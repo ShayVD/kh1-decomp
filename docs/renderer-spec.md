@@ -1912,6 +1912,78 @@ rows: `D_002BC980`, `D_002A6890`); and **two draw states read a target**: the fr
 itself writes there as CT24 at run time). The message font is not flagged. From the user's disc: the dumps
 never go in the repo.
 
+### 5.3 The 2D layers on the Vita's screen (session 89, static, draft)
+
+**One coordinate space.** Every 2D drawer in the main ELF writes GS primitive coordinates in 1/16 pixels of
+the **512 x 384 3D target** (FBP `0xD0`), with the target's top left at `(0x7000, 0x7400)` (`XYOFFSET`
+1792 / 1856, §3.1): screen pixel `(x, y)` is `((x << 4) + 0x7000, (y << 4) + 0x7400)`. Read from the C:
+
+| Drawer | Where the position comes from | Source |
+| --- | --- | --- |
+| Text windows, their frames, parts, rows, lists, icons, numbers | the window's origin `+0xb0 / +0xb4` (already in 1/16 GS units) plus offsets in pixels; scaled about an anchor when `+0x48` bit 0 (`+0x74 / +0x78`) | textwin, winpart, winmenu, wintext, winrow, winlist |
+| Icons outside a window | `(x << 4) + 0x7000`, `(y << 4) + 0x7400` | wintext.nostrict.c `func_001fcdc8` |
+| The message-font text | `x * 16 + 0x7000`, `y * 16 + 0x7400`; message codes 17 / 18 position in screen pixels (`- (origin - 0x7000)`) | text.nofill.c, text.nostrict_nofill.c, wintext.nostrict.c `func_001f94f0` |
+| The field text, the value selector | the same, own static chains (§4.10) | fldtext.c `func_0010c540` area, selector.c |
+| HUD sprites, gauges, arcs, needles | `pos * 16 + 0x7000 / 0x7400` | ui.c, gauge.nostrict*.c, prim.nostrict*.c |
+| Notices, banners, pop-ups | pixels from layout tables (`D_00458548`, `D_00469C94`) through the same offset | notice.c, banner.c, popup.c |
+| Markers on 3D things (lock-on, target gauge, damage numbers, objects' name windows) | a 3D point through `D_002E26C0` (view-screen) to GS units, then `- 0x7000 / 0x7400` (hudmath.c `func_00249558`) or `>> 4 - 1792 / 1856` (objwin.nostrict.c) | hudmath.c, objwin.nostrict.c, gauge.nostrict.c |
+| Menu backgrounds, the journal, the pointer, list menus | the same offsets | menubg, journal_s*, journalfx, pointer, listmenu |
+| Full-screen passes: the clear (`D_002A6500`), the fades, flash, letterbox, blur, sway, lens grid, spin | the whole 512 x 384 (or its half, 256 x 192, for the menu blur's capture) | brightfade.c, sceneeff.c, §4.16 / 4.17 |
+
+**Exceptions** (not in the 3D target): the frame copy's flash `D_002A6B80` (a quad over the 512 x 448
+display buffer after the copy), the **system-message band** (its own 512 x 128 display on read circuit 1,
+§4.15) and the screen/fade.c ending (the same writes), and the 640-wide buffer at `0x118000` (case 2 of
+the frame copy: the movies and `D_002B73E0`). The window clip `SCISSOR_1` is in target pixels, clamped
+to 512 x 384 and reset to it by `func_001f8f30`. A quirk to keep: winmenu.c's window y getter / setter
+(`func_001fd268` / `func_001fd278`) use `0x7000`, not `0x7400` (a y 64 pixels off; no main-ELF caller,
+so an overlay's, matched code).
+
+**The target's pixels are square.** 512 / 384 is 4 : 3, which is the TV's shape; the frame copy's
+stretch to 448 lines only fills NTSC's visible lines. So the port needs no aspect correction of the 2D
+art: one uniform scale of the 512 x 384 space keeps every shape.
+
+**What assumes 512 x 384** (each needs the port's real target size, not the constant): `SCISSOR_1`'s
+full-screen value (gspkt.c's defaults, `func_001f8f30`), `XYOFFSET` itself, the frame copy's 16 strips of
+32 pixels, the clear's 16-sprite sends, the menu blur's half-size capture and its 1 / 2 pixel offsets
+(scale them with the target), the sway's and lens grid's copies into the Z buffer's memory, the spin's
+turned quad, the letterbox bars (y 0-34 and 350-384, x 0-512), the guard band (`(2048, 2048, 1/512,
+1/384)` in renderer B's qw 7, §2.3), the viewport `D_002BBF60` (clip to GS units) and every marker
+projected through it.
+
+**Plan for 960 x 544.** 544 x 4 / 3 = 725.3, so a 4:3 picture is about **725 x 544, scale 1.4167**, with
+bars of 117 / 118 pixels.
+
+1. **First bring-up: 4:3, pillarboxed.** Render the 3D target at 725 x 544 (or any multiple of 512 x
+   384 for supersampling), keep the 2D in the same target with one affine map `(X / 16 - 1792) * s,
+   (Y / 16 - 1856) * s` in the vertex shader of every GIF-path draw, scissor and full-screen pass, and
+   present it centred in black bars. Nothing in the game code changes; the draw list's order between 2D
+   and 3D (they share the target and the keys) stays as it is. The glyph and window-font textures are
+   small (18-pixel cells, a 256 x 256 sheet): bilinear at 1.42 is soft but readable; a later step can
+   swap in a higher-resolution font sheet keyed by the same cells.
+2. **Option: a wide 3D view with the HUD anchored** (after the real-disc run). The 3D gets a hor+
+   projection over the whole 960 x 544: narrow the x row of the clip matrix `D_002BC020` and widen the
+   viewport `D_002BBF60` (both built in `func_00110618`, still a non-match; in the port a wrapper after
+   it). The CPU culls that use the clip matrix (renderer B's visibility, `func_00121000`'s guard-band
+   test) widen with it; **renderer A's grid visibility (`func_00107548`) and any cull with its own
+   constants must be checked first**, or the sides pop in. The 2D stays in the 4:3 canvas (scale 1.4167,
+   centred at x 117), except:
+   - the **full-screen passes** (clear, fades, flash, letterbox, the blur, sway, lens grid and spin
+     copies) cover the whole 960 x 544;
+   - **markers over 3D** (hudmath.c, objwin.nostrict.c, the target gauge) come out of the wide projection
+     in canvas units below 0 or above 512 at the sides, which the centred canvas map already places right:
+     they must *not* be anchored or clamped;
+   - **HUD elements are anchored to an edge**: a table kept by the port (not in the game code) of the HUD
+     drawers and the side they keep, moving left-anchored ones by -117 and right-anchored by +118 canvas
+     pixels x 1.4167. The rule to start from: an element whose rectangle lies in the left third goes left,
+     the right third right, the rest centred (the HP / MP gauges, the command menu, the party gauges, the
+     notices' layout tables). The real-disc run's draws (`gsstate.py --draws`) list the rectangles;
+   - the **menus and text windows** stay in the centred canvas (a full-screen menu shows the 3D's wide
+     sides behind its background, or the port dims the bars), and the system-message band and movies stay
+     4:3 and centred.
+3. Rule 7 (frame-time) and the PS2's overscan: the original HUD sits inside a TV's safe area, so on the
+   Vita's fully visible screen it looks inset; the anchoring of step 2 is the place to move it outward if
+   wanted.
+
 ## 6. Open questions
 
 1. **Model data formats.** The mesh VIF streams (UNPACK formats, STCYCL

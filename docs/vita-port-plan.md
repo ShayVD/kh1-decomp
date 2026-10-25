@@ -1484,6 +1484,89 @@ layoutcheck `--all`'s idx-next rows: 12 of the 16 arrays are there as unbounded 
 the trigger boxes and the window lists (inside `D_00389C90`) and `D_003F31D0` are new. Next: count the
 DATA rows' high-water marks on the real-disc run (a host-only hook, or gdb watchpoints).
 
+### 5.1ac Session 89: the 2D layers' space, vibration, the CIRCLE / CROSS swap
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). Only docs/ and one comment in
+src/vm/vm_lib.c changed: kh1.elf byte-identical, every out/build object bit-identical, the float ELF the
+same (no float-untested row).
+
+**The 2D layers** (item 4a, renderer-spec 5.3): every 2D drawer of the main ELF (windows, text, field
+text, HUD, notices, menus, the markers projected from 3D) works in 1/16 pixels of the 512 x 384 target
+at `(0x7000, 0x7400)`; only the flash after the frame copy, the system-message band, the fade.c ending
+and the 640-wide movie buffer are outside it. The target is 4:3 with square pixels (448 lines were only
+NTSC's), so one uniform scale keeps the art. The plan: **first a 4:3 picture of about 725 x 544 (scale
+1.4167) between bars**, the game unchanged and one affine map on every GIF-path draw; later, as an
+option, a hor+ 3D view over 960 x 544 with the HUD anchored by a port-side table (full-screen passes
+widened, markers over 3D not anchored, renderer A's grid visibility checked first so the sides do not
+pop in).
+
+**Vibration** (item 4b; src/pad/padvib*.c, padread.nostrict.c). Two players `D_005757B0[2]` (0x2C bytes:
+the pattern and two channels), stepped once a frame by task 20001 (`func_00176ee0`, registered by
+pppapi.c `func_00175980`). A pattern is a **type-20 record** `{type 20, flags (bit 0: loop), offset[2],
+count[2]}` with, per motor, `count` pairs of bytes `{time, level}`: the first pair (time 0) sets the start
+level, each later pair ramps linearly from the previous level to its own over `time` time steps
+(`D_002BBDFC`: 1 a 60 Hz field, so 2 a frame at 30 fps), clamped to 0-255. **A first pair with a time
+other than 0 holds its level for ever** (the step only advances the time after the first pair; every
+pattern in the ELF starts with 0). At the end a looping pattern restarts, else the pad stops
+(`func_00176c60`: both levels 0, the player cleared). Levels go to the pad record's bytes 2 / 3
+(`D_002C5AD2[i][0]` motor 0, `[1]` motor 1); padread packs them each frame as libvib's two-actuator
+profile (`D_002C5A80` = 3, one byte): **bit 0 = motor 0 on when its level >= 128** (the small motor
+is on / off), **bits 1-8 = motor 1's level** (the large motor, 0-255), sent with `sceVibSetActParam`
+unless the config's vibration option is off (`func_00219348`: `D_003F34B8->f10`) or bit 16 of
+`D_002C5978` is set (no writer in the main ELF: an overlay or nothing), then both bytes cleared. Only pad
+0 is ever started (every caller passes 0).
+
+| Starter | Pattern |
+| --- | --- |
+| hitreact.nostrict.c (the player hit, reaction kinds of `func_001347f0`) | the ELF's table `D_00308870` (7 patterns, by `func_00147790`): kind 3 pattern 1, kinds 4 / 5 pattern 0, kind 6 pattern 6, kind 7 pattern 5 |
+| vm_lib.c `func_001d39b0` (an event command; not while `D_0037A378` bit 0) | the event file's table (`D_00389C90.x3040 + x3060[n]`): from the disc |
+| objscmd.c `func_0012b638` (an object script command) | a pointer in the script: from the disc |
+
+The ELF's 7 patterns (`{time, level}` per motor; motor 0 on only at levels >= 128):
+
+| # | Motor 0 (small) | Motor 1 (large) | Used |
+| --- | --- | --- | --- |
+| 0 | 128, ramp to 0 in 19 | 255, to 0 in 20 | hit kinds 4 / 5 |
+| 1 | 132, to 0 in 10 | 255, to 0 in 10 | hit kind 3 |
+| 2 | - | 150, 150 for 5 | none in the main ELF |
+| 3 | 196 for 4, to 0 in 6 | 255 for 4, to 0 in 11 | none |
+| 4 | 255 for 7, to 8 in 9 | 255, 196 in 6, 255 in 6, 202 in 7, 0 in 10 | none |
+| 5 | 255, to 0 in 19 | - | hit kind 7 |
+| 6 | 255, to 0 in 10 | - | hit kind 6 |
+
+Stoppers (`func_00176c60(0)`): gamephase.c `func_00122330` / `func_001223b8` (phase changes),
+gamestate.c `func_00109658` (the soft reset), objscmd.c `func_0012b2c0` (an object freeze, with the hit
+flags) and `func_0012b658`, vm_lib.c `func_001d3a28` (an event command); `func_00176ea8` resets both at
+start.
+
+**On the Vita**: the handheld has no motors (`PlatVibSetActParam` returns 0). On a PS TV with a DualShock
+3 / 4, `PlatVibSetActParam` unpacks the two bytes into `SceCtrlActuator { small = (b0 & 1) ? 255 : 0, large
+= (b0 >> 1 | b1 << 7) & 0xFF }` and calls `sceCtrlSetActuator` on the external pad's port, best only when
+the value changes (the game sends every frame). One gap to close in the wrapper: when the config turns
+vibration off (or the bit-16 flag is set) the game stops sending, also the zero, so a motor running at that
+moment would keep its last value; the wrapper sends a zero when it sees no call for a frame.
+
+**The CIRCLE / CROSS swap** (item 4c). Every confirm and cancel in the main ELF reads the raw bits or the
+action table built from them, so **swapping bits 0x2000 and 0x4000 in the live pad's bytes inside
+`PlatPadRead`** (before `func_0011f548` makes press / release / repeat) moves all of it together, the way
+the Western releases did: the menus' 81 raw `PAD_CROSS` cancels in 28 files (all in src/menu/; the shops and lists back out
+through action 0x2, `D_002C5BB8 & 2` in shop.c and list.c), the window confirm (winmenu.c `func_001fe5a0`, the one `PAD_CIRCLE` path every menu's
+`func_001fe570` uses) and config.c's own CIRCLE, the value selector's raw cross (selector.c, `press &
+0x4000`) and the debug frame-step's raw circle (framectl.c `D_002C5AD0[2] & 0x2000`), and the action table
+(`D_002C5990`: text advance 0x1, back 0x2, jump 0x4, the command menu's 0x10000, shortcut 1 0x80000).
+Above the wrapper and so unaffected (correctly): padrec.c's replay and button script (their 0x2000 /
+0x4000 are the game's confirm / cancel, recorded in the original layout) and the script's pushes of held
+bits (vm_lib.c `func_001d14a0`). **What does not follow** (the screen naming a button):
+- the **window font in the ELF** (`D_003E9660`, cells `D_003E9138`, decoded this session): no face-button
+  icon; only **L1 / R1** (cells 8 / 9: the name entry's page arrows, nameentry.nofill.c), unaffected;
+- **message text**: the button glyphs the messages use (tutorials, the help line, "press ..." prompts) are
+  in the disc's message font and files, not the ELF; the swap needs a port-side remap of the circle and
+  cross glyph codes at the glyph lookup (text.c / wintext.nostrict.c `func_001f94f0`'s glyph branch, the
+  field text `func_0010c540`), with the codes read from the real disc;
+- **HUD and menu textures** from the disc (TIM2 sheets; the command menu, the action prompt, the menu
+  footers if they show buttons): the asset extraction tool writes a second, swapped sheet, or the port
+  keeps a per-texture cell swap list. Both lists wait for the real-disc run (`KH1_HOST_TEXDUMP`).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

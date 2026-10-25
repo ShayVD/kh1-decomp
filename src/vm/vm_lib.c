@@ -2086,8 +2086,9 @@ s32 func_001d3948(VmRec *vm) {
     return 2;
 }
 
-/* Play the sound of the script file's table entry stk[sp] (not while
- * D_0037A378 bit 0 is set). */
+/* Start the vibration pattern (a type-20 record, src/pad/padvib.nostrict.c)
+ * of the script file's table entry stk[sp] on pad 0 (not while D_0037A378
+ * bit 0 is set; vita-port-plan 5.1ac). */
 s32 func_001d39b0(VmRec *vm) {
     s8 *x = D_00389C90.x3040 + D_00389C90.x3060[vm->stk[vm->sp]];
     if (!(D_0037A378 & 1)) {
