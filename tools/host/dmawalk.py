@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Walk the static DMA chains offline, over the PS2 ELF's bytes (phase 5, docs/vita-port-plan.md 5.1p).
 
-  python3 -I tools/host/dmawalk.py [--elf SLPS_251.98] [--float ELF] [--regs] [-v] [--state] [--tsv out/host/dmawalk.tsv]
+  python3 -I tools/host/dmawalk.py [--elf SLPS_251.98] [--float ELF] [--regs] [-v] [--state] [--no-seeds] [--tsv out/host/dmawalk.tsv]
 
 The Python twin of host/null/dmawalk.c (KH1_HOST_TRACE=2, docs/renderer-spec.md
 4.4-4.6) for the sends whose chain is a name: dmacheck.py --list's "static data"
@@ -14,6 +14,11 @@ tag's upper words first when the send sets TTE), and the data of a VIF1 DIRECT
 read again as GIF packets (PATH2).  A chain that leaves the ELF's bytes, ends
 inside a GIF packet or a VIF code's data, or holds a word that is no VIF code is a
 row (exit 1).
+
+SEEDS (session 78): the chains an init function builds from constants (the text
+windows' headers, the menus' image uploads, the wave, texspot's tags) are written over
+the ELF's bytes first, so they walk too ("seeded from" in the note); --no-seeds walks
+the ELF alone.
 
 Not rows: a chain in bss, or a data chain whose first tag is zero in the ELF
 (built at run time: walk them on the host), and data the chain sends from bss, the
@@ -66,9 +71,24 @@ class Image:
     def __init__(self, path: Path):
         self.elf = Elf.load(path)
         self.segs = [(s.vaddr, s.offset, s.filesz, s.memsz) for s in self.elf.segments if s.type == 1]
+        self.seeds = []        # (address, bytes, builder): what the C writes at run time (SEEDS)
+
+    def seed(self, a: int, data: bytes, src: str):
+        self.seeds.append((a, data, src))
+
+    def seeded(self, a: int, n: int = 16):
+        """the seed holding [a, a + n) whole, or None"""
+        for s in self.seeds:
+            if s[0] <= a and a + n <= s[0] + len(s[1]):
+                return s
+        return None
 
     def kind(self, a: int, n: int = 16) -> str:
         """'elf' (bytes), 'bss', 'code' (a placeholder the game patches), 'spr' or 'outside'"""
+        if self.seeded(a, n):
+            return "elf"
+        if RUNTIME[0] <= a < RUNTIME[1]:
+            return "bss"
         if a & 0x80000000 or 0x70000000 <= a < 0x70004000:
             return "spr"
         if CODE[0] <= a < CODE[1]:
@@ -81,6 +101,9 @@ class Image:
         return "outside"
 
     def read(self, a: int, n: int) -> bytes:
+        s = self.seeded(a, n)
+        if s:
+            return s[1][a - s[0]:a - s[0] + n]
         return self.elf.read(a, n)
 
     def words(self, a: int) -> tuple[int, int, int, int]:
@@ -103,6 +126,12 @@ class Names:
                 return name, a - s
         return None
 
+    def add(self, a: int, n: int, name: str):
+        """a name data.tsv lacks (a bss name the linker script places)"""
+        r = self.by_name.get(name)
+        if r is None or (r[0] == a and r[1] < n):   # or a size-0 alias the float ELF lists
+            self.__init__([x for x in self.rows if x[2] != name] + [(a, n, name)])
+
     @classmethod
     def ps2(cls):
         rows = []
@@ -116,6 +145,105 @@ class Names:
         rows = [(s.value, s.size, s.name) for s in elf.symbols()
                 if s.type in (0, 1) and s.shndx and re.match(r"D_[0-9A-F]{8}$", s.name)]
         return cls(rows)
+
+
+# --- chains the C builds at run time from constants (session 78) ---------------------------
+#
+# 61 sends start at a chain that is zero in the ELF.  Most are not drawn at run time from
+# data: an init function writes the whole packet from constants once and the senders send it
+# as it is (the text windows' headers, the menus' image uploads, the wave), or writes only the
+# tag over a packet the ELF holds (texspot).  Each seed below writes, over the ELF's bytes,
+# what that C writes, so the walk reads those chains too (status "whole", note "seeded").
+# An upload's source is the image a file load left in memory: RUNTIME stands for it (read as
+# bss: the IMAGE packet covers it).  Not seeded: chains the C fills per frame from the model
+# data (mdlgs's D_00351C40 / D_00573AC0 / D_00573E40) and grideff's D_002BC270, whose
+# transfer size comes from the run (func_00106e18).  --no-seeds walks the ELF's bytes alone.
+# The values were checked against the host build (gdb: the init functions' bytes, session 78).
+
+RUNTIME = (0x01F00000, 0x02000000)   # a file's image in memory (an address no ELF byte has)
+MASK = (1 << 64) - 1
+
+
+def _q(a: int, b: int = 0) -> bytes:
+    return struct.pack("<QQ", a & MASK, b & MASK)
+
+
+def _end(qwc: int) -> int:
+    """func_0011fb78(p, 7, end): an end tag"""
+    return 0x70000000 | qwc
+
+
+def _gif(nloop: int, eop: int) -> int:
+    """func_0011fb48(t, eop, end): a PACKED GIF tag, one A+D register"""
+    return nloop | eop << 15 | 1 << 60
+
+
+def upload(a0, a1, a2, a3, a4, a5, a6, a7, a8) -> bytes:
+    """func_0011fbb0(a0 ... a8, buf) (src/gfx/gifpkt.c): an image upload, 11 qwords.  BITBLTBUF
+    DBP a0 DBW a1 DPSM a2, TRXPOS a3 / a4, TRXREG a5 x a6, TRXDIR 0, an IMAGE tag of a7 qwords
+    whose pixels a ref tag sends from a8, then TEXFLUSH; the upper words it leaves are 0"""
+    return b"".join([
+        _q(0x10000006), _q(_gif(4, 0), 0xE),
+        _q(a0 << 32 | a1 << 48 | a2 << 56, 0x50), _q(a3 << 32 | a4 << 48, 0x51),
+        _q(a5 | a6 << 32, 0x52), _q(0, 0x53),
+        _q(a7 | 1 << 59), _q(a7 | 0x30000000 | a8 << 32),
+        _q(_end(2)), _q(_gif(1, 1), 0xE), _q(0, 0x3F)])
+
+
+def _text_head(regs) -> bytes:
+    """func_001f2eb8's packet headers: an end tag, a GIF tag (EOP), one A+D qword per register"""
+    return _q(_end(len(regs) + 1)) + _q(0x1000000000008000 | len(regs), 0xE) + \
+        b"".join(_q(v, r) for r, v in regs)
+
+
+def _wave() -> bytes:
+    """func_001e9670 (src/screen/wave.c): a cnt tag of 404 qwords (TEST_1, ALPHA_1, then a
+    200-loop GIF tag over 100 strips of four qwords) and an end tag"""
+    v = []
+    for i in range(100):
+        v += [struct.pack("<4i", i + 32, i + 96, i + 16, 96), struct.pack("<4i", 0x7880, (i + 2098) << 4, 0xFFFFFF, 0),
+              struct.pack("<4i", i + 32, i + 96, i + 16, 96), struct.pack("<4i", 0x8780, (i + 2098) << 4, 0xFFFFFF, 0)]
+    return _q(0x10000194) + _q(0x1000000000000002, 14) + _q(0x4000D, 71) + _q(68, 66) + \
+        _q(0x2024C000000080C8, 65) + b"".join(v) + _q(0x70000000)
+
+
+def _tag_over(img, a: int, qwc: int) -> bytes:
+    """a builder that writes only the tag's first words (QWC, the id byte, ADDR 0) over the ELF's packet"""
+    return struct.pack("<HBBI", qwc, img.read(a + 2, 1)[0], 0x70, 0) + img.read(a + 8, 8)
+
+
+TEX0_FONT = 0x2007BF8621413D7C
+TEX0_FONT2 = 0x2007FF8622411000
+# (chain, builder, bytes(img, at)): at(name) is the name's address in that image
+SEEDS = [
+    ("D_003F1A70", "func_001f2eb8", lambda img, at: _text_head([(0x47, 0x4000D)])),
+    ("D_003F1E70", "func_001f2eb8", lambda img, at: _text_head(
+        [(0x47, 0x4000D), (0x3F, 0), (0x06, TEX0_FONT), (0x14, 0x61)])),
+    ("D_003F2270", "func_001f2eb8", lambda img, at: _text_head(
+        [(0x47, 0x4000D), (0x3F, 0), (0x06, TEX0_FONT2), (0x14, 0x61)])),
+    ("D_003F27D0", "func_001f2eb8", lambda img, at: _text_head([(0x47, 0x5000D)])),
+    ("D_003F2670", "func_001f2eb8", lambda img, at: upload(0x3D7C, 4, 20, 0, 0, 256, 256, 2048, at("D_003E9660"))),
+    ("D_003F2720", "func_001f2eb8", lambda img, at: upload(0x3DFC, 1, 0, 0, 0, 16, 16, 64, at("D_003F1660"))),
+    ("D_0035C4A0", "func_00175708", lambda img, at: _tag_over(img, at("D_0035C4A0"), 10)),
+    ("D_0035C550", "func_00175708", lambda img, at: _tag_over(img, at("D_0035C550"), 16)),
+    ("D_00631620", "func_001e9670", lambda img, at: _wave()),
+    ("D_00641080", "func_0020b338", lambda img, at: upload(0x3600, 2, 0x13, 0, 0, 0x68, 0x38, 0x16C, RUNTIME[0])),
+    ("D_00641130", "func_0020b338", lambda img, at: upload(0x3640, 1, 0, 0, 0, 0x10, 0x10, 0x40, RUNTIME[0])),
+    ("D_00642D30", "func_00219500", lambda img, at: upload(0x3600, 4, 0x13, 0, 0, 0x8A, 0x58, 0x2F7, RUNTIME[0])),
+    ("D_00642DE0", "func_00219500", lambda img, at: upload(0x3680, 1, 0, 0, 0, 0x10, 0x10, 0x40, RUNTIME[0])),
+    ("D_00642EB0", "func_0021d188", lambda img, at: upload(0x3600, 4, 0x13, 0, 0, 0x100, 0x100, 0x1000, RUNTIME[0])),
+    ("D_00642F60", "func_0021d188", lambda img, at: upload(0x3700, 1, 0, 0, 0, 0x10, 0x10, 0x40, RUNTIME[0])),
+    ("D_00643290", "func_0021e120", lambda img, at: upload(0x3600, 2, 19, 0, 0, 64, 64, 256, RUNTIME[0])),
+    ("D_00643340", "func_0021e120", lambda img, at: upload(0x3680, 1, 0, 0, 0, 16, 16, 64, RUNTIME[0])),
+]
+
+
+def apply_seeds(img: Image, at, names: Names | None = None) -> None:
+    for name, src, build in SEEDS:
+        data = build(img, at)
+        img.seed(at(name), data, src)
+        if names is not None:
+            names.add(at(name), len(data), name)
 
 
 # --- the receivers -------------------------------------------------------------------------
@@ -441,6 +569,11 @@ def static_sends(img: Image, names: Names):
     return out
 
 
+def ps2_of(nm):
+    """(D_ name, offset) as the PS2 address it stands for: two names of one place (an alias) agree"""
+    return int(nm[0][2:], 16) + nm[1] if nm else None
+
+
 def same_chain(a_img, a_names, a_tags, b_img, b_names, b_start):
     """the float ELF's chain from b_start against the original's tags: [] or the differences"""
     diffs, tag, asr = [], b_start, []
@@ -451,11 +584,11 @@ def same_chain(a_img, a_names, a_tags, b_img, b_names, b_start):
         bq, bid = w0 & 0xFFFF, w0 >> 28 & 7
         if (bq, bid) != (qwc, tid):
             return ["tag %s+%#x: %s %d, float %s %d" % (*a_names.at(at), TAGS[tid], qwc, TAGS[bid], bq)]
-        if a_names.at(at) != b_names.at(tag):
+        if ps2_of(a_names.at(at)) != ps2_of(b_names.at(tag)):
             diffs.append("tag %s+%#x at float %s" % (*a_names.at(at), b_names.at(tag)))
         if tid in (0, 2, 3, 4, 5):
             na, nb = a_names.at(addr), b_names.at(baddr)
-            if (na or addr) != (nb or baddr):
+            if (ps2_of(na) if na else addr) != (ps2_of(nb) if nb else baddr):
                 diffs.append("tag %s+%#x ADDR -> %s, float -> %s" % (
                     *a_names.at(at), "%s+%#x" % na if na else "%08x" % addr, "%s+%#x" % nb if nb else "%08x" % baddr))
         bdata = baddr if tid in (0, 3, 4) else tag + 16
@@ -497,6 +630,8 @@ def main() -> int:
     ap.add_argument("-v", action="store_true", help="with --regs: each value decoded")
     ap.add_argument("--state", action="store_true",
                     help="the renderer's state list: each distinct GS state value and the functions that send it")
+    ap.add_argument("--no-seeds", action="store_true",
+                    help="walk the ELF's bytes alone (no SEEDS: the chains init code builds are run time)")
     ap.add_argument("--tsv", type=Path)
     a = ap.parse_args()
     if a.state:
@@ -506,6 +641,15 @@ def main() -> int:
     img, names = Image(a.elf), Names.ps2()
     fl = Image(a.float) if a.float else None
     fnames = Names.from_elf(fl.elf) if fl else None
+    if not a.no_seeds:
+        apply_seeds(img, lambda n: names.by_name[n][0] if n in names.by_name else int(n[2:], 16), names)
+        if fl:
+            def fat(n):
+                if n in fnames.by_name:
+                    return fnames.by_name[n][0]
+                base, off = names.at(int(n[2:], 16))   # a name inside a bigger definition
+                return fnames.by_name[base][0] + off
+            apply_seeds(fl, fat, fnames)
     rows, tsv, total = [], [], collections.Counter()
     walked = {}
     counts = collections.Counter()
@@ -528,8 +672,9 @@ def main() -> int:
                     walked[key] = walk(img, start, ch, tte)
                 tags, probs, rx, notes = walked[key]
                 status = "PROBLEM" if probs else "whole"
-                counts[status] += 1
-                note = "%d tags, %d qwords, ends with %s; %s" % (
+                sd = img.seeded(start)
+                counts[status + (" (seeded)" if sd else "")] += 1
+                note = ("seeded from %s; " % sd[2] if sd else "") + "%d tags, %d qwords, ends with %s; %s" % (
                     len(tags), sum(t[2] for t in tags), TAGS[tags[-1][1]] if tags else "?", "; ".join(probs + notes))
                 if probs:
                     rows.append((call, fn, sname, "; ".join(probs)))
@@ -545,11 +690,9 @@ def main() -> int:
                         if m:   # a table entry: the chain the float table's word names
                             fstart = struct.unpack("<I", fl.read(fs[0] + int(m.group(1)) * 4, 4))[0]
                         else:
-                            fstart = fs[0] + start - names.by_name[base][0] if base in names.by_name else None
-                        if fstart is None:
-                            d = ["%s: no PS2 start" % base]
-                        else:
-                            d = same_chain(img, names, tags, fl, fnames, fstart)
+                            # a D_ name is its PS2 address (an alias the float ELF keeps need not be in data.tsv)
+                            fstart = fs[0] + start - int(base[2:], 16)
+                        d = same_chain(img, names, tags, fl, fnames, fstart)
                     note += "; float: " + ("same chain" if not d else "; ".join(d[:3]))
                     counts["float same" if not d else "float DIFF"] += 1
                     if d:

@@ -1013,6 +1013,38 @@ registers, 53 values (the HUD's seven environments, renderer B's draw state, the
 D_0061E8B0 writes PRIM 0 from two zero A+D qwords (a state write, not a draw: the GIF parser must allow it).
 Valgrind with TRACE=4: 0 errors up to the overlay entry. The text windows' chains wait for the real disc.
 
+### 5.1r Session 78: the chains the C builds from constants, opdma's set-up packets, the GS register file
+
+Static only (the Mac was away until 2026-10-26). Only tools/, docs/ and one comment in src/gfx/opdma.c changed:
+kh1.elf is byte-identical, every out/build object bit-identical (sha1 of all 677 before and after), and the float
+ELF the same (fcheck.sh), so there is no float-untested.md row.
+
+**`dmawalk.py` seeds** (renderer-spec 4.8): 17 chains that were "run time" in the walk are built once by init code
+from constants (text.nofill.c's func_001f2eb8: the text windows' four headers and the window font's two uploads;
+the menus' image uploads in menubg, config and journal; wave.c's func_001e9670; texspot's tag words). `SEEDS`
+copies what that C writes and lays it over the ELF's bytes before the walk: **155 sends, 81 whole + 68 whole from
+seeds, 0 problems**, the float build the same chain for all 149; 6 stay run time (grideff's upload, whose size comes
+from the run, and mdlgs' renderer B chains). Every seed was compared with the host build's bytes under gdb (after the
+boot, and after calling the wave and menubg init functions): all equal. `--no-seeds` gives session 77's numbers.
+`--float` now finds a chain by the address its D_ name stands for (aliases the float ELF keeps are not in data.tsv).
+
+**What they add to the state list** (23 registers, 115 values, from 18 / 87): the window font (PSMT4 at `0x3D7C`)
+and the message font (**PSMT4HL at `0x1000`: in the Z buffer's top byte**, uploaded with its PSMT4HH half by
+func_001ef950); the text headers' `TEST_1 0x4000D` (`ZTE=0`: no depth test); the wave as 100 `LINE|IIP|ABE` lines;
+texspot's pass into the off-screen buffer `0x3A0000` (FBW 256, XYOFFSET 0) and its composite with REGION_CLAMP;
+the menus' uploads into the `0x3600` slot with CLUTs at `0x3640` / `0x3680` / `0x3700`.
+
+**opdma's set-up packets** (session 77's item 4a): the priority-list insert functions count the DMA tag in their
+`qwc`, so `7` sends a GIF tag and 5 A+D, the same 6 qwords func_001aa008 sends: nothing runs short. Three of the
+five A+D are PRIM 0 (not two), and the TEX1 / TEXA / CLAMP words written after them are never sent or read in the
+main ELF. `D_0061E800` (ZMSK 1, first) and `D_0061E8B0` (ZMSK 0, last) bracket the frame's lists: no Z writes inside,
+restored after. Checked against gdb's dump of both packets on the host.
+
+**The GS register file** (renderer-spec 5.1, a draft): which registers the Vita renderer keeps per context, which it
+drops (PRMODE, TEXCLUT, SCANMSK, DTHE / DIMX, COLCLAMP, PABE, FBA, MIPTBP: one value each, all inert; TEXFLUSH,
+which the upload itself replaces),
+and that GS memory itself must be modelled (targets read back as textures, the font in the Z buffer's top byte).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

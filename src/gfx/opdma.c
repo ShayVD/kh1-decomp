@@ -11,7 +11,10 @@
  * D_0061E800 / D_0061E8B0 and chain 288 tags into the priority lists
  * D_0061EEA0 (16 heads), D_0061FFA0 (16) and D_0061EFA0 (256), which
  * func_001aa6b0 / func_001aa700 / func_001aa750 insert into and
- * func_001aa650 sends.  func_001aa950 / func_001aa990 push on two s32 stacks
+ * func_001aa650 sends (their qwc counts the DMA tag: its QWC is qwc - 1, so
+ * the set-up packets go as a GIF tag and 5 A+D, PRIM 0 / ZBUF / PRIM 0 /
+ * PRIM 0 / TEST; the TEX1, TEXA and CLAMP words func_001a9eb8 writes after
+ * them are never sent nor read: docs/renderer-spec.md 4.8).  func_001aa950 / func_001aa990 push on two s32 stacks
  * with s8 stack pointers (upwards from 0x70000000 and downwards from
  * 0x70004000: the scratchpad), func_001aa9d0 / func_001aa9e8 pop them and
  * func_001aaa00 / func_001aaa38 test for room.  func_001aaf88 picks the VU0

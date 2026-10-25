@@ -25,7 +25,7 @@ Conventions:
 | `python3 -I tools/vu/find_vu1.py SLPS_251.98 --summary N` | opcode histogram of program N and its fixed (`vi00`-based) VU memory accesses |
 | `python3 -I tools/vu/vif_chain.py ADDR...` | walks a static DMA chain and prints its tags and VIF commands (STCYCL, UNPACK layout, MPG, MSCAL/MSCNT, BASE/OFFSET); `--one` decodes a single spliced tag. New in this session |
 | `python3 -I tools/vu/gs_packets.py --callers --layout layout.tsv` | decodes every static GS packet passed to the GIF send wrapper `func_00106b18`, register by register |
-| `python3 -I tools/host/dmawalk.py [--regs [-v]] [--float ELF]` | every DMA send whose chain is a name (PlatDmaSend's static rows and dmapool's GIF wrappers): the chain walked, its data read as GIF packets / VIF codes (VIF1 DIRECT data as GIF packets, PATH2), the GS registers each send writes (`-v`: decoded), and with `--float` whether the m12 float build sends the same chain (§4.6). New in session 76. `--state` (session 77): the state list instead, each register's distinct values decoded with the functions that send each (§4.7) |
+| `python3 -I tools/host/dmawalk.py [--regs [-v]] [--float ELF]` | every DMA send whose chain is a name (PlatDmaSend's static rows and dmapool's GIF wrappers): the chain walked, its data read as GIF packets / VIF codes (VIF1 DIRECT data as GIF packets, PATH2), the GS registers each send writes (`-v`: decoded), and with `--float` whether the m12 float build sends the same chain (§4.6). New in session 76. `--state` (session 77): the state list instead, each register's distinct values decoded with the functions that send each (§4.7). Session 78: `SEEDS` writes the 17 chains init code builds from constants over the ELF's bytes first (68 more sends walked; `--no-seeds` turns it off, §4.8) |
 | `KH1_HOST_TRACE=4 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt [--sends]` | the same state list for the chains a host run sends (the run-time ones too: the text windows, the HUD), each named by the host symbol at its start (§4.7). New in session 77 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
@@ -444,6 +444,9 @@ in that frame.
 | `0x360000` (block `0x3600`) | texture slot, rewritten per draw (renderer B PSMT8, UI PSMT4/CT24) | `func_0015f488`, `func_00106460` |
 | block `0x3700` | renderer B CLUT (PSMCT32) | `func_0015f488` |
 | block `0x3A00`, `0x3FF4`, `0x3FF8` | UI CLUTs | static packets |
+| block `0x1000` (`0x100000`) | **the message font, in the Z buffer's top byte**: two 256x256 4-bit halves uploaded as PSMT4HH and PSMT4HL (`func_001ef950`, CLUT block `0x3FFC`); text.c's draws read the PSMT4HL half (`D_003F2270`) | session 78 (§4.8) |
+| block `0x3D7C`, CLUT `0x3DFC` | the window font, PSMT4 256x256 from the ELF (`D_003E9660`, CLUT `D_003F1660`), uploaded by `D_003F2670` / `D_003F2720` | session 78 (§4.8) |
+| blocks `0x3600`-`0x3700` | also the menus' images: menubg (PSMT8 104x56 + CLUT `0x3640`), config (PSMT8 138x88 + CLUT `0x3680`), journal (PSMT8 256x256 + CLUT `0x3700`; 64x64 + `0x3680`) | session 78 (§4.8) |
 | `0x180000` (block `0x1800`) | PSMT8H texture (8-bit indices in the top byte of 32-bit pixels, overlapping the Z area) | `func_00103058`, `func_0010b6c0` |
 
 - Drawing offset: the 512 x 384 target is centred at (2048, 2048),
@@ -493,12 +496,14 @@ Static packets (`gs_packets.py --callers`), renderer B's template
 | `SPRITE|ABE` / `SPRITE|ABE|FST` untextured | the additive fade quad (`func_00106000`), `func_001039f8` |
 | `TRISTRIP|IIP` untextured | src/screen/fade.c `func_001137f8` (`D_002BD100`, 18 strips: a gouraud wipe) |
 | `TRISTRIP|TME|ABE|FST` | sceneeff `func_00102da8` (a textured 2D strip) |
+| `LINE|IIP|ABE` | the wave transition (src/screen/wave.c `D_00631620`): 100 horizontal gouraud lines, one per row, shifted by a sine (session 78) |
 
 Session 77 (`dmawalk.py --state`): the `POINT|ABE` this table listed for `func_00106460` is not
 there; `D_002A6AA0` is an untextured `SPRITE` (one RGBAQ, two XYZ2) under `DATE=1 DATM=1`. The
-one `POINT` (PRIM 0) in a run is opdma's `D_0061E8B0` (`func_001aa008`): two of its five A+D
-qwords are left zero, so they write PRIM 0 with no vertex after them, a state write and no draw (a
-port's GIF parser must take A+D to address 0 with value 0 as harmless).
+one `POINT` (PRIM 0) in a run is opdma's `D_0061E8B0` (`func_001aa008`): **three** of its five A+D
+qwords (the 2nd, 4th and 5th; session 77 said two) are left zero, so they write PRIM 0 with no vertex
+after them, a state write and no draw (a port's GIF parser must take A+D to address 0 with value 0
+as harmless). `D_0061E800` is the same packet with `ZMSK=1` (§4.8).
 
 Renderer A's clipped tags use context 2 (`CTXT=1`), so both contexts are live
 and a port must track `*_1` and `*_2` registers separately.
@@ -525,7 +530,9 @@ and a port must track `*_1` and `*_2` registers separately.
 | `ATE ATST=NOTEQUAL AREF=0` | `func_00106460` (PSMT4 UI) |
 | `ATE ATST=NEVER AFAIL=FB_ONLY` | colour-only writes (masks) |
 | `ATE ATST=NEVER AFAIL=ZB_ONLY ZTST=GREATER` | opdma `func_001aaf00` (`D_00373030`): **Z-only writes**, where the new Z is nearer (session 77) |
-| `ATE ATST=GREATER AREF=0 ZTST=GREATER` | opdma's set-up packet `D_0061E8B0` (run time) |
+| `ATE ATST=GREATER AREF=0 ZTST=GREATER` | opdma's set-up packets `D_0061E800` / `D_0061E8B0` (run time; §4.8) |
+| `ATE ATST=GREATER AREF=0`, **`ZTE=0`** (`0x4000D`) | the text windows' and text.c's headers (`D_003F1A70`, `D_003F1E70`, `D_003F2270`) and the wave: no depth test (a port reads `ZTE=0` as `ZTST=ALWAYS`); windows with flag `0x10` then send `D_003F27D0`, the same with `ZTE=1 ZTST=GEQUAL` (session 78) |
+| `ATE ATST=GEQUAL AREF=120 ZTST=ALWAYS`, then `ZTST=GEQUAL` | texspot `func_00175600`: the 256x256 pass into `0x3A0000`, then its composite (§4.8) |
 | `ATE ATST=GREATER AREF=0 ZTST=GEQUAL` | sceneeff `func_00103058`, `func_0010ff60`; `TEST_2` in field.c `func_00100988`, display.c `func_00110ce0` |
 | `TEST_2 ATST=GREATER AREF=16` / `AREF=127` | field.c `func_00100988` / roommdl `func_00114a38` |
 | `ATE ATST=ALWAYS ZTST=ALWAYS` (`0x30003`) | the HUD: every caller of the default environment `func_002370c8` overrides its `TEST_1` with it (§4.7) |
@@ -850,6 +857,8 @@ temporary packets.
   `D_003F2670` / `D_003F2720` / `D_003F27D0`, grideff's `D_002BC270`, mdlgs' `D_00351C40`,
   texspot's `D_0035C4A0` / `D_0035C550`) and **13 are in bss** (the image uploads, `D_00573AC0` /
   `D_00573E40`, wave's `D_00631620`): the host run reads those (4.4) when it reaches them.
+  Session 78: 68 of these 74 sends go to chains an init function builds from constants; the walk
+  now seeds them and reads them whole (§4.8).
 - **The VIF chains are microcode and setup**: mdlgs' `func_0015fc00` table (`D_00351BE0`, 24 entries,
   9 chains) and `D_00277E40` / `D_00278210` are one END tag each holding 1-3 MPG uploads (the VU1
   programs of §2.1) and a few codes; `func_0015f018`'s VIF0 / VIF1 chains and `func_0015f798`'s
@@ -923,6 +932,73 @@ temporary packets.
   Not yet seen: the text windows' chains (they are drawn after the title, which the fake disc does
   not reach): the real disc's run (next-session item 2) gives them.
 
+### 4.8 The run-time chains the C builds from constants, and opdma's set-up packets (session 78, static)
+
+- **Seeds.** 61 of 4.6's sends start at a chain that is zero in the ELF, but most of those chains
+  are not drawn from data: an init function writes the whole packet from constants once and the
+  senders send it as it is. `dmawalk.py` now has a `SEEDS` table (17 chains, each with the
+  function whose C it copies) and writes them over the ELF's bytes before the walk; `--no-seeds`
+  gives 4.6's numbers back. **155 sends: 81 whole, 68 whole from seeds, 0 problems**; still run
+  time: 2 zero (grideff `D_002BC270`, whose transfer size comes from the run; mdlgs `D_00351C40`)
+  and 4 in bss (mdlgs `D_00573AC0` / `D_00573E40`: renderer B's per-frame chains). With
+  `--float` all 149 walked chains are the same chain in the float build. **The seeds were checked
+  against the host build**: under gdb, after the boot ran `func_001f2eb8` and after `call
+  func_001e9670()` / `call func_0020b338()`, every word of the host's packets equals the seed's
+  (the ref tags' ADDR is a host pointer there).
+- **What the seeded chains are.**
+  - `func_001f2eb8` (text.nofill.c) builds the text's headers once: `D_003F1A70` (TEST_1 only,
+    sent by 16 window draws), `D_003F1E70` (TEST_1, TEXFLUSH, `TEX0_1` the window font: PSMT4
+    256x256 at `0x3D7C`, CLUT `0x3DFC`; `TEX1_1 LCM=1` bilinear; 23 senders), `D_003F2270` (the
+    same with `TEX0_1` the message font: **PSMT4HL** 256x256 at `0x1000`, CLUT `0x3FFC`; 9
+    senders: text.c's and wintext's draws), `D_003F27D0` (TEST_1 with Z GEQUAL, for windows with flag
+    `0x10`), and the window font's uploads `D_003F2670` / `D_003F2720` (`func_0011fbb0`: 2048
+    qwords PSMT4 from `D_003E9660`, the CLUT from `D_003F1660`; both in the ELF). The headers'
+    `TEST_1 = 0x4000D` has **`ZTE=0`**: no depth test (ZTST is not used); a port reads it as
+    `ZTST=ALWAYS`.
+  - The message font is the disc's file `D_00490940` (`func_001ef950`): its CLUT to `0x3FFC` and its
+    two halves to block `0x1000` as PSMT4HH and PSMT4HL, i.e. **into the top byte of the Z
+    buffer's words** (the Z buffer is Z24 at `0xE0000`..`0x1C0000`; the top 8 bits are free). Only
+    the HL half is drawn by the static headers; a port uploads both as ordinary 4-bit textures.
+  - The menus' image uploads (`func_0011fbb0` into bss, the pixels from a file the menu loaded):
+    menubg `D_00641080` / `D_00641130` (`func_0020b338`: PSMT8 104x56 at `0x3600`, CLUT `0x3640`),
+    config `D_00642D30` / `D_00642DE0` (`func_00219500`: PSMT8 138x88, CLUT `0x3680`), journal
+    `D_00642EB0` / `D_00642F60` (`func_0021d188`: PSMT8 256x256, CLUT `0x3700`) and
+    `D_00643290` / `D_00643340` (`func_0021e120`: PSMT8 64x64, CLUT `0x3680`). The seeds give the
+    pixels' source as a stand-in address the walk reads as run-time data.
+  - The wave transition (`func_001e9670`, src/screen/wave.c): a cnt tag of 404 qwords, `TEST_1`
+    `0x4000D`, `ALPHA_1 (Cs-Cd)*As+Cd`, then a GIF tag `LINE|IIP|ABE` with RGBAQ + XYZF2 x 200:
+    100 lines, one per row (Y 2098+i), X from 1928+v to 2168+v where `func_001e9418` moves v along
+    a sine each frame and fades the two colours' alpha (`D_003DD308` / `D_003DD30C`, 0..112).
+  - texspot (`func_00175708` writes only the tags, QWC 10 and 16, over packets the ELF holds;
+    `func_00175600` sends them around a renderer B draw `func_0015fa20`): `D_0035C4A0` points
+    the target at the off-screen buffer `0x3A0000` (FBW 256, `XYOFFSET` 0,0, scissor 256x256,
+    `ATST=GEQUAL AREF=120`, Z off and not written); `D_0035C550` then draws a PSMT8 64x64 sprite
+    (`0x3600`, CLUT `0x3700`, `TFX=DECAL`) and composites the `0x3A00` CT32 256x256 texture with
+    `REGION_CLAMP` 1..255 into the 3D target (`XYOFFSET` 1792,1856). Its `ZBUF_1` / `FRAME_1`
+    (+0xF0 / +0x100) and the sprite corners come from the run (the object's own target and the
+    spot's position), so the walk lists the ELF's placeholders (the default `0x1A0000` / Z24).
+- **The state list with the seeds**: 23 registers, 115 distinct values (from 18 / 87). New:
+  `XYOFFSET_1` (0,0 and 1792,1856), `PRIM LINE|IIP|ABE`, four `TEX0_1` (the two fonts, texspot's
+  sprite and its `0x3A00` read), `TEX1_1 LCM=1`, `CLAMP_1 REGION_CLAMP 1..255`, three `TEST_1`
+  (the `ZTE=0` header, texspot's two), `FRAME_1 0x3A0000` FBW 256, a 256x256 scissor, and the
+  transfer registers (`BITBLTBUF` 7, `TRXREG` 5, `TRXPOS` / `TRXDIR` 1 each).
+- **opdma's set-up packets** (`func_001a9eb8`, next-session item 4a of session 77). The insert
+  functions' count (`func_001aa6b0` / `func_001aa700`'s `qwc`) **includes the DMA tag**: the tag's
+  QWC is `qwc - 1`. So `func_001a9f88`'s `7` sends the tag's 6 qwords, a GIF tag (NLOOP 1, EOP,
+  5 A+D) and its 5 A+D qwords, exactly as `func_001aa008`'s END tag of QWC 6 does: **no 7th
+  qword goes and nothing runs short**. The 5 A+D are PRIM 0, `ZBUF_1`, PRIM 0, PRIM 0, `TEST_1
+  ATE ATST=GREATER ZTE ZTST=GREATER` (`0x7000D`); `D_0061E800` has `ZBUF ZMSK=1` and heads list 1
+  at priority 0, `D_0061E8B0` has `ZMSK=0` and goes last in list 3 at priority 15, so each frame
+  the draws queued in the three lists (sent by pppobj's `func_001aa650`) go without writing Z and
+  the end restores Z writes;
+  `func_001aa008` sends `D_0061E8B0` alone to restore them. The words `func_001a9eb8` writes after
+  the 5th A+D (`TEX1_1` `0x21`: LCM, bilinear magnify; `TEXA` TA1 128; `CLAMP_1` REPEAT, at
+  +0x70..+0x9F) **are never sent and never read** in the main ELF: the readers are the VU0 draw
+  routines (src/asm/vu0_render_2.s: the `ZBUF` qword at +0x30 and the `TEST` qword at +0x60, copied
+  into their own packets), keshpdtt (+0x60), ryjkekoto (+0x30) and `func_001aaf30` (+0x60). The
+  three zero A+D qwords are never written. Checked on the host: gdb's dump of both packets after
+  the boot matches this word for word.
+
 ## 5. Mapping to a modern API
 
 For a Vulkan/GL-class backend (the Vita's GXM has the same concepts).
@@ -963,6 +1039,51 @@ interrupt-driven executor becomes a plain loop.
 | End-of-frame copy 384 -> 448, fade `D_002BC070`, flashes | final full-screen pass: scale to the window, multiply by the fade colour, add the flash quads |
 | Interlace/field mode, DISPLAY offsets | ignore; present progressive frames |
 | `sceGsSyncPath` busy-waits | remove (single-threaded command replay) |
+
+### 5.1 The GS register file the port keeps (session 78, draft)
+
+The game writes GS registers as **state**, not with each draw: the HUD sends a whole environment
+before it draws (§4.7), the text windows send a header and then sprites, opdma's set-up packet
+heads the frame's lists (§4.8). So the port's GIF parser keeps a register file, updated by every
+A+D / PACKED / REGLIST write and the GIF tag's PRE, and turns each vertex kick into a draw with the
+state as it stands. Which registers it keeps, from every value the static chains, the seeds (§4.8),
+the fake-disc run (§4.7) and the session 15 dump (§3.3) write:
+
+| Register | Kept | Values seen | What the port does with it |
+| --- | --- | --- | --- |
+| `PRIM` | one (CTXT bit selects the context) | `TRISTRIP` / `TRIFAN` / `SPRITE` / `LINE` with IIP, TME, FGE, ABE, FST, CTXT2 | primitive and vertex format; a PRIM write restarts the vertex queue; PRIM 0 with no vertex is harmless (opdma) |
+| `PRMODECONT`, `PRMODE` | dropped | `PRMODECONT=1` always; `PRMODE` never written | PRIM's attribute bits always rule |
+| `RGBAQ`, `ST`, `UV`, `XYZ(F)2/3`, `FOG` | the vertex being built | | vertex attributes (RGBA 0x80 = 1.0; ST/Q; XY 12.4 minus XYOFFSET) |
+| `FRAME_1` / `FRAME_2` | per context | FBP `0x000` CT24, `0x8C` CT24 640, `0xD0` CT32 (3D target), `0x1B0`, `0x1D0` FBW 256 (off-screen), `0x1F0` FBW 64, `0x70` (Z area as colour); FBMSK 0, `0xFFFFFF`, `0xFF000000` | selects the render target (§3.1's addresses map to GPU targets); FBMSK to the colour write mask |
+| `ZBUF_1` / `ZBUF_2` | per context | ZBP `0x70` Z24 (and `0x0` once); ZMSK 0/1; Z16S `0x380000` in the shadow pass (§3.3) | depth target and depth write |
+| `TEST_1` / `TEST_2` | per context | 11 + 4 values: ATST ALWAYS/NEVER/GEQUAL/GREATER/LESS/NOTEQUAL, AREF 0/16/120/127/128, AFAIL KEEP/FB_ONLY/ZB_ONLY, DATE/DATM, ZTE 0/1, ZTST ALWAYS/GEQUAL/GREATER | alpha test as a shader discard against AREF/128; AFAIL as write masks on the failing fragments (two draws where it is not KEEP); DATE as stencil; ZTST to the depth function (ZTE 0 = ALWAYS) |
+| `ALPHA_1` / `ALPHA_2` | per context | five equations (§3.2 ALPHA), FIX 0 / 128 | blend state (§5's rows); keep A/B/C/D and FIX as a key |
+| `TEX0_1` / `TEX0_2` | per context | 24 static values (CT32, CT24, PSMT8, PSMT8H, PSMT4, PSMT4HL); `TEX0_2` only from the model data | the texture key (TBP0, TBW, PSM, TW, TH, CBP, CPSM, CSA) into the decoded-texture cache; TCC / TFX to the shader; CLD decides when the CLUT is (re)read |
+| `TEX1_1` / `TEX1_2` | per context | MMAG/MMIN 0 or 1; LCM 0/1; MXL 0 everywhere | sampler filter; no mipmaps (drop LCM, MXL, L, K, MTBA) |
+| `TEX2_1` / `TEX2_2` | into TEX0's CLUT fields | the HUD's environment only (PSMT8, CBP 0, CLD 1) | a CLUT change without a texture change |
+| `CLAMP_1` / `CLAMP_2` | per context | REPEAT, CLAMP, REGION_CLAMP (U 1..255, 0..510, the atlas windows of §3.3), REGION_REPEAT (mask 255) | sampler wrap for REPEAT / CLAMP; REGION_* in the shader (clamp or mask the texel coordinate) |
+| `XYOFFSET_1` / `XYOFFSET_2` | per context | (1792, 1856) main; (0, 0) texspot's 256 pass; 1920 the shadow pass | subtracted from vertex XY before the viewport transform |
+| `SCISSOR_1` / `SCISSOR_2` | per context | 20 values (512x384, 512x448, 640x448, 256x256, sceneeff's 16 strips) | scissor rectangle |
+| `FOGCOL` | one | per draw (renderer B), rgb (16,112,128) in display.c | fog colour uniform |
+| `TEXA` | one | TA0/TA1 128/0, 0/128, 128/128; AEM 0 | the alpha a CT24 (TA0) or CT16 texel gets; apply when decoding or as a uniform |
+| `TEXCLUT` | dropped | never written; CSM 0 everywhere | |
+| `SCANMSK` | dropped | 0 only | |
+| `DTHE`, `DIMX` | dropped | DTHE 0 (dither off) | |
+| `COLCLAMP` | dropped | 1 (clamp): what a UNORM target does | |
+| `PABE`, `FBA_1` / `FBA_2` | dropped | 0 | |
+| `MIPTBP1_x` / `MIPTBP2_x` | dropped | 0 (no mipmaps) | |
+| `TEXFLUSH` | dropped | 0, after each upload | the texture cache is invalidated by the upload itself |
+| `BITBLTBUF`, `TRXPOS`, `TRXREG`, `TRXDIR` + IMAGE | one transfer state | host->local only; DBP the slots of §3.1, PSMCT32 / PSMT8 / PSMT4 / PSMT4HH / PSMT4HL | an upload: write the pixels into a 4 MB model of GS memory (swizzled per PSM), and drop the cached textures it overlaps |
+| `SIGNAL`, `FINISH`, `LABEL`, `HWREG`, `TRXDIR` local->host | not seen | | |
+
+GS memory itself has to be modelled, not just the uploads: the game reads its own targets back
+as textures (the 3D target `0x1A00` for the frame copy and post effects, the shadow / texspot
+buffer `0x3A00`, the Z area drawn as colour at `0x0E00`), and packs the message font into the Z
+buffer's top byte (PSMT4HL / HH at `0x1000`). The port maps each FRAME / ZBUF range to a GPU target
+and resolves a TEX0 that lands in one to that target's texture; any other TEX0 decodes from the
+memory model through the cache. Still to confirm on a run: the text windows' sprites (their
+packets are built per draw in a scratch buffer, `func_00122048`), renderer A's mesh chains, and
+whether an overlay writes registers this table drops (dktitle.x).
 
 ## 6. Open questions
 
