@@ -133,7 +133,7 @@ frame parity `D_00351BD0`):
 | --- | --- | --- |
 | 0-3 | object matrix (arg of `func_00107ec0`; per object via `func_00108be8`/`func_00108c58`) | local -> world |
 | 4-7 | `D_002BC170` (4x4 s32 block) | qw4.w / qw5.w = fog coefficients A, B (P2, P3, P7); qw6 = RGBA scale (P0-P4, P6, P7; P5 uses it as the flat colour); qw7 unused? |
-| 8-11 | `D_002BC020` | world -> clip (frustum-normalised: `CLIPW` against w) |
+| 8-11 | `D_002BC020` | world -> clip (renderer A's guard box, 1636 x 303 GS pixels about the centre, not the 4:3 screen; session 90, §5.4: `CLIPW` against w) |
 | 12-15 | `D_002BBF60` | clip -> GS screen (viewport, Z scale, `XYOFFSET` centring) |
 | 16-31 | `D_002A3F60[4]` | UV-scroll offsets; P3 reads `qw(15+n).xy` for vertex flag n (inferred: 16 material slots, 4 per matrix) |
 | 32-33 | `D_00494BC0` rows | P6 point light: qw32 = position (xyz) and radius (w), qw33 = colour |
@@ -1433,7 +1433,7 @@ each frame and an `end` tag (`D_0047A1D0` / `D_00472150`'s first qword) after th
 | 3 | `D_0047E220` / `D_00482260` | `func_00107c48`: every visible cell with a mesh B | table index 3 = **P3** (env map / UV scroll), **50000** | static **`REF 2 -> D_004862B0`**: `STCYCL 1,1; UNPACK V4-32 1 -> @0 +TOPS` of the GIF tag `TRIFAN|IIP|TME|FGE|ABE|CTXT2` (`0x313EC000`, NLOOP 5, REGS `0x412`), `MSCNT`: the clipped-output template with fog, not the map's | the cells' second layer, translucent |
 
 `func_00107548` (key 10020's setup, every frame) culls the cells: a cell whose group bit is not in
-`D_002BCC98` gets state 0 (hidden); otherwise `func_00107ab8` (the camera test, not read here) gives class 0,
+`D_002BCC98` gets state 0 (hidden); otherwise `func_00107ab8` (the camera test, read in session 90, §5.4: the cell's 8 box corners against the 4:3 frustum `D_002BBFE0`, far plane = the fog far) gives class 0,
 1 or culled (state 0). A visible cell gets state 2, or 1 once its mesh A tag went into chain 0 or 1.
 **`func_00107c48` (case 3) then walks the same cells: every cell with state non-zero (1 or 2: so a cell with
 no mesh A can still have a B layer) whose entry has a mesh B tag gets state 3 and its B tag in chain 3's
@@ -1926,7 +1926,7 @@ the **512 x 384 3D target** (FBP `0xD0`), with the target's top left at `(0x7000
 | The field text, the value selector | the same, own static chains (§4.10) | fldtext.c `func_0010c540` area, selector.c |
 | HUD sprites, gauges, arcs, needles | `pos * 16 + 0x7000 / 0x7400` | ui.c, gauge.nostrict*.c, prim.nostrict*.c |
 | Notices, banners, pop-ups | pixels from layout tables (`D_00458548`, `D_00469C94`) through the same offset | notice.c, banner.c, popup.c |
-| Markers on 3D things (lock-on, target gauge, damage numbers, objects' name windows) | a 3D point through `D_002E26C0` (view-screen) to GS units, then `- 0x7000 / 0x7400` (hudmath.c `func_00249558`) or `>> 4 - 1792 / 1856` (objwin.nostrict.c) | hudmath.c, objwin.nostrict.c, gauge.nostrict.c |
+| Markers on 3D things (lock-on, damage numbers, labels, marks over actors, objects' name windows; **not** the target's gauge, a fixed top-left part, §5.3.1) | a 3D point through `D_002E26C0` (view-screen) to GS units, then `- 0x7000 / 0x7400` (hudmath.c `func_00249558`) or `>> 4 - 1792 / 1856` (objwin.nostrict.c) | hudmath.c, objwin.nostrict.c, marker / dmgnum / lblnum / actmark / partymark |
 | Menu backgrounds, the journal, the pointer, list menus | the same offsets | menubg, journal_s*, journalfx, pointer, listmenu |
 | Full-screen passes: the clear (`D_002A6500`), the fades, flash, letterbox, blur, sway, lens grid, spin | the whole 512 x 384 (or its half, 256 x 192, for the menu blur's capture) | brightfade.c, sceneeff.c, §4.16 / 4.17 |
 
@@ -1961,20 +1961,22 @@ bars of 117 / 118 pixels.
    small (18-pixel cells, a 256 x 256 sheet): bilinear at 1.42 is soft but readable; a later step can
    swap in a higher-resolution font sheet keyed by the same cells.
 2. **Option: a wide 3D view with the HUD anchored** (after the real-disc run). The 3D gets a hor+
-   projection over the whole 960 x 544: narrow the x row of the clip matrix `D_002BC020` and widen the
-   viewport `D_002BBF60` (both built in `func_00110618`, still a non-match; in the port a wrapper after
-   it). The CPU culls that use the clip matrix (renderer B's visibility, `func_00121000`'s guard-band
-   test) widen with it; **renderer A's grid visibility (`func_00107548`) and any cull with its own
-   constants must be checked first**, or the sides pop in. The 2D stays in the 4:3 canvas (scale 1.4167,
-   centred at x 117), except:
+   projection over the whole 960 x 544. *Corrected in session 90 (§5.4):* the projection
+   (`D_002E26C0`, `D_002BBF60` x `D_002BC020`) stays as it is (hor+ keeps the vertical view, and the wide
+   view, GS x 1709-2387, is already inside renderer A's guard box `D_002BC020`); **no CPU cull reads
+   `D_002BC020`**. The culls (the grid's `func_00107548`, props, actors, shadows, ppp effects, the party
+   warp) all test the 4:3 frustums `D_002BBE60` / `D_002BBEE0` (as `D_002BBFA0` / `D_002BBFE0`), so one
+   constant in `func_00110618` (the x 320, still a non-match; in the port its C) widens them together;
+   the markers and objwin have their own 4:3 bounds (port-side constants). `func_00121000` is not a cull.
+   The 2D stays in the 4:3 canvas (scale 1.4167, centred at x 117), except:
    - the **full-screen passes** (clear, fades, flash, letterbox, the blur, sway, lens grid and spin
      copies) cover the whole 960 x 544;
-   - **markers over 3D** (hudmath.c, objwin.nostrict.c, the target gauge) come out of the wide projection
+   - **markers over 3D** (hudmath.c, objwin.nostrict.c; their hide-off-screen bounds widened, §5.4) come out of the wide projection
      in canvas units below 0 or above 512 at the sides, which the centred canvas map already places right:
      they must *not* be anchored or clamped;
    - **HUD elements are anchored to an edge**: a table kept by the port (not in the game code) of the HUD
-     drawers and the side they keep, moving left-anchored ones by -117 and right-anchored by +118 canvas
-     pixels x 1.4167. The rule to start from: an element whose rectangle lies in the left third goes left,
+     drawers and the side they keep, moving left-anchored ones by -82.8 and right-anchored by +82.8 canvas
+     pixels (117 / 118 Vita pixels; first draft in §5.3.1). The rule to start from: an element whose rectangle lies in the left third goes left,
      the right third right, the rest centred (the HP / MP gauges, the command menu, the party gauges, the
      notices' layout tables). The real-disc run's draws (`gsstate.py --draws`) list the rectangles;
    - the **menus and text windows** stay in the centred canvas (a full-screen menu shows the 3D's wide
@@ -1983,6 +1985,179 @@ bars of 117 / 118 pixels.
 3. Rule 7 (frame-time) and the PS2's overscan: the original HUD sits inside a TV's safe area, so on the
    Vita's fully visible screen it looks inset; the anchoring of step 2 is the place to move it outward if
    wanted.
+
+#### 5.3.1 The HUD's anchor table (session 90, static, first draft)
+
+Every gameplay HUD part in src/hud draws ui.c sprites (`UiSpr`, 0xC0 bytes) out of **sprite files linked into
+the ELF's .data** (`D_0044A830` ... `D_00469CA0`, `func_0024aac8` fixes their offsets at set up). A sprite's
+rectangle is in **target pixels**, and `func_0024a6b8` turns it into `(x << 4) + 0x7000`, `(y << 4) + 0x7400`;
+each drawer then adds its own origin `(dx << 4, dy << 4)` to the four vertices (`func_00243380` notice,
+`func_00248798` banner, `func_00243c10` pop-ups, `func_0023d700` gauges, `func_00246570` target gauge,
+`func_00244968` counter). So **a part's screen rectangle = its sprites' rectangles + the drawer's origin**,
+and both are readable without a boot. The values below were read from the ELF's words (a small reader of
+the program headers; nothing written to the repo). Rectangles are the sprites' rest keys (the last key of
+track c); the open / close animations slide them 4-64 pixels from there.
+
+The rule (§5.3 step 2): x0 >= 341 right, x1 <= 171 left, else centre; y split the same way (128 / 256).
+Where a rectangle straddles a line but grows from one edge, the side it grows from is proposed (marked).
+In 960 x 544 with the 4:3 canvas at scale 1.4167 a left-anchored part moves by **-82.8 target pixels**
+(117 Vita pixels) and a right-anchored one by **+82.8** (118).
+
+| Element | Drawer | Position source | Rectangle (512 x 384) | Anchor |
+| --- | --- | --- | --- | --- |
+| Sora's HP / MP gauge (round, kind 0) | gauge.nostrict.c `func_00241260` (frame), `func_0023f688` / `func_0023e160` (arcs), `func_0023d7e8` (needles), `func_00242c08` (face) | base `D_00454600[0]` = (443, 316) + frame-size offset `D_00454650[unk94]` = (24, 24) / (0, 24) / (0, 0) (`func_0023d490` picks it from the maxima); sprites `D_0044A830` (39) in absolute pixels | (360, 257)-(503, 375) at the largest size; +24 / +24 at the smallest | right, bottom |
+| Party gauge 1 (kind 1) | the same, sprites `D_0044C5A0` | `D_00454600[1]` = (399, 44) + `D_00454680[0]` = (0, 0) | (363, 9)-(435, 79) | right, top |
+| Party gauge 2 (kind 2) | the same | `D_00454600[2]` = (399, 44) + `D_004546C0[0]` = (68, 20) | (431, 29)-(503, 99) | right, top |
+| Kind 3 gauge (f32 values, `func_00241c00`, no main-ELF caller: an overlay's) | `func_002410b8`, sprites `D_0044F4D0` | `D_00454600[3]` = (443, 68) + `D_00454700[unk94]` = (0, 0) | (363, 9)-(503, 127) | right, top |
+| World map's gauge (kind 4, `tt_gaugeWorldmap` `D_00454A20`) | `func_00240fa0`, `func_00240400` (parts by `D_00454A20.mode`), sprites `D_00451040` (69) | `D_00454600[4]` = (443, 316) + `D_00454650[unk94]` | (334, 257)-(503, 375) | right (grows left past 341), bottom |
+| Command menu, top list | cmdmenu.c `func_0023a968` -> cmdmenu.nostrict.c `func_0023bb98` | constants (16, 260); rows `y + 20 + 22 i`; sprites `D_004409A0` (100 wide) | (16, 260)-(116, 280 + 22 n), n = 4: to 368 | left, bottom |
+| Command menu, sub lists 1-4 (`D_00650120[1..4]`, `[6]` = `D_00650C00`) | the same | parent x + 11; y parent + 22 / + 44 / + 22 * cursor, or `348 - 22 n` when it would pass 369 | x 27-164 (`D_00443180` 112 wide), y up to 368 | left, bottom |
+| Command menu, kind 5 frame | cmdmenu.nofill.c `func_0023a608` | constants (16, 282); `D_00448FA0` 110 x 86 | (16, 282)-(126, 368) | left, bottom |
+| The "obtained" notice (most likely) | notice.c / notice.nostrict.c `func_002436c0`, `func_00243508` | constants (160, 344); sprites `D_00454A40` / `D_00455A10` (in), `D_004569E0` / `D_004577D0` (out); text at + sprite 0's (5, 0) + `D_00458548` (71, 4) | (160, 344)-(366, 368); text from (236, 348) | centre (straddles 171), bottom |
+| The banner | banner.c `func_00248b58`, `func_002489c8` | constants (160, 344); sprites `D_00467410` (open), `D_00468220` (close), `D_00468E10` (kind 1); text + (5, 0) + `D_00469C94` (55, 4) | (160, 344)-(334, 368); text from (220, 348) | centre, bottom |
+| Party pop-ups (title + n lines) | popup.nostrict.c `func_00244298` -> `func_00244188` -> popup.c `func_00243ef8` | constants: columns from (16, 16), 200 apart, 16 lines a column; lines 20 then 22 apart; sprites `D_00458560` (13) | column 1 (16, 16)-(208, 368); column 2 x 216-408; column 3 x 416-608 (off the target) | left, top (the stack grows rightwards) |
+| Target's gauge | tgtgauge.c `func_00246750` | constants x 16, y 24 / 65 / 80 (`func_002485f0`: time / score shown) + 28 with the sign; sprites `D_0045D6E0`; bar width `max / 2` (<= 150) + 44 | (16, 24)-(<= 210, 37) at y 24 | left (grows right), top. **Not projected** |
+| The sign over it (lock-on name plate? guess) | marker.nostrict_nofill.c `func_0023cb30` | constants (16, 24 / 65 / 80); sprites `D_00449990` by lists `D_0044A800` (8, 9, 10) / `D_0044A810` (5, 6, 7) | (16, 24)-(128, 48) | left, top |
+| Munny counter (most likely: prize.nostrict.c calls it) | counter.nostrict.c `func_00244be0` | constants (25, 238); digits 13 apart, then the frame; sprites `D_00459D40` | (25, 238)-(~150, 258) for 5 digits | left, bottom (above the command menu) |
+| Minigame time / score | timer.c `func_00248140`, timer.nostrict.c `func_00248238` (icon) | the caller's `MgHud` x / y (overlay) + absolute sprites `D_00466180` / `D_004667B0` / `D_00466DE0` (frames), `D_00465FD0` (score); texts at constants (69, 22), the record 43 lower; icon (12, 15) 64 x 64 | (0, 15)-(243, 78) with x / y 0 | left, top |
+| Two-sprite one-shot (class1a.nostrict.c starts it) | oneshot.c `func_00249010` | absolute sprites `D_00469CA0` | (131, 284)-(195, 302) | centre by the rule; left (next to the command menu) is a guess |
+| Lock-on mark, actor markers | marker.nostrict_nofill.c `func_0023c270` / `func_0023c5c8` | actor point -> `func_00237a48` (`D_002E26C0`) -> `func_00249558`, centred | projected | **not anchored** |
+| Damage / heal numbers | dmgnum.nostrict.c | the same projection | projected | not anchored |
+| Labelled numbers | lblnum.nostrict.c | the same | projected | not anchored |
+| Marks over an actor / the party | actmark.nostrict.c, partymark.c | 54 pixels above the projected point 0x8004 | projected | not anchored |
+| Objects' name windows | objwin.nostrict.c | projected (§5.3) | projected | not anchored |
+| System-message band | §4.15 | its own 512 x 128 display | full width | centred, 4:3 |
+
+Not found in the main ELF: **a minimap** (KH1 has none); **the Trinity prompt** (trinity.c draws no 2D: its
+marks are 3D, the HUD part may be in the code loaded at `D_00F20000`); **a separate action prompt**: TRIANGLE
+sets `D_002E3168 |= 1` and no HUD file draws a prompt of its own, so the action command most likely shows as
+a row of the command menu's top list (as on the disc's screens; a guess). An **HP-orb counter**: none; the
+counter above is the only one. The top list's title sprite has two sets (`D_00449530`, `func_0023a8d0`) picked
+by `D_002C5958` bit 0, the battle flag sound-spec reads: the battle / field look of the same rectangle.
+
+**Corrections to §5.3's table**: the target's gauge is a fixed top-left part (tgtgauge.c), not a marker over
+3D: anchor it left. gauge.nostrict.c projects nothing (`func_00249820` is a copy of the centre, for the
+party's faces one pixel higher); its rectangles are fixed.
+
+**The sprite file** (`UiFile`, include/hud/ui.h): +0x8 the sprites' offset, +0xC their size (n x 0xC0), +0x10
+/ +0x18 / +0x20 the keys of tracks a (0x20 bytes: frames, pad, four f32 colour), b (0x50: four colours), c
+(0x20: frames, pad, **x, y, w, h as f32**). A sprite: +0x0 `r` = x, y, w, h (s32 pixels), +0x10 `t` = u0, v0,
+u1, v1 (texels, u0 > u1 mirrors), +0x20 four RGBA, +0x60 flags (4 / 0x10: rect track; 2 / 8: colour; 0x40 /
+0x80: four colours), +0x64 / +0x78 / +0x8C the tracks (time, key, count, key index, flags). Notice and banner
+keys end in a negative frame count (-6 / -10: the hold key). Not identified: the words at +0x0 / +0x4 / +0x14 /
++0x1C of the header (+0x0 is 0 in all files read), and why `D_0045D6E0` sprites 11-13 are 2-4 pixels wide (end
+caps, a guess). The index lists (`D_00458520`, `D_00469C20`, `D_00459C50`, `D_0044A800`, ...) are s32 sprite
+numbers ended by -1, read by `func_0024afc0` / `func_0024af40`.
+
+**The gauge tables** (data_0045.s, 16-byte entries x, y, 0, 0 or 1): `D_00454600[5]` the kinds' bases (the
+arc centre is base + offset, `func_00240b68`: `unk80 = (p1 + p2) * 16 + 0x7000 / 0x7400`); `D_00454650[3]`
+kind 0 / 4's offset by frame size; `D_00454680[4]` / `D_004546C0[4]` the party's offsets (only [0] read:
+(0, 0), (68, 20); [1..3] = (12, 0), (12, 0), (24, 0) / (68, 20), (80, 20), (80, 20) unused in the main ELF);
+`D_00454700[3]` kind 3's (zero). `D_00454730` / `D_00454780` / `D_004547C0` (5 / 4 / 4 entries) are the arcs'
+**texture centre (u, v) and half side in 1/16 pixels** (`func_0023d208` puts the fan's square at centre +-
+z): Sora's 45-59 pixels, the party's 26-35. `D_00454820` ... `D_004549E0` are the needles' corners (x, y and
+u, v pairs). `D_00454A20` (`tt_gaugeWorldmap`: mode, barrier, scale, two values) is zero in the ELF.
+
+**What the real-disc run must confirm** (`KH1_HOST_TRACE=5`, a field, a battle with lock-on and a pick-up,
+the world map, a minigame): `gsstate.py --draws` lists draw states, not rectangles; it needs **a per-chain
+vertex extent** (min / max of XYZ2 minus `0x7000 / 0x7400`, >> 4, per sending function: the HUD's sends all
+go from `D_00351E10`, so the key is the drawing environment sent just before: `D_00651C00` gauges,
+`D_00655F80` notice, `D_006694B0` banner, `D_006562C0` pop-ups, `D_00668120` target gauge, `D_006510A0` sign,
+`D_0065FB30` counter, `D_00669070` timer, `D_006697C0` one-shot, `D_00648790` / cmdmenu's for the menu). Then:
+each rectangle above against the drawn one; the party gauges really at the top right (the data say so);
+which frame size Sora's gauge uses early on; what the banner, the sign, kind 3 and the one-shot show; the
+timer's `MgHud` x / y; whether a pop-up column 3 is ever reached; the face pictures' sizes (TIM2 from the
+disc, centred on the arc centre); and that no gameplay 2D part draws from an overlay outside this table.
+
+### 5.4 The culls under a wider view (session 90, static, draft)
+
+Read from the C, from `func_00110618`'s disassembly (still a non-match; nonmatchings/session6/w6_02 has the
+same maths) and from `func_0024edf0` (src/asm/text_0024e0a4.s, C twin in host/port/asm_c.c). Renderer-spec 5.3
+step 2. **No CPU cull in the main ELF uses `D_002BC020` or `D_002BBF60`.** The culls use two other outputs
+of `func_00110618`, which are the exact 4:3 screen frustum.
+
+**The six matrices** (`func_00110a48`, display.c:281: `func_00110618(BBE20, BBE60, BBEA0, BBEE0, BBF20,
+BBF60, scrz = D_004F7650, ax 0.8, ay 0.84, cx 2048, cy 2048, zmin 1, zmax 16777000, near 1, far 4e8, fog far
+D_004D90F8)`; `D_004D90F8` is `camS.a[1]`, display.c:343). A point at view `(X, Y, Z)` lands at GS pixel
+`2048 + 0.8 scrz X / Z`, so the 512-pixel width is `|X / Z| <= 320 / scrz` and the 384 height is `|Y / Z| <=
+229 / scrz` (0.84 x 229 = 192.4).
+
+| Output | Built as | Half-extent at scrz (GS px) | World product (display.c:298-301, view.c:152-155) |
+|---|---|---|---|
+| `D_002BBE20` | view -> screen, far 4e8 | (projection) | `D_002E2740` = it; `D_002E26C0` = it x view |
+| `D_002BBE60` | view -> clip, `scrz/320`, `scrz/229`, far 4e8 | 320 x 229 (256 x 192: **the 4:3 screen**) | `D_002BBFA0` |
+| `D_002BBEA0` | view -> screen, fog far | (projection) | none (only saved / restored) |
+| `D_002BBEE0` | view -> clip, `scrz/320`, `scrz/229`, fog far | 320 x 229 (**the 4:3 screen**) | `D_002BBFE0` |
+| `D_002BBF20` | view -> clip, `scrz/2045`, `scrz/360.5`, far 4e8 | 2045 x 360.5 (1636 x 303 px: a guard box) | `D_002BC020` (renderer A VU 8-11) |
+| `D_002BBF60` | clip -> screen: x 1636, y 302.8, +2048 | | renderer A VU 12-15 |
+
+So `D_002BC020` is renderer A's guard-band box, already 6.4 times the screen's half-width. It is not a
+frustum, and no CPU test reads it.
+
+| Cull | Where | Test | Frustum source | Under hor+ |
+|---|---|---|---|---|
+| Grid cells (renderer A) | `func_00107548` grideff.c:353 -> `func_00107ab8` hand/vu0.c:7; from field.c:338 `func_00100988` | each cell's 8 box corners (its 128-byte record in map section 1, `src->e[i]`) times `D_002BBFE0 x D_0029B280`, `VCLIPW`: culled when all 8 are outside one x / y / near plane (`0x2F`); class 1 (P2, fogged) when a corner is past the fog far plane (`+z`), else class 0 | `D_002BBFE0` = 4:3 side planes. No cone, no table, no distance except the fog far plane | **pops in at the sides.** Widen with the shared constant change below |
+| Props / room models | `func_00114a38` roommdl.c:120 (from `func_001369e8` objdraw.nostrict.c:366) | 8 corners from the model header times `D_002BBFA0 x D_0029B280`, `func_0024edf0`: drawn when it is 0 | `D_002BBFA0` | pops in; the same change |
+| Actors (renderer B) | `func_00135bb0` objvis.nostrict.c:46, from `func_001368e8` / `func_00136ab8` objdraw.c:74/95, `func_00136768` objdraw.nostrict.c:329 | box `func_00135a68(x410 radius, x414 height)` times `D_002BBFA0 x` the actor matrix, `func_0024edf0`; always visible when `x370` bit 49 is set; hidden when bit 45 is set and the scale is 0. A pass sets `x370` bit 35 ("drawn") | `D_002BBFA0` | pops in; the same change. Bit 35 also drives gameplay (below) |
+| Guard flag `0x100` (P18) | `func_00121000` vecutil.c:124, from `func_00136428` objdraw.nostrict.c:305 | all 8 corners `w >= 1` and inside 0..4095 after `D_002E26C0`: the box needs no VU clipping. **Not a visibility test** | `D_002E26C0` (GS range) | none |
+| Renderer B per-triangle | P11-P17 on VU1 (§2.3), matrix `D_002E26C0` from `func_001621e0` objdraw.nostrict.c:313 | reject / clip against qw 7 `(2048, 2048, 1/512, 1/384)` | its own (header chain `0x00272CF0`) | the visible edge sits 339 px out, inside the 512-px band. The port clips in hardware (§5 table), so none |
+| Shadows | `func_00127c20` shadow.nostrict.c:226/277 | 8 corners of the shadow's world box, `func_0024edf0(D_002BBFA0)` | `D_002BBFA0` | pops in; the same change |
+| ppp effects | `func_001812d0` pppsys.c:544, from `func_00181738` pppsys.nostrict.c:304 and `func_00181b30` pppsys.c:696 | 8 points at `e->x8C` times `D_002BBFA0 x D_00615E70`; `x90 = 255` off-screen: not drawn, and **not updated** when `own->xf8` | `D_002BBFA0` | effects at the sides vanish or freeze; the same change |
+| Party warp | `func_00169f28` partyctl.c:197/177 | picks the nearest leader trail point `D_00575090[i]` whose box is **off** screen (`func_0024edf0 != 0`) and has a clear line, then moves the member there | `D_002BBFA0` | a member would appear inside the wide sides; the same change |
+| Markers (lock-on, target sign, damage numbers, labels, party marks) | `func_00249580` hudmath.c:94, from marker.nostrict_nofill.c:64/92, actmark.nostrict.c:87, lblnum.nostrict.c:73, dmgnum.nostrict.c:86, partymark.c:104 | `sceVu0ClipAll` of the point through `D_002E26C0` against `D_00469F90 = (1792, 1856, 0, 1)` .. `D_00469FA0 = (2304, 2240, 0, 4e8)`: hidden unless on the 512 x 384 | own data constants (the 4:3 screen in GS px) | **port-side constant**: x 1709.2 .. 2386.8 |
+| Object windows' tail | `func_0010b390` objwin.nostrict.c:283/326-329 | `RotTransPers(D_002E26C0)`, then `>> 4 - 1792 / 1856`; `f6 = 1` when x < 0, x > 512, y < 0 or y > 384 | own constants (canvas px) | **port-side constant**: x -82.8 .. 594.8. `f6` picks the tail sprites `func_0010a5d0` draws (guess: the tail of a speaker who is off screen) |
+| Draw-list / prim / kekoto triangles | `func_00237548`, `func_002378c8` drawlist.nostrict_nofill.c:20/119, prim.nostrict.c:41, ryjkekoto.nostrict.c:332, `func_00121120` vecutil.c:146 | `sceVu0ClipScreen`: inside the 4096 x 4096 GS range, w > 0 | GS range | none |
+| Lock-on choice | `func_0012f3d0` / `func_0012f218` cmdmenu.nostrict.c:755/703; cycling `func_0012f5c0` / `func_0012f690`; R1 `func_0012f700` | distance minus radius (1200 cap for spawn flag `0x1000`), kind priority `D_002E319C`, line of sight `func_0012f0f8`: from the camera eye `D_002E2780` when the target's `x370` bit 35 (drawn) is set, else from the player | no screen, cone or FOV test; only bit 35, the actor frustum's result | none beyond step 1 |
+| Action target / lock loss | `func_0012f868` cmdmenu.nostrict.c:817; `func_0012eb08` cmdmenu.c:370; `func_0012fa98` | distance <= 300 weighted by facing (`func_00121b38`), dy within +-350, line of sight; loss at > 1500 or dy > 1000 | none | none |
+
+**Bit 35, "drawn this frame"** (cleared by `func_00136bc0` objdraw.c:140, set by the actor passes above; the
+prop pass `func_001369e8` sets it whatever `func_00114a38` returns) is read by gameplay:
+`func_00138130` objtask.c:299 steps an actor's motion (`func_00130f18`) only while it is drawn, when its
+spawn record has `x4 & 0x20000`; `func_00153f88` hitreact.nostrict.c:97 starts action 25 on a
+defeated actor only if it is drawn (or `D_002C5958` bit 0); and the script command `func_0012a030`
+objscmd.c:866 (in the table at data_002E.s:353) returns it to the script; and `func_0012f218` lets a drawn target pass the lock-on line-of-sight test from the camera. So the actor frustum is a gameplay
+input, not just a draw cull: with a 4:3 frustum under a wide view, those actors would freeze in plain sight.
+Widening the frustum keeps the original rule ("on screen") true on the wide screen.
+
+**`func_0024edf0`** returns 0 (visible) whenever `D_002BBDE0 != 3` (game state 3, inferred: field play), so
+outside that state none of the `D_002BBFA0` culls apply.
+
+#### What the port changes
+
+1. **One constant in `func_00110618`**: the 320 (`sxd = n * 320 / d`) becomes `320 * k`, with `k = (960 / 544)
+   / (4 / 3) = 1.3235` (423.5). The same value goes into `D_002BBE60[0][0]` and `D_002BBEE0[0][0]`, so the grid,
+   props, actors, shadows, ppp effects, the party warp and bit 35 all widen together. Leave the 229 (y), the
+   2045 / 360.5 guard box and the projection (`ax`) alone.
+2. **The projection itself does not change.** Hor+ keeps the vertical field of view, so `D_002E26C0` and
+   `D_002BBF60` x `D_002BC020` keep mapping a world point to the same GS pixel. The wide view is the 4:3
+   canvas extended to x -82.8 .. 594.8, which is GS 1709.2 .. 2386.8, inside renderer A's guard box (412 ..
+   3684). *Corrects 5.3 step 2:* narrowing `D_002BC020`'s x row and widening `D_002BBF60` only enlarges that
+   box. It is harmless but not needed. And neither renderer B's visibility nor `func_00121000` uses
+   `D_002BC020`: the first uses `D_002BBFA0`, the second `D_002E26C0` and is not a cull.
+3. **Marker bounds**: patch `D_00469F90.x` / `D_00469FA0.x` to 1709.2 / 2386.8 on the port's data, or wrap
+   `func_00249580`. Without this, 5.3's unanchored markers are hidden at the sides before they are drawn.
+4. **`func_0010b390`'s 0 / 512** becomes -82.8 / 594.8 (a port `#ifdef`, matched build unchanged).
+5. **Renderer B's guard band** (qw 7, P11-P14's whole-triangle reject): the port's renderer clips in hardware
+   and drops it, as the §5 table already says. If kept, the margin past the visible edge shrinks from 256 to
+   173 px.
+
+*Corrections to existing text:* §2.2's table calls `D_002BC020` "frustum-normalised". It is the 1636 x 303 px
+guard box, not the screen. §4.14's "`func_00107ab8` (the camera test, not read here)" is now read: an 8-corner
+box against `D_002BBFE0` (the 4:3 frustum, far plane = fog far), as above. §5.3's "CPU culls that use the clip
+matrix" should read "the 4:3 frustum `D_002BBE60` / `D_002BBEE0`".
+
+#### Open (need the real disc or a boot)
+
+- Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and
+  compare the side cells, props and effects (Traverse Town first district is a good open room).
+- Which actors have spawn flag `0x20000` (motion stepped only while drawn), and which scripts call
+  `func_0012a030`. Both need the spawn / script files.
+- `func_0010b390`'s `f6` meaning (the tail sprites `D_002B7210` ... `D_002B7350`), from a boot that shows an
+  object window with its speaker off screen.
+- Overlays and the runtime code at `0x00F20000` were not searched. The Gummi ship (gummi/ship.c sets
+  `D_002BC140`) and the menus' model views may build their own frustum.
+- `func_00110618` is still a non-match. The port needs its C (the session 6 draft is believed right in its
+  maths) to carry the change in step 1.
 
 ## 6. Open questions
 

@@ -9,13 +9,38 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 89 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 90 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 89, 2026-10-25)
+## Where we stopped (end of session 90, 2026-10-25)
+
+- **Session 90** (static, vita-port-plan 5.1ad, renderer-spec 5.3.1 and 5.4): **the culls under a wider
+  view, the HUD's anchor table, movies.** renderer-spec 5.4: **no CPU cull reads `D_002BC020`** (it is
+  renderer A's 1636 x 303 px guard box, not a frustum; 2.2 and 5.3 corrected). `func_00110618` builds six
+  matrices; the culls use the two **exact 4:3 frustums** `D_002BBE60` / `D_002BBEE0` (as `D_002BBFA0` /
+  `D_002BBFE0`, 320 x 229 at scrz): the grid (`func_00107548` -> `func_00107ab8`, 8 box corners, no cone),
+  props `func_00114a38`, actors `func_00135bb0`, shadows `func_00127c20`, ppp effects `func_001812d0`
+  (off-screen ones also stop updating) and the party warp `func_00169f28` (picks an off-screen point) all
+  go through `func_0024edf0`. **Hor+ = one constant** (the x 320 times 1.3235 in `func_00110618`); the
+  projection stays. **Bit 35 of `x370` ("drawn") feeds gameplay** (flag-`0x20000` actors' motion, action
+  25, script command `func_0012a030`, the lock-on line of sight). Lock-on has no screen test.
+  `func_00121000` is not a cull (P18 flag). Markers `func_00249580` (`D_00469F90` / `D_00469FA0` =
+  1792..2304 x 1856..2240) and objwin `func_0010b390` (0..512 x 0..384) need port-side bounds.
+  **renderer-spec 5.3.1**: the HUD's sprite files (`UiFile`, rectangles in target pixels) plus each
+  drawer's origin give every part's rectangle without a boot: Sora's gauge (360,257)-(503,375) right /
+  bottom (`D_00454600`), the party gauges top right, the command menu (16,260) left / bottom, notice and
+  banner (160,344) centre / bottom, pop-ups from (16,16), the counter (25,238), the timer; **the target's
+  gauge is fixed at (16, 24 / 65 / 80), not a marker** (5.3 corrected). vita-port-plan 5.1ad **movies**:
+  `func_00111020(n)` loads dkmovie.x to `0x00F20000` and calls `entry(0, n)`; commands 1-9 (start, status
+  2 ready / 4 ended, width, close, stopped, the band's flags, frozen step, frame count / current);
+  started by gamestate.c states 11-13 / 16-18 (asked for by dktitle.x, inferred) and script opcode 24
+  entries 584 / 585 / 489 / 490; names `D_0046A058` (opn, end, end2, demo, end3, ffx2 .dat); no libmpeg
+  in the main ELF (the decoder is in dkmovie.x); a `PlatMovie*` layer drafted (sceAvPlayer on re-encoded
+  files or a software MPEG-2 decoder; licence open). Only docs/ changed: **every out/build object
+  bit-identical**, the float ELF the same (no float-untested row).
 
 - **Session 89** (static, vita-port-plan 5.1ac, renderer-spec 5.3): **the 2D layers' space, vibration,
   the CIRCLE / CROSS swap.** renderer-spec 5.3: every 2D drawer (windows, text, field text, HUD, notices,
@@ -100,28 +125,10 @@ items.
   layoutcheck / relcheck / abscheck 0, valgrind 0 errors to the overlay fault, the stub:2 run ends in
   func_00132790 as before.
 
-- **Session 85** (static, vita-port-plan 5.1y, renderer-spec 4.14, new docs/sound-spec.md): **the sound
-  driver's commands as the Vita audio layer's interface, renderer A's grid chains.** docs/sound-spec.md
-  lists snd_rpc.c's transport (RPC 0 bind with mode 0 boot / 1 soft reset / 2 room load; direct calls answer
-  in word 0; 8-word records queued and sent as RPC 30 once a frame), the status block (SE voices +0, streams
-  +0x1800, **disc error +0x1C08**, transfer count +0x1F00) and every command with its arguments, senders and
-  meaning (transfers `0x26` / 3 / 4 / `0xB` / `0x28`, music `0xC` / `0xD` / `0xE` / `0x2F` / `0x30`, SEs 5 /
-  8 / 6 / 7 / 2, voices `0x12` / `0x13` / `0x14`, object SEs `0x29`-`0x2B`, settings `0xF` / `0x23` /
-  `0x24` / `0x27`). Findings: **RPC 30 sends only the first 256 of the queue's 1024 records**;
-  `func_0011d2d0` searches the static SE table, not the live pointer (a 128-slot room's ppp SE switch finds
-  nothing); **`func_001ecb08`'s wildcard loops fall through and read up to 0x114 bytes past the status
-  block** (into `D_0063F640` on the PS2; on the host whatever follows: no layout check sees pointer
-  walks); 16 entry points have no main-ELF caller (for the dktitle.x check). **renderer-spec 4.14**:
-  `func_00107d30` case 3 = each visible cell's second mesh (map section 1 entry `i + 1`'s `{w8, w12}` tag,
-  `func_00107c48`), P3 at key 50000 after the opaque pass, no Z writes, the static FGE fan template
-  `D_004862B0`; cases 0 / 1 the first meshes at 10020; the fade groups reuse chain 3's head (open question
-  6.8 answered from the C). Item 4c (defer as default) waits for the real-disc room run. Only docs/ and
-  README.md changed: kh1.elf byte-identical, the float ELF the same (no float-untested row).
-
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-89.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-90.
 - **Nine default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
   (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68), 69 (2,043), 70 (2,041; sessions 71 to 85
-  left the float ELF's bytes the same) and **86 (2,041, the current default: D_0063F640 inside the floated
+  left the float ELF's bytes the same; so did 87 to 90) and **86 (2,041, the current default: D_0063F640 inside the floated
   sound status block)**. Session 69 made 21 objects one definition (vita-port-plan 5.1i): 10 objects that floated in place as
   parts of a run now float whole into the float area (the shop / list windows D_0062F6E0 / D_0062F790 / D_00630460,
   the ppp matrices D_00615E70 / D_00616000, D_0052EB50, D_00551700, D_00575900, the timer sets D_006692F0 /
@@ -239,11 +246,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 90 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 91 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s90 and /mnt/project-files/kh1-runtime/s90, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s91 and /mnt/project-files/kh1-runtime/s91, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
@@ -261,7 +268,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -282,7 +289,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    compare one run with `KH1_HOST_PAD=none` (it should sit in the "no controller" band from frame 32), and once
    the room run gets further, try a `KH1_HOST_PAD` script (START at the title, CIRCLE, the menu with
    TRIANGLE?; session 88: start from tests/host/pads/title.txt and move its frames to what the run shows). Read the
-   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 89: find the message font's button glyph codes** (circle, cross, triangle, square, L1 / R1 ... in the decoded font and the message files) **and the disc's HUD / menu textures that show a button** (`KH1_HOST_TEXDUMP`), for 5.1ac's swap lists; record the HUD draws' rectangles (`gsstate.py --draws`) for renderer-spec 5.3's anchor table. **Session 88: record the high-water marks of countcheck's
+   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 89: find the message font's button glyph codes** (circle, cross, triangle, square, L1 / R1 ... in the decoded font and the message files) **and the disc's HUD / menu textures that show a button** (`KH1_HOST_TEXDUMP`), for 5.1ac's swap lists; record the HUD draws' rectangles for renderer-spec 5.3.1's anchor table (with item 4a's `--extents`; check each row of 5.3.1, the kind-3 gauge, the one-shot and the minigame timer's x / y). **Session 88: record the high-water marks of countcheck's
    DATA rows** (gdb watchpoints or a host-only hook: renderer B's `D_0055C698.x4 / .x8 / .xc` against 78 / 480 / 72,
    the collision count `D_002C12C4` against 2048, the message count `D_00389C80` against 273, the trigger boxes). Fix host-only causes the way
    sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
@@ -301,20 +308,22 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    `D_002BBE04` (the screen spin)? Session 88: who calls padrec.c's recorder / replay / button script / idle timer
    (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
    `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
-   second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? Without the Mac: skip.
-4. **Static, without the Mac**: (a) **The culls under a wider view** (renderer-spec 5.3 step 2): renderer A's grid
-   visibility (`func_00107548`, grideff.c), renderer B's model visibility, `func_00121000`'s guard-band test,
-   the lock-on and target choice (do they test the 4:3 screen?), the object / effect culls: list each one's
-   frustum source (`D_002BC020`, `D_002BBF60` or its own constants) and what a hor+ projection must change.
-   (b) **The HUD's layout tables in the ELF** (`D_00458548` notices, `D_00469C94` banners, the gauges' and
-   command menu's positions): a first draft of 5.3's anchor table (left / right / centre per element). (c)
-   **Movies on the Vita**: the main ELF's side of the movie player (the 640-wide buffer at `0x118000`, the
-   IPU / MPEG calls, frame pacing, how the dkmovie.x overlay is entered) as an interface for the port's
-   video decoder (vita-port-plan 6's licence question stays open). (d) `KH1_HOST_DMAC=defer` as the default
-   and argcheck's 3 value uses still wait for the Mac.
+   second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open)? Without the Mac: skip.
+4. **Static, without the Mac**: (a) **`gsstate.py --extents`**: per send (keyed by the drawing environment
+   sent before it, renderer-spec 5.3.1's list: `D_00651C00` gauges, `D_00655F80` notice, ...), the min / max
+   of XYZ2 in target pixels, so the real-disc run checks 5.3.1's rectangles; test it on the fake disc's
+   trace. (b) **The hor+ change in host C** (renderer-spec 5.4 step 1): a host-only C twin of
+   `func_00110618`'s maths (nonmatchings/session6 w6_02 as the start; compare its six matrices with the
+   PS2 ELF's in a host run on the fake disc, gdb after the first call) with the x 320 behind a
+   `KH1_HOST_WIDE` switch, the markers' and objwin's bounds with it; the PS2 build untouched. (c) **The
+   frustums 5.4 did not search**: the Gummi ship (gummi/ship.c, `D_002BC140`), the menus' model views,
+   the world map: do they build their own clip matrices? (d) **Bit 35's readers** (5.4): list the actors
+   with spawn flag `0x20000` and the scripts' use of `func_0012a030` once the disc's files are read (else
+   note the plan). (e) `KH1_HOST_DMAC=defer` as the default and argcheck's 3 value uses still wait for
+   the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=90`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=91`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 91) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 92) with this
    prompt: the user wants each session to start the next one without being asked.

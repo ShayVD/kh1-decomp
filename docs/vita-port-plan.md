@@ -1567,6 +1567,141 @@ bits (vm_lib.c `func_001d14a0`). **What does not follow** (the screen naming a b
   footers if they show buttons): the asset extraction tool writes a second, swapped sheet, or the port
   keeps a per-texture cell swap list. Both lists wait for the real-disc run (`KH1_HOST_TEXDUMP`).
 
+### 5.1ad Session 90: the culls under a wider view, the HUD's anchor table, movies
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). Only docs/ changed: kh1.elf
+byte-identical, every out/build object bit-identical, the float ELF the same (no float-untested row).
+
+**The culls** (item 4a, renderer-spec 5.4): no CPU cull reads the clip matrix `D_002BC020` (renderer A's
+guard box); the grid, props, actors, shadows, ppp effects and the party warp all test the exact 4:3
+frustum `D_002BBFA0` / `D_002BBFE0` from `func_00110618`, so a hor+ view needs one constant (the x 320)
+changed there, and the markers (`func_00249580`, `D_00469F90` / `D_00469FA0`) and objwin's tail
+(`func_0010b390`) need port-side bounds. The actor frustum's "drawn" bit 35 is a gameplay input (motion
+of flag-`0x20000` actors, action 25, a script command, the lock-on line of sight). Lock-on has no screen
+test. **The HUD** (item 4b, renderer-spec 5.3.1): every HUD part's rectangle reads from the ELF's sprite
+files plus the drawer's origin; a first anchor table (Sora's gauge right / bottom, the party's right / top,
+the command menu and counter left / bottom, notice and banner centre / bottom, the target's gauge left /
+top: **not a marker over 3D**, corrected in 5.3). **Movies** (item 4c) below.
+
+#### Movies on the Vita: the main ELF's side of the player (static, draft)
+
+Read from the C (src/game/dkmovie.c, gamestate.c, vm_lib.c, framectl.c, screen/brightfade.c, objwin.nostrict.c,
+movies.c, io/discfile.c, sound/snd_rpc.c, src/sdk/gcc991111/text_00260000_s2.c and text_00260000_s6_28.c) and the
+ELF's data. dkmovie.x is not in the container, so everything it does is inferred from what the main ELF calls,
+reads and leaves unwritten. Not checked on a console or a host run. "Guess" marks a reading with no direct evidence.
+
+**Loading and entering the overlay.** `func_00111020(n)` stores the movie number in `D_004D9244`, clears the
+loaded flag `D_002BCAE0` and queues `func_00120748("dkmovie.x" (D_0048CF30), 0x00F20000, func_00110fc8, 0)`: a
+loader-thread task (`func_00120678`: `func_001204a0` looks the name up in KINGDOM.IDX and reads it, then
+FlushCache(0), FlushCache(2) and the callback). The callback `func_00110fc8` sets `D_002BCAE0` = 1 and calls the
+entry, `int entry(int cmd, int arg)` at the file's first byte, as `entry(0, n)`. Every other call is a wrapper in
+dkmovie.c that passes a command and arg 0 (6 passes one). No function table is passed: the overlay calls the main
+ELF by absolute address (136 jal, 14 j, 13 %hi/%lo pairs on the user's disc, shiftable-plan "Counts"). It loads
+over whatever is at `0x00F20000`; on the title path it replaces dktitle.x, and state 0 loads dktitle.x again after.
+
+| Wrapper | Command | Callers | Meaning (from the use; the command's work is in the overlay) |
+| --- | --- | --- | --- |
+| `func_00110fc8` | 0, n | the load callback | open movie n (guess: n indexes the names below) |
+| `func_00111060` | 1 | gamestate.c states 12 / 17, script command 489 | start: first `func_00113e28(2)` (pause depth +1, sound `0xF`(2): pause all) and sound `0x24`(`0x7B`) |
+| `func_00111090` | 2 | gamestate.c, vm_lib.c, framectl.c | status: 0 when not loaded (`D_002BCAE0` = 0), 2 ready to start, 4 ended |
+| `func_001110d0` | 3 | brightfade.c `func_00106000` case 2, each frame | the frame width: 512 or 640 |
+| `func_00111130` | 4 | only `func_001111b0` | close / free (guess) |
+| `func_00111150` | 5 | gamestate.c states 14 / 19, the reset loop | 1 once stopped |
+| `func_00111170` | 6, flags | framectl.c `func_0010f8d0` while a movie is loaded | the system-message band's flags (b0 no pad, b1 disc error, b2 read error): pause / resume (guess) |
+| `func_00111190` | 7 | the band loop and the reset loop, each frozen frame | step or stop while the main loop is frozen (guess) |
+| `func_001110f0` | 8 | gamestate.c states 13 / 18 | the frame count (guess from `cur >= count - 1`) |
+| `func_00111110` | 9 | the same | the current frame (guess) |
+| `func_001111b0` | none | only the soft reset (`func_00109658`) | the clean-up below |
+
+`func_001111b0` (the clean-up): when in the field (`D_002BBDE0` = 3) and `D_002A3F44` = 1, `func_001017b8` (roombg.c,
+reloads the room background); sound `0x24`(9); `func_00114830` (clears the pause lock `D_004D9334`); `D_002BBE04` =
+3 (the next frame copy clears to black, then 0); `D_002BBE18` = 0; `entry(4, 0)`; `D_002BCAE0` = 0; `D_002BCB34` = 1
+(no reader in the main ELF); `func_00113e28(0)` (resume the sound). Nothing in the normal play path calls it, so
+either the overlay calls it at the end of a script movie (guess: it lives among the wrappers and checks the field
+state) or a script movie never runs it. To confirm.
+
+**Who starts a movie.**
+
+| Path | Steps |
+| --- | --- |
+| Title (gamestate.c `func_00109770`) | state 11: once the transition fade ends (`D_002B6774` = 0), `D_002BBE0C` = 1 and `func_00111020(3)`; 12: status 2 then start; 13: play. State 16 / 17 / 18 do the same with `func_00111020(5)`. States 11 and 16 are requested through `func_00109558`, which no main-ELF code calls with 11 or 16: dktitle.x asks for them (inferred). |
+| Event script (opcode 24, table `D_003D9FE0`) | 584 `func_001d8b98`: `func_00111020(stk)`, the number from the script; 585 `func_001d8b68`: wait for status 2; 489 `func_001d8be0`: start; 490 `func_001d8c00`: wait for status 4. A function returning 4 is taken to run again next frame (inferred from the waits). |
+
+The names (`D_0046A058`, movies.c): 0 `opn.dat`, 1 `end.dat`, 2 `end2.dat`, 3 `demo.dat`, 4 `end3.dat`, 5 `ffx2.dat`.
+If n indexes them (guess), the title plays 3 (`demo.dat`, the attract demo: any held button skips) and 5
+(`ffx2.dat`, the Final Fantasy X-2 trailer: START skips), and the scripts play the opening and the three endings.
+There are no `.pss` strings in the ELF. Whether the files are in KINGDOM.IMG or loose on the disc is not known.
+shiftable-plan reads M1's early crash as dkmovie.x running first at boot; since state 0 loads dktitle.x first, a
+boot movie would come from dktitle.x through state 11 or 16 (to confirm).
+
+**The frame buffer.** Case 2 of the end-of-frame copy (`func_00106000(D_002BBE04)`, brightfade.c) takes the width
+`v` from `entry(3, 0)`, sets the display to `v` x 448 PSMCT24 (`func_0010fee8(v, 448)`), and draws one sprite from
+`TBP0 0x1180` (`0x118000`, `TBW v / 64`, PSMCT24, TW 9 or 10, TH 9) to the display buffer at 0, `v` x 448, 1:1 (no
+stretch, unlike cases 0/1/3/4's 384 to 448). Then, while `D_002A6B80` != 0, the `0x80FEFEFE` quad over the display
+(renderer-spec 3.1). `0x118000` is `640 x 448 x 4` bytes: the buffer sits right after a 640-wide display buffer
+and covers the 3D target at `0x1A0000` (unused while a movie plays). **No main-ELF code stores 2 to `D_002BBE04`**
+(renderer-spec 4.15), and nothing in the main ELF writes the pixels: the overlay uploads the decoded frames there
+and selects case 2 (inferred). `D_002B73E0` is a 2-quadword packet that sets `FRAME_1` = `0x010A008C` (FBP `0x8C`,
+640 wide, PSMCT24); objwin.nostrict.c `func_0010b6c0` sends it instead of `D_002B73B0` (`FRAME_1` = the 3D target)
+while `D_002BBE18` != 0, which only the overlay can set (the main ELF stores 0 only). So something the game draws
+can be put into the movie picture (guess: subtitles or credits over a movie; which, unknown).
+
+**Pacing.** The title path sets `D_002BBE0C` = 1, so the main loop runs at 30 frames a second (two fields per
+`func_001104e0`), and each frame only polls (commands 2, 8, 9, 3) and copies. Nothing in the main loop steps the
+decoder, so the overlay decodes on its own thread or from interrupts (guess). The main ELF installs no IPU DMA
+handler (only channels 1, 2 and 5). The field parity `D_002BBDE8` has no reader in the main ELF (maybe the
+overlay's, guess). At the last frame (`cur >= count - 1`) the title states set `D_002A6B80` = 1.
+
+**Skipping and the end.** State 13 skips while any pad 0 button is held (`D_002C5AD4`, record +4), state 18 on a
+START press (`D_002C5AD8 & 8`). A skip does not call the overlay: it sets `D_002A6B80` = 1, `D_002BBE04` = 3,
+`D_002BBE18` = 0, resets the display (`func_0010ff60(254)`), then states 14 / 19 wait for `entry(5)` = 1 and go to
+state 0. So the overlay notices the skip itself (guess: from `D_002BBDE0` or `D_002BBE04`). Status 4 ends a movie
+normally (state 0 again, or the script goes on). The script commands check no button: a skip of the opening or an
+ending, if any, is the overlay's. The soft reset (`func_00109658`, `D_002BCA00 & 0xF09`) loops `func_001220d0`,
+`entry(7)` and a frame end until `entry(5)` = 1, then `func_001111b0`.
+
+**Main-ELF code that only the overlay can use** (linked, never called by the main ELF):
+- `func_00111238`, a stub nothing calls, that calls `sceCdRead`(0, 0, 0, 0), `func_0024b138` (decode.c, the packed
+  block unpacker; no other caller), `sceCdStatus`, `sceCdBreak`, `sceCdGetError`, `sceIpuInit`, `sceIpuSync` with no
+  arguments: it keeps them linked (portability.md). So `sceIpuInit` / `sceIpuSync` are never called for real.
+- libipu (`PsIIlibipu 2500` at `0x46E0A0`): `func_002723c8` / `func_00272430` (fromIPU / toIPU CHCR through
+  D_ENABLEW), `func_00272498` (stop both channels and save the state: `sceIpuStopDMA`, guess), `func_00272580`
+  (restore it: `sceIpuRestartDMA`, guess), `func_00272738`, the IQ / VQ tables `D_0046E0B0` / `D_0046E100`. There is
+  no libmpeg (`sceMpeg*`) in the main ELF: the demuxer and the MPEG-2 decode loop are in dkmovie.x (inferred).
+- movies.c's six functions: `func_0024b9a8(i)` the name, `func_0024b9c0` / `func_0024b9e0` the chosen value
+  `D_00669A38`, `func_0024b9d0` / `func_0024b9f0` `D_00669A3C`, `func_0024ba00` (store and keep `sceCdGetError`).
+- Sound commands with no main-ELF sender (sound-spec 3): 1 (`func_001ed0d0`), `0x16`-`0x19`, `0x1B`, `0x1D`
+  (`func_001ed870` ... `func_001eda38`), `0x32` (`func_001eda90`), `0x1F`-`0x22` (`func_001ec9a8` ... `func_001ecab0`);
+  some may feed the movie's audio to the IOP (guess). `0x24` is sent with `0x7B` before and 9 after.
+- DMA: IPU channels 3 (fromIPU `0x1000B000`) and 4 (toIPU `0x1000B400`) appear only in libipu; the frame upload to
+  `0x118000` would go by GIF (channel 2) or PATH3 (guess).
+
+**The port's interface.** Keep every main-ELF function above unchanged and replace dkmovie.x with a host file
+(`host/movie.c`) that implements the same `entry(cmd, arg)` on a small platform layer, so no game code learns
+about the Vita:
+
+| Call | Covers | Vita side |
+| --- | --- | --- |
+| `PlatMovieOpen(name, &info)` | command 0 (the name from `func_0024b9a8(n)`), 3 (`info.width`), 8 (`info.frames`) | open the extracted file; 0 width means missing: report status 4 at once |
+| `PlatMovieFrame(&tex)` | 1 starts, 2 / 9 poll, the case 2 copy | the newest decoded frame (YUV planes) and its number; the renderer draws it 4:3 in place of the `0x118000` copy (`D_002BBE04` = 2) |
+| `PlatMovieAudio(paused)` | 6 and the sound pause `0xF` | the movie's PCM into the mixer as its own voice; paused while the band shows |
+| `PlatMovieSkip()` | the title skips, 7 / 5 | stop decoding; status 4, `entry(5)` = 1 |
+| `PlatMovieClose()` | 4, `func_001111b0` | free the decoder and the texture |
+
+On the Vita, either (a) the asset extraction tool re-encodes each movie from the user's own disc to H.264 + AAC
+MP4 with the user's host ffmpeg (never shipped) and `sceAvPlayer` plays it in hardware (it outputs YUV420 frames
+and 48 kHz PCM); or (b) the port decodes the original MPEG-2 in software (libmpeg2 is GPL-2.0+, libavcodec's
+MPEG-2 decoder LGPL-2.1+; 640 x 448 at 30 frames a second on the Vita's four A9 cores is plausible, untested). The
+licence question (section 6) stays open; (a) keeps the decoder out of the repo. Either way the PSS audio
+format (SPU ADPCM or PCM, interleave) must be read from a file first.
+
+**To confirm from dkmovie.x** (inventory.py on the user's Mac): which of the functions above it calls; what each
+command does and returns (0-9); that it stores 2 to `D_002BBE04` and non-zero to `D_002BBE18`, and with what;
+whether n indexes `D_0046A058`, and how the file is found (KINGDOM.IDX through `func_00120190`, `sceCdSearchFile`, the
+HDD path) and read (`sceCdRead` streaming); its threads, IPU DMA handlers and timer (vsync, `D_002BBDE8`?); the
+audio path (which sound commands, what `0x24`(`0x7B`) means); how it sees a title skip and whether it calls
+`func_001111b0`; the frame size, rate and count read from the files themselves.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
