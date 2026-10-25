@@ -9,6 +9,11 @@ int memcmp(const void *, const void *, __SIZE_TYPE__);
 
 void kh1_batch_reset(KH1Batcher *b) { memset(b, 0, sizeof *b); }
 
+/* session 126: an event for the recorder (batch.h KH1_BEV_*) */
+static void ev(KH1Batcher *b, u32 what, const KH1BatchKey *k, u32 arg) {
+    if (b->ev) b->ev(b->ev_ctx, what, k, arg);
+}
+
 void kh1_batch_key(const KH1DrawState *d, const KH1RenderPass *p, KH1BatchKey *out) {
     memset(out, 0, sizeof *out);
     out->n = d->n;
@@ -31,8 +36,8 @@ void kh1_batch_key(const KH1DrawState *d, const KH1RenderPass *p, KH1BatchKey *o
     out->sy1 = p->sy1;
 }
 
-/* a primitive with key k: joins the open batch or opens one */
-static int plain(KH1Batcher *b, const KH1BatchKey *kp, u32 nv) {
+/* a primitive with key k (src: KH1_BEV_NEW, or the group's primitive replayed): joins the open batch or opens one */
+static int plain(KH1Batcher *b, const KH1BatchKey *kp, u32 nv, u32 src) {
     KH1BatchKey k = *kp;
     KH1BatchCount *f = &b->frame;
     int opened = 0;
@@ -55,10 +60,12 @@ static int plain(KH1Batcher *b, const KH1BatchKey *kp, u32 nv) {
         f->batches++;
         f->draws += k.n + k.setup;
         opened = 1;
+        ev(b, KH1_BEV_OPEN, &k, 0);
     }
     b->broken = 0;
     f->prims++;
     f->verts += nv;
+    ev(b, KH1_BEV_PRIM, &k, src);
     return opened;
 }
 
@@ -92,8 +99,9 @@ static void replay(KH1Batcher *b) {
         b->frame.prims--;
         b->frame.verts -= b->grp[i].nv;
         b->frame.merged--;
-        if (plain(b, &k, b->grp[i].nv) && !i) b->gfull = 0;
+        if (plain(b, &k, b->grp[i].nv, i) && !i) b->gfull = 0;
         else if (!i) b->gfull = 1;
+        if (!i) ev(b, KH1_BEV_GROUP, &k, !b->gfull);
         b->grp[i].k = k;
     }
     /* they are a new group under that column */
@@ -107,11 +115,13 @@ static void absorb(KH1Batcher *b, u32 nv) {
     b->frame.prims++;
     b->frame.verts += nv;
     b->frame.merged++;
+    ev(b, KH1_BEV_ABSORB, 0, 0);
     if (++b->rep < b->ngrp) return;
     /* the column is complete: the group's batches now draw the union */
     if (b->open && b->cur.sx0 == b->ux0 && b->cur.sx1 == b->ux1) b->cur.sx1 = b->cx1;
     b->ux1 = b->cx1;
     b->frame.columns++;
+    ev(b, KH1_BEV_WIDEN, 0, (u32)b->cx1);
     b->gstate = KH1_GRP_DONE;
 }
 
@@ -137,7 +147,7 @@ int kh1_batch_prim_sig(KH1Batcher *b, const KH1DrawState *d, const KH1RenderPass
         absorb(b, nv);
         return 0;
     }
-    opened = plain(b, &k, nv);
+    opened = plain(b, &k, nv, KH1_BEV_NEW);
     if (b->gstate != KH1_GRP_RECORD || !b->ngrp || k.sx0 != b->ux0 || k.sx1 != b->ux1 || k.sy0 != b->grp[0].k.sy0 ||
         k.sy1 != b->grp[0].k.sy1) {
         b->gstate = KH1_GRP_RECORD;
@@ -145,13 +155,16 @@ int kh1_batch_prim_sig(KH1Batcher *b, const KH1DrawState *d, const KH1RenderPass
         b->ux0 = k.sx0;
         b->ux1 = k.sx1;
         b->gfull = !opened; /* a group shares no batch with what came before it (its batches get widened) */
+        ev(b, KH1_BEV_GROUP, &k, !b->gfull);
     }
     if (b->ngrp < KH1_BATCH_GROUP && !feedback(d, p)) {
         b->grp[b->ngrp].k = k;
         b->grp[b->ngrp].nv = nv;
         b->grp[b->ngrp].sig = sig;
+        ev(b, KH1_BEV_REC, &k, b->ngrp);
         b->ngrp++;
     } else {
+        if (!b->gfull) ev(b, KH1_BEV_END, 0, 0);
         b->gfull = 1;
     }
     return opened;
@@ -164,6 +177,7 @@ int kh1_batch_prim(KH1Batcher *b, const KH1DrawState *d, const KH1RenderPass *p,
 /* the column group ends (a transfer, the frame) */
 static void group_end(KH1Batcher *b) {
     if (b->gstate == KH1_GRP_REPEAT) replay(b);
+    if (b->gstate != KH1_GRP_NONE) ev(b, KH1_BEV_END, 0, 0);
     b->gstate = KH1_GRP_NONE;
     b->ngrp = 0;
     b->gfull = 0;

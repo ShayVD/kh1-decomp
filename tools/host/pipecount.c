@@ -14,11 +14,19 @@
  * <vertices> <signature>` is a run of kicks in one state with the same vertices (session 125: the signature
  * feeds batch.h's column groups), `X` a transfer or CLUT load, `E` ends it; for each send it
  * prints `send N: BATCHES DRAWS PRIMS VERTS` (include/platform/batch.h's cut, the 3D target's 4:3 canvas at
- * scale 1), then the totals and what opened the batches. */
+ * scale 1), then the totals and what opened the batches.
+ *
+ * Session 126 (renderer-spec 4.13 "Session 126"): --passes reads the same sends through
+ * include/platform/cmdbuf.h's recorder, each send alone with every target taken as drawn before it (what the
+ * frame drew earlier is unknown here, and the packets' vertices are not passed, so no pass counts as cleared):
+ * `send N: P passes C commands` and a `pass` line each (target, depth, load / store: a STORE is a later pass
+ * of the same send sampling or drawing on the target; OPEN is decided by what follows the send), then the
+ * totals. */
 #include "common.h"
 #include "platform/drawstate.h"
 #include "platform/batch.h"
 #include "platform/vertex.h"
+#include "platform/cmdbuf.h"
 
 int printf(const char *, ...);
 int scanf(const char *, ...);
@@ -75,9 +83,59 @@ static int batches(void) {
     return 0;
 }
 
+void *malloc(__SIZE_TYPE__);
+
+static int passes(void) {
+    static const KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
+    static KH1CmdRec r;
+    void *vm = malloc(2u << 20), *um = malloc(2u << 18);
+    char t[4];
+    u32 w[22], i, n = 0, multi = 0, sampled = 0, opened = 0, joins = 0;
+    KH1DrawRegs g;
+    KH1DrawState d;
+    KH1RenderPass p;
+    kh1_cmd_init(&r, vm, 1u << 20, um, 1u << 18);
+    while (scanf("%3s", t) == 1) {
+        if (t[0] == 'S') {
+            kh1_cmd_init(&r, vm, 1u << 20, um, 1u << 18);
+            r.assume_drawn = 1;
+            continue;
+        }
+        if (t[0] == 'X') { kh1_cmd_break(&r); continue; }
+        if (t[0] == 'E') {
+            kh1_cmd_frame(&r);
+            joins += r.frame.depth_joins;
+            n++;
+            if (r.npass) {
+                printf("send %u: %u passes %u commands\n", n, r.npass, r.ncmd);
+                for (i = 0; i < r.npass; i++) {
+                    printf("pass %u: %s\n", i + 1, kh1_cmd_pass_str(&r.pass[i]));
+                    if (r.pass[i].why & KH1_WHY_SAMPLED) sampled++;
+                }
+                if (r.npass > 1) multi++;
+                opened += r.npass;
+            } else {
+                printf("send %u: 0 passes 0 commands\n", n);
+            }
+            kh1_cmd_reset_frame(&r);
+            continue;
+        }
+        for (i = 0; i < 22; i++)
+            if (scanf("%x", &w[i]) != 1) return 1;
+        read_regs(w, &g);
+        kh1_drawstate_of(&g, &d);
+        kh1_target_of(g.frame_lo, g.frame_hi, g.zbuf_lo, g.zbuf_hi, g.test_lo, w[17], w[18], 0, 0, &c43, 1.0f, &p);
+        for (i = 0; i < w[19]; i++) kh1_cmd_prim(&r, &d, &p, 0, w[20] / w[19], w[21]);
+    }
+    printf("total: %u sends, %u passes, %u sends with more than one pass, %u passes sampled by a later pass of their send, "
+           "%u depth-only pass changes joined\n", n, opened, multi, sampled, joins);
+    return 0;
+}
+
 int main(int argc, char **argv) {
     u32 w[17], i, n = 0, vmask, nv;
     if (argc > 1 && !strcmp(argv[1], "--batches")) return batches();
+    if (argc > 1 && !strcmp(argv[1], "--passes")) return passes();
     KH1DrawRegs r;
     KH1DrawState d;
     KH1PipeKey shk;
