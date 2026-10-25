@@ -42,6 +42,9 @@
  *                       (host/null/present.c).  Turns on the chain walk (KH1_HOST_TRACE=2), which
  *                       feeds the model; it holds only what the model can draw (the fake disc's
  *                       frames are black).  From the user's disc: never commit the frames.
+ *                       Session 97: with KH1_HOST_WIDE the shot line says what the 512-wide model
+ *                       cannot show (the view's sides) and the display shot is read back by the
+ *                       stretched copy's margin (host/null/present.c, kh1_present_wide).
  *   KH1_HOST_COUNTS=1   (session 96) the high-water marks of countcheck.py's DATA rows (renderer
  *                       B's lists, the collision candidates, the message pointers, the grid cells,
  *                       the trigger boxes, the windows' message lists), sampled at each vblank, DMA
@@ -67,6 +70,7 @@ extern float kh1_view_wide;
 extern int kh1_view_side16;
 void kh1_null_hud_wide(int margin16); /* host/null/plat_null.c */
 int kh1_present_init(int w, int h, int target, const char *dir, const void *send); /* host/null/present.c */
+void kh1_present_wide(int side16);
 extern unsigned char D_002A6890[]; /* brightfade.c's frame copy (renderer-spec 5.4 "Session 93") */
 
 int kh1_host_stop_at_cdread = 1;
@@ -261,6 +265,7 @@ int main(int argc, char **argv) {
                 return 2;
             }
             if (kh1_host_trace < 2) kh1_host_trace = 2;
+            if (kh1_view_side16) kh1_present_wide(kh1_view_side16); /* session 97 */
             printf("kh1-host: shot %dx%d of the %s after each frame copy, to %s\n", w, h,
                    target ? "3D target" : "display", dir);
         }

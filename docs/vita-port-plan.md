@@ -1858,6 +1858,24 @@ counts_test).
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1ak Session 97: the frame copy walked, the wide view's shots
+
+Static and host only (Sunday 2026-10-25, the Mac away until 2026-10-26). **No change under src/** (kh1.elf
+byte-identical, the float ELF the same, no float-untested row). selftest PASS (present_test 22 -> 30 checks).
+
+- **present_test through the copy** (item 4a): the frame copy's packet shape, read from the ELF's
+  `D_002A65D0` (renderer-spec 5.4 "Session 97": 6 x A+D, two REGLISTs, 16 strips, v 0 .. 384 over the
+  display's 448 lines), built in the test and walked by the chain walk under a made-up target: the display
+  shot shows the target's colours at the canvas map's pixels.
+- **The shots under `KH1_HOST_WIDE`** (item 4b): the stretched copy reads u from the view's left edge, so the
+  model's 512-wide display holds canvas x d + margin at pixel d (a finding: the session 96 display shot was
+  shifted by 82.8 px under the wide view). `kh1_present_wide` (host/null/present.c, set from main.c): the
+  display shot is read back by the margin (canvas margin .. 512 shown), the target shot is unchanged with
+  black sides, and both shot lines say so. Renderer-spec 5.4 writes down what a renderer draws in the sides
+  (its own wide 3D target, not the copy).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
