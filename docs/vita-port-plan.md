@@ -2636,6 +2636,24 @@ docs only, no float-untested row. selftest PASS (texcache_test 24 checks, presen
 - **Still waiting for the Mac**: as 5.1be, plus the real-disc run's texture cache line (`KH1_HOST_COUNTS=1`
   with `KH1_HOST_SHOT`): stamp hits against hash hits, decodes a frame, the texels held (is 4M enough?).
 
+### 5.1bg Session 119: the texture formats a port uploads, TEXA in the shader
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host and test code and
+docs only, no float-untested row. selftest PASS (texfmt_test 53 checks).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The texture formats** (item 4b): new include/platform/texfmt.h and host/port/texfmt.c (renderer-spec 4.13
+  "Session 119"): CT32 / Z32 as RGBA8, CT24 / Z24 as RGBA8 with A from TEXA in the shader, CT16 / CT16S / Z16 /
+  Z16S as A1B5G5R5 (the GS's halfword as is; the shader takes the 5 bits back and TEXA's alpha), the 8-bit
+  indexed PSMs as P8 and the 4-bit ones as P4 with the palette cache's words. `kh1_texfmt_sample` is what the
+  shader must do, checked against `kh1_gsmem_read_tex` for every PSM under three TEXA values.
+- **TEXA in the present's sampling** (item 4c): TEXA is a draw's uniform, so one cache entry serves every TEXA;
+  texfmt_test draws a CT16 and a CT24 texture with two TEXA values through the texture cache and without: the
+  same pixels, one entry each. The texture dump keeps its own `seen` table (it writes TEXA's and the CLUT's
+  colours, which the cache's key leaves out).
+- **To check on the Vita**: the P4 nibble order and the linear texture stride (rows padded to 8 texels here).
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
