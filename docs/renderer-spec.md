@@ -1658,6 +1658,65 @@ point and bilinear at every 1/16 texel from 4 texels left of a 16 x 8 texture to
 sample equals the GS's per-tap rule; a broken shader clamp or tap rule fails it), and point-sampled
 REPEAT / CLAMP on each axis against the model's sprite (a 16 x 16 texture drawn 48 x 48).
 
+**Session 121 (vita-port-plan 5.1bi): the blend state, the alpha test and the destination alpha.**
+include/platform/blend.h / host/port/blend.c turn ALPHA, PRIM's ABE, FBMSK and COLCLAMP into a GPU blend
+state; include/platform/atest.h / host/port/atest.c turn TEST into discards, write masks and a stencil.
+
+*The port's targets keep alpha on the GS's 0x80 scale*: a draw stores `min(As, 0x80) / 0x80` (8-bit
+`(As x 255 + 64) / 128`, 0x80 and above 255), read back exactly as `min(As, 0x80)`. Then the shader's one
+output alpha is both the stored value and the factor `As / 0x80`, `DST_ALPHA` is `Ad / 0x80`, and DATE's
+bit 7 is "stored alpha is 1.0" (0x7F stores 253), exact. Two consequences: a port's render target sampled as
+a texture gives `At = A x 0x80`, not `A x 0xFF` (texfmt's uploads stay as they are), and an As above 0x80
+written to a target reads back as 0x80 (the GS keeps it; nothing in the main ELF is seen to read one back).
+COLCLAMP 1 is what a UNORM target does. The alpha a draw writes is the source's (alpha factors ONE, ZERO).
+
+*The colour*: the shader writes `pre_a x (Cs x C / 0x80) + pre_d x Cs` clamped to 0 .. 0xFF and the blend
+takes it with factor ONE, so the GPU's factors only carry the destination's term (ZERO, ONE, SRC_ALPHA,
+DST_ALPHA and their ONE_MINUS forms: no constant colour is assumed). Where the destination's factor is 0
+or 1 the shader floors the product (ceils it when it is applied negated: the GS's arithmetic shift of a
+negative product) and the result is the GS's for every As, above 0x80 included. The game's forms:
+
+| ALPHA | GS | GPU | Kind |
+|---|---|---|---|
+| `0x44` (Cs - Cd) x As + Cd | the normal blend: 20 static senders, renderer B, ALPHA_2 in field.c / display.c | ADD, ONE x (Cs x As / 0x80) + ONE_MINUS_SRC_ALPHA x Cd | within 2 while As <= 0x80; above it the factor clamps (Cs instead of past it) |
+| `0x48` (Cs - 0) x As + Cd | additive: func_00106000, the bevel (As 0x90), the HUD's numbers (FIX 0x80 unused) | ADD, ONE, ONE, the product floored | exact for every As |
+| `0x42` (0 - Cs) x As + Cd | the bevel's subtractive sides (As 0x90) | REVERSE_SUBTRACT, ONE, ONE, the product ceiled | exact for every As |
+| `0x81` (Cd - Cs) x As + 0 | func_00106000's darken | REVERSE_SUBTRACT, SRC_ALPHA x Cd - ONE x (Cs x As / 0x80) | within 2 while As <= 0x80 |
+| `0x2A` FIX 0x80 (0 - 0) x FIX + Cs | renderer B's default | blending off | exact |
+
+Of all 135 forms (81, the 27 with C = FIX at FIX 0 / 0x40 / 0x80) 93 are exact, 12 within 2 while C <=
+0x80, and 30 need the shader to read the frame (`KH1_BLEND_FETCH`: Cs x Ad, a destination term `1 + C`,
+the destination times a FIX other than 0 / 0x80, a source that can pass 0xFF before a subtract, a per-bit
+FBMSK). None of the 30 is in the main ELF. **Whether a normal blend's As goes past 0x80** depends on the
+disc's vertex and texel alphas (renderer A / B's meshes): the real-disc run should count `0x44` draws
+whose As can exceed 0x80 (a texel above 0x80 under MODULATE with Av 0x80, or a vertex alpha above it).
+If the count is not 0 the port needs the second form there: the shader reads the frame (SGX543's
+programmable blending) for those draws only. FBMSK is the channel mask (0: RGBA, 0xFFFFFF: A only,
+0xFF000000: RGB only, the game's three; CT24: RGB; CT16's FBMSK on 5551's bits).
+
+*The alpha test*: the shader compares the 8-bit alpha texfunc's exact form gives with AREF (exact). A
+fragment that fails writes AFAIL's set (KEEP nothing, FB_ONLY the frame, ZB_ONLY Z, RGB_ONLY the colour
+without A), so where a failing fragment writes something a passing one writes more of, the port draws
+twice (the pass draw discards fails, the fail draw discards passes and masks); 5040 of the 98304 TEST /
+mask / ZMSK states the test sweeps take two draws, the rest one or none. *The game's TEST values are all
+one draw*: GREATER 0 / 16 / 127, GEQUAL 120, NOTEQUAL 0, LESS (renderer B's pass 2) with KEEP discard
+where the test fails; NEVER with FB_ONLY (the masks) or ZB_ONLY (opdma's Z-only writes) draws AFAIL's set
+with no discard; ALWAYS neither. No RGB_ONLY. *DATE / DATM* as a stencil: a set-up draw over the
+primitive's rectangle samples the target, discards where `(stored A == 1.0) != DATM` and writes stencil 1,
+no colour; the draw tests stencil 1. The game's one DATE draw (brightfade func_00106460's `D_002A6AA0`,
+DATM 1, after an alpha-only write with FBMSK 0xFFFFFF) is one sprite; a batch that overlaps itself and
+changes the alpha it tests would need the set-up per primitive. ZTE 0 is ZTST ALWAYS; ZTST NEVER draws
+nothing.
+
+tests/host/blend_test.c (32 checks): known values (the floored and ceiled products, the clamps, FIX, a CT24
+frame's Ad 0x80), the stored alpha's round trip, every form's GPU model against the GS over a grid of Cs /
+Cd and every As (exact forms) or As <= 0x80 (the rest), the bevel's two forms at As 0x90 for every Cs / Cd,
+the masks, and all 81 forms drawn by the model's sprite equal to `kh1_blend_gs`. tests/host/atest_test.c
+(12 checks): the eight methods, every TEST state's draws against the GS's rules for every fragment alpha and
+four frame alphas, the game's values as one draw, and each ATST / AFAIL / DATE / DATM drawn by the model's
+sprite. For that, `kh1_gsmem_sprite` takes the alpha test and DATE when the new `KH1GsSprite.tests` is 1;
+gsregs.c passes 0, so a run's model and traces are unchanged.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question
@@ -2020,8 +2079,8 @@ the fake-disc run (§4.7) and the session 15 dump (§3.3) write:
 | `RGBAQ`, `ST`, `UV`, `XYZ(F)2/3`, `FOG` | the vertex being built | | vertex attributes (RGBA 0x80 = 1.0; ST/Q; XY 12.4 minus XYOFFSET) |
 | `FRAME_1` / `FRAME_2` | per context | FBP `0x000` CT24, `0x8C` CT24 640, `0xD0` CT32 (3D target), `0x1B0`, `0x1D0` FBW 256 (off-screen), `0x1F0` FBW 64, `0x70` (Z area as colour); FBMSK 0, `0xFFFFFF`, `0xFF000000` | selects the render target (§3.1's addresses map to GPU targets); FBMSK to the colour write mask |
 | `ZBUF_1` / `ZBUF_2` | per context | ZBP `0x70` Z24 (and `0x0` once); ZMSK 0/1; Z16S `0x380000` in the shadow pass (§3.3) | depth target and depth write |
-| `TEST_1` / `TEST_2` | per context | renderer A's TEST_2 from the C: `0x31001`, `0x5010D` (AREF 16), `0x507FD` (AREF 127), `0x5000D`, `0x50000` (§4.11); 11 + 4 values: ATST ALWAYS/NEVER/GEQUAL/GREATER/LESS/NOTEQUAL, AREF 0/16/120/127/128, AFAIL KEEP/FB_ONLY/ZB_ONLY, DATE/DATM, ZTE 0/1, ZTST ALWAYS/GEQUAL/GREATER | alpha test as a shader discard against AREF/128; AFAIL as write masks on the failing fragments (two draws where it is not KEEP); DATE as stencil; ZTST to the depth function (ZTE 0 = ALWAYS) |
-| `ALPHA_1` / `ALPHA_2` | per context | five equations (§3.2 ALPHA), FIX 0 / 128; the window bevel's subtractive `(0-Cs)*As+Cd`, written **inside a strip** (§4.9) | blend state (§5's rows); keep A/B/C/D and FIX as a key; a write between a strip's kicks splits the strip |
+| `TEST_1` / `TEST_2` | per context | renderer A's TEST_2 from the C: `0x31001`, `0x5010D` (AREF 16), `0x507FD` (AREF 127), `0x5000D`, `0x50000` (§4.11); 11 + 4 values: ATST ALWAYS/NEVER/GEQUAL/GREATER/LESS/NOTEQUAL, AREF 0/16/120/127/128, AFAIL KEEP/FB_ONLY/ZB_ONLY, DATE/DATM, ZTE 0/1, ZTST ALWAYS/GEQUAL/GREATER | alpha test as a shader discard against AREF/128; AFAIL as write masks on the failing fragments (two draws where it is not KEEP and the test can pass; 4.13 "Session 121"); DATE as stencil; ZTST to the depth function (ZTE 0 = ALWAYS) |
+| `ALPHA_1` / `ALPHA_2` | per context | five equations (§3.2 ALPHA), FIX 0 / 128; the window bevel's subtractive `(0-Cs)*As+Cd`, written **inside a strip** (§4.9) | blend state (§5's rows; the mapping in 4.13 "Session 121"); keep A/B/C/D and FIX as a key; a write between a strip's kicks splits the strip |
 | `TEX0_1` / `TEX0_2` | per context | 24 static values (CT32, CT24, PSMT8, PSMT8H, PSMT4, PSMT4HL); `TEX0_2` only from the model data | the texture key (TBP0, TBW, PSM, TW, TH, CBP, CPSM, CSA) into the decoded-texture cache; TCC / TFX to the shader; CLD decides when the CLUT is (re)read |
 | `TEX1_1` / `TEX1_2` | per context | MMAG/MMIN 0 or 1; LCM 0/1; MXL 0 everywhere | sampler filter; no mipmaps (drop LCM, MXL, L, K, MTBA) |
 | `TEX2_1` / `TEX2_2` | into TEX0's PSM and CLUT fields | the HUD's environment (PSMT8, CBP 0, CLD 1); the text headers (PSMT8, CBP `0x3FFC` / `0x3DFC`, CLD 2); **one per glyph** (PSMT4HL or PSMT4HH, CSA 0 / 1, CLD 0) and per window part (PSMT4, CSA 0 / 3 / 4) (§4.9) | a palette or 4-bit-half change without a texture change: the texture key takes PSM and CSA from it |

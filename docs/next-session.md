@@ -9,13 +9,28 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 120 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 121 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 120, 2026-10-25)
+## Where we stopped (end of session 121, 2026-10-25)
+
+- **Session 121** (static, vita-port-plan 5.1bi): **the blend state, the alpha test and the destination alpha.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
+  include/platform/blend.h / host/port/blend.c (renderer-spec 4.13 "Session 121"): the port's targets keep
+  alpha on the 0x80 scale (`min(As, 0x80) / 0x80`), so the shader's output alpha is the factor and the stored
+  value; the shader pre-scales Cs (floored, or ceiled when subtracted) and the GPU's factors carry only the
+  destination's term. The game's additive, subtractive (the bevel's As 0x90) and no-blend forms are exact
+  for every As; the normal blend `0x44` and the darken `0x81` within 2 while As <= 0x80 (the factor clamps
+  above). 30 of 135 forms need the shader to read the frame, none in the main ELF. New
+  include/platform/atest.h / host/port/atest.c: the alpha test as a shader discard, AFAIL as a second draw
+  where needed (none of the game's TEST values needs it), DATE / DATM as a stencil set-up from the stored
+  alpha's 1.0. `kh1_gsmem_sprite` takes ATE / DATE when `KH1GsSprite.tests` is 1 (tests only; gsregs.c passes
+  0). New tests/host/blend_test.c (32 checks) and atest_test.c (12). kh1.elf byte-identical, no float-untested
+  row; selftest PASS.
+
 
 - **Session 120** (static, vita-port-plan 5.1bh): **the texture function and the sampler state in the shader.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
@@ -571,7 +586,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 121 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 122 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -593,7 +608,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 120: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 121: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -638,18 +653,21 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests, fscheck's run-time
    builds and longcheck's `--cc` are skipped): (a) **the user's answer on the full-width rules** (session
-   101's card, still unanswered at session 120): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
+   101's card, still unanswered at session 121): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
    winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session 101"'s paragraph (say so in a new
-   vita-port-plan 5.1 entry); (b) **the blend state** (the next step after 5.1bh): ALPHA's A / B / C / D and
-   FIX as a GPU blend state, as port code (a host/port/blend.c and its header) tested against
-   `kh1_gsmem_sprite`'s ABE blending: the GS's C is As, Ad or FIX on the 0x80 scale, so As above 0x80 is a
-   factor above 1.0 that a GPU blend factor clamps (which equations the game uses, from §3.2's five and the
-   window bevel's subtractive one, and whether any draw's alpha goes past 0x80: the shader can pre-scale the
-   colour, or a second form is needed); COLCLAMP 1 and the written alpha (the source's); FBMSK as the write
-   mask; (c) **the alpha test and destination alpha**: TEST's ATST / AREF / AFAIL as a shader discard and
-   write masks (AFAIL FB_ONLY / ZB_ONLY / RGB_ONLY), DATE / DATM as a stencil, tested on the model's sprite
-   where it models them (extend `kh1_gsmem_sprite` for ATE if needed, the PS2 build untouched); record which
-   forms the game sets in renderer-spec 4.13 "Session 121".
+   vita-port-plan 5.1 entry); (b) **the depth state** (the next step after 5.1bi): ZBUF / TEST's ZTE / ZTST /
+   ZMSK and XYZ2's Z as a GPU depth state, as port code (a host/port/depth.c and its header): Z24 and Z16S
+   as a depth format (the integer Z on the GS against a GPU's float or 24-bit depth: GEQUAL with Z growing
+   toward the viewer, the exact compare of equal Zs, the far / near range renderer A / B send), ZMSK as the
+   depth write, the Z buffer drawn as colour (sceneeff `func_00103c48`, renderer-spec 3.2) and read back as a
+   texture (TBP0 0xE00), tested on the GS model where it models Z (extend it if needed, the PS2 build
+   untouched); and **fog** (PRIM's FGE, the vertex FOG, FOGCOL): the GS's `(F x C + (0xFF - F) x FOGCOL) >> 8`
+   after the texture function, before the alpha test and blend, as a shader step, exact on 8-bit values;
+   (c) **the primitive assembly**: the GIF's vertex queue as GPU primitives (POINT, LINE, LINESTRIP,
+   TRIANGLE, TRISTRIP, TRIFAN, SPRITE as two triangles; IIP 0's flat colour from the last vertex: a GPU's
+   provoking vertex; a register write inside a strip splitting it with the last two vertices kept, the
+   bevel's case), tested against gsregs.c's queue; record which forms the game sends in renderer-spec 4.13
+   "Session 122".
    (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
    callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
    --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
@@ -661,10 +679,13 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    and 4M texels enough?) and the bytes the slot `0x3600` takes a frame (`--uploads`), into renderer-spec 4.13
    "Session 117" / "Session 118"; and (session 120) the draws' TEX0 TFX / TCC (any HIGHLIGHT among the
    meshes' TEX0_2 or renderer B's per-draw TEX0?), CLAMP_2 and TEX1_2 (`--draws`), for 4.13 "Session 120"'s
-   tables.
+   tables; and (session 121) **the blend's As**: count the `0x44` (normal blend) draws whose As can pass 0x80
+   (a texel alpha above 0x80 under MODULATE, or a vertex alpha above it: renderer A / B's meshes), and any
+   render target sampled with TCC 1 whose stored alpha went past 0x80, for 4.13 "Session 121" (if either is
+   not 0, those draws need the shader's frame read).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=121`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=122`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 122) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 123) with this
    prompt: the user wants each session to start the next one without being asked.

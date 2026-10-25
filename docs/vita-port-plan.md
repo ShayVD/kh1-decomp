@@ -2672,6 +2672,27 @@ docs only, no float-untested row. selftest PASS (texfunc_test 33 checks, sampler
 - **To check on the real disc**: the meshes' TEX0_2 TFX and CLAMP_2 / TEX1_2 values (`gsstate.py --draws`).
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bi Session 121: the blend state, the alpha test and the destination alpha
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host and test code and
+docs only, no float-untested row. selftest PASS (blend_test 32 checks, atest_test 12).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The blend state** (item 4b): new include/platform/blend.h and host/port/blend.c (renderer-spec 4.13 "Session
+  121"). The port's targets keep alpha on the 0x80 scale (`min(As, 0x80) / 0x80`), so the shader's output
+  alpha is both the factor and the stored value and DST_ALPHA is Ad / 0x80; the shader pre-scales Cs (floored,
+  or ceiled when subtracted, where the destination's factor is 0 / 1: exact for every As). The game's
+  additive, subtractive (the bevel's As 0x90 included) and no-blend forms are exact; the normal blend and the
+  darken are within 2 while As <= 0x80 and clamp above it. 30 of 135 forms need the shader to read the frame;
+  none is in the main ELF. FBMSK as channel masks (the game's 0, 0xFFFFFF, 0xFF000000).
+- **The alpha test and DATE** (item 4c): new include/platform/atest.h and host/port/atest.c: the compare in the
+  shader on texfunc's exact 8-bit alpha, AFAIL as a second draw with its own masks where needed (none of the
+  game's TEST values needs it), DATE / DATM as a stencil set-up from the stored alpha's 1.0 (exact on the 0x80
+  scale). `kh1_gsmem_sprite` takes ATE / DATE when `KH1GsSprite.tests` is 1 (the tests only; gsregs.c passes 0).
+- **To check on the real disc**: whether a `0x44` draw's As goes past 0x80 (the meshes' vertex / texel alphas),
+  and whether anything samples a render target's alpha above 0x80.
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

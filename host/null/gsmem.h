@@ -133,6 +133,10 @@ typedef struct {
     u32 rgba;                                  /* the second vertex's RGBA (a sprite is flat) */
     s32 uorg;                                  /* session 99: added to both u (10.4) as the model reads them:
                                                 * a wide copy's read-back by the margin (gsregs.c) */
+    u32 tests;                                 /* session 121: 1 lets the sprite take TEST's alpha test (every
+                                                * ATST / AFAIL; ZB_ONLY writes nothing, no Z being written) and
+                                                * DATE on a CT32 frame (tests/host/atest_test.c); gsregs.c
+                                                * passes 0, so a run's model and traces are as before */
 } KH1GsSprite;
 int kh1_gsmem_sprite(const KH1GsSprite *s);
 /* session 95: an untextured SPRITE (clear, fade, letterbox) filled into the model's pixels for the

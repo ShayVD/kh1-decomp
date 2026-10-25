@@ -503,17 +503,21 @@ static u32 texel(u32 c, u32 n, u32 wm) { return wm ? (c >= n ? n - 1 : c) : c & 
 /* a u read back by a wide copy's margin can start left of texel 0 (session 99): the model has none there */
 static s32 umax0(s32 u) { return u < 0 ? 0 : u; }
 
+static int atst(u32 m, u32 a, u32 ref);
+
 int kh1_gsmem_sprite(const KH1GsSprite *s) {
     static u32 tex[64 * 64];
     u32 p = s->prim, fpsm = s->frame_lo >> 24 & 63, fbp = (s->frame_lo & 0x1FF) * 32, fbw = s->frame_lo >> 16 & 63;
     u32 tw = s->tex0_lo >> 26 & 15, th = (s->tex0_lo >> 30 | s->tex0_hi << 2) & 15, tfx = s->tex0_hi >> 3 & 3;
     u32 tcc = s->tex0_hi >> 2 & 1, ztst = s->test_lo >> 17 & 3, wms = s->clamp_lo & 3, wmt = s->clamp_lo >> 2 & 3;
-    u32 w, h, n = 0, x, y, i, t, d, cv[4], ct[4], cd[4], fbmsk = s->frame_hi, v;
+    u32 w, h, n = 0, x, y, i, t, d, cv[4], ct[4], cd[4], fbmsk = s->frame_hi, v, pmsk;
     s32 x0, y0, x1, y1, u0, v0, u1, v1, px0, px1, py0, py1, k, c, col[4], as, ad, f;
     const u32 *pal;
     if ((p & 7) != 6 || (p & 0x130) != 0x110 || s->tex1_lo & 0x1E0 || tfx > 1 || wms > 1 || wmt > 1) return 0;
     if (fpsm != KH1_PSMCT32 && fpsm != KH1_PSMCT24) return 0;
-    if (!fbw || s->test_lo & 1 || s->test_lo >> 14 & 1) return 0;            /* ATE, DATE */
+    if (!fbw) return 0;
+    if (!s->tests && (s->test_lo & 1 || s->test_lo >> 14 & 1)) return 0;     /* ATE, DATE */
+    if (s->test_lo >> 14 & 1 && fpsm != KH1_PSMCT32) return 0;               /* DATE on a frame with no alpha */
     if (s->test_lo >> 16 & 1 && !(ztst == 1 && s->zbuf_hi & 1)) return 0;    /* a Z test or write */
     if (tw > 6 || th > 6 || kh1_gsmem_tex_target(s->tex0_lo, s->tex0_hi)) return 0;
     w = 1u << tw;
@@ -561,6 +565,16 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
             for (i = 0; i < 3; i++) col[i] = tfx ? ct[i] : clamp255(ct[i] * cv[i] >> 7);
             col[3] = tcc ? (tfx ? ct[3] : clamp255(ct[3] * cv[3] >> 7)) : cv[3];
             d = kh1_gsmem_read_pixel(fpsm, fbp, fbw, c, k);
+            pmsk = fbmsk;
+            /* session 121 (s->tests): DATE passes where Ad's bit 7 is DATM; a failed alpha test writes
+             * by AFAIL: KEEP nothing, FB_ONLY the frame, ZB_ONLY the Z buffer (not written here: nothing),
+             * RGB_ONLY the colour without the alpha */
+            if (s->test_lo >> 14 & 1 && (d >> 31) != (s->test_lo >> 15 & 1)) continue;
+            if (s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)col[3], s->test_lo >> 4 & 0xFF)) {
+                u32 afail = s->test_lo >> 12 & 3;
+                if (afail == 0 || afail == 2) continue;
+                if (afail == 3) pmsk |= 0xFF000000u;
+            }
             if (p >> 6 & 1) { /* ABE: ((A - B) x C >> 7) + D */
                 for (i = 0; i < 4; i++) cd[i] = d >> i * 8 & 0xFF;
                 as = col[3];
@@ -574,7 +588,7 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
                 }
             }
             v = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
-            v = (d & fbmsk) | (v & ~fbmsk);
+            v = (d & pmsk) | (v & ~pmsk);
             put(fpsm, fbp, fbw, c, k, v);
             n++;
         }
