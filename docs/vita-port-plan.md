@@ -1073,6 +1073,38 @@ AREF<=120` with Z written and the model's fog colour, the translucent pass `ATST
 `(Cs-Cd)*As+Cd`); func_0015f8c8's sub-rectangle uploads (texture animation); func_0015f388's reset (blending off,
 `ATST GEQUAL AREF 128`), placed in the draw list at four keys. 5.1's table has these values without a run.
 
+### 5.1t Session 80: GS memory on the host, the builders giftags.py misses, renderer A's state from the C
+
+Static only (the Mac was away until 2026-10-26). Only host/, tests/, tools/host and docs/ changed: kh1.elf is
+byte-identical, every out/build object bit-identical (sha1 of all 677 before and after), no src/ or shift input
+touched, so the float ELF is the same and there is no float-untested.md row.
+
+**host/null/gsmem.c** (new; renderer-spec 5.2): 4 MB of GS local memory with the block / page / column swizzle of
+CT32, CT24, CT16, T8, T4, T8H, T4HL and T4HH (bit formulas, checked against PCSX2's tables for every pixel of a
+page, outside the repo), written by host->local uploads (TRXDIR, then dmawalk.c's IMAGE qwords; HWREG too) and
+local->local copies, the GS's 512-halfword CLUT buffer loaded at each TEX0 / TEX2 by CLD (0-5), and a reader that
+decodes a TEX0 to RGBA8 (`kh1_gsmem_read_tex`) with page stamps for a texture cache. tests/host/gsmem_test.c (36
+checks) in `make test`. `KH1_HOST_TRACE=5` prints each send's uploads, `gsstate.py --uploads` lists them, and
+**`KH1_HOST_TEXDUMP=DIR`** writes each drawn texture as a .pam. Fake disc, stub:2: three uploads from
+func_001ef950 (src/text/text.c): the message font as PSMT4HL / PSMT4HH 256x256 at `0x1000` and its 16x16 CT32 CLUT
+at `0x3FFC`; the font lands inside the Z area's 512x512 at `0x0E00`. Valgrind 0 errors to the overlay fault.
+
+**The boot draw environment reaches the host's register file**: PlatGsPutDrawEnv (null) now feeds
+`kh1_dma_gif_direct`, so func_001100a8's 31 A+D (both contexts, renderer-spec 4.11) are in the state: fake disc
+87 sends, 22 chains, 40 registers, 61 values.
+
+**renderer-spec 4.10** (from the C): menu rows / lists draw through wintext / winpart only; the list frame
+`func_00208458` restarts three strips in one tag with ADC; **the field text and the selector use their own static
+headers, REGLIST packets and PRIM as a register write, ZTE 1**; the field text's palettes pick a texel's low / high
+2 bits (`func_0010e610`, read from the C); **the HUD gauges draw TRIANGLE pairs and a TRIFAN**, each triangle
+re-loading the CLUT with a PSMT8 TEX0 then the real one. Five corrections to 4.9.
+
+**renderer-spec 4.11** (from the C): renderer A writes no GS register in its VIF chains (meshes by XGKICK);
+context 2's state is the boot environment plus six PATH3 A+D packets at draw-list keys 10010 (a backdrop pass with
+`TEST_2` NEVER / FB_ONLY / ZTST ALWAYS; FOGCOL each frame), 10020 (AREF 16), 40000 (AREF 127 per opaque prop), 50000
+(ZMSK 1, translucent) and 50100 (restore), plus the shadow's; mesh TEX0_2 / CLAMP_2 / batch PRIMs come from the
+disc files (inferred). Corrections to 4.6, 3.3 and 5.1's FOGCOL row.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

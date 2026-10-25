@@ -420,3 +420,27 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
                                      v.bad_word, v.bad_addr);
     return bad;
 }
+
+/* A GIF packet sent without a chain (sceGsPutDrawEnv's normal-mode send: the boot draw environment,
+ * renderer-spec 4.11), read like a walk's GIF stream; the line has a send's shape (chcr 0) so
+ * tools/host/gsstate.py names it by the packet's host symbol.  Session 80. */
+void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
+    GifStream g = { 0 };
+    char regs[400];
+    int i;
+    gs_nval = 0;
+    kh1_gs_clear_draws();
+    kh1_gsmem_clear_log();
+    gif_block(&g, q, qwc);
+    gif_regs(&g, regs);
+    printf("kh1-host: dma ch 2 chcr 00000000 tadr %08x: direct (normal mode), %u qwords; gif %u packets%s%s%s\n",
+           (u32)(unsigned long)q, qwc, g.packets, g.left ? ": ENDS INSIDE A PACKET" : "", regs[0] ? "; regs" : "",
+           regs);
+    if (kh1_host_trace >= 4)
+        for (i = 0; i < (int)gs_nval; i++)
+            printf("kh1-host:   gs %02x %08x%08x\n", gs_val[i].reg, gs_val[i].hi, gs_val[i].lo);
+    if (kh1_host_trace >= 5) {
+        gs_print_draws();
+        gs_print_uploads();
+    }
+}
