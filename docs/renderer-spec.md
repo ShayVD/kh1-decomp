@@ -2175,7 +2175,7 @@ draft's header says). The divider is assumed to round to nearest.
 that change), and the markers' bounds `D_00469F90.x` / `D_00469FA0.x` become 1709.2 / 2386.8. objwin's
 `func_0010b390` now tests `PLAT_VIEW_X0` / `PLAT_VIEW_X1` (include/platform/view.h: the literals 0 / 512 on
 the PS2, so its object is bit-identical; `kh1_view_x0` / `kh1_view_x1` = -82 / 594 on the host with the
-switch). The null platform draws nothing, so the switch shows only in what the culls let through; the
+switch; session 95: -82.8125 / 594.8125 from `kh1_view_side16`, "Session 95" below). The null platform draws nothing, so the switch shows only in what the culls let through; the
 fake-disc run ends in `func_00132790` as before with and without it.
 
 **The other projections in the main ELF** (5.4's open item): only the camera path writes the frustums
@@ -2230,14 +2230,14 @@ scissor equal to the full 4:3 canvas means the whole view (the GS cannot hold a 
 a renderer rule, not a game change).
 
 **The full-screen passes' 512-wide constants** (5.3 step 2's list). Built in C, now through
-`include/platform/view.h` (`PLAT_VIEW_W` = 512, `PLAT_VIEW_GX0` / `PLAT_VIEW_GX1` = `0x7000` / `0x9000` on the
+`include/platform/view.h` (`PLAT_VIEW_W` = 512, since session 95 `PLAT_VIEW_W16` = 8192, `PLAT_VIEW_GX0` / `PLAT_VIEW_GX1` = `0x7000` / `0x9000` on the
 PS2, where every use folds to the original's literal: **all 677 out/build objects bit-identical**):
 
 | Pass | Function | Constant | Under the wide view |
 | --- | --- | --- | --- |
 | Menu blur, nine copies | sceneeff.c `func_00102a48` | x `0x6fe0 +- o` .. `0x8fe0 +- o` (the -2 px base) | `PLAT_VIEW_GX0 - 0x20 +- o` .. `PLAT_VIEW_GX1 - 0x20 +- o` |
-| Spin, the turned quad | sceneeff.c `func_00102cc8` | half width `4096` (256 px) about the centre | `PLAT_VIEW_W * 8`; the centre (256, `func_00102d20`'s `4096.0f`) stays |
-| Sway, the stretched copy | sceneeff.c `func_001032b0` | XYZ x `0x7000` / `0x9000`; texel `u1 = 0x2000 - u0` | `PLAT_VIEW_GX0 / GX1`; `u1 = PLAT_VIEW_W * 16 - u0` (texels from the view's left edge) |
+| Spin, the turned quad | sceneeff.c `func_00102cc8` | half width `4096` (256 px) about the centre | `PLAT_VIEW_W16 / 2` (session 95; `PLAT_VIEW_W * 8` before); the centre (256, `func_00102d20`'s `4096.0f`) stays |
+| Sway, the stretched copy | sceneeff.c `func_001032b0` | XYZ x `0x7000` / `0x9000`; texel `u1 = 0x2000 - u0` | `PLAT_VIEW_GX0 / GX1`; `u1 = PLAT_VIEW_W16 - u0` (texels from the view's left edge; session 95) |
 | Depth blur, nine copies and the mode 1 mask | sceneeff.nostrict.c `func_00103058` | x `0x6fc0` / `0x6fe0` / `0x7000` .. `0x8fc0` / `0x8fe0` / `0x9000` | `PLAT_VIEW_GX0 / GX1` less 0x40 / 0x20 / 0 |
 | Flash after the frame copy (cases 0 / 1) | brightfade.c `func_00106000` | `D_002A6970[10 / 11]` x `0x7000` / `0x9000` | `PLAT_VIEW_GX0 / GX1`; case 2 (the 640-wide movie buffer) stays 4:3 |
 | A full-width colour band, y 64-320 | opdma.c `func_001aa7a0` (no main-ELF caller: an overlay's) | x `0x7000` / `0x9000` (96-bit literals on the PS2) | `PLAT_VIEW_GX0 / GX1` (the non-PS2 branch) |
@@ -2269,7 +2269,7 @@ through `func_00106b18`, read with `gs_packets.py -v`), with what stretches:
 | `D_002A61E0` letterbox (two bars) | target | X |
 | `D_002A5FD0` the target copied into the Z area (16 strips from x 1790.5) | Z area | X and u |
 | `D_002A4ED0` the spin's display-to-target copy (u 1 .. 513; `SCISSOR_1` the full canvas) | target | X and u |
-| `D_002A4FC0` the spin's turned strip `D_002A4F60` (u 0.5 .. 512.5) | target | u only: its XYZ come from C, already wide (`func_00102cc8`'s `PLAT_VIEW_W`) |
+| `D_002A4FC0` the spin's turned strip `D_002A4F60` (u 0.5 .. 512.5) | target | u only: its XYZ come from C, already wide (`func_00102cc8`'s `PLAT_VIEW_W16`) |
 | `D_002B6760` the menu capture (u 0 .. 512 to x 1792 .. 2048, a half-size buffer of its own) | capture | u, and X scaled from the buffer's left edge without the view's offset (`KH1_FS_XS`) |
 | `D_002BC980` **the display clear** (dispenv.c `func_0010ff60`, a grey level over 512 x 448; not in session 92's list) | display | X |
 
@@ -2332,6 +2332,47 @@ written as a PAM through the canvas map's inverse (`kh1_canvas_unmap`), pillarbo
 read as the canvas's 384. It shows what the model holds (uploads, copies, point-sampled textured sprites,
 5.2), not the 3D or the untextured passes: black on the fake disc, a check of the uploads and 2D sprites on
 the real one.
+
+#### Session 95: one margin, the flat sprites in the present, prim.c's send (static + host)
+
+**One convention for the view's margin.** Before, `kh1_view_x0 / x1` truncated the margin to whole pixels
+(-82 .. 594) while the static packets' stretch, the HUD's anchors and the scissor rule used 1325 sixteenths
+(82.8125 px) and `PLAT_VIEW_SIDE` the unrounded 82.82: at the edges the C passes (the sway's u1, the spin,
+the blur, opdma's band, objwin) and the stretched packets could miss each other by up to 0.8 px. **Decided:
+sixteenths.** `kh1_view_init` rounds the margin once, `kh1_view_side16` (1325 at 960 x 544), and every form
+in `include/platform/view.h` is exact in it: `PLAT_VIEW_GX0 / GX1` = `0x7000 - side16` / `0x9000 + side16`,
+`PLAT_VIEW_W16` = `8192 + 2 side16` (the spin's half width `W16 / 2`, the sway's `u1 = W16 - u0`;
+`PLAT_VIEW_W` is gone), `PLAT_VIEW_X0 / X1` = `-side16 / 16` / `512 + side16 / 16` (floats now: objwin
+compares a float), `PLAT_VIEW_SIDE` = `side16 / 16` (the lens grid's u: 82.8125), the markers' bounds 1792 -
+/ 2304 + the same. The null platform's HUD shift, full-screen stretch and scissor rule take `kh1_view_side16`
+itself (`kh1_null_hud_wide(s32)`), and the present's `kh1_canvas_fit` computes the same 1325 from the
+screen: tests/host/canvas_test.c checks the two agree, and that `GX0 / GX1 / X0 / X1 / SIDE` and the
+markers sit on the canvas's view edges, at six screens (960 x 544, 1920 x 1080, 1280 x 720, 2560 x 1080, 800
+x 480, 640 x 480). On the PS2 every form folds to the original's literal: **all 677 out/build objects
+bit-identical**.
+
+**The flat sprites in the present.** host/null/gsmem.c's `kh1_gsmem_flat_sprite` fills an untextured
+SPRITE (the clears `D_002A6500`, the display clear `D_002BC980`, fade, letterbox) into the model's pixels,
+with the GS's pixel rule, SCISSOR, ALPHA blending and FBMSK, into a CT32 / CT24 / CT16 / CT16S FRAME. It is
+**off unless the present turns it on** (`kh1_gsmem_flat(1)` in `kh1_present_init`) and it leaves the trace
+as it was: the pages are not marked as written (the draw is still marked by `kh1_gsmem_draw`, a render target
+is still one), and only its own counters move (`flat_sprites`, `flat_pixels`; the shot line prints the
+count). Not filled: fog, a Z test other than ALWAYS (and Z is never written), DATE, an alpha test the flat
+alpha does not settle with AFAIL KEEP. Fake disc, 60 frames, `KH1_HOST_TRACE=5`: `gsstate.py --draws`,
+`--targets`, `--uploads`, `--sends` identical with and without `KH1_HOST_SHOT`; 16 flat sprites a frame
+filled, still black (the fake disc's clear colour is 0). gsmem_test +6 checks, present_test +1.
+
+**`src/gfx/prim.c`'s staging send** (`D_00648070`, func_00238440): **not a HUD part.** It sends kind 1
+draw-list nodes one at a time, built by `func_00237790`: two model-space points through the caller's matrix,
+clipped (`PlatVu0ClipScreen3`) and projected (`RotTransPersN`), as a Gouraud LINE (PRIM 9) with Z: 3D lines
+drawn under whatever environment the 3D pass left, so they follow the 3D's canvas map and need no anchor.
+**No main-ELF caller** (no `jal`, no pointer word, no `lui / addiu` pair to `0x00238440`), and neither have
+prim.nostrict.c's `func_002384e0` / `func_00238768` or prim.nostrict_nofill.c's `func_002386c0` (all
+three send into a caller's buffer); only `func_002388b8` (the textured quads written into a caller's buffer,
+not sent) has callers, 18 of them in src/hud, whose sends hudcheck already covers. So the four senders are an
+overlay's (dktitle.x check). hudcheck.py now also lists the staging sends outside src/hud and fails on one
+`OTHER_STAGES` does not name (one: `D_00648070`); the self-test renames the buffer in a copy and expects the
+failure.
 
 #### Open (need the real disc or a boot)
 

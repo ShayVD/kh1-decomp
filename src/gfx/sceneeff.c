@@ -130,7 +130,7 @@ void func_00102cc8(s32 *x0, s32 *x1, s32 *y0, s32 *y1) {
     s32 ox = D_002BC0A0, cx = D_002BC090, oy = D_002BC0A4, cy = D_002BC094;
     s32 x = (cx + ox) * 16, y = (cy + oy) * 16;
     /* the view's half width (4096 on the PS2), the 4:3 half height */
-    *x0 = x - PLAT_VIEW_W * 8; *x1 = x + PLAT_VIEW_W * 8; *y0 = y - 3072; *y1 = y + 3072;
+    *x0 = x - PLAT_VIEW_W16 / 2; *x1 = x + PLAT_VIEW_W16 / 2; *y0 = y - 3072; *y1 = y + 3072;
 }
 
 /* func_00102d20 (from auto/text_00100000_2.c). */
@@ -260,7 +260,7 @@ s32 func_001032b0(void) {
     if (*a < -3.1415928f) *a += 6.2831855f;
     u0 = (s32)(cosf(*a) * 48.0f + 64.0f);
     v0 = (s32)(sinf(*a) * 48.0f + 64.0f);
-    u1 = PLAT_VIEW_W * 16 - u0; /* the target copy's width (renderer-spec 5.4 "Session 92") */
+    u1 = PLAT_VIEW_W16 - u0; /* the target copy's width (renderer-spec 5.4 "Session 92") */
     v1 = 0x1800 - v0;
     p = func_00106ca8(6);
     p[0] = 0xA400000000008001;

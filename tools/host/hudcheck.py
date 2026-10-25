@@ -16,7 +16,9 @@ every environment the C builds or sends and checks:
     function or in a caller before the call that reaches it, and every environment that can reach it
     keeps the same side. The host's GIF path moves a staging send by the environment sent before it,
     so a staging send under no environment, or under two parts' environments with different sides,
-    would draw a part where another part goes.
+    would draw a part where another part goes;
+  - (session 95) each staging send outside src/hud is one OTHER_STAGES names, with what it draws: a
+    new one is a HUD part or a 3D pass someone has to place.
 
 No build and no game data: it reads src/ and host/port/hudanchor.c.
 
@@ -34,6 +36,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # environments built or sent outside src/hud: what they are
 OTHER = {
     "D_006480D0": "gspkt.c's default environment (func_002372e0 / func_00237318: no main-ELF caller, an overlay's)",
+}
+
+# staging sends outside src/hud: what they draw (session 95, renderer-spec 5.4 "Session 95")
+OTHER_STAGES = {
+    "D_00648070": "prim.c func_00238440's 3D lines (kind 1 draw-list nodes projected through the caller's "
+                  "matrix, func_00237790; no HUD part): no main-ELF caller, an overlay's",
 }
 
 BUILD = re.compile(r"\bfunc_002370c8\s*\(\s*&?\s*(D_[0-9A-F]{8})\s*\)")
@@ -190,7 +198,18 @@ def main():
                                 % (sym, ", ".join(where)))
         if a.v:
             print("%s  %-7s %s" % (sym, kind if kind in ("anchor", "marker") else "other", ", ".join(where)))
-    stages = staging(functions(a.src))
+    funcs = functions(a.src)
+    stages = staging(funcs)
+    outside = [("%s:%d" % (path, line), what, name) for name, (path, _, ev) in sorted(funcs.items())
+               if not path.startswith("src/hud/") for line, kind, what in ev if kind == "stage"]
+    for where, base, fn in outside:
+        if base not in OTHER_STAGES:
+            problems.append("staging send %s (%s, in %s) is outside src/hud and OTHER_STAGES does not name it"
+                            % (base, where, fn))
+        if a.v:
+            print("stage %s  %s in %s: outside src/hud: %s" % (base, where, fn, OTHER_STAGES.get(base, "?")))
+    for base in sorted(set(OTHER_STAGES) - {b for _, b, _ in outside}):
+        problems.append("OTHER_STAGES names %s but no staging send outside src/hud uses it" % base)
     for where, base, fn, found in stages:
         kinds = {side.get(e, "marker" if e in markers else "?") for e in found}
         if not found:
@@ -204,8 +223,8 @@ def main():
                 "%s via %s" % (e, " <- ".join(c)) for e, c in sorted(found.items())) or "nothing"))
     for p in problems:
         print("hudcheck: " + p)
-    print("hudcheck: %d HUD environments (%d anchored, %d markers), %d other; %d staging sends; %d problems"
-          % (hud, len(anchors), len(markers), other, len(stages), len(problems)))
+    print("hudcheck: %d HUD environments (%d anchored, %d markers), %d other; %d staging sends (%d outside src/hud); "
+          "%d problems" % (hud, len(anchors), len(markers), other, len(stages), len(outside), len(problems)))
     return 1 if problems else 0
 
 

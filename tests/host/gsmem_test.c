@@ -398,6 +398,61 @@ int main(void) {
         CHECK("sprite: bilinear is a target", st->sprites == 2 && kh1_gsmem_targets(0, 0) == 1);
     }
 
+    /* session 95: the present's flat sprites (kh1_gsmem_flat_sprite).  A full-screen clear into a CT24
+     * display, then a blended band and a Z-tested sprite: with the switch off nothing is filled; on,
+     * the pixels are, and the targets, the draws and the other counters are the same either way */
+    {
+        static const u32 tex_disp = 0 | 8 << 14 | KH1_PSMCT24 << 20 | 9u << 26 | 1u << 30, tex_hi = 2;
+        u32 on, draws[2], tgt[2], tex[2], spr[2], n[2];
+        for (on = 0; on < 2; on++) {
+            kh1_gs_reset();
+            kh1_gsmem_flat(on);
+            kh1_gs_write(0x18, 0x7000, 0x7400);
+            kh1_gs_write(0x40, 511 << 16, 447 << 16);
+            kh1_gs_write(0x4C, 0 | 8 << 16 | KH1_PSMCT24 << 24, 0);
+            kh1_gs_write(0x47, 0x30000, 0); /* ZTE, ZTST ALWAYS */
+            kh1_gs_write(0x00, 6, 0);
+            kh1_gs_write(0x01, 0x80102030, 0x3F800000);
+            kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+            kh1_gs_write(0x05, 0x9000 | 0x9000 << 16, 0); /* 448 lines */
+            /* the letterbox's kind: black at alpha 0x40 over rows 0 .. 39, (Cs - Cd) As + Cd */
+            kh1_gs_write(0x42, 0x44, 0);
+            kh1_gs_write(0x00, 6 | 1 << 6, 0);
+            kh1_gs_write(0x01, 0x40000000, 0x3F800000);
+            kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+            kh1_gs_write(0x05, 0x9000 | (0x7400 + 40 * 16) << 16, 0);
+            /* ZTST GEQUAL: a Z test the fill leaves alone */
+            kh1_gs_write(0x47, 0x50000, 0);
+            kh1_gs_write(0x00, 6, 0);
+            kh1_gs_write(0x01, 0x80FFFFFF, 0x3F800000);
+            kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+            kh1_gs_write(0x05, 0x7100 | 0x7500 << 16, 0);
+            draws[on] = st->target_draws;
+            tgt[on] = kh1_gsmem_targets(0, 0);
+            tex[on] = kh1_gsmem_tex_target(tex_disp, tex_hi);
+            spr[on] = st->sprites + st->uploads + st->copies + st->pixels;
+            n[on] = st->flat_sprites;
+            if (!on) CHECK("flat off: nothing filled", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 100, 100) == 0 && n[0] == 0);
+        }
+        CHECK("flat: the clear", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 100, 100) == 0x102030 &&
+              kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 511, 447) == 0x102030);
+        CHECK("flat: the band blended", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 5, 5) == 0x081018 &&
+              kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 5, 40) == 0x102030);
+        CHECK("flat: a Z test not filled", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 0, 39) == 0x081018);
+        CHECK("flat: counts", n[1] == 2 && st->flat_pixels == 512 * 448 + 512 * 40);
+        CHECK("flat: the same draws and targets", draws[0] == draws[1] && draws[0] == 6 && /* each a FRAME and a Z draw */ tgt[0] == tgt[1] &&
+              tex[0] == tex[1] && tex[0] != 0 && spr[0] == spr[1]);
+        /* a CT16 FRAME: RGBA 5551 */
+        kh1_gs_write(0x4C, 0x40 | 8 << 16 | KH1_PSMCT16 << 24, 0);
+        kh1_gs_write(0x47, 0, 0);
+        kh1_gs_write(0x00, 6, 0);
+        kh1_gs_write(0x01, 0x80FF0800, 0x3F800000);
+        kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+        kh1_gs_write(0x05, 0x7100 | 0x7500 << 16, 0);
+        CHECK("flat: CT16", kh1_gsmem_read_pixel(KH1_PSMCT16, 0x40 * 32, 8, 3, 3) == (0x8000 | 0x1F << 10 | 1 << 5));
+        kh1_gsmem_flat(0);
+    }
+
     /* texanim's scroll (session 84): row r of the copy is row (r + 3) % 8 of the source; at y 0 both
      * copies are 0 rows high and the destination keeps the last step's rows */
     for (y = 0; y < 8; y++)

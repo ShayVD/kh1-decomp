@@ -9,10 +9,23 @@
 #ifdef KH1_PS2
 #define PLAT_VIEW_X0 0
 #define PLAT_VIEW_X1 512
+#define PLAT_VIEW_SIDE16 0
+#define PLAT_VIEW_SIDE 0.0f
 #else
-extern s32 kh1_view_x0, kh1_view_x1;
-#define PLAT_VIEW_X0 kh1_view_x0
-#define PLAT_VIEW_X1 kh1_view_x1
+/* Session 95: one convention for the margin.  kh1_view_side16 is the view's margin past each 4:3
+ * edge in sixteenths of a canvas pixel (the GS's 12.4 unit), rounded once by kh1_view_init: 1325
+ * (82.8125 px) at 960 x 544, the same number the full-screen stretch, the HUD's anchors, the scissor
+ * rule and the present use (host/port/canvas.c kh1_canvas_fit, host/null/plat_null.c).  Every
+ * other form below is exact in it, so the C passes and the stretched static packets meet on the
+ * same sixteenth at both edges. */
+extern s32 kh1_view_side16;
+#define PLAT_VIEW_SIDE16 kh1_view_side16
+#define PLAT_VIEW_X0 (-kh1_view_side16 / 16.0f)
+#define PLAT_VIEW_X1 (512.0f + kh1_view_side16 / 16.0f)
+/* the view's margin in canvas pixels as a float (82.8125 at 960 x 544; 0.0f on the PS2).  The lens
+ * grid (sceneeff.c func_00103c48) reads its copy of the target, which starts at the view's left
+ * edge, at u 64 .. 448 of the 4:3 canvas: the margin moves its ST back onto the same pixels. */
+#define PLAT_VIEW_SIDE (kh1_view_side16 / 16.0f)
 /* the view's width over the PS2's 4:3 (1.0 there; KH1_HOST_WIDE sets it), and the start-up call
  * that applies it (host/port/view.c) */
 extern f32 kh1_view_wide;
@@ -20,23 +33,13 @@ void kh1_view_init(f32 aspect);
 #endif
 
 /* Session 92: the full-screen passes built in C (renderer-spec 5.4 "Session 92"): the clear, fades,
- * flash, blurs, sway and spin cover the whole view, not the 4:3 canvas.  PLAT_VIEW_W is the view's
- * width in canvas pixels (512 on the PS2); PLAT_VIEW_GX0 / GX1 its left / right edge in GS units
+ * flash, blurs, sway and spin cover the whole view, not the 4:3 canvas.  PLAT_VIEW_W16 is the view's
+ * width in canvas sixteenths (8192 on the PS2); PLAT_VIEW_GX0 / GX1 its left / right edge in GS units
  * (12.4 with XYOFFSET's 0x7000 origin: 0x7000 / 0x9000 on the PS2, where every use folds to the
  * literal the original has).  A copy of the target is addressed in texels from the view's left
- * edge, so a texel range 0 .. 512 becomes 0 .. PLAT_VIEW_W. */
-#define PLAT_VIEW_W (PLAT_VIEW_X1 - PLAT_VIEW_X0)
-#define PLAT_VIEW_GX0 (0x7000 + PLAT_VIEW_X0 * 16)
-#define PLAT_VIEW_GX1 (0x7000 + PLAT_VIEW_X1 * 16)
-
-/* Session 94: the view's margin past each 4:3 edge in canvas pixels as a float, unrounded (82.8 at
- * 960 x 544, the full-screen stretch's; 0 on the PS2, where it folds away).  The lens grid
- * (sceneeff.c func_00103c48) reads its copy of the target, which starts at the view's left edge, at
- * u 64 .. 448 of the 4:3 canvas: the margin moves its ST back onto the same pixels. */
-#ifdef KH1_PS2
-#define PLAT_VIEW_SIDE 0.0f
-#else
-#define PLAT_VIEW_SIDE (256.0f * (kh1_view_wide - 1.0f))
-#endif
+ * edge, so a texel range 0 .. 512 (sixteenths 0 .. 8192) becomes 0 .. PLAT_VIEW_W16. */
+#define PLAT_VIEW_W16 (8192 + 2 * PLAT_VIEW_SIDE16)
+#define PLAT_VIEW_GX0 (0x7000 - PLAT_VIEW_SIDE16)
+#define PLAT_VIEW_GX1 (0x9000 + PLAT_VIEW_SIDE16)
 
 #endif

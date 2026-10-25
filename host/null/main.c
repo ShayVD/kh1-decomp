@@ -59,8 +59,8 @@ void func_00100558(int argc, char **argv);
 int kh1_cd_image_open(const char *path);
 void kh1_view_init(float aspect); /* host/port/view.c */
 extern float kh1_view_wide;
-extern int kh1_view_x0, kh1_view_x1;
-void kh1_null_hud_wide(float margin); /* host/null/plat_null.c */
+extern int kh1_view_side16;
+void kh1_null_hud_wide(int margin16); /* host/null/plat_null.c */
 int kh1_present_init(int w, int h, int target, const char *dir, const void *send); /* host/null/present.c */
 extern unsigned char D_002A6890[]; /* brightfade.c's frame copy (renderer-spec 5.4 "Session 93") */
 
@@ -221,9 +221,10 @@ int main(int argc, char **argv) {
             const char *c = strchr(wide, ':');
             float aspect = c ? (float)atof(wide) / (float)atof(c + 1) : 960.0f / 544.0f;
             kh1_view_init(aspect);
-            printf("kh1-host: wide view x %.4f (canvas x %d .. %d)\n", kh1_view_wide, kh1_view_x0, kh1_view_x1);
+            printf("kh1-host: wide view x %.4f (canvas x %.4f .. %.4f, margin %d sixteenths)\n", kh1_view_wide,
+                   -kh1_view_side16 / 16.0, 512 + kh1_view_side16 / 16.0, kh1_view_side16);
             /* session 92: the HUD's anchored parts move to the wide edges (renderer-spec 5.3.1) */
-            kh1_null_hud_wide(256.0f * (kh1_view_wide - 1.0f));
+            kh1_null_hud_wide(kh1_view_side16); /* session 95: the one rounded margin */
         }
     }
     {

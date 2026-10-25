@@ -96,8 +96,9 @@ static u32 gs_prim(void) {
     return p;
 }
 
-/* a SPRITE drawn into the model's pixels when gsmem.c can (kh1_gsmem_sprite), else 0 */
-static int gs_sprite(u32 p, const KH1GsContext *c) {
+/* a SPRITE drawn into the model's pixels when gsmem.c can (kh1_gsmem_sprite), else 0; flat: session
+ * 95's fill of an untextured one for the present instead (kh1_gsmem_flat_sprite, after the draw is marked) */
+static int gs_sprite(u32 p, const KH1GsContext *c, int flat) {
     KH1GsSprite s;
     s.prim = p;
     s.frame_lo = c->frame.lo; s.frame_hi = c->frame.hi; s.zbuf_hi = c->zbuf.hi; s.test_lo = c->test.lo;
@@ -109,7 +110,7 @@ static int gs_sprite(u32 p, const KH1GsContext *c) {
     s.xy[0] = vxy[0]; s.xy[1] = vxy[1];
     s.uv[0] = vuv[0]; s.uv[1] = vuv[1];
     s.rgba = vrgba[1];
-    return kh1_gsmem_sprite(&s);
+    return flat ? kh1_gsmem_flat_sprite(&s) : kh1_gsmem_sprite(&s);
 }
 
 static void gs_kick(int draw, u32 xy) {
@@ -172,8 +173,10 @@ static void gs_kick(int draw, u32 xy) {
     if (draw) {
         KH1GsContext *c = &gs.ctx[p >> 9 & 1];
         if (k) k->draws++;
-        if ((p & 7) != 6 || !gs_sprite(p, c))
+        if ((p & 7) != 6 || !gs_sprite(p, c, 0)) {
             kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
+            if ((p & 7) == 6) gs_sprite(p, c, 1);
+        }
     }
     i = p & 7;
     if (i == 0 || i == 1 || i == 3 || i == 6) gs.nvert = 0;

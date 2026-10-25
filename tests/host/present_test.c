@@ -64,6 +64,15 @@ int main(int argc, char **argv) {
         f = fopen(path, "rb");
         CHECK("hook: the shot written", f != 0);
         if (f) fclose(f);
+        /* session 95: the present turns the flat sprites on: a clear of the display shows */
+        kh1_gs_write(0x18, 0x7000, 0x7400);
+        kh1_gs_write(0x40, 511 << 16, 447 << 16);
+        kh1_gs_write(0x00, 6, 0);
+        kh1_gs_write(0x01, 0x80405060, 0x3F800000);
+        kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+        kh1_gs_write(0x05, 0x9000 | 0x9000 << 16, 0);
+        CHECK("hook: a flat clear filled", kh1_gsmem_stats()->flat_sprites == 1 &&
+              kh1_present_rgb(rgb, 960, 544, KH1_PSMCT24, 0, 8, 448) == 0 && at(480, 272) == 0x405060 && at(10, 272) == 0);
         CHECK("hook: bad size", kh1_present_init(0, 48, 0, argv[1], mem[0]) == -1);
     }
 

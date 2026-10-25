@@ -1809,6 +1809,31 @@ countcheck, dmacheck, abscheck and layoutcheck 0, indcheck as before.
   `src/gfx/prim.c`'s staging send (`D_00648070`) is outside src/hud and not checked.
 - **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default and argcheck's 3 value uses.
 
+### 5.1ai Session 95: one margin in sixteenths, the flat sprites in the present, prim.c's send
+
+Static and host only (Sunday 2026-10-25, the Mac away until 2026-10-26). One change under src/ (sceneeff.c's
+spin and sway read `PLAT_VIEW_W16`, 8192 on the PS2): **all 677 out/build objects bit-identical**, kh1.elf
+byte-identical, the m12 float ELF the same bytes (no float-untested row). selftest PASS (canvas_test 57
+checks, gsmem_test and present_test grown, hudcheck's third negative case); abicheck, relcheck, walkcheck,
+countcheck, dmacheck, abscheck and layoutcheck 0, indcheck as before.
+
+- **The view's margin, one convention** (item 4a, renderer-spec 5.4 "Session 95"): `kh1_view_side16`,
+  rounded once in `kh1_view_init` (1325 sixteenths = 82.8125 px at 960 x 544), replaces `kh1_view_x0 / x1`
+  (which truncated to -82 / 594); `PLAT_VIEW_GX0 / GX1 / W16 / X0 / X1 / SIDE` and the markers' bounds are
+  exact in it, and the null platform's HUD shift / stretch / scissor rule take it directly, so the C passes
+  and the stretched static packets meet on the same sixteenth. canvas_test checks view.c against
+  `kh1_canvas_fit` at six screen sizes.
+- **The model's flat sprites** (item 4b): `kh1_gsmem_flat_sprite` (host/null/gsmem.c) fills untextured
+  SPRITEs (clears, display clear, fade, letterbox) into the model for `KH1_HOST_SHOT`, switched on by the
+  present only, without marking pages or moving the trace's counters: the fake disc's `--draws / --targets /
+  --uploads / --sends` are identical with the shot on. The fake disc's frames stay black (clear colour 0).
+- **prim.c's staging send** (item 4c): 3D lines (kind 1 nodes projected through the caller's matrix), not a
+  HUD part, and with no main-ELF caller, like prim.nostrict(_nofill).c's other three senders: an overlay's.
+  hudcheck.py now fails on a staging send outside src/hud that its `OTHER_STAGES` does not name.
+- **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default (it needs the real-disc
+  room run to show the same `--nodes` order), argcheck's 3 value uses (dktitle.x's calls into the main ELF),
+  and now the callers of prim.c's four senders (dktitle.x / the other overlays).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

@@ -47,6 +47,10 @@ rewrite matched code.
    (sceneeff.c, sceneeff.nostrict.c, brightfade.c, opdma.c), and include/platform/hudanchor.h:
    the HUD's anchor table (port data, host/port/hudanchor.c), keyed by each part's drawing
    environment, which a port's GIF path applies under a wide view.
+   Session 95 replaced `PLAT_VIEW_W` with `PLAT_VIEW_W16` (the width in sixteenths) and made
+   every view.h form exact in one rounded margin, `kh1_view_side16` (sixteenths, set by
+   kh1_view_init): a port uses that one number for its C passes, its packet stretch, its HUD
+   anchors and its present.
    Session 93 added include/platform/fullscreen.h (the static full-screen packets a wide
    view stretches, keyed by the send, host/port/fullscreen.c) and include/platform/canvas.h
    (the 2D canvas map onto the screen, the stretch and the scissor rule as pure functions,

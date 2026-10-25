@@ -28,6 +28,8 @@ typedef struct {
     u32 target_draws; /* primitives drawn into a render target (kh1_gsmem_draw, session 81) */
     u32 sprites;      /* point-sampled sprites drawn into the model's pixels (kh1_gsmem_sprite, session 83) */
     u32 sprite_pixels;
+    u32 flat_sprites; /* untextured sprites filled for the present (kh1_gsmem_flat_sprite, session 95) */
+    u32 flat_pixels;
 } KH1GsMemStats;
 
 /* clears the 4 MB, the CLUT buffer, the transfer and the counters */
@@ -110,6 +112,11 @@ typedef struct {
     u32 rgba;                                  /* the second vertex's RGBA (a sprite is flat) */
 } KH1GsSprite;
 int kh1_gsmem_sprite(const KH1GsSprite *s);
+/* session 95: an untextured SPRITE (clear, fade, letterbox) filled into the model's pixels for the
+ * present, without marking the pages or moving the other counters: off unless kh1_gsmem_flat(1)
+ * (host/null/present.c turns it on).  Returns 1 when handled; the caller still marks the draw. */
+void kh1_gsmem_flat(int on);
+int kh1_gsmem_flat_sprite(const KH1GsSprite *s);
 
 /* an upload or copy since the last kh1_gsmem_clear_log (KH1_HOST_TRACE=5 prints them) */
 typedef struct {

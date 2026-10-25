@@ -9,7 +9,8 @@
  * two frustums every CPU cull tests (D_002BBE60 / D_002BBEE0, as D_002BBFA0 / D_002BBFE0: the grid,
  * props, actors and bit 35, shadows, ppp effects, the party warp) widen together; the projection,
  * the y 229 and the guard box (2045 / 360.5) stay.  kh1_view_init also widens the markers' bounds
- * (hudmath.c's D_00469F90 / D_00469FA0) and objwin's (PLAT_VIEW_X0 / X1). */
+ * (hudmath.c's D_00469F90 / D_00469FA0) and objwin's (PLAT_VIEW_X0 / X1), all from one rounded margin,
+ * kh1_view_side16. */
 #include "common.h"
 #include "platform/view.h"
 
@@ -18,16 +19,17 @@ void sceVu0UnitMatrix(Mtx);
 void sceVu0MulMatrix(Mtx, Mtx, Mtx);
 
 f32 kh1_view_wide = 1.0f;
-s32 kh1_view_x0 = 0, kh1_view_x1 = 512;
+s32 kh1_view_side16 = 0; /* the margin in canvas sixteenths (platform/view.h, session 95) */
 extern f32 D_00469F90[4], D_00469FA0[4]; /* the markers' GS-pixel bounds: (1792, 1856, 0, 1), (2304, 2240, 0, 4e8) */
 
 /* aspect: the screen's width over its height (960 / 544 on the Vita); 4 / 3 or less keeps the PS2's */
 void kh1_view_init(f32 aspect) {
     f32 side;
     kh1_view_wide = aspect > 4.0f / 3.0f ? aspect * 3.0f / 4.0f : 1.0f;
-    side = 256.0f * (kh1_view_wide - 1.0f); /* canvas pixels past each 4:3 edge: 82.8 at 960 x 544 */
-    kh1_view_x0 = (s32)-side;
-    kh1_view_x1 = 512 + (s32)side;
+    side = 256.0f * (kh1_view_wide - 1.0f); /* canvas pixels past each 4:3 edge: 82.82 at 960 x 544 */
+    /* rounded once to sixteenths (1325 = 82.8125 px); every margin the port uses comes from this */
+    kh1_view_side16 = (s32)(side * 16.0f + 0.5f);
+    side = kh1_view_side16 / 16.0f;
     D_00469F90[0] = 1792.0f - side;
     D_00469FA0[0] = 2304.0f + side;
 }
