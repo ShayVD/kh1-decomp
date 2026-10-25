@@ -78,12 +78,17 @@ def game_files():
     return sorted(out)
 
 
+# unmatched functions whose C the host takes from host/port instead of the draft (session 91:
+# host/port/view.c, checked against the original's code by tools/host/viewcheck.py)
+HOST_TWINS = {"func_00110618": "host/port/view.c"}
+
+
 def draft_files():
-    """The C drafts of shift/drafts.tsv's game functions (not the SDK's)."""
+    """The C drafts of shift/drafts.tsv's game functions (not the SDK's, nor HOST_TWINS')."""
     out = []
     for l in open(os.path.join(ROOT, "shift", "drafts.tsv")):
         f = l.rstrip("\n").split("\t")
-        if len(f) >= 2 and f[0].startswith("func_"):
+        if len(f) >= 2 and f[0].startswith("func_") and f[0] not in HOST_TWINS:
             out.append(f[1])
     return out
 

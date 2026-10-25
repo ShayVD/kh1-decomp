@@ -1702,6 +1702,33 @@ HDD path) and read (`sceCdRead` streaming); its threads, IPU DMA handlers and ti
 audio path (which sound commands, what `0x24`(`0x7B`) means); how it sees a title skip and whether it calls
 `func_001111b0`; the frame size, rate and count read from the files themselves.
 
+### 5.1ae Session 91: the drawn rectangles, the camera matrices in C, the wide switch
+
+Static and host only (Sunday 2026-10-25; the Mac is back from 2026-10-26). kh1.elf byte-identical, **every
+out/build object bit-identical** (objwin.nostrict.c's 0 / 512 became `PLAT_VIEW_X0` / `PLAT_VIEW_X1`, the same
+literals on the PS2), the float ELF the same (no float-untested row). selftest PASS; abicheck, relcheck,
+walkcheck and countcheck 0; indcheck as before (241 rows: 117 OK, 42 READ, 70 OVERLAY, 12 CLANG-READ).
+
+- **`gsstate.py --extents`** (item 4a, renderer-spec 5.3.1): host/null/gsregs.c keeps each draw state's vertex
+  extent less `XYOFFSET` (`KH1GsDraw.x0 .. y1`), dmawalk.c prints it on the draw lines (`, xy X0 Y0 X1 Y1`), and
+  gsstate.py lists the rectangle per send in target pixels, a send from the HUD's staging buffer `D_00351E10`
+  keyed by the environment sent before it (`D_00651C00 ch2 > D_00351E10 ch2`), with 5.3's anchor. Fake disc:
+  the clear, the frame copy and the flash, all full screen. gsregs_test.c +1 check.
+- **The camera matrices in C** (item 4b, renderer-spec 5.4): host/port/view.c is `func_00110618` for every
+  port (the session 12 draft's maths in the SDK's two forms), linked on the host in place of the draft
+  (census.py `HOST_TWINS`). **`tools/host/viewcheck.py`** (new) runs the original function's code from the
+  user's ELF in an interpreter and compares: **bit-identical** with IEEE rounding on 13 argument sets (2 ulp
+  at most with the EE's round-toward-zero). **`KH1_HOST_WIDE=W:H`** (`1` = 960:544): `kh1_view_init` scales the
+  320 by `(W / H) / (4 / 3)` (only the two frustums' x scale change), widens the markers' bounds to
+  1709.2 .. 2386.8 and objwin's to -82 .. 594 (include/platform/view.h, new: the visible x range wrapper).
+- **No other frustum in the main ELF** (item 4c): journal, party menu, objwin, shadow and the lens grid build
+  view -> screen matrices only; `D_002BC140` / `D_002BC144` are the effects' and sound listener's camera
+  pointers (the Gummi overlay sets them through `func_001bb858`, no main-ELF caller).
+- **Bit 35's readers** (item 4d): the plan for the disc (renderer-spec 5.4): records' `flags & 0x20000` in the
+  room object lists after `func_00132c70`; the object-script halfword `0xA30B` (table 0 entry 163,
+  `func_0012a030`). objcmd2.c's comment on the `0x40000000` flag corrected (the result is pushed back; not a
+  float flag).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

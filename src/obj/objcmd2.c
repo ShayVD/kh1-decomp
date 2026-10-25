@@ -1,6 +1,7 @@
 /* The object scripts' second command table, default flags (docs/modules.md
  * "Session 51"): the 21 functions of D_00362340 (8-byte {fn, argc} records,
- * argc | 0x40000000 for a float result), the table after D_002E2810 in the
+ * argc | 0x40000000 when the command's args[0] is pushed back as its result:
+ * stackvm.nostrict.c op 11), the table after D_002E2810 in the
  * object-script descriptor D_002E2F20 (docs/renderer-spec.md): empty
  * commands, set or clear an object flag (func_001768e8), get the camera's
  * position and target (func_00176a60 / 00176a80), vector copies and

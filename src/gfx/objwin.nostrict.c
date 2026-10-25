@@ -3,6 +3,7 @@
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
 #include "platform/vu.h"
+#include "platform/view.h"
 #include "data/pieces/D_002E26C0.h"
 #include "data/bss_0049.h"
 #include "data/types/nostrict_text_00100000_s6_01_p2.h"
@@ -323,8 +324,8 @@ void func_0010b390(Win_0b390 *w, f32 *o) {
         PlatVu0Normalize(b, b);
         w->f1c = zero;
         if (t[2] <= 0) w->f6 = 0;
-        if (t[0] < 0) w->f6 = 1;
-        if (t[0] > 512) w->f6 = 1;
+        if (t[0] < PLAT_VIEW_X0) w->f6 = 1; /* the 4:3 screen's sides (renderer-spec 5.4) */
+        if (t[0] > PLAT_VIEW_X1) w->f6 = 1;
         if (t[1] < 0) w->f6 = 1;
         if (t[1] > 384) w->f6 = 1;
         func_00133830(w->id, w->m60);

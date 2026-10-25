@@ -38,6 +38,10 @@ rewrite matched code.
    sceGsPutDrawEnv, the GS CSR at 0x12001000 / 0x12000000 read and written
    directly), src/screen/capture.c (sceGsExecStoreImage / LoadImage of the
    frame) and src/game/framectl.c's func_0010f658 (the display flip).
+   Session 91 added include/platform/view.h: the 3D view's visible x range in canvas
+   pixels (`PLAT_VIEW_X0` / `PLAT_VIEW_X1`, the literals 0 / 512 on the PS2), for code
+   that hides a 2D part off the 4:3 screen (objwin.nostrict.c); a port with a wide screen
+   sets it with kh1_view_init (host/port/view.c, docs/renderer-spec.md 5.4).
    **Session 56 wrote the wrappers** (each byte-identical, one header per
    commit): `dma.h` (PlatDmaGetChan / PlatDmaSend, 38 files; libdma named in
    functions.tsv), `gs.h` (PlatGsSyncPath, image load / store packets and

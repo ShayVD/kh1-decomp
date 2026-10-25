@@ -100,6 +100,8 @@ static void gs_kick(int draw, u32 xy) {
         if (p >> 5 & 1) d.fogcol = gs.fogcol;
         for (i = 0; i < ndraws; i++)
             if (!memcmp(&draws[i], &d, (char *)&d.kicks - (char *)&d)) break;
+        d.x0 = d.y0 = 0x7FFFFFFF;
+        d.x1 = d.y1 = -0x7FFFFFFF;
         if (i == ndraws && ndraws < DRAWS) draws[ndraws++] = d;
         cur = i < ndraws ? i : DRAWS;
         /* a texture in drawn pages (a render target) is not the uploads' (host/null/gsmem.c) */
@@ -110,6 +112,15 @@ static void gs_kick(int draw, u32 xy) {
     if (k) k->kicks++;
     else gs.lost++;
     if (!need) return;
+    if (k) { /* the extent (session 91, gsstate.py --extents): XYZ's 12.4 X / Y less XYOFFSET's */
+        const KH1GsContext *c = &gs.ctx[p >> 9 & 1];
+        s32 x = (s32)(xy & 0xFFFF) - (s32)(c->xyoffset.lo & 0xFFFF);
+        s32 y = (s32)(xy >> 16) - (s32)(c->xyoffset.hi & 0xFFFF);
+        if (x < k->x0) k->x0 = x;
+        if (x > k->x1) k->x1 = x;
+        if (y < k->y0) k->y0 = y;
+        if (y > k->y1) k->y1 = y;
+    }
     if (gs.nvert < need) {
         i = gs.nvert++;
     } else { /* a strip or fan's next vertex: the queue moves up */

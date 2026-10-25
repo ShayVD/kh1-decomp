@@ -236,6 +236,14 @@ static const char *target_note(u32 t) {
     return b;
 }
 
+/* session 91: the vertices' extent in 1/16 pixels from XYOFFSET (gsstate.py --extents) */
+static const char *extent_note(const KH1GsDraw *d) {
+    static char b[64];
+    if (d->x1 < d->x0) return "";
+    sprintf(b, ", xy %d %d %d %d", d->x0, d->y0, d->x1, d->y1);
+    return b;
+}
+
 /* KH1_HOST_TRACE=5: each draw state the send drew in (host/null/gsregs.c), with the context's
  * FRAME, ZBUF, TEST, ALPHA, TEX0 and CLAMP, and its kicks and primitives */
 static void gs_print_draws(void) {
@@ -243,9 +251,10 @@ static void gs_print_draws(void) {
     int n = kh1_gs_draws(d, 64), i;
     for (i = 0; i < n && i < 64; i++)
         printf("kh1-host:   draw prim %03x frame %08x zbuf %08x test %08x alpha %08x%08x tex0 %08x%08x clamp "
-               "%08x%08x: %u kicks, %u prims%s\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
+               "%08x%08x: %u kicks, %u prims%s%s\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
                d[i].ctx.alpha.hi, d[i].ctx.alpha.lo, d[i].ctx.tex0.hi, d[i].ctx.tex0.lo, d[i].ctx.clamp.hi,
-               d[i].ctx.clamp.lo, d[i].kicks, d[i].draws, d[i].target ? target_note(d[i].target) : "");
+               d[i].ctx.clamp.lo, d[i].kicks, d[i].draws, extent_note(&d[i]),
+               d[i].target ? target_note(d[i].target) : "");
     if (n > 64) printf("kh1-host:   draw ... %d states in all\n", n);
 }
 

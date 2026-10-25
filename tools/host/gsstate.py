@@ -3,7 +3,7 @@
 
   KH1_HOST_TRACE=4 out/host/kh1-host > run.txt     (KH1_HOST_ISO=..., KH1_HOST_OVL=stub:2 ...)
   python3 -I tools/host/gsstate.py run.txt [--exe out/host/kh1-host] [--sends] [--draws] [--uploads] [--targets]
-                                           [--nodes [--frame N]]
+                                           [--nodes [--frame N]] [--extents [--via SYM ...]]
 
 The run-time twin of `tools/host/dmawalk.py --state`, which reads only the chains the ELF
 holds: KH1_HOST_TRACE=4 (host/null/dmawalk.c) prints after each send's line every distinct GS
@@ -26,7 +26,11 @@ list nodes ("kh1-host: node ..." lines, src/model/mdlgs.nostrict.c's PlatGsListN
 command order (the last frame with a draw list, or --frame N) with each node's callback, payload,
 sends, kicks and uploads, then every distinct node of the run, each checked against
 tools/host/drawkeys.py's key map (a node whose list, callback and key no insert in src/ explains
-is marked NOT IN THE KEY MAP).
+is marked NOT IN THE KEY MAP).  --extents (session 91, renderer-spec 5.3.1) lists the vertices'
+extent per drawing send in target pixels (XYZ less XYOFFSET, the ", xy" of a draw line): a send
+from a shared staging buffer (--via, default D_00351E10, every HUD part's sprites) is keyed by the
+drawing environment sent before it (`D_00651C00 > D_00351E10`: the gauges), so each HUD part gets
+its own rectangle to check against 5.3.1's table, with the anchor 5.3's rule gives it.
 
 The values come from the user's disc and ELF at run time: never commit the output.
 """
@@ -50,7 +54,7 @@ SEND = re.compile(r"^kh1-host: dma ch (\d+) chcr ([0-9a-f]{8}) tadr ([0-9a-f]{8}
 GS = re.compile(r"^kh1-host:   gs ([0-9a-f]{2}) ([0-9a-f]{16})$")
 DRAW = re.compile(r"^kh1-host:   draw prim ([0-9a-f]{3}) frame ([0-9a-f]{8}) zbuf ([0-9a-f]{8}) test ([0-9a-f]{8}) "
                   r"alpha ([0-9a-f]{16}) tex0 ([0-9a-f]{16}) clamp ([0-9a-f]{16}): (\d+) kicks, (\d+) prims"
-                  r"(?:, reads target (\d+))?$")
+                  r"(?:, xy (-?\d+) (-?\d+) (-?\d+) (-?\d+))?(?:, reads target (\d+))?$")
 TARGET = re.compile(r"^kh1-host:   target (\d+) bp ([0-9a-f]{4}) bw (\d+) psm ([0-9a-f]{2}) rows (\d+) "
                     r"mask ([0-9a-f]{8}): (\d+) prims$")
 UPLOAD = re.compile(r"^kh1-host:   upload (host|copy) dbp ([0-9a-f]{4}) dbw (\d+) dpsm ([0-9a-f]{2}) "
@@ -64,6 +68,27 @@ NODE_MAIN = "kh1-host: node main"
 VBLANK = re.compile(r"^kh1-host: vblank (\d+)$")
 LIST_END = re.compile(r"^kh1-host: list (draw|imm) end: (\d+) nodes, frame (\d+)$")
 KICKS = re.compile(r"^kh1-host:   draw prim .*: (\d+) kicks, (\d+) prims")
+VIA = ("D_00351E10",)  # the HUD's staging buffer (src/hud: every part's sprites are built and sent there)
+
+
+def anchor(x0: float, y0: float, x1: float, y1: float) -> str:
+    """renderer-spec 5.3 step 2's rule on a 512 x 384 rectangle: a third of each side"""
+    if x0 <= 0 and x1 >= 511 and y0 <= 0 and y1 >= 383:
+        return "full screen"
+    h = "right" if x0 >= 512 * 2 / 3 else "left" if x1 <= 512 / 3 else "centre"
+    v = "bottom" if y0 >= 384 * 2 / 3 else "top" if y1 <= 384 / 3 else "middle"
+    return h + ", " + v
+
+
+def print_extents(extents) -> None:
+    """extents: key -> [sends, prims, x0, y0, x1, y1, {frame: None}] in 1/16 pixels"""
+    print("# drawn extents per send (KH1_HOST_TRACE=5; target pixels from XYOFFSET, renderer-spec 5.3.1): %d"
+          % len(extents))
+    for key, (n, prims, x0, y0, x1, y1, frames) in sorted(extents.items(), key=lambda kv: (kv[1][3], kv[1][2])):
+        f = sorted(frames)
+        r = tuple(v / 16 for v in (x0, y0, x1, y1))
+        print("\t(%7.1f, %7.1f)-(%7.1f, %7.1f)  %-13s %5d sends %6d prims  frames %d-%d  %s" % (
+            r + (anchor(*r), n, prims, f[0], f[-1], key)))
 
 
 def print_uploads(uploads) -> None:
@@ -198,6 +223,9 @@ def main() -> int:
     ap.add_argument("--targets", action="store_true", help="also the render targets drawn into (KH1_HOST_TRACE=5)")
     ap.add_argument("--nodes", action="store_true", help="also the draw / immediate list nodes (KH1_HOST_TRACE=5)")
     ap.add_argument("--frame", type=int, help="with --nodes: the frame whose command order to print")
+    ap.add_argument("--extents", action="store_true", help="also the drawn rectangle per send (KH1_HOST_TRACE=5)")
+    ap.add_argument("--via", action="append", help="a staging buffer keyed by the send before it (default %s)"
+                    % ", ".join(VIA))
     a = ap.parse_args()
     syms = Syms(a.exe)
     state = collections.defaultdict(dict)
@@ -205,6 +233,10 @@ def main() -> int:
     draws = {}
     uploads = {}
     targets = {}
+    extents = {}
+    via = tuple(a.via or VIA)
+    ext, ext_new = None, False
+    env = None  # the last send not from a staging buffer: what keys a staging send's extent
     nodes, events, vframe = [], {}, 0  # events: frame -> nodes and main-thread sends, in run order
     node = None  # the node whose sends these are
     cur, nsend, nval = None, 0, 0
@@ -213,6 +245,12 @@ def main() -> int:
         if m:
             ch, tadr = int(m.group(1)), int(m.group(3), 16)
             cur = "%s ch%d" % (syms.at(tadr), ch)
+            base = cur.split("+")[0].split(" ")[0]
+            if base in via:
+                ext = "%s > %s" % (env or "?", cur)
+            else:
+                ext, env = cur, cur
+            ext_new = True
             sends[cur] += 1
             nsend += 1
             if node is not None:
@@ -222,7 +260,7 @@ def main() -> int:
             continue
         m = VBLANK.match(line)
         if m:
-            vframe, node, cur = int(m.group(1)), None, None
+            vframe, node, cur, env = int(m.group(1)), None, None, None
             continue
         m = NODE.match(line)
         if m:
@@ -258,8 +296,17 @@ def main() -> int:
             d[0] += int(m.group(8))
             d[1] += int(m.group(9))
             d[2][cur] = None
-            if m.group(10):
-                d[3][int(m.group(10))] = None
+            if m.group(14):
+                d[3][int(m.group(14))] = None
+            if m.group(10) and int(m.group(9)):
+                xy = [int(m.group(i)) for i in range(10, 14)]
+                e = extents.setdefault(ext, [0, 0, xy[0], xy[1], xy[2], xy[3], {}])
+                e[0] += ext_new
+                ext_new = False
+                e[1] += int(m.group(9))
+                e[2], e[3] = min(e[2], xy[0]), min(e[3], xy[1])
+                e[4], e[5] = max(e[4], xy[2]), max(e[5], xy[3])
+                e[6][vframe] = None
             continue
         m = TARGET.match(line)
         if m and cur:
@@ -301,6 +348,10 @@ def main() -> int:
         if not targets:
             print("gsstate: no target lines (trace level below 5, or nothing drawn)", file=sys.stderr)
         print_targets(targets)
+    if a.extents:
+        if not extents:
+            print("gsstate: no draw extents (trace level below 5, or a host built before session 91)", file=sys.stderr)
+        print_extents(extents)
     if a.nodes:
         if not nodes:
             print("gsstate: no node lines (trace level below 5, or no list ran)", file=sys.stderr)
