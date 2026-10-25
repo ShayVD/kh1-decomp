@@ -1159,7 +1159,7 @@ the fake-disc run (§4.7) and the session 15 dump (§3.3) write:
 | `PABE`, `FBA_1` / `FBA_2` | dropped | 0 | |
 | `MIPTBP1_x` / `MIPTBP2_x` | dropped | 0 (no mipmaps) | |
 | `TEXFLUSH` | dropped | 0, after each upload | the texture cache is invalidated by the upload itself |
-| `BITBLTBUF`, `TRXPOS`, `TRXREG`, `TRXDIR` + IMAGE | one transfer state | host->local only; DBP the slots of §3.1, PSMCT32 / PSMT8 / PSMT4 / PSMT4HH / PSMT4HL | an upload: write the pixels into a 4 MB model of GS memory (swizzled per PSM), and drop the cached textures it overlaps |
+| `BITBLTBUF`, `TRXPOS`, `TRXREG`, `TRXDIR` + IMAGE | one transfer state | host->local only; DBP the slots of §3.1, PSMCT32 / PSMT8 / PSMT4 / PSMT4HH / PSMT4HL | an upload: write the pixels into a 4 MB model of GS memory (swizzled per PSM), and drop the cached textures it overlaps (on the host since session 80: §5.2) |
 | `SIGNAL`, `FINISH`, `LABEL`, `HWREG`, `TRXDIR` local->host | not seen | | |
 
 **On the host** (session 79): host/null/gsregs.c is this table as code. host/null/dmawalk.c's GIF
@@ -1186,6 +1186,52 @@ and resolves a TEX0 that lands in one to that target's texture; any other TEX0 d
 memory model through the cache. Still to confirm on a run: the text windows' sprites (read from the C in §4.9; the run shows the
 values the C computes), renderer A's mesh chains, and whether an overlay writes registers this
 table drops (dktitle.x).
+
+### 5.2 GS memory on the host (session 80)
+
+host/null/gsmem.c is the memory model 5.1's last paragraph asks for, the third step of the port's GIF
+parser after dmawalk.c's reader and gsregs.c's register file: 4 MB laid out the way the GS lays out each
+pixel storage mode, written by the uploads and read back as RGBA8 for a TEX0.
+
+- **Layout** (`kh1_gsmem_addr`): pages of 8 KB (CT32 / CT24 / T8H / T4HL / T4HH 64x32 pixels, CT16 64x64,
+  T8 128x64, T4 128x128), 32 blocks a page (CT32 / T8: 8x4 blocks in the order x0 y0 x1 y1 x2; CT16 /
+  T4: 4x8 in the order y0 x0 y1 x1 y2), pages across by BW (T8 / T4 by BW / 2), the block number added to
+  BP and wrapped at 4 MB. Inside a block: CT32's word from x0 y0 x1 x2 y1 y2; CT16's halfword from x3 x0
+  y0 x1 x2 y1 y2; T8's byte and T4's nibble read CT32's word order on 8 word rows with the halves swapped
+  in rows 2-3 of even 4-row groups and 0-1 of odd ones, the byte from x3 and y1 (T4's nibble from x3 x4
+  and y1). Written as bit formulas, not tables; checked against PCSX2's tables for every pixel of a page
+  in each of the four orders (session 80, outside the repo). CT24 writes a CT32 word's low 24 bits, T8H
+  its top byte, T4HL / T4HH that byte's nibbles: **the message font in the Z buffer's top byte leaves the
+  Z bits alone** (tested).
+- **Uploads**: a TRXDIR write starts the transfer BITBLTBUF / TRXPOS / TRXREG describe; host->local takes
+  the IMAGE data (GIF FLG 2 / 3, and HWREG, never seen) left to right, top to bottom, packed (CT24 3
+  bytes a pixel across words, T4 the low nibble first), and IMAGE data past the rectangle is counted as
+  extra; local->local copies at once in TRXPOS.DIR's pixel order; local->host is counted, not done.
+- **The CLUT buffer** is the GS's 512 halfwords (a CT32 entry in halfwords e and e + 256, CT16 in one). A
+  TEX0 or TEX2 write with an indexed PSM loads it as CLD says (1 always, 2 / 3 also set CBP0 / CBP1, 4 / 5
+  only when CBP differs from CBP0 / CBP1): a 4-bit CLUT 16 entries (8x2) at CSA x 16, an 8-bit one 256
+  (16x16, entries 8-15 and 16-23 of each 32 swapped). So **the windows' glyphs** (4.9: the header loads
+  the 8-bit CLUT at `0x3FFC` with CLD 2, each glyph reads PSMT4HL / HH at CSA 0 / 1 with CLD 0) **read
+  buffer entries 0-15 and 16-31, i.e. the stored 16x16's swizzled first two rows** (tested).
+- **The reader** (`kh1_gsmem_read_tex`): TBP0 / TBW / PSM / TW / TH to `1 << TW` x `1 << TH` RGBA8 words
+  (R in the low byte, A the texel's own 0-0x80 scale; TCC and TFX are the shader's), indexed PSMs through
+  the buffer at CSA (CPSM CT32 or CT16), CT24 / CT16 alpha from TEXA (TA0, AEM, TA1).
+  `kh1_gsmem_tex_stamp` gives the newest write to any page the texture covers and
+  `kh1_gsmem_clut_stamp` the buffer's load count: a decoded-texture cache keyed by TEX0 checks both
+  instead of dropping textures on every upload.
+- **Not modelled**: CT16S, the Z formats' own block orders (an upload in one is counted and its data
+  taken), CSM 1 (TEXCLUT, never written), an 8-bit CLUT at CSA not 0, local->host.
+
+`KH1_HOST_TRACE=5` prints each send's uploads (`kh1-host:   upload host dbp ...`) and
+`tools/host/gsstate.py RUN.txt --uploads` lists a run's. On the fake disc (stub:2) the same 86 sends
+make three uploads, from three chains on the stack built by func_0011fbb0 in **func_001ef950**
+(src/text/text.c, called from func_00109388 at boot, after it loads the file `D_00490940` names into a
+func_001559f0 buffer): **the 16x16 CT32 CLUT at `0x3FFC` from the file's +0x10000, then the message
+font as PSMT4HL (+0) and PSMT4HH (+0x8000), 256x256 each at `0x1000` BW 4** (the CLUT §4.9's headers
+load; on the fake disc the pixels are zeros). tests/host/gsmem_test.c (36 checks, in `make test`): addresses per PSM, an upload and
+read back per PSM, CT24 packing, the font's halves over a Z pattern, 4- and 8-bit CLUT loads with CLD 0 /
+1 / 2 / 4, the glyphs' CSA 1 read of an 8-bit CLUT, TEXA, a local copy, the cache stamp, IMAGE through
+the GIF reader. Valgrind: 0 errors to the overlay fault.
 
 ## 6. Open questions
 

@@ -21,10 +21,12 @@
  *
  * Every register write also goes to the GS register file (host/null/gsregs.c, session 79), which
  * keeps the state across sends and counts the vertex kicks per draw state; KH1_HOST_TRACE=5
- * prints each send's draw states after its gs lines. */
+ * prints each send's draw states after its gs lines.  The IMAGE data goes to the GS memory model
+ * (host/null/gsmem.c, session 80), and KH1_HOST_TRACE=5 also prints each send's uploads. */
 #include "common.h"
 #include "dmawalk.h"
 #include "gsregs.h"
+#include "gsmem.h"
 
 int printf(const char *, ...);
 int sprintf(char *, const char *, ...);
@@ -98,7 +100,8 @@ static void gif_qword(GifStream *g, const u32 *q) {
                 if (d != 0xE) gif_value(g, d, q + 2 * h);
                 if (d < 0xE) kh1_gs_write(d, q[2 * h], q[2 * h + 1]);
             }
-        } else {
+        } else { /* IMAGE: the upload's pixels (host/null/gsmem.c) */
+            kh1_gsmem_image(q, 4);
             g->left--;
         }
         return;
@@ -231,6 +234,16 @@ static void gs_print_draws(void) {
     if (n > 64) printf("kh1-host:   draw ... %d states in all\n", n);
 }
 
+/* KH1_HOST_TRACE=5: each upload / copy into GS memory the send made (host/null/gsmem.c, session 80) */
+static void gs_print_uploads(void) {
+    static KH1GsUpload u[64];
+    int n = kh1_gsmem_log(u, 64), i;
+    for (i = 0; i < n && i < 64; i++)
+        printf("kh1-host:   upload %s dbp %04x dbw %u dpsm %02x at %u,%u size %ux%u: %u pixels\n",
+               u[i].dir ? "copy" : "host", u[i].bp, u[i].bw, u[i].psm, u[i].x, u[i].y, u[i].w, u[i].h, u[i].pixels);
+    if (n > 64) printf("kh1-host:   upload ... %d in all\n", n);
+}
+
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
@@ -243,6 +256,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     extra[0] = 0;
     gs_nval = 0;
     kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
+    kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
     while (!done && !bad && ntags < 4096) {
         u32 w0, qwc, id, addr, next = tag + 16;
         if (!where(tag, 16)) { bad = KH1_DMA_TAG_OUTSIDE; break; }
@@ -336,7 +350,10 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     if (kh1_host_trace >= 4)
         for (i = 0; i < (int)gs_nval; i++)
             printf("kh1-host:   gs %02x %08x%08x\n", gs_val[i].reg, gs_val[i].hi, gs_val[i].lo);
-    if (kh1_host_trace >= 5) gs_print_draws();
+    if (kh1_host_trace >= 5) {
+        gs_print_draws();
+        gs_print_uploads();
+    }
     if (bad || kh1_host_trace == 3)
         for (i = 0; i < (int)ntags; i++) {
             u32 *t = (u32 *)(unsigned long)tags[i][0];

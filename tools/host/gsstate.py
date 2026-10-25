@@ -2,7 +2,7 @@
 """The renderer's state list from a host run (phase 5, docs/renderer-spec.md 4.7).
 
   KH1_HOST_TRACE=4 out/host/kh1-host > run.txt     (KH1_HOST_ISO=..., KH1_HOST_OVL=stub:2 ...)
-  python3 -I tools/host/gsstate.py run.txt [--exe out/host/kh1-host] [--sends] [--draws]
+  python3 -I tools/host/gsstate.py run.txt [--exe out/host/kh1-host] [--sends] [--draws] [--uploads]
 
 The run-time twin of `tools/host/dmawalk.py --state`, which reads only the chains the ELF
 holds: KH1_HOST_TRACE=4 (host/null/dmawalk.c) prints after each send's line every distinct GS
@@ -15,7 +15,9 @@ chains.  --sends adds a count of sends per chain.  --draws (a KH1_HOST_TRACE=5 r
 lists the draw states host/null/gsregs.c's register file counted ("kh1-host:   draw ..."): each
 distinct PRIM + FRAME / ZBUF / TEST / ALPHA / TEX0 / CLAMP the vertex kicks drew with (the state
 carried over from earlier sends included), decoded, with its kicks, primitives and the chains whose
-data kicked them.
+data kicked them.  --uploads (KH1_HOST_TRACE=5, session 80) lists the transfers into GS memory
+host/null/gsmem.c took ("kh1-host:   upload ..."): each distinct destination (DBP, DBW, DPSM) and
+rectangle, how often, the pixels written and the chains that sent them.
 
 The values come from the user's disc and ELF at run time: never commit the output.
 """
@@ -39,7 +41,21 @@ SEND = re.compile(r"^kh1-host: dma ch (\d+) chcr ([0-9a-f]{8}) tadr ([0-9a-f]{8}
 GS = re.compile(r"^kh1-host:   gs ([0-9a-f]{2}) ([0-9a-f]{16})$")
 DRAW = re.compile(r"^kh1-host:   draw prim ([0-9a-f]{3}) frame ([0-9a-f]{8}) zbuf ([0-9a-f]{8}) test ([0-9a-f]{8}) "
                   r"alpha ([0-9a-f]{16}) tex0 ([0-9a-f]{16}) clamp ([0-9a-f]{16}): (\d+) kicks, (\d+) prims$")
+UPLOAD = re.compile(r"^kh1-host:   upload (host|copy) dbp ([0-9a-f]{4}) dbw (\d+) dpsm ([0-9a-f]{2}) "
+                    r"at (\d+),(\d+) size (\d+)x(\d+): (\d+) pixels$")
+PSM = {0x00: "PSMCT32", 0x01: "PSMCT24", 0x02: "PSMCT16", 0x0A: "PSMCT16S", 0x13: "PSMT8", 0x14: "PSMT4",
+       0x1B: "PSMT8H", 0x24: "PSMT4HL", 0x2C: "PSMT4HH", 0x30: "PSMZ32", 0x31: "PSMZ24", 0x32: "PSMZ16",
+       0x3A: "PSMZ16S"}
 DRAW_REGS = (0x00, 0x4C, 0x4E, 0x47, 0x42, 0x06, 0x08)
+
+
+def print_uploads(uploads) -> None:
+    """uploads: (kind, dbp, dbw, dpsm, x, y, w, h) -> [count, pixels, {chain: None}]"""
+    print("# uploads into GS memory (KH1_HOST_TRACE=5): %d distinct" % len(uploads))
+    for (kind, dbp, dbw, psm, x, y, w, h), (n, px, chains) in sorted(uploads.items(), key=lambda kv: kv[0][1:]):
+        short = "" if px == n * w * h else " (SHORT: %d of %d pixels)" % (px, n * w * h)
+        print("\t%s DBP 0x%04x DBW %d %s at (%d, %d) %dx%d: %d time(s)%s  %s" % (
+            kind, dbp, dbw, PSM.get(psm, "psm%02x" % psm), x, y, w, h, n, short, ", ".join(chains)))
 
 
 def print_draws(draws) -> None:
@@ -80,11 +96,13 @@ def main() -> int:
     ap.add_argument("--exe", type=Path, default=ROOT / "out/host/kh1-host")
     ap.add_argument("--sends", action="store_true", help="also the number of sends per chain")
     ap.add_argument("--draws", action="store_true", help="also the draw states (a KH1_HOST_TRACE=5 run)")
+    ap.add_argument("--uploads", action="store_true", help="also the uploads into GS memory (KH1_HOST_TRACE=5)")
     a = ap.parse_args()
     syms = Syms(a.exe)
     state = collections.defaultdict(dict)
     sends = collections.Counter()
     draws = {}
+    uploads = {}
     cur, nsend, nval = None, 0, 0
     for line in a.log.read_text(errors="replace").splitlines():
         m = SEND.match(line)
@@ -107,6 +125,15 @@ def main() -> int:
             d[0] += int(m.group(8))
             d[1] += int(m.group(9))
             d[2][cur] = None
+            continue
+        m = UPLOAD.match(line)
+        if m and cur:
+            key = (m.group(1), int(m.group(2), 16), int(m.group(3)), int(m.group(4), 16)) + tuple(
+                int(m.group(i)) for i in range(5, 9))
+            u = uploads.setdefault(key, [0, 0, {}])
+            u[0] += 1
+            u[1] += int(m.group(9))
+            u[2][cur] = None
         elif not line.startswith("kh1-host:   "):
             cur = None
     if not nsend:
@@ -122,6 +149,10 @@ def main() -> int:
         if not draws:
             print("gsstate: no draw lines: the run's trace level was below 5", file=sys.stderr)
         print_draws(draws)
+    if a.uploads:
+        if not uploads:
+            print("gsstate: no upload lines (trace level below 5, or no uploads)", file=sys.stderr)
+        print_uploads(uploads)
     print("# %d sends, %d chains, %d registers, %d distinct values" % (
         nsend, len(sends), len(state), sum(len(v) for v in state.values())), file=sys.stderr)
     return 0
