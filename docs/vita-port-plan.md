@@ -2612,6 +2612,30 @@ docs only, no float-untested row. selftest PASS (one new host test, present_test
 - **Still waiting for the Mac**: as 5.1bd; the real-disc run's palette counts (`KH1_HOST_COUNTS=1`) and the
   slot's bytes a frame (`--uploads`).
 
+### 5.1bf Session 118: the texture cache as port code, render targets in it
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host and test code and
+docs only, no float-untested row. selftest PASS (texcache_test 24 checks, present_test 57).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The texture cache as port code** (item 4b): new include/platform/texcache.h and host/port/texcache.c
+  (renderer-spec 4.13 "Session 118"): the layout and page stamp as the key, the texels' hash and a byte compare
+  on a stamp miss, a decode only for new bytes, the stored texels kept (indices with the palette cache's
+  palette, TEXA applied when sampled). host/null/gsmem.c's new hook `kh1_gsmem_texels` gives the model's
+  textured sprites (`kh1_gsmem_sprite`, `kh1_gsmem_flat_sprite`) their texels; host/null/present.c sets it
+  (`kh1_present_tex`, on with `KH1_HOST_SHOT` and `KH1_HOST_COUNTS=1`) and `kh1_present_tex_report` prints the
+  counts at the end of a run. gsmem.c's `texel_rgba` is split into the read and `value_rgba` (a stored value to
+  RGBA8), so both paths decode a texel the same way. The same display pixels with it as without
+  (present_test).
+- **Render targets in the cache** (item 4c): a texture in drawn pages is the GPU's and never kept, since a
+  target's stamp does not move with each draw (texcache_test: the `0x3A00` pass, an upload into its corner, the
+  message font under Z24). Two model fixes found by it: the write sequence goes on across `kh1_gsmem_reset`
+  (a stale hit after a reset), and each IMAGE piece moves it (a read between two pieces of an upload).
+- **Fake disc** (`KH1_HOST_OVL=stub`, 120 frames, `KH1_HOST_SHOT`): 1888 textured draws, all the frame copy
+  reading the 3D target, so 0 decodes; without `KH1_HOST_SHOT` no textured draw reaches the model.
+- **Still waiting for the Mac**: as 5.1be, plus the real-disc run's texture cache line (`KH1_HOST_COUNTS=1`
+  with `KH1_HOST_SHOT`): stamp hits against hash hits, decodes a frame, the texels held (is 4M enough?).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

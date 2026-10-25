@@ -71,6 +71,12 @@ int kh1_gsmem_clut(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *out)
  * host/null/present.c sets both; the palette must equal kh1_gsmem_clut's, so the pixels do not move */
 extern void (*kh1_gsmem_clut_loaded)(u32 tex0_lo, u32 tex0_hi);
 extern const u32 *(*kh1_gsmem_palette)(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi);
+/* session 118 (the texture cache in the present, renderer-spec 4.13 "Session 118"): when set, the
+ * model's textured sprites (kh1_gsmem_sprite, kh1_gsmem_flat_sprite) ask it for the TEX0's stored
+ * texels (1 << TW by 1 << TH, row by row: the index for an indexed PSM, the stored value otherwise,
+ * as kh1_gsmem_read_pixel gives) and read GS memory when it returns 0 (a render target's texture).
+ * host/null/present.c sets it; the texels must equal GS memory's, so the pixels do not move */
+extern const u32 *(*kh1_gsmem_texels)(u32 tex0_lo, u32 tex0_hi);
 /* a texture cache's key check: the newest write sequence number of any 8 KB page the texture's
  * w x h texels lie in (0: never written since the reset), and the CLUT buffer's load count */
 u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);

@@ -195,7 +195,9 @@ static void copy_walk(const char *dir, u32 n, void **f) {
  * (host/null/present.c, kh1_present_pal): a 16 x 16 PSMT4 texture at 0x2000 drawn 32 x 32 (the
  * model's exact sprite) with CSA 0 loaded, again with CSA 1 and CLD 0 (no load: a draw lookup), and a
  * 128 x 128 PSMT8 at 0x2400 drawn 128 x 128 (the present's textured sprite), both CLUTs CT32 (0x3700
- * and 0x3A00, made-up colours); the display's 512 x 448 pixels are kept in out */
+ * and 0x3A00, made-up colours); the display's 512 x 448 pixels are kept in out.  Session 118: tex turns
+ * the port's texture cache on (kh1_present_tex), and a 16 x 16 CT32 texture at 0x2800 is drawn last
+ * (a direct PSM through the cache's stored values) */
 static u32 scene_px[512 * 448];
 static void scene_sprite(u32 tex0_lo, u32 tex0_hi, s32 x, s32 y, s32 w, s32 h, u32 tw) {
     kh1_gs_write(0x06, tex0_lo, tex0_hi);
@@ -206,11 +208,14 @@ static void scene_sprite(u32 tex0_lo, u32 tex0_hi, s32 x, s32 y, s32 w, s32 h, u
     kh1_gs_write(0x03, tw * 16 | tw * 16 << 16, 0);
     kh1_gs_write(0x05, (u32)(0x7000 + (x + w) * 16) | (u32)(0x7400 + (y + h) * 16) << 16, 0);
 }
-static void scene(int cache, u32 *out) {
+static void scene(int cache, int tex, u32 *out) {
     u32 x, y, i;
     kh1_gsmem_reset();
     kh1_gs_reset();
     kh1_present_pal(cache);
+    kh1_present_tex(tex);
+    for (y = 0; y < 16; y++)
+        for (x = 0; x < 16; x++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0x2800, 1, x, y, 0x80000000u | (x * 0x0F0503 + y * 0x01070B));
     for (y = 0; y < 16; y++)
         for (x = 0; x < 16; x++) kh1_gsmem_write_pixel(KH1_PSMT4, 0x2000, 1, x, y, (x + y * 3) & 15);
     for (y = 0; y < 128; y++)
@@ -224,6 +229,7 @@ static void scene(int cache, u32 *out) {
     scene_sprite(0x2000 | 1 << 14 | (u32)KH1_PSMT4 << 20 | 4u << 26, 0 | 1 << 2 | 0x3700 << 5 | 1u << 29, 10, 20, 32, 32, 16);
     scene_sprite(0x2000 | 1 << 14 | (u32)KH1_PSMT4 << 20 | 4u << 26, 0 | 1 << 2 | 0x3700 << 5 | 1u << 24, 50, 20, 32, 32, 16);
     scene_sprite(0x2400 | 2 << 14 | (u32)KH1_PSMT8 << 20 | 7u << 26 | 3u << 30, 1 | 1 << 2 | 0x3A00 << 5 | 1u << 29, 100, 100, 128, 128, 128);
+    scene_sprite(0x2800 | 1 << 14 | (u32)KH1_PSMCT32 << 20 | 4u << 26, 0 | 1 << 2, 300, 20, 32, 32, 16);
     for (y = 0; y < 448; y++)
         for (x = 0; x < 512; x++) out[y * 512 + x] = kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, x, y);
 }
@@ -395,23 +401,44 @@ int main(int argc, char **argv) {
         static u32 with_px[512 * 448];
         const KH1PalCache *pc;
         u32 i, same = 1;
-        scene(1, with_px);
+        scene(1, 0, with_px);
         pc = kh1_present_pal_cache();
-        CHECK("palcache: drawn", kh1_gsmem_stats()->sprites == 2 && kh1_gsmem_stats()->tex_sprites == 1 &&
+        CHECK("palcache: drawn", kh1_gsmem_stats()->sprites == 3 && kh1_gsmem_stats()->tex_sprites == 1 &&
               with_px[30 * 512 + 15] != 0 && with_px[110 * 512 + 110] != 0);
         CHECK("palcache: two loads two fills, the CSA 1 draw its own", pc && pc->misses == 3 && pc->hits == 0 && pc->full == 0);
         CHECK("palcache: the T4's CSA 1 a palette of its own", with_px[30 * 512 + 15] != with_px[30 * 512 + 55]);
-        scene(0, scene_px);
-        CHECK("palcache: off", kh1_present_pal_cache() == 0 && kh1_gsmem_stats()->sprites == 2);
+        scene(0, 0, scene_px);
+        CHECK("palcache: off", kh1_present_pal_cache() == 0 && kh1_gsmem_stats()->sprites == 3);
         for (i = 0; i < 512 * 448; i++)
             if (with_px[i] != scene_px[i]) same = 0;
         CHECK("palcache: the shot's pixels the same", same);
         /* the same scene twice with the cache: the second frame's loads hit (one frame here) */
-        scene(1, with_px);
+        scene(1, 0, with_px);
         kh1_gs_write(0x06, 0x2000 | 1 << 14 | (u32)KH1_PSMT4 << 20 | 4u << 26, 0 | 1 << 2 | 0x3700 << 5 | 1u << 29);
         pc = kh1_present_pal_cache();
         CHECK("palcache: a reload hits", pc && pc->hits == 1 && pc->misses == 3);
         kh1_present_pal(1);
+        /* session 118: the same pixels with the texture cache (and the palette cache) as without: the
+         * two T4 draws one texture (CSA is not in the key: a stamp hit), the T8 and the CT32 their own */
+        {
+            const KH1TexCache *tc;
+            scene(1, 1, with_px);
+            tc = kh1_present_tex_cache();
+            same = 1;
+            for (i = 0; i < 512 * 448; i++)
+                if (with_px[i] != scene_px[i]) same = 0;
+            CHECK("texcache: the shot's pixels the same", same && with_px[30 * 512 + 310] != 0);
+            CHECK("texcache: three decodes, the CSA 1 draw a stamp hit", tc && tc->draws == 4 && tc->decodes == 3 &&
+                  tc->stamp_hits == 1 && tc->hash_hits == 0 && tc->targets == 0 &&
+                  tc->decoded == 16 + 128 * 128 + 16); /* the 16-wide ones TH 0: one row */
+            scene(0, 1, with_px);
+            same = 1;
+            for (i = 0; i < 512 * 448; i++)
+                if (with_px[i] != scene_px[i]) same = 0;
+            CHECK("texcache: without the palette cache, the same", same);
+            CHECK("texcache: off", (kh1_present_tex(0), kh1_present_tex_cache() == 0));
+            kh1_present_tex(1);
+        }
     }
 
     if (fails) { printf("present_test: %d of %d failed\n", fails, checks); return 1; }

@@ -22,6 +22,7 @@
 #include "dmawalk.h"
 #include "platform/canvas.h"
 #include "platform/palcache.h"
+#include "platform/texcache.h"
 #include "present.h"
 
 void *fopen(const char *, const char *);
@@ -126,6 +127,7 @@ int kh1_present_init(s32 w, s32 h, int target, const char *dir, const void *send
     kh1_dma_after_send = present_after;
     kh1_gsmem_flat(1); /* session 95: the clears, fades and letterbox filled into the model */
     kh1_present_pal(1); /* session 117: the indexed decodes through the port's palette cache */
+    kh1_present_tex(1); /* session 118: the textured sprites' texels through the port's texture cache */
     return 0;
 }
 
@@ -210,4 +212,71 @@ void kh1_present_pal_report(void) {
            "%u uncached (every slot in use); at most %u fills in a frame (frame %lu), %.2f a frame\n",
            pal_loads, pal_draws, pal_frames, pal_c.hits, pal_c.misses, pal_c.full, pal_fills_max, pal_max_at,
            pal_frames ? (double)pal_c.misses / pal_frames : 0.0);
+}
+
+/* Session 118 (vita-port-plan 5.1bf, renderer-spec 4.13 "Session 118"): the port's texture cache
+ * (host/port/texcache.c) in the present.  Each textured sprite the model draws (kh1_gsmem_texels)
+ * looks its TEX0 up with the page stamp (kh1_gsmem_tex_stamp) and the render target its pages hold
+ * (kh1_gsmem_tex_target: the frame copy's 3D target, a pass at 0x3A00 read back after its draw), and
+ * reads the stored texels the cache keeps; a target's texture is the GPU's own (0: the model reads
+ * GS memory, as before).  The texels are GS memory's, so the pixels are the same with the cache as
+ * without (tests/host/present_test.c).  The counts are what a Vita renderer would do: a stamp hit
+ * reads nothing, a hash hit reads and hashes the texels, a decode is one GPU texture upload. */
+static KH1TexCache tex_c;
+static int tex_on;
+static u32 tex_frames, tex_hashed_now, tex_decoded_now, tex_hashed_max, tex_decoded_max;
+static unsigned long tex_frame, tex_hmax_at, tex_dmax_at;
+
+static void tex_mark(void) {
+    u32 h = tex_c.hashed - tex_hashed_now, d = tex_c.decoded - tex_decoded_now;
+    if (h > tex_hashed_max) { tex_hashed_max = h; tex_hmax_at = tex_frame; }
+    if (d > tex_decoded_max) { tex_decoded_max = d; tex_dmax_at = tex_frame; }
+}
+
+static void tex_tick(void) {
+    unsigned long f = kh1_host_frame();
+    if (tex_frames && f == tex_frame) return;
+    if (tex_frames) {
+        tex_mark();
+        kh1_texcache_frame(&tex_c);
+    }
+    tex_hashed_now = tex_c.hashed; /* the counts at the frame's start */
+    tex_decoded_now = tex_c.decoded;
+    tex_frame = f;
+    tex_frames++;
+}
+
+static void tex_read(u32 lo, u32 hi, u32 *out, void *ctx) {
+    u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), x, y;
+    (void)ctx;
+    for (y = 0; y < h; y++)
+        for (x = 0; x < w; x++) out[y * w + x] = kh1_gsmem_read_pixel(lo >> 20 & 63, lo & 0x3FFF, lo >> 14 & 63, x, y);
+}
+
+static const u32 *tex_for(u32 lo, u32 hi) {
+    int decoded;
+    tex_tick();
+    return kh1_texcache_get(&tex_c, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), tex_read, 0,
+                            &decoded);
+}
+
+void kh1_present_tex(int on) {
+    tex_on = on && kh1_texcache_init(&tex_c) == 0;
+    if (!on) kh1_texcache_free(&tex_c);
+    kh1_gsmem_texels = tex_on ? tex_for : 0;
+    tex_frames = tex_hashed_now = tex_decoded_now = tex_hashed_max = tex_decoded_max = 0;
+    tex_frame = tex_hmax_at = tex_dmax_at = 0;
+}
+
+const KH1TexCache *kh1_present_tex_cache(void) { return tex_on ? &tex_c : 0; }
+
+void kh1_present_tex_report(void) {
+    if (!tex_on) return;
+    if (tex_frames) tex_mark(); /* the last frame's */
+    printf("kh1-host: texture cache: %u textured draws in %u frames with one: %u stamp hits, %u hash hits, "
+           "%u decodes, %u render targets (not kept), %u not kept (full); texels hashed %u (at most %u in a frame, "
+           "frame %lu), decoded %u (at most %u in a frame, frame %lu, %.0f a frame); %u texels held\n",
+           tex_c.draws, tex_frames, tex_c.stamp_hits, tex_c.hash_hits, tex_c.decodes, tex_c.targets, tex_c.full,
+           tex_c.hashed, tex_hashed_max, tex_hmax_at, tex_c.decoded, tex_decoded_max, tex_dmax_at,
+           tex_frames ? (double)tex_c.decoded / tex_frames : 0.0, tex_c.texels);
 }
