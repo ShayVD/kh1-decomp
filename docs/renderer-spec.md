@@ -1514,6 +1514,15 @@ load**: rebuild the animated entries (`0x3E00 + v`) after the cross-fade each fr
 renderer A meshes' own CLUT uploads (PATH2 DIRECT inside the disc's chains, §4.11) are not in the C: the host
 run's `--uploads` lists them.
 
+**Session 116 (vita-port-plan 5.1bd): the cache, built and tested; render targets over the boot / load
+CLUTs.** host/port/palcache.c is that cache (keyed by the 16 / 256 entries the load read, 64 slots, LRU among
+slots not used this frame), tested on the four cases above through the GS model (tests/host/palcache_test.c).
+fscheck.py checks every render target's drawn blocks against this table's boot and load rows: the only
+overlaps are the shadow window of 256, the eye overlay's copy and a 256-high crossfade over the window font's
+`0x3DFC` (blocks `0x3DFC .. 0x3DFF`), each repaired by the windows' re-send (§4.12); nothing draws over the room
+CLUTs, `0x3FD8`, `0x3FFC`, the field text's pairs or `0x3FF4` / `0x3FF8`. The ppp effect slots' CLUT blocks come
+from the effect files (the host run's `--uploads`).
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

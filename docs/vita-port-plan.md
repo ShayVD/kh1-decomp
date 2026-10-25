@@ -2556,6 +2556,37 @@ no float-untested row. selftest PASS (one new negative case with two breaks).
   uploads (`--uploads`), the message font's layers (`KH1_HOST_TEXDUMP`), `KH1_HOST_DMAC=defer` as the default,
   argcheck's 3 value uses, the callers of prim.c's four senders.
 
+### 5.1bd Session 116: a palette cache for the port, and render targets over the boot / load CLUTs
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; port code, a test, a
+tool check and docs only, no float-untested row. selftest PASS (one new host test, one new negative case).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **A palette cache** (item 4b): new **host/port/palcache.c** (`include/platform/palcache.h`, port code outside
+  src/): `kh1_palcache_get(cache, entries, n, &fill)` keys a decoded palette by **the 16 or 256 RGBA8 entries a
+  CLD load read** (an FNV-1a hash, then a full compare), never by (CBP, CSA); 64 slots, a miss refills the least
+  recently used slot no draw of this frame uses and sets `fill` (upload that slot's GPU palette), -1 when every
+  slot is in use this frame (draw uncached). Nothing is dropped on a load: new bytes are a new key. On the host
+  the entries come from the GS model's CLUT buffer: new `kh1_gsmem_clut` (host/null/gsmem.c: the palette a TEX0
+  reads, 256 for T8 with the CSM1 swap undone, CSA's 16 for T4). **tests/host/palcache_test.c** (20 checks, in
+  `make test`) drives the model with renderer-spec 4.13 "Session 115"'s cases: renderer B's `0x3700` with two
+  model records in one frame (two slots, both hit next frame), the timer's font then its icon at `0x3A00` (two
+  slots; the font again hits), CSA 0 / 1 of one 256-colour load drawn as T4 (two keys), a room CLUT whose entry
+  the cross-fade changes between frames (a miss that frame, the old palette kept), the window font's `0x3DFC`
+  overwritten by a shadow window and re-sent (hits the boot slot, no refill), and LRU eviction / a full frame.
+- **Render targets over boot / load CLUTs** (item 4c): fscheck.py now records every block a send's FRAME or
+  ZBUF draws (PS2 and wide view) and checks it against clutupload.py's boot and load CLUTs (new
+  `clutupload.scan` / `static_cluts`; the room's `0x3E00 + i` read as `0x3E00 .. 0x3FD7`, `SYMBOLIC`). Nothing
+  re-sends a boot or load CLUT, so an overlap is a CLUT the PS2 reads broken too unless `RT_CLUT_EXPECTED`
+  names the re-send. **Found: exactly the three known cases**, all over the window font's `0x3DFC` (blocks
+  `0x3DFC .. 0x3DFF`): the shadow window of 256 (`D_004F7820[2]`), the eye overlay's 256 x 256 copy (texspot)
+  and a 256-high crossfade, each repaired by the windows' re-send (4.12). No target reaches the room CLUTs, the
+  HUD's `0x3FD8`, the message font's `0x3FFC`, the field text's pairs or `0x3FF4` / `0x3FF8`. Not checkable from
+  the C: the ppp effects' CLUTs (`func_00180b40` / `func_00180ab8`, at the file's DBP rebased into the effect's
+  slot, `UNRESOLVED`): the host run's `--uploads` gives their blocks. A new negative case (the HUD's rows moved
+  to `0x3D00`) must fail.
+- **Still waiting for the Mac**: as 5.1bc, plus the ppp effect slots' CLUT blocks.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

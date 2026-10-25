@@ -9,13 +9,25 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 115 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 116 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 115, 2026-10-25)
+## Where we stopped (end of session 116, 2026-10-25)
+
+- **Session 116** (static, vita-port-plan 5.1bd): **a palette cache for the port, and render targets over the
+  boot / load CLUTs.** Session 101's card was still unanswered, so "widen" stays (check the session 101 thread
+  again). New host/port/palcache.c (`include/platform/palcache.h`): decoded palettes keyed by the 16 / 256
+  entries a CLD load read (hash + compare), 64 slots, LRU among slots not used this frame; host/null/gsmem.c's
+  new `kh1_gsmem_clut` gives the entries. tests/host/palcache_test.c (20 checks, in `make test`) runs
+  renderer-spec 4.13 "Session 115"'s four cases through the GS model. fscheck.py now checks every render
+  target's drawn blocks against clutupload's boot and load CLUTs (`RT_CLUT_EXPECTED`): only the three known
+  overlaps over the window font's `0x3DFC` (shadow window 256, eye overlay, 256-high crossfade; re-sent before
+  the windows draw), 0 problems; the ppp effect slots' CLUT blocks are not in the C (`UNRESOLVED`: host run).
+  kh1.elf byte-identical, no float-untested row; selftest PASS (a new negative case).
+
 
 - **Session 115** (static, vita-port-plan 5.1bc): **who writes each CLUT block, and the timer's `0x3A00`.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
@@ -509,7 +521,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 116 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 117 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -531,7 +543,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 115: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 116: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -576,23 +588,25 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests, fscheck's run-time
    builds and longcheck's `--cc` are skipped): (a) **the user's answer on the full-width rules** (session
-   101's card, still unanswered at session 115): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
+   101's card, still unanswered at session 116): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
    winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session 101"'s paragraph (say so in a new
-   vita-port-plan 5.1 entry); (b) **a palette cache for the port, tested on the host** (the next step after
-   5.1bc): host/port/palcache.c keyed by the bytes uploaded (source and length, or a hash of the 16 / 256
-   entries) at a CLD load, with a test on renderer-spec 4.13 "Session 115"'s cases: renderer B's `0x3700`
-   with two model records in one frame, the timer's font then its icon at `0x3A00`, a room CLUT changed by the
-   cross-fade between frames, a boot CLUT (`0x3DFC`) overwritten by a shadow window and re-sent; (c)
-   **cross-check fscheck's render-to-texture blocks against clutupload's list**: a render target over a CLUT
-   block whose writer is boot or load (not re-sent before its readers) would be a real bug on the PS2 too; the
-   shadow windows over `0x3C00` / `0x3DFC` are the known cases (re-sent per draw), so make the tool say so.
-   (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the callers of prim.c's senders still
-   wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws --uploads`, record the HUD
-   descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table and every CLUT upload not in
-   clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13 "Session 115".
+   vita-port-plan 5.1 entry); (b) **the palette cache in the host's present** (the next step after 5.1bd):
+   host/null/present.c's indexed-texture decode goes through host/port/palcache.c (the entries from
+   `kh1_gsmem_clut` at each CLD load), and the run prints the cache's hits / misses / fills per frame at the end
+   (`KH1_HOST_COUNTS=1`), so the real-disc run measures what a Vita renderer would upload; extend
+   tests/host/present_test.c so a shot's pixels are the same with the cache as without; (c) **a texture cache's
+   key, the same way**: renderer-spec 3.1's texture slot `0x3600` is rewritten per draw, so test keying decoded
+   textures by `kh1_gsmem_tex_stamp` (page write sequence) against keying by the bytes, on the timer's font /
+   icon pair at `0x3600` and a room texture under texanim's scroll (gsmem_test's `scroll` cases), and write the
+   result into renderer-spec 4.13. (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
+   callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
+   --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
+   every CLUT upload not in clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13
+   "Session 115", and the ppp effect slots' CLUT blocks (clutupload's `UNRESOLVED`; does any render target
+   draw over them? fscheck's `RT_CLUT_EXPECTED`).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=116`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=117`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 117) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 118) with this
    prompt: the user wants each session to start the next one without being asked.

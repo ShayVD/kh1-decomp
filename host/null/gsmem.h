@@ -61,6 +61,9 @@ void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v);
  * TH, both at most 1024.  texa: TEXA (TA0, AEM, TA1) for CT24 / CT16 texels and CT16 CLUT entries.
  * Returns 0, or -1 for a PSM or CLUT the model does not have (out untouched). */
 int kh1_gsmem_read_tex(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *out);
+/* session 116: the palette the TEX0 reads from the CLUT buffer (256 entries for T8 / T8H, CSA's 16 for
+ * the 4-bit PSMs) as RGBA8 words; returns the count, 0 for one the model does not have */
+int kh1_gsmem_clut(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *out);
 /* a texture cache's key check: the newest write sequence number of any 8 KB page the texture's
  * w x h texels lie in (0: never written since the reset), and the CLUT buffer's load count */
 u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);

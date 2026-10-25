@@ -176,6 +176,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/canvas_test.c" "$ROOT/host/port/canvas.c" "$ROOT/host/port/view.c"
   "$W/canvas_test" > "$W/canvas.log" || { cat "$W/canvas.log"; exit 1; }
   tail -n 1 "$W/canvas.log"
+  # the port's palette cache keyed by the CLUT entries loaded (host/port/palcache.c, session 116)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/palcache_test" \
+      "$ROOT/tests/host/palcache_test.c" "$ROOT/host/port/palcache.c" "$ROOT/host/null/gsmem.c"
+  "$W/palcache_test" > "$W/palcache.log" || { cat "$W/palcache.log"; exit 1; }
+  tail -n 1 "$W/palcache.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \
@@ -343,6 +348,14 @@ sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$E
      ! grep -q 'D_002A5A90 .*reads TEX0 0x1A00 .*under KH1_FS_UOWN: no capture.s own buffer (the 3D target)' "$W/fs_neg8.log" ||
      ! grep -q 'D_002A6890 .*copies the 3D target (u over 32 texels) and its row has no KH1_FS_U' "$W/fs_neg8.log"; then
     echo "selftest: fscheck missed a stretched copy reading the wrong buffer" >&2; cat "$W/fs_neg8.log" >&2; exit 1
+  fi
+  # session 116: render targets over a boot or load CLUT (clutupload's list). The HUD's boot rows moved from
+  # 0x3FD8 into the off-screen buffer (0x3D00): the shadow windows' and the crossfade's targets now draw there
+  mkdir -p "$W/fsneg11" && cp -r "$ROOT/src/." "$W/fsneg11/"
+  sed -i 's/PlatGsSetDefLoadImage(&li, 0x3FD8,/PlatGsSetDefLoadImage(\&li, 0x3D00,/' "$W/fsneg11/hud/hud.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --src "$W/fsneg11" > "$W/fs_neg11.log" ||
+     ! grep -q 'D_004F7820\[2\] (run time): its FRAME draws blocks 0x3D00 .. 0x3D03 over the boot CLUT 0x3D00 (func_00239368)' "$W/fs_neg11.log"; then
+    echo "selftest: fscheck missed a render target over a boot CLUT" >&2; cat "$W/fs_neg11.log" >&2; exit 1
   fi
 else
   echo "selftest: no $(basename "$ELF"), fscheck skipped"

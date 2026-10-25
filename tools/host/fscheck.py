@@ -52,6 +52,10 @@ checks:
     CBP1 for 4 / 5), reading its CLUT's blocks then, from CBP's origin (CSA is the buffer's slot); every
     sprite with an indexed PSM (PSMT8 / PSMT4 / T8H / T4HL / T4HH) reads slots loaded in its picture from its
     own CBP / CPSM, else CLUT_EXPECTED names who loads them; a CSM2 load is reported (not modelled).
+  - (session 116) every block a send's FRAME or ZBUF draws (PS2 and wide view) against the boot and load
+    CLUTs of clutupload.py's list: nothing re-sends those, so a render target over one is a CLUT the PS2
+    reads broken too, unless RT_CLUT_EXPECTED names the re-send (the shadow windows', the eye overlay's and a
+    256-high crossfade's over the window font's 0x3DFC, re-sent before the windows draw).
 
 Needs the user's ELF (the packets are its data); prints names and coordinates, never packet bytes.
 
@@ -697,6 +701,58 @@ def spans(bs):
     return ", ".join("0x%04X" % a if a == z else "0x%04X .. 0x%04X" % (a, z) for a, z in out)
 
 
+# (session 116) every block a send's FRAME or ZBUF draws, PS2 and wide view: (key, label, function, "FRAME" /
+# "ZBUF") -> blocks, filled by block_check for clut_cross
+DRAWN = {}
+# (session 116) render targets drawn over a boot or load CLUT (clutupload.py's list) on purpose: (send, the CLUT's
+# writer) -> why the CLUT is right again before its readers. Nothing re-sends a boot or load CLUT unless it is
+# listed here with the re-send, so any other overlap is a CLUT the PS2 reads broken too
+RT_CLUT_EXPECTED = {
+    ("D_004F7820", "func_001f2eb8"): "shadow.c func_001284a0: the shadow windows of 196 and 256 clear rows 224 .. 255 "
+                                     "of the off-screen buffer, the window font's CLUT 0x3DFC with them; the windows "
+                                     "re-send it (func_001f82b0 -> func_001f8270, renderer-spec 4.12) before they draw",
+    ("D_0035C4A0", "func_001f2eb8"): "texspot: the eye overlay's 256 x 256 copy over the window font's CLUT 0x3DFC, "
+                                     "re-sent as D_004F7820's",
+    ("func_00135ed0", "func_001f2eb8"): "objdraw: a crossfade 256 high over the window font's CLUT 0x3DFC, re-sent as "
+                                        "D_004F7820's",
+}
+
+
+def clut_cross(src, built_ok, verbose):
+    """(session 116, renderer-spec 4.13 "Session 116") DRAWN against clutupload.py's boot and load CLUTs:
+    (problems, overlaps found, unresolved CLUT destinations)"""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import clutupload
+    rows, cp, _seen, _where = clutupload.scan(src)
+    static, unresolved = clutupload.static_cluts(rows)
+    problems = ["clutupload: " + p for p in cp]
+    for d, size, f in unresolved:
+        if d not in clutupload.UNRESOLVED:
+            problems.append("%s: a %s CLUT at %s (%s) whose blocks are not known: add it to clutupload.py's "
+                            "SYMBOLIC or UNRESOLVED" % (f, clutupload.REVIEWED[f][0], d, size))
+    found, used = 0, set()
+    for (key, label, fn, what), bs in sorted(DRAWN.items(), key=lambda kv: kv[0][1:]):
+        for blocks, when, writer, d in static:
+            hit = bs & blocks
+            if not hit:
+                continue
+            found += 1
+            if verbose:
+                print("%s (%s): its %s draws blocks %s, the %s CLUT %s (%s)%s" % (
+                    label, fn, what, spans(hit), when, d, writer,
+                    " (expected)" if (key, writer) in RT_CLUT_EXPECTED else ""))
+            if (key, writer) in RT_CLUT_EXPECTED:
+                used.add((key, writer))
+            else:
+                problems.append("%s (%s): its %s draws blocks %s over the %s CLUT %s (%s), which nothing re-sends: "
+                                "broken on the PS2 too, or add the re-send to RT_CLUT_EXPECTED" % (
+                                    label, fn, what, spans(hit), when, d, writer))
+    for k in RT_CLUT_EXPECTED:
+        if k not in used and (built_ok or k[0] not in RT_BUILT):
+            problems.append("%s: in RT_CLUT_EXPECTED over %s's CLUT, but no longer drawn there" % k)
+    return problems, found, unresolved
+
+
 def block_check(s, fn, sp, flags, writes, side16, verbose, free=frozenset(), label=None):
     """(session 108) the problems of one send's drawn blocks, and the BLOCK_EXPECTED keys it used; label
     names a variant (session 109: a run-time build) in the messages, s stays BLOCK_EXPECTED's key.
@@ -712,6 +768,7 @@ def block_check(s, fn, sp, flags, writes, side16, verbose, free=frozenset(), lab
             if bw is None:
                 problems.append("%s (%s): %s PSM 0x%02X has no block order in PSM_BLOCKS" % (s, fn, what, where[2]))
                 continue
+            DRAWN.setdefault((key, s, fn, what), set()).update(bw | bp)
             own = region(where[0])
             if z and own and own[0] != Z_REGION:
                 if (key, own[0]) in expected:
@@ -1267,6 +1324,8 @@ def main():
             rl = step2(*(STEP2_AFTER[name] or map(int, var.split("x")))) + rl
         tex(name, "run time", pics + [(sprites_of(rl), uploads_of(rl), set(), {}, frozenset(), True, loads_of(rl))],
             "%s[%s]" % (name, var))
+    cx, ncx, unres = clut_cross(args.src, built is not None, args.v)
+    problems += cx
     for s, (_f, name) in rows.items():
         if s not in sends:
             problems.append("%s (%s): a row in the table, but no send of it" % (s, name))
@@ -1305,9 +1364,10 @@ def main():
           "%d drawn past their frame's width (%d expected), %d sends setting FRAME and %d render-to-texture "
           "sends from the C (%d block overlaps expected), %d texture reads checked (%d skipped, %d from "
           "outside expected), %d stretched reads' sources checked, %d CLUT reads checked (%d loaded elsewhere), "
-          "%d problems" % (
+          "%d render-target overlaps of a boot or load CLUT (%d expected; %d CLUT uploads at blocks the C does not "
+          "give), %d problems" % (
               len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(overs), len(overs & set(OVER_EXPECTED)),
-              nframed, nrt, len(bused), ntex, nskip, len(tused), nsrc, nclut, len(cused), len(problems)))
+              nframed, nrt, len(bused), ntex, nskip, len(tused), nsrc, nclut, len(cused), ncx, len(RT_CLUT_EXPECTED), len(unres), len(problems)))
     sys.exit(1 if problems else 0)
 
 

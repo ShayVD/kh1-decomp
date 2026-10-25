@@ -147,16 +147,49 @@ def params(line):
     return out
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--src", default=os.path.join(ROOT, "src"))
-    ap.add_argument("--table", action="store_true", help="print every CLUT upload with its destination and when")
-    a = ap.parse_args()
-    bodies, heads, where = {}, {}, {}
-    for d in sorted(os.listdir(a.src)):
-        if d == "sdk" or not os.path.isdir(os.path.join(a.src, d)):
+# (session 116) the boot / load CLUTs whose destination is an expression: expression -> (first block, end, why).
+# fscheck.py checks that no render target draws over a boot or load CLUT's blocks (nothing re-sends those)
+SYMBOLIC = {
+    "i + 0x3e00": (0x3E00, 0x3FD8, "the room's CLUTs: 0x3E00 + i, i below the file's n0 / n1; the HUD's rows at "
+                                   "0x3FD8 bound them"),
+}
+# boot / load CLUTs whose blocks are not known from the C: expression -> why (the host run's --uploads lists them)
+UNRESOLVED = {
+    "dbp": "a ppp effect's CLUT at the file's DBP, rebased into the slot the effect was given (pppsys.c "
+           "func_00180b40: (slot << 5) + 0x3D40 from func_00181280)",
+    "v": "a ppp effect's image or CLUT of variable size (func_00180ab8), as dbp",
+}
+
+
+def static_cluts(rows):
+    """(session 116) the boot and load CLUTs as (blocks, when, function, destination), and the unresolved
+    destinations' rows; blocks are CT32 8 x 8 (an 8 x 2 CLUT one block, a 16 x 16 one four: b, b + 1, b + 2,
+    b + 3 in the GS's block order)"""
+    out, unresolved = [], []
+    for d, size, f, _w in rows:
+        when = REVIEWED.get(f, ("?",))[0]
+        if when not in ("boot", "load"):
             continue
-        for dp, dn, fn in sorted(os.walk(os.path.join(a.src, d))):
+        n = 4 if size == "256" else 1
+        v = num(d) if d.startswith("0x") else None
+        if v is not None:
+            out.append((set(range(v, v + n)), when, f, d))
+        elif d in SYMBOLIC:
+            lo, hi, _why = SYMBOLIC[d]
+            out.append((set(range(lo, hi)), when, f, d))
+        else:
+            unresolved.append((d, size, f))
+    return out, unresolved
+
+
+def scan(src):
+    """(session 116) every CLUT upload in src: (rows of (destination, colours, function, file), problems, the
+    functions found, function -> file); fscheck.py's render-to-texture cross-check reads the rows too"""
+    bodies, heads, where = {}, {}, {}
+    for d in sorted(os.listdir(src)):
+        if d == "sdk" or not os.path.isdir(os.path.join(src, d)):
+            continue
+        for dp, dn, fn in sorted(os.walk(os.path.join(src, d))):
             dn.sort()
             for name in sorted(fn):
                 if not name.endswith(".c"):
@@ -169,7 +202,7 @@ def main():
                     if m and not line.rstrip().endswith(";") and not line.startswith((" ", "\t", "#")) \
                             and m.group(1) not in ("if", "while", "for", "switch"):
                         cur = m.group(1)
-                        bodies[cur], heads[cur], where[cur] = [], line, os.path.relpath(path, a.src)
+                        bodies[cur], heads[cur], where[cur] = [], line, os.path.relpath(path, src)
                         continue
                     if cur and line.startswith("}"):
                         cur = None
@@ -227,6 +260,15 @@ def main():
                         % (f, where[f]))
     for f in sorted(set(REVIEWED) - seen):
         problems.append("%s: in REVIEWED but no CLUT upload found in it" % f)
+    return rows, problems, seen, where
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--src", default=os.path.join(ROOT, "src"))
+    ap.add_argument("--table", action="store_true", help="print every CLUT upload with its destination and when")
+    a = ap.parse_args()
+    rows, problems, seen, where = scan(a.src)
     if a.table:
         print("block\tcolours\twhen\tfunction\tfile\twhat")
         done = set()
