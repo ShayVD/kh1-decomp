@@ -2108,6 +2108,39 @@ no float-untested row. selftest PASS (new flare_test: 14 checks).
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1ar Session 104: the other store readers tested on the host
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). Only a comment changed under src/ (menubg.c's
+store rectangle): kh1.elf byte-identical, no float-untested row. selftest PASS (new storeread_test: 24 checks).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The other `PlatGsExecStoreImage` readers on the null platform** (item 4b): tests/host/storeread_test.c
+  links the game's own src/menu/menubg.c, src/screen/capture.c, src/gfx/sceneeff.c and src/screen/screen.c
+  with gsimage.c / gsmem.c (`-ffunction-sections -Wl,--gc-sections`, so only the tested functions' callees
+  need stubs: 13 symbols) and runs them on made-up pixels in the 4:3 view and the wide one:
+  - **menubg.c `func_0020a8f0`** stores 16 x 1 CT32 at **x 256, y 4 and y 443** of FBP 0 / FBW 8 (the old
+    header comment said "(4, 16) and (443, 16)": those are y and w) and keeps each row's first pixel
+    without its alpha byte. Wide or not it reads the PS2's x 256, never the view's edges. A frame only the
+    draws wrote reads black (0, after a reset) or whatever an earlier upload left there (the null platform
+    does not rasterise); a flat clear filled for the present (`kh1_gsmem_flat(1)`, `KH1_HOST_SHOT`) reads
+    its colour. **So on a host run without `KH1_HOST_SHOT` the menu backdrop's gradient is black or stale**;
+    a port's store reads its real frame there (the 4:3 centre column of the view, 5.1an).
+  - **capture.c `func_0010a3e8`** sends the half copy `D_002B6760`, asks `func_00121e28` for 0x24000 bytes and
+    stores 256 x 192 CT24 from block 0x3600 (FBW 4): exactly 0x24000 bytes, 0x300 a row, wide or not.
+  - **sceneeff.c `func_00102a48`** (the menu blur) loads that back (`func_0010a470`) and scans 0x9000 words:
+    a captured frame sends the blur `D_002A4B60` (its corners at the view's edges under the wide view, at
+    `0x6fe0 - o` on the 4:3); black with only the alpha byte set is empty (the CT24 store drops alpha) and
+    sends `D_002A4DD0`; the last pixel alone is enough (the scan covers all 0x24000 bytes). **A half target
+    only the draws wrote reads zeros, so on the null platform the menu opens with the empty pass, not the
+    blur**: expect `D_002A4DD0` in a host run's `--nodes` / `--draws` when the menu opens (with
+    `KH1_HOST_SHOT` the copy may be point-sampled into the model and send the blur; not checked).
+  - **screen.c `func_001e1480`** (vm_lib's capture) stores the target 0x1A00 into `D_00F20000`: 0x90000
+    bytes, 0x600 a row, wide or not (gsimage_test checks capture.c's twin).
+  With gsimage.c's "drawn Z reads 0" widened to every format, the drawn-frame and flat-clear checks fail, so
+  the test also holds that only Z formats read 0 when drawn.
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

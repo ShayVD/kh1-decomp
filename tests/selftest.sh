@@ -144,6 +144,15 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" -lm
   "$W/flare_test" > "$W/flare.log" || { cat "$W/flare.log"; exit 1; }
   tail -n 1 "$W/flare.log"
+  # the other store readers: menubg's backdrop colours, the half capture and the menu blur's empty
+  # test, vm_lib's capture (session 104); --gc-sections keeps only what the four functions reach
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -fno-strict-aliasing -ffunction-sections -fdata-sections -DKH1_HOST \
+      -I"$ROOT/include" -I"$ROOT/src" -Wl,--gc-sections -o "$W/storeread_test" "$ROOT/tests/host/storeread_test.c" \
+      "$ROOT/src/menu/menubg.c" "$ROOT/src/screen/capture.c" "$ROOT/src/gfx/sceneeff.c" "$ROOT/src/screen/screen.c" \
+      "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
+      "$ROOT/host/port/canvas.c" -lm
+  "$W/storeread_test" > "$W/storeread.log" || { cat "$W/storeread.log"; exit 1; }
+  tail -n 1 "$W/storeread.log"
   # KH1_HOST_COUNTS's high-water marks (host/null/counts.c, session 96)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/counts_test" \
       "$ROOT/tests/host/counts_test.c" "$ROOT/host/null/counts.c"

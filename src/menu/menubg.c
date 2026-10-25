@@ -1,6 +1,7 @@
 /* The backgrounds of the menus (docs/modules.md "Session 39"),
  * 0x0020a8f0-0x0020b6a8: func_0020a8f0 reads two pixels of the frame buffer
- * back (sceGsExecStoreImage at (4, 16) and (443, 16)) into D_003F34B0, the
+ * back (sceGsExecStoreImage of 16 x 1 at x 256, y 4 and y 443; session 104:
+ * the first pixel of each, tests/host/storeread_test.c) into D_003F34B0, the
  * top and bottom colours; func_0020a9b0 / func_0020ab88 / func_0020ae98 draw
  * a full-screen gradient with them (plain, through the textures of D_003F1A70
  * / D_003F1E70, or into a packet), func_0020b120 one with four colours,

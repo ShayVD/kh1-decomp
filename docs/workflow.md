@@ -1030,6 +1030,7 @@ found that the next session needs:
 - **A fresh container** needs `dpkg --add-architecture i386 && apt-get install libc6:i386 libstdc++5:i386
   binutils-mips-linux-gnu` before `make toolchain` (it stops on each missing piece in turn).
   Session 103: also `gcc-multilib`, or selftest skips every host C test (`gcc -m32` cannot link).
+  Session 104: `apt-get update` first, or apt finds no `gcc-multilib` candidate.
 - **reach_check idx-span** (worker s33reach, `--no-idx-span`; docs/shiftable-plan.md "Session 33: reach_check"): a
   bounded index pins every name up to its tight end (bound from a loop cap or a constant compare). 11 newly pinned
   (8 real: D_003F5C20-2C, D_004E3A1C, the script VM's D_003C39B0 / F0 / D_003C3A30), none released; 2,043 -> 2,032
