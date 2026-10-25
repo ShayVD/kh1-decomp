@@ -95,14 +95,14 @@ s32 func_00135ed0(C02Img *img, C02Src *src)
     regs = 0x53531;
     c = 128;
     adc = 0x8000;
-    cld = 1UL << 61;
+    cld = 1ULL << 61;
     n = func_001623e8(src->res->x154);
     func_001623f8(src->res->x154, img->xc + n / 2, &tex);
     dt = &buf[0];
     gt = &buf[1];
     p = &buf[2];
     p = func_0011fb38(0x4c, ((u64)img->x4 >> 6) << 16 | 0x1d0, p);
-    p = func_0011fb38(0x4e, 1UL << 32, p);
+    p = func_0011fb38(0x4e, 1ULL << 32, p);
     p = func_0011fb38(0x18, 0, p);
     p = func_0011fb38(0x40, (u64)(img->x4 - 1) << 16 | (u64)(img->x6 - 1) << 48, p);
     p = func_0011fb38(0x42, 0x8000000011UL, p);
@@ -526,14 +526,14 @@ void func_00136d38(C02Obj *o)
         PlatVu0OuterProduct(o->mtx[1], o->mtx[2], m);
         PlatVu0Normalize(o->mtx[1], o->mtx[1]);
     }
-    o->fl.w &= ~(1UL << 45);
+    o->fl.w &= ~(1ULL << 45);
     PlatVu0CopyVector(scale, o->scale);
     scale[1] *= o->x480;
     k = o->desc->x4c;
     if (k != 0x204 && k != 0x23) {
         for (i = 0; i < 3; i++) {
             if (c02_fabsf(scale[i] - 1.0f) > 0.0001f) {
-                o->fl.w |= 1UL << 45;
+                o->fl.w |= 1ULL << 45;
                 break;
             }
         }
@@ -557,7 +557,7 @@ void func_00136d38(C02Obj *o)
         for (i = 0; i < 4; i++) {
             for (j = 0; j < 4; j++) {
                 if (save[i][j] != o->mtx[i][j]) {
-                    o->fl.w &= ~(1UL << 57);
+                    o->fl.w &= ~(1ULL << 57);
                     return;
                 }
             }

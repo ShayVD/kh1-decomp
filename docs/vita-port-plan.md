@@ -2414,6 +2414,55 @@ float-untested row. selftest PASS (one new negative case, one changed).
 - **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
   of prim.c's four senders.
 
+### 5.1az Session 112: the CLUT loads, the textures' TW / TH, and `long` shifts on the host
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; the C changes
+(`1UL << n` to `1ULL << n`, one host-only branch) are the same EE code, so no float-untested row. selftest PASS (four new negative
+cases, one changed).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The CLUT loads** (item 4b): fscheck now models the GS's CLUT buffer per picture (16 slots of 16 CT32
+  entries). Every TEX0 / TEX2 write (TEX2 merges PSM, CBP, CPSM, CSM, CSA, CLD into its context's TEX0, in
+  `sprites_of` too) is an event in the picture: CLD 1 loads, 2 / 3 load and set CBP0 / CBP1, 4 / 5 load only
+  when CBP differs from CBP0 / CBP1 (unknown at a picture's start: taken as a load); an 8-bit CLUT fills all
+  slots from CSA, a 4-bit one slot CSA. The load reads its CLUT's blocks *then* (session 110 checked them at
+  the sprite), and from CBP's origin: **correction**, CSA places a 4-bit CLUT in the buffer, not in memory
+  (session 110's `clut_rect` offset the source by CSA). Each sprite with an indexed PSM needs its slots loaded
+  in the picture from its own CBP / CPSM, else `CLUT_EXPECTED` names who loads it; a CSM2 load is reported
+  (not modelled; none found). **13 CLUT reads checked, 0 problems, `CLUT_EXPECTED` empty**: the wipe's shape
+  (CBP 0x3A00, PSMT4, CLD 1), the eye overlay's two sprites and the crossfade's two at each size (CBP 0x3700,
+  PSMT8, CLD 1) all load their own CLUT just before. Not covered: the draw list's and the windows' packets
+  (the window font's TEX2 CLD 2 then TEX0 CLD 0 with CSA palettes, renderer-spec 4.8), which fscheck does not
+  walk.
+- **The step-2 TEX0's TW / TH** (item 4c): **TW / TH are log2 of the image's size.** The texture record is one
+  16-byte layout in three readers (u16 QWC, u8 TW, u8 TH, u16 w, u16 h, the data's address, the CLUT's):
+  `func_0015f488` (step 2) uploads `x4 x x6` with QWC `x0` and sets TW / TH from `x2` / `x3`; `func_0015fa20`
+  (the eye image) reads the same QWC / w / h / data / CLUT fields; the crossfade `func_00135ed0` uploads its
+  second texture `1 << x2` by `1 << x3` with QWC `x0` and draws it over the part's `w x h` (`D_0055C680`, step
+  2's request: `x4` / `x6` are `t->x4` / `t->x6`). So the record's sizes are powers of two and `x4 = 1 << x2`
+  (else the crossfade's upload would not be its QWC); `step2_regs`'s rounding up gives the same TW / TH and
+  stays. **Found**: tools/host/rtsends.c's `func_001623f8` stub returned a zero record, so the crossfade's
+  second texture was checked as one texel; it now returns the record at the part's size (TW / TH log2, QWC
+  w x h / 16; addresses 0).
+- **Found: `1UL << n` with n >= 32 is wrong on the host.** `long` is 64-bit on the EE and 32-bit under
+  `gcc -m32` and on the Vita; the census builds with `-w`, so gcc's shift-count warning never showed. Seven
+  sites: objdraw.nostrict.c's crossfade `cld = 1UL << 61` (CLD 1 lost: its second TEX0 loaded no CLUT) and
+  `ZBUF = 1UL << 32` (ZMSK 1 lost), func_00136d38's object flags `1UL << 45` / `1UL << 57`, and
+  summon.nostrict.c's `x370 |= 1UL << 52` (func_0013b238) / `&= ~(1UL << 52)` (func_0013b5d8): gcc folds
+  each to 0 (the debug dump of the crossfade's TEX0 shows CLD 0), so each flag was never set and its clear
+  (`&= ~0`) cleared nothing. All now `1ULL << n`. **Correction to 5.1ax**: the crossfade does not write Z32 into
+  the display on the PS2: the original (`li a1, 0x8000; dsll a1, a1, 17`) sets ZMSK, so the ZBUF entry was the host's bug;
+  `ZBLOCK_EXPECTED` loses it and the boot needs no flicker check. New **tools/host/longcheck.py** (in
+  selftest, no ELF needed): every L / UL literal or `(long)` cast shifted by a constant >= 32 in the C the host
+  compiles (src/ but src/sdk, host/, include/; `#ifdef KH1_PS2` branches left out) fails; 1351 files, 0 now.
+  With `--cc gcc` (selftest uses it when `gcc -m32` works) it also compiles src/ with `-fsyntax-only` and
+  reports gcc's "shift count >= width of type", for shifts of 32-bit variables: one more, objutil.c
+  `func_001375d8` (the actor-gone test the HUD's counter, gauge, action and party marks call), whose
+  `(u32 << 32) >> 32` the EE does in a 64-bit register (`dsll32` / `dsra32`: bit 0 kept) and gcc -m32 folds
+  to 0; its host branch is now `x & 1` (`#ifdef KH1_PS2` keeps the matching C). portability.md rule 5 says so.
+- **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
+  of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

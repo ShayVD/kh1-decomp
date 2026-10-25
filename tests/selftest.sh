@@ -105,6 +105,16 @@ if python3 -I "$ROOT/tools/host/hudcheck.py" --src "$W/hudneg2/src" > "$W/hud_ne
    ! grep -q 'D_00648080 .*outside src/hud and OTHER_STAGES does not name it' "$W/hud_neg2.log"; then
   echo "selftest: hudcheck missed a staging send outside src/hud" >&2; cat "$W/hud_neg2.log" >&2; exit 1
 fi
+# session 112: a long literal shifted by 32 or more (32-bit on the host) fails tools/host/longcheck.py
+# (and, when gcc -m32 works, a 32-bit variable shifted so: gcc's shift-count warning)
+LONGCC=(); echo 'int x;' > "$W/m32.c"; gcc -m32 -fsyntax-only "$W/m32.c" 2> /dev/null && LONGCC=(--cc gcc)
+python3 -I "$ROOT/tools/host/longcheck.py" "${LONGCC[@]}" > "$W/long.log" || { cat "$W/long.log"; exit 1; }
+tail -n 1 "$W/long.log"
+mkdir -p "$W/longneg/obj" && sed 's/1ULL << 61;/1UL << 61;/' "$ROOT/src/obj/objdraw.nostrict.c" > "$W/longneg/obj/objdraw.nostrict.c"
+if python3 -I "$ROOT/tools/host/longcheck.py" --src "$W/longneg" > "$W/long_neg.log" ||
+   ! grep -q 'objdraw.nostrict.c:98: 1UL << 61' "$W/long_neg.log"; then
+  echo "selftest: longcheck missed 1UL << 61" >&2; cat "$W/long_neg.log" >&2; exit 1
+fi
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
@@ -251,20 +261,36 @@ sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$E
      ! grep -q "D_0035C550's tag stores .* not found" "$W/fs_neg6.log"; then
     echo "selftest: fscheck missed the eye overlay's tag stores gone" >&2; cat "$W/fs_neg6.log" >&2; exit 1
   fi
-  # session 110: the Z buffers the sends write and the textures they read. With the depth blur's wide Z entry,
-  # the crossfade's Z-in-the-display entry and (session 111) renderer B's step-2 upload before the callbacks
-  # taken out, the blur's capture writing Z past the PS2's blocks, the eye overlay reading an image nothing in
-  # its picture uploaded and (when gcc -m32 builds rtsends.c) the crossfade's ZBUF 0 in the display all fail
+  # session 110: the Z buffers the sends write and the textures they read. With the depth blur's wide Z entry
+  # and (session 111) renderer B's step-2 upload before the callbacks taken out, the blur's capture writing Z
+  # past the PS2's blocks and the eye overlay reading an image nothing in its picture uploaded both fail; with
+  # the crossfade's ZBUF put back to 0 (session 112: `1UL << 32` was 0 under -m32), its Z in the display too
+  # (when gcc -m32 builds rtsends.c)
   if python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import fscheck as f
-del f.ZBLOCK_EXPECTED[("D_002A5620", "wide")], f.ZBLOCK_EXPECTED[("func_00135ed0", 0x0000)]
+del f.ZBLOCK_EXPECTED[("D_002A5620", "wide")]
 f.STEP2_AFTER.clear()
 sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$ELF" > "$W/fs_neg7.log" ||
      ! grep -q 'D_002A5620 .*its ZBUF draws blocks 0x0E80 .*past the PS2.s (0x0E00 .. 0x0E7F' "$W/fs_neg7.log" ||
-     ! grep -q 'D_0035C4A0+D_0035C550 .*reads blocks 0x3600 .. 0x360F, 0x3700 .. 0x3703 in texture slot' "$W/fs_neg7.log" ||
-     { grep -q 'run-time builds' "$W/fs_neg7.log" &&
-       ! grep -q 'func_00135ed0\[64x64\] .*its ZBUF at 0x0000 is in display' "$W/fs_neg7.log"; }; then
-    echo "selftest: fscheck missed a Z write past the PS2's blocks or in the display, or an unloaded texture" >&2
+     ! grep -q 'D_0035C4A0+D_0035C550 .*reads blocks 0x3600 .. 0x360F in texture slot' "$W/fs_neg7.log" ||
+     ! grep -q 'D_0035C4A0+D_0035C550 .*its CLUT load reads blocks 0x3700 .. 0x3703 in texture slot' "$W/fs_neg7.log"; then
+    echo "selftest: fscheck missed a Z write past the PS2's blocks or an unloaded texture or CLUT" >&2
     cat "$W/fs_neg7.log" >&2; exit 1
+  fi
+  sed 's/func_0011fb38(0x4e, 1ULL << 32, p);/func_0011fb38(0x4e, 0, p);/' "$ROOT/src/obj/objdraw.nostrict.c" > "$W/objdraw_z0.c"
+  if python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import fscheck as f
+f.RT_SOURCES = tuple(sys.argv[3] if s.endswith("objdraw.nostrict.c") else s for s in f.RT_SOURCES)
+sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$ELF" "$W/objdraw_z0.c" > "$W/fs_neg9.log" ||
+     { grep -q 'run-time builds' "$W/fs_neg9.log" &&
+       ! grep -q 'func_00135ed0\[64x64\] .*its ZBUF at 0x0000 is in display' "$W/fs_neg9.log"; }; then
+    echo "selftest: fscheck missed the crossfade's Z in the display" >&2; cat "$W/fs_neg9.log" >&2; exit 1
+  fi
+  # session 112: the CLUT loads. Renderer B's step-2 TEX0 with CLD 0 (no load) leaves the eye overlay's first
+  # sprite reading a CLUT nothing in its picture loads
+  mkdir -p "$W/fsneg10" && cp -r "$ROOT/src/." "$W/fsneg10/"
+  sed -i 's/| 0x2006E00401313600ULL;/| 0x0006E00401313600ULL;/' "$W/fsneg10/model/mdlgs.nostrict.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --src "$W/fsneg10" > "$W/fs_neg10.log" ||
+     ! grep -q 'D_0035C4A0+D_0035C550 .*reads the CLUT 0x3700 (CSA 0) that no TEX0 / TEX2 in its picture loads' "$W/fs_neg10.log"; then
+    echo "selftest: fscheck missed a CLUT read nothing loaded" >&2; cat "$W/fs_neg10.log" >&2; exit 1
   fi
   # session 111: the stretched copies' sources. The menu blur's row without KH1_FS_UOWN (its capture's own
   # buffer read as a texture), the depth blur capture's with it (the 3D target read as a capture's buffer) and
