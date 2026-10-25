@@ -2000,7 +2000,7 @@ What a port's `PlatGs*` do with each (the GS block and PSM tell them apart):
    or (b) answer with an occlusion query and return all-visible / all-hidden bytes in the shape the loop
    reads (the flare then dims in steps, not smoothly). The box is `bC0` x `bC1` pixels about the light
    (`r = v -+ bC0 x 8` sixteenths; u8s, so at most 255 x 255; `pppKeLnsLpTDraw` sets them from its key as
-   `e << 3` / `f << 2`, if those are the same fields: read a flare's record before choosing).
+   `e << 3` / `f << 2`, if those are the same fields: read a flare's record before choosing). *Session 101 (5.1ao): they are the same fields; the box is at most 4096 pixels by the scratch's size.*
 5. **The display, CT32, 16 x 1** (menubg). The display in a port is the presented view. The two rows are
    display lines 4 and 443 (the 448-line display; the target's 3 and 380 after the copy's 384 -> 448
    stretch) at **canvas x 256, the view's centre**: the port maps canvas x 256 to its own centre column and
@@ -2010,6 +2010,55 @@ What a port's `PlatGs*` do with each (the GS block and PSM tell them apart):
 
 Nothing above changes the PS2 build: these are the port's `PlatGs*` (vita-port-plan 5, step 3); the host's
 null platform keeps its GS memory model, where the shapes are the PS2's already.
+
+### 5.1ao Session 101: 5.1an's contract in the null platform, the full-width rules, the lens flare's box
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). One change under src/, inside `#ifndef KH1_PS2`
+(winpart.nostrict.c): **all 677 out/build objects bit-identical**, kh1.elf byte-identical, so the m12 float ELF
+is the same bytes (no float-untested row). selftest PASS (gsimage_test: 17 checks), the host links (571 objects).
+
+- **The image transfers on the null platform** (item 4a): `PlatGsSetDefLoadImage` / `PlatGsExecLoadImage` /
+  `PlatGsSetDefStoreImage` / `PlatGsExecStoreImage` were stubs that did nothing; they are now
+  **host/null/gsimage.c**. The SetDef calls fill libgraph's packets (sceGsLoadImage 0x60 bytes: A+D tag,
+  BITBLTBUF, TRXPOS, TRXREG, TRXDIR 0, the IMAGE tag; sceGsStoreImage 0x70: 4 VIF codes, A+D tag,
+  BITBLTBUF's source half, TRXPOS, TRXREG, FINISH, TRXDIR 1; every caller's buffer is at least that: `s32
+  sp[28]`, `GsImagePacket` 14 u64s, kelnscls's 0x70-byte `GsStoreImage`). A load is an upload into gsmem.c's
+  model (TRXDIR 0 then the bytes as IMAGE words, counted and logged like a GIF one; only while
+  `KH1_HOST_TRACE >= 2` feeds the model, as before). A store copies the rectangle out of the model **in the
+  PS2's packed shape** (CT32 / Z32 4 bytes, CT24 / Z24 3, CT16 2, T8 1, T4 a nibble; rows `w` pixels apart),
+  whatever the view: the null platform keeps the PS2's GS memory, so the shapes 5.1an names hold by
+  construction. **tests/host/gsimage_test.c** asserts them under the 960:544 view (`kh1_gs_view(-1325,
+  10842)`) and under 4:3: the target `0x1A00` 512 x 384 CT24 is exactly 0x90000 bytes, 0x600 a row, RGB
+  without the alpha byte; the two 512 x 192 halves load back into `0x0E00 / 0x1400` with the same pixels;
+  the capture `0x3600` 256 x 192 is 0x24000 bytes (0x300 a row); kelnscls's Z24 box is `w8 x h4 x 3`;
+  menubg's 16 CT32 pixels are 64 bytes; a load from an unaligned source works; no trace, no load. What
+  changes on a host run: main memory now gets the model's bytes where it got nothing (menubg's backdrop
+  colours, the blur's "all zero = no capture" test, the flare's count read real values; with no trace the
+  model is empty, so all zero), and `--uploads` now lists the image loads (timload, roombg, objwin, hud,
+  fldtext, opimage, mdlpkt, capture's halves).
+- **The menus' full-width rules** (item 4b, renderer-spec 5.4 "Session 101"): `func_00206130` widens a
+  rule whose x is canvas 0 (`0x7000`) and whose width is 512 to `PLAT_VIEW_GX0 .. PLAT_VIEW_GX1` off the
+  PS2, before the window's zoom (which still scales it about the window's centre). Done on the
+  recommendation while the user's choice was pending (the card in session 101's thread): **if the user
+  picks "keep them 4:3", delete that `#ifndef KH1_PS2` block** (nothing else depends on it).
+  nameentry.nofill.c's `func_002078f0(.., 0, 188, y, 200, 512, 1)` goes to `func_00201440` (a textured
+  row, `D_003F2C40.s2C40_2[19]`), not `func_00206130`: not covered; read `func_00201440` before deciding.
+- **The lens flare's box** (item 4c, 5.1an item 4): `func_00192958` has one caller (`jal` at file offset
+  0x92f40), `pppKeLnsLpTDraw`, and `FlareObj` is the same record as its `PppLnsWork` (`+0xC0` / `+0xC1`,
+  `+0x8D`): on the key's frame **`bC0 = key->e << 3`, `bC1 = key->f << 2`** (u8 stores: e and f above 31 /
+  63 wrap), `b8D = key->g` (the test runs every `g + 1` frames, phase `b8C` from the constructor's counter
+  `D_00372708`); the constructor `pppKeLnsLpTCon` zeroes `bC0 / bC1`, so before the first key the box is
+  empty and the flare is hidden (`f7C = 0`). The box is **`bC0` x `bC1` target pixels** centred on the
+  light (`r = v -+ bC0 x 8` sixteenths), clamped to the scissor; the ratio divides by the unclamped `bC0 x
+  bC1`, so a flare at the screen's edge dims by the part off screen. **The store's size is bounded by the
+  scratch**: `func_001aa950(0x3060)` and the store at `+96` leave 0x3000 bytes, so `w8 x h4 <= 4096`
+  pixels (e.g. 64 x 64, `e <= 8`, `f <= 16`) or the PS2 overruns its scratch stack too: a port can size its
+  depth read for 4096 pixels. The keys' e / f values are in the disc's ppp files (not read yet). For a
+  port rendering 960 x 544: its target has 544 / 384 = 1.417 pixels per canvas pixel, so the store either
+  samples its depth at the PS2-sized box's positions scaled by that, or reads the bigger box and
+  downsamples to `w8 x h4`; either way the bytes keep 5.1an's shape and the count's ratio is unchanged.
+- **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
 
 ### 5.2 Session 60: overlays, dktitle.x
 

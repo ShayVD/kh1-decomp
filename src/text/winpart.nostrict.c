@@ -10,6 +10,7 @@
 #include "common.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
+#include "platform/view.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1E70.h"
 #include "data/pieces/D_003F1A70.h"
@@ -1757,6 +1758,15 @@ void func_00206130(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     p->w1 = 0;
     p->z1 = 0x100000;
     p->y1 = y + ph * 16;
+#ifndef KH1_PS2
+    /* session 101 (renderer-spec 5.4 "Session 101"): a full-width rule, at canvas 0 and 512 wide
+     * (the menus' func_00206130(win, 0, y, 512, ..)), runs to the view's edges like the backdrop
+     * behind it; a window's zoom below still scales it about the window's centre */
+    if (x == 0x7000 && pw == 512) {
+        p->x0 = PLAT_VIEW_GX0;
+        p->x1 = PLAT_VIEW_GX1;
+    }
+#endif
     if (o->u48.w.lo & 1) {
         a = func_001f4570(o);
         b = func_001f45e0(o);

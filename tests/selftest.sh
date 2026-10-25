@@ -131,6 +131,12 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/present_test" "$W" > "$W/present.log" || { grep -v '^kh1-host:' "$W/present.log"; exit 1; }
   tail -n 1 "$W/present.log"
+  # the image loads and stores (host/null/gsimage.c, session 101): 5.1an's shapes under a wide view
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsimage_test" \
+      "$ROOT/tests/host/gsimage_test.c" "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" \
+      "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
+  "$W/gsimage_test" > "$W/gsimage.log" || { cat "$W/gsimage.log"; exit 1; }
+  tail -n 1 "$W/gsimage.log"
   # KH1_HOST_COUNTS's high-water marks (host/null/counts.c, session 96)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/counts_test" \
       "$ROOT/tests/host/counts_test.c" "$ROOT/host/null/counts.c"

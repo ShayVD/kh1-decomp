@@ -157,10 +157,7 @@ int PlatGsSyncPath(int mode, unsigned short timeout) {
     if (mode == 0) null_gs_send("PlatGsSyncPath(0)", 0);
     return 0;
 }
-int PlatGsSetDefLoadImage(void *lp, short dbp, short dbw, short psm, short x, short y, short w, short h) { return 0; }
-int PlatGsSetDefStoreImage(void *sp, short sbp, short sbw, short psm, short x, short y, short w, short h) { return 0; }
-int PlatGsExecLoadImage(void *lp, void *src) { return 0; }
-int PlatGsExecStoreImage(void *sp, void *dst) { return 0; }
+/* the image loads and stores: host/null/gsimage.c (session 101) */
 void PlatGsDefDispEnv(void *disp, short psm, short w, short h, short dx, short dy) {}
 void PlatGsPutDispEnv(void *disp) {}
 /* the draw environment's GIF packet (tag + NLOOP qwords), read like a chain's data under
