@@ -9,13 +9,33 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 86 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 87 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 86, 2026-10-25)
+## Where we stopped (end of session 87, 2026-10-25)
+
+- **Session 87** (static, vita-port-plan 5.1aa, renderer-spec 4.16): **index walks and builder results,
+  a scripted pad, the script's screen spin.** **walkcheck.py** now also lists `idx` rows (an integer a
+  loop steps that a later loop indexes with) and `call` rows (a pointer a builder returns, stepped on by a
+  later loop; 88 builders): 21 + 4 new rows, all read (IDX_REVIEWED / CALL_REVIEWED), **42 rows, 0
+  WALK**. Found: **savemenu.c `func_00228588` steps `j` by 2** when it fills the party (`buf[3]` or
+  `buf[2]` left unset, a stack byte < 10 goes into the party; the PS2 does the same, so check on a boot);
+  wintext's message code 11 passes a message byte as the digit count of a `dig[12]` (check the real
+  disc's messages). **host/null/pad.c** (new, plat_null.c's pad calls moved there): **the null pad is now
+  connected** (before, every host run sat in `func_0010f918`'s "no controller" loop from frame 32);
+  `KH1_HOST_PAD=none` the old answer, **`KH1_HOST_PAD=FILE`** a script of `FRAME BUTTONS [RX RY LX LY]`
+  lines (`START`, `CIRCLE+UP`, `0x4000`, `-`, `out`), `KH1_HOST_TRACE=1` prints `kh1-host: pad FRAME
+  BUTTONS`; tests/host/pad_test.c (18 checks). `D_002C5BB0` holds **actions** through the 30-entry table
+  `D_002C5990`, not the PAD_* bits (START / SELECT have none). **renderer-spec 4.16**: `D_002BBE04` 1 / 4
+  (objscmd.c `func_0012b450`, vm_lib.c) blend the frame last shown, turned by a ramping angle, into the
+  target before the frame copy (1 over the live scene, 4 over the frozen last frame: a feedback swirl);
+  a negative angle is used at once, a 0-frame record divides by 0 (EE `FLT_MAX` vs IEEE NaN). Only
+  tools/host, host/, tests/ and docs/ changed: **every out/build object bit-identical**, the float ELF the
+  same (no float-untested row). layoutcheck / relcheck / abscheck / dmacheck / abicheck 0, valgrind 0
+  errors to the overlay fault, the stub:2 run ends in func_00132790 as before.
 
 - **Session 86** (static, vita-port-plan 5.1z, renderer-spec 4.15, sound-spec 3 and 5): **the status
   block read past its end, pointer walks, a null sound server, frame pacing.** The piece `D_0063D640`
@@ -89,24 +109,7 @@ items.
   background textures (`0x2600 + 256 i`). Valgrind 0 errors. src/ changed only by the two hooks:
   **every out/build object bit-identical**, the float ELF the same (no float-untested row).
 
-- **Session 82** (static, vita-port-plan 5.1v, renderer-spec 4.12, 5.2): **the Z formats in GS memory.**
-  host/null/gsmem.c has PSMZ32 / Z24 / Z16 / Z16S (the colour twin with the final block number XOR `0x18`, as
-  PCSX2) and PSMCT16S (block order y0 x0 y2 y1 x1); inside a page a Z32 / Z24 pixel (x, y) is CT32's (x ^ 32,
-  y ^ 16), Z16's (x ^ 32, y ^ 32): **a CT24 read of the Z24 buffer (the capture `D_002B66B0`) sees each page's
-  quarters swapped**. Z uploads / reads / textures decode, CT16S CLUTs load, a Z target's pages are marked
-  through the same address function; checked against PCSX2's tables on 30 M addresses outside the repo;
-  gsmem_test 52 -> 61 checks. **`tools/host/drawkeys.py`** (new): every draw / immediate list insert by key,
-  wrappers followed to literal keys (38 rows; table in renderer-spec 4.12): texanim 10000+n, state packets
-  10010 / 10020 / 50000 / 50100, renderer B resets 20499 / 70499, room / objects 40000 (opaque) and 50010
-  (translucent), shadow state 45499 / 60499, shadows 60000+n, texanim passes 90000+10id+0..6; renderer B's
-  `e->x28` (priority +- depth order, clamped to [prio-500, prio+499], the 59500-60499 band kept) the only
-  data-driven keys. **sendorder.py** read 4 more registrations (`(s32) &func_X` casts; 168, all literal keys,
-  `--all` lists unreadable calls: none); still only the in-game menu sends unsynced. vita-port-plan 5.1v
-  writes the port's rule: a main-thread send (PlatGsSyncPath, ch 1 / 2 PlatDmaSend, PlatGsPutDrawEnv) first
-  replays any pending list (`kh1_gs_flush_pending()`). Valgrind 0 errors. Only host/, tests/, tools/host and
-  docs/ changed: **every out/build object bit-identical**, the float ELF the same (no float-untested row).
-
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-86.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-87.
 - **Nine default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
   (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68), 69 (2,043), 70 (2,041; sessions 71 to 85
   left the float ELF's bytes the same) and **86 (2,041, the current default: D_0063F640 inside the floated
@@ -157,9 +160,10 @@ items.
   index the analysis cannot bound, so reading does not shrink the list; relcheck found the real splits instead.
   An `s32 [5]` at a 4- but not 8-aligned address fails the link (ee-gcc pads it): merge with the name before.
   **`python3 -I tools/host/walkcheck.py`** (session 86, no build needed): pointer walks that run on from one loop
-  into the next, which neither check sees (0 WALK, 17 REVIEWED); census.py's HOST_TAIL pads a piece on the host only.
+  into the next, which neither check sees, and since session 87 index walks and builder results (0 WALK, 42 REVIEWED); census.py's HOST_TAIL pads a piece on the host only.
 - **Null platform**: PlatMcSync answers done with "no card" (-10) and PlatMcGetInfo writes its outputs;
-  PlatPadRead leaves no button pressed, PlatPadGetButtonProfile answers -1. PlatSifCallRpc hands the sound
+  **host/null/pad.c** (session 87): one pad connected, nothing pressed (`KH1_HOST_PAD=none`: no pad,
+  `KH1_HOST_PAD=FILE`: a script; vita-port-plan 5.1aa). PlatSifCallRpc hands the sound
   RPCs to **host/null/sound.c** (session 86): RPC 0x30 answers 1; RPC 0 keeps the status block's address; a
   frame after a queue (RPC 30) the bank transfers it held (commands 3, 4, 0xB, 0x28) come off the +0x1F00
   count (D_0063F540: boot waits for it non-zero, the sound tasks / summons / soft reset for 0); SE and
@@ -224,43 +228,47 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 87 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 88 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s87 and /mnt/project-files/kh1-runtime/s87, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s88 and /mnt/project-files/kh1-runtime/s88, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
-   option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party),
-   loading a save from the title screen, a new game's name entry if one is reachable, buying and selling in an item
-   shop and a Gummi shop, the Moogle's synthesis, a list that pages (session 70 merged the list callback), the title
-   screen left idle until its demo, a battle with the HUD (the HP / MP gauges, the command menu including its
-   second kind-4 menu (session 70: D_00650120[6]), lock-on and the target's gauge, damage numbers, an "obtained"
-   notice), the world map's gauge, a minigame with a timer or score if one is near, a level-up, a Trinity mark if one
-   is near, a summon if one is available, enemy drops picked up, the pause, a game over and its continue, a room
-   change and a world change, a movie, music and sound effects throughout (session 86 moved the sound status
-   block's message buffer), a controller pulled out for a second (the system-message band, renderer-spec 4.15),
-   and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its
-   data_0063.s / bss_0063.c change), then session 70's (revert it), then session 69's (the one-definition merges),
-   then session 59's `--no-fmt-read`, then session 34's switches. Move what boots into docs/shiftable-plan.md and
-   clear docs/float-untested.md. Note what the boot shows about the "(a guess)" modules and rename the ones it
-   settles. Without the Mac: skip.
+   option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
+   **session 87: after the save point's party choice, does a member appear who was not chosen?**
+   savemenu.c `func_00228588`), loading a save from the title screen, a new game's name entry if one is reachable,
+   buying and selling in an item shop and a Gummi shop, the Gummi garage (session 87 read its lists), the Moogle's
+   synthesis, a list that pages (session 70 merged the list callback), the title screen left idle until its demo,
+   a battle with the HUD (the HP / MP gauges, the command menu including its second kind-4 menu (session 70:
+   D_00650120[6]), lock-on and the target's gauge, damage numbers, an "obtained" notice), the world map's gauge, a
+   minigame with a timer or score if one is near, a level-up, a Trinity mark if one is near, a summon if one is
+   available, enemy drops picked up, the pause, a game over and its continue, a room change and a world change, a
+   movie, music and sound effects throughout (session 86 moved the sound status block's message buffer), a
+   controller pulled out for a second (the system-message band, renderer-spec 4.15), a scene with the screen
+   spin if one is near (renderer-spec 4.16: the picture turning into itself), and anything using atan: camera,
+   lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
+   session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
+   the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
 2. **Host run on the real disc (with the Mac)**: ask once for the user's ISO (Downloads; the unpatched original,
    not KH1_BIG.iso) to be copied into the container's scratchpad (never into the repo or project files), and run:
    `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host`, once under valgrind, `KH1_HOST_TRACE=2` (every DMA chain
    walked: a chain leaving host memory or ending inside a packet is a bug; record the windows' per-draw packets),
    `KH1_HOST_TRACE=5` with `gsstate.py RUN.txt --sends --draws --uploads --targets --nodes` (compare with
-   renderer-spec 3.2 / 4.7-4.14 and 5.1; every node in drawkeys.py's map; the targets `0x1A00`, Z24 `0x0E00`, the
+   renderer-spec 3.2 / 4.7-4.16 and 5.1; every node in drawkeys.py's map; the targets `0x1A00`, Z24 `0x0E00`, the
    display buffer, `0x3A00`), `KH1_HOST_TEXDUMP=DIR` (look at the decoded message font: readable glyphs settle
    gsmem.c's swizzle and 4.9's 2-bits-a-layer inference), then **`KH1_HOST_OVL=stub:2`** (Dive to the Heart's
    files are on the real disc: record how far the room parse func_00132790 gets), and the `KH1_HOST_TRACE=5` room
    run once more with `KH1_HOST_DMAC=defer` (same `--nodes` order expected; pending only at frame-end waits; the
    texture steps' dir-2 copies in `--uploads`; key 50000's P3 upload and chain 3, `D_0047E220` / `D_00482260`,
-   with its tags in map section 1). **Session 86: run each with `KH1_HOST_SND=trace` and `python3 -I
-   tools/host/sndlog.py RUN.txt`**: the boot's bank transfers (sizes from the real files), the title / Dive to
-   the Heart music starts (`0xC` with track, volume, fade), SEs played and ended, no frame near 256 records;
-   check the transfer count goes back to 0 and nothing waits on it for ever. Fix host-only causes the way sessions
-   63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
+   with its tags in map section 1). Run each with `KH1_HOST_SND=trace` and `python3 -I tools/host/sndlog.py
+   RUN.txt` (the boot's bank transfers, the title / Dive to the Heart music starts, SEs played and ended, no
+   frame near 256 records; the transfer count back to 0). **Session 87: the pad is connected by default now**;
+   compare one run with `KH1_HOST_PAD=none` (it should sit in the "no controller" band from frame 32), and once
+   the room run gets further, try a `KH1_HOST_PAD` script (START at the title, CIRCLE, the menu with
+   TRIANGLE?). Read the message files' code 11 digit counts (`dig[12]`, 5.1aa). Fix host-only causes the way
+   sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
    walkcheck at 0, the PS2 ELF byte-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
    `python3 -I tools/ovl/inventory.py dktitle.x --tsv out/ovl/dktitle.layout.tsv`, record the counts (not the bytes)
@@ -270,22 +278,24 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    the targets take?). Does it call func_00109558, and with which states (session 68 guessed 2 = new game)? Does it
    call drawlist's flushes (func_00237f20 / func_002380c0 / func_00238258) or the push func_002376c8, gspkt.c's
    func_002372e0 / func_00237318, and which of the 16 sound entry points with no main-ELF caller (sound-spec 3)?
-   Session 86: does dkmovie.x (the same folder) store 2 to `D_002BBE04` (the movie copy from `0x118000`,
-   renderer-spec 4.15), and does any overlay read the field parity `D_002BBDE8`? Without the Mac: skip.
-4. **Static, without the Mac**: (a) **Index walks**: walkcheck.py follows pointers; extend it (or a sibling) to
-   an index or count that survives one loop into a second that indexes an array with it (`for (i = 0; i < n;
-   i++) ...; for (; i < m; i++) a[i]`), and to a pointer returned by a builder that a caller walks on; read every
-   row. (b) **A scripted pad on the host**: `KH1_HOST_PAD=FILE` (frame, buttons lines) behind PlatPadRead /
-   PlatPadGetState in plat_null.c, so a host run can press START at the title, answer the system-message band's
-   retry, or open the menu; check it on the fake disc (the pause and the controller-out band, renderer-spec 4.15:
-   no pad for 31 frames raises `D_002C5968.b0`, and with the null pad never connected a longer host run
-   may sit in `func_0010f918`'s message loop: the null pad should report one connected). (c) From the C:
-   `func_00102da8`, the frame copy's cases 1 / 4 (the script's screen effects, objscmd.c `func_0012b450`'s
-   colour / angle / scale record) into renderer-spec. (d) `KH1_HOST_DMAC=defer` as the default and argcheck's 3
-   value uses still wait for the Mac.
+   Does dkmovie.x (the same folder) store 2 to `D_002BBE04` (the movie copy from `0x118000`, renderer-spec 4.15),
+   and does any overlay read the field parity `D_002BBDE8`? Session 87: does any overlay call func_001fb3e0 /
+   func_001fbb50 (wintext's number draws with no main-ELF caller) and with which digit counts, or store 1 / 4 to
+   `D_002BBE04` (the screen spin)? Without the Mac: skip.
+4. **Static, without the Mac**: (a) **The other full-screen effects** (sceneeff.c, renderer-spec): the glow rings
+   `func_00102a48`, the colour pulse `func_001032b0`, the 25 x 25 warp grid `func_00103c48` and `func_001039f8`
+   (their packets with `gs_packets.py -v`, who starts them, what a port draws), as 4.17. (b) **The Vita input
+   layer**: from the C, every reader of the raw pad (`D_00425BC8`, `D_002C5AD0`) and of the action bits
+   (`D_002C5BB0` through `D_002C5990`'s 30 entries): which buttons each screen reads, the repeat timings
+   `D_002C5C20`-`D_002C5C2C`, the stick dead zone, padrec.c's replay and demo script; write the Vita's
+   sceCtrl-to-libpad2 mapping into vita-port-plan (portability: platform/pad.h) and add a `KH1_HOST_PAD` example
+   for the title. (c) **A count kept across functions**: walkcheck's idx rows stay inside one function; list the
+   globals a loop counts up (`D_00643200[k]++`, `n = D_x++`) that another function indexes an array with, and read
+   each against the array's size (layoutcheck's idx-next rows may overlap: compare). (d) `KH1_HOST_DMAC=defer` as
+   the default and argcheck's 3 value uses still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=87`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=88`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 88) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 89) with this
    prompt: the user wants each session to start the next one without being asked.

@@ -1540,6 +1540,65 @@ movie frames reach the screen through `0x118000` and case 2 only when the movie 
 (inferred; for the overlay check, vita-port-plan 5.2). `func_0010b6c0` (objwin.nostrict.c) also draws
 there (§3.1).
 
+### 4.16 The script's screen spin: `func_00102da8`, the frame copy's cases 1 / 4 (session 87, static)
+
+Read from the C (src/gfx/sceneeff.c, src/screen/brightfade.c `func_00106000`, src/vm/objscmd.c
+`func_0012b450`, src/vm/vm_lib.c) and the two static packets (`gs_packets.py -v 0x2a4ed0 0x2a4fc0`); not
+checked on a console or a host run. The name "spin" is a guess from the code.
+
+**Who turns it on.** `D_002BBE04` selects the end-of-frame copy (`func_00106000(D_002BBE04)`, gamestate.c,
+once a frame). Two script commands store 1: the object script's `func_0012b450` (objscmd.c, the command
+table `D_002E2810` + 0x508) from a 40-byte record, and the event script's `func_001cde38` (vm_lib.c) with
+the defaults in brackets:
+
+| Variable | From the record | Meaning |
+| --- | --- | --- |
+| `D_002BC080[0..3]` | `c[0..3] x 128` (128, 128, 128, 64) | RGBA of the copy: 128 = 1.0; the alpha is the blend weight |
+| `D_002BC090`, `D_002BC094` | `+0x10`, `+0x14` (256, 192) | the centre, screen pixels |
+| `D_002BC0A0`, `D_002BC0A4` | `+0x18`, `+0x1C` (0, 0) | an offset added to the centre |
+| `D_002BC098` (f32) | `+0x20` degrees, to radians, wrapped to [-pi, pi] (`func_00120c88`) (0) | the end angle |
+| `D_002BC09C` (s32) | `+0x24` (1) | frames to reach it |
+
+vm_lib's `func_001cdea8` turns 1 into **4** (only when it is 1); `func_001cded0` and objscmd's
+`func_0012b530` store 0 (off). `func_00106000`'s first switch calls `func_00102da8(D_002BBE04)` for 1 and
+4 and clears the frame count `D_002BC730` for every other value, so each start ramps from 0 again.
+
+**Each frame** (`func_00102da8`), before the global colour quads and the frame copy of §4.15:
+1. **Case 4 only**: `D_002A4ED0` copies the **display buffer** (block 0, PSMCT24, 512 x 448: the frame
+   on screen) into the 3D target at block `0x1A00` (FRAME FBP `0xD0`), one opaque `SPRITE|TME|FST`
+   UV (1, 0)-(513, 448) to (0, 0)-(512, 384), bilinear: **this frame's render is replaced** by the last
+   frame shown, shrunk 448 to 384 lines. Case 4 is a frozen picture that keeps spinning.
+2. The angle: `f = D_002BC730 x (D_002BC098 / D_002BC09C)`; when it passes the end angle it is held there,
+   otherwise the count goes up. So a positive angle ramps over `D_002BC09C` frames and stays. **A
+   negative angle never ramps**: at count 0 `f = 0` is already above it, so it is used at once (and the
+   count stays 0).
+3. The quad: the screen rectangle (512 x 384) centred at (`D_002BC090 + D_002BC0A0`, `D_002BC094 +
+   D_002BC0A4`) (`func_00102cc8`), its corners taken to the screen centre's origin (-256, -192), turned by
+   `f` about Z (`PlatVu0RotMatrixZ` of the unit matrix `D_002BCAF0`, `func_00102d20`) and put back
+   (x 16, + 4096 / 3072, then + 28664 / 29680: the `0x7000` / `0x7400` origin less half a pixel
+   across and one pixel down).
+4. `D_002A4FC0` draws it into the target: `TRISTRIP|TME|ABE|FST`, the texture the **display buffer**
+   again (UV 0.5-512.5 x 0.5-448.5, bilinear, CLAMP), `ALPHA (Cs-Cd)*As>>7+Cd` with RGBAQ = `D_002BC080`
+   (`D_002A4F60[3]`; the packet's own 16 alpha is overwritten), ZTST ALWAYS. The same strip is sent 16
+   times, each under a 32-pixel-wide SCISSOR column (`D_002A46D0`-`D_002A48B0`, x 0-31 ... 480-511): the
+   texture-cache-friendly way to draw a full-screen copy, one draw in a port.
+
+Then the frame copy (`D_002A6540`, `D_002A6890`) shows the target. Because the texture is the frame
+shown last, **the effect feeds back**: each frame holds a turned, faded copy of the one before, which held
+one of the one before that. With case 1 that is a spinning trail over the live scene; with case 4 over
+a still picture (the image swirls into itself). The corners the turned quad leaves uncovered keep this
+frame's pixels.
+
+**For the port.** Keep the last presented frame as a texture (the 512 x 448 image the copy wrote, or the
+presented image at any size). Per frame with the effect on: (case 4) draw it over the whole scene target,
+opaque; then one quad, 4:3 like the target, offset by (centre + offset - (256, 192)) and turned by `f`
+about the target's centre, textured with the last frame, colour `rgb / 128` (modulate x 2 as in §5),
+blend `SRC_ALPHA, ONE_MINUS_SRC_ALPHA` with alpha `a / 128`, depth test off; then the usual copy. Rule 7
+(portability.md): with `D_002BC09C = 0` the EE's `x / 0` is the largest float and `0 x FLT_MAX = 0`, so
+frame 0 is unturned and frame 1 is at the end angle; IEEE gives `0 x inf = NaN` for frame 0 (a NaN quad).
+The two defaults (vm_lib 1 frame) never divide by 0; an object script record with `+0x24 = 0` would, so
+clamp the count to at least 1 (or compute the step the EE way) in the port.
+
 ## 5. Mapping to a modern API
 
 For a Vulkan/GL-class backend (the Vita's GXM has the same concepts).
@@ -1578,6 +1637,7 @@ interrupt-driven executor becomes a plain loop.
 | `FBMSK=0xFFFFFF` | colour write mask (alpha only) |
 | CTXT1/CTXT2 | no equivalent: they are two state sets; fold into the pipeline state |
 | End-of-frame copy 384 -> 448, fade `D_002BC070`, flashes | final full-screen pass: scale to the window, multiply by the fade colour, add the flash quads |
+| The script's screen spin (`D_002BBE04` 1 / 4, §4.16): the last shown frame turned and blended back | keep the last presented frame as a texture; one turned quad before the final pass |
 | Interlace/field mode, DISPLAY offsets | ignore; present progressive frames |
 | `sceGsSyncPath` busy-waits | remove (single-threaded command replay) |
 
