@@ -45,4 +45,8 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc);
 extern int kh1_host_trace;
 extern const char *kh1_host_texdump;
 
+/* Session 94: called with the send's start after each walk or direct send, once its GS writes are in
+ * the register file and the memory model (KH1_HOST_SHOT, host/null/present.c); 0 = none */
+extern void (*kh1_dma_after_send)(u32 tadr);
+
 #endif

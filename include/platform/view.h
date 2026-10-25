@@ -29,4 +29,14 @@ void kh1_view_init(f32 aspect);
 #define PLAT_VIEW_GX0 (0x7000 + PLAT_VIEW_X0 * 16)
 #define PLAT_VIEW_GX1 (0x7000 + PLAT_VIEW_X1 * 16)
 
+/* Session 94: the view's margin past each 4:3 edge in canvas pixels as a float, unrounded (82.8 at
+ * 960 x 544, the full-screen stretch's; 0 on the PS2, where it folds away).  The lens grid
+ * (sceneeff.c func_00103c48) reads its copy of the target, which starts at the view's left edge, at
+ * u 64 .. 448 of the 4:3 canvas: the margin moves its ST back onto the same pixels. */
+#ifdef KH1_PS2
+#define PLAT_VIEW_SIDE 0.0f
+#else
+#define PLAT_VIEW_SIDE (256.0f * (kh1_view_wide - 1.0f))
+#endif
+
 #endif

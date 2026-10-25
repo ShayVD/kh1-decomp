@@ -33,6 +33,20 @@ s32 kh1_canvas_stretch_x(s32 gx, s32 x0, s32 w) { return 0x7000 + x0 + scale13(g
 
 s32 kh1_canvas_stretch_u(s32 u, s32 w) { return scale13(u, w); }
 
+u32 kh1_canvas_stretch_clamp(u32 lo, s32 w) {
+    s32 maxu = (s32)(lo >> 14 & 0x3FF), add = w - 8192;
+    if ((lo & 3) != 2) return lo;
+    maxu += add >= 0 ? (add + 8) / 16 : -((-add + 8) / 16);
+    if (maxu > 1023) maxu = 1023;
+    if (maxu < 0) maxu = 0;
+    return (lo & ~(0x3FFu << 14)) | (u32)maxu << 14;
+}
+
+void kh1_canvas_unmap(const KH1Canvas *c, f32 sx, f32 sy, f32 *cx, f32 *cy) {
+    *cx = (sx - c->ox) / c->s;
+    *cy = (sy - c->oy) / c->s;
+}
+
 int kh1_canvas_scissor(u32 lo, u32 hi, s32 x0, s32 w, s32 *sx0, s32 *sx1) {
     u32 ax0 = lo & 0x7FF, ax1 = lo >> 16 & 0x7FF, ay0 = hi & 0x7FF, ay1 = hi >> 16 & 0x7FF, k;
     *sx0 = (s32)ax0 * 16;

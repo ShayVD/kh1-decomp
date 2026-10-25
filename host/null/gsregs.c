@@ -198,7 +198,10 @@ void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
     case 0x04: case 0x05: gs_kick(1, gs_xs(lo)); return;  /* XYZF2 / XYZ2 */
     case 0x0C: case 0x0D: gs_kick(0, gs_xs(lo)); return;  /* XYZF3 / XYZ3: a vertex, no drawing */
     case 0x06: case 0x07: set(&gs.ctx[reg - 6].tex0, lo, hi); kh1_gsmem_tex0(lo, hi); return;
-    case 0x08: case 0x09: set(&gs.ctx[reg - 8].clamp, lo, hi); return;
+    case 0x08: case 0x09: /* session 94: the lens grid's REGION over a copy of the view's width */
+        if (gs_sw && gs_swhat & KH1_FS_CLAMP) lo = kh1_canvas_stretch_clamp(lo, gs_sw);
+        set(&gs.ctx[reg - 8].clamp, lo, hi);
+        return;
     case 0x14: case 0x15: set(&c->tex1, lo, hi); return;
     case 0x16: case 0x17: /* TEX2: PSM and the CLUT fields (CBP, CPSM, CSM, CSA, CLD) of TEX0 */
         c = &gs.ctx[reg - 0x16];

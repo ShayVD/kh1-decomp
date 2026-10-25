@@ -285,6 +285,29 @@ int main(void) {
         kh1_gs_reset();
     }
 
+    /* session 94: the lens grid's CLAMP_1 (KH1_FS_CLAMP): REGION_CLAMP MAXU 510 grows by the view's
+     * added width in a listed send, stays in any other */
+    {
+        static KH1FullScreen tab[1];
+        u32 lo = 2 | 2 << 2 | 510u << 14;
+        int k;
+        kh1_gs_reset();
+        clear();
+        tab[0].send = mem[0]; tab[0].what = KH1_FS_CLAMP; tab[0].name = "lens grid";
+        for (k = 0; k < 2; k++) {
+            q(k * 4, 0x70000002, 0, 0, 0);
+            q(k * 4 + 1, 1 | 1 << 15, 1 << 28, 0xE, 0);
+            q(k * 4 + 2, lo, 0, 0x08, 0);
+        }
+        kh1_dma_fullscreen(tab, 1, -1325, 10842);
+        CHECK("clamp: walk", kh1_dma_walk(2, 0x104, A(0), where) == 0);
+        CHECK("clamp: REGION grown", s->ctx[0].clamp.lo == ((lo & ~(0x3FFu << 14)) | 676u << 14));
+        CHECK("clamp: walk 2", kh1_dma_walk(2, 0x104, A(4), where) == 0);
+        CHECK("clamp: not listed", s->ctx[0].clamp.lo == lo);
+        kh1_dma_fullscreen(tab, 0, 0, 0);
+        kh1_gs_reset();
+    }
+
     /* dropped registers are counted, not kept; a non-register is unknown */
     kh1_gs_write(0x45, 0, 0);
     kh1_gs_write(0x46, 1, 0);

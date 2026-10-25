@@ -2281,7 +2281,8 @@ display) from 0 .. 512 to 0 .. w / 16, from the view's left edge (session 92's c
 buffer of its own and starts at 0. ST (float) texture coordinates are not stretched: no listed packet uses
 them. The lens grid's `D_002A6110` (`CLAMP_1` REGION U 0 .. 510) and its mesh stay (the centre square), as
 session 92 said; whether its u, read from the copy into the Z area, needs the view's margin added (the copy
-starts at the view's left edge now) is for the renderer bring-up to settle on screen.
+starts at the view's left edge now) is for the renderer bring-up to settle on screen. *Session 94: settled
+statically, the margin added and the REGION widened ("Session 94" below).*
 
 **The scissor rule**: a `SCISSOR` equal to the full 4:3 canvas (0 .. 511 x 0 .. 383, every HUD environment's
 and the spin copy's) or to the display's (0 .. 511 x 0 .. 447, the display clear's) reads as the whole view; one
@@ -2312,6 +2313,26 @@ row to be stale, and an environment outside src/hud to be a known one (gspkt.c's
 overlay's). Today: 17 HUD environments, 11 anchored, 6 markers, 1 other, 0 problems. tests/selftest.sh runs
 it (no build, so CI too) and checks that a table missing the minigame timer fails.
 
+#### Session 94: the lens grid under the wide view, the host present (static + host)
+
+**The lens grid** (`func_00103c48`, 4.17) under the wide view: the copy into the Z area (`D_002A5FD0`,
+stretched X and u since session 93) holds the whole view, texel 0 at the view's left edge, so the grid's ST
+(`u` 0.125 .. 0.875 of the copy's TW 512 = texels 64 .. 448 of the 4:3 canvas) would read 82.8 px too far
+left. **Decided: the margin is added** in C, `u = (64 + PLAT_VIEW_SIDE) / 512` per row
+(`include/platform/view.h`: `256 (wide - 1)` canvas pixels, unrounded like the stretch's -1325 sixteenths; the
+literal 0.125 on the PS2, the objects bit-identical), so the bulge samples the same pixels it covers, and
+`D_002A6110`'s `CLAMP_1` REGION_CLAMP MAXU 510 grows by the view's added width (510 + 166 = 676 at 960 x 544,
+`kh1_canvas_stretch_clamp`, fullscreen.c's `KH1_FS_CLAMP` row). A renderer reads the grid's ST against the
+packet's TW 512 (s up to 1.037: texel 531) without wrapping, inside the copy of the view's width. The mesh
+(x -192 .. 192) and its view -> screen matrix stay: the bulge is the centre square, the sides keep the scene.
+
+**The host present** (`KH1_HOST_SHOT=W:H[:target][:DIR]`, host/null/present.c, vita-port-plan 5.1ah): after
+each frame copy `D_002A6890` the GS memory model's display (the copy's FRAME) or 3D target (its TEX0) is
+written as a PAM through the canvas map's inverse (`kh1_canvas_unmap`), pillarboxed, the display's 448 lines
+read as the canvas's 384. It shows what the model holds (uploads, copies, point-sampled textured sprites,
+5.2), not the 3D or the untextured passes: black on the fake disc, a check of the uploads and 2D sprites on
+the real one.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and
@@ -2329,7 +2350,8 @@ it (no build, so CI too) and checks that a table missing the minigame timer fail
   GIF path does not apply it yet (only the HUD's shift).~~ Session 93: applied (above); the real-disc run with
   `KH1_HOST_WIDE=1` and `--extents` should show every full-screen send at -82.8 .. 594.8 and each HUD part
   moved by its side.
-- Session 93: the lens grid's u into the copy in the Z area under the wide view (the margin added or not).
+- ~~Session 93: the lens grid's u into the copy in the Z area under the wide view (the margin added or not).~~
+  Session 94: added (below).
 
 ## 6. Open questions
 

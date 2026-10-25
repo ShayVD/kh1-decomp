@@ -37,6 +37,7 @@ int fprintf(void *, const char *, ...);
 int fclose(void *);
 
 const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded textures (main.c) */
+void (*kh1_dma_after_send)(u32 tadr); /* session 94: KH1_HOST_SHOT's present (host/null/present.c) */
 
 typedef struct {
     u32 left;    /* qwords (REGLIST: 64-bit words) of the current packet still to come */
@@ -519,6 +520,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     if (bad & KH1_DMA_TAG_OUTSIDE) printf("kh1-host:   tag at %08x outside\n", tag);
     if (bad & KH1_DMA_VIF_BAD) printf("kh1-host:   %u words no VIF code, the first %08x at %08x\n", v.bad,
                                      v.bad_word, v.bad_addr);
+    if (kh1_dma_after_send) kh1_dma_after_send(tadr);
     return bad;
 }
 
@@ -546,4 +548,5 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
         gs_print_uploads();
         gs_print_targets();
     }
+    if (kh1_dma_after_send) kh1_dma_after_send((u32)(unsigned long)q);
 }

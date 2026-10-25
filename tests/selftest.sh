@@ -91,6 +91,13 @@ sed '/D_00669070, -1/d' "$ROOT/host/port/hudanchor.c" > "$W/hudanchor_missing.c"
 if python3 -I "$ROOT/tools/host/hudcheck.py" --table "$W/hudanchor_missing.c" > "$W/hud_missing.log"; then
   echo "selftest: hudcheck missed a HUD environment left out of the table" >&2; exit 1
 fi
+# session 94: a staging send under no environment fails (the minigame timer's send taken out)
+mkdir -p "$W/hudneg/src" && cp -r "$ROOT/src/hud" "$W/hudneg/src/"
+sed -i '/func_00237018(&D_00669070, 0x16, 1);/d' "$W/hudneg/src/hud/timer.c"
+if python3 -I "$ROOT/tools/host/hudcheck.py" --src "$W/hudneg/src" > "$W/hud_neg.log" ||
+   ! grep -q 'D_006691D4 .*follows no environment send' "$W/hud_neg.log"; then
+  echo "selftest: hudcheck missed a staging send under no environment" >&2; cat "$W/hud_neg.log" >&2; exit 1
+fi
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
@@ -111,6 +118,12 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/canvas_test.c" "$ROOT/host/port/canvas.c"
   "$W/canvas_test" > "$W/canvas.log" || { cat "$W/canvas.log"; exit 1; }
   tail -n 1 "$W/canvas.log"
+  # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
+      "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \
+      "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
+  "$W/present_test" "$W" > "$W/present.log" || { grep -v '^kh1-host:' "$W/present.log"; exit 1; }
+  tail -n 1 "$W/present.log"
   # the null sound server (host/null/sound.c, session 86)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/sound_test" \
       "$ROOT/tests/host/sound_test.c" "$ROOT/host/null/sound.c"

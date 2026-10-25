@@ -33,6 +33,11 @@ void kh1_canvas_map(const KH1Canvas *c, s32 gx, s32 gy, f32 *sx, f32 *sy);
 s32 kh1_canvas_stretch_x(s32 gx, s32 x0, s32 w);
 /* a texel u (10.4) into a copy of the target: 0 .. 512 to 0 .. w / 16 */
 s32 kh1_canvas_stretch_u(s32 u, s32 w);
+/* Session 94: CLAMP's low word with a REGION_CLAMP (WMS 2) MAXU grown by the view's added width,
+ * (w - 8192) / 16 texels rounded (510 -> 676 at 960 x 544), at most 1023; another WMS unchanged */
+u32 kh1_canvas_stretch_clamp(u32 clamp_lo, s32 w);
+/* Session 94: the inverse of kh1_canvas_map, a screen pixel to canvas pixels (fractions kept) */
+void kh1_canvas_unmap(const KH1Canvas *c, f32 sx, f32 sy, f32 *cx, f32 *cy);
 /* SCISSOR's x range (SCAX0 / SCAX1 in its low word, SCAY0 / SCAY1 in its high one) in canvas
  * sixteenths, half-open [*x0, *x1): the full 4:3 canvas (0 .. 511 x 0 .. 383, or the display's
  * 0 .. 447) is the whole view, a column 32k .. 32k + 31 of the target's full height the view's column
