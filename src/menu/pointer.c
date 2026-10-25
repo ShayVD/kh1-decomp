@@ -50,7 +50,7 @@ void func_0020b6a8(void) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(0x400, 0x80);
     p = buf + 2;
-    ua = (void *)(((u32)buf & 0x0FFFFFFF) | 0x80000000);
+    ua = (void *)PLAT_DMA_SPR_ADDR(buf);
     m = D_002BBDF8;
     p[0] = 0x50AB400000000001;
     p[1] = 0xEEEEE;

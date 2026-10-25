@@ -55,7 +55,7 @@ void func_00106b18(s32 arg0) {
 
 /* func_00106b58 (from hand/text_00100000_h1.c). */
 void func_00106b58(u32 x) {
-    u32 v = x | 0x80000000;
+    u32 v = x | PLAT_DMA_SPR;
     PlatGsSyncPath(0, 0);
     PlatDmaSend(D_002A6B84, v);
 }
@@ -130,7 +130,7 @@ void func_00106d48(s32 arg0) {
 typedef struct { u8 pad[16]; u32 w16; } DmaReq;
 s32 func_00106db0(DmaReq *r) {
     PlatDmaPutVif1Qwc(0);
-    PlatDmaPutVif1Tadr(r->w16 & 0x0fffffff);
+    PlatDmaPutVif1Tadr(PLAT_DMA_ADDR(r->w16));
     PlatDmaPutStat(2);
     PlatIFlushCache(0);
     PlatDmaPutVif1Chcr(0x105);

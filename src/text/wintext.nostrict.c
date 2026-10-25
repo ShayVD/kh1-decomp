@@ -92,7 +92,7 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     p[6] = 68;
     p[7] = 66;
     p[8] = 0x60ab400000008001;
-    tag = ((u32)base & 0x0fffffff) | 0x80000000;
+    tag = PLAT_DMA_SPR_ADDR(base);
     p[9] = 0x4343ee;
     base[0] = 0x7000000b;
     a = ((u8 **)&D_003E8E08);
@@ -324,7 +324,7 @@ KH1_V0(s32) func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(1024, 128);
     p = (Pkt *)(buf + 2);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     p->h[0] = 0x4000000000000001;
     p->h[1] = 0xEEEE;
     p->h[3] = 63;
@@ -412,7 +412,7 @@ s32 func_001fbcd8(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, 
     neg = 0;
     base = func_00122048(1024, 128);
     p = base + 2;
-    tag = ((u32)base & 0x0fffffff) | 0x80000000;
+    tag = PLAT_DMA_SPR_ADDR(base);
     p[0] = 0x5000000000000001;
     p[2] = 0;
     p[1] = 0xeeeee;
@@ -568,7 +568,7 @@ s32 func_001fc330(TextWin *o, s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x4000000000000001;
     p[1] = 0xEEEE;
     p[2] = 0;
@@ -659,7 +659,7 @@ s32 func_001fc750(TextWin *o, s32 x, s32 y, SprPrm *pr) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x4000000000000001;
     p[1] = 0xEEEE;
     p[2] = 0;
@@ -824,7 +824,7 @@ s32 func_001fcdc8(s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0, s32 c1) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x4000000000000001;
     p[1] = 0xEEEE;
     p[2] = 0;

@@ -288,8 +288,8 @@ extern s8 D_00372F28;
 #include "data/pieces/D_00372F30.h"
 
 void func_001aa918(void) {
-    (*(s32 *)&D_00372EA8) = 0x70000000;
-    (*(s32 *)&D_00372F30) = 0x70004000;
+    (*(s32 *)&D_00372EA8) = PLAT_SPR_BASE;
+    (*(s32 *)&D_00372F30) = PLAT_SPR_END;
     D_00372EA0 = 0;
     D_00372F28 = 0;
 }

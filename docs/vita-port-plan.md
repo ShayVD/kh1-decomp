@@ -792,6 +792,50 @@ layoutcheck 0, relcheck 0 (`--all`: the same 38 end rows), abicheck 0, indcheck 
 unchanged (3 value uses). The fake-disc host run stops where session 70's did (the overlay entry; with
 `KH1_HOST_OVL=stub:2`, func_00132790 from func_001136a8).
 
+### 5.1l Session 72: the DMA chains and the hand-built DMA addresses
+
+Static only (the Mac was away). kh1.elf is byte-identical and **every out/build object is bit-identical** (the
+changes are macros that expand to the PS2's own tokens); the default float ELF loads the same bytes (fcheck: all
+same), so there is no float-untested.md row.
+
+**The 181 PlatDmaSend calls** (35 files; `python3 -I tools/host/dmacheck.py --list [--tsv out/host/dmacheck.tsv]`
+sorts them by where the chain comes from):
+
+| source | calls | what was checked |
+| --- | --- | --- |
+| static data (a data piece) | 72 | every name sits in a host run with the PS2's distances (data_0027 / 002B / 0035 / 0037 / 003F), so a chain and the names after it stay together; reach_check already walks the read-only ones (dma-chain / dma-ref) |
+| static bss | 13 | D_00573AC0 / D_00573E40 (session 71); the eight 0xb0 image uploads (D_00641080 / 1130, D_00642D30 / DE0, D_00642EB0 / F60, D_00643290 / 3340) are func_0011fbb0's chain, exactly 11 qwords (cnt 6, ref to the image, end 2); D_00631620 (wave.c) is cnt 0x194 + end = 0x1960 bytes of its 0x2020 |
+| scratchpad frame | 75 | heap.c's func_00122048 frames (text windows, menus, journal, HUD) and opdma.c's stacks (ppp): see below |
+| pointer | 21 | queue entries' +0x10 (texanim / shadow / dmapool's func_0015ed80 callbacks), caller buffers (text.c's `u128 a[11]` on the stack, 11 qwords for func_0011fbb0), drawlist's double buffers, opdma's priority lists D_0061EEA0 (one definition since session 68) |
+
+func_0011fbb0's ref tag reads the image (a7 qwords from a8): the static sources D_003E9660 (0x800 qwords) and
+D_003F1660 (0x40) are exactly their definitions; the others are file buffers (pointer variables).
+
+**Found: DMA addresses built with the PS2's masks.** libdma's sceDmaSend turns a 0x7xxxxxxx address into the
+scratchpad form itself (func_00266ba8: `(a & 0x0fffffff) | 0x80000000` when a >> 28 == 7), but tags inside a chain
+need it written, so the game writes it by hand: 63 places `(p & 0x0fffffff) | 0x80000000` on a scratchpad frame
+(winpart 22, wintext 13, textwin 5, text 4, menubg 4, the journal 4, winmenu 4, gauge 2, config, pointer, winlist,
+util, ryjkekoto), func_00106b58's `x | 0x80000000`, func_0011fb78's SPR bit in a cnt / end tag when the end is above
+0x6fffffff (on a 32-bit host the stack is), and three VIF1 TADR writes `p & 0x0fffffff` (sceneeff.c, dmapool.c,
+mdlpkt.c). On the host the masks cut a pointer (the null platform ignores the tag, so nothing showed); the Vita
+renderer would walk the wrong address. They are now PLAT_DMA_SPR_ADDR(p), `| PLAT_DMA_SPR`, `(u64)PLAT_DMA_SPR <<
+32` and PLAT_DMA_ADDR(p) (platform/dma.h: the PS2's expression on KH1_PS2, the plain pointer elsewhere).
+**opdma.c's two scratchpad stacks** (func_001aa918: D_00372EA8 up from 0x70000000, D_00372F30 down from 0x70004000;
+func_001aa950 / func_001aa990 push them for the ppp effects' packets: kemat, kemdl, keshptail(x), kelnscls,
+keshpdtt, kemdltfd, ryjkekoto) started at literal PS2 addresses: on the host the first ppp draw would have written
+to 0x70000000. Now PLAT_SPR_BASE / PLAT_SPR_END. portability.md rule 13; tools/host/dmacheck.py lists any new one
+(0 rows; its REVIEWED table holds the end tags and frame counts that look like 0x70000000).
+
+**relcheck's 29 drafts that do not compile**: the 11 TImode ones (`typedef int u128 __attribute__((mode(TI)))`)
+do not take census.py's kh1_s128 either (they assign integers to u128, or use EE register asm); all 11 are older
+drafts of functions matched since (kelnscls func_00192958, kethcls pppKeThFrame, keshptail(x), ryjkekoto,
+drawlist's 7d48), whose matched C is in the host census and checked. The other 18 use EE register names or
+scratch headers that are gone. No change.
+
+layoutcheck 0, relcheck 0, abicheck 0, indcheck unchanged (241), argcheck unchanged (3 value uses), dmacheck 0.
+The fake-disc host run stops where session 71's did (the overlay entry; with `KH1_HOST_OVL=stub:2`,
+func_00132790 from func_00132c70). Valgrind was not run (not installed in this container).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

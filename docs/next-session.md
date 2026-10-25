@@ -9,24 +9,33 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23).
-If this session starts before then (sessions 49 to 71 ran without it), do not ask for the Mac or wait on it: skip items 1
+If this session starts before then (sessions 49 to 72 ran without it), do not ask for the Mac or wait on it: skip items 1
 to 3, add every float change to docs/float-untested.md as untested, and do the static items. **From Monday 2026-10-26
 on, ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make item 1 the first
 thing**: eight float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO is in Downloads for the host
 run, and the overlay files are in Downloads/kh1-test/ovl.
 
-## Where we stopped (end of session 71, 2026-10-25)
+## Where we stopped (end of session 72, 2026-10-25)
 
+- **Session 72** (static, vita-port-plan 5.1l, portability rule 13): the 181 PlatDmaSend calls sorted by source
+  (`python3 -I tools/host/dmacheck.py --list`: 72 static data, 13 bss, 75 scratchpad frames, 21 pointers); the
+  static chains fit their host definitions (func_0011fbb0's image uploads are exactly 0xb0; wave.c's packet
+  0x1960 of 0x2020). Found and fixed: 63 scratchpad tag addresses built as `(p & 0x0fffffff) | 0x80000000`, three
+  VIF1 TADR masks, func_00106b58's `| 0x80000000`, func_0011fb78's tag SPR bit, and opdma.c's two scratchpad stacks
+  starting at literal 0x70000000 / 0x70004000 (the ppp effects' packets would have gone there on the host): now
+  PLAT_DMA_SPR_ADDR / PLAT_DMA_ADDR / PLAT_DMA_SPR / PLAT_SPR_BASE / PLAT_SPR_END. **Every out/build object
+  bit-identical**, the float ELF the same (no float-untested row). `tools/host/dmacheck.py` (new) keeps it at 0.
+  relcheck's 11 TImode drafts are of functions matched since: no change.
 - **Session 71** (static, vita-port-plan 5.1k): relcheck now also reads the PS2 objects' HI16 / LO16 pairs (0 rows:
   ee-gcc keeps offsets in the load displacement, so they add nothing) and the 140 unlinked drafts in nonmatchings/
   that compile for the host (6 rows, func_0010d470's known table end, REVIEWED_DRAFTS). Of layoutcheck `--all`'s 7
   uncached rows, 5 sit inside data pieces (no change) and the packet area D_00573AC0 is now one definition with
   D_00573E40 (the Pk2 that calls it): `u8 [0x450]`, bss_0057.c. **The float ELF loads the same bytes** (fcheck
   all same), so nothing new to boot.
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-71.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-72.
 - **Eight default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
   (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68), 69 (2,043) and **70 (2,041, the current
-  default; session 71's merge left the float ELF's bytes the same)**. Session 69 made 21 objects one definition (vita-port-plan 5.1i): 10 objects that floated in place as
+  default; sessions 71 and 72 left the float ELF's bytes the same)**. Session 69 made 21 objects one definition (vita-port-plan 5.1i): 10 objects that floated in place as
   parts of a run now float whole into the float area (the shop / list windows D_0062F6E0 / D_0062F790 / D_00630460,
   the ppp matrices D_00615E70 / D_00616000, D_0052EB50, D_00551700, D_00575900, the timer sets D_006692F0 /
   D_00669320) and 20 neighbours are pinned. Session 70 made 6 more one definition (5.1j: the command menus
@@ -53,6 +62,8 @@ run, and the overlay files are in Downloads/kh1-test/ovl.
 - **Argument classes** (portability.md rule 11): `python3 -I tools/host/abicheck.py` (text) and indcheck
   (trees) both 0. Run both after any new declaration. indcheck: **0 CLANG** (session 69: the three nested-function
   files are CLANG-READ, read from their gcc host objects, which have no `call *`).
+- **DMA addresses** (portability.md rule 13): `python3 -I tools/host/dmacheck.py` at **0 rows** (run it after
+  touching packet code; `--list` for the sends).
 - **Layout dependencies** (portability.md rule 12, vita-port-plan.md §5.1i-§5.1k): two checks, both at **0 rows**;
   run both after any data change (a new row is a host crash waiting: opdma in 64, the notice in 68 were found by
   crashing). `python3 -I tools/host/layoutcheck.py` (after `make shift` and `make host-census`) reads the linked
@@ -130,11 +141,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 72 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 73 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s72 and /mnt/project-files/kh1-runtime/s72, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s73 and /mnt/project-files/kh1-runtime/s73, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party),
@@ -163,15 +174,16 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    (does dktitle.x call the setters func_001c06c0 / func_001468f8 / func_0012cab8 or write vm_lib's hooks? what do
    the targets take?). Does it call func_00109558, and with which states (session 68 guessed 2 = new game)?
    Without the Mac: skip.
-4. **Static, without the Mac**: (a) DMA chains: 181 PlatDmaSend calls in 35 files send a buffer the Vita
-   renderer will walk (the null platform does not). List each call's source (a name, or a pointer: follow where it
-   is built) and the chain's extent (tag qwc, call / ret / next / ref targets, the packets written before the
-   send), and check it against the source's host definition, as session 71 did for D_00573AC0 / D_00573E40
-   (vita-port-plan 5.1k); a chain that runs into the next name is a one-definition merge. A small tool next to
-   layoutcheck is fine if the patterns repeat. (b) relcheck's 29 drafts that do not compile (11 TImode: try
-   census.py's kh1_s128 types; the rest include scratch headers that are gone: skip them). (c) argcheck's 3 value
-   uses still wait for dktitle.x. Keep every PS2 object the same except for one-definition merges (kh1.elf
+4. **Static, without the Mac**: (a) the 21 pointer-source DMA sends (dmacheck `--list`, "pointer"): follow each
+   to where its chain is built (texanim / shadow / dmapool's func_0015ed80 queue entries +0x10, objdraw.nostrict.c's
+   buf, mdlgs.nostrict.c's B4Rec2 x18, keth.nostrict.c's `*buf`, drawlist's b0 / b1, frame.c's arg0) and check the
+   extent against the builder's buffer, as 5.1l did for the static ones; the PlatGs* image loads that take a
+   scratchpad buffer (kemat's PlatGsExecLoadImage) for the same masks inside the wrapper's PS2 side. (b) Other PS2
+   addresses in game code: hardware registers written outside include/platform (grep 0x1000xxxx / 0x1100xxxx /
+   0x1200xxxx stores outside src/sdk) and literal main-memory addresses (portability.md "Known absolute addresses":
+   func_00171078's 0x35BD40); extend dmacheck or add a sibling if the patterns repeat. (c) argcheck's 3 value uses
+   still wait for dktitle.x. Keep every PS2 object the same except for one-definition merges (kh1.elf
    byte-identical; run fcheck.sh: a float-untested.md row only when the float ELF's bytes change).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=72`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=73`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).

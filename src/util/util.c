@@ -96,7 +96,7 @@ void func_001edfb8(s32 x0, s32 y0, s32 w, s32 h) {
         p = func_00122048(1024, 128);
         buf = p;
         p = buf + 1;
-        ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+        ub = (void *)PLAT_DMA_SPR_ADDR(buf);
         p->a = 0x1000000000008001;
         p->b = 14;
 

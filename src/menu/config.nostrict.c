@@ -35,7 +35,7 @@ void func_00219598(Wnd2 *w, s32 px, s32 py) {
     PlatDmaSend(PlatDmaGetChan(2), D_00642DE0);
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x5000000000008001;
     p[1] = 0xeeeee;
     p[2] = 0x4000d;

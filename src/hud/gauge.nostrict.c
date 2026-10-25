@@ -1328,7 +1328,7 @@ void func_00242c08(GActor *o, s32 idx, s32 *pos, f32 alpha) {
     pk++;
     func_0011fb78(top, 7, pk);
     PlatFlushCache(0);
-    PlatDmaSend(PlatDmaGetChan(2), (void *)(((u32)buf & 0x0FFFFFFF) | 0x80000000));
+    PlatDmaSend(PlatDmaGetChan(2), (void *)PLAT_DMA_SPR_ADDR(buf));
     PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
@@ -1372,7 +1372,7 @@ void func_00242ef8(GActor *o, s32 n, s32 a2, s32 *pos, s32 *col) {
     q->w = 0;
     func_0011fb78(p, 7, q + 1);
     PlatFlushCache(0);
-    PlatDmaSend(PlatDmaGetChan(2), (void *)(((u32)buf & 0x0FFFFFFF) | 0x80000000));
+    PlatDmaSend(PlatDmaGetChan(2), (void *)PLAT_DMA_SPR_ADDR(buf));
     PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }

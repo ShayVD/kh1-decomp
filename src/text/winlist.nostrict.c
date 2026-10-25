@@ -49,7 +49,7 @@ void func_00208458(TextWin *o, s32 x, s32 y, u32 col, s32 n) {
 
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1536, 128);
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     x90 = o->x90;
     X = o->xb0 + (x << 4);
     Y = o->xb4 + (y << 4);

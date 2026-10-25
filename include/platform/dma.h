@@ -77,6 +77,22 @@ extern u8 PlatSpr[0x4000];
 #endif
 #define PLAT_SPR_END (PLAT_SPR_BASE + 0x4000)
 
+/* A DMA tag address the game builds by hand (session 72).  The chains in the
+ * scratchpad (heap.c's frames, opdma.c's two stacks) are sent and referenced
+ * as (p & 0x0fffffff) | 0x80000000: PLAT_DMA_SPR_ADDR(p), 63 places.  The
+ * VIF1 chains started by register (sceneeff.c, dmapool.c, mdlpkt.c) write
+ * TADR as p & 0x0fffffff: PLAT_DMA_ADDR(p).  (libdma's sceDmaSend makes the
+ * same scratchpad conversion itself for a 0x7xxxxxxx address, func_00266ba8,
+ * but the tags inside a chain need it written.)  On the Vita and the host both
+ * are the plain pointer: the masks would cut a host address. */
+#ifdef KH1_PS2
+#define PLAT_DMA_SPR_ADDR(p) (((u32)(p) & 0x0fffffff) | PLAT_DMA_SPR)
+#define PLAT_DMA_ADDR(p) ((u32)(p) & 0x0fffffff)
+#else
+#define PLAT_DMA_SPR_ADDR(p) ((u32)(p))
+#define PLAT_DMA_ADDR(p) ((u32)(p))
+#endif
+
 /* The uncached mirror of main memory (session 61): packets the game builds
  * for DMA are written through address | 0x20000000 so they skip the data
  * cache.  PLAT_UNCACHED(p) is that address as a u32 on the PS2 and the plain

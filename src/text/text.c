@@ -618,7 +618,7 @@ s32 func_001f2a50(u32 color, s32 x, s32 y, u8 *str, s32 sc) {
     void *u;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(0x1000, 0x80);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     buf[0] = ((s32)((u8 *)func_001f12c0((Q *)(buf + 2), 1, color, x, y, str, sc) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
     PlatGsSyncPath(0, 0);
@@ -631,7 +631,7 @@ s32 func_001f2b58(u32 color, s32 x, s32 y, s32 glyph, s32 sc) {
     void *u;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(0x400, 0x80);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     buf[0] = ((s32)((u8 *)func_001f15f0((Q *)(buf + 2), 1, color, x, y, glyph, sc) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
     PlatGsSyncPath(0, 0);
@@ -644,7 +644,7 @@ s32 func_001f2c60(u32 color, s32 x, s32 y, s32 code, s32 sc) {
     void *u;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(0x400, 0x80);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     buf[0] = ((s32)((u8 *)func_001f1868((Q *)(buf + 2), 1, color, x, y, code, sc) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
     PlatGsSyncPath(0, 0);
@@ -660,7 +660,7 @@ s32 func_001f2d68(s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val, s32 sc, u32 
     p = func_00122048(0x400, 0x80);
     buf = p;
     p += 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     buf[0] = ((s32)((u8 *)func_001f18e8((Q *)p, 1, mode, nd, pad, x, y, val, sc, col) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
     PlatGsSyncPath(0, 0);

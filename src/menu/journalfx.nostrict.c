@@ -35,7 +35,7 @@ s32 func_0021b860(Wnd *o, s32 x, s32 y, s32 w, s32 h, s32 idx) {
     buf = func_00122048(1024, 128);
     y <<= 4;
     p = buf + 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x5000000000008001;
     p[1] = 0xEEEEE;
     p[2] = 0x4000D;
@@ -139,7 +139,7 @@ s32 func_0021bbe0(Wnd *o, s32 x, s32 y, s32 w, s32 h, s32 idx, s32 col) {
     p[12] = 0x30AE400000008004;
     p[4] = 0;
     p[13] = 1251;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     col = func_001edd88(col, o->x90);
     p += 14;
     X = o->xb0 + (x << 4);
@@ -225,7 +225,7 @@ s32 func_0021bf68(Wnd *o, Prm *a) {
     buf = func_00122048(1024, 128);
     p = buf + 2;
     p[0] = 0x5000000000008001;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     p[1] = 0xEEEEE;
     W = w << 4;
     p[2] = 0x4000D;

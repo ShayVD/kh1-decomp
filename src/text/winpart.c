@@ -117,7 +117,7 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(2048, 128);
     h = (Q *)buf + 1;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     h->a.d = 0x6000000000008001;
     h->b.d = 0xeeeeee;
     q = h + 1;

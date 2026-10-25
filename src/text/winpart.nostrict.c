@@ -120,7 +120,7 @@ void func_00200038(TextWin *o) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     q = (QW *)(buf + 2);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     q->a = 0x50ab400000000001;
     q->b = 0xeeeee;
     q++;
@@ -261,7 +261,7 @@ void func_00200648(TextWin *o, s32 type, s32 px, s32 py, s32 pw, s32 *cols) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1536, 128);
     pk = buf + 2;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     ((PH *)pk)->tag = 0x5000000000000001;
     ((PH *)pk)->ad = 0xeeeee;
     ((PH *)pk)->d2 = 0;
@@ -539,7 +539,7 @@ void func_002016b0(TextWin *o, s32 x, s32 y, u32 c) {
     f32 fx, fy, a, b, d, e;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     q = (Q *)buf + 1;
     q->a = 0x50ab400000000001;
     q->b = 0xeeeee;
@@ -607,7 +607,7 @@ void func_00201988(TextWin *o, s32 x, s32 y, u32 c) {
     f32 fx, fy, a, b, d, e;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     q = (Q *)buf + 1;
     q->a = 0x50ab400000000001;
     q->b = 0xeeeee;
@@ -675,7 +675,7 @@ void func_00201c60(TextWin *o, s32 x, s32 y, u32 c) {
     f32 fx, fy, a, b, d, e;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     q = (Q *)buf + 1;
     q->a = 0x50ab400000000001;
     q->b = 0xeeeee;
@@ -743,7 +743,7 @@ void func_00201f38(TextWin *o) {
     if (o->xcc == 0) return;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     s = (Spr2 *)(buf + 2);
 
     ((u64 *)s)[0] = 0x50ab400000000001;
@@ -817,7 +817,7 @@ void func_00202300(TextWin *w, s32 a1, s32 a2) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x50ab400000000001;
     p[1] = 0xeeeee;
     p[2] = 0;
@@ -888,7 +888,7 @@ void func_00203028(TextWin *o, s32 x0, s32 y, s32 x1, s32 c) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(2048, 128);
     h = (Q *)buf + 1;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     h->a = 0x6000000000008001;
     h->b = 0xeeeeee;
     q = h + 1;
@@ -1064,7 +1064,7 @@ void func_00203a10(TextWin *o, s32 x) {
     if (!(o->xce < o->xcc)) return;
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     q = (Q *)buf + 1;
     q->a = 0x6000000000008001;
     q->b = 0xeeeeee;
@@ -1175,7 +1175,7 @@ void func_002040f8(TextWin *o) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x1000000000008001;
     p[1] = 14;
     p = func_0011fb38(66, 68, buf + 4);
@@ -1285,7 +1285,7 @@ void func_00204948(TextWin *w, s32 a1, s32 a2, s32 a3) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x1000000000008001;
     p[1] = 14;
     p = func_0011fb38(66, 68, buf + 4);
@@ -1358,7 +1358,7 @@ void func_00204d80(TextWin *w, s32 a1, s32 a2, s32 a3, s32 a4) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x1000000000008001;
     p[1] = 14;
     p = func_0011fb38(66, 68, buf + 4);
@@ -1450,7 +1450,7 @@ void func_002053e8(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     PlatDmaSend(PlatDmaGetChan(2), &D_003F1A70);
     buf = (Q3 *)func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
-    ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    ub = (void *)PLAT_DMA_SPR_ADDR(buf);
     p->tag = 0x4023400000008001;
     p->ad = 0x44ee;
     p->d2 = 68;
@@ -1497,7 +1497,7 @@ void func_00205618(TextWin *w, s32 a1, s32 a2, s32 a3, s32 a4, s32 *col) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     al = w->x90;
     p->h[0] = 0x9026400000008001;
     p->h[1] = 0x4e4e4e4ee;
@@ -1563,7 +1563,7 @@ void func_00205938(TextWin *o, s32 col) {
     PlatDmaSend(PlatDmaGetChan(2), &D_003F1A70);
     buf = (Q3 *)func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
-    ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    ub = (void *)PLAT_DMA_SPR_ADDR(buf);
     p->tag = 0x4023400000008001;
     p->ad = 0x44ee;
     p->d2 = 68;
@@ -1610,7 +1610,7 @@ void func_00205b30(TextWin *w, s32 *r) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     al = w->x90;
     p->h[0] = 0x9026400000008001;
     p->h[1] = 0x4e4e4e4ee;
@@ -1676,7 +1676,7 @@ void func_00205e30(TextWin *w, s32 *col) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     al = w->x90;
     p->h[0] = 0x9026400000008001;
     p->h[1] = 0x4e4e4e4ee;
@@ -1742,7 +1742,7 @@ void func_00206130(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     PlatDmaSend(PlatDmaGetChan(2), &D_003F1E70);
     buf = (Q3 *)func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
-    ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    ub = (void *)PLAT_DMA_SPR_ADDR(buf);
     p->tag = 0x4023400000008001;
     p->ad = 0x44ee;
     p->d2 = 68;
@@ -1789,7 +1789,7 @@ void func_00206370(TextWin *w, s32 px, s32 py, s32 pw, s32 ph, s32 k0, s32 k1, s
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p->h[0] = 0x9026400000008001;
     p->h[1] = 0x4e4e4e4ee;
     p->h[2] = 68;
@@ -1860,7 +1860,7 @@ void func_00206748(TextWin *w, s32 f1, s32 f2, s32 px, s32 py, s32 pw, s32 ph) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (Pk6 *)(buf + 2);
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p->h[0] = 0xf022400000008001;
     p->h[1] = 0x044e44e44e44e44e;
     k = (w->x90 << 24) | 0x202020;
@@ -1980,7 +1980,7 @@ void func_00206b70(TextWin *w, Spr *r) {
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    ub = ((u32)buf & 0x0fffffff) | 0x80000000;
+    ub = PLAT_DMA_SPR_ADDR(buf);
     p[0] = 0x1000000000008006;
     p[1] = 14;
     p[2] = 0x4000d;
