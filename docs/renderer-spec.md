@@ -759,8 +759,7 @@ temporary packets.
   GIF channel (`*chan |= 0x40`) and nothing clears it again, so once drawlist
   has run, every later GIF `sceDmaSend` on the PS2 also transfers its tags'
   upper 64 bits. A port must take TTE from word 0 at each send, not from the
-  call site (what those upper words hold in each GIF chain is not checked
-  yet: an open question for the GIF parser). shadow's func_00127500 sets chain mode and
+  call site, and on the GIF channel then drop the tag anyway (4.5). shadow's func_00127500 sets chain mode and
   clears TTE on VIF1 before its send (the 224-byte heap chain, 4.3). The
   direct VIF1 senders write `D1_CHCR` themselves: func_00106db0 `0x105` (no
   TTE), func_00108d90 `0x145` (TTE: the tag's upper words are VIF codes).
@@ -778,8 +777,38 @@ temporary packets.
   the PS2 (dma.h PLAT_DMA_SPR, 0 off the EE: the port's addresses are plain
   pointers).
 - **Host result** (session 74, fake disc, `KH1_HOST_OVL=stub:2`): 86 sends,
-  all on the GIF channel (none on VIF1 before the run stops), 1-3 tags each (cnt / ref
-  / end and lone refe / end), none leaving host memory, valgrind 0 errors.
+  84 on the GIF channel and one each on VIF0 / VIF1 (func_0015f018, session 75),
+  1-3 tags each (cnt / ref / end and lone refe / end), none leaving host
+  memory, valgrind 0 errors.
+
+### 4.5 The tags' upper words and the receiver's read (session 75, static)
+
+- **What the GIF tags' upper 64 bits hold.** The builders clear the qword
+  before writing the low word (`*p = KH1_Q(0)`: func_00237018, drawlist's
+  packets), and the static chains hold 0 there: upper words 0. The exception
+  is func_0011fbb0's image upload on its caller's stack (text.c): the tags are
+  written as 64-bit words and the upper half is stack garbage.
+- **TTE on the GIF channel.** Nothing in the main ELF calls drawlist's
+  flushes, so on the main ELF alone the GIF channel's TTE stays clear (every
+  send seen: CHCR 0 or 4). If an overlay calls them, the tag can not reach
+  the GIF: read as a GIFtag, `0x1000000N` is NLOOP N, NREG 16 (0), PACKED
+  PRIM, and would swallow 16 x N qwords of a packet that starts with its own
+  EOP GIFtag. **The GIF parser drops every tag on channel 2, TTE or not**
+  (inference; a PCSX2 GS dump settles it if an overlay runs drawlist).
+- **VIF tags with TTE.** The upper words are VIF codes and come first:
+  func_0015f018's static VIF0 / VIF1 chains (D_00278680, D_00272C70) start
+  `FLUSHE` / `FLUSHA`, `STCYCL 4,4` in the tag, then one UNPACK each.
+- **The receiver's read** (what the Vita's PlatDmaSend feeds its GIF parser;
+  host/null/dmawalk.c under `KH1_HOST_TRACE=2`): the data of every tag in
+  chain order is **one stream**. GIF: a GIFtag (NLOOP bits 0-14, EOP 15, FLG
+  58-59, NREG 60-63 with 0 = 16), then NLOOP x NREG qwords PACKED,
+  (NLOOP x NREG + 1) / 2 REGLIST, NLOOP IMAGE; a packet can run on into the
+  next tag's data (an IMAGE GIFtag in a cnt, its pixels by ref). VIF: codes
+  and their data; UNPACK reads `ceil(n x bits / 32)` words for n = NUM (or,
+  with WL > CL, CL of each WL), bits = (32 >> vl) x (vn + 1) (16 for V4-5);
+  DIRECT / DIRECTHL data starts on a qword, MPG's on 64 bits; STMASK 1 word,
+  STROW / STCOL 4. A send should end on a packet / code boundary: on the
+  fake disc every one of the 86 does.
 
 ## 5. Mapping to a modern API
 

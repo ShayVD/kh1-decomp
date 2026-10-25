@@ -83,4 +83,12 @@ grep -q 'src/counter.c  AddCounter' report.log
 ! grep -q '100.00%  src/counter.c  AddCounter' report.log
 make --no-print-directory progress | tee progress.log
 grep -q 'Functions matched: 4/7' progress.log
+# The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
+if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
+     "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" 2> "$W/dmawalk_cc.log"; then
+  "$W/dmawalk_test" > "$W/dmawalk.log" || { grep -v '^kh1-host:   ' "$W/dmawalk.log"; exit 1; }
+  tail -n 1 "$W/dmawalk.log"
+else
+  echo "selftest: no gcc -m32, dmawalk_test skipped"
+fi
 echo "selftest: PASS"

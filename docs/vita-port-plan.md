@@ -920,6 +920,40 @@ whatever the last writer of word 0 left: drawlist leaves it set on the GIF chann
 layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck unchanged, argcheck unchanged (3 value
 uses, waiting for dktitle.x).
 
+### 5.1o Session 75: what the GIF tags' upper words hold, the receiver's read of each chain
+
+Static only (the Mac was away). Only host/ and tests/ changed: kh1.elf is byte-identical, every out/build object is
+bit-identical, and the float ELF the same (no PS2 source changed), so there is no float-untested.md row.
+
+**The upper 64 bits of the GIF tags** (renderer-spec 4.4's open question, now 4.5): the tag builders clear the
+qword first (`*p = KH1_Q(0)`, then the low word: func_00237018, drawlist's func_00237ec0 / 7790 / 78c8 / 7d48), so
+their upper words are 0; the static chains the fake disc sends hold 0 there too. The one exception is
+func_0011fbb0's image uploads on the caller's stack (text.c's `u128 a[11]`): the cnt / ref / end tags are written
+as 64-bit words and the upper half is **whatever the stack held** (seen: `09bc0000 080967a2`, `ffd53ce0
+f7be6915`). Nothing in the main ELF calls drawlist's flushes (func_00237f20 / func_002380c0 / func_00238258: 0
+jal, 0 pointer words; nor the push by depth func_002376c8; hud.c's func_00236f18 only gives D_00425F80 its
+buckets), so **the main ELF never sets TTE on the GIF channel**: every GIF send seen has CHCR 0 or 4. If an
+overlay calls them (item 3's dktitle.x check), the tag qword can not be reaching the GIF: read as a GIFtag,
+drawlist's `0x1000000N` is NLOOP N, NREG 16, PACKED with PRIM registers, swallowing 16 x N qwords of a packet
+that already starts with its own EOP GIFtag. So the GIF parser drops every tag on channel 2, whatever TTE says
+(an inference: confirm with a PCSX2 GS dump if an overlay turns out to run drawlist).
+
+**The receiver's read** (host/null/dmawalk.c, split out of plat_null.c; renderer-spec 4.5): after the walk,
+`KH1_HOST_TRACE=2` reads each send's data in chain order as its receiver would: the GIF channel as one stream
+of GIF packets (PACKED NLOOP x NREG qwords, REGLIST half that, IMAGE NLOOP), VIF0 / VIF1 as one stream of VIF
+codes and their data (each tag's upper words first with TTE; STCYCL's CL / WL for UNPACK sizes, DIRECT and MPG
+data aligned, VIF0 without OFFSET / BASE / MSKPATH3 / DIRECT). A chain that ends inside a GIF packet or a VIF
+code's data, or a word that is no VIF code, is a problem and prints the tags; `=3` also prints each tag's upper
+words. tests/host/dmawalk_test.c (in `make test` when gcc -m32 works) checks 14 made-up chains. Fake disc,
+stub:2: **86 sends, every one whole**: 84 GIF (1-4 packets, one EOP each; the 3 image chains have their REF
+data inside the IMAGE packet, as expected), and (a correction to 5.1n's "all GIF") **one VIF0 and one VIF1
+send**, both from func_0015f018 (mdlgs: TTE set on both, static D_00278680 75 qwords and D_00272C70 7 qwords; the
+tag's upper words are `FLUSHE` / `FLUSHA` then `STCYCL 4,4`, then one UNPACK each). Valgrind with TRACE=2: 0
+errors up to the overlay entry (23 sends).
+
+layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck unchanged, argcheck unchanged (3 value
+uses, waiting for dktitle.x).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
