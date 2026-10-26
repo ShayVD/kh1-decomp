@@ -64,7 +64,63 @@ function reached only by pointer after the end would still be missed; fix layout
 
 The game's own (ee-gcc 2.96, `-O2 -G0`, the kh1.toml default) matches the overlays: the first
 autodecomp pass matched about 40% of the functions of the eight small overlays straight
-from m2c. No overlay-specific flags have been needed so far.
+from m2c. Two kh1.toml flag modes are used by a few overlay functions (session 131b):
+
+- `nofill` (delay slots not filled): dkmovie's DMA register writers, gb func_00f4d880, the
+  xs_dh_break random float (the main ELF's rand.nofill.c).
+- `nosib` (`-fno-optimize-sibling-calls`, new): wm's sound helpers func_00f2fe40,
+  func_00f2fe88, func_00f454b0 end in `jal` + return where -O2 would tail-call.
+
+A hand file named `func_X.<mode>.c` is compiled with that mode (`KH1_MODE=<mode>` for
+autodecomp; hand.py and twins.py pass it on from the draft's or the source's name).
+
+## Hand matching (session 131b)
+
+```sh
+python3 tools/ovl/hand.py show gb func_00f3bab0          # asm + autodecomp's closest draft
+python3 tools/ovl/hand.py try  gb func_00f3bab0 d.c      # compile a draft (ovl.h prepended), diff
+python3 tools/ovl/hand.py keep gb func_00f3bab0 d.c      # on a match: ovl/gb/hand/func_00f3bab0.c
+python3 tools/ovl/hand.py perms gb func_00f3bab0 d.c     # every order of the lines between //{ and //}
+python3 tools/ovl/twins.py [NAME...]                     # copy matched C to same-shape functions
+```
+
+twins.py: gb and wm share most of their code (and the summons share helpers), so every
+match is tried on the functions with the same instructions (symbols, call targets and
+labels masked; large literals masked as a fallback) in every overlay. Run it after each
+`make ovl`.
+
+autodecomp's variants (tools/permute.py) added for the overlays: `callee_stubs` (overlay
+callees at lower addresses as empty `CONTEXT_ONLY` definitions: callee defined above
+changes gcc's branch-likely and slot choices), `data_defs` (overlay data as `CONTEXT_ONLY`
+zero-initialised definitions: gcc then fills slots with %lo loads), `float_args` (bit
+patterns passed as float literals, also any pattern in a libvu0 float parameter),
+`merge_splits` (m2c's var_a3 / var_a3_2 as one variable), `sort_stores` (runs of global
+stores in address order), `void_self` (m2c's `Duplicate return node`: the function is
+void), and `pad_frame` (an unused aligned local to reach the original frame size).
+
+What the hand matches needed, most often first:
+
+- Real types: structs with pad arrays instead of M2C_FIELD, `OvlVec` / `OvlMtx` locals,
+  the PlatVu0* wrappers. dkmovie's big movie work struct (fields at 0x3DD48..0x3DF5x) shows up
+  in m2c as `&D_0003DF44 + arg0`; it is a struct pointer.
+- Store order: m2c's statement order is the scheduled order, not the source's. Fields in
+  struct order, chained `a = b = c = 10.0f;`, or `hand.py perms`.
+- Loops: m2c's countdown do-while with a pointer is `for (i = 0; i < N; i++) arr[i]...`;
+  `E *e = &arr[i];` and `arr[i].f` compile differently (try both).
+- Returns: void functions (m2c returns a leftover $v0), a missing return in an s32
+  function, a pointer returned where a bool is tested, `if (x & 1) return 1; return 0;`
+  versus `return (x & 1) != 0;` (the first keeps `sltu`), a narrower callee return type
+  that blocks a tail call.
+- Arguments m2c lost or added: pass-through arguments, the variadic `func_001c01b0(s32,
+  void (*)(), ...)`, an argument computed into a local before the call.
+- Float literals: gcc 2.96 reads some short spellings one ulp off; twelve significant
+  digits are safe (`0.349065810442f`, `3.14159250259f`).
+- Frame size: an unused local OvlMtx or array.
+
+Near misses and open questions are in the session's notes (docs/next-session.md); two
+recurring ones: an endless loop that calls a function without saving $ra (gb
+func_00f50db0, wm func_00f77ea8; gcc always saves it, maybe asm), and the angle-wrap
+helpers (gb func_00f25a68, wm func_00f35800 / func_00f4cb60, register allocation).
 
 ## Results
 
