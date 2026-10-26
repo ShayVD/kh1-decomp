@@ -839,7 +839,9 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **With the Mac, after the Vita display thread's PR**: a Vita3K run with pad input through the
    menu and into the movie; printf to kh1.log once the DMA log can be quiet.
 3. **Match dktitle.x's 12 left** (nonmatchings/session132/NOTES.md) and dkmovie's front-end drafts
-   (func_00f20258: 3 words, a lui scheduled early); the permuter needs the user's OK.
+   (func_00f20258: 3 words, a lui scheduled early). **The user OK'd running the cloned
+   decomp-permuter on 2026-10-26** (session 134's thread: "Ok permuter"); if the session's
+   permission check still refuses it, say so and quote that approval.
 4. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears.
 5. End with `make progress-update SESSION=135`, refresh docs/progress.md's tables, commit, open a PR,
    and refresh this prompt.
