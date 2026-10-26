@@ -1,8 +1,7 @@
 # The first Vita build
 
-Written 2026-10-25 (phase 5, after session 122). Built and packed in a cloud container; **not run on a
-Vita or in Vita3K yet** (no hardware or emulator was reachable). What it is, how to build it, what it
-does and does not do, and what to check first on a device.
+Written 2026-10-25 (phase 5, after session 122); first run in Vita3K on 2026-10-26 (below, "In
+Vita3K"). What it is, how to build it, what it does and does not do.
 
 ## What it is
 
@@ -48,8 +47,10 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    - `title=N` the game state asked for at the title overlay's first call (default 2: a new game,
      Dive to the Heart; `-1` stays in the title state);
    - `frames=N` exit after N frames (0, the default: never).
-4. `ux0:data/kh1/kh1.log` gets everything the host runner prints: each disc search and read, the
-   overlay calls, the end of the run. Send it back after a run.
+4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
+   watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
+   written through sceIoWrite (a funopen FILE): newlib's own fopen'd / freopen'd log stayed empty in
+   Vita3K. Send it back after a run.
 
 On screen: the GS model's picture in the middle, and in the left bar a square that changes colour
 every 30 frames (the frame loop is alive), a green bar that grows per 256 disc reads and a blue one
@@ -93,10 +94,33 @@ What a run can show, at best:
 - gumisave.c's func_001b9c60 keeps the overlay entry as a pointer and calls it later: on the Vita
   that jumps into data (the Gummi ship editor; not reachable before the world map anyway).
 
+## In Vita3K (2026-10-26)
+
+Vita3K v0.2.1 4232-92bda548 on an M3 Mac (macOS 14.6.1, MoltenVK), firmware 3.74, the Japan Final
+Mix ISO, `Vita3K --frontend sdl -r KHDC00001`, log level ERROR (its TRACE default filled the disk).
+
+- **First runs: a crash in the first second**, in the sound update (sndctl.c vd01 through
+  func_0011d7e0, a slot whose position pointer was 0x14). The host runner on the same ISO crashed in
+  the same place: the real disc's first room-independent load had never run on any host.
+  func_0010fc98 (framectl.c) copies allarea.nam (6112 bytes) to D_004D6B10, whose PS2 extent runs
+  through D_004D6B20's table to 0x4D8E40; bss_004D.c defined only its first 16 bytes, so on the host
+  the copy ran over the sound slots (D_004E3458). D_004D6B10 is now the whole 0x2330 bytes and
+  D_004D6B20 a name inside it (portability.md's rule); kh1.elf is byte-identical. layoutcheck /
+  relcheck could not see it: the length comes from the file. Also: the 32-bit host's fopen refuses
+  the 3.3 GiB image, so host/port/cd_image.c uses fopen64 / fseeko64 there.
+- **After the fix: no faults.** `title=-1` (stay in the title state) and the default (a new game)
+  both run with no fault for 30 to 75 s. The new game reads 34 files (3225 sectors) by frame 60 and
+  then runs its frame loop: about 22 DMA sends and one frame copy shown a frame. The host runner
+  does the same on the ISO for 5000 frames, x86 and ARM (qemu) alike.
+- **About 10 frames a second** in Vita3K on the M3 with the new game, 20 at the title: the software
+  present (a GS model read per pixel) and the chain walk, emulated. Not a measure of a real Vita.
+- **The picture is black**, as expected: no title (the overlay), no 3D. The status strip moves.
+
 ## What next, in order
 
-1. **Boot it** (Monday, the Mac: Vita3K, or a Vita): the log and a photo of the screen. Then the same
-   run on the host with the ISO (`KH1_HOST_ISO=... KH1_HOST_OVL=stub:2 KH1_HOST_TRACE=1`) to compare.
+1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
+   with pad scripts, and look for more overruns of the allarea.nam kind (a disc file's length
+   copied into a name the host sizes from its PS2 neighbour).
 2. **A GXM present**: the framebuffer copy through GXM (one textured quad), then the GIF path's
    sprites and triangles drawn by GXM with the state the port code already decides
    (include/platform/{texfmt,texfunc,sampler,blend,atest,depth,fog,primasm}.h).

@@ -31,6 +31,8 @@ static KH1Canvas canvas;
 /* for each screen column / row, the display's column / line (-1: outside the picture) */
 static s16 col_of[FB_W], line_of[FB_H];
 static u32 line_buf[512];
+static unsigned long status_frames; /* the last vblank's, for the strip after a copy */
+static unsigned status_reads;
 volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown; /* the watchdog's (main.c) */
 
 int kh1_vita_display_init(const void *frame_copy_send) {
@@ -70,6 +72,7 @@ static u32 abgr_of(u32 psm, u32 v) {
 }
 
 /* the model's buffer (FRAME's FBP, FBW, PSM) into the back buffer, then shown */
+void kh1_vita_status(unsigned long frames, unsigned reads);
 static void present_buffer(u32 bp, u32 bw, u32 psm, u32 lines) {
     u32 *out = fb[fb_cur ^ 1];
     int x, y, last = -2;
@@ -98,6 +101,8 @@ static void present_buffer(u32 bp, u32 bw, u32 psm, u32 lines) {
     shown++;
     kh1_vita_shown = shown;
     kh1_vita_flip();
+    /* the copy filled the pillarbox black: the strip again (a vblank draws it too) */
+    kh1_vita_status(status_frames, status_reads);
 }
 
 /* host/null/dmawalk.c's hook after each send: the frame copy's FRAME is the display buffer */
@@ -120,6 +125,8 @@ static void fill(u32 *p, int x, int y, int w, int h, u32 c) {
 
 /* the status strip in the left pillarbox of the buffer on screen (see the header) */
 void kh1_vita_status(unsigned long frames, unsigned reads) {
+    status_frames = frames;
+    status_reads = reads;
     static const u32 beat[4] = { 0xFF0000FFu, 0xFF00FFFFu, 0xFFFF00FFu, 0xFFFFFFFFu };
     u32 *p = fb[fb_cur];
     if (!p) return;
