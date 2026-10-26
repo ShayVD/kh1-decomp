@@ -9,7 +9,14 @@
 /* 0x6A0000 - 0x1FE0000 (the stack): 25 MiB, 0x40000-aligned so the slots at D_00FE0000 are too */
 #define KH1_MEM_BASE 0x6A0000
 #define KH1_MEM_END 0x1FE0000
+#ifdef KH1_VITA
+/* the Vita's executable takes two load segments, and a section aligned past the page makes a third
+ * (vita-elf-create refuses it): the game reaches the slots by offsets from D_00FE0000 (objslot.c),
+ * so the page is enough there */
+u8 kh1_memmap[KH1_MEM_END - KH1_MEM_BASE] __attribute__((aligned(0x1000)));
+#else
 u8 kh1_memmap[KH1_MEM_END - KH1_MEM_BASE] __attribute__((aligned(0x40000)));
+#endif
 
 #define KH1_REGION(name, addr) \
     __asm__(".globl " #name "\n\t.set " #name ", kh1_memmap + " #addr " - 0x6A0000")

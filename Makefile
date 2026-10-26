@@ -27,7 +27,7 @@ ifeq ($(filter clean distclean help toolchain check layout rank,$(MAKECMDGOALS))
 -include $(GEN)/objects.mk
 endif
 
-.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help shift data-relocs host-census
+.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help shift data-relocs host-census vita vita-armcheck
 
 all: verify
 
@@ -48,6 +48,8 @@ help:
 	@echo "make shift SHIFT_MODE=m12 SHIFT_DRAFTS=1   near-miss C drafts in place of their asm exports (static diff)"
 	@echo "make data-relocs      regenerate data_relocs.tsv (pointers in the data blob)"
 	@echo "make host-census      phase 5: compile the game C with gcc -m32 (KH1_HOST), count failures and undefined symbols, link out/host/kh1-host"
+	@echo "make vita             phase 5: the Vita build, out/vita/kh1-decomp.vpk (needs VITASDK; docs/vita-build.md)"
+	@echo "make vita-armcheck    phase 5: the same code for ARM Linux, out/armlinux/kh1-arm, for qemu-arm"
 
 $(ORIG):
 	@echo "error: $(ORIG) not found. Copy the ELF from your own disc to the repo root." >&2
@@ -73,6 +75,15 @@ build: $(PATCHED)
 # a PS2 build cuts. Touches only out/host/.
 host-census: $(PIECES_STAMP)
 	@$(PY) -I tools/host/census.py --exe
+
+# Phase 5 Vita build (docs/vita-build.md): the same files with vitasdk, packed as a VPK that
+# holds bytes of the user's ELF (never share it).  vita-armcheck builds them for ARM Linux to run
+# the host runner under qemu-arm.  Touch only out/vita/ and out/armlinux/.
+vita: $(PIECES_STAMP) $(GEN)/symbols.ld
+	@$(PY) -I tools/vita/build.py
+
+vita-armcheck: $(PIECES_STAMP) $(GEN)/symbols.ld
+	@$(PY) -I tools/vita/build.py --linux-arm
 
 $(PATCHED): $(ORIG) layout.tsv kh1.ld $(GEN)/symbols.ld $(OBJS) tools/kh1tool.py
 	@$(KH1) link-script

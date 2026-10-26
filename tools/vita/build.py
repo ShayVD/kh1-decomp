@@ -1,0 +1,265 @@
+#!/usr/bin/env python3
+"""The first Vita build (phase 5, docs/vita-build.md): the game's C, the data pieces and the
+platform code (host/null's GS model and DMA walk, host/port, host/vita) compiled for the Vita's
+Cortex-A9 with vitasdk, linked, and packed as out/vita/kh1-decomp.vpk.
+
+    python3 -I tools/vita/build.py               # needs $VITASDK (or /usr/local/vitasdk) and a
+                                                  # PS2 `make` first (the data pieces, symbols.ld)
+    python3 -I tools/vita/build.py --linux-arm   # the same code for 32-bit ARM Linux (the host's
+                                                  # null runner, host/null/main.c): out/armlinux/kh1-arm,
+                                                  # run under qemu-arm (gcc-arm-linux-gnueabihf,
+                                                  # qemu-user), to check the ARM build without a Vita
+
+It reuses tools/host/census.py's compile and link steps with the Vita's compiler: the game files
+and the drafts of the unmatched functions as census --exe takes them, the D_ names only the PS2
+linker script places (defs_host.c) and the functions.tsv aliases (aliases.ld).
+
+**The VPK holds bytes from your own ELF** (the data pieces and defs_host.c's initial values, as
+the host build does): it is build output for your own Vita, never to be shared or committed.
+The game's disc image is not in it; the Vita reads it from ux0:data/kh1/ (host/vita/main.c).
+
+What runs and what does not: docs/vita-build.md.
+"""
+import argparse
+import os
+import re
+import struct
+import subprocess
+import sys
+import zlib
+from concurrent.futures import ThreadPoolExecutor
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(ROOT, "tools", "host"))
+import census  # noqa: E402
+
+TITLE = "Kingdom Hearts (kh1-decomp)"
+TITLE_ID = "KHDC00001"
+VERSION = "00.01"
+
+# census.py's host flags for ARM: gnu89 and the gcc 2.96 leniencies, char signed as on the EE
+# (ARM's is unsigned), no fused multiply-add (portability rule 7)
+CFLAGS = [
+    "-std=gnu89", "-O2", "-g", "-w", "-fsigned-char", "-fno-strict-aliasing", "-ffp-contract=off",
+    "-Iinclude", "-Isrc", "-Ihost/vita/include", "-Ihost/null", "-Ihost/vita",
+    "-Wno-error=implicit-function-declaration", "-Wno-error=int-conversion",
+    "-Wno-error=incompatible-pointer-types", "-Wno-error=implicit-int",
+]
+# gcc 14 and later refuse these by default (vitasdk's gcc is 15; the Linux cross gcc may be older)
+CFLAGS_GCC14 = ["-Wno-error=return-mismatch", "-Wno-error=declaration-missing-parameter-type"]
+
+# the two targets: the Vita, and 32-bit ARM Linux for qemu-arm (the host's null runner as it is,
+# with host/vita's context switch and host/armlinux's overlay answer)
+TARGETS = {
+    "vita": dict(
+        out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA"],
+        dirs=[("null", ("main.c", "pad.c")), ("port", ()), ("vita", ())],
+        link=["-Wl,-q", "-Wl,--no-warn-rwx-segments"],
+        libs=["-lSceDisplay_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lm"]),
+    "linux-arm": dict(
+        out="out/armlinux", prefix="arm-linux-gnueabihf-", defines=["-DKH1_HOST", "-fno-pic", "-fno-stack-protector"],
+        dirs=[("null", ()), ("port", ()), ("vita", ("main.c", "pad.c", "display.c")), ("armlinux", ())],
+        link=["-no-pie", "-Wl,--no-warn-execstack"], libs=["-lm"]),
+}
+
+# The overlay entry D_00F20000: the game loads an overlay's MIPS code there and calls its first byte,
+# and the same name is the load's destination (and a sound bank's or a capture's buffer).  In the
+# files that name it, the preprocessed text's calls (`D_00F20000(` outside a declaration, or a cast
+# of it called at once, `...) D_00F20000)(`) go to kh1_ovl_entry (host/vita/main.c); every other use
+# stays the buffer.  gumisave.c's func_001b9c60 keeps a cast pointer and calls it later: on the Vita
+# that call jumps into data (the Gummi overlays are not decompiled either).
+OVL_CALL = re.compile(r"(?<![\w\s])(\s*)D_00F20000(\s*\(|\s*\)\s*\()|(\b(?:return|else|do)\s+)D_00F20000(\s*\()")
+
+
+def ovl_callers(files):
+    return set(f for f in files if "D_00F20000" in open(os.path.join(ROOT, f), errors="replace").read())
+
+
+def ovl_rewrite(text):
+    """The calls of the overlay entry in a preprocessed file to kh1_ovl_entry; the count."""
+    n = [0]
+
+    def sub(m):
+        n[0] += 1
+        if m.group(3) is not None:
+            return m.group(3) + "kh1_ovl_entry" + m.group(4)
+        return m.group(1) + "kh1_ovl_entry" + m.group(2)
+    text = OVL_CALL.sub(sub, text)
+    return "int kh1_ovl_entry();\n" + text, n[0]
+
+
+def assemble_data(asm, out):
+    """src/data/*.s for ARM: `.word` is 4 bytes as on MIPS; `@progbits` / `@object` are `%` (`@` starts
+    an ARM comment).  census.HOST_TAIL's zeros after a piece as on the host."""
+    objs = []
+    d = os.path.join(out, "data")
+    os.makedirs(d, exist_ok=True)
+    inc = open(os.path.join(ROOT, "include", "data", "piece.inc")).read().replace("@progbits", "%progbits") \
+        .replace("@object", "%object")
+    open(os.path.join(d, "piece.inc"), "w").write(inc)
+    for f in sorted(os.listdir(os.path.join(ROOT, "src", "data"))):
+        if not f.endswith(".s"):
+            continue
+        src = open(os.path.join(ROOT, "src", "data", f)).read()
+        src = src.replace('"include/data/piece.inc"', '"%s"' % os.path.join(d, "piece.inc"))
+        src = src.replace("@progbits", "%progbits").replace("@object", "%object")
+        for name, n in census.HOST_TAIL.items():
+            src = re.sub(r"^(\s*PIECE_END %s,.*)$" % name, r"\1\n\t.space 0x%x" % n, src, flags=re.M)
+        tmp = os.path.join(d, f)
+        open(tmp, "w").write(src)
+        obj = tmp[:-2] + ".o"
+        p = subprocess.run([asm, "-o", obj, tmp], cwd=ROOT, capture_output=True, text=True)
+        if p.returncode:
+            print("data: %s does not assemble: %s" % (f, p.stderr.strip().splitlines()[0]))
+        else:
+            objs.append(obj)
+    return objs
+
+
+def compile_game(cc, files, ovl, out):
+    calls = {}
+
+    def one(path):
+        obj = os.path.join(out, path + ".o")
+        os.makedirs(os.path.dirname(obj), exist_ok=True)
+        src = path
+        if path in ovl:
+            p = subprocess.run([cc] + census.CFLAGS + ["-E", path], cwd=ROOT, capture_output=True, text=True)
+            if p.returncode:
+                return path, False, census.first_error(p.stderr) or [p.stderr.strip()[-300:]]
+            text, calls[path] = ovl_rewrite(p.stdout)
+            src = os.path.join(out, path + ".i")
+            open(src, "w").write(text)
+        p = subprocess.run([cc] + census.CFLAGS + ["-c", "-o", obj, src], cwd=ROOT, capture_output=True, text=True,
+                           env=dict(os.environ, LC_ALL="C"))
+        errs = census.first_error(p.stderr)
+        return path, p.returncode == 0, errs or ([p.stderr.strip()[-300:]] if p.returncode else [])
+    with ThreadPoolExecutor(os.cpu_count() or 4) as ex:
+        res = list(ex.map(one, files))
+    compile_game.calls = calls
+    return res
+
+
+def png_icon(path, w, h, rgb):
+    """A plain one-colour 8-bit paletted PNG (the LiveArea wants indexed colour), made here: no
+    image is committed."""
+    def chunk(t, d):
+        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+    raw = b"".join(b"\0" + bytes(w) for _ in range(h))
+    data = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 3, 0, 0, 0)) \
+        + chunk(b"PLTE", bytes(rgb)) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
+    open(path, "wb").write(data)
+
+
+def run(args, what):
+    p = subprocess.run(args, cwd=ROOT, capture_output=True, text=True)
+    if p.returncode:
+        print("vita: %s failed:\n%s%s" % (what, p.stdout[-3000:], p.stderr[-3000:]))
+        sys.exit(1)
+    return p
+
+
+def tool_prefix(name):
+    """The compiler prefix's directory: vitasdk's bin, or PATH for the Linux cross compiler."""
+    if name == "vita":
+        sdk = os.environ.get("VITASDK", "/usr/local/vitasdk")
+        b = os.path.join(sdk, "bin")
+        if not os.path.exists(os.path.join(b, "arm-vita-eabi-gcc")):
+            sys.exit("vita: no vitasdk at %s (set VITASDK; docs/vita-build.md says how to get it)" % sdk)
+        return b + os.sep
+    p = subprocess.run(["sh", "-c", "command -v arm-linux-gnueabihf-gcc"], capture_output=True, text=True)
+    if p.returncode:
+        sys.exit("vita: --linux-arm needs arm-linux-gnueabihf-gcc (apt install gcc-arm-linux-gnueabihf qemu-user)")
+    return os.path.dirname(p.stdout.strip()) + os.sep
+
+
+def gcc_major(cc):
+    v = subprocess.run([cc, "-dumpversion"], capture_output=True, text=True).stdout.strip()
+    return int(v.split(".")[0]) if v[:1].isdigit() else 0
+
+
+def package(b, out, elf):
+    velf = os.path.join(out, "kh1.velf")
+    run([b + "vita-elf-create", elf, velf], "vita-elf-create")
+    eboot = os.path.join(out, "eboot.bin")
+    run([b + "vita-make-fself", "-s", "-c", velf, eboot], "vita-make-fself")
+    sfo = os.path.join(out, "param.sfo")
+    run([b + "vita-mksfoex", "-s", "APP_VER=" + VERSION, "-s", "TITLE_ID=" + TITLE_ID,
+         "-d", "ATTRIBUTE2=12", TITLE, sfo], "vita-mksfoex")
+    sysdir = os.path.join(out, "sce_sys")
+    os.makedirs(os.path.join(sysdir, "livearea", "contents"), exist_ok=True)
+    png_icon(os.path.join(sysdir, "icon0.png"), 128, 128, (0x20, 0x30, 0x80))
+    png_icon(os.path.join(sysdir, "livearea", "contents", "bg.png"), 840, 500, (0x10, 0x18, 0x40))
+    png_icon(os.path.join(sysdir, "livearea", "contents", "startup.png"), 280, 158, (0x20, 0x30, 0x80))
+    open(os.path.join(sysdir, "livearea", "contents", "template.xml"), "w").write(
+        '<?xml version="1.0" encoding="utf-8"?>\n<livearea style="a1" format-ver="01.00" content-rev="1">\n'
+        '  <livearea-background><image>bg.png</image></livearea-background>\n'
+        '  <gate><startup-image>startup.png</startup-image></gate>\n</livearea>\n')
+    vpk = os.path.join(out, "kh1-decomp.vpk")
+    if os.path.exists(vpk):
+        os.remove(vpk)
+    pack = [b + "vita-pack-vpk", "-s", sfo, "-b", eboot]
+    for f in ("icon0.png", "livearea/contents/bg.png", "livearea/contents/startup.png",
+              "livearea/contents/template.xml"):
+        pack += ["-a", "%s=sce_sys/%s" % (os.path.join(sysdir, f), f)]
+    run(pack + [vpk], "vita-pack-vpk")
+    return vpk
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--linux-arm", action="store_true", help="build out/armlinux/kh1-arm for qemu-arm instead")
+    a = ap.parse_args()
+    name = "linux-arm" if a.linux_arm else "vita"
+    t = TARGETS[name]
+    b = tool_prefix(name)
+    cc = b + t["prefix"] + "gcc"
+    out = os.path.join(ROOT, t["out"])
+    if not os.path.exists(os.path.join(ROOT, "out", "gen", "symbols.ld")):
+        sys.exit("vita: run the PS2 `make` first (out/gen/symbols.ld, out/data/pieces/)")
+
+    census.OUT = out
+    census.CFLAGS = CFLAGS + t["defines"] + (CFLAGS_GCC14 if gcc_major(cc) >= 14 else [])
+    census.NM = b + t["prefix"] + "nm"
+    census.TYPE_PREFIX = "%"
+    census.PLATFORM_DIRS = t["dirs"]
+    census.assemble_data = lambda: assemble_data(b + t["prefix"] + "as", out)
+    os.makedirs(out, exist_ok=True)
+
+    files = census.game_files() + census.draft_files()
+    results = compile_game(cc, files, ovl_callers(files), out)
+    bad = [r for r in results if not r[1]]
+    calls = compile_game.calls
+    print("%s: %d / %d game files compile (%d calls of the overlay entry in %d files)" %
+          (name, len(results) - len(bad), len(results), sum(calls.values()), sum(1 for v in calls.values() if v)))
+    for path, _ok, errs in bad[:20]:
+        print("  %s: %s" % (path, (errs or ["?"])[0]))
+    if bad:
+        return 1
+
+    census.link_census(results, cc)
+    objs = census.link_census.objs
+    extra = [census.link_census.script] if census.link_census.script else []
+    elf = os.path.join(out, "kh1.elf" if name == "vita" else "kh1-arm")
+    p = subprocess.run([cc] + t["link"] + ["-o", elf] + objs + extra + t["libs"], cwd=ROOT,
+                       capture_output=True, text=True)
+    if p.returncode:
+        open(os.path.join(out, "link.log"), "w").write(p.stderr)
+        syms = sorted(set(re.findall(r"undefined reference to `([^']+)'", p.stderr)))
+        lines = [l for l in p.stderr.splitlines() if "undefined reference" in l or "multiple definition" in l]
+        print("%s: the link fails (%d undefined: %s; %s/link.log)" % (name, len(syms), " ".join(syms[:30]), t["out"]))
+        print("\n".join((lines or p.stderr.splitlines())[:10]))
+        return 1
+    print("%s: %s linked (%d objects)" % (name, os.path.relpath(elf, ROOT), len(objs)))
+    if name == "linux-arm":
+        print("linux-arm: run it as the host runner: KH1_HOST_ISO=... QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf "
+              "qemu-arm %s" % os.path.relpath(elf, ROOT))
+        return 0
+    vpk = package(b, out, elf)
+    print("vita: %s (%d KiB): your own build, never share it (docs/vita-build.md)"
+          % (os.path.relpath(vpk, ROOT), os.path.getsize(vpk) // 1024))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
