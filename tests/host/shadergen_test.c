@@ -17,6 +17,9 @@
  *   sampler   REGION_CLAMP on U and V, point and bilinear: the shader's clamp, then the GPU's addressing and
  *             filter, is kh1_sampler_port's sample; ST / Q divided
  *   vertex    the 7 vertex shaders map a vertex.h vertex to clip space and pass its attributes on
+ *   layout    (session 129) vertex.h's GXM attribute table against each generated vertex shader's inputs:
+ *             names and order, components (floatN), offsets and sizes inside the 32-byte KH1GpuVert; two
+ *             deliberate breaks of the table caught
  *   fetch     (session 128) the frame read: every FETCH form of the blend sweep on CT32 and CT24 frames is
  *             kh1_blend_gpu's pixel (the GS's formula on what the target holds), Ad read back for every
  *             stored byte, and FBMSK's per-bit merges (the shadow casters' 0x00000001 among them) are the
@@ -61,6 +64,15 @@ static void uniforms(const KH1DrawState *d) {
 }
 
 /* the shader for a key, generated and counted; 0 when not generated */
+static int find_str(const char *h, const char *n) {
+    u32 i, j;
+    for (i = 0; h[i]; i++) {
+        for (j = 0; n[j] && h[i + j] == n[j]; j++) {}
+        if (!n[j]) return 1;
+    }
+    return 0;
+}
+
 static const char *frag(const KH1ShaderKey *k) {
     u32 n = kh1_shader_frag_cg(k, text, sizeof text);
     if (!n) return 0;
@@ -120,6 +132,12 @@ static void parse(void) {
         k.discard = KH1_DISCARD_FAIL;
         if (frag(&k)) { memset(&run, 0, sizeof run); run.tex = tex_one; exec(text); if (run.bad) ok = 0; }
     }
+    k = key0(); /* session 129: DATE's clear (stencil only) */
+    k.setup = 2;
+    CHECK("parse: DATE's clear generates (no discard, no sample)", frag(&k) && !find_str(text, "clip") && !find_str(text, "tex2D"));
+    memset(&run, 0, sizeof run);
+    exec(text);
+    if (run.bad) ok = 0;
     k = key0();
     k.fetch = 1;
     k.fpsm = 2;
@@ -646,6 +664,71 @@ static void vertex(void) {
     CHECK("vertex: the 7 vertex shaders map target pixels to clip space and pass the attributes on", !bad);
 }
 
+/* ---- the GXM vertex stream (vertex.h kh1_vertex_attrs) ---- */
+static int same(const char *a, const char *b, u32 n) {
+    u32 i;
+    for (i = 0; i < n; i++)
+        if (a[i] != b[i]) return 0;
+    return b[n] == 0;
+}
+static u32 field_off(const char *name) { /* where vertex.h's comment puts each input, by offsetof */
+    if (name[0] == 'p') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->x;
+    if (name[0] == 'c') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->rgba;
+    if (name[0] == 't') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->s;
+    return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->f;
+}
+/* the shader text's inputs (the lines "    floatN name : SEMANTIC," before the uniforms) against a table:
+ * 0 when they agree */
+static u32 layout_diff(const char *cg, const KH1VtxAttr *a, u32 na) {
+    const char *p = cg;
+    u32 n = 0, bad = 0;
+    while (*p && !(p[0] == '(' && p[1] == '\n')) p++;
+    if (!*p) return 1;
+    p += 2;
+    for (;;) {
+        const char *nm;
+        u32 comps = 1, len = 0, size;
+        while (*p == ' ') p++;
+        if (p[0] != 'f' || p[1] != 'l') break; /* "uniform ...": the inputs end */
+        p += 5;                                  /* "float" */
+        if (*p >= '1' && *p <= '4') comps = (u32)(*p++ - '0');
+        nm = ++p;
+        while (nm[len] && nm[len] != ' ') len++;
+        p = nm + len;
+        while (*p && *p++ != '\n') {}
+        if (n >= na) { bad++; break; }
+        size = a[n].format == KH1_VFMT_F32 ? 4 : 1;
+        if (!same(nm, a[n].name, len) || comps != a[n].count || a[n].offset != field_off(a[n].name) ||
+            a[n].offset + comps * size > KH1_VTX_STRIDE)
+            bad++;
+        /* the formats vertex.h gives: position and texcoords F32, colour and F U8N */
+        if ((a[n].name[0] == 'p' || a[n].name[0] == 't') != (a[n].format == KH1_VFMT_F32)) bad++;
+        n++;
+    }
+    return bad + (n != na);
+}
+static void layout(void) {
+    u32 i, bad = 0, caught = 0;
+    KH1VtxAttr a[4];
+    CHECK("layout: KH1GpuVert is the stream's 32-byte stride", sizeof(KH1GpuVert) == KH1_VTX_STRIDE);
+    for (i = 0; i < 7; i++) {
+        u32 n = kh1_vertex_attrs(i, a);
+        kh1_shader_vert_cg(i, text, sizeof text);
+        if (!n || layout_diff(text, a, n)) bad++, printf("shadergen_test: layout: variant %u (%s)\n", i, kh1_vertkey_str(i));
+    }
+    CHECK("layout: each vertex shader's inputs are vertex.h's attributes (names, components, offsets)", !bad);
+    /* the comparison sees a wrong offset and a wrong component count */
+    kh1_vertex_attrs(6, a);
+    kh1_shader_vert_cg(6, text, sizeof text);
+    a[2].offset += 4;
+    caught += layout_diff(text, a, 4) != 0;
+    a[2].offset -= 4;
+    a[2].count = 2;
+    caught += layout_diff(text, a, 4) != 0;
+    CHECK("layout: two deliberate table breaks caught", caught == 2);
+    CHECK("layout: no variant past 6", kh1_vertex_attrs(7, a) == 0);
+}
+
 int main(void) {
     parse();
     texfunc();
@@ -655,6 +738,7 @@ int main(void) {
     texfmt();
     sampler();
     vertex();
+    layout();
     fetch();
     printf("shadergen_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;

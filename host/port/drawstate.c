@@ -95,16 +95,25 @@ void kh1_drawstate_of(const KH1DrawRegs *r, KH1DrawState *out) {
     for (i = 0; i < out->n; i++) pipe_of(out, &sk, cls, &out->atest.draw[i], &out->pipe[i]);
     if (out->n && out->pipe[0].shader.discard) out->u.aref = out->atest.aref;
     if (out->n && out->atest.date) {
-        /* the set-up: the rectangle's triangles, no colour, no depth, stencil written, its own shader */
+        /* the set-up: the draw's own primitives (session 129: its class, so a line or point draw marks its
+         * own pixels), no colour, no depth, stencil written, its own shader */
         KH1PipeKey *p = &out->setup_pipe;
         out->setup = 1;
-        p->cls = KH1_PA_TRIANGLES;
+        p->cls = (u8)cls;
         p->ztest = KH1_ZTST_ALWAYS;
         p->stencil = 2;
         p->shader.setup = 1;
         p->shader.datm = out->atest.datm;
         p->shader.discard = KH1_DISCARD_FAIL;
     }
+}
+
+void kh1_date_clear_pipe(const KH1PipeKey *setup, KH1PipeKey *out) {
+    *out = *setup;
+    out->stencil = 3;
+    out->shader.setup = 2;
+    out->shader.datm = 0;
+    out->shader.discard = KH1_DISCARD_NONE;
 }
 
 const char *kh1_pipekey_str(const KH1PipeKey *k) {
@@ -122,8 +131,9 @@ const char *kh1_pipekey_str(const KH1PipeKey *k) {
     p += sprintf(p, "%s", cls[k->cls & 3]);
     if (k->blend) p += sprintf(p, " %s/1/%s", eq[k->eq % 3], bf[k->fd % 6]);
     p += sprintf(p, " mask %x z %s%s", k->mask, zt[k->ztest & 3], k->zwrite ? "/w" : "");
-    if (k->stencil) p += sprintf(p, " stencil %s", k->stencil == 1 ? "test" : "set");
+    if (k->stencil) p += sprintf(p, " stencil %s", k->stencil == 1 ? "test" : k->stencil == 3 ? "clear" : "set");
     p += sprintf(p, " |");
+    if (s->setup == 2) { sprintf(p, " date-clear"); return b; }
     if (s->setup) { sprintf(p, " date-setup datm %u", s->datm); return b; }
     if (s->tex)
         p += sprintf(p, " %s%s %s%s %s%s%s%s", fmt[s->tex % 5], s->texa ? "+texa" : "", tfx[s->tfx & 3],
@@ -168,7 +178,12 @@ void kh1_pipeset_add(KH1PipeSet *s, const KH1DrawState *d) {
     u8 smp[4];
     s->states++;
     if (!d->n) { s->empty++; return; }
-    if (d->setup) add_pipe(s, &d->setup_pipe);
+    if (d->setup) {
+        KH1PipeKey c;
+        kh1_date_clear_pipe(&d->setup_pipe, &c);
+        add_pipe(s, &c);
+        add_pipe(s, &d->setup_pipe);
+    }
     for (i = 0; i < d->n; i++) add_pipe(s, &d->pipe[i]);
     if (!d->pipe[0].shader.tex) return;
     smp[0] = d->sampler.u.addr;

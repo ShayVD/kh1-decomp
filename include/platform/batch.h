@@ -23,7 +23,9 @@
  * window draws in the same call.  A state that draws nothing (ZTST NEVER, PRIM 7) neither opens nor ends
  * a batch.  primasm.h's vertex queue is the GIF parser's and is carried across the cut (a strip whose
  * ALPHA_1 changes between kicks goes on in the next batch).  A batch issues drawstate.h's n draws plus
- * DATE's set-up: that is its draw calls.
+ * DATE's clear and set-up (session 129: two): that is its draw calls.  A DATE primitive is a batch of its
+ * own (session 129: the GS tests each pixel as it writes it, so a set-up for several primitives at once is
+ * not exact when they overlap).
  *
  * Session 125 (renderer-spec 4.13 "Session 125", vita-port-plan 5.1bm): **column groups**.  The PS2's
  * texture-cache trick (5.4 "Session 93") draws one full-screen copy 16 times, each under a 32-pixel

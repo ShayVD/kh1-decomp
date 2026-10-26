@@ -75,3 +75,16 @@ u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask) {
     if (mask) *mask = m;
     return n;
 }
+
+u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[4]) {
+    u32 tex = index >= 5 ? KH1_VTX_STQ : index >= 3 ? KH1_VTX_UV : KH1_VTX_NONE, fog = index && !(index & 1), n = 0;
+    if (index > 6) return 0;
+    /* the order is shadergen.c's kh1_shader_vert_cg: pos, col, tc, fog */
+    out[n].name = "pos", out[n].offset = 0, out[n].format = KH1_VFMT_F32, out[n++].count = 3;
+    if (index) out[n].name = "col", out[n].offset = 24, out[n].format = KH1_VFMT_U8N, out[n++].count = 4;
+    if (tex) out[n].name = "tc", out[n].offset = 12, out[n].format = KH1_VFMT_F32, out[n++].count = tex == KH1_VTX_STQ ? 3 : 2;
+    if (fog) out[n].name = "fog", out[n].offset = 28, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
+    return n;
+}
+
+const char *kh1_vfmt_str(u32 format) { return format == KH1_VFMT_F32 ? "F32" : format == KH1_VFMT_U8N ? "U8N" : "?"; }

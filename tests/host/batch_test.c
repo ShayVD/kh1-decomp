@@ -8,7 +8,8 @@
  *   moved     XYOFFSET written between sprites: still one batch (the vertices are mapped on the CPU).
  *   breaks    a texture upload between two sprites in one state: two batches, one opened by the transfer;
  *             TEX0 / FOGCOL / SCISSOR / FRAME changes: a texture, a uniform, a scissor, a render pass.
- *   date      a DATE draw: each batch two draw calls (the set-up and the draw).
+ *   date      a DATE draw: each primitive a batch of its own (session 129), each batch three draw calls (the
+ *             stencil clear, the set-up and the draw).
  *   frames    kh1_batch_frame: five frames, the totals and the largest frame.
  * Session 125 (batch.h's column groups, renderer-spec 4.13 "Session 125"):
  *   columns   two full-screen sprites drawn under each of the 16 32-pixel column scissors (the PS2's
@@ -158,7 +159,8 @@ int main(void) {
     sprite(0, 0);
     sprite(16, 0);
     c = b->frame;
-    CHECK("date: one batch of two draw calls (the set-up and the draw)", c.batches == 1 && c.draws == 2 && c.prims == 2);
+    CHECK("date: a batch per primitive, three draw calls each (the clear, the set-up and the draw)",
+          c.batches == 2 && c.draws == 6 && c.prims == 2);
     c = frame();
 
     CHECK("frames: five frames, the largest the breaks' 7 batches and the glyphs' 100 primitives",

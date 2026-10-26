@@ -266,6 +266,13 @@ static void game(void) {
     CHECK("brightfade's DATE: a set-up pipeline (stencil set, DATM 1) and a draw that tests it",
           d.n == 1 && d.setup && d.setup_pipe.stencil == 2 && d.setup_pipe.shader.setup && d.setup_pipe.shader.datm == 1 &&
           d.setup_pipe.mask == 0 && !d.setup_pipe.zwrite && d.pipe[0].stencil == 1);
+    {   /* session 129: the clear before it, and the set-up in the draw's own class */
+        KH1PipeKey c;
+        kh1_date_clear_pipe(&d.setup_pipe, &c);
+        CHECK("DATE's clear: stencil 0 over the same primitives, no discard, no colour, no depth",
+              c.stencil == 3 && c.shader.setup == 2 && !c.shader.discard && c.mask == 0 && !c.zwrite &&
+              c.cls == d.setup_pipe.cls && c.cls == d.pipe[0].cls);
+    }
     /* nothing drawn */
     env(&r, 6);
     r.test_lo = test_word(0, 0, 0, 0, 0, 0, 1, 0);
@@ -294,9 +301,9 @@ static void game(void) {
     r.test_lo = test_word(0, 0, 0, 0, 0, 0, 1, 0);
     kh1_drawstate_of(&r, &d);
     kh1_pipeset_add(s, &d);
-    CHECK("the set: 4 states (1 empty), 4 pipelines (the two-draw state twice, DATE's draw and set-up), 4 shaders",
-          s->states == 4 && s->empty == 1 && s->npipe == 4 && s->pipe_uses[0] == 2 && s->pipe_uses[1] == 2 &&
-          s->nshader == 4);
+    CHECK("the set: 4 states (1 empty), 5 pipelines (the two-draw state twice, DATE's clear, set-up and draw), 5 shaders",
+          s->states == 4 && s->empty == 1 && s->npipe == 5 && s->pipe_uses[0] == 2 && s->pipe_uses[1] == 2 &&
+          s->nshader == 5);
 }
 
 int main(void) {
