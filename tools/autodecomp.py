@@ -284,7 +284,10 @@ def score(ours: bytes, theirs: bytes) -> int:
     a = [ours[i:i + 4] for i in range(0, len(ours), 4)]
     b = [theirs[i:i + 4] for i in range(0, len(theirs), 4)]
     m = sum(x.size for x in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks())
-    return len(a) + len(b) - 2 * m
+    # a draft that lost most of the code (m2c's --void dropping the return
+    # value's computation: `jr ra; nop`) is no starting point for the search
+    lost = len(b) if 3 * len(a) < len(b) else 0
+    return len(a) + len(b) - 2 * m + lost
 
 
 def why_score(why: str) -> float:

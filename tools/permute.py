@@ -245,6 +245,12 @@ def variants(code: str) -> list[str]:
         w = callee_stubs(v)
         if w != v:
             out.append(w)
+    # overlay data defined above the function: gcc then fills delay slots with
+    # its %lo loads (gb func_00f3c1d8)
+    for v in list(out[-2:]) + [code]:
+        w = data_defs(v)
+        if w != v:
+            out.append(w)
     # all globals volatile / none volatile, as search starting points (the
     # search toggles one at a time, which misses fixes needing two edits)
     for v in list(out) + [code]:
@@ -276,6 +282,20 @@ def callee_stubs(code: str) -> str:
         body = "{}" if rt == "void" else "{ return 0; }"
         return f"CONTEXT_ONLY {rt} {name}({params}) {body}"
     return PROTO_RE.sub(stub, code)
+
+
+DATA_RE = re.compile(r"^extern (?!volatile\b)([A-Za-z_][\w ]*?[\s*]+)(D_([0-9A-F]{8}))((?:\[[^\]]*\])*);", re.M)
+
+
+def data_defs(code: str) -> str:
+    """`extern T D_X;` of overlay data as zero-initialised CONTEXT_ONLY definitions."""
+    def d(m: re.Match) -> str:
+        if not 0x00F20000 <= int(m.group(3), 16) < 0x01200000:
+            return m.group(0)
+        dims = re.sub(r"\[\]", "[1]", m.group(4))
+        init = "{ 0 }" if dims or not re.search(r"\*|\b(?:[su](?:8|16|32|64)|f32|M2C_UNK\w*|int|char|short|long|float)\s*$", m.group(1)) else "0"
+        return f"CONTEXT_ONLY {m.group(1)}{m.group(2)}{dims} = {init};"
+    return DATA_RE.sub(d, code)
 
 
 ABS_DEREF_RE = re.compile(r"\*\((\w+(?: \w+)?) \*\)0x([0-9A-Fa-f]{6,8})\b")
