@@ -14,7 +14,11 @@
  * The left pillarbox carries a status strip so a black picture can be told from a hang: a square
  * that changes colour every 30 frames (the vblank count moves), a green bar per 256 disc reads
  * and a blue one per frame copy shown.  With no frame copy for 30 vblanks (a load) the last picture
- * is drawn again with the strip.  Not part of the PS2 build. */
+ * is drawn again with the strip.
+ *
+ * Session 136: when the GPU renderer runs (gxm.c, kh1_vita_present_gpu), the picture is its display target,
+ * drawn each vblank after the frame's GPU scenes (main.c), and the GS model draws no pixels.  Not part of the
+ * PS2 build. */
 #include <psp2/display.h>
 #include <psp2/gxm.h>
 #include <psp2/kernel/processmgr.h>
@@ -38,6 +42,7 @@ static KH1Canvas canvas;
 static u32 pic_w, pic_lines;               /* the texture's picture: columns, the display's lines */
 static unsigned long status_frames, drawn_at; /* the last vblank's; the vblank of the last draw */
 static unsigned status_reads;
+static int gpu; /* session 136: the picture is gxm.c's display target */
 volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown; /* the watchdog's (main.c) */
 volatile u32 kh1_vita_us_present; /* session 135: microseconds in present_buffer (the watchdog's) */
 
@@ -69,7 +74,10 @@ static void strip(void) {
 static void draw(void) {
     vita2d_start_drawing();
     vita2d_clear_screen();
-    if (pic_w && pic_lines)
+    if (gpu) {
+        if (kh1_vita_gxm_present(canvas.ox, canvas.oy, 512.0f * canvas.s, 384.0f * canvas.s)) shown++;
+        kh1_vita_shown = shown;
+    } else if (pic_w && pic_lines)
         vita2d_draw_texture_part_scale(tex, canvas.ox, canvas.oy, 0, 0, (float)pic_w, (float)pic_lines, canvas.s,
                                        canvas.s * 384.0f / (float)pic_lines);
     strip();
@@ -116,12 +124,26 @@ static void after_send(u32 tadr) {
 
 void kh1_vita_present_on(void) { kh1_dma_after_send = after_send; }
 
+/* session 136: the GPU's picture; the sends are still counted for the watchdog */
+static void count_send(u32 tadr) {
+    kh1_vita_sends++;
+    kh1_vita_last_send = tadr;
+}
+
+void kh1_vita_present_gpu(void) {
+    gpu = 1;
+    kh1_dma_after_send = count_send;
+}
+
+/* session 136: each vblank after the GPU's frame (main.c) */
+void kh1_vita_draw(void) { draw(); }
+
 /* each vblank (main.c): the strip's counts, drawn with the last picture when no frame copy has
  * been shown for 30 vblanks */
 void kh1_vita_status(unsigned long frames, unsigned reads) {
     status_frames = frames;
     status_reads = reads;
-    if (tex && frames - drawn_at >= 30) draw();
+    if (tex && !gpu && frames - drawn_at >= 30) draw();
 }
 
 /* a whole-screen colour (the "no disc" screen) */
