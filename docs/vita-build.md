@@ -189,6 +189,39 @@ No crash in either. The art stage is still far from 60: its draws are not the fa
 need profiling on the real disc. The watchdog line now also gives, of each 2 s, the ms spent in the
 vblank wait and in the present; the rest is the game and the chain walk (the GS model's drawing).
 
+**On the real disc** (the host runner with the user's image, START at frame 1300, 2000 frames,
+KH1_HOST_SHOT=640:362; callgrind over frames 1700-1800, the menu up over the art):
+
+- **The menu text was never drawn.** dktitle.x's menu lines (func_00f201c8: a 4-vertex TRISTRIP, the
+  alpha fading to the right) and their bars (func_00f203a8) give TEX0 CPSM 1 (CT24), which the GS
+  model refused as a CLUT format. The entries hold the glyphs' coverage in their alpha (CBP 0x38F5:
+  black, alpha 0 .. 0x80), so CPSM CT24 is now read as CT32 (`cpsm_of`, gsmem_test checks it), and
+  the strips' rectangles fill through gs_quad (gsregs.c) with each pixel's colour between the four
+  corners'. NEW GAME / LOAD / SPECIAL MOVIE now show.
+- **Every texture and CLUT is uploaded again each frame** with the same bytes (~800,000 pixels:
+  two CT32 512 x 192, a T4 512 x 384, the menu's eight 512 x 32, two CT24 512 x 192 into the 3D
+  target, the CLUTs). Each moved the pages' stamps, so the present's texture cache read 2.7 million
+  texels back a frame to hash them. A write that stores the bits already there now keeps the stamp
+  (`mark`): the run's 13,318 textured draws became stamp hits, 0 texels hashed after the first.
+  The uploads keep each rectangle's addresses (`trx_addrs`, a 4 MB store) and write CT32 / PSMT8 /
+  PSMT4 pieces in one loop (`trx_bulk`).
+- One full-screen blended layer reads a render target's CT24 texels (not cacheable) and went through
+  the general loop; the art loop now reads CT32 / CT24 texels in place, takes the quads (weights a
+  column / row instead of two divisions a pixel), and the art's own blend ((Cs - Cd) x As + Cd from
+  a palette or CT32 texels) has a loop of its own.
+
+| real disc, frames 1700-1800 | instructions a frame (callgrind, x86 -O1) |
+|---|---|
+| before (no text drawn) | ~570 M |
+| text drawn, stamps kept | ~277 M before the last two items |
+| host run, 2000 frames with shots | 61 s -> 39 s -> 29 s |
+
+Every one of the 1991 shots is byte-identical through each step (old against new binary), and
+gsfast_test now also covers quads, uploads in random pieces over drawn pages, and denser texels
+(each deliberate break tried is caught). What is left is mostly the four full-screen blended art
+layers (~785,000 blended pixels a frame) plus the frame copy and clear: the CPU model's floor. The
+real fix for that is the GXM renderer, not more of this model. Not yet measured in Vita3K.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
