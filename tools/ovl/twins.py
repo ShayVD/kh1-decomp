@@ -62,6 +62,15 @@ def norm(lines: list[str], start: int) -> list[str]:
     return out
 
 
+BIGNUM = re.compile(r"(?<![\w.+-])-?\d{4,}\b")
+
+
+def loose(key: tuple) -> tuple:
+    """A shape with large literals masked too: the asm printer leaves a %lo it lost
+    across a branch as a plain offset (`lw v0,23776(s0)`), which differs per overlay."""
+    return tuple(BIGNUM.sub("N", ln) for ln in key)
+
+
 def mapping(src: list[str], dst: list[str]) -> dict[str, str] | None:
     m: dict[str, str] = {}
     for a, b in zip(src[1:], dst[1:]):
@@ -120,12 +129,15 @@ def main() -> int:
     targets = sys.argv[1:] or overlays()
     asm = {n: dump_asm(n) for n in overlays()}
     shapes: dict[tuple, list[tuple[str, str]]] = {}
+    loose_shapes: dict[tuple, list[tuple[str, str]]] = {}
     for n in overlays():
         done = matched(n)
         for f in done:
             if f in asm[n]:
                 start = int(f[5:], 16)
-                shapes.setdefault(tuple(norm(asm[n][f], start)), []).append((n, f))
+                key = tuple(norm(asm[n][f], start))
+                shapes.setdefault(key, []).append((n, f))
+                loose_shapes.setdefault(loose(key), []).append((n, f))
     srcs = {n: sources(n) for n in overlays()}
     found = 0
     for t in targets:
@@ -134,7 +146,7 @@ def main() -> int:
             if g in done or list((ROOT / "ovl" / t / "hand").glob(f"{g}.*c")):
                 continue
             key = tuple(norm(lines, int(g[5:], 16)))
-            for n, f in shapes.get(key, []):
+            for n, f in shapes.get(key, []) or loose_shapes.get(loose(key), []):
                 code = srcs[n].get(f)
                 if code is None:
                     continue
