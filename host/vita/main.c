@@ -20,6 +20,7 @@
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
 #include <psp2/kernel/processmgr.h>
+#include <psp2/kernel/threadmgr.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -115,6 +116,23 @@ int kh1_ovl_entry(int cmd, int arg) {
     return 0;
 }
 
+/* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
+ * means no vblank: this says whether DMA sends still move) */
+extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
+static int watchdog(SceSize args, void *argp) {
+    unsigned long last = (unsigned long)-1;
+    (void)args;
+    (void)argp;
+    for (;;) {
+        sceKernelDelayThread(2000000);
+        vlog("kh1-vita: watchdog %llu ms: frame %lu, %u disc reads, %u sends (last 0x%08x), %u shown%s\n",
+             (unsigned long long)(sceKernelGetProcessTimeWide() / 1000), frames, kh1_host_cd_reads,
+             kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown, frames == last ? " (no vblank since the last)" : "");
+        last = frames;
+    }
+    return 0;
+}
+
 static void config(char *iso, int n) {
     char path[128], line[256];
     FILE *f;
@@ -190,6 +208,10 @@ int main(int argc, char **argv) {
     kh1_present_pal(1); /* the indexed decodes through the port's palette cache */
     kh1_present_tex(1); /* the textured sprites through the port's texture cache */
     kh1_vita_present_on();
+    {
+        SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, 0, 0);
+        if (t >= 0) sceKernelStartThread(t, 0, 0);
+    }
     vlog("kh1-vita: func_00100558 (the game's main)\n");
     func_00100558(argc, argv);
     vlog("kh1-vita: func_00100558 returned after %lu frames, %u disc reads, %lu overlay calls\n", frames,

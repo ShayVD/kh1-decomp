@@ -31,6 +31,7 @@ static KH1Canvas canvas;
 /* for each screen column / row, the display's column / line (-1: outside the picture) */
 static s16 col_of[FB_W], line_of[FB_H];
 static u32 line_buf[512];
+volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown; /* the watchdog's (main.c) */
 
 int kh1_vita_display_init(const void *frame_copy_send) {
     int i;
@@ -95,12 +96,15 @@ static void present_buffer(u32 bp, u32 bw, u32 psm, u32 lines) {
         }
     }
     shown++;
+    kh1_vita_shown = shown;
     kh1_vita_flip();
 }
 
 /* host/null/dmawalk.c's hook after each send: the frame copy's FRAME is the display buffer */
 static void after_send(u32 tadr) {
     const KH1GsReg *r;
+    kh1_vita_sends++;
+    kh1_vita_last_send = tadr;
     if (tadr != frame_copy) return;
     r = &kh1_gs_state()->ctx[0].frame;
     present_buffer((r->lo & 0x1FF) * 32, r->lo >> 16 & 63, r->lo >> 24 & 63, 448);
