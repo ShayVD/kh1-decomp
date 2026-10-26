@@ -1,3 +1,6 @@
+/* dktitle.x func_00f25c40: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+#include "ovl.h"
+
 typedef struct { char *(*f0)(void); s32 (*f4)(void); s32 (*f8)(void); s32 (*fc)(void); s32 x10; char *(*f14)(void); } Cfg;
 typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 mode : 2; u32 hi : 3; } __attribute__((packed)) Sema;
 typedef unsigned int size_t;

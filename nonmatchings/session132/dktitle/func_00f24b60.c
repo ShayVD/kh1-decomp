@@ -1,3 +1,7 @@
+/* dktitle.x func_00f24b60: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+#include "ovl.h"
+#include "platform/thread.h"
+
 typedef unsigned int size_t;
 typedef struct { char *(*f0)(void); s32 (*f4)(void); s32 (*f8)(void); s32 (*fc)(void); s32 x10; char *(*f14)(void); s32 x18; s32 (*f1c)(void); } Cfg;
 void *memset(void *, int, size_t);
@@ -125,7 +129,7 @@ void func_00f24b60(void) {
     D_00F2C8B0 = func_00f26648(D_00F274F8, D_00F2C8AC, 64, 0);
     D_00F2C8B4 = func_00f26648(D_00F27510, D_00F2C8B0, 256, 0);
     D_00F2C8D0 = 0x20000;
-    if ((u32)(D_00F2C8B4 + 0x20000) >= (u32)func_00f20000) __asm__ volatile("break");
+    if ((u32)(D_00F2C8B4 + 0x20000) >= (u32)func_00f20000) PlatBreak();
     func_001f31a8(D_00F26EA0, 1);
     D_00F2C89C = 1;
     func_0024e468(30);

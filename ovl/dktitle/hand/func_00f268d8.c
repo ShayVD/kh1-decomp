@@ -1,5 +1,6 @@
 /* dktitle.x func_00f268d8: matched by hand. */
 #include "ovl.h"
+#include "platform/thread.h"
 
 u8 *func_00f247a0(u8 *, u8 *, s32, s32, s32, s32, s32, u8 *, s32, u64, s32, u64, u8 *, s32);
 u8 *func_00f26898(u8 *);
@@ -47,7 +48,7 @@ void func_00f268d8(void) {
     p = func_00f247a0(b + 0x2A000, b + 0x2E000, 368, 0, 128, 128, 8, rgba, 0, 72, 0, 0x3001D, p, 0x2600);
     p = func_00f247a0(b + 0x2A000, b + 0x2E000, 368, 0, 128, 128, 8, rgba, 0, 68, 0, 0x3001D, p, 0x2600);
     p = func_00f26898(p);
-    if ((s32)p >= (s32)(D_00F2C8B4 + D_00F2C8D0)) __asm__ volatile("break");
+    if ((s32)p >= (s32)(D_00F2C8B4 + D_00F2C8D0)) PlatBreak();
     sceGsSyncPath(0, 0);
     sceDmaSend(ch, D_00F2C8B4);
     sceGsSyncPath(0, 0);

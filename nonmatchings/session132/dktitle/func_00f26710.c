@@ -1,3 +1,6 @@
+/* dktitle.x func_00f26710: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+#include "ovl.h"
+
 void func_00109278(void);
 s32 func_0011ef10(s32, void *);
 void func_0020b968(void);

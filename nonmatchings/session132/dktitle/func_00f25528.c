@@ -1,3 +1,6 @@
+/* dktitle.x func_00f25528: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+#include "ovl.h"
+
 typedef unsigned int size_t;
 void *memcpy(void *, const void *, size_t);
 void *memset(void *, int, size_t);
