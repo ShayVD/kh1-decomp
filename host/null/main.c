@@ -150,10 +150,10 @@ void kh1_host_vblank(void) {
     }
 }
 
-/* host/port/memmap.c: the PS2's 0x6A0000 - 0x1FE0000 */
+/* host/port/memmap.c: the PS2's 0x6A0000 - 0x2000000 */
 extern unsigned char kh1_memmap[];
 #define KH1_MEM_BASE 0x6A0000u
-#define KH1_MEM_END 0x1FE0000u
+#define KH1_MEM_END 0x2000000u
 /* the overlay area (host/port/memmap.c's D_00F20000, up to the slots at D_00FE0000) */
 #define KH1_OVL_BASE 0xF20000u
 #define KH1_OVL_END 0xFE0000u

@@ -46,3 +46,36 @@ runs on the fake disc.
 - The overlays call SDK functions directly (sceGsSetDefLoadImage, sceGsExecLoadImage, FlushCache,
   sceGsSyncPath ...): the port's sdk_host.c / platform code must define them (the host link lists
   any it lacks).
+
+## Session 133: on the real disc and in Vita3K
+
+- **Host runner, the user's Final Mix ISO** (KH1_BIG.iso, SHA-256 9ad74868…, which holds the
+  KH1_F131 float ELF; staged into the container in 390 MB parts, never committed):
+  `kh1-ovl: dktitle.x loaded: native C (6 pointers fixed up)`. With no pad the logo fades in by
+  frame ~1100 (the white set-up, then the logo and the small Sora / flag art). A pad script
+  (`KH1_HOST_PAD`, frame numbers = shot frames) with START at 1300 and CIRCLE every 200 frames
+  from 2000: the large hooded-Sora art fades in, New Game opens the game mode page (Final Mix
+  Beginner / Final Mix / Final Mix Proud), then the camera page (auto / manual), the sound page
+  (stereo / mono), the summary with "この設定でいいですか? はい / いいえ", and はい fades the title out.
+- **The memory map was too short**: the fade-out's capture (src/screen/capture.c func_0010a058,
+  `PlatGsExecStoreImage` 512 x 384 CT24 = 0x90000 bytes into func_001559f0(62, 2)'s buffer at
+  0x1F60000) wrote 0x10000 bytes past the old map end 0x1FE0000, over the host's `current` (ovl.c)
+  and `kh1_vsync_cb`; the next vblank called 0xF5F5F5F5 (the title's white). Without
+  `KH1_HOST_SHOT` the model's pixels are 0, so the overwrite went unseen. host/port/memmap.c now
+  runs to 0x2000000 (on the PS2 0x1FE0000 up is the main thread's stack area, whose unused bottom
+  the capture takes). gdb with a hardware watchpoint on the clobbered word found it in one run:
+  `watch -l *(int*)&kh1_vsync_cb` after `handle SIGSEGV nostop noprint pass` (every overlay call
+  on x86 is a SIGSEGV redirected by main.c, so stopping on SIGSEGV stops at the first title frame).
+- After the confirm the game makes 33 disc reads (3,905 sectors) and loads the next overlay at
+  0xF20000 (lsn 99113, 17 sectors: dkmovie.x, the opening movie), called from dkmovie.c's
+  func_00110fc8: with no native C it faults (`KH1_HOST_OVL=stub` answers it 0 and the game then
+  calls entry (2, 0) every other frame forever: the movie never ends). **The next overlay to make
+  native is dkmovie.x.**
+- **Vita3K** (v0.2.1 on the Mac, `Vita3K --frontend sdl -l 4 VPK` installs; then `-r KHDC00001`,
+  config.txt `frames=2400`; the pref path is ~/Library/Application Support/Vita3K/Vita3K/fs, ux0
+  under it): the title draws (the logo, then the hooded-Sora art faded in), no crash in 3 minutes,
+  ~20 frames a second, ~6.5 once the large art is up (the software present). No menu: no pad input
+  was given. kh1.log has no `kh1-ovl:` line although the native C ran (the picture is the title's):
+  open question, the loader's printf may not reach the funopen log on the Vita.
+- The Mac had only ~229 MB free after this run: free space before the next Vita3K run (its log at
+  TRACE filled the disk once).
