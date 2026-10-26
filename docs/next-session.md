@@ -9,13 +9,31 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac should be reachable from about 09:00 UTC on Monday 2026-10-26** (session 128 asked at 00:07 UTC; the
-user said it would be there in 9 hours and to do static work until then; sessions 49 to 128 ran without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+user said it would be there in 9 hours and to do static work until then; sessions 49 to 129 ran without it;
+session 129 finished at about 02:00 UTC, before the Mac was back). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 128, 2026-10-26)
+## Where we stopped (end of session 129, 2026-10-26)
+
+- **Session 129** (static, vita-port-plan 5.1bq): **the vertex stream as GXM reads it, DATE's set-up area.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). vertex.h's
+  `kh1_vertex_attrs`: each vertex variant's SceGxmVertexAttribute rows (input name for the regIndex lookup,
+  offset, F32 / U8N, components) and `KH1_VTX_STRIDE` 32; the UV variants now declare `float2 tc`; GXM draws are
+  indexed, so a port keeps one static U16 index buffer 0 .. n. DATE: the set-up over the command's own vertices
+  is the exact area (the GS tests only the pixels a draw writes), made exact by a stencil clear before each
+  set-up (drawstate.h `kh1_date_clear_pipe`: KH1PipeKey stencil 3, KH1ShaderKey setup 2), the set-up in the
+  draw's own primitive class, and one batch per DATE primitive (batch.c). Static set now **43 pipelines / 28
+  fragment shaders** (the clear). Tests: shadergen_test 22 ("layout"), cmdbuf_test 49 ("date": an overlapping
+  DATE frame replayed from the GXM calls with a garbage stencil gives the GS's pixels; without the clear it
+  does not), batch_test 14, drawstate_test 23. kh1.elf byte-identical, no float-untested row; selftest PASS.
+  Item 4d waited: PR #131 (the Vita build, another thread) was still open; that thread was told about both
+  interface changes. **Matching**: no new match (6,981 / 6,988); 001c62a0's draft 15 -> 14 words (an `lk0`
+  local; nonmatchings/session129/NOTES.md), 00200e28's natural-type draft 24 (ties the best). The permuter's
+  default score does not track the word count on these two: raise its register penalty and re-score every
+  output with the real build (the notes).
 
 - **Session 128** (static, vita-port-plan 5.1bp): **the frame read, the command list as GXM calls.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). shadergen.c
@@ -698,7 +716,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 129 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 130 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -794,15 +812,15 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    Session 123: if inventory.py finds GIF chains in the overlay, count the pipelines they add with
    tools/host/drawpipes.py's walk (a `--elf`-style run over the overlay's chains).
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests are skipped): (a) **the user's
-   answer on the full-width rules** (session 101's card, still unanswered at session 128): "keep them 4:3" means
+   answer on the full-width rules** (session 101's card, still unanswered at session 129): "keep them 4:3" means
    deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session
-   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the vertex stream as GXM wants it**: for
-   each of vertex.h's 7 variants the SceGxmVertexAttribute / SceGxmVertexStream table (offsets, formats: F32 x 3
-   position, U8N x 4 colour, F32 texcoords, U8N fog) as port data in host/port/, with a test that every
-   generated vertex shader's inputs and the table agree (names, components, offsets inside the 32-byte vertex);
-   (c) **the DATE set-up's rectangle**: gxmrec.c draws the set-up with the command's own vertices; check against
-   atest.h whether the GS's DATE only needs the draw's own pixels (then that is exact) and test it in
-   cmdbuf_test with a DATE frame replayed from the calls; (d) if PR #131 is merged, **wire gxmrec into
+   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the GXM vertex programs from the table**: a host check
+   that builds each SceGxmVertexAttribute array from `kh1_vertex_attrs` the way a port would (regIndex by name
+   from the generated Cg's input order) and, if a psp2cgc / vitasdk is reachable in the container (the Vita
+   thread installed one), compile the 7 vertex and 28 fragment shaders once and record which fail (the frame
+   read's `dst` declaration is the one most in doubt); (c) **the DATE clear's cost**: the fake disc and the
+   static sends have one DATE draw (brightfade); confirm in the real-disc run (item 2) that no other DATE draw
+   appears (`--draws`, TEST bit 14), else count the extra draw calls; (d) if PR #131 is merged, **wire gxmrec into
    host/vita/** behind a `KH1_VITA_GXM` switch only as a stub that logs the calls (no renderer yet), so the
    first Vita3K / hardware run shows the per-frame call counts; (e) `KH1_HOST_DMAC=defer` as the default,
    argcheck's 3 value uses and the callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
@@ -823,9 +841,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    the shadow pass's Zs against Z16S's 0xFFFF (a clamp would flatten them), the FGE draws' FOGCOL and F
    range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
 
-5. **Matching (optional, 1 worker)**: only with a new idea; session 128's permuter recipe (the context-only
-   callee copies kept) has not been tried on 001c62a0 or 00200e28 yet.
-6. End with `make progress-update SESSION=129`, refresh the per-phase table in docs/progress.md (between its
+5. **Matching (optional, 1 worker)**: only with a new idea. Session 129 ran the permuter on 001c62a0 (14 words:
+   base / b register swap and a hoisted constant) and 00200e28 (24: scheduler tie-breaks in one block); see
+   nonmatchings/session129/NOTES.md. Untried: 00110618 (93, an FP register permutation; its draft is 16 bytes
+   long) with the raised register penalty.
+6. End with `make progress-update SESSION=130`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
 7. **Once the PR is merged, message the coordinator to start the next session** (session 130) with this
