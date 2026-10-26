@@ -244,6 +244,7 @@ int main(int argc, char **argv) {
     }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
+    sceIoRemove(log); /* session 136: Vita3K's open kept the last run's tail past this run's lines (no truncate) */
     log_fd = sceIoOpen(log, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_TRUNC, 0777);
     if (log_fd >= 0) {
         FILE *f;
