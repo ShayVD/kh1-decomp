@@ -55,3 +55,13 @@ near-miss drafts here (dktitle/), listed in ovl/dktitle/drafts.tsv so the port c
 | func_00f25c40 | 245 (47 aligned) | retry loop's s6 / s7 roles |
 | func_00f24b60 | 598 | first full draft, allocation |
 | func_00f228c8 | 746 | case 18 falls into 19-21's bodies, cross-jumped menus |
+
+## Session 135: decomp-permuter (20 minutes each, 2 threads)
+
+The user OK'd the cloned decomp-permuter (2026-10-26). Each draft in ovl/dktitle/drafts.tsv and
+dkmovie's two: dkmovie func_00f20258 matched (ovl/dkmovie/hand/; func_0011ef10 declared to return a
+value). func_00f25528: permuter score 50 -> 40, 6 -> 4 words by `autodecomp.py try` (not kept: the
+draft stays the port's). dkmovie func_00f20140: 29 -> 13 words (register choice for the packet base;
+four hand variants with a `MoviePkt *` local did not help). No improvement on 00f26710, 00f241c8,
+00f20a98, 00f21068 (reorg's annul choice, as expected). The runs still going when the PR opened are
+in the PR's follow-up commit.
