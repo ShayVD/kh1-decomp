@@ -6,7 +6,8 @@
  * read as it is, not extracted.  2048-byte sectors (.iso) or raw 2352-byte ones (.bin, mode 1
  * or mode 2 form 1), as tools/shift/extract_kingdom.py reads them.  Plain stdio on the host; on
  * the Vita (KH1_VITA) the kernel's sceIo calls, whose 64-bit seek reaches past 2 GiB (newlib's
- * fseek takes a 32-bit long, and the disc is larger).  Nothing is written.  Not part of the PS2
+ * fseek takes a 32-bit long, and the disc is larger); on the 32-bit hosts glibc's fopen64 /
+ * fseeko64 for the same reason (a plain fopen of a 3.3 GiB image fails there).  Nothing is written.  Not part of the PS2
  * build. */
 #include "common.h"
 
@@ -39,13 +40,15 @@ static int read_sector(u32 lsn, u8 *buf) {
     return sceIoRead(img_fd, buf, SECTOR) == SECTOR;
 }
 #else
+void *fopen64(const char *, const char *);
+int fseeko64(void *, long long, int);
 static void *img_file;
-#define img_open(path) fopen(path, "rb")
+#define img_open(path) fopen64(path, "rb")
 #define img_close() fclose(img_file)
 
 /* one sector's 2048 data bytes; 0 if past the end of the image */
 static int read_sector(u32 lsn, u8 *buf) {
-    if (fseek(img_file, (long)lsn * img_ssize + img_off, 0) != 0) return 0;
+    if (fseeko64(img_file, (long long)lsn * img_ssize + img_off, 0) != 0) return 0;
     return fread(buf, 1, SECTOR, img_file) == SECTOR;
 }
 #endif
