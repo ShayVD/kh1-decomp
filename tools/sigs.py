@@ -14,6 +14,7 @@ tools/autodecomp.py; `tools/sigs.py func_00123456` prints one guess.
 """
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -101,6 +102,8 @@ def analyse(cfg) -> dict[int, tuple[int, int, str]]:
     import mips
     funcs = disassemble(cfg)
     sig = {a: (0, 0, "void", False) for a in funcs}
+    if K.OVL:  # calls into the main ELF read that function's arguments (its C, else a guess; fixed)
+        sig = {**_read_tsv(_main_tsv()), **source_sigs(), **sig}
     # Return values: a callee returns something if a caller reads v0 (or f0)
     # after the call before writing it.
     used_ret: dict[int, str] = {}
@@ -312,11 +315,7 @@ def prototype(name: str, s: tuple) -> str:
 def write(cfg) -> dict[int, tuple[int, int, str]]:
     sig = analyse(cfg)
     if K.OVL:  # an overlay's functions call the main ELF's: its prototypes come first
-        main_tsv = K.ROOT / "out" / "sigs.tsv"
-        if not main_tsv.exists():
-            subprocess.run([sys.executable, __file__], check=True, env={k: v for k, v in __import__("os").environ.items()
-                                                                       if k != "KH1_OVL"})
-        sig = {**_read_tsv(main_tsv), **sig}
+        sig = {**_read_tsv(_main_tsv()), **source_sigs(), **sig}
     names = {a: s for s, a in K.load_registry().items()}
     K.OUT.mkdir(parents=True, exist_ok=True)
     SIGS_TSV.write_text("addr\tint_args\tfloat_args\treturn\tvariadic\n" +
@@ -326,6 +325,50 @@ def write(cfg) -> dict[int, tuple[int, int, str]]:
               if re.match(r"^[A-Za-z_]\w*$", names.get(a, f"func_{a:08x}"))]
     SIGS_H.write_text("\n".join(lines) + "\n")
     return sig
+
+
+DEF_RE = re.compile(r"^(?!static\b|CONTEXT_ONLY\b)([A-Za-z_][\w \t*]*?)\b(\w+)\s*\(([^;{)]*(?:\([^)]*\)[^;{)]*)*)\)\s*\{", re.M)
+
+
+def source_sigs() -> dict[int, tuple[int, int, str, bool]]:
+    """The main ELF's matched C: each defined function's real argument kinds (f32 params
+    go in FP registers, everything else in GPRs) and return kind. Overlays call these."""
+    registry = K.load_registry()
+    out = {}
+    for p in sorted((K.ROOT / "src").rglob("*.c")):
+        if p.name.startswith("."):
+            continue
+        for m in DEF_RE.finditer(p.read_text(errors="ignore")):
+            rtype, name, params = m.group(1).strip(), m.group(2), m.group(3).strip()
+            mm = re.fullmatch(r"func_([0-9a-fA-F]{8})", name)
+            addr = int(mm.group(1), 16) if mm else registry.get(name)
+            if addr is None or rtype in ("return", "else", "if"):
+                continue
+            ni = nf = 0
+            variadic = False
+            if params not in ("", "void"):
+                for prm in re.split(r",(?![^()]*\))", params):
+                    prm = prm.strip()
+                    if prm == "...":
+                        variadic = True
+                    elif "*" not in prm and re.match(r"(const\s+)?(f32|float)\b", prm):
+                        nf += 1
+                    else:
+                        ni += 1
+            if "*" in rtype or rtype not in ("void", "f32", "float"):
+                rt = "s32" if not rtype.startswith("void") or "*" in rtype else "void"
+            else:
+                rt = "f32" if rtype in ("f32", "float") else "void"
+            out[addr] = (ni, nf, rt, variadic)
+    return out
+
+
+def _main_tsv() -> Path:
+    path = K.ROOT / "out" / "sigs.tsv"
+    if not path.exists():
+        env = {k: v for k, v in os.environ.items() if k != "KH1_OVL"}
+        subprocess.run([sys.executable, __file__], check=True, env=env, stdout=subprocess.DEVNULL)
+    return path
 
 
 def load() -> dict[int, tuple[int, int, str]]:

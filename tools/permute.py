@@ -40,6 +40,15 @@ def add_prototypes(code: str, sigs: dict[str, str]) -> str:
     return ("\n".join(missing) + "\n" + code) if missing else code
 
 
+EXTERN_PROTO_RE = re.compile(r"^[^\n;{}]*?\b(\w+)\([^;{}]*\);\s*/\* extern \*/[^\n]*$", re.M)
+
+
+def known_prototypes(code: str, sigs: dict[str, str]) -> str:
+    """m2c's own guesses (`/* extern */`) replaced by the known prototypes (the main
+    ELF's C for an overlay's calls: f32 arguments in FP registers)."""
+    return EXTERN_PROTO_RE.sub(lambda m: sigs.get(m.group(1), m.group(0)), code)
+
+
 SIG_RE = re.compile(r"^(?P<ret>[\w ]+?\*?)\s*(?P<name>\w+)\((?P<params>[^)]*)\)\s*\{", re.M)
 
 
