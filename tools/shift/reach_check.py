@@ -1785,6 +1785,8 @@ def main() -> int:
     ap.add_argument("--out", type=Path, help="write the floated names a hazard involves (--float-skip-file)")
     ap.add_argument("--elf", type=Path, default=ROOT / "SLPS_251.98")
     ap.add_argument("--overlays", type=Path, default=ROOT / "out/overlays")
+    ap.add_argument("--ovl-data-as-code", action="store_true",
+                    help="scan each overlay whole, its data part decoded as code too (before session 131)")
     ap.add_argument("--all", action="store_true", help="also list indexed accesses from floated bases")
     ap.add_argument("--anchors-elf", type=Path, default=ROOT / "out/shift/kh1-shift.linked.elf",
                     help="the M0 link, for the addresses of every D_ name")
@@ -1930,7 +1932,15 @@ def main() -> int:
         regions.append((name, mips.decode(s, elf.read(s, e - s))))
     for p in sorted(a.overlays.glob("*.x")) if a.overlays.is_dir() else []:
         body = p.read_bytes()
-        regions.append((p.name, mips.decode(0x00F20000, body[: len(body) & ~3])))
+        n_ = len(body) & ~3
+        if not a.ovl_data_as_code:
+            # session 131: only the code part (up to the last `jr ra` and its delay slot, as tools/ovl/inventory.py
+            # finds it). Decoding the data part as instructions is noise, and wm.x's 242 KB of it kept the
+            # fixpoint growing past 10 GB without ending.
+            ws_ = struct.unpack(f"<{n_ // 4}I", body[:n_])
+            last = max((k for k, w_ in enumerate(ws_) if w_ == 0x03E00008), default=n_ // 4 - 2)
+            n_ = min(n_, 4 * (last + 2))
+        regions.append((p.name, mips.decode(0x00F20000, body[:n_])))
 
     def read_word(addr: int):
         b_ = elf.read(addr, 4)

@@ -89,13 +89,16 @@ READ = {
     ("src/text/fldtext.c", "func_0010e430"):
         "READ: Fade.cb is func_0010ef70's third argument: msgwin.c's (id, win) callbacks and void ones",
     ("src/util/task.c", "func_001bffa0"):
-        "OVERLAY: the task's fn is set only by func_001c06c0, which nothing in the main ELF calls",
+        "OVERLAY: the task's fn is set only by func_001c06c0, which nothing in the main ELF calls; session 131: wm.x "
+        "calls it once, func_001c06c0(-1, 0x00F23008), a void target (clears an overlay flag; reads no argument)",
     ("src/game/objreq.c", "func_001468b0"):
         "OVERLAY: x38 is set only by func_001468f8, which nothing in the main ELF calls",
     ("src/game/cmdmenu.nostrict.c", "func_0012d930"):
-        "OVERLAY: D_00524F74 is set only by func_0012cab8, which nothing in the main ELF calls",
+        "OVERLAY: D_00524F74 is set only by func_0012cab8, which nothing in the main ELF calls; session 131: "
+        "xl_limit.x and the summon overlays store 0 or one of their functions, which read no argument (void)",
     ("src/game/summon.c", "func_0013ab08"):
-        "OVERLAY: D_00304B6C is 0 in the ELF and src/ only clears it",
+        "READ: D_00304B6C is 0 in the ELF and src/ only clears it; session 131: xs_bambi / xs_genie / xs_mushu / "
+        "xs_simba store their task there and it reads its first argument (the object), which func_0013ab08 now passes on",
     ("src/gummi/gumisave.c", "func_001b9c10"):
         "OVERLAY: the gummi overlay's entry, called with nothing: on the EE a0 is still FlushCache's 2 "
         "(if the kernel keeps it) and a1 what func_001207f8 left; check what the entry reads",

@@ -2930,6 +2930,64 @@ D_0046A6A8 and names 0x9A0000 / 0xBA0000 (the load area) itself.
    the file, verified byte-identical like the main ELF.
 4. Its calls into the main ELF are then ordinary calls by name, so the port links it with the rest.
 
+#### 5.2a Session 131: the inventory of every overlay, and the toolchain check
+
+Run on the user's twelve files (Downloads/kh1-test/ovl, staged into the container's out/overlays; counts
+only, never bytes). Each loads at 0x00F20000 (inventory.py's default; the Gummi and world map ones too).
+
+| overlay | size | code / data bytes | functions | main-ELF functions called (game / SDK), call sites |
+|---|---|---|---|---|
+| dktitle.x | 30,139 | 27,852 / 2,284 | 71 | 101 (73 / 28), 305 |
+| dkmovie.x | 34,192 | 33,384 / 808 | 122 | 49 (31 / 18), 150 |
+| gb.x | 344,488 | 202,132 / 142,356 | 533 | 216 (179 / 37), 1,626 |
+| wm.x | 632,810 | 390,696 / 242,112 | 1,108 | 303 (255 / 48), 3,085 |
+| xl_limit.x | 13,381 | 12,572 / 808 | 75 | 75 (60 / 15), 263 |
+| xs_bambi.x | 2,460 | 2,100 / 360 | 12 | 23 (21 / 2), 35 |
+| xs_dh_break.x | 70,148 | 2,872 / 67,276 | 8 | 18 (8 / 10), 37 |
+| xs_dumbo.x | 117,296 | 12,604 / 104,692 | 53 | 77 (58 / 19), 185 |
+| xs_genie.x | 659,128 | 11,700 / 647,428 | 63 | 61 (54 / 7), 161 |
+| xs_mushu.x | 5,020 | 4,780 / 240 | 23 | 40 (36 / 4), 80 |
+| xs_simba.x | 551,444 | 6,860 / 544,584 | 32 | 60 (53 / 7), 127 |
+| xs_tink.x | 3,613 | 3,316 / 296 | 13 | 29 (19 / 10), 55 |
+
+**Toolchain (step 2)**: 8 of 9 small dktitle.x functions, written by hand, are byte-identical when built
+with the main ELF's ee-gcc 2.96 `-O2 -G0 -fno-strict-aliasing` and linked at their addresses (7 of 9 in
+the strict default; one needs the nostrict order). So the overlays use the main ELF's compiler and its
+per-file flag modes (nonmatchings/session131/NOTES.md, ovl_toolcheck/). Byte compares of linked code, not
+objdiff: an overlay build target (step 3) does not exist yet.
+
+**What the overlays call and store** (answers to the questions sessions 68-130 left for this check;
+read from the disassembly at each call site):
+
+- **dktitle.x** asks for game states **2** (twice), **11** and **16** through `func_00109558` (session 68's
+  "2 = new game" stands; 11 / 16 are the title's other two choices, inferred), sets the sound driver's RPC
+  `0x27` value to 60 (`func_001ed170(60)`), and calls none of: the indcheck setters, drawlist's flushes or
+  push, gspkt.c's two, prim.c's senders, wintext's number draws, padrec.c, memstack.c, pause.c's blur,
+  the vibration starts, winmenu's y getter / setter, `func_002066b0` or argcheck's three value-use
+  functions (`func_001ffaf0`, `func_002040a0`, `func_00206710`). It touches none of `D_002BBE04`,
+  `D_002BBDE8`, `D_002C5C2C`, `D_002C5978`. If the title's demo replays pad input, it is not through a direct call into padrec.c.
+- **dkmovie.x** stores **2 to `D_002BBE04`** (the frame copy from `0x118000`: renderer-spec 4.15's inference
+  holds) and **1 to `D_002BBE18`**, right after `func_00114820`, and calls `func_001111b0` (with no
+  arguments set).
+- **wm.x** (world map): stores 1, 0 and 4 to `D_002BBE04` (the screen spin, renderer-spec 4.16) in three
+  places; calls **`func_00110a48`** (the view's six matrices, so it gets the wide frustum) with f12 = 277.0;
+  calls `func_001bb858` (the view pointer pair setter) five times, memstack.c's push / pop
+  (`func_001bb480` / `func_001bb4b0`), a vibration start `func_00176ba8(&..., 0)`, and the task setter
+  `func_001c06c0(-1, 0x00F23008)` (a void target).
+- **gb.x** (Gummi): `func_001bb858` and memstack.c's push / pop, but **not `func_00110a48`**: the Gummi
+  ship builds its own view, so the wide frustum has to be added there when it is decompiled (5.4).
+- **xl_limit.x** (limit breaks) starts vibration patterns **3 and 4** (`func_00147790`); it and all the
+  summon overlays (xs_bambi, xs_dumbo, xs_genie, xs_mushu, xs_simba, xs_tink) set `D_00524F74` through
+  `func_0012cab8` (0, or one of their functions taking no argument).
+- **xs_bambi / xs_genie / xs_mushu / xs_simba** store their own task in **`D_00304B6C`**, and those tasks
+  read their first argument (the object). summon.c's `func_0013ab08` (the object task that calls it)
+  received the object in a0 and left it there on the EE; the C dropped it. It now takes `void *o` and
+  passes it on (same bytes; indcheck's row is READ now). Without this a ported summon would get garbage.
+- **xs_dumbo.x** pushes and flushes its own draw lists (`func_002376c8`, `func_00238258` with 180).
+- No overlay calls prim.c's senders, wintext's number draws, padrec.c (`func_00233650` ...), pause.c's
+  `func_00114068`, winmenu's `func_001fd268` / `func_001fd278`, or reads `D_002BBDE8` / `D_002C5C2C`;
+  none sets `D_002C5978` through a %hi/%lo store found by the inventory.
+
 ### 5.3 The first Vita build (2026-10-25, after session 122)
 
 Bring-up step 3 (vitasdk skeleton) done ahead of step 2 (the extraction tool, not needed: the Vita reads

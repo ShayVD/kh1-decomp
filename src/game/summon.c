@@ -96,10 +96,13 @@ void func_0013aac0(s32 arg0) {
     }
 }
 
-/* func_0013ab08 (from auto/text_00130000_2.c). */
-void func_0013ab08(void) {
-    if ((*(M2C_UNK (*(*))())&D_00304B6C) != NULL) {
-        (*(M2C_UNK (*(*))())&D_00304B6C)();
+/* func_0013ab08 (from auto/text_00130000_2.c). An object task (objtask.nostrict.c's case 2): the summon
+ * overlays store their own task in D_00304B6C (xs_bambi / xs_genie / xs_mushu / xs_simba) and those read
+ * their first argument, the object, which reaches them in a0 unchanged; so it is passed on here
+ * (session 131, from the overlays' code; the bytes are the same). */
+void func_0013ab08(void *o) {
+    if ((*(void (**)(void *))&D_00304B6C) != NULL) {
+        (*(void (**)(void *))&D_00304B6C)(o);
     }
 }
 
