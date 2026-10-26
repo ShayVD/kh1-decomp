@@ -45,6 +45,28 @@ DATA_PLACEMENTS = GEN / "data.tsv"
 OBJDIFF_DIR = OUT / "objdiff"
 OBJDIFF_JSON = ROOT / "objdiff.json"
 BINUTILS = os.environ.get("KH1_BINUTILS_PREFIX", "mips-linux-gnu-")
+SRC_DIR = ROOT / "src"
+
+# Overlay mode (phase 2, the 12 overlays: docs/overlays.md). KH1_OVL=<name> points every
+# tool at ovl/<name>/ (sources, layout.tsv, functions.tsv), at out/ovl/<name>.elf (the
+# user's overlay file wrapped as an ELF at its load address by tools/ovl/build.py) and
+# at out/ovl/<name>/ for build output. Calls into the main ELF keep their func_ names.
+OVL = os.environ.get("KH1_OVL", "")
+OVL_BASE = 0x00F20000
+MAIN_TEXT = (0x00100000, 0x00272C70)
+OVL_FILE = ROOT / "out" / "ovl" / f"{OVL}.elf"
+OVL_REGISTRY = ROOT / "ovl" / OVL / "functions.tsv"
+if OVL:
+    SRC_DIR = ROOT / "ovl" / OVL
+    LAYOUT = SRC_DIR / "layout.tsv"
+    OUT = ROOT / "out" / "ovl" / OVL
+    GEN = OUT / "gen"
+    LINKED = OUT / "linked.elf"
+    PATCHED = OUT / f"{OVL}.elf"
+    PLACEMENTS = GEN / "placements.tsv"
+    DATA_PLACEMENTS = GEN / "data.tsv"
+    OBJDIFF_DIR = OUT / "objdiff"
+    OBJDIFF_JSON = OUT / "objdiff.json"
 
 SOURCE_SUFFIXES = {".c": "c", ".cpp": "cxx", ".cc": "cxx", ".s": "asm", ".S": "asm"}
 ADDR_REF_RE = re.compile(r"\b(?:func|D)_([0-9A-Fa-f]{8})\b")
@@ -70,6 +92,8 @@ def cfg_get(cfg: dict, dotted: str):
 
 def orig_path(cfg: dict) -> Path:
     env = os.environ.get("KH1_ORIG")
+    if not env and OVL:
+        return OVL_FILE
     return Path(env) if env else ROOT / cfg["target"]["elf"]
 
 
@@ -149,25 +173,29 @@ def load_layout() -> list[Func]:
 def load_registry() -> dict[str, int]:
     """functions.tsv: symbol<TAB>address. Symbols may be C++ signatures."""
     out: dict[str, int] = {}
-    if not REGISTRY.exists():
-        return out
-    for lineno, line in enumerate(REGISTRY.read_text().splitlines(), 1):
+    for reg in (REGISTRY, OVL_REGISTRY) if OVL else (REGISTRY,):
+        if reg.exists():
+            _read_registry(reg, out)
+    return out
+
+
+def _read_registry(path: Path, out: dict[str, int]) -> None:
+    for lineno, line in enumerate(path.read_text().splitlines(), 1):
         s = line.strip()
         if not s or s.startswith("#"):
             continue
         parts = s.split("\t")
         if len(parts) < 2:
-            sys.exit(f"functions.tsv:{lineno}: expected symbol<TAB>address")
+            sys.exit(f"{path.name}:{lineno}: expected symbol<TAB>address")
         sym = resolve_symbol(parts[0].strip())
         addr = int(parts[1], 16)
         if sym in out and out[sym] != addr:
-            sys.exit(f"functions.tsv:{lineno}: {sym} defined twice with different addresses")
+            sys.exit(f"{path.name}:{lineno}: {sym} defined twice with different addresses")
         out[sym] = addr
-    return out
 
 
 def iter_sources() -> list[Path]:
-    src = ROOT / "src"
+    src = SRC_DIR
     # dot-files are scratch copies (try harnesses); KH1_SKIP: a regex of paths to leave out
     skip = re.compile(os.environ["KH1_SKIP"]) if os.environ.get("KH1_SKIP") else None
     return sorted(p for p in src.rglob("*") if p.suffix in SOURCE_SUFFIXES and p.is_file()
@@ -729,6 +757,10 @@ def object_data(obj: Path) -> tuple[list[tuple[str, str, int]], list[str]]:
 def data_region(cfg, orig: Elf, addr: int, size: int) -> str | None:
     """'data' (file-backed, after code), 'bss' (in the load segment but not in the
     file), or None if [addr, addr+size) is not inside one of them."""
+    if OVL:  # an overlay: its data follows its code up to the end of the file; no bss known
+        lay = load_layout()
+        seg = next(s for s in orig.segments if s.type == PT_LOAD)
+        return "data" if lay[-1].end <= addr and addr + size <= seg.vaddr + seg.filesz else None
     text_end = parse_int(cfg["target"]["text_end"])
     seg = next(s for s in orig.segments if s.type == PT_LOAD and s.vaddr <= text_end < s.vaddr + s.memsz)
     if not (text_end <= addr and addr + size <= seg.vaddr + seg.memsz):
@@ -1102,7 +1134,7 @@ def cmd_objdiff(args, cfg) -> int:
             asm.write_text(".set noreorder\n.set noat\n.text\n" + body + "\n")
             obj = OBJDIFF_DIR / side / f"{unit}.o"
             subprocess.run([f"{BINUTILS}as", "-march=r5900", "-EL", "-G0", "-o", str(obj), str(asm)], check=True)
-            objs[side] = obj.relative_to(ROOT).as_posix()
+            objs[side] = obj.relative_to(OBJDIFF_JSON.parent).as_posix()
         fl = flags_for(cfg, rel)
         units.append({
             "name": rel,
@@ -1138,7 +1170,8 @@ def cmd_objdiff_report(args, cfg) -> int:
     if cli is None:
         sys.exit("error: objdiff-cli not found; run tools/setup_toolchain.sh")
     out = OBJDIFF_DIR / "report.json"
-    subprocess.run([cli, "report", "generate", "-p", str(ROOT), "-o", str(out), "-f", "json"], check=True)
+    subprocess.run([cli, "report", "generate", "-p", str(OBJDIFF_JSON.parent), "-o", str(out), "-f", "json"],
+                   check=True)
     rep = json.loads(out.read_text())
     for unit in rep.get("units", []):
         for fn in unit.get("functions", []):
@@ -1257,7 +1290,8 @@ def decompiled_addrs() -> dict[int, str]:
     """addr -> 'src' / 'wip' for functions already in src/ or nonmatchings/."""
     out: dict[int, str] = {}
     registry = load_registry()
-    for base, tag in ((ROOT / "nonmatchings", "wip"), (ROOT / "src", "src")):
+    dirs = ((SRC_DIR, "src"),) if OVL else ((ROOT / "nonmatchings", "wip"), (ROOT / "src", "src"))
+    for base, tag in dirs:
         for p in sorted(base.rglob("*")):
             if p.suffix not in SOURCE_SUFFIXES or not p.is_file():
                 continue
@@ -1453,7 +1487,8 @@ def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str
             return names[addr]
         if addr in jtbls:
             return f"jtbl_{addr:08X}"
-        return f"func_{addr:08x}" if lo_text <= addr < hi_text else f"D_{addr:08X}"
+        is_code = lo_text <= addr < hi_text or (OVL and MAIN_TEXT[0] <= addr < MAIN_TEXT[1])
+        return f"func_{addr:08x}" if is_code else f"D_{addr:08X}"
 
     lines = [f"glabel {names.get(f.addr, f.name)}"]
     for a, w, mn, ops in insns:

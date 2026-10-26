@@ -32,7 +32,7 @@ from elf32 import Elf  # noqa: E402
 
 ROOT = K.ROOT
 M2C = K.TOOLCHAIN_DIR / "m2c" / "m2c.py"
-AUTO_DIR = ROOT / "src" / "auto"
+AUTO_DIR = K.SRC_DIR / "auto"  # ovl/<name>/auto in overlay mode (KH1_OVL)
 CACHE = K.OUT / "autodecomp"
 VARIANTS = [
     ["--valid-syntax"],
@@ -48,7 +48,7 @@ _names = None
 _layout = None
 _protos: dict[str, str] = {}
 _cc = ""
-OPTS = {"budget": 60, "context": True, "max_score": 16}
+OPTS = {"budget": 60, "context": True, "max_score": 16, "rodata": True}
 
 
 def _init():
@@ -182,8 +182,10 @@ LAST_ERRORS: list[tuple[int, str]] = []  # (line in `code`, message) of the last
 
 def _flag_path() -> str:
     """The source path whose kh1.toml flags drafts are compiled with: a file
-    in the output directory (--out-dir picks e.g. an SDK library's flags)."""
-    return (AUTO_DIR / "x.c").relative_to(ROOT).as_posix()
+    in the output directory (--out-dir picks e.g. an SDK library's flags).
+    KH1_MODE=<mode> compiles as a <name>.<mode>.c file there (kh1.toml flag modes)."""
+    mode = os.environ.get("KH1_MODE")
+    return (AUTO_DIR / (f"x.{mode}.c" if mode else "x.c")).relative_to(ROOT).as_posix()
 
 
 def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bool, str]:
@@ -213,7 +215,8 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
         return False, "assemble error"
     K.fix_object(obj)
     elf = Elf.load(obj)
-    if any(s.name.startswith(".rodata") and s.size for s in elf.sections):
+    rodata = [s for s in elf.sections if s.name.startswith(".rodata") and s.size]
+    if rodata and not OPTS.get("rodata"):
         return False, "uses rodata (needs hand placement)"
     registry = K.load_registry()
     undef = [s.name for s in elf.symbols() if s.shndx == 0 and s.name]
@@ -223,17 +226,24 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
         if a is None:
             return False, f"unresolvable symbol {u}"
         defsyms += ["--defsym", f"{u}=0x{a:08x}"]
-    ld_script = workdir / "c.ld"
-    ld_script.write_text(f"SECTIONS {{ .f 0x{f.addr:08x} : {{ *(.text.{sym}) }}\n"
-                         "  .ctx 0x0f000000 : { *(.ctx .ctx.*) }\n"
-                         "  .other 0x40000000 : { *(.text .text.* .data .bss .rodata*) }\n"
-                         "  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
-    r = subprocess.run([f"{K.BINUTILS}ld", "-EL", "--no-warn-mismatch", "-e", "0", "-o", str(out),
-                        "-T", str(ld_script), *defsyms, str(obj)],
-                       capture_output=True, text=True)
-    if r.returncode:
-        return False, "link error: " + r.stderr.strip().splitlines()[-1]
-    linked = Elf.load(out)
+    # --rodata: constants and jump tables go where the original's %hi/%lo pairs say
+    # (kh1tool's infer_rodata, as the build does); the first link only finds them.
+    placed_ro: dict[str, int] = {}
+    if rodata:
+        ok, why = _link(f, sym, defsyms, obj, workdir, {})
+        if not ok:
+            return False, why
+        placed_ro, problems = K.infer_rodata(obj, {sym: f.addr}, _orig)
+        if problems or len(placed_ro) != len(rodata):
+            return False, "mismatch (rodata not placeable" + (f": {problems[0]}" if problems else "") + ", score 999)"
+        _, ok_why = _link(f, sym, defsyms, obj, workdir, placed_ro)
+        if ok_why != "ok":
+            return False, ok_why
+    else:
+        ok, why = _link(f, sym, defsyms, obj, workdir, {})
+        if not ok:
+            return False, why
+    linked = Elf.load(workdir / "c.elf")
     sec = linked.section(".f")
     if sec is None:
         return False, "no code"
@@ -244,7 +254,28 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
     if len(ours) > f.size or ours_p != theirs:
         diff = sum(1 for i in range(0, min(len(ours), f.size), 4) if ours[i:i + 4] != theirs[i:i + 4])
         return False, f"mismatch ({len(ours)} vs {f.size} bytes, {diff} words differ, score {score(ours, theirs)})"
+    for k, (name, addr) in enumerate(sorted(placed_ro.items())):
+        rs = linked.section(f".r{k}")
+        if rs is None or linked.section_bytes(rs) != _orig.read(addr, rs.size):
+            return False, f"mismatch (code identical, rodata {name} differs, score 1)"
     return True, "match"
+
+
+def _link(f: K.Func, sym: str, defsyms: list[str], obj: Path, workdir: Path,
+          rodata: dict[str, int]) -> tuple[bool, str]:
+    out = workdir / "c.elf"
+    ro = "".join(f"  .r{k} 0x{addr:08x} : {{ *({name}) }}\n" for k, (name, addr) in enumerate(sorted(rodata.items())))
+    ld_script = workdir / "c.ld"
+    ld_script.write_text(f"SECTIONS {{ .f 0x{f.addr:08x} : {{ *(.text.{sym}) }}\n" + ro +
+                         "  .ctx 0x0f000000 : { *(.ctx .ctx.*) }\n"
+                         "  .other 0x40000000 : { *(.text .text.* .data .bss .rodata*) }\n"
+                         "  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
+    r = subprocess.run([f"{K.BINUTILS}ld", "-EL", "--no-warn-mismatch", "-e", "0", "-o", str(out),
+                        "-T", str(ld_script), *defsyms, str(obj)],
+                       capture_output=True, text=True)
+    if r.returncode:
+        return False, "link error: " + r.stderr.strip().splitlines()[-1]
+    return True, "ok"
 
 
 def score(ours: bytes, theirs: bytes) -> int:
@@ -253,7 +284,10 @@ def score(ours: bytes, theirs: bytes) -> int:
     a = [ours[i:i + 4] for i in range(0, len(ours), 4)]
     b = [theirs[i:i + 4] for i in range(0, len(theirs), 4)]
     m = sum(x.size for x in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks())
-    return len(a) + len(b) - 2 * m
+    # a draft that lost most of the code (m2c's --void dropping the return
+    # value's computation: `jr ra; nop`) is no starting point for the search
+    lost = len(b) if 3 * len(a) < len(b) else 0
+    return len(a) + len(b) - 2 * m + lost
 
 
 def why_score(why: str) -> float:
@@ -303,6 +337,12 @@ def try_function(addr: int) -> tuple[int, bool, str, str]:
     for c in raw:
         p = permute.preprocess(c, _protos, _cc, loc)
         cands += [p, *permute.variants(p)]
+        pf = permute.pad_frame(p, loc)
+        if pf != p:
+            cands += [pf, *permute.variants(pf)]
+        k = permute.known_prototypes(p, _protos)
+        if k != p:
+            cands += [k, *permute.variants(k)]
     cands = list(dict.fromkeys(cands))
     seen = set(cands)
     scored = []
@@ -397,7 +437,16 @@ def write_results(matches: dict[int, str]) -> list[Path]:
     Functions whose extern declarations conflict with a file's go into a
     numbered sibling file."""
     files: dict[str, dict] = {}
+    written = []
+    AUTO_DIR.mkdir(parents=True, exist_ok=True)
     for addr in sorted(matches):
+        if "CONTEXT_ONLY" in matches[addr]:  # needs its callee stubs above it: a file of its own
+            path = AUTO_DIR / f"func_{addr:08x}.c"
+            path.write_text("/* Matched automatically from m2c output (tools/autodecomp.py), with\n"
+                            " * CONTEXT_ONLY copies of the callees defined above it. */\n"
+                            f'#include "m2c.h"\n\n{matches[addr].strip()}\n')
+            written.append(path)
+            continue
         decls, body = split_unit(matches[addr])
         base = f"text_{addr >> 16:04x}0000"
         n = 0
@@ -418,8 +467,6 @@ def write_results(matches: dict[int, str]) -> list[Path]:
             unit["decls"][name] = d
         unit["funcs"].append(body)
         unit["defined"].add(fname)
-    AUTO_DIR.mkdir(parents=True, exist_ok=True)
-    written = []
     for key, unit in sorted(files.items()):
         path = AUTO_DIR / f"{key}.c"
         text = ["/* Matched automatically from m2c output (tools/autodecomp.py); not yet",

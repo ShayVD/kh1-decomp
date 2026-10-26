@@ -54,3 +54,6 @@ src/**/.*
 # Worker worktrees and toolchain symlinks
 /.claude/worktrees/
 /tools/toolchain
+
+# EE overlays from KINGDOM.IMG (tools/ovl/build.py; never commit them)
+*.x

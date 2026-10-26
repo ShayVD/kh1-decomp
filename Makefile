@@ -27,7 +27,7 @@ ifeq ($(filter clean distclean help toolchain check layout rank,$(MAKECMDGOALS))
 -include $(GEN)/objects.mk
 endif
 
-.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help shift data-relocs host-census vita vita-armcheck
+.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help shift data-relocs host-census vita vita-armcheck ovl ovl-report ovl-progress
 
 all: verify
 
@@ -43,6 +43,8 @@ help:
 	@echo "make progress         print the progress tracker"
 	@echo "make progress-update  rewrite docs/progress.md + history (end of session)"
 	@echo "make test             tool self-tests (no game ELF needed)"
+	@echo "make ovl              build + verify the overlays in ovl/ against out/overlays/*.x (docs/overlays.md)"
+	@echo "make ovl-report       objdiff-cli report for each overlay; make ovl-progress: matched per overlay"
 	@echo "make shift            shiftable build: fresh ELF linked symbolically, M0 check (docs/shiftable-plan.md)"
 	@echo "make shift SHIFT_MODE=m1|m2|m12   code rotated / data moved / both, inverse-map comparator against M0"
 	@echo "make shift SHIFT_MODE=m12 SHIFT_DRAFTS=1   near-miss C drafts in place of their asm exports (static diff)"
@@ -120,6 +122,16 @@ progress: $(PATCHED)
 
 progress-update: report
 	@$(KH1) progress --write
+
+# The 12 EE overlays (docs/overlays.md): each built and verified on its own, out/ovl/ only.
+ovl:
+	@$(PY) tools/ovl/build.py verify $(OVL)
+
+ovl-report:
+	@$(PY) tools/ovl/build.py report $(OVL)
+
+ovl-progress:
+	@$(PY) tools/ovl/build.py progress
 
 toolchain:
 	@tools/setup_toolchain.sh

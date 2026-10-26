@@ -25,6 +25,7 @@ KH1_REGION(D_006A0000, 0x6A0000);  /* func_0014a090's three pools (0x80000) */
 KH1_REGION(D_00720000, 0x720000);  /* func_00133628's seven pools, the party files (to 0x7F2C00) */
 KH1_REGION(D_00820000, 0x820000);  /* the block heap (src/util/heap*.c), 0x180000 */
 KH1_REGION(D_009A0000, 0x9A0000);  /* the load area (dktitle.x names 0x9A0000 and 0xBA0000) */
+KH1_REGION(D_00BA0000, 0xBA0000);  /* session 132: dktitle.x's second buffer in it */
 KH1_REGION(D_00F20000, 0xF20000);  /* the overlay area: every overlay is linked here */
 KH1_REGION(D_00FE0000, 0xFE0000);  /* 12 slots of 0x40000 (src/obj/objslot.c) */
 KH1_REGION(D_01CE0000, 0x1CE0000); /* func_00155a50's area, up to the stack */

@@ -19,6 +19,10 @@ int sceClose(int fd);
 int sceRead(int fd, void *buf, int nbyte);
 int sceWrite(int fd, const void *buf, int nbyte);
 int sceLseek(int fd, int offset, int whence);
+int sceSync(const char *path, int flag);
+int sceRemove(const char *filename);
+int sceMkdir(const char *dirname, int flag);
+int sceFormat(const char *path, const char *blockdev, void *arg, int arglen);
 long sceLseek64(int fd, long offset, int whence); /* long is 64-bit in the EE ABI */
 int sceIoctl(int fd, int request, void *arg);
 int sceIoctl2(int fd, int request, void *arg, unsigned int arglen, void *buf, unsigned int buflen);

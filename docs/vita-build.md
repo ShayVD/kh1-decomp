@@ -75,6 +75,11 @@ the controls, the speed, the memory budget (160 MiB newlib heap, 37 MiB .bss, `A
 
 What a run can show, at best:
 
+- **Session 132: the title overlay is native C** (docs/native-overlays.md): when the game loads the
+  pinned dktitle.x, `kh1_ovl_entry` runs its C instead of answering 0, so a Vita build made now
+  (tools/vita/build.py takes it through census.py's link step) should reach the title screen on the
+  real disc; `title=N` only applies when the file is not the pinned one. Not built or run here (no
+  vitasdk in the container). The older note:
 - **No title screen.** The title is the overlay dktitle.x (MIPS code the game loads from the disc to
   0xF20000 and calls); no overlay is decompiled yet (vita-port-plan 5.2). tools/vita/build.py routes
   every call of the overlay entry (29 in 13 files, found in the preprocessed C) to

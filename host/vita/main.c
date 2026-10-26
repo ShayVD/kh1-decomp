@@ -8,8 +8,9 @@
  *       iso=PATH              another image path
  *       title=N               at the title overlay's entry call ask for game state N (2: a new
  *                             game, Dive to the Heart; -1: stay at the title).  Default 2.  The
- *                             title screen itself is dktitle.x, an overlay not decompiled yet
- *                             (vita-port-plan 5.2), so nothing draws it: see kh1_ovl_entry.
+ *                             title screen itself is dktitle.x: once its C is complete
+ *                             (session 132, host/port/ovl.c) the title runs and this is unused;
+ *                             until then nothing draws it: see kh1_ovl_entry.
  *       trace=N               the host's KH1_HOST_TRACE levels into the log (default 1: disc reads)
  *       frames=N              exit after N frames (default 0: never)
  *   ux0:data/kh1/kh1.log      stdout and stderr
@@ -26,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+#include "platform/ovl.h"
 #include "present.h"
 #include "gsmem.h"
 #include "vita.h"
@@ -105,6 +107,9 @@ void kh1_host_vblank(void) {
  * (func_00109558, the request roomload.c and gameover.c make): 2 starts a new game. */
 static unsigned long ovl_calls;
 int kh1_ovl_entry(int cmd, int arg) {
+    int ret;
+    if (PlatOvlCall(cmd, arg, &ret)) /* session 132: a native overlay (dktitle.x, host/port/ovl.c) */
+        return ret;
     ovl_calls++;
     vlog("kh1-vita: frame %lu: overlay entry D_00F20000(%d, %d) answered 0 (no overlay is decompiled)\n", frames,
            cmd, arg);

@@ -40,6 +40,43 @@ def add_prototypes(code: str, sigs: dict[str, str]) -> str:
     return ("\n".join(missing) + "\n" + code) if missing else code
 
 
+GSTORE_RE = re.compile(r"^(\s+)(?:M2C_FIELD\(&?(D_[0-9A-F]{8}), [^,]+, (0x[0-9A-F]+|\d+)\)"
+                       r"|(D_[0-9A-F]{8})(?:\[(0x[0-9A-F]+|\d+)\])?)( = [^;=]+;)$")
+
+
+def sort_stores(code: str) -> str:
+    """Runs of two or more `D_X[...] = v;` / `M2C_FIELD(&D_X, T, off) = v;` lines sorted
+    by address (symbol, then offset or index)."""
+    lines = code.split("\n")
+    out, i = [], 0
+    while i < len(lines):
+        j = i
+        while j < len(lines) and GSTORE_RE.match(lines[j]):
+            j += 1
+        run = lines[i:j]
+        if len(run) > 1:
+            def key(ln: str) -> tuple[int, int]:
+                m = GSTORE_RE.match(ln)
+                sym, off = (m.group(2), m.group(3)) if m.group(2) else (m.group(4), m.group(5))
+                return int(sym[2:], 16), int(off or "0", 0)
+            run = sorted(run, key=key)
+            out += run
+            i = j
+        else:
+            out.append(lines[i])
+            i += 1
+    return "\n".join(out)
+
+
+EXTERN_PROTO_RE = re.compile(r"^[^\n;{}]*?\b(\w+)\([^;{}]*\);\s*/\* extern \*/[^\n]*$", re.M)
+
+
+def known_prototypes(code: str, sigs: dict[str, str]) -> str:
+    """m2c's own guesses (`/* extern */`) replaced by the known prototypes (the main
+    ELF's C for an overlay's calls: f32 arguments in FP registers)."""
+    return EXTERN_PROTO_RE.sub(lambda m: sigs.get(m.group(1), m.group(0)), code)
+
+
 SIG_RE = re.compile(r"^(?P<ret>[\w ]+?\*?)\s*(?P<name>\w+)\((?P<params>[^)]*)\)\s*\{", re.M)
 
 
@@ -181,6 +218,37 @@ def stack_buffer(code: str, locals_size: int) -> str:
     return head + f"\n    s32 sp[{(locals_size + 3) // 4}];" + body
 
 
+def pad_frame(code: str, locals_size: int) -> str:
+    """The original frame has locals the draft never uses (an unused matrix:
+    wm func_00f60448): declare a buffer of that size so the frame matches."""
+    if locals_size < 16 or re.search(r"\bsp\b|\[\d+\];|\b(?:OvlVec|OvlMtx)\b", code):
+        return code
+    start = re.search(r"^\S.*\)\s*\{\s*$", code, re.M)
+    if not start:
+        return code
+    n = locals_size // 16
+    return code[: start.end()] + f"\n    f32 unused_frame[{n}][4] __attribute__((aligned(16)));" + code[start.end():]
+
+
+VARDECL_RE = re.compile(r"^([ \t]+)([A-Za-z_][\w \t]*?\**)[ \t]*\b(var_[a-z]\w*?)(?:_(\d+))?;[ \t]*\n", re.M)
+
+
+def merge_splits(code: str) -> str:
+    """m2c splits one variable the original reuses (a loop counter in three
+    loops: wm func_00f64c78) into var_a3, var_a3_2, ...; merge those of one type."""
+    groups: dict[str, set[str]] = {}
+    for m in VARDECL_RE.finditer(code):
+        groups.setdefault(m.group(3), set()).add(m.group(2).strip())
+    out = code
+    for base, types in groups.items():
+        names = re.findall(rf"\b{base}_\d+\b", out)
+        if len(types) != 1 or not names:
+            continue
+        out = re.sub(rf"^[ \t]+[^\n;]*\b{base}_\d+;[ \t]*\n", "", out, flags=re.M)
+        out = re.sub(rf"\b{base}_\d+\b", base, out)
+    return out
+
+
 # --------------------------------------------------------------------------- variants
 
 def variants(code: str) -> list[str]:
@@ -191,6 +259,10 @@ def variants(code: str) -> list[str]:
     v = re.sub(r"(?<!\*\()&(D_[0-9A-F]{8}) ([+-]) ", r"(s8 *)&\1 \2 ", v)
     v = re.sub(r"(\w) ([+-]) &(D_[0-9A-F]{8})\b", r"\1 \2 (s8 *)&\3", v)  # `i * 4 + &D_X`
     v = re.sub(r"\bM2C_UNK \*(\w+);", r"s8 *\1;", v)
+    if v != code:
+        out.append(v)
+    # `*(T *)0x00F20908`: m2c lost the %hi across a branch (a lui both paths share); a global
+    v = absolute_globals(code)
     if v != code:
         out.append(v)
     # m2c counts pointer increments in bytes even on typed pointers
@@ -222,9 +294,35 @@ def variants(code: str) -> list[str]:
     # (pppPointCon: `w->x = w->y = w->z = 0.0f`)
     out += chain_stores(code)
     lp = copy_loop(code)
-    for v in (lp, void_callees(code), void_callees(lp)):
+    vs = void_self(code)
+    for v in (lp, void_callees(code), void_callees(lp), vs, void_callees(vs)):
         if v != code:
             out.append(v)
+    # overlay callees at lower addresses were defined above the caller in the
+    # original file, which changes gcc's branch-likely and slot choices
+    # (docs/matching-tips.md "Callee above"; xs_simba func_00f20530)
+    for v in (code, void_callees(code)):
+        w = callee_stubs(v)
+        if w != v:
+            out.append(w)
+    v = merge_splits(code)
+    if v != code:
+        out.append(v)
+    # runs of stores to globals in address order: the scheduler reorders
+    # independent stores, so m2c's order is not the source's (wm func_00f2cba8)
+    v = sort_stores(code)
+    if v != code:
+        out.append(v)
+    # float arguments m2c passed as their bit patterns (`func(5, arg0, 0x42C80000)`)
+    v = float_args(code)
+    if v != code:
+        out.append(v)
+    # overlay data defined above the function: gcc then fills delay slots with
+    # its %lo loads (gb func_00f3c1d8)
+    for v in list(out[-2:]) + [code]:
+        w = data_defs(v)
+        if w != v:
+            out.append(w)
     # all globals volatile / none volatile, as search starting points (the
     # search toggles one at a time, which misses fixes needing two edits)
     for v in list(out) + [code]:
@@ -233,6 +331,132 @@ def variants(code: str) -> list[str]:
             if w != v and w != code:
                 out.append(w)
     return list(dict.fromkeys(out))
+
+
+PROTO_RE = re.compile(r"^([A-Za-z_][\w \t*]*?)\b(func_([0-9a-f]{8}))\(([^;{}]*)\);[^\n]*$", re.M)
+
+
+def callee_stubs(code: str) -> str:
+    """Prototypes of overlay functions below the one defined as empty CONTEXT_ONLY definitions."""
+    own = re.findall(r"\bfunc_([0-9a-f]{8})\([^;{}]*\)\s*\{", code)
+    if not own or int(own[-1], 16) < 0x00F20000:
+        return code
+    me = int(own[-1], 16)
+
+    def stub(m: re.Match) -> str:
+        rt, name, addr, args = m.group(1).strip(), m.group(2), int(m.group(3), 16), m.group(4).strip()
+        if not 0x00F20000 <= addr < me or "(" in args:
+            return m.group(0)
+        if args in ("", "void"):
+            params = "void"
+        else:
+            params = ", ".join(a if a == "..." else f"{a} p{k}" for k, a in enumerate(a.strip() for a in args.split(",")))
+        body = "{}" if rt == "void" else "{ return 0; }"
+        return f"CONTEXT_ONLY {rt} {name}({params}) {body}"
+    return PROTO_RE.sub(stub, code)
+
+
+FLOAT_BITS_RE = re.compile(r"^0x([34BC][0-9A-F]{3}0000)$")
+# float parameters of the libvu0 calls: any bit pattern passed there is a float
+VU0_FLOAT_PARAMS = {"sceVu0RotMatrixX": 2, "sceVu0RotMatrixY": 2, "sceVu0RotMatrixZ": 2,
+                    "sceVu0ScaleVector": 2, "sceVu0ScaleVectorXYZ": 2, "sceVu0DivVector": 2,
+                    "sceVu0DivVectorXYZ": 2, "sceVu0InterVector": 3, "sceVu0InterVectorXYZ": 3}
+
+
+def float_args(code: str) -> str:
+    """Call arguments that are float bit patterns (low half zero, |x| in 2^-8..2^24) as
+    float literals, with that parameter of the callee's prototype made f32."""
+    fixes: dict[str, set[int]] = {}
+    out, k = [], 0
+    for m in re.finditer(r"\b(\w+)\(", code):
+        if m.start() < k or m.group(1) in ("if", "while", "for", "switch", "return", "sizeof"):
+            continue
+        start = m.end() - 1
+        end = _group_end(code, start)
+        if end < 0:
+            continue
+        args, depth, last = [], 0, start + 1
+        for i in range(start + 1, end - 1):
+            c = code[i]
+            if c in "([":
+                depth += 1
+            elif c in ")]":
+                depth -= 1
+            elif c == "," and depth == 0:
+                args.append((last, i))
+                last = i + 1
+        args.append((last, end - 1))
+        for n, (a, b) in enumerate(args):
+            t = code[a:b].strip()
+            fm = FLOAT_BITS_RE.match(t)
+            if VU0_FLOAT_PARAMS.get(m.group(1)) == n and re.fullmatch(r"0x[0-9A-F]{1,8}", t):
+                bits = int(t, 16)
+            elif not fm:
+                continue
+            else:
+                bits = int(fm.group(1), 16)
+                if not 0x3B800000 <= bits & 0x7FFFFFFF < 0x4B800000:
+                    continue
+            sp = _spellings(bits)
+            # twelve digits: gcc's decimal reader can be one ulp off on the shortest
+            # spelling (0.34906587f, wm func_00f2f188 needs 0.349065810442f)
+            lit = next((x for x in sp if "e" not in x and struct.pack("<f", float(x)) == struct.pack("<I", bits)), sp[0])
+            if "." in lit and len(lit.replace("-", "").replace(".", "").lstrip("0")) < 12 and lit.split(".")[1] != "0":
+                lit = f"{struct.unpack('<f', struct.pack('<I', bits))[0]:.12g}"
+            out.append(code[k:a] + " " * (code[a:b].startswith(" ")) + lit + "f")
+            k = b
+            fixes.setdefault(m.group(1), set()).add(n)
+    if not fixes:
+        return code
+    new = "".join(out) + code[k:]
+    for name, idx in fixes.items():
+        def proto(pm: re.Match) -> str:
+            ps = [x.strip() for x in pm.group(2).split(",")]
+            if not all(i < len(ps) for i in idx) or "..." in ps:
+                return pm.group(0)
+            for i in idx:
+                ps[i] = "f32"
+            return f"{pm.group(1)}{name}({', '.join(ps)});"
+        new = re.sub(rf"^(\S[^\n;{{}}()]*\b){name}\(([^;{{}}()]*)\);", proto, new, flags=re.M)
+    return new
+
+
+DATA_RE = re.compile(r"^extern (?!volatile\b)([A-Za-z_][\w ]*?[\s*]+)(D_([0-9A-F]{8}))((?:\[[^\]]*\])*);", re.M)
+
+
+def data_defs(code: str) -> str:
+    """`extern T D_X;` of overlay data as zero-initialised CONTEXT_ONLY definitions."""
+    def d(m: re.Match) -> str:
+        if not 0x00F20000 <= int(m.group(3), 16) < 0x01200000:
+            return m.group(0)
+        dims = re.sub(r"\[\]", "[1]", m.group(4))
+        init = "{ 0 }" if dims or not re.search(r"\*|\b(?:[su](?:8|16|32|64)|f32|M2C_UNK\w*|int|char|short|long|float)\s*$", m.group(1)) else "0"
+        return f"CONTEXT_ONLY {m.group(1)}{m.group(2)}{dims} = {init};"
+    return DATA_RE.sub(d, code)
+
+
+ABS_DEREF_RE = re.compile(r"\*\((\w+(?: \w+)?) \*\)0x([0-9A-Fa-f]{6,8})\b")
+
+
+def absolute_globals(code: str) -> str:
+    """`*(T *)0xADDR` (an address in EE RAM) as an extern global D_ADDR of type T."""
+    decls = {}
+
+    def fix(m: re.Match) -> str:
+        a = int(m.group(2), 16)
+        if not 0x00100000 <= a < 0x02000000:
+            return m.group(0)
+        name = f"D_{a:08X}"
+        decls.setdefault(name, m.group(1))
+        return name
+    v = ABS_DEREF_RE.sub(fix, code)
+    if not decls:
+        return code
+    new = [f"extern {t} {n};" for n, t in decls.items() if not re.search(rf"^extern [^;]*\b{n}\b", v, re.M)]
+    start = re.search(r"^\S.*\)\s*\{\s*$", v, re.M)
+    if not start:
+        return code
+    return v[: start.start()] + "".join(d + "\n" for d in new) + v[start.start():]
 
 
 NARROW_LOAD_RE = re.compile(r"M2C_FIELD\((?:[^(),]|\([^()]*\))+, ([su](?:8|16|32)) \*, (?:0x[0-9A-Fa-f]+|\d+)\)|\*(arg\d+)\b")
@@ -737,6 +961,19 @@ def goto_loops(code: str) -> str:
         lines[i:end + 1] = [f"{ind}for (;;) {{", *body, f"{ind}}}"]
         i += 1
     return "\n".join(lines)
+
+
+def void_self(code: str) -> str:
+    """The function itself as void: m2c makes a function returning whatever $v0 held
+    (a callee's result, a temporary) s32, with a `Duplicate return node` (wm func_00f77f38)."""
+    defs = list(re.finditer(r"^(?:s32|u32|M2C_UNK|s16|u16|s8|u8|void \*|\? \*) (func_[0-9a-f]{8}\([^;{}]*\)\s*\{)", code, re.M))
+    if not defs:
+        return code
+    d = defs[-1]
+    body = code[d.end():]
+    body = re.sub(r"^(\s*)return (\w+\([^;\n]*\));", r"\1\2;\n\1return;", body, flags=re.M)
+    body = re.sub(r"^(\s*)return [^;\n]+;", r"\1return;", body, flags=re.M)
+    return code[: d.start()] + "void " + d.group(1) + body
 
 
 def void_callees(code: str) -> str:

@@ -2988,6 +2988,18 @@ read from the disassembly at each call site):
   `func_00114068`, winmenu's `func_001fd268` / `func_001fd278`, or reads `D_002BBDE8` / `D_002C5C2C`;
   none sets `D_002C5978` through a %hi/%lo store found by the inventory.
 
+#### 5.2b Session 132: dktitle.x decompiled, linked into the port as native C
+
+Step 3 is PR #139's overlay build (`make ovl`, `KH1_OVL=NAME`, docs/overlays.md), used for
+dktitle.x: ovl/dktitle/layout.tsv (71 functions, the same finder), 59 matched byte-identical
+(objdiff 100% each), 12 near-miss drafts (nonmatchings/session132/NOTES.md). Step 4 done for it:
+docs/native-overlays.md. The loader tells the platform which file it read (PlatOvlLoaded), the
+port checks the pin, fixes up the 6 pointers in the overlay's data (ovl/dktitle/relocs.tsv) and
+answers the entry with `dktitle_00f20000`; the C reads its strings and tables from the loaded
+file in the memory map. On the fake disc with the user's own dktitle.x (`fake_disc.py
+--dktitle`) the title's frame loop runs 600 frames, x86 and qemu-arm logs equal but for host
+addresses. Not yet seen on the real disc (the title pack at D_009A0000 comes from it) or a Vita.
+
 ### 5.3 The first Vita build (2026-10-25, after session 122)
 
 Bring-up step 3 (vitasdk skeleton) done ahead of step 2 (the extraction tool, not needed: the Vita reads

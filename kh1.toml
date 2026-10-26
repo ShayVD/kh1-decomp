@@ -224,3 +224,10 @@ cflags = "-O2 -G0 -fmove-all-movables"
 path = "src/hand/nostrict_nosib/"
 mode = "nostrict_nosib"
 cflags = "-O2 -G0 -fno-strict-aliasing -fno-optimize-sibling-calls"
+
+# Files built without sibling-call optimisation: calls at the end of a
+# function stay `jal` + return (the overlays' wm/gb sound helpers, docs/overlays.md).
+[[toolchain.override]]
+path = "src/hand/nosib/"
+mode = "nosib"
+cflags = "-O2 -G0 -fno-optimize-sibling-calls"

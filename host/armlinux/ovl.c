@@ -6,12 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "platform/ovl.h"
 
 int func_00109558(int state);
 unsigned long kh1_host_frame(void);
 
 int kh1_ovl_entry(int cmd, int arg) {
     static int state = -2;
+    int ret;
+    if (PlatOvlCall(cmd, arg, &ret)) /* a native overlay (host/port/ovl.c) */
+        return ret;
     if (state == -2) {
         const char *s = getenv("KH1_HOST_OVL");
         state = s && strncmp(s, "stub:", 5) == 0 ? atoi(s + 5) : -1;
