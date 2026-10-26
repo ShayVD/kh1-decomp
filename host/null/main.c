@@ -87,6 +87,7 @@ extern const char *kh1_host_texdump; /* host/null/dmawalk.c */
 unsigned int kh1_host_cd_reads, kh1_host_cd_sectors;
 static unsigned long frames, max_frames = 600;
 static int ovl_stub;
+static int ovl_state = -1; /* KH1_HOST_OVL=stub:N (also read off x86, where the stub cannot work) */
 static unsigned long ovl_calls;
 
 unsigned long kh1_host_frame(void) { return frames; }
@@ -161,7 +162,6 @@ extern unsigned char kh1_memmap[];
  * func_00109630) also asks for game state N with func_00109558, the request the main ELF's own
  * state changes use (roomload.c, gameover.c): a guess at the title's choice (2 would be a new
  * game: func_00109770's case 2 runs func_00109588 and func_001095b0). */
-static int ovl_state = -1;
 int func_00109558(int state);
 static int ovl_entry(int cmd, int arg) {
     ovl_calls++;

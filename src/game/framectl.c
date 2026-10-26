@@ -296,7 +296,7 @@ void *func_0010fc98(void) {
 #undef memcpy
 
 /* func_0010fce8 (from auto/text_00100000_14.c). */
-M2C_UNK D_004D6B20[0x8c8] ALIGNED(32);
+extern M2C_UNK D_004D6B20[0x8c8]; /* inside D_004D6B10 (bss_004D.c): allarea.nam is copied there whole */
 #define D_004D6B10 (*(M2C_UNK (*)) &D_004D6B10)
 void *func_0010fce8(s32 arg0, s32 arg1) {
   s8 *new_var;

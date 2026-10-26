@@ -149,8 +149,16 @@ def assemble_data():
     return objs
 
 
+# What the Vita build (tools/vita/build.py) swaps: the nm that reads its objects, the assembler's
+# symbol-type prefix ("%" on ARM, where "@" starts a comment) and the platform directories, each
+# with the files it leaves out (host/null's main.c and pad.c are the host runner's own).
+NM = "nm"
+TYPE_PREFIX = "@"
+PLATFORM_DIRS = [("null", ()), ("port", ())]
+
+
 def nm(objs, defined):
-    args = ["nm", "--defined-only" if defined else "--undefined-only"] + objs
+    args = [NM, "--defined-only" if defined else "--undefined-only"] + objs
     out = subprocess.run(args, capture_output=True, text=True).stdout
     syms = set()
     for l in out.splitlines():
@@ -260,8 +268,8 @@ def host_defs(undefined, cc):
         else:
             out.append("unsigned char %s[0x%x] __attribute__((aligned(16)));" % (blk, pad + end - first))
         for s, a, size in names:
-            out.append('__asm__(".globl %s\\n.type %s, @object\\n.size %s, 0x%x\\n.set %s, %s + 0x%x");'
-                       % (s, s, s, size, s, blk, pad + a - first))
+            out.append(('__asm__(".globl %s\\n.type %s, @object\\n.size %s, 0x%x\\n.set %s, %s + 0x%x");'
+                        % (s, s, s, size, s, blk, pad + a - first)).replace("@object", TYPE_PREFIX + "object"))
     host_defs.inside = inside
     src = os.path.join(OUT, "defs_host.c")
     open(src, "w").write("\n".join(out) + "\n")
@@ -282,10 +290,10 @@ def link_census(results, cc):
     data_objs = assemble_data()
     null_objs = []
     # host/null: the null platform; host/port: what every port platform shares
-    for d in ("null", "port"):
+    for d, skip in PLATFORM_DIRS:
         nd = os.path.join(ROOT, "host", d)
         for f in sorted(os.listdir(nd)):
-            if f.endswith(".c"):
+            if (f.endswith(".c") or f.endswith(".S")) and f not in skip:
                 obj = os.path.join(OUT, d, f + ".o")
                 os.makedirs(os.path.dirname(obj), exist_ok=True)
                 p = subprocess.run([cc] + CFLAGS + ["-c", "-o", obj, os.path.join("host", d, f)], cwd=ROOT,

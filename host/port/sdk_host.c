@@ -40,11 +40,14 @@ int rand(void) {
     return (int)((rand_next >> 32) & 0x7FFFFFFF);
 }
 
-/* newlib's __assert(file, line, expression): glibc's takes (expression, file, line) */
+/* newlib's __assert(file, line, expression): glibc's takes (expression, file, line).  The Vita's
+ * libc is newlib: its own __assert is the same call */
+#ifndef KH1_VITA
 void __assert(const char *file, int line, const char *expr) {
     printf("assertion \"%s\" failed: file \"%s\", line %d\n", expr, file, line);
     abort();
 }
+#endif
 
 /* __main (0x00262c78): gcc's once-only __do_global_ctors; the host runs constructors itself */
 void func_00262c78(void) {}

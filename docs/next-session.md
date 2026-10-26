@@ -167,6 +167,13 @@ Ask for the Mac at the start; if the user says it is away, do the static items.
   tests/host/drawstate_test.c (22 checks), target_test.c (27). kh1.elf byte-identical, no float-untested row;
   selftest PASS.
 
+- **The first Vita build** (2026-10-25, its own thread, after session 122): `make vita` packs
+  out/vita/kh1-decomp.vpk (docs/vita-build.md, vita-port-plan 5.3): the game's C and the host runner's
+  platform on vitasdk, a software present of the GS model, sceCtrl, sceIo disc reads, the overlay
+  stub going to a new game. **Not run on a Vita yet: with the Mac, install it (or run it in Vita3K)
+  with the ISO at ux0:data/kh1/kh1.iso and bring back ux0:data/kh1/kh1.log.** No title screen
+  (dktitle.x), no 3D, no sound yet. `make vita-armcheck` (qemu-arm) matches the x86 host run.
+
 - **Session 122** (static, vita-port-plan 5.1bj): **the depth state, fog and the primitive assembly.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
   include/platform/depth.h / host/port/depth.c (renderer-spec 4.13 "Session 122"): the port's depth is the
@@ -775,7 +782,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    session may split a copy into 390 MB parts in ~/Downloads/kh1-test/isoparts (`split -b 390m`), stage the parts
    into the scratchpad, `cat` them back and check the SHA-256 against the original's (never into the repo or
    project files), then run session 130's item 2 list (in full in `git show d82f248:docs/next-session.md`, "Session 131 plan" item 2 and item 4's "Add to item 2").
-4. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears; (d) if PR #131 is merged, the
+4. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears; (d) PR #131 is merged (2026-10-26): the
    gxmrec stub and the static asserts (session 131's item 4d).
 5. **Matching (optional)**: only with a new idea (0010d470: the cross-jump; 00110618, 001c62a0, 00200e28 notes).
 6. End with `make progress-update SESSION=132`, refresh the per-phase table in docs/progress.md, commit, open a PR,
