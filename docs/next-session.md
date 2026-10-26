@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste this to start the next session.
+Paste this to start the next session (session 135).
 
 ---
 
@@ -16,7 +16,29 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 133, 2026-10-26)
+## Where we stopped (end of session 134, 2026-10-26)
+
+- **Session 134** (Mac for staging only): **past the opening movie on the real disc.**
+  - dkmovie.x's 12 overlay files were in the project files (kh1-runtime/ovl, pins checked); the
+    ISO parts were staged from ~/Downloads/kh1-test/isoparts (9 parts, rejoined, SHA-256 9ad74868…).
+  - **dkmovie.x native**: its front end (6 functions; drafts for func_00f20140 29 words and
+    func_00f20258 3 words) links as C; the player behind its table `D_00F28478` is the platform's,
+    include/platform/movie.h + host/port/movie.c (no decoder: open, ready, the next frame ended,
+    then done, as the PS2 player's flags 0x8000 / 0x40000 go). New: `ovl/NAME/platform.tsv`
+    (tools/host/ovlnative.py points table entries at port functions and compiles only what the
+    rest reaches). docs/native-overlays.md "Session 134".
+  - Host runner, session 133's pad script: `kh1-movie: open 0 (opn.dat)`, then the opening's
+    black monologue screen, 15,000 frames, no crash. Fixed on the way (objects unchanged): ppploop.c's
+    three `*MoveLoopReset` and fldtext.c's func_0010c540 (register passthroughs hidden by m2c casts).
+  - **Open**: the monologue draws one glyph a line, and no disc read follows in 15,000 frames
+    (sound effect 21102's volume set every other frame while the null IOP has ended it: a lead).
+  - Vita3K: not run (the "Speed up the Vita title screen" thread replaces the present path); the
+    missing `kh1-ovl:` line explained: no printf line reaches Vita3K's kh1.log at all (only vlog's).
+  - kh1.elf byte-identical (6,981 / 6,988); dkmovie / dktitle overlays byte-identical; `make test`
+    PASS; `make vita` links both native overlays. No new match; dktitle's 12 not tried (the
+    permuter still needs the user's OK).
+
+## Where we stopped before (end of session 133, 2026-10-26)
 
 - **Session 133** (with the Mac): **the native title on the real disc and in Vita3K.**
   - Host runner on the user's KH1_BIG.iso (staged in 390 MB parts through a Remote Control `split`, rejoined
@@ -805,7 +827,26 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 134 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 135 plan (at most 3 workers, docs/workflow.md "Resource limit")
+
+1. **Leave the monologue** (the next boundary on the real disc; docs/native-overlays.md "Session
+   134"): find what the game waits on after the opening movie. Start from sound effect 21102
+   (who sends se-volume 0x08 for it every other frame, and what end it expects from the IOP:
+   host/null/sound.c's `end se`), the event script's opcodes in that stretch, and the game state.
+   Then the one-glyph-a-line text: func_0010cb80 / the func_0010d470 draft's glyph layout or the
+   GS model. Stage the ISO from ~/Downloads/kh1-test/isoparts (9 parts, SHA-256 9ad74868…) or
+   ask for the Mac; the overlay files are in the project files' kh1-runtime/ovl.
+2. **With the Mac, after the Vita display thread's PR**: a Vita3K run with pad input through the
+   menu and into the movie; printf to kh1.log once the DMA log can be quiet.
+3. **Match dktitle.x's 12 left** (nonmatchings/session132/NOTES.md) and dkmovie's front-end drafts
+   (func_00f20258: 3 words, a lui scheduled early); the permuter needs the user's OK.
+4. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears.
+5. End with `make progress-update SESSION=135`, refresh docs/progress.md's tables, commit, open a PR,
+   and refresh this prompt.
+6. **Once the PR is merged, message the coordinator to start the next session** (session 136) with
+   this prompt.
+
+## Session 134 plan (done; kept for reference)
 
 1. **dkmovie.x native** (the next boundary on the real disc): PR #139 (merged) left dkmovie.x at 95 / 122
    matched (docs/overlays.md; f205a4 / f205f4 are hand-written asm loops), so link it the way dktitle.x is
