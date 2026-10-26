@@ -17,6 +17,7 @@
  * Not part of the PS2 build. */
 #include <psp2/ctrl.h>
 #include <psp2/display.h>
+#include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
 #include <psp2/kernel/processmgr.h>
 #include <stdio.h>
@@ -46,6 +47,15 @@ int kh1_host_trace = 1;
 unsigned int kh1_host_cd_reads, kh1_host_cd_sectors;
 static unsigned long frames, max_frames;
 static int title_state = 2;
+static SceUID log_fd = -1;
+
+/* the log goes straight to sceIoWrite (a FILE from funopen, unbuffered): newlib's own fopen'd log
+ * stayed empty in Vita3K through two runs */
+static int log_write(void *cookie, const char *buf, int n) {
+    (void)cookie;
+    if (log_fd >= 0) sceIoWrite(log_fd, buf, n);
+    return n;
+}
 
 unsigned long kh1_host_frame(void) { return frames; }
 
@@ -132,15 +142,17 @@ int main(int argc, char **argv) {
     }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
-    /* one FILE for both, unbuffered: a crash loses nothing (the first Vita3K run's freopen'd log
-     * stayed empty) */
-    {
-        FILE *f = fopen(log, "w");
+    log_fd = sceIoOpen(log, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_TRUNC, 0777);
+    if (log_fd >= 0) {
+        FILE *f = funopen(0, 0, log_write, 0, 0);
         if (f) {
             setvbuf(f, 0, _IONBF, 0);
             stdout = f;
             stderr = f;
+            _GLOBAL_REENT->_stdout = f;
+            _GLOBAL_REENT->_stderr = f;
         }
+        sceIoWrite(log_fd, "kh1-vita: log open\n", 19);
     }
     printf("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
     if (kh1_vita_display_init(D_002A6890)) {
