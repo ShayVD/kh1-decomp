@@ -16,7 +16,25 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 131, 2026-10-26)
+## Where we stopped (end of session 132, 2026-10-26)
+
+- **Session 132** (static, no Mac): **dktitle.x decompiled and linked into the port as native C.**
+  - Built on PR #139's overlay build (`make ovl`, `KH1_OVL=dktitle`; its branch was merged in, so this
+    PR goes after #139). ovl/dktitle/layout.tsv 71 functions; **59 / 71 byte-identical** (objdiff 100%
+    each, `make ovl-report OVL=dktitle`; 13,828 / 27,852 code bytes). The 12 left have near-miss drafts
+    (nonmatchings/session132/, ovl/dktitle/drafts.tsv; 3 within 2 words: func_00f21068 `bc1fl`,
+    func_00f241c8, func_00f26710). What the functions do and the matching lessons:
+    nonmatchings/session132/NOTES.md.
+  - **Native overlays** (docs/native-overlays.md): include/platform/ovl.h's PlatOvlLoaded in the loader
+    task (empty on the PS2), host/port/ovl.c (pin check, the data's 6 pointers fixed up from
+    ovl/dktitle/relocs.tsv, entry dispatch), tools/host/ovlnative.py in census's link step (per-overlay
+    names, data names in the memory map), include/platform/ovlsdk.h (the overlays' SCE calls onto the
+    wrappers; new PlatFsWrite / Sync / Remove / Mkdir / Format answer "no HDD"). x86's fault redirect and
+    the ARM / Vita `kh1_ovl_entry` ask PlatOvlCall first; the stub stays for the other overlays.
+  - `fake_disc.py OUT.iso --dktitle out/overlays/dktitle.x`: the title's frame loop runs 600 frames
+    natively; x86 and qemu-arm logs equal but for host addresses. Not run on the real disc or a Vita.
+  - kh1.elf byte-identical; selftest PASS; no new main-ELF match (6,981 / 6,988).
+
 
 - **Session 131** (with the Mac): **the first float boot since session 29, every overlay inventoried.**
   - reach_check never finished on wm.x (it decoded the overlays' data as code; >10 GB): it now scans each
@@ -759,32 +777,25 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 132 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 133 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Decompile dktitle.x (the user's choice, the main item).** The overlay is the user's file (Downloads/kh1-test/ovl,
-   stage it into out/overlays; never commit it). (a) vita-port-plan 5.2 step 3: an overlay build target in kh1tool
-   (an overlay config in kh1.toml: file `out/overlays/dktitle.x`, base 0xF20000, layout from
-   `tools/ovl/inventory.py --tsv out/ovl/dktitle.layout.tsv` committed as `ovl/dktitle/layout.tsv` (addresses and
-   sizes only), the main ELF's names as externs), linking src/ovl/dktitle/*.c at their addresses and patching a
-   copy of the file, verified byte-identical, with objdiff units for it; start from
-   nonmatchings/session131/ovl_toolcheck/ (8 functions already byte-identical; the flags per file as in the main
-   ELF, nostrict where needed). (b) Then match its 71 functions (27,852 bytes of code; autodecomp / m2c / permuter
-   as for the main ELF, with the overlay's own data as `D_00F2xxxx`); its data part (2,284 bytes, 29 strings)
-   stays a blob extracted at build time like the main ELF's data. (c) Report progress per function in
-   docs/progress.md (a new overlay row). (d) Once it links, replace the host's `KH1_HOST_OVL=stub` path for
-   dktitle.x with the real C (host/null: call `ovl_dktitle_entry` when the title loads it), so the host build
-   reaches the title screen; note what PR #131's Vita build needs to do the same.
-2. **With the Mac: finish the boot route** (docs/float-untested.md): KH1_BIG.iso already holds KH1_F131; if
+1. **With the Mac: the title on the real disc.** Ask the user once whether a Remote Control session may split a copy
+   of the ISO into 390 MB parts in ~/Downloads/kh1-test/isoparts (`split -b 390m`); stage them into the scratchpad,
+   `cat` them back, check the SHA-256 (never into the repo or project files). Then `make host-census` and
+   `KH1_HOST_ISO=... KH1_HOST_SHOT=512:448::DIR KH1_HOST_FRAMES=1200 out/host/kh1-host`: the log should say
+   "kh1-ovl: dktitle.x loaded: native C"; look at the shots (the logo fades, press start), script the pad
+   (KH1_HOST_PAD) to pick new game and see whether the title's own func_00109558(2) takes the boot on. Note
+   what breaks (the drafts are the first suspects). Never commit the frames.
+2. **With the Mac: a Vita build with the native title** (tools/vita/build.py, docs/vita-build.md), run in
+   Vita3K or on the Vita, bring back ux0:data/kh1/kh1.log.
+3. **Match dktitle.x's 12 left** (nonmatchings/session132/NOTES.md table; the 3 within 2 words first). Each
+   match: `hand.py keep`, drop its drafts.tsv row, `make ovl OVL=dktitle`, `make ovl-report OVL=dktitle`.
+4. **With the Mac: finish the boot route** (docs/float-untested.md): KH1_BIG.iso already holds KH1_F131; if
    reach_check or the float set changed, rebuild and re-patch through a Remote Control session. Play a fight
    (lock-on, damage numbers, a level-up if near), a shop (buy and sell), the warp drive, a movie; then move the
    proven rows into docs/shiftable-plan.md and clear them.
-3. **Host run on the real disc (with the Mac)**: the ISO is 3.5 GB; ask the user once whether a Remote Control
-   session may split a copy into 390 MB parts in ~/Downloads/kh1-test/isoparts (`split -b 390m`), stage the parts
-   into the scratchpad, `cat` them back and check the SHA-256 against the original's (never into the repo or
-   project files), then run session 130's item 2 list (in full in `git show d82f248:docs/next-session.md`, "Session 131 plan" item 2 and item 4's "Add to item 2").
-4. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears; (d) PR #131 is merged (2026-10-26): the
-   gxmrec stub and the static asserts (session 131's item 4d).
-5. **Matching (optional)**: only with a new idea (0010d470: the cross-jump; 00110618, 001c62a0, 00200e28 notes).
-6. End with `make progress-update SESSION=132`, refresh the per-phase table in docs/progress.md, commit, open a PR,
-   and refresh this prompt.
-7. **Once the PR is merged, message the coordinator to start the next session** (session 133) with this prompt.
+5. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears; (c) once PR #139 merges,
+   rebase this branch's successor on main.
+6. End with `make progress-update SESSION=133`, refresh the per-phase table and the overlay table in
+   docs/progress.md, commit, open a PR, and refresh this prompt.
+7. **Once the PR is merged, message the coordinator to start the next session** (session 134) with this prompt.
