@@ -55,6 +55,10 @@ typedef struct {
     u8 su, sv;    /* sampler.h's KH1_SHADER_* on each axis (with a texture) */
     u8 setup;     /* 1: DATE's set-up shader (samples the target's alpha, discards, no colour) */
     u8 datm;      /* the set-up's DATM: it keeps the pixels whose stored alpha is 1.0 when 1, below it when 0 */
+    /* a frame read's own (fetch 1 / 2, else 0; renderer-spec 4.13 "Session 128"): */
+    u8 fabcd;     /* fetch 1: ALPHA's A / B / C / D byte (the shader runs the GS's formula with it) */
+    u8 fpsm;      /* the frame: 0 CT32, 1 CT24 (Ad is 0x80, no alpha stored), 2 CT16 / CT16S */
+    u8 fbm[4];    /* FBMSK's bytes R, G, B, A: the bits the shader keeps from the target */
 } KH1ShaderKey;
 
 /* one GPU pipeline */

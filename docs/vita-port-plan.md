@@ -2844,6 +2844,25 @@ and docs only, no float-untested row. selftest PASS (cmdbuf_test 29 checks, shad
   1-bit mask (drop it or programmable blending).
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bp Session 128: the frame read, the command list as GXM calls
+
+Static only (Monday 2026-10-26; the user said the Mac is back about 9 hours later, so items 1 to 3 wait for the
+next session). kh1.elf byte-identical; host, tool and test code and docs only, no float-untested row. selftest PASS
+(shadergen_test 17 checks, cmdbuf_test 46).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The frame read** (item 4b): the fetch 1 / 2 fragment shaders generate, with the target's pixel as an input
+  (programmable blending); fetch 1 runs the GS's formula, both merge FBMSK's bits where a byte's mask is a low or
+  high run. All 27 static fragment shaders now generate. The shadow casters' 1-bit mask can be dropped (static,
+  inferred: within 1 of 255 in red on the receivers; renderer-spec 4.13 "Session 128").
+- **GXM calls** (item 4c): new include/platform/gxmrec.h / host/port/gxmrec.c record the calls a Vita renderer
+  makes for a frame's commands (scenes with loads / stores, texture uploads, palette fills and read-backs,
+  target uploads, blits, program / texture / region / uniform sets, draws); cmdbuf_test replays them through its
+  rasteriser for the same pixels. pipes.c prints a `gxm:` line under `KH1_HOST_TRACE=5`.
+- **For PR #131's Vita build**: gxmrec.c is plain C (memset / memcmp / sprintf / strlen), under the
+  host/port/*.c glob. The fragment program input `dst` needs the first psp2cgc compile to confirm its declaration.
+- **Still waiting for the Mac**: as 5.1bf, plus the real-disc `gxm:` line (calls and scenes a frame).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

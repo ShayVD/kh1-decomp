@@ -2093,6 +2093,54 @@ that `float` varyings are f32 or that the 8-bit rounding absorbs fp16 (an input 
 of k x 255: it rounds back), the viewport's Z (scale 1, offset 0), and the shadow casters' 1-bit mask: drop it
 (R's LSB of a shadow mask) or read the colour surface (programmable blending).
 
+**Session 128 (vita-port-plan 5.1bp): the frame read, the command list as GXM calls.** *The frame read*: the
+fetch 1 / 2 fragment shaders (a FETCH blend, a per-bit FBMSK) now generate (host/port/shadergen.c). They take the
+target's pixel as an input `dst` (`__nativecolor __regformat unsigned char4 dst : COLOR`: the Vita's programmable
+blending, the colour surface's 8-bit bytes at the fragment; the exact declaration is this generator's reading of
+psp2cgc and is checked by the first compile) and the pipeline blends nothing. Fetch 1 runs the GS's formula on Cs
+(after fog and the alpha test) and the target: Cd as stored, Ad read back from the 0x80 scale (`floor((a8 x 128 +
+127.5) / 255)`, exact for every byte) or 0x80 on a CT24 frame, C = As / Ad / FIX, `clamp(floor((A - B) x C x 2^-7)
++ D, 0, 255)`; A / B / C / D come from the key (KH1ShaderKey's new `fabcd`, `fpsm`, `fbm[4]`, set only for a frame
+read, so the static counts are unchanged). Then FBMSK's bits: per colour byte a mask of the low k bits (kept from
+the target) or of the high 8 - k bits is a float merge, `floor(X x 2^-k) x 2^k + Y - floor(Y x 2^-k) x 2^k` (X the
+byte whose high bits stay, Y the one whose low k bits stay); an alpha byte 0x00 / 0xFF writes or keeps the stored
+alpha. **Not generated**: another mask shape (split bits: integer ops would do it), a partial alpha byte (the 0x80
+scale has no bits to merge), a CT16 / CT16S frame with a frame read (the 5551 target), and TAPS.
+
+*The check* (tests/host/shadergen_test.c, 17 checks): every FETCH form of the blend sweep (50 of the 270 A / B /
+C / D x FIX forms on CT32 and CT24 frames) over 968 colour / target pairs is kh1_blend_gpu's FETCH pixel (the GS's
+formula on what the target holds; 48400 cases); Ad's read-back for all 256 stored bytes; 10 FBMSK shapes (the
+shadow casters' `0x00000001`, low and high runs in each byte, a kept alpha byte), with no blend and under the
+normal blend, keep the GS's bits; five shapes with no float form are not generated.
+
+| Set | Fragment shaders | Generated | Not |
+|---|---|---|---|
+| static (drawpipes.py) | 27 | **27** (the shadow casters' merge is 4 statements) | 0 |
+| fake disc | 2 | 2 | 0 |
+
+*The shadow casters' 1-bit mask.* `D_004F7820`'s FRAME_1 / 2 `FBMSK=1` keeps R's bit 0 of the off-screen buffer
+through the window's clear (RGBA 0) and the black silhouettes (§3.4), so that bit is whatever the buffer held
+before (a crossfade's or eye overlay's copy, or an earlier shadow). The only reader found is the next step: the
+bilinear copy into `0x3600` (TCC 1, `(Cs - Cd) x As + Cd`) that the receivers (renderer A P1) sample, where an R of
+0 or 1 changes the darkened floor by at most 1 of 255 in red. None of the image stores the C makes (menubg, the half
+capture and blur, vm_lib's capture, the flare: 5.1ar) reads `0x3A00`. So (static, inferred) **the mask
+can be dropped** (a plain colour write) with no visible change; the frame-read shader is exact and costs 4
+statements, so a port can keep it where programmable blending is cheap. Why the game masks the bit is not known.
+
+*GXM calls* (new include/platform/gxmrec.h / host/port/gxmrec.c, a "null GXM"): one frame of cmdbuf.h's recorder
+walked into the calls a Vita renderer makes: BEGIN_SCENE (the pass's target and depth buffer, colour / depth
+load) and END_SCENE (stores), TEX_UPLOAD (a texture cache entry), PAL_FILL / PAL_READBACK (a palette slot, from
+the CPU or the CLUT pass's target), TARGET_UPLOAD / BLIT (a transfer on a target: the open scene ends first),
+SET_PROGRAMS (a pipeline of the frame's deduplicated table, its fragment program and vertex.h's vertex program),
+SET_TEXTURE (an entry or a target's own texture, an indexed texture's palette slot), SET_REGION (the scissor),
+SET_UNIFORMS (the command's 64-byte slot) and DRAW (a vertex range of the frame's ring). Only state that changes
+is set again within a scene; a DATE command draws its set-up pipeline, then each GPU draw. tests/host/cmdbuf_test.c
+"gxm" (46 checks in all) replays columns, partial and transfers from the calls alone (programs from the pipeline
+table, FIX read from the ring at SET_UNIFORMS, textures and palettes by slot, the target upload and the CLUT
+read-back): the same pixels as gsmem.c; frames 1 and 2 of "passes" give one BEGIN / END pair a pass with its loads
+and stores. `KH1_HOST_TRACE=5` prints a `gxm:` line (fake disc: 3 frames, 32 calls, at most 18 a frame, 5 scenes,
+5 draws). The Vita build (host/vita/) turns each call into its sceGxm* call.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

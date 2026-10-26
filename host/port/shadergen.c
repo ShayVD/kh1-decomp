@@ -43,7 +43,7 @@ u32 kh1_shader_forms(const char ***f, const u32 **uses) {
     return F_COUNT;
 }
 
-static const char *names[KH1_SV_COUNT] = { "col", "tc", "fog", "pos", "u_a", "u_b", "u_r", "u_c", "u_xf", "r0", "r1", "r2",
+static const char *names[KH1_SV_COUNT] = { "col", "tc", "fog", "pos", "dst", "u_a", "u_b", "u_r", "u_c", "u_xf", "r0", "r1", "r2",
                                            "r3", "r4", "r5", "r6", "r7", "ocolor", "opos", "ocol", "otc", "ofog" };
 static int scalar_var(u32 i) { return i == KH1_SV_FOG || i == KH1_SV_OFOG; }
 
@@ -128,7 +128,21 @@ static void key_str(Gen *g, const KH1ShaderKey *k) {
         put(g, k->discard == KH1_DISCARD_FAIL ? " discard-fail " : " discard-pass ");
         put(g, at[k->atst & 7]);
     }
-    if (k->pre_a != 2 || k->pre_d != 3) {
+    if (k->fetch) {
+        static const char hex[] = "0123456789abcdef";
+        char h[10];
+        u32 i;
+        put(g, k->fetch == 1 ? " fetch " : " fetch-mask");
+        if (k->fetch == 1) { h[0] = hex[k->fabcd >> 4]; h[1] = hex[k->fabcd & 15]; h[2] = 0; put(g, h); }
+        if (k->fpsm == 1) put(g, " ct24");
+        if (k->fbm[0] | k->fbm[1] | k->fbm[2] | k->fbm[3]) {
+            for (i = 0; i < 4; i++) { h[i * 2] = hex[k->fbm[3 - i] >> 4]; h[i * 2 + 1] = hex[k->fbm[3 - i] & 15]; }
+            h[8] = 0;
+            put(g, " fbmsk ");
+            put(g, h);
+        }
+    }
+    if (k->fetch != 1 && (k->pre_a != 2 || k->pre_d != 3)) {
         put(g, " pre ");
         n[0] = (char)('0' + k->pre_a);
         n[1] = (char)('0' + k->pre_d);
@@ -139,14 +153,75 @@ static void key_str(Gen *g, const KH1ShaderKey *k) {
     }
 }
 
+/* a colour byte's FBMSK as a float merge: 0 written, 8 kept, 1 .. 7 the low k bits kept (*hi 0) or the
+ * low k bits written and the rest kept (*hi 1); -1 another shape */
+static s32 mask_shape(u32 m, u32 *hi) {
+    s32 k;
+    *hi = 0;
+    if (!m) return 0;
+    if (m == 0xFF) return 8;
+    for (k = 1; k < 8; k++) {
+        if (m == (1u << k) - 1) return k;
+        if (m == (0xFFu & ~((1u << k) - 1))) { *hi = 1; return k; }
+    }
+    return -1;
+}
+
+/* the GS's blend on Cs (r4) and the target (dst): r4.xyz = clamp(((A - B) x C >> 7) + D) (blend.h kh1_blend_gs) */
+static void fetch_blend(Gen *g, const KH1ShaderKey *k) {
+    static const char *cs = "r4.xyz", *cd = "r3.xyz";
+    u32 A = k->fabcd & 3, B = k->fabcd >> 2 & 3, C = k->fabcd >> 4 & 3, D = k->fabcd >> 6 & 3;
+    const char *a = A == 0 ? cs : A == 1 ? cd : 0, *b = B == 0 ? cs : B == 1 ? cd : 0, *d = D == 0 ? cs : D == 1 ? cd : 0;
+    st(g, "r3", F_MOV, "dst", 0, 0); /* Cd, and Ad read back from the 0x80 scale: (a8 x 128 + 127) / 255 */
+    if (k->fpsm == 1) st(g, "r3.w", F_MOV, "128.0", 0, 0);
+    else {
+        st(g, "r3.w", F_MAD, "r3.w", "128.0", "127.5");
+        st(g, "r3.w", F_FLOORMUL, "r3.w", "0.00392156862745098", 0);
+    }
+    if (A == B || (!a && !b)) st(g, "r6.xyz", F_MOV, "0.0", 0, 0);
+    else if (!b) st(g, "r6.xyz", F_MOV, a, 0, 0);
+    else st(g, "r6.xyz", F_SUB, a ? a : "0.0", b, 0);
+    st(g, "r6.xyz", F_FLOORMUL3, "r6.xyz", C == 0 ? "r4.www" : C == 1 ? "r3.www" : "u_a.yyy", "0.0078125");
+    if (d) st(g, "r6.xyz", F_ADD, "r6.xyz", d, 0);
+    st(g, "r4.xyz", F_CLAMP, "r6.xyz", "0.0", "255.0");
+}
+
+/* FBMSK's bits kept from the target, on r7 (the 8-bit colour and the stored alpha) */
+static void fetch_mask(Gen *g, const KH1ShaderKey *k) {
+    static const char *p[8] = { 0, "0.5", "0.25", "0.125", "0.0625", "0.03125", "0.015625", "0.0078125" };
+    static const char *q[8] = { 0, "2.0", "4.0", "8.0", "16.0", "32.0", "64.0", "128.0" };
+    static const char *r7c[3] = { "r7.x", "r7.y", "r7.z" }, *dc[3] = { "dst.x", "dst.y", "dst.z" };
+    static const char *r5c[3] = { "r5.x", "r5.y", "r5.z" }, *r6c[3] = { "r6.x", "r6.y", "r6.z" };
+    u32 i, hi;
+    for (i = 0; i < 3; i++) {
+        s32 n = mask_shape(k->fbm[i], &hi);
+        const char *x = hi ? dc[i] : r7c[i], *y = hi ? r7c[i] : dc[i];
+        if (!n) continue;
+        if (n == 8) { st(g, r7c[i], F_MOV, dc[i], 0, 0); continue; }
+        /* x's high bits and y's low k: floor(x / 2^k) x 2^k + y - floor(y / 2^k) x 2^k */
+        st(g, r5c[i], F_FLOORMUL, x, p[n], 0);
+        st(g, r6c[i], F_FLOORMUL, y, p[n], 0);
+        st(g, r5c[i], F_SUB, r5c[i], r6c[i], 0);
+        st(g, r7c[i], F_MAD, r5c[i], q[n], y);
+    }
+    if (k->fbm[3] == 0xFF) st(g, "r7.w", F_MOV, "dst.w", 0, 0);
+}
+
 u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
     Gen g;
     s32 pa = (s32)k->pre_a - 2, pd = (s32)k->pre_d - 2;
+    u32 i, hi;
     g.buf = buf;
     g.cap = cap;
     g.n = g.over = 0;
     if (cap) buf[0] = 0;
-    if (k->fetch) return 0;                                           /* a frame read */
+    if (k->fetch) { /* a frame read: a CT16 target, or a mask with no float form */
+        if (k->fpsm == 2) return 0;
+        for (i = 0; i < 3; i++)
+            if (mask_shape(k->fbm[i], &hi) < 0) return 0;
+        if (k->fbm[3] && k->fbm[3] != 0xFF) return 0;
+    }
+    if (k->fetch == 1) pa = 0, pd = 1;                                /* the shader blends itself */
     if (k->tex && (k->su == KH1_SHADER_TAPS || k->sv == KH1_SHADER_TAPS)) return 0; /* the shader's own taps */
     if (pa && k->csel == 1) return 0;                                 /* Cs x Ad: blend.h makes that a FETCH */
     put(&g, "// kh1-decomp fragment shader: ");
@@ -159,6 +234,7 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
         if (k->fog) put(&g, "    float fog : TEXCOORD1,\n");
         if (k->tex) put(&g, "    uniform sampler2D tex,\n");
         put(&g, "    uniform float4 u_a,\n    uniform float4 u_b,\n    uniform float4 u_r,\n");
+        if (k->fetch) put(&g, "    __nativecolor __regformat unsigned char4 dst : COLOR,\n"); /* the target's pixel */
     }
     put(&g, "    out float4 ocolor : COLOR)\n{\n");
     regs(&g);
@@ -251,6 +327,7 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
         else st(&g, "r5.z", F_SUB, "0.5", "r5.z", 0);
         st(&g, 0, F_CLIP, "r5.z", 0, 0);
     }
+    if (k->fetch == 1) fetch_blend(&g, k);
     /* the blend's pre-scale (blend.h): pre_a x (Cs x C / 0x80, floored or ceiled) + pre_d x Cs, clamped */
     if (pa) {
         st(&g, "r6.xyz", F_MUL, "r4.xyz", k->csel == 2 ? "u_a.yyy" : "r4.www", 0);
@@ -269,6 +346,7 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
     st(&g, "r7.xyz", F_MOV, "r4.xyz", 0, 0);
     st(&g, "r7.w", F_ROUND, "r4.w", "1.9921875", "0.5");
     st(&g, "r7.w", F_MIN, "r7.w", "255.0", 0);
+    if (k->fetch) fetch_mask(&g, k);
     st(&g, "ocolor", F_DIV, "r7", "255.0", 0);
     put(&g, "}\n");
     return g.over ? 0 : g.n;

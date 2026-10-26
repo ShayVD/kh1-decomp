@@ -27,6 +27,7 @@
 #include "platform/canvas.h"
 #include "platform/ring.h"
 #include "platform/cmdbuf.h"
+#include "platform/gxmrec.h"
 #include "platform/primasm.h"
 #include "platform/palcache.h"
 #include "platform/texcache.h"
@@ -38,6 +39,8 @@ void *memset(void *, int, __SIZE_TYPE__);
 static KH1PipeSet set;
 static u32 draws_seen;
 static KH1CmdRec *rec;
+static KH1GxmRec *gxm; /* session 128: each frame's commands as GXM calls (gxmrec.h) */
+static u32 gxm_max_calls, gxm_max_scenes;
 #define batcher (rec->b)
 void *malloc(__SIZE_TYPE__);
 
@@ -88,6 +91,8 @@ static KH1CmdRec *recorder(void) {
                      malloc(KH1_RING_FRAMES * KH1_RING_UNIFORM_BYTES), KH1_RING_UNIFORM_BYTES);
         pal = (KH1PalCache *)malloc(sizeof *pal);
         kh1_palcache_init(pal);
+        gxm = (KH1GxmRec *)malloc(sizeof *gxm);
+        kh1_gxm_clear(gxm);
         tex = (KH1TexCache *)malloc(sizeof *tex);
         tex_ok = kh1_texcache_init(tex) == 0;
         kh1_gsmem_xfer_hook = on_xfer;
@@ -206,6 +211,9 @@ void kh1_pipes_frame(void) {
         for (i = 0; i < rec->npass; i++)
             printf("kh1-host:   pass %u: %s\n", i + 1, kh1_cmd_pass_str(&rec->pass[i]));
     }
+    kh1_gxm_frame(gxm, rec);
+    if (gxm->frame.calls > gxm_max_calls) gxm_max_calls = gxm->frame.calls;
+    if (gxm->frame.scenes > gxm_max_scenes) gxm_max_scenes = gxm->frame.scenes;
     if (kh1_pipes_frame_hook) kh1_pipes_frame_hook(rec);
     kh1_cmd_reset_frame(rec);
     kh1_palcache_frame(pal);
@@ -273,6 +281,14 @@ static void report_cmds(void) {
     printf("kh1-host:   transfers: %u uploads, %u copies, %u CLUT loads (%u palette fills), %u texture decodes (%u texels); "
            "%u read a render target, %u write one; %u scenes split by a transfer on their own target\n", t->uploads,
            t->copies, t->cluts, t->pal_fills, t->textures, t->texels, t->tgt_reads, t->tgt_writes, t->splits);
+    {   /* session 128: the GXM calls (include/platform/gxmrec.h) */
+        const KH1GxmCount *g = &gxm->total;
+        printf("kh1-host:   gxm: %u frames, %u calls (a frame at most %u, %u scenes), %u scenes (%u load, %u store), %u draws, "
+               "%u program sets, %u texture sets, %u region sets; %u texture uploads, %u palette fills, %u palette "
+               "read-backs, %u target uploads, %u blits; %u lost\n", g->frames, g->calls, gxm_max_calls, gxm_max_scenes,
+               g->scenes, g->loads, g->stores, g->draws, g->programs, g->textures, g->regions, g->tex_uploads, g->pal_fills,
+               g->pal_readbacks, g->target_uploads, g->blits, g->lost);
+    }
     for (i = 0; i < nseq; i++) printf("kh1-host:   pass list %u: %u frames\n", i + 1, seq_frames[i]);
 }
 

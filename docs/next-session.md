@@ -8,14 +8,29 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## The Mac
 
-**The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 127 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+**The Mac should be reachable from about 09:00 UTC on Monday 2026-10-26** (session 128 asked at 00:07 UTC; the
+user said it would be there in 9 hours and to do static work until then; sessions 49 to 128 ran without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 127, 2026-10-25)
+## Where we stopped (end of session 128, 2026-10-26)
+
+- **Session 128** (static, vita-port-plan 5.1bp): **the frame read, the command list as GXM calls.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). shadergen.c
+  now generates the fetch 1 / 2 fragment shaders: the target's pixel as an input `dst` (programmable blending;
+  the declaration `__nativecolor __regformat unsigned char4 dst : COLOR` is unverified until the first psp2cgc
+  compile), fetch 1 running the GS's formula with A / B / C / D from the key (KH1ShaderKey's new `fabcd`, `fpsm`,
+  `fbm[4]`, set only for a frame read), both merging FBMSK's bits where a byte's mask is a low or high run (split
+  bits, a partial alpha byte and CT16 frames not generated). All 27 static fragment shaders generate.
+  The shadow casters' 1-bit mask can be dropped (static, inferred: within 1 of 255 in red on the receivers,
+  renderer-spec 4.13 "Session 128"). New include/platform/gxmrec.h / host/port/gxmrec.c (a "null GXM"): a
+  frame's commands as the calls a Vita renderer makes; tests/host/cmdbuf_test.c 46 checks (the calls replayed
+  for gsmem.c's pixels, the scenes' loads / stores), shadergen_test 17 (every FETCH form, Ad read back for all
+  256 bytes, 10 FBMSK shapes). `KH1_HOST_TRACE=5` adds a `gxm:` line. kh1.elf byte-identical, no float-untested
+  row; selftest PASS. The Vita build thread (PR #131) was told about gxmrec.h.
+  Matching: one worker took another run at the smallest holdouts (results in nonmatchings/session128/NOTES.md).
 
 - **Session 127** (static, vita-port-plan 5.1bo): **the transfers in the command list, the shaders as Cg.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). cmdbuf.h's
@@ -680,7 +695,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 128 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 129 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -748,6 +763,10 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    split scenes) into renderer-spec 4.13 "Session 127"; one room run with `KH1_HOST_SHADERS=DIR` (in the
    scratchpad): the `Cg:` line, any fragment shader past the static 27 and any not generated (a frame read or
    TAPS: note the draw).
+   **Add (session 128)**: the `gxm:` line for the title, the room run and the menu blur (calls and scenes a
+   frame, program / texture sets, palette read-backs, target uploads: the Vita's CPU cost a frame) into
+   renderer-spec 4.13 "Session 128"; and in a shadow scene, whether the shadow casters' FBMSK `0x00000001` ever
+   meets a target whose R has bit 0 set (the `fetch-mask` pipeline's draws in `--draws`).
    **Add (session 126)**: each distinct frame's pass list and the `commands:` / `passes:` / `depth:` lines for
    the title, the room run and the menu blur (`KH1_HOST_TRACE=5`): the scenes a frame opens, which return to
    the 3D target after a capture (LOAD, and the scene before STORE, colour and depth), whether the real disc's
@@ -772,19 +791,17 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    Session 123: if inventory.py finds GIF chains in the overlay, count the pipelines they add with
    tools/host/drawpipes.py's walk (a `--elf`-style run over the overlay's chains).
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests are skipped): (a) **the user's
-   answer on the full-width rules** (session 101's card, still unanswered at session 127): "keep them 4:3" means
+   answer on the full-width rules** (session 101's card, still unanswered at session 128): "keep them 4:3" means
    deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session
-   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the frame read** (the next step after
-   5.1bo): generate the fetch 1 / 2 fragment shaders with the colour surface as an input (the Vita's
-   programmable blending: the target's pixel read in the shader), the interpreter given the destination pixel,
-   and check them against kh1_blend_gs plus the FBMSK merge on blend_test's 62 FETCH forms and the shadow
-   casters' `0x00000001`; say in renderer-spec 4.13 whether the 1-bit mask can simply be dropped (what reads R's
-   lowest bit of the shadow buffer?); (c) **the command list as GXM calls**: a host "null GXM" backend that
-   walks a frame's commands and records the calls a Vita renderer makes (scene begin / end with the passes'
-   load / store, a texture upload into an entry, a palette fill, a blit, a draw with its programs, uniforms
-   and vertex range), with a test replaying the recorded calls through the cmdbuf_test rasteriser (the same
-   pixels); keep it in host/port/ as plain C so PR #131's build can link it, and message the Vita build thread
-   about the interface; (d) `KH1_HOST_DMAC=defer` as the default,
+   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the vertex stream as GXM wants it**: for
+   each of vertex.h's 7 variants the SceGxmVertexAttribute / SceGxmVertexStream table (offsets, formats: F32 x 3
+   position, U8N x 4 colour, F32 texcoords, U8N fog) as port data in host/port/, with a test that every
+   generated vertex shader's inputs and the table agree (names, components, offsets inside the 32-byte vertex);
+   (c) **the DATE set-up's rectangle**: gxmrec.c draws the set-up with the command's own vertices; check against
+   atest.h whether the GS's DATE only needs the draw's own pixels (then that is exact) and test it in
+   cmdbuf_test with a DATE frame replayed from the calls; (d) if PR #131 is merged, **wire gxmrec into
+   host/vita/** behind a `KH1_VITA_GXM` switch only as a stub that logs the calls (no renderer yet), so the
+   first Vita3K / hardware run shows the per-frame call counts; (e) `KH1_HOST_DMAC=defer` as the default,
    argcheck's 3 value uses and the callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
    --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
    every CLUT upload not in clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13
@@ -804,8 +821,8 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
 
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=128`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=129`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 129) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 130) with this
    prompt: the user wants each session to start the next one without being asked.

@@ -16,7 +16,11 @@
  *             kh1_texfmt_sample's, from the GPU's sample of kh1_texfmt_convert's upload
  *   sampler   REGION_CLAMP on U and V, point and bilinear: the shader's clamp, then the GPU's addressing and
  *             filter, is kh1_sampler_port's sample; ST / Q divided
- *   vertex    the 7 vertex shaders map a vertex.h vertex to clip space and pass its attributes on */
+ *   vertex    the 7 vertex shaders map a vertex.h vertex to clip space and pass its attributes on
+ *   fetch     (session 128) the frame read: every FETCH form of the blend sweep on CT32 and CT24 frames is
+ *             kh1_blend_gpu's pixel (the GS's formula on what the target holds), Ad read back for every
+ *             stored byte, and FBMSK's per-bit merges (the shadow casters' 0x00000001 among them) are the
+ *             GS's bits; the mask shapes with no float form are not generated */
 #include "common.h"
 #include "platform/shadergen.h"
 #include "platform/texfunc.h"
@@ -118,7 +122,8 @@ static void parse(void) {
     }
     k = key0();
     k.fetch = 1;
-    CHECK("parse: a FETCH key is not generated", !frag(&k));
+    k.fpsm = 2;
+    CHECK("parse: a FETCH key on a CT16 frame is not generated", !frag(&k));
     k = key0();
     k.tex = KH1_TEXFMT_RGBA8;
     k.su = KH1_SHADER_TAPS;
@@ -261,7 +266,8 @@ static void blend(void) {
                         r.zbuf_hi = 1;
                         kh1_drawstate_of(&r, &ds);
                         if (!ds.n) continue;
-                        if (!frag(&ds.pipe[0].shader)) { fetch++; continue; }
+                        if (ds.pipe[0].shader.fetch) { fetch++; continue; } /* the frame read: fetch() */
+                        if (!frag(&ds.pipe[0].shader)) { bad++; continue; }
                         forms++;
                         uniforms(&ds);
                         for (i = 0; i < NV * 8; i++)
@@ -279,8 +285,127 @@ static void blend(void) {
                                            b, c, d, fix[fi], cs, dst, want, got);
                             }
                     }
-    printf("shadergen_test: blend: %u forms generated, %u FETCH (not generated), %u cases\n", forms, fetch, n);
-    CHECK("blend: the shader's output through the GPU's blend is kh1_blend_gpu's, every form not FETCH", !bad && forms);
+    printf("shadergen_test: blend: %u forms generated, %u FETCH (fetch below), %u cases\n", forms, fetch, n);
+    CHECK("blend: the shader's output through the GPU's blend is kh1_blend_gpu's, every form not FETCH generated", !bad && forms);
+}
+
+/* ---- fetch: the frame read ---- */
+/* FBMSK's merge as the GS writes it: the masked bits kept from the target; alpha kept when its byte is all
+ * masked (the 0x80 scale has no bits to merge) */
+static u32 fbmsk_merge(u32 out, u32 dst, u32 fbmsk) {
+    u32 m = (fbmsk & 0xFFFFFF) | ((fbmsk >> 24) == 0xFF ? 0xFF000000u : 0);
+    return (out & ~m) | (dst & m);
+}
+
+static u32 fetch_case(const KH1DrawState *ds, u32 cs, u32 dst) {
+    memset(run.v[KH1_SV_COL], 0, sizeof run.v[0]);
+    unorm4(run.v[KH1_SV_COL], cs);
+    set4(run.v[KH1_SV_DST], (f32)(dst & 0xFF), (f32)(dst >> 8 & 0xFF), (f32)(dst >> 16 & 0xFF), (f32)(dst >> 24));
+    exec(text);
+    (void)ds;
+    return out8(run.v[KH1_SV_OCOLOR]);
+}
+
+static void fetch(void) {
+    static const u32 as[] = { 0x00, 0x01, 0x40, 0x7F, 0x80, 0x81, 0x90, 0xFF };
+    static const u32 fix[] = { 0x80, 0x40, 0x00 };
+    static const u32 masks[] = { 0x00000001, 0x00000003, 0x0000007F, 0x000000FE, 0x000000C0, 0x0000FF01,
+                                 0x00F00F80, 0xFF000001, 0x00010101, 0xFFFE7F03 };
+    static const u32 nogen[] = { 0x00000005, 0x00000081, 0x00004200, 0x80000001, 0x7F000000 };
+    u32 a, b, c, d, fi, psm, i, j, mi, forms = 0, other = 0, bad = 0, n = 0, nm = 0, ok = 1;
+    KH1DrawRegs r;
+    KH1DrawState ds;
+    /* every FETCH form of the blend sweep, on CT32 and CT24 frames, no FBMSK */
+    for (psm = 0; psm < 2; psm++)
+        for (a = 0; a < 3; a++)
+            for (b = 0; b < 3; b++)
+                for (c = 0; c < 3; c++)
+                    for (d = 0; d < 3; d++)
+                        for (fi = 0; fi < (c == 2 ? 3u : 1u); fi++) {
+                            memset(&r, 0, sizeof r);
+                            r.prim = 0x46;
+                            r.alpha_lo = a | b << 2 | c << 4 | d << 6;
+                            r.alpha_hi = fix[fi];
+                            r.frame_lo = psm << 24;
+                            r.zbuf_hi = 1;
+                            kh1_drawstate_of(&r, &ds);
+                            if (!ds.n || ds.pipe[0].shader.fetch != 1) { other++; continue; }
+                            if (!frag(&ds.pipe[0].shader) || ds.pipe[0].blend) { bad++; continue; }
+                            forms++;
+                            uniforms(&ds);
+                            for (i = 0; i < NV * 8; i++)
+                                for (j = 0; j < NV; j++) {
+                                    u32 cs = vals[i % NV] | vals[j] << 8 | vals[(i / NV + j) % NV] << 16 | as[i / NV] << 24;
+                                    u32 dst = vals[j] | vals[(i + 2) % NV] << 8 | vals[i % NV] << 16 | ((i * 37 + j * 11) & 0xFF) << 24;
+                                    u32 want = kh1_blend_gpu(&ds.blend, cs, dst), got = fetch_case(&ds, cs, dst);
+                                    if (psm == 1) { want &= 0xFFFFFF; got &= 0xFFFFFF; } /* no alpha stored */
+                                    n++;
+                                    if (got != want && !bad++)
+                                        printf("shadergen_test: fetch %u%u%u%u fix %02x psm %u cs %08x dst %08x: model %08x, shader %08x\n",
+                                               a, b, c, d, fix[fi], psm, cs, dst, want, got);
+                                }
+                        }
+    printf("shadergen_test: fetch: %u FETCH forms generated (%u forms not FETCH), %u cases\n", forms, other, n);
+    CHECK("fetch: every FETCH form's shader is kh1_blend_gpu's pixel on CT32 and CT24", !bad && forms);
+    /* Ad read back for every stored byte: (Cs - 0) x Ad + 0 with Cs 0xFF (Cs x Ad: a FETCH form) */
+    memset(&r, 0, sizeof r);
+    r.prim = 0x46;
+    r.alpha_lo = 0 | 2 << 2 | 1 << 4 | 2 << 6;
+    r.zbuf_hi = 1;
+    kh1_drawstate_of(&r, &ds);
+    if (ds.n && ds.pipe[0].shader.fetch == 1 && frag(&ds.pipe[0].shader)) {
+        for (i = 0; i < 256; i++) {
+            u32 dst = 0x102030 | i << 24, want = kh1_blend_gpu(&ds.blend, 0x80FFFFFFu, dst) & 0xFFFFFF;
+            if ((fetch_case(&ds, 0x80FFFFFFu, dst) & 0xFFFFFF) != want) ok = 0;
+        }
+    } else
+        ok = 0;
+    CHECK("fetch: Ad read back from the 0x80 scale for every stored byte", ok);
+    /* FBMSK's per-bit merges, with no blend (fetch 2) and under the normal blend (fetch 1) */
+    bad = 0;
+    for (mi = 0; mi < sizeof masks / sizeof masks[0]; mi++)
+        for (a = 0; a < 2; a++) {
+            memset(&r, 0, sizeof r);
+            r.prim = a ? 0x46 : 0x06;
+            r.alpha_lo = 0x44;
+            r.frame_hi = masks[mi];
+            r.zbuf_hi = 1;
+            kh1_drawstate_of(&r, &ds);
+            if (!ds.n || ds.pipe[0].shader.fetch != (a ? 1 : 2) || !frag(&ds.pipe[0].shader)) {
+                if (!bad++) printf("shadergen_test: fetch mask %08x abe %u not generated\n", masks[mi], a);
+                continue;
+            }
+            nm++;
+            uniforms(&ds);
+            for (i = 0; i < NV * 8; i++)
+                for (j = 0; j < NV; j++) {
+                    u32 cs = vals[i % NV] | vals[j] << 8 | vals[(i / NV + j) % NV] << 16 | as[i / NV] << 24;
+                    u32 dst = vals[(j + 4) % NV] | vals[(i + 2) % NV] << 8 | vals[i % NV] << 16 | ((i * 37 + j * 11) & 0xFF) << 24;
+                    u32 want = fbmsk_merge(kh1_blend_gpu(&ds.blend, cs, dst), dst, masks[mi]), got = fetch_case(&ds, cs, dst);
+                    if (got != want && !bad++)
+                        printf("shadergen_test: fetch mask %08x abe %u cs %08x dst %08x: model %08x, shader %08x\n", masks[mi],
+                               a, cs, dst, want, got);
+                }
+        }
+    printf("shadergen_test: fetch: %u FBMSK merges generated\n", nm);
+    CHECK("fetch: FBMSK's per-bit merges keep the GS's bits (the shadow casters' 0x00000001 among them)", !bad && nm);
+    ok = 1;
+    for (mi = 0; mi < sizeof nogen / sizeof nogen[0]; mi++) {
+        memset(&r, 0, sizeof r);
+        r.prim = 0x06;
+        r.frame_hi = nogen[mi];
+        r.zbuf_hi = 1;
+        kh1_drawstate_of(&r, &ds);
+        if (!ds.n || ds.pipe[0].shader.fetch != 2 || frag(&ds.pipe[0].shader)) ok = 0;
+    }
+    CHECK("fetch: a mask with no float form (split bits, a partial alpha byte) is not generated", ok);
+    /* the shadow casters' shader, for the record */
+    memset(&r, 0, sizeof r);
+    r.prim = 0x06;
+    r.frame_hi = 0x00000001;
+    r.zbuf_hi = 1;
+    kh1_drawstate_of(&r, &ds);
+    printf("%s", ds.n && frag(&ds.pipe[0].shader) ? text : "?\n");
 }
 
 /* ---- atest ---- */
@@ -530,6 +655,7 @@ int main(void) {
     texfmt();
     sampler();
     vertex();
+    fetch();
     printf("shadergen_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }
