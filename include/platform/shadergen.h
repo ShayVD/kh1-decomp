@@ -34,9 +34,9 @@
  * frame with a frame read (the 5551 target's bits) and the sampler's own taps (KH1_SHADER_TAPS,
  * REGION_REPEAT with a fix or a narrow mask).  Of the main ELF's 27 static fragment shaders (drawpipes.py)
  * one has a frame read: the shadow casters' FBMSK 0x00000001 (fetch 2, R's lowest bit kept: func_001284a0's
- * environment), now generated; no TAPS.  The input's declaration (`__nativecolor __regformat unsigned char4
- * dst : COLOR`) is this generator's reading of psp2cgc's colour-surface input: to be checked by the first
- * psp2cgc compile (the Vita build).
+ * environment), now generated; no TAPS.  The frame read's declarations (session 136, from SceShaccCg's own
+ * diagnostics): `__nativecolor void main(...)`, `__regformat unsigned char4 dst : FRAGCOLOR` and a
+ * `__regformat unsigned char4` COLOR output written as bytes (kh1_shader_run scales it back to 0 .. 1).
  *
  * The uniforms the code reads are kh1_shader_uniforms' 16 floats (one 64-byte uniform slot, ring.h):
  *   u_a = (AREF, FIX, TA0, TA1)   u_b = (AEM, FOGCOL R, G, B)   u_r = REGION_CLAMP's texel-centre bounds
