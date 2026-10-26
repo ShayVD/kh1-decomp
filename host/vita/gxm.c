@@ -114,6 +114,12 @@ static void *heap_alloc(Heap *h, u32 len) {
     return 0;
 }
 
+static u32 heap_free_bytes(const Heap *h) {
+    u32 i, n = 0;
+    for (i = 0; i < h->nfree; i++) n += h->free[i].len;
+    return n;
+}
+
 static void heap_free(Heap *h, void *p, u32 len) {
     u32 off, i;
     if (!p) return;
@@ -146,6 +152,7 @@ static Heap tram;  /* LPDDR uncached: textures, palettes, vertices, indices */
 
 /* ---- shaders: shadergen's Cg, compiled by SceShaccCg or read back from the cache ---- */
 static int shark_ok;
+static char tex_why[160], pipe_why[200]; /* the last texture binding's / pipeline's failure (the skip log's) */
 static u32 compiled, cached, failed; /* shaders compiled on the device, read from the cache, refused */
 
 static u64 fnv64(const char *s, u32 n) {
@@ -320,14 +327,20 @@ static SceGxmFragmentProgram *prog_of(const KH1PipeKey *p, u32 vi, FragShader **
         p = &alt;
         *fs = frag_of(&p->shader);
     }
-    if (!*fs || !vert[vi].vp) return 0;
+    if (!*fs || !vert[vi].vp) {
+        snprintf(pipe_why, sizeof pipe_why, "%s: %s", kh1_pipekey_str(p), !*fs ? "its fragment shader" : "its vertex variant");
+        return 0;
+    }
     for (i = 0; i < nprog; i++) {
         e = &prog[i];
         if (e->blend == p->blend && e->eq == p->eq && e->fs == p->fs && e->fd == p->fd && e->mask == p->mask &&
             e->vert == vi && !memcmp(&e->k, &p->shader, sizeof e->k))
             return e->fp;
     }
-    if (nprog == PROGS) return 0;
+    if (nprog == PROGS) {
+        snprintf(pipe_why, sizeof pipe_why, "%s: the program table is full", kh1_pipekey_str(p));
+        return 0;
+    }
     e = &prog[nprog];
     memset(e, 0, sizeof *e);
     e->k = p->shader;
@@ -344,10 +357,16 @@ static SceGxmFragmentProgram *prog_of(const KH1PipeKey *p, u32 vi, FragShader **
     bi.colorDst = p->blend ? factor(p->fd) : SCE_GXM_BLEND_FACTOR_ZERO;
     bi.alphaSrc = SCE_GXM_BLEND_FACTOR_ONE;
     bi.alphaDst = SCE_GXM_BLEND_FACTOR_ZERO;
-    if (sceGxmShaderPatcherCreateFragmentProgram(patcher, (*fs)->id, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
-                                                 SCE_GXM_MULTISAMPLE_NONE, p->blend || p->mask != 15 ? &bi : 0,
-                                                 vert[vi].prog, &e->fp) < 0)
-        return 0;
+    {
+        int err = sceGxmShaderPatcherCreateFragmentProgram(patcher, (*fs)->id, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4,
+                                                           SCE_GXM_MULTISAMPLE_NONE, p->blend || p->mask != 15 ? &bi : 0,
+                                                           vert[vi].prog, &e->fp);
+        if (err < 0) {
+            snprintf(pipe_why, sizeof pipe_why, "%s: sceGxmShaderPatcherCreateFragmentProgram 0x%08x", kh1_pipekey_str(p),
+                     (u32)err);
+            return 0;
+        }
+    }
     nprog++;
     return e->fp;
 }
@@ -577,6 +596,18 @@ static int ready;
 static s32 display = -1;  /* the display target's index, once drawn */
 static u32 frames, draws, skipped, scenes; /* the watchdog's */
 
+/* session 136: why a draw (or a scene, or a frame) is skipped, each reason's first case logged with what was
+ * asked, and the counts every 600 frames while they grow */
+enum { W_RING, W_TARGET, W_DEPTH, W_SCENE, W_PIPE, W_TEX, W_RANGE, W_STATE, W_N };
+static const char *const why_s[W_N] = { "the frame's vertices overflow the ring", "no render target", "no depth buffer",
+                                        "sceGxmBeginScene refused", "no pipeline", "no texture", "vertices out of range",
+                                        "no uniforms or primitive class" };
+static u32 why[W_N];
+static void skip(u32 w, const char *detail) {
+    skipped++;
+    if (!why[w]++) kh1_vita_log("kh1-gxm: first skip, %s: %s\n", why_s[w], detail ? detail : "");
+}
+
 volatile u32 kh1_vita_us_gpu; /* microseconds in kh1_vita_gxm_frame (the watchdog's) */
 
 static void stencil(u32 mode) {
@@ -630,8 +661,26 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     t0 = sceKernelGetProcessTimeWide();
     kh1_gxm_frame(&rec, r);
     sceGxmFinish(ctx); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
-    if (r->vring.head > vbuf_bytes) { skipped++; return; }
+    if (r->vring.head > vbuf_bytes) {
+        char d[64];
+        snprintf(d, sizeof d, "%u bytes, room for %u", (u32)r->vring.head, (u32)vbuf_bytes);
+        skip(W_RING, d);
+        return;
+    }
     loose_frame++;
+    if (frames % 600 == 0 && skipped) {
+        static u32 last;
+        if (skipped != last) {
+            u32 w;
+            char b[512];
+            u32 n = 0;
+            for (w = 0; w < W_N; w++)
+                if (why[w] && n < sizeof b - 64) n += (u32)snprintf(b + n, sizeof b - n, " %u %s;", why[w], why_s[w]);
+            b[n] = 0;
+            kh1_vita_log("kh1-gxm: skipped so far:%s\n", b);
+            last = skipped;
+        }
+    }
     memcpy(vbuf, vsrc, r->vring.head);
     memset(&t, 0, sizeof t);
     for (i = 0; i < rec.n; i++) {
@@ -642,16 +691,38 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             Depth *z;
             u32 j, dstore = 0;
             cur = c->tgt < KH1_CMD_TARGETS ? target(c->tgt, c->rt, c->w, c->h) : 0;
-            if (!cur) { skipped++; break; }
+            if (!cur) {
+                char d[96];
+                snprintf(d, sizeof d, "target %u (rt %u) %u x %u; %u KiB of CDRAM free", c->tgt, c->rt, c->w, c->h,
+                         heap_free_bytes(&vram) >> 10);
+                skip(W_TARGET, d);
+                break;
+            }
             z = depth_of(c->depth, c->w, c->h);
-            if (!z) { cur = 0; break; }
+            if (!z) {
+                char d[96];
+                snprintf(d, sizeof d, "depth %u %u x %u; %u KiB of CDRAM free", c->depth, c->w, c->h,
+                         heap_free_bytes(&vram) >> 10);
+                skip(W_DEPTH, d);
+                cur = 0;
+                break;
+            }
             for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++) ;
             if (j < rec.n) dstore = rec.call[j].dstore != KH1_STORE_DISCARD;
             sceGxmDepthStencilSurfaceSetForceLoadMode(&z->surf, c->depth != KH1_DS_NONE && c->dload == KH1_LOAD_LOAD
                                                       ? SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_ENABLED : SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_DISABLED);
             sceGxmDepthStencilSurfaceSetForceStoreMode(&z->surf, c->depth != KH1_DS_NONE && dstore
                                                        ? SCE_GXM_DEPTH_STENCIL_FORCE_STORE_ENABLED : SCE_GXM_DEPTH_STENCIL_FORCE_STORE_DISABLED);
-            if (sceGxmBeginScene(ctx, 0, cur->gxrt, 0, 0, 0, &cur->surf, &z->surf) < 0) { cur = 0; break; }
+            {
+                int err = sceGxmBeginScene(ctx, 0, cur->gxrt, 0, 0, 0, &cur->surf, &z->surf);
+                if (err < 0) {
+                    char d[64];
+                    snprintf(d, sizeof d, "0x%08x, target %u %u x %u", (u32)err, c->tgt, c->w, c->h);
+                    skip(W_SCENE, d);
+                    cur = 0;
+                    break;
+                }
+            }
             open = 1;
             zbound = c->depth != KH1_DS_NONE;
             scenes++;
@@ -738,19 +809,38 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             have_tex = 0;
             if (c->src) { /* a target's own pixels, read in place */
                 Target *s = c->src <= KH1_CMD_TARGETS ? &tgt[c->src - 1] : 0;
-                if (!s || !s->mem || s == cur) break; /* feedback: the scene's own target (not sampled) */
-                if (sceGxmTextureInitLinearStrided(&t, s->mem, SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR, w, h, s->stride * 4) < 0)
+                if (!s || !s->mem || s == cur) { /* feedback: the scene's own target (not sampled) */
+                    snprintf(tex_why, sizeof tex_why, "target %u as a texture: %s", c->src,
+                             !s || !s->mem ? "not made" : "the scene's own target");
                     break;
+                }
+                if (sceGxmTextureInitLinearStrided(&t, s->mem, SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR, w, h, s->stride * 4) < 0) {
+                    snprintf(tex_why, sizeof tex_why, "target %u as a %u x %u texture (stride %u): refused", c->src, w, h,
+                             s->stride);
+                    break;
+                }
             } else {
                 const TexMem *m = c->slot >= 0 && c->slot < KH1_TEXCACHE_SLOTS ? &tex[c->slot] : tex_loose(c->tex0_lo, c->tex0_hi);
                 u32 fmt;
-                if (!m || !m->mem || m->lo != c->tex0_lo || m->w != w || m->h != h) break;
+                if (!m || !m->mem || m->lo != c->tex0_lo || m->w != w || m->h != h) {
+                    snprintf(tex_why, sizeof tex_why, "tex0 %08x%08x %u x %u (slot %d): %s", c->tex0_hi, c->tex0_lo, w, h,
+                             c->slot, !m ? "in neither cache" : !m->mem ? "not uploaded" : "the slot holds another");
+                    break;
+                }
                 fmt = kh1_texfmt_of(m->psm);
-                if (sceGxmTextureInitLinear(&t, m->mem, tex_format(fmt), w, h, 0) < 0) break;
+                if (sceGxmTextureInitLinear(&t, m->mem, tex_format(fmt), w, h, 0) < 0) {
+                    snprintf(tex_why, sizeof tex_why, "tex0 %08x%08x %u x %u psm %02x: sceGxmTextureInitLinear refused",
+                             c->tex0_hi, c->tex0_lo, w, h, m->psm);
+                    break;
+                }
                 if (fmt == KH1_TEXFMT_P8 || fmt == KH1_TEXFMT_P4) {
                     void *pp = c->pslot >= 0 && (u32)c->pslot == pal_rb_slot ? pal_rb
                                : c->pslot >= 0 && c->pslot < KH1_PALCACHE_SLOTS ? pal[c->pslot] : 0;
-                    if (!pp) break;
+                    if (!pp) {
+                        snprintf(tex_why, sizeof tex_why, "tex0 %08x%08x: no palette (slot %d)", c->tex0_hi, c->tex0_lo,
+                                 c->pslot);
+                        break;
+                    }
                     sceGxmTextureSetPalette(&t, pp);
                 }
             }
@@ -776,11 +866,11 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                                                          SCE_GXM_PRIMITIVE_LINES, SCE_GXM_PRIMITIVE_TRIANGLES };
             u32 per = c->cls == KH1_PA_TRIANGLES ? 3 : c->cls == KH1_PA_LINES ? 2 : 1, v0 = c->v0, left = c->nv;
             void *vb, *fb;
-            if (!cur || bad_pipe || !pk || !fp || !u || !xf || c->cls == KH1_PA_NONE ||
-                (pk->shader.tex && pk->shader.setup != 2 && !have_tex) || (u64)(v0 + left) * 32 > r->vring.head) {
-                skipped++;
-                break;
-            }
+            if (!cur) { skip(W_TARGET, "a draw outside a scene that began"); break; }
+            if (bad_pipe || !pk || !fp) { skip(W_PIPE, pk ? pipe_why : "no pipeline set"); break; }
+            if (pk->shader.tex && pk->shader.setup != 2 && !have_tex) { skip(W_TEX, tex_why); break; }
+            if ((u64)(v0 + left) * 32 > r->vring.head) { skip(W_RANGE, 0); break; }
+            if (!u || !xf || c->cls == KH1_PA_NONE) { skip(W_STATE, 0); break; }
             if (pk->shader.tex && fs->tex >= 0) sceGxmSetFragmentTexture(ctx, (u32)fs->tex, &t);
             stencil(c->stencil);
             while (left) {
