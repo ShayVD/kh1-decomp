@@ -862,7 +862,7 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
      * between texel and pixel (the frame copy: no blend, no FBMSK, no alpha test, DECAL or MODULATE by
      * 0x80, a CT32 / CT24 texture), into a CT32 / CT24 frame whose addresses split; and a cached
      * texture's art with its blend */
-    if (fsplit && !c16 && !fbmsk) {
+    if (fsplit && !c16 && !fbmsk && !s->quad) {
         u32 keep = fpsm == KH1_PSMCT24 ? 0xFF000000u : 0, set;
         if (!tme && !(p >> 6 & 1)) {
             set = (cv[0] | cv[1] << 8 | cv[2] << 16 | (u32)cv[3] << 24) & ~keep;
@@ -957,6 +957,16 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
         u32 fr = fsplit ? sp_ry[k - py0] : 0, a;
         ty = tme ? sp_ty[k - py0] : 0;
         for (c = px0; c < px1; c++) {
+            if (s->quad) { /* session 135: the corners' colours at the pixel's centre */
+                s32 fx = x1 > x0 ? ((c * 16 + 8 - x0) << 8) / (x1 - x0) : 0, fy = y1 > y0 ? ((k * 16 + 8 - y0) << 8) / (y1 - y0) : 0;
+                fx = fx < 0 ? 0 : fx > 256 ? 256 : fx;
+                fy = fy < 0 ? 0 : fy > 256 ? 256 : fy;
+                for (i = 0; i < 4; i++) {
+                    s32 top = (s32)(s->rgbav[0] >> i * 8 & 0xFF) * (256 - fx) + (s32)(s->rgbav[1] >> i * 8 & 0xFF) * fx;
+                    s32 bot = (s32)(s->rgbav[2] >> i * 8 & 0xFF) * (256 - fx) + (s32)(s->rgbav[3] >> i * 8 & 0xFF) * fx;
+                    cv[i] = (top * (256 - fy) + bot * fy) >> 16;
+                }
+            }
             for (i = 0; i < 4; i++) col[i] = cv[i];
             if (tme) { /* the texel at the pixel's left / top edge, as kh1_gsmem_sprite */
                 tx = sp_tx[c - px0];

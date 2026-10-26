@@ -156,6 +156,11 @@ typedef struct {
                                                 * (FGE: f and fogcol after the texture function) */
     u32 zbuf_lo;                               /* session 122: ZBUF's ZBP and PSM (tests bit 2) */
     u32 z, f, fogcol;                          /* the second vertex's Z and F, FOGCOL's RGB */
+    u32 quad;                                  /* session 135: kh1_gsmem_flat_sprite only: 1 for a strip's
+                                                * rectangle (gsregs.c gs_quad), each pixel's colour from
+                                                * rgbav's four corners (top left, top right, bottom left,
+                                                * bottom right) instead of rgba */
+    u32 rgbav[4];
 } KH1GsSprite;
 int kh1_gsmem_sprite(const KH1GsSprite *s);
 /* session 95: an untextured SPRITE (clear, fade, letterbox) filled into the model's pixels for the
