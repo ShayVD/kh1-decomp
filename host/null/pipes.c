@@ -12,7 +12,11 @@
  * merge (batch.h's column groups).  Session 126 (renderer-spec 4.13 "Session 126"): the batcher is a command
  * recorder's (include/platform/cmdbuf.h): each kick's GPU vertices (primasm.h, vertex.h) go into the per-frame
  * rings, and each frame's render passes get their load / store needs; the report adds `commands:` and `passes:`
- * lines and each distinct frame's pass list.  Not part of the PS2 build. */
+ * lines and each distinct frame's pass list.  Session 127 (renderer-spec 4.13 "Session 127"): the transfers
+ * are commands too: gsmem.c's hooks give each upload, copy and CLUT load (the CLUT through a palette cache of
+ * the recorder's own, include/platform/palcache.h), and each textured kick whose binding may have moved looks
+ * its TEX0 up in a texture cache of its own (include/platform/texcache.h): a decode is a TEXTURE command; the
+ * report adds a `transfers:` line.  Not part of the PS2 build. */
 #include "common.h"
 #include "gsregs.h"
 #include "gsmem.h"
@@ -24,6 +28,9 @@
 #include "platform/ring.h"
 #include "platform/cmdbuf.h"
 #include "platform/primasm.h"
+#include "platform/palcache.h"
+#include "platform/texcache.h"
+#include "platform/shadergen.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -34,15 +41,66 @@ static KH1CmdRec *rec;
 #define batcher (rec->b)
 void *malloc(__SIZE_TYPE__);
 
-/* session 126: the recorder and its two rings, made at the first kick (only KH1_HOST_TRACE=5 runs use them) */
+/* session 127: the recorder's caches (what a port's renderer would hold) */
+static KH1PalCache *pal;
+static KH1TexCache *tex;
+static int tex_ok, tex_look = 1; /* tex_look: a transfer since the last lookup */
+static u32 pal_buf[256];
+
+static void on_xfer(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi) {
+    kh1_cmd_upload(rec, dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
+    tex_look = 1;
+}
+
+static void on_clut(u32 lo, u32 hi) {
+    const KH1GsState *s = kh1_gs_state();
+    u32 n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_buf);
+    int fill = 0, slot = n ? kh1_palcache_get(pal, pal_buf, n, &fill) : -1;
+    kh1_cmd_clut(rec, lo, hi, slot, fill);
+    tex_look = 1;
+}
+
+static void tex_read(u32 lo, u32 hi, u32 *out, void *ctx) {
+    u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), x, y;
+    (void)ctx;
+    for (y = 0; y < h; y++)
+        for (x = 0; x < w; x++) out[y * w + x] = kh1_gsmem_read_pixel(lo >> 20 & 63, lo & 0x3FFF, lo >> 14 & 63, x, y);
+}
+
+/* the draw's texture: its entry in the recorder's texture cache (-1: a render target's, or not kept) */
+static void tex_lookup(u32 lo, u32 hi) {
+    const u32 *t = 0;
+    int decoded = 0;
+    s32 slot = -1, i;
+    if (tex_ok) t = kh1_texcache_get(tex, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), tex_read, 0,
+                                     &decoded);
+    for (i = 0; t && i < KH1_TEXCACHE_SLOTS; i++)
+        if (tex->slot[i].tex == t) slot = i;
+    kh1_cmd_texture(rec, lo, hi, slot, decoded, decoded && slot >= 0 ? tex->slot[slot].n : 0);
+}
+
+/* session 126: the recorder and its two rings, made at the first use (only KH1_HOST_TRACE=5 runs use them);
+ * session 127: with its caches, and gsmem.c's transfer hooks set */
 static KH1CmdRec *recorder(void) {
     if (!rec) {
         rec = (KH1CmdRec *)malloc(sizeof *rec);
         kh1_cmd_init(rec, malloc(KH1_RING_FRAMES * KH1_RING_VERTEX_BYTES), KH1_RING_VERTEX_BYTES,
                      malloc(KH1_RING_FRAMES * KH1_RING_UNIFORM_BYTES), KH1_RING_UNIFORM_BYTES);
+        pal = (KH1PalCache *)malloc(sizeof *pal);
+        kh1_palcache_init(pal);
+        tex = (KH1TexCache *)malloc(sizeof *tex);
+        tex_ok = kh1_texcache_init(tex) == 0;
+        kh1_gsmem_xfer_hook = on_xfer;
+        kh1_gsmem_clut_hook = on_clut;
     }
     return rec;
 }
+
+/* session 127: made before the run's first transfer (host/null/main.c) */
+void kh1_pipes_start(void) { recorder(); }
+
+const KH1PalCache *kh1_pipes_palcache(void) { recorder(); return pal; }
+const KH1TexCache *kh1_pipes_texcache(void) { recorder(); return tex_ok ? tex : 0; }
 
 int memcmp(const void *, const void *, __SIZE_TYPE__);
 
@@ -51,7 +109,7 @@ const KH1CmdRec *kh1_pipes_recorder(void) { return recorder(); }
 
 /* the registers of the last kick's state, its draw state and pass (most kicks repeat the last one's) */
 static KH1DrawRegs last_r;
-static u32 last_scissor[2], last_xfer;
+static u32 last_scissor[2];
 static int have_last;
 static KH1DrawState last_d;
 static KH1RenderPass last_p;
@@ -70,8 +128,6 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     static const KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
     const KH1GsState *gs = kh1_gs_state();
     const KH1GsContext *c = &gs->ctx[prim >> 9 & 1];
-    const KH1GsMemStats *ms = kh1_gsmem_stats();
-    u32 xfer = ms->uploads + ms->copies + ms->clut_loads;
     KH1DrawRegs r;
     KH1PrimAsm pa;
     KH1PaVert out[6];
@@ -98,8 +154,7 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     r.fogcol = gs->fogcol.lo;
     r.texa_lo = gs->texa.lo;
     r.texa_hi = gs->texa.hi;
-    if (have_last && xfer != last_xfer) kh1_cmd_break(rec);
-    last_xfer = xfer;
+    /* session 127: the transfers break the batch from gsmem.c's hooks (kh1_cmd_upload, kh1_cmd_clut) */
     if (!have_last || memcmp(&r, &last_r, sizeof r) || c->scissor.lo != last_scissor[0] ||
         c->scissor.hi != last_scissor[1]) {
         kh1_drawstate_of(&r, &last_d);
@@ -109,6 +164,11 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
         last_scissor[0] = c->scissor.lo;
         last_scissor[1] = c->scissor.hi;
         have_last = 1;
+        tex_look = 1;
+    }
+    if (tex_look && prim >> 4 & 1) { /* session 127: the binding may have moved: the texture cache's answer */
+        tex_lookup(c->tex0.lo, c->tex0.hi);
+        tex_look = 0;
     }
     /* session 126: the primitive's GPU vertices: a fresh list of its type (a strip's or fan's kick is one triangle
      * of the vertices the hook gives) through primasm.h and vertex.h */
@@ -148,6 +208,9 @@ void kh1_pipes_frame(void) {
     }
     if (kh1_pipes_frame_hook) kh1_pipes_frame_hook(rec);
     kh1_cmd_reset_frame(rec);
+    kh1_palcache_frame(pal);
+    if (tex_ok) kh1_texcache_frame(tex);
+    tex_look = 1;
 }
 
 void kh1_pipes_draw(const KH1GsDraw *g) {
@@ -206,6 +269,10 @@ static void report_cmds(void) {
            t->open, t->feedback);
     printf("kh1-host:   depth: %u passes with a depth buffer, %u load, %u store, %u discard, %u open at the end\n",
            t->dpasses, t->dloads, t->dstores, t->ddiscards, t->dopen);
+    /* session 127: the transfers between the draws */
+    printf("kh1-host:   transfers: %u uploads, %u copies, %u CLUT loads (%u palette fills), %u texture decodes (%u texels); "
+           "%u read a render target, %u write one; %u scenes split by a transfer on their own target\n", t->uploads,
+           t->copies, t->cluts, t->pal_fills, t->textures, t->texels, t->tgt_reads, t->tgt_writes, t->splits);
     for (i = 0; i < nseq; i++) printf("kh1-host:   pass list %u: %u frames\n", i + 1, seq_frames[i]);
 }
 
@@ -228,6 +295,42 @@ static void report_batches(void) {
            KH1_RING_UNIFORM_BYTES);
 }
 
+/* session 127: the run's shaders as Cg (shadergen.h): counted, and with KH1_HOST_SHADERS=DIR written there as
+ * frag_N.cg (the pipe set's fragment shaders in order) and vert_N.cg (vertex.h's variant numbers) */
+typedef struct _IO_FILE FILE;
+FILE *fopen(const char *, const char *);
+int fclose(FILE *);
+__SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, FILE *);
+char *getenv(const char *);
+int sprintf(char *, const char *, ...);
+
+static void put_file(const char *dir, const char *name, u32 n, const char *text, u32 len) {
+    char path[512];
+    FILE *f;
+    sprintf(path, "%.400s/%s_%u.cg", dir, name, n);
+    f = fopen(path, "w");
+    if (!f) return;
+    fwrite(text, 1, len, f);
+    fclose(f);
+}
+
+static void report_shaders(u32 vmask) {
+    static char text[KH1_SHADER_TEXT];
+    const char *dir = getenv("KH1_HOST_SHADERS");
+    u32 i, gen = 0, not_gen = 0, len, most = 0;
+    for (i = 0; i < set.nshader; i++) {
+        len = kh1_shader_frag_cg(&set.shader[i], text, sizeof text);
+        if (!len) { not_gen++; continue; }
+        gen++;
+        if (len > most) most = len;
+        if (dir && *dir) put_file(dir, "frag", i + 1, text, len);
+    }
+    for (i = 0; i < 7; i++)
+        if (vmask >> i & 1 && dir && *dir && (len = kh1_shader_vert_cg(i, text, sizeof text)) != 0) put_file(dir, "vert", i, text, len);
+    printf("kh1-host:   Cg: %u fragment shaders generated (at most %u bytes), %u not (a frame read or the sampler's own "
+           "taps)%s\n", gen, most, not_gen, dir && *dir ? ", written with the vertex shaders to KH1_HOST_SHADERS" : "");
+}
+
 void kh1_pipes_report(void) {
     u32 i, vmask, nv;
     if (rec) {
@@ -247,5 +350,6 @@ void kh1_pipes_report(void) {
     for (i = 0; i < 7; i++)
         if (vmask >> i & 1) printf(" [%s]", kh1_vertkey_str(i));
     printf("\n");
+    report_shaders(vmask);
     report_targets();
 }

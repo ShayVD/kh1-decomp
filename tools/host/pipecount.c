@@ -21,12 +21,16 @@
  * frame drew earlier is unknown here, and the packets' vertices are not passed, so no pass counts as cleared):
  * `send N: P passes C commands` and a `pass` line each (target, depth, load / store: a STORE is a later pass
  * of the same send sampling or drawing on the target; OPEN is decided by what follows the send), then the
- * totals. */
+ * totals.
+ *
+ * Session 127 (renderer-spec 4.13 "Session 127"): then `Cg: G generated, N not` over the fragment shaders
+ * (include/platform/shadergen.h: N need a frame read or the sampler's own taps). */
 #include "common.h"
 #include "platform/drawstate.h"
 #include "platform/batch.h"
 #include "platform/vertex.h"
 #include "platform/cmdbuf.h"
+#include "platform/shadergen.h"
 
 int printf(const char *, ...);
 int scanf(const char *, ...);
@@ -169,5 +173,17 @@ int main(int argc, char **argv) {
     for (i = 0; i < 7; i++)
         if (vmask >> i & 1) printf(" [%s]", kh1_vertkey_str(i));
     printf("\n");
+    {
+        static char cg[KH1_SHADER_TEXT];
+        u32 gen = 0, most = 0, len;
+        for (i = 0; i < set.nshader; i++)
+            if ((len = kh1_shader_frag_cg(&set.shader[i], cg, sizeof cg)) != 0) {
+                gen++;
+                if (len > most) most = len;
+            } else {
+                printf("not generated: shader %u\n", i + 1);
+            }
+        printf("Cg: %u fragment shaders generated (at most %u bytes), %u not\n", gen, most, set.nshader - gen);
+    }
     return 0;
 }
