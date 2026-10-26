@@ -121,6 +121,9 @@ void kh1_host_vblank(void) {
     if (gpu_on) { /* session 136: the frame's GS draws on the GPU (gxm.c through the recorder's hook), shown */
         SceUInt64 t0 = sceKernelGetProcessTimeWide(), t1;
         kh1_pipes_frame();
+        /* only a whole picture is shown: the display target as the frame copy left it (the software
+         * present's rule); between copies the game may be part-way through the next one */
+        if (kh1_vita_frame_copied()) kh1_vita_gxm_latch();
         t1 = sceKernelGetProcessTimeWide();
         kh1_vita_draw();
         us_frame += (u32)(t1 - t0);

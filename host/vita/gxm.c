@@ -953,9 +953,59 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     kh1_vita_us_gpu += (u32)(sceKernelGetProcessTimeWide() - t0);
 }
 
+/* session 136: the display target copied (by the GPU, after the frame's scenes) into its own surface at a
+ * frame copy, so the present shows a whole picture; until the first one the display target itself */
+static Target shown_tgt;
+static f32 *latch_v; /* the copy's quad (LPDDR) */
+static int latched;
+void kh1_vita_gxm_latch(void) {
+    Target *d = display >= 0 ? &tgt[display] : 0, *s = &shown_tgt;
+    SceGxmTexture t;
+    if (!ready || !d || !d->mem || !latch_v) return;
+    if (!s->mem || s->w != d->w || s->h != d->h) {
+        if (s->mem) heap_free(s->heap, s->mem, s->bytes);
+        memset(s, 0, sizeof *s);
+        s->w = d->w;
+        s->h = d->h;
+        s->stride = d->stride;
+        s->bytes = s->stride * 4 * s->h;
+        s->mem = (u8 *)surface_alloc(s->bytes, &s->heap);
+        if (!s->mem) return;
+        if (sceGxmColorSurfaceInit(&s->surf, SCE_GXM_COLOR_FORMAT_A8B8G8R8, SCE_GXM_COLOR_SURFACE_LINEAR,
+                                   SCE_GXM_COLOR_SURFACE_SCALE_NONE, SCE_GXM_OUTPUT_REGISTER_SIZE_32BIT, s->w, s->h,
+                                   s->stride, s->mem) < 0) {
+            heap_free(s->heap, s->mem, s->bytes);
+            s->mem = 0;
+            return;
+        }
+    }
+    if (!(s->gxrt = rt_of(s->w, s->h))) return;
+    {   /* clip y -1 is row 0 under the frame's viewport (y down); texel centres line up, point sampled */
+        f32 u1 = (f32)d->w / (f32)d->stride;
+        f32 q[16] = { -1, -1, 0, 0, 1, -1, u1, 0, -1, 1, 0, 1, 1, 1, u1, 1 };
+        memcpy(latch_v, q, sizeof q);
+    }
+    if (sceGxmBeginScene(ctx, 0, s->gxrt, 0, 0, 0, &s->surf, 0) < 0) return;
+    sceGxmTextureInitLinearStrided(&t, d->mem, SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR, d->stride, d->h, d->stride * 4);
+    sceGxmTextureSetMinFilter(&t, SCE_GXM_TEXTURE_FILTER_POINT);
+    sceGxmTextureSetMagFilter(&t, SCE_GXM_TEXTURE_FILTER_POINT);
+    sceGxmSetViewport(ctx, (f32)s->w * 0.5f, (f32)s->w * 0.5f, (f32)s->h * 0.5f, (f32)s->h * 0.5f, 0.0f, 1.0f);
+    sceGxmSetRegionClip(ctx, SCE_GXM_REGION_CLIP_NONE, 0, 0, s->w - 1, s->h - 1);
+    sceGxmSetFrontDepthFunc(ctx, SCE_GXM_DEPTH_FUNC_ALWAYS);
+    sceGxmSetFrontDepthWriteEnable(ctx, SCE_GXM_DEPTH_WRITE_DISABLED);
+    stencil(0);
+    sceGxmSetVertexProgram(ctx, pv);
+    sceGxmSetFragmentProgram(ctx, pf);
+    sceGxmSetFragmentTexture(ctx, 0, &t);
+    sceGxmSetVertexStream(ctx, 0, latch_v);
+    sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLE_STRIP, SCE_GXM_INDEX_FORMAT_U16, index_buf, 4);
+    sceGxmEndScene(ctx, 0, 0);
+    latched = 1;
+}
+
 /* the display target into vita2d's open scene: the 4:3 picture over the canvas's rectangle (screen pixels) */
 int kh1_vita_gxm_present(f32 x, f32 y, f32 w, f32 h) {
-    Target *d = display >= 0 ? &tgt[display] : 0;
+    Target *d = latched ? &shown_tgt : display >= 0 ? &tgt[display] : 0;
     SceGxmTexture t;
     f32 *v;
     if (!ready || !d || !d->mem) return 0;
@@ -1041,6 +1091,7 @@ int kh1_vita_gxm_init(void) {
     vbuf_bytes = KH1_RING_VERTEX_BYTES;
     vbuf = (u8 *)heap_alloc(&tram, vbuf_bytes);
     index_buf = (u16 *)heap_alloc(&tram, 64000 * 2);
+    latch_v = (f32 *)heap_alloc(&tram, 16 * sizeof(f32));
     pal_rb = heap_alloc(&tram, 1024);
     for (i = 0; i < KH1_PALCACHE_SLOTS; i++) pal[i] = heap_alloc(&tram, 1024);
     if (!vbuf || !index_buf || !pal_rb || !pal[KH1_PALCACHE_SLOTS - 1]) return -1;

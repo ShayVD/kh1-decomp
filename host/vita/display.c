@@ -124,10 +124,19 @@ static void after_send(u32 tadr) {
 
 void kh1_vita_present_on(void) { kh1_dma_after_send = after_send; }
 
-/* session 136: the GPU's picture; the sends are still counted for the watchdog */
+/* session 136: the GPU's picture; the sends are still counted for the watchdog, and the frame copy marks
+ * the display buffer whole (main.c latches the GPU's display target then: kh1_vita_frame_copied) */
+static int copied;
 static void count_send(u32 tadr) {
     kh1_vita_sends++;
     kh1_vita_last_send = tadr;
+    if (tadr == frame_copy) copied = 1;
+}
+
+int kh1_vita_frame_copied(void) {
+    int c = copied;
+    copied = 0;
+    return c;
 }
 
 void kh1_vita_present_gpu(void) {

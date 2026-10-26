@@ -10,6 +10,8 @@ void kh1_vita_fill(unsigned int abgr);
 /* session 136: the picture drawn by the GPU (gxm.c) instead of the GS model's buffer */
 void kh1_vita_present_gpu(void);
 void kh1_vita_draw(void);
+int kh1_vita_frame_copied(void); /* display.c: a frame copy was sent since the last call */
+void kh1_vita_gxm_latch(void);   /* gxm.c: the display target, whole, kept for the present */
 
 /* gxm.c (session 136): the GPU renderer.  init: 0 when it can run; frame: one frame of the command recorder
  * (host/null/pipes.c's kh1_pipes_frame_hook); present: the display target into vita2d's open scene */
