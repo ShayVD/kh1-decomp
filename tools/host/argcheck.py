@@ -67,13 +67,17 @@ BENIGN = {
 }
 
 
-def files():
+def files(sdk=False):
+    """The game's C files and shift/drafts.tsv's drafts; with sdk, src/sdk/'s C (definitions only:
+    the game calls libm's sinf as func_0026b7d0, session 135)."""
     out = []
     for d, _, fs in os.walk(os.path.join(ROOT, "src")):
         rel = os.path.relpath(d, ROOT)
-        if rel == "src/sdk" or rel.startswith("src/sdk/"):
+        if (rel == "src/sdk" or rel.startswith("src/sdk/")) != sdk:
             continue
         out += [os.path.join(rel, f) for f in fs if f.endswith(".c")]
+    if sdk:
+        return sorted(out)
     for l in open(os.path.join(ROOT, "shift", "drafts.tsv")):
         f = l.rstrip("\n").split("\t")
         if len(f) >= 2 and f[0].startswith("func_"):
@@ -139,8 +143,9 @@ def main():
         if len(f) >= 2 and not l.startswith("#") and f[1].split():
             alias[f[0]] = "func_" + f[1].split()[0].lower()[-8:]
     srcs = {f: strip_comments(open(os.path.join(ROOT, f), errors="replace").read()) for f in files()}
+    sdk = {f: strip_comments(open(os.path.join(ROOT, f), errors="replace").read()) for f in files(sdk=True)}
     defs = {}  # func_ name -> (params, variadic, rettype, file)
-    for f, s in srcs.items():
+    for f, s in list(srcs.items()) + list(sdk.items()):
         for m in DEF_RX.finditer(s):
             ret, name, p = m.group(1).strip(), m.group(2), m.group(3)
             if ret in ("return", "else", "if", "while", "for", "switch") or "define" in ret:
@@ -178,7 +183,11 @@ def main():
     for f, s in sorted(srcs.items()):
         for m in CALL_RX.finditer(s):
             name = m.group(1)
-            if name not in voids or defs[name][3] == f:
+            if name not in voids:
+                continue
+            # in the callee's own file the compiler sees the void, unless the call goes through
+            # m2c's cast (`#define f ((s32 (*)()) f)`: fldtext.c's func_0010c720, session 135)
+            if defs[name][3] == f and not re.search(r"#define\s+" + name + r"\s+\(\(", s):
                 continue
             before = s[:m.start()].rstrip()
             # a value use: assigned, returned, compared, negated or passed on

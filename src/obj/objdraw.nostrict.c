@@ -243,8 +243,10 @@ extern void func_00175600(void);
 extern R14 *func_001357b8(void);
 extern void func_00135a68(u8 *, f32, f32);
 extern s32 func_00121000(f32 (*)[4], u8 *);
-extern void func_001621e0(s32, f32 (*)[4], S14 *, O14 *);
-void func_00136428(O14 *o, u32 fl, s32 a2, f32 *col, f32 alpha) {
+extern void *func_001621e0(s32, f32 (*)[4], S14 *, O14 *);
+/* Returns the model draw's result (func_001606d0's DObj25 *): func_00136768 reads it from $v0
+ * (session 135, argcheck). */
+void *func_00136428(O14 *o, u32 fl, s32 a2, f32 *col, f32 alpha) {
     f32 m[4][4];
     S14 s;
     u8 buf[128];
@@ -310,7 +312,7 @@ void func_00136428(O14 *o, u32 fl, s32 a2, f32 *col, f32 alpha) {
         s.g[0] = 0x31000070;
         s.g[1] = t;
     }
-    func_001621e0(o->f15c, D_002E26C0, &s, o);
+    return func_001621e0(o->f15c, D_002E26C0, &s, o);
 }
 
 /* func_00136768 (from hand/nostrict/text_00120000_h54.c). */

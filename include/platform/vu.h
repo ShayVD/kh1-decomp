@@ -165,9 +165,12 @@ static __inline__ void PlatVu0Cross3(f32 *d, const f32 *a, const f32 *b) {
     d[0] = x; d[1] = y; d[2] = z; d[3] = 0.0f;
 }
 /* v / |v| over xyz, w 0 (vsqrt, vdiv Q = 1 / |v|, vmulq.xyz into a cleared
- * register) */
+ * register).  The VU's 1 / 0 is +max, not infinity, so a zero vector comes out
+ * 0, not NaN (0 x max): the player's move direction of a still pad is one
+ * (func_0014f798, session 135), and a NaN there sticks in the position. */
 static __inline__ void PlatVu0Normalize3(f32 *d, const f32 *v) {
-    f32 q = 1.0f / PlatVu0Length3(v);
+    f32 l = PlatVu0Length3(v);
+    f32 q = l == 0.0f ? PlatVu0Float(0x7F7FFFFF) : 1.0f / l;
     f32 x = v[0] * q, y = v[1] * q, z = v[2] * q;
     d[0] = x; d[1] = y; d[2] = z; d[3] = 0.0f;
 }

@@ -36,7 +36,7 @@ s32 func_00f25c40(void) {
     char buf[64];
     Cfg *c;
     s32 fd, r, lba, blk;
-    u32 left, chunk, i, nblk;
+    u32 left, chunk, nblk;
 
     c = &D_0046A688;
     sprintf(buf, D_00F27538, c->f4(), c->f8());
@@ -55,6 +55,7 @@ s32 func_00f25c40(void) {
     D_0046A614 = 410;
     if (nblk != 0) {
         do {
+            u32 i; // scoped to the loop: 245 -> 7 words (decomp-permuter, session 135)
 retry:
             if (D_002C5968.mode) for (;;) func_00f25c28();
             while (D_002C5968.b1 || D_002C5968.b0) func_00f25c28();

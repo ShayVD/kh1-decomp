@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste this to start the next session (session 135).
+Paste this to start the next session (session 136).
 
 ---
 
@@ -16,7 +16,26 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 134, 2026-10-26)
+## Where we stopped (end of session 135, 2026-10-26)
+
+- **Session 135** (no Mac; ISO staged by the coordinator, SHA-256 9ad74868… checked): **past the "monologue".**
+  - That screen was **Dive to the Heart** waiting for the player: its last line さあ 歩き出してごらん
+    asks Sora to walk (script VM 0 loops until save byte 0x901 = 4; trigger box 2). Sora is invisible
+    (no 3D on the null platform). Two host bugs made his facing / position NaN: objutil.c's sinf call
+    without its argument (m2c) and `PlatVu0Normalize3` of a zero vector (VU gives 0). Fixed (objects
+    unchanged). With the stick held he walks, the variable goes to 4, the doves' SEs play, the lines
+    キミの中に眠る力 / カタチは力を与える and the tutorial's ✕でジャンプ! show (docs/native-overlays.md
+    "Session 135").
+  - **One glyph a line fixed**: fldtext.c func_0010c720 returns the cursor its caller reads from $v0.
+  - argcheck.py now sees sdk definitions and same-file casts; objdraw func_00136428 returns the
+    model draw's result; 4 `return void_f()` hits left, listed in native-overlays.md.
+  - **Permuter** (the user's OK, 2026-10-26): dkmovie func_00f20258 matched (96 / 122);
+    dktitle func_00f25528 6 -> 4 words, dkmovie func_00f20140 29 -> 13 words (our measure),
+    func_00f25c40 245 -> 7 words (kept in the draft), the rest no better after 20 minutes each
+    (00f228c8 and 00f24b60 never ran) (nonmatchings/session132/NOTES.md, docs/overlays.md).
+  - kh1.elf byte-identical (6,981 / 6,988); dktitle / dkmovie overlays byte-identical; `make test` PASS.
+
+## Where we stopped before (end of session 134, 2026-10-26)
 
 - **Session 134** (Mac for staging only): **past the opening movie on the real disc.**
   - dkmovie.x's 12 overlay files were in the project files (kh1-runtime/ovl, pins checked); the
@@ -827,7 +846,26 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 135 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 136 plan (at most 3 workers, docs/workflow.md "Resource limit")
+
+1. **Through Dive to the Heart on the host**: pick a weapon at the pedestals (read their positions
+   from the field's objects / trigger boxes with gdb, since nothing 3D is drawn), answer the
+   questions, and see the next boundary (the first fight, or Destiny Islands' load). Pad scripts:
+   docs/native-overlays.md "Session 135". Keep watching for NaNs (a hardware watchpoint on the
+   player at `D_002C64A0 + 1200` + 0x10 with `if $x != $x`).
+2. **The 4 `return void_f()` argcheck hits** (native-overlays.md "Session 135"): check whether the
+   object task reads func_00152140's value.
+3. **With the Mac, after the Vita display thread's PR**: a Vita3K run with pad input into Dive to the
+   Heart (the two NaN fixes and the text fix matter there too).
+4. **Matching**: dktitle's 11 left (func_00f25c40 is 7 words off now; 00f228c8 and 00f24b60 are
+   the two the permuter has not tried) and dkmovie's func_00f20140 (permuter outputs are not committed;
+   rerun `KH1_OVL=dktitle python3 tools/permuter.py import ...`, docs/overlays.md).
+5. End with `make progress-update SESSION=136`, refresh docs/progress.md's tables, commit, open a PR,
+   and refresh this prompt.
+6. **Once the PR is merged, message the coordinator to start the next session** (session 137) with
+   this prompt.
+
+## Session 135 plan (done; kept for reference)
 
 1. **Leave the monologue** (the next boundary on the real disc; docs/native-overlays.md "Session
    134"): find what the game waits on after the opening movie. Start from sound effect 21102

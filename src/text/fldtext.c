@@ -174,7 +174,9 @@ static inline u64 uv(s32 x, s32 y) {
     y = y * 16 + 8;
     return (u64)x | ((u64)y << 16);
 }
-void func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
+/* Returns the advanced cursor too: func_0010cb80 takes it from $v0 (session 135: as void the
+ * host's caller stored a garbage pointer, so every glyph of a line went to the same slot). */
+u64 *func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
     u64 *p;
     s32 row = 0, col = 0;
     s32 k, off, page;
@@ -215,8 +217,7 @@ void func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
             p[5] = xyz(x + 0x18, y + off + 0x18);
             break;
         }
-        *pp = p + 6;
-        return;
+        return *pp = p + 6;
     } else {
         page = id / 441;
         switch (page) {
@@ -254,7 +255,7 @@ void func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
             p[5] = xyz(x + w, y + w);
         }
     }
-    *pp = p + 6;
+    return *pp = p + 6;
 }
 
 /* func_0010cb80 (from hand/text_00100000_h28.c). */
