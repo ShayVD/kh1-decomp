@@ -202,6 +202,10 @@ def variants(code: str) -> list[str]:
     v = re.sub(r"\bM2C_UNK \*(\w+);", r"s8 *\1;", v)
     if v != code:
         out.append(v)
+    # `*(T *)0x00F20908`: m2c lost the %hi across a branch (a lui both paths share); a global
+    v = absolute_globals(code)
+    if v != code:
+        out.append(v)
     # m2c counts pointer increments in bytes even on typed pointers
     v = scale_increments(code)
     if v != code:
@@ -242,6 +246,30 @@ def variants(code: str) -> list[str]:
             if w != v and w != code:
                 out.append(w)
     return list(dict.fromkeys(out))
+
+
+ABS_DEREF_RE = re.compile(r"\*\((\w+(?: \w+)?) \*\)0x([0-9A-Fa-f]{6,8})\b")
+
+
+def absolute_globals(code: str) -> str:
+    """`*(T *)0xADDR` (an address in EE RAM) as an extern global D_ADDR of type T."""
+    decls = {}
+
+    def fix(m: re.Match) -> str:
+        a = int(m.group(2), 16)
+        if not 0x00100000 <= a < 0x02000000:
+            return m.group(0)
+        name = f"D_{a:08X}"
+        decls.setdefault(name, m.group(1))
+        return name
+    v = ABS_DEREF_RE.sub(fix, code)
+    if not decls:
+        return code
+    new = [f"extern {t} {n};" for n, t in decls.items() if not re.search(rf"^extern [^;]*\b{n}\b", v, re.M)]
+    start = re.search(r"^\S.*\)\s*\{\s*$", v, re.M)
+    if not start:
+        return code
+    return v[: start.start()] + "".join(d + "\n" for d in new) + v[start.start():]
 
 
 NARROW_LOAD_RE = re.compile(r"M2C_FIELD\((?:[^(),]|\([^()]*\))+, ([su](?:8|16|32)) \*, (?:0x[0-9A-Fa-f]+|\d+)\)|\*(arg\d+)\b")

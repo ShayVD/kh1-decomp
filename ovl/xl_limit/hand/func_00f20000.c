@@ -1,5 +1,5 @@
 /* xl_limit.x: functions matched by hand (session 131b). */
-#include "common.h"
+#include "ovl.h"
 
 extern s32 D_00F23200, D_00F23204, D_00F23208, D_002E26A0;
 void func_0012cab8(s32);
