@@ -63,5 +63,8 @@ dkmovie's two: dkmovie func_00f20258 matched (ovl/dkmovie/hand/; func_0011ef10 d
 value). func_00f25528: permuter score 50 -> 40, 6 -> 4 words by `autodecomp.py try` (not kept: the
 draft stays the port's). dkmovie func_00f20140: 29 -> 13 words (register choice for the packet base;
 four hand variants with a `MoviePkt *` local did not help). No improvement on 00f26710, 00f241c8,
-00f20a98, 00f21068 (reorg's annul choice, as expected). The runs still going when the PR opened are
-in the PR's follow-up commit.
+00f20a98, 00f21068 (reorg's annul choice, as expected). func_00f25c40: 245 -> 7 words, kept in the
+draft (`u32 i` declared inside the do-while; the other 7 words and the 4-byte size gap are open).
+The rest only moved the permuter's score, not `autodecomp.py try`'s word count: 00f21808 36 -> 39
+(nostrict), 00f21ca0 94 -> 91, 00f23aa8 and 00f24330 worse; nothing kept. 00f228c8 and 00f24b60
+imported but never ran (the queue ended first).

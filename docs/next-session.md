@@ -30,8 +30,9 @@ Ask for the Mac at the start; if the user says it is away, do the static items.
   - argcheck.py now sees sdk definitions and same-file casts; objdraw func_00136428 returns the
     model draw's result; 4 `return void_f()` hits left, listed in native-overlays.md.
   - **Permuter** (the user's OK, 2026-10-26): dkmovie func_00f20258 matched (96 / 122);
-    dktitle func_00f25528 6 -> 4 words, dkmovie func_00f20140 29 -> 13 words (our measure), the
-    rest no better after 20 minutes each (nonmatchings/session132/NOTES.md, docs/overlays.md).
+    dktitle func_00f25528 6 -> 4 words, dkmovie func_00f20140 29 -> 13 words (our measure),
+    func_00f25c40 245 -> 7 words (kept in the draft), the rest no better after 20 minutes each
+    (00f228c8 and 00f24b60 never ran) (nonmatchings/session132/NOTES.md, docs/overlays.md).
   - kh1.elf byte-identical (6,981 / 6,988); dktitle / dkmovie overlays byte-identical; `make test` PASS.
 
 ## Where we stopped before (end of session 134, 2026-10-26)
@@ -856,7 +857,8 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    object task reads func_00152140's value.
 3. **With the Mac, after the Vita display thread's PR**: a Vita3K run with pad input into Dive to the
    Heart (the two NaN fixes and the text fix matter there too).
-4. **Matching**: dktitle's 11 left and dkmovie's func_00f20140 (permuter outputs are not committed;
+4. **Matching**: dktitle's 11 left (func_00f25c40 is 7 words off now; 00f228c8 and 00f24b60 are
+   the two the permuter has not tried) and dkmovie's func_00f20140 (permuter outputs are not committed;
    rerun `KH1_OVL=dktitle python3 tools/permuter.py import ...`, docs/overlays.md).
 5. End with `make progress-update SESSION=136`, refresh docs/progress.md's tables, commit, open a PR,
    and refresh this prompt.
