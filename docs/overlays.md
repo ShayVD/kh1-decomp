@@ -117,7 +117,22 @@ What the hand matches needed, most often first:
   always right: wm func_00f2f188 needs `0.349065810442f` (12 digits), the pi of wm's
   RotMatrixX calls `3.141592503f` (10; `3.14159250259f` is one ulp off), `0.3f` gives the
   target's 0x3E999999. Try a few spellings.
-- Frame size: an unused local OvlMtx or array.
+- Frame size: an unused local OvlMtx or array (16 / 64 / 96 bytes too big: OvlVec / OvlMtx).
+- Register choice, when nothing else works: a local register variable
+  (`register s32 n KH1_REG("s1") = 5;`, include/common.h), with a comment saying why
+  (gb func_00f29720, wm func_00f553b8; the main ELF does the same).
+- Flag modes: try `nostrict` (a reload after a store through a struct pointer), `norlo`
+  (a counted loop gcc would reverse into a countdown), `nofill`, `nosib`.
+- Callee results: return a memcpy-like callee's result, or declare a callee non-void, when
+  $v0 stays occupied in the original; an unprototyped `void f();` when one function is
+  called with 3 and 4 arguments.
+- Statement order search: `hand.py perms` for up to 6 lines; the workers' hill-climbing and
+  one-line-position scripts for longer runs (session 131b's scratch, not committed).
+- Struct copies through ldl/ldr/sdl/sdr are plain assignments of 4-aligned structs; a u128
+  written then read by word needs a union.
+- `(u32)(x - 1) == 48` keeps a subtraction gcc would fold; `switch (id - 1)` too.
+- Address association: `(i*0x590 + 0x540) + base` needs the sum written in two steps;
+  a base pointer local (`E *e = D; &e[i].sub`) keeps `base+off` from folding into %lo.
 
 Near misses and open questions are in the session's notes (docs/next-session.md); two
 recurring ones: an endless loop that calls a function without saving $ra (gb
@@ -130,15 +145,18 @@ Kept up to date by the session that changes them (`make ovl-progress`).
 
 | Overlay | Functions | Matched | Notes |
 |---|---|---|---|
-| dkmovie | 122 | see progress | |
+| dkmovie | 122 | 95 | session 131b; f205a4 / f205f4 are hand-written sq/daddiu asm loops |
 | dktitle | 71 | 59 | session 132: native C in the port (docs/native-overlays.md), notes in nonmatchings/session132/NOTES.md |
-| gb | 533 | see progress | |
-| wm | 1109 | see progress | |
-| xl_limit | 76 | 39 | |
-| xs_bambi | 13 | 4 | |
-| xs_dh_break | 9 | 1 | |
-| xs_dumbo | 54 | 20 | |
-| xs_genie | 64 | 24 | |
-| xs_mushu | 24 | 9 | |
-| xs_simba | 33 | 15 | |
-| xs_tink | 14 | 3 | |
+| gb | 533 | 367 | session 131b; most of its code is wm's (twins.py) |
+| wm | 1109 | 747 | session 131b |
+| xl_limit | 76 | 68 | session 131b |
+| xs_bambi | 13 | 13 | complete |
+| xs_dh_break | 9 | 5 | session 131b |
+| xs_dumbo | 54 | 48 | session 131b |
+| xs_genie | 64 | 58 | session 131b |
+| xs_mushu | 24 | 22 | session 131b |
+| xs_simba | 33 | 29 | session 131b |
+| xs_tink | 14 | 13 | session 131b |
+
+Session 131b (the 11 overlays other than dktitle): 752 -> 1,465 / 2,051, every overlay
+byte-identical. Near misses with their drafts are listed in docs/next-session.md ("Session 131b").
