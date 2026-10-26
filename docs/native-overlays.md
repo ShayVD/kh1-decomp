@@ -210,7 +210,7 @@ runs on the fake disc.
 - **The attack tutorial runs**: 君が手に入れた力 それは「たたかう」力, ○で攻撃!, the command menu
   (たたかう) and Sora's face; with CIRCLE pressed every 30 frames the Shadows (actors 16-20, kind 3)
   come and go, and at frame ~17,800 the next station loads (the player at (-8840, -14304), two kind-4
-  actors at (-8670, -15430)). **Open**: what that station wants; a goto to its objects stops ~100 short
+  actors at (-8670, -15430)). **Open**: what that station wants; a goto to its objects is blocked ~150 short at (-8784, -15336)
   and nothing happens in 5,000 frames of CIRCLE. Next time: read its event script / trigger boxes
   (session 135's VM trace) instead of guessing.
 - qemu-arm (`make vita-armcheck`, then the runner on the disc) takes the same path to frame 19,000.

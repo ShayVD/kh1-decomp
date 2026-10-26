@@ -8,7 +8,7 @@
 #   8000-8800   off the pedestal, then goto (host/null/pad.c) round to the staff's (500, -300), CROSS
 #   9200-10100  CIRCLE: the staff's lines, yes, "this is your form?" yes; the floor breaks (xs_dh_break.x)
 #   12700-17900 CIRCLE every 30 frames: the attack tutorial and the Shadows
-#   18100       goto toward the next station's two objects (-8670, -15430): stops ~100 short (open)
+#   18100       goto toward the next station's two objects (-8670, -15430): blocked ~150 short (open)
 1300 START
 1302 -
 2000 CIRCLE
