@@ -182,8 +182,10 @@ LAST_ERRORS: list[tuple[int, str]] = []  # (line in `code`, message) of the last
 
 def _flag_path() -> str:
     """The source path whose kh1.toml flags drafts are compiled with: a file
-    in the output directory (--out-dir picks e.g. an SDK library's flags)."""
-    return (AUTO_DIR / "x.c").relative_to(ROOT).as_posix()
+    in the output directory (--out-dir picks e.g. an SDK library's flags).
+    KH1_MODE=<mode> compiles as a <name>.<mode>.c file there (kh1.toml flag modes)."""
+    mode = os.environ.get("KH1_MODE")
+    return (AUTO_DIR / (f"x.{mode}.c" if mode else "x.c")).relative_to(ROOT).as_posix()
 
 
 def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bool, str]:
@@ -429,7 +431,16 @@ def write_results(matches: dict[int, str]) -> list[Path]:
     Functions whose extern declarations conflict with a file's go into a
     numbered sibling file."""
     files: dict[str, dict] = {}
+    written = []
+    AUTO_DIR.mkdir(parents=True, exist_ok=True)
     for addr in sorted(matches):
+        if "CONTEXT_ONLY" in matches[addr]:  # needs its callee stubs above it: a file of its own
+            path = AUTO_DIR / f"func_{addr:08x}.c"
+            path.write_text("/* Matched automatically from m2c output (tools/autodecomp.py), with\n"
+                            " * CONTEXT_ONLY copies of the callees defined above it. */\n"
+                            f'#include "m2c.h"\n\n{matches[addr].strip()}\n')
+            written.append(path)
+            continue
         decls, body = split_unit(matches[addr])
         base = f"text_{addr >> 16:04x}0000"
         n = 0
@@ -450,8 +461,6 @@ def write_results(matches: dict[int, str]) -> list[Path]:
             unit["decls"][name] = d
         unit["funcs"].append(body)
         unit["defined"].add(fname)
-    AUTO_DIR.mkdir(parents=True, exist_ok=True)
-    written = []
     for key, unit in sorted(files.items()):
         path = AUTO_DIR / f"{key}.c"
         text = ["/* Matched automatically from m2c output (tools/autodecomp.py); not yet",

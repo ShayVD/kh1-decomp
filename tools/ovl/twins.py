@@ -82,6 +82,9 @@ def matched(name: str) -> set[str]:
 FUNC_DEF = re.compile(r"^[A-Za-z_][^;{}()]*\b(func_[0-9a-f]{8})\s*\([^;{]*\)\s*\{", re.M)
 
 
+MODES: dict[tuple[str, str], str] = {}  # (overlay, func) -> flag mode of its file (func_X.nofill.c)
+
+
 def sources(name: str) -> dict[str, str]:
     """{func: self-contained C} of the matched functions of one overlay."""
     out = {}
@@ -90,6 +93,8 @@ def sources(name: str) -> dict[str, str]:
         defs = list(FUNC_DEF.finditer(text))
         if p.parent.name == "hand" and len(defs) == 1:
             out[defs[0].group(1)] = text
+            if len(p.suffixes) > 1:
+                MODES[(name, defs[0].group(1))] = p.suffixes[-2][1:]
             continue
         # an auto/ file: every declaration line plus the one function body
         head = text[: defs[0].start()] if defs else text
@@ -99,13 +104,13 @@ def sources(name: str) -> dict[str, str]:
     return out
 
 
-def try_file(name: str, func: str, code: str) -> bool:
+def try_file(name: str, func: str, code: str, mode: str = "") -> bool:
     with tempfile.NamedTemporaryFile("w", suffix=".c", delete=False) as fh:
         fh.write(code)
         path = fh.name
     try:
         r = subprocess.run([sys.executable, "tools/autodecomp.py", "try", func, "--file", path], cwd=ROOT,
-                           capture_output=True, text=True, env=dict(os.environ, KH1_OVL=name))
+                           capture_output=True, text=True, env=dict(os.environ, KH1_OVL=name, KH1_MODE=mode))
     finally:
         os.unlink(path)
     return " MATCH " in r.stdout
@@ -126,7 +131,7 @@ def main() -> int:
     for t in targets:
         done = matched(t)
         for g, lines in sorted(asm[t].items()):
-            if g in done or (ROOT / "ovl" / t / "hand" / f"{g}.c").exists():
+            if g in done or list((ROOT / "ovl" / t / "hand").glob(f"{g}.*c")):
                 continue
             key = tuple(norm(lines, int(g[5:], 16)))
             for n, f in shapes.get(key, []):
@@ -140,8 +145,9 @@ def main() -> int:
                 new = SYM.sub(lambda m: mp.get(m.group(0), m.group(0)), code)
                 # names only the C has (declarations of unused externs) stay as they are
                 new = re.sub(r"\A/\*[^\n]*\*/\n", "", new)
-                if try_file(t, g, new):
-                    out = ROOT / "ovl" / t / "hand" / f"{g}.c"
+                mode = MODES.get((n, f), "")
+                if try_file(t, g, new, mode):
+                    out = ROOT / "ovl" / t / "hand" / (f"{g}.{mode}.c" if mode else f"{g}.c")
                     out.parent.mkdir(parents=True, exist_ok=True)
                     out.write_text(f"/* {t}.x {g}: the twin of {n}.x {f} (tools/ovl/twins.py). */\n" + new)
                     print(f"{t} {g} <- {n} {f}")

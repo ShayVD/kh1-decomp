@@ -8,7 +8,8 @@
   python3 tools/ovl/hand.py perms NAME func_X draft.c # try every order of the lines between
                                                       # `//{` and `//}` in draft.c (store order)
 
-A draft is plain C without includes: include/ovl.h (common.h, platform/vu.h, m2c.h and the
+A draft named NAME.<mode>.c (x.nofill.c) is compiled with that kh1.toml flag mode and kept
+as func_X.<mode>.c. A draft is plain C without includes: include/ovl.h (common.h, platform/vu.h, m2c.h and the
 OvlVec / OvlMtx types) is put in front. One function per file; declare what it uses.
 """
 from __future__ import annotations
@@ -24,8 +25,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+MODE = ""  # a kh1.toml flag mode, from the draft's name (draft.nofill.c)
+
+
 def env(name: str) -> dict:
-    return dict(os.environ, KH1_OVL=name)
+    return dict(os.environ, KH1_OVL=name, KH1_MODE=MODE)
 
 
 def try_code(name: str, func: str, code: str, diff: bool = True) -> tuple[bool, str]:
@@ -42,7 +46,7 @@ def try_code(name: str, func: str, code: str, diff: bool = True) -> tuple[bool, 
 
 
 def keep(name: str, func: str, code: str) -> Path:
-    out = ROOT / "ovl" / name / "hand" / f"{func}.c"
+    out = ROOT / "ovl" / name / "hand" / (f"{func}.{MODE}.c" if MODE else f"{func}.c")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(f"/* {name}.x {func}: matched by hand. */\n#include \"ovl.h\"\n\n{code.strip()}\n")
     return out
@@ -68,7 +72,10 @@ def main() -> int:
         if fail.exists():
             print(fail.read_text())
         return 0
-    code = Path(sys.argv[4]).read_text()
+    global MODE
+    draft = Path(sys.argv[4])
+    MODE = draft.suffixes[-2][1:] if len(draft.suffixes) > 1 else ""
+    code = draft.read_text()
     if cmd == "try":
         print(try_code(name, func, code)[1])
         return 0

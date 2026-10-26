@@ -238,6 +238,13 @@ def variants(code: str) -> list[str]:
     for v in (lp, void_callees(code), void_callees(lp)):
         if v != code:
             out.append(v)
+    # overlay callees at lower addresses were defined above the caller in the
+    # original file, which changes gcc's branch-likely and slot choices
+    # (docs/matching-tips.md "Callee above"; xs_simba func_00f20530)
+    for v in (code, void_callees(code)):
+        w = callee_stubs(v)
+        if w != v:
+            out.append(w)
     # all globals volatile / none volatile, as search starting points (the
     # search toggles one at a time, which misses fixes needing two edits)
     for v in list(out) + [code]:
@@ -246,6 +253,29 @@ def variants(code: str) -> list[str]:
             if w != v and w != code:
                 out.append(w)
     return list(dict.fromkeys(out))
+
+
+PROTO_RE = re.compile(r"^([A-Za-z_][\w \t*]*?)\b(func_([0-9a-f]{8}))\(([^;{}]*)\);[^\n]*$", re.M)
+
+
+def callee_stubs(code: str) -> str:
+    """Prototypes of overlay functions below the one defined as empty CONTEXT_ONLY definitions."""
+    own = re.findall(r"\bfunc_([0-9a-f]{8})\([^;{}]*\)\s*\{", code)
+    if not own or int(own[-1], 16) < 0x00F20000:
+        return code
+    me = int(own[-1], 16)
+
+    def stub(m: re.Match) -> str:
+        rt, name, addr, args = m.group(1).strip(), m.group(2), int(m.group(3), 16), m.group(4).strip()
+        if not 0x00F20000 <= addr < me or "(" in args:
+            return m.group(0)
+        if args in ("", "void"):
+            params = "void"
+        else:
+            params = ", ".join(a if a == "..." else f"{a} p{k}" for k, a in enumerate(a.strip() for a in args.split(",")))
+        body = "{}" if rt == "void" else "{ return 0; }"
+        return f"CONTEXT_ONLY {rt} {name}({params}) {body}"
+    return PROTO_RE.sub(stub, code)
 
 
 ABS_DEREF_RE = re.compile(r"\*\((\w+(?: \w+)?) \*\)0x([0-9A-Fa-f]{6,8})\b")
