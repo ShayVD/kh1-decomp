@@ -18,6 +18,16 @@ Ask for the Mac at the start; if the user says it is away, do the static items.
 
 ## Where we stopped (end of session 132, 2026-10-26)
 
+- **Session 131b** (static, parallel to 131/132, PR #139): **the other 11 overlays hand-matched, 752 -> 1,465 /
+  2,051** (every overlay byte-identical; xs_bambi complete; wm 747 / 1,109, gb 367 / 533, dkmovie 95 / 122).
+  tools/ovl/hand.py (show / try / keep / perms), tools/ovl/twins.py (copy matches to same-shape functions in
+  every overlay), new kh1.toml mode `nosib`, autodecomp variants (CONTEXT_ONLY callee stubs and data, float
+  arguments incl. libvu0 angles, split-variable merge, store-order sort, void returns, frame padding). Four
+  parallel workers did three rounds each; yields fell to 7-19 per worker by round 3. How-to and tricks:
+  docs/overlays.md "Hand matching"; near misses and the functions that are probably not C:
+  nonmatchings/session131b/NOTES.md. Main ELF unchanged (6,981 / 6,988; the 7 holdouts stay flagged as
+  compiler-pass limits).
+
 - **Session 132** (static, no Mac): **dktitle.x decompiled and linked into the port as native C.**
   - Built on PR #139's overlay build (`make ovl`, `KH1_OVL=dktitle`; its branch was merged in, so this
     PR goes after #139). ovl/dktitle/layout.tsv 71 functions; **59 / 71 byte-identical** (objdiff 100%
