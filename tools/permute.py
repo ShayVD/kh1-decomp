@@ -294,7 +294,8 @@ def variants(code: str) -> list[str]:
     # (pppPointCon: `w->x = w->y = w->z = 0.0f`)
     out += chain_stores(code)
     lp = copy_loop(code)
-    for v in (lp, void_callees(code), void_callees(lp)):
+    vs = void_self(code)
+    for v in (lp, void_callees(code), void_callees(lp), vs, void_callees(vs)):
         if v != code:
             out.append(v)
     # overlay callees at lower addresses were defined above the caller in the
@@ -960,6 +961,19 @@ def goto_loops(code: str) -> str:
         lines[i:end + 1] = [f"{ind}for (;;) {{", *body, f"{ind}}}"]
         i += 1
     return "\n".join(lines)
+
+
+def void_self(code: str) -> str:
+    """The function itself as void: m2c makes a function returning whatever $v0 held
+    (a callee's result, a temporary) s32, with a `Duplicate return node` (wm func_00f77f38)."""
+    defs = list(re.finditer(r"^(?:s32|u32|M2C_UNK|s16|u16|s8|u8|void \*|\? \*) (func_[0-9a-f]{8}\([^;{}]*\)\s*\{)", code, re.M))
+    if not defs:
+        return code
+    d = defs[-1]
+    body = code[d.end():]
+    body = re.sub(r"^(\s*)return (\w+\([^;\n]*\));", r"\1\2;\n\1return;", body, flags=re.M)
+    body = re.sub(r"^(\s*)return [^;\n]+;", r"\1return;", body, flags=re.M)
+    return code[: d.start()] + "void " + d.group(1) + body
 
 
 def void_callees(code: str) -> str:
