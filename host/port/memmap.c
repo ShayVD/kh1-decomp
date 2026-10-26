@@ -6,9 +6,14 @@
  * names by address.  Not part of the PS2 build (it lives outside src/). */
 #include "common.h"
 
-/* 0x6A0000 - 0x1FE0000 (the stack): 25 MiB, 0x40000-aligned so the slots at D_00FE0000 are too */
+/* 0x6A0000 - 0x2000000: 25.4 MiB, 0x40000-aligned so the slots at D_00FE0000 are too.  It runs to the
+ * end of RAM, through the main thread's stack area (0x1FE0000 up, crt0): the game's own stack is the
+ * host's, but the screen capture (capture.c func_0010a058, 512 x 384 CT24 = 0x90000 bytes into the
+ * buffer func_001559f0(62, 2) returns, 0x1F60000 on the real disc's new game) runs 0x10000 bytes past
+ * 0x1FE0000 into the stack's unused bottom (session 133: with the map ending at 0x1FE0000 it wrote
+ * over the host's pointers past the array). */
 #define KH1_MEM_BASE 0x6A0000
-#define KH1_MEM_END 0x1FE0000
+#define KH1_MEM_END 0x2000000
 #ifdef KH1_VITA
 /* the Vita's executable takes two load segments, and a section aligned past the page makes a third
  * (vita-elf-create refuses it): the game reaches the slots by offsets from D_00FE0000 (objslot.c),
