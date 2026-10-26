@@ -80,6 +80,41 @@ def find_functions(base: int, words: tuple[int, ...]) -> tuple[list[int], int]:
                 starts.add(base + 4 * j)
                 cur = base + 4 * j
                 max_target = 0
+    # A last function that ends in a tail call (j) is past the last jr ra: extend the code
+    # over every function a jal reaches beyond it, up to its own jr ra or j out of it.
+    def code_jal_targets(lo: int, hi: int) -> set[int]:
+        out = set()
+        for k in range((lo - base) // 4, (hi - base) // 4):
+            if so.op(words[k]) in (so.OP_JAL, so.OP_J):  # calls and tail calls
+                tt = ((base + 4 * k + 4) & 0xF0000000) | ((words[k] & 0x3FFFFFF) << 2)
+                if base <= tt < base + 4 * n:
+                    out.add(tt)
+        return out
+
+    pending = {t for t in code_jal_targets(base, end_code) if t >= end_code}
+    while True:
+        if not pending:  # a function reached only by pointer: a frame set-up saving ra
+            k = (end_code - base) // 4
+            while k < n and words[k] == NOP:
+                k += 1
+            if (k + 1 < n and words[k] >> 16 == 0x27BD and words[k] & 0x8000
+                    and any(words[j] >> 16 == 0xFFBF for j in range(k + 1, min(k + 8, n)))):
+                pending.add(base + 4 * k)
+            else:
+                break
+        t = min(pending)
+        pending.discard(t)
+        # only right after the code (nop padding between): a jal into the data is not code
+        if t < end_code or any(words[k] != NOP for k in range((end_code - base) // 4, (t - base) // 4)):
+            continue
+        for k in range((t - base) // 4, n):
+            w, a = words[k], base + 4 * k
+            o = so.op(w)
+            if w == so.JR_RA or (o == so.OP_J and not t <= (((a + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)) <= a):
+                old, end_code = end_code, a + 8
+                pending |= {x for x in code_jal_targets(old, end_code) if x >= end_code}
+                starts.add(t)
+                break
     starts = sorted(s for s in starts if s < end_code)
     return starts, end_code
 

@@ -311,8 +311,14 @@ def prototype(name: str, s: tuple) -> str:
 
 def write(cfg) -> dict[int, tuple[int, int, str]]:
     sig = analyse(cfg)
+    if K.OVL:  # an overlay's functions call the main ELF's: its prototypes come first
+        main_tsv = K.ROOT / "out" / "sigs.tsv"
+        if not main_tsv.exists():
+            subprocess.run([sys.executable, __file__], check=True, env={k: v for k, v in __import__("os").environ.items()
+                                                                       if k != "KH1_OVL"})
+        sig = {**_read_tsv(main_tsv), **sig}
     names = {a: s for s, a in K.load_registry().items()}
-    K.OUT.mkdir(exist_ok=True)
+    K.OUT.mkdir(parents=True, exist_ok=True)
     SIGS_TSV.write_text("addr\tint_args\tfloat_args\treturn\tvariadic\n" +
                         "".join(f"{a:08x}\t{s[0]}\t{s[1]}\t{s[2]}\t{int(s[3])}\n" for a, s in sorted(sig.items())))
     lines = ["typedef signed int s32;", "typedef float f32;"]
@@ -325,8 +331,12 @@ def write(cfg) -> dict[int, tuple[int, int, str]]:
 def load() -> dict[int, tuple[int, int, str]]:
     if not SIGS_TSV.exists():
         return write(K.load_config())
+    return _read_tsv(SIGS_TSV)
+
+
+def _read_tsv(path: Path) -> dict[int, tuple[int, int, str]]:
     out = {}
-    for line in SIGS_TSV.read_text().splitlines()[1:]:
+    for line in path.read_text().splitlines()[1:]:
         a, ni, nf, rt, *var = line.split("\t")
         out[int(a, 16)] = (int(ni), int(nf), rt, bool(var and var[0] == "1"))
     return out

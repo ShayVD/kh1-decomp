@@ -32,7 +32,7 @@ from elf32 import Elf  # noqa: E402
 
 ROOT = K.ROOT
 M2C = K.TOOLCHAIN_DIR / "m2c" / "m2c.py"
-AUTO_DIR = ROOT / "src" / "auto"
+AUTO_DIR = K.SRC_DIR / "auto"  # ovl/<name>/auto in overlay mode (KH1_OVL)
 CACHE = K.OUT / "autodecomp"
 VARIANTS = [
     ["--valid-syntax"],
