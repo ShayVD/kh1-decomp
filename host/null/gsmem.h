@@ -53,6 +53,13 @@ u32 kh1_gsmem_addr(u32 psm, u32 bp, u32 bw, u32 x, u32 y);
 /* reads / writes one pixel's stored bits (a CT32 word's top byte for T8H, its nibble for T4HL /
  * T4HH; the low 24 bits for CT24 / Z24, the top byte kept) */
 u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y);
+/* session 135: w x h pixels' stored bits from (x0, y0), row by row into out (stride words a row), as
+ * kh1_gsmem_read_pixel gives them; -1 for a PSM the model has not or a rectangle past 2048.  Two
+ * address tables instead of the swizzle per pixel (the Vita's present) */
+int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride);
+/* session 135: 1 (the default) lets the sprites and kh1_gsmem_read_rect take a rectangle's addresses
+ * from two tables where the layout allows; 0 computes every pixel's address (the tests compare) */
+void kh1_gsmem_fast(int on);
 void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v);
 
 /* decodes the texture TEX0 names (TBP0, TBW, PSM, TW, TH; CPSM and CSA for the indexed PSMs, from
@@ -149,6 +156,11 @@ typedef struct {
                                                 * (FGE: f and fogcol after the texture function) */
     u32 zbuf_lo;                               /* session 122: ZBUF's ZBP and PSM (tests bit 2) */
     u32 z, f, fogcol;                          /* the second vertex's Z and F, FOGCOL's RGB */
+    u32 quad;                                  /* session 135: kh1_gsmem_flat_sprite only: 1 for a strip's
+                                                * rectangle (gsregs.c gs_quad), each pixel's colour from
+                                                * rgbav's four corners (top left, top right, bottom left,
+                                                * bottom right) instead of rgba */
+    u32 rgbav[4];
 } KH1GsSprite;
 int kh1_gsmem_sprite(const KH1GsSprite *s);
 /* session 95: an untextured SPRITE (clear, fade, letterbox) filled into the model's pixels for the

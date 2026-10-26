@@ -29,6 +29,9 @@ static u32 gs_q = 0x3F800000; /* the PACKED Q (ST's third word), 1.0 at each GIF
 static KH1GsDraw draws[DRAWS];
 static u32 ndraws, cur = ~0u; /* cur: the draw state of the last kick, ~0 once the state changes */
 static KH1GsVert vq[3]; /* the queued vertices (session 83: sprites; session 122: every field, the hook) */
+/* session 135: a strip's first four vertices since its PRIM, for the present's quads (gs_quad) */
+static KH1GsVert sv[4];
+static u32 nsv;
 void (*kh1_gs_prim_hook)(u32 prim, const KH1GsVert *v, u32 n, u32 state);
 static s32 gs_xshift; /* added to each XYZ's X (session 92: the HUD's anchors, kh1_gs_xshift) */
 static s32 gs_sx0, gs_sw; /* session 93: a full-screen packet's stretch (kh1_gs_xstretch), gs_sw 0 = none */
@@ -119,11 +122,45 @@ static int gs_sprite(u32 p, const KH1GsContext *c, int flat) {
      * "Session 99"); a capture of its own (KH1_FS_UOWN) starts at its texel 0; the registers and the
      * trace keep the renderer's u */
     s.uorg = gs_sw && (gs_swhat & (KH1_FS_U | KH1_FS_UOWN)) == KH1_FS_U ? gs_sx0 : 0;
+    s.quad = 0;
     return flat ? kh1_gsmem_flat_sprite(&s) : kh1_gsmem_sprite(&s);
+}
+
+/* Session 135: a TRISTRIP of four vertices that is an axis-aligned rectangle (v0 top left, v1 top right,
+ * v2 bottom left, v3 bottom right, UV), as dktitle.x's menu text draws its lines (func_00f201c8: an
+ * alpha fading to the right), filled for the present like a sprite with each pixel's colour
+ * interpolated from the four (kh1_gsmem_flat_sprite's quad).  The GS's two Gouraud triangles give the
+ * same colours for a gradient along one axis, the only kind the title draws.  0 when the strip is not
+ * that shape. */
+static int gs_quad(u32 p, const KH1GsContext *c) {
+    KH1GsSprite t;
+    u32 i;
+    if ((sv[0].xy >> 16) != (sv[1].xy >> 16) || (sv[2].xy >> 16) != (sv[3].xy >> 16) ||
+        (sv[0].xy & 0xFFFF) != (sv[2].xy & 0xFFFF) || (sv[1].xy & 0xFFFF) != (sv[3].xy & 0xFFFF) ||
+        (sv[0].uv >> 16) != (sv[1].uv >> 16) || (sv[2].uv >> 16) != (sv[3].uv >> 16) ||
+        (sv[0].uv & 0x3FFF) != (sv[2].uv & 0x3FFF) || (sv[1].uv & 0x3FFF) != (sv[3].uv & 0x3FFF))
+        return 0;
+    t.prim = (p & ~7u) | 6;
+    t.frame_lo = c->frame.lo; t.frame_hi = c->frame.hi; t.zbuf_hi = c->zbuf.hi; t.test_lo = c->test.lo;
+    t.alpha_lo = c->alpha.lo; t.alpha_hi = c->alpha.hi; t.tex0_lo = c->tex0.lo; t.tex0_hi = c->tex0.hi;
+    t.tex1_lo = c->tex1.lo; t.clamp_lo = c->clamp.lo;
+    t.xyoffset_lo = c->xyoffset.lo; t.xyoffset_hi = c->xyoffset.hi;
+    t.scissor_lo = c->scissor.lo; t.scissor_hi = c->scissor.hi;
+    t.texa_lo = gs.texa.lo; t.texa_hi = gs.texa.hi;
+    t.xy[0] = sv[0].xy; t.xy[1] = sv[3].xy;
+    t.uv[0] = sv[0].uv; t.uv[1] = sv[3].uv;
+    t.rgba = sv[3].rgba;
+    t.tests = 0;
+    t.zbuf_lo = c->zbuf.lo; t.z = sv[3].z; t.f = sv[3].f; t.fogcol = gs.fogcol.lo;
+    t.uorg = gs_sw && (gs_swhat & (KH1_FS_U | KH1_FS_UOWN)) == KH1_FS_U ? gs_sx0 : 0;
+    t.quad = 1;
+    for (i = 0; i < 4; i++) t.rgbav[i] = sv[i].rgba;
+    return kh1_gsmem_flat_sprite(&t);
 }
 
 static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
     u32 p = gs_prim(), need = kh1_gs_prim_verts(p), i;
+    int fourth = 0;
     KH1GsDraw d, *k;
     if (cur == ~0u) {
         memset(&d, 0, sizeof d);
@@ -181,6 +218,10 @@ static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
     vq[i].q = gs.rgbaq.hi;
     vq[i].s = gs.st.lo;
     vq[i].t = gs.st.hi;
+    if ((p & 7) == 4 && nsv < 4) { /* session 135: a strip's first four (gs_quad) */
+        sv[nsv++] = vq[i];
+        fourth = nsv == 4;
+    }
     if (gs.nvert < need) return;
     if (draw && kh1_gs_prim_hook) kh1_gs_prim_hook(p, vq, need, cur);
     /* a full queue: XYZ2 / XYZF2 draw; the lists (POINT, LINE, TRIANGLE, SPRITE) start again,
@@ -191,6 +232,8 @@ static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
         if ((p & 7) != 6 || !gs_sprite(p, c, 0)) {
             kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
             if ((p & 7) == 6) gs_sprite(p, c, 1);
+            /* session 135: the strip's second triangle completes a rectangle (the title's text) */
+            if (fourth) gs_quad(p, c);
         }
     }
     i = p & 7;
@@ -206,7 +249,7 @@ static void set(KH1GsReg *r, u32 lo, u32 hi) {
 void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
     KH1GsContext *c = &gs.ctx[reg & 1];
     switch (reg) {
-    case 0x00: set(&gs.prim, lo & 0x7FF, 0); gs.nvert = 0; return;
+    case 0x00: set(&gs.prim, lo & 0x7FF, 0); gs.nvert = 0; nsv = 0; return;
     case 0x01: gs.rgbaq.lo = lo; gs.rgbaq.hi = hi; return;
     case 0x02: gs.st.lo = lo; gs.st.hi = hi; return;
     case 0x03: /* UV: a full-screen copy's u stretched with its X (session 93) */

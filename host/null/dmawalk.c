@@ -38,6 +38,7 @@ int fclose(void *);
 
 const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded textures (main.c) */
 void (*kh1_dma_after_send)(u32 tadr); /* session 94: KH1_HOST_SHOT's present (host/null/present.c) */
+int kh1_dma_quiet; /* session 135: no send line (the Vita, dmawalk.h) */
 void (*kh1_dma_draw_state)(const KH1GsDraw *d); /* session 123: each send's draw states (KH1_HOST_TRACE=5) */
 
 typedef struct {
@@ -500,7 +501,8 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
         if (tte && tte_hi)
             sprintf(extra + strlen(extra), "; %u tags with upper words (TTE)", tte_hi);
     }
-    printf("kh1-host: dma ch %d chcr %08x tadr %08x: %u tags, %u qwords, ends with %s%s%s%s%s\n", ch, chcr,
+    if (!kh1_dma_quiet)
+        printf("kh1-host: dma ch %d chcr %08x tadr %08x: %u tags, %u qwords, ends with %s%s%s%s%s\n", ch, chcr,
            tadr, ntags, qwords, last,
            bad & KH1_DMA_TAG_OUTSIDE ? ": TAG OUTSIDE" : bad & KH1_DMA_DATA_OUTSIDE ? ": DATA OUTSIDE"
            : bad & KH1_DMA_CALL_DEEP ? ": CALL TOO DEEP" : bad & KH1_DMA_NO_END ? ": NO END (4096 tags)" : "",
@@ -540,7 +542,8 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
     kh1_gsmem_clear_log();
     gif_block(&g, q, qwc);
     gif_regs(&g, regs);
-    printf("kh1-host: dma ch 2 chcr 00000000 tadr %08x: direct (normal mode), %u qwords; gif %u packets%s%s%s\n",
+    if (!kh1_dma_quiet)
+        printf("kh1-host: dma ch 2 chcr 00000000 tadr %08x: direct (normal mode), %u qwords; gif %u packets%s%s%s\n",
            (u32)(unsigned long)q, qwc, g.packets, g.left ? ": ENDS INSIDE A PACKET" : "", regs[0] ? "; regs" : "",
            regs);
     if (kh1_host_trace >= 4)

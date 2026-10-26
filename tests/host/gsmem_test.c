@@ -167,6 +167,12 @@ int main(void) {
     kh1_gs_write(0x06, 0x2100 | 2 << 14 | KH1_PSMT4 << 20 | 3 << 26 | 3u << 30, 0x2000 << 5 | 2u << 29);
     kh1_gs_write(0x06, 0x2100 | 2 << 14 | KH1_PSMT4 << 20 | 3 << 26 | 3u << 30, 0x2000 << 5 | 4u << 29);
     CHECK("CLD 2 then 4", st->clut_loads == 3);
+    /* session 135: CPSM CT24 (1, dktitle.x's menu lines) loads as CT32, the entries' alpha kept */
+    kh1_gs_write(0x06, 0x2100 | 2 << 14 | KH1_PSMT4 << 20 | 3 << 26 | 3u << 30, 0x2004 << 5 | 1 << 19 | 1u << 29);
+    CHECK("CPSM CT24 loads as CT32", st->clut_loads == 4 &&
+                                     kh1_gsmem_read_tex(0x2100 | 2 << 14 | KH1_PSMT4 << 20 | 3 << 26 | 3u << 30,
+                                                        0x2004 << 5 | 1 << 19, 0, 0, tex) == 0 &&
+                                     tex[0] == 0x40000800 && tex[15] == 0x40000F00);
 
     /* an 8-bit CLUT: the 16 x 16 stored entries 8-15 and 16-23 of each 32 swapped */
     upload(0x2200, 1, KH1_PSMCT32, 0, 0, 16, 16);

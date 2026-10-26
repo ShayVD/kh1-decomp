@@ -48,5 +48,9 @@ extern const char *kh1_host_texdump;
 /* Session 94: called with the send's start after each walk or direct send, once its GS writes are in
  * the register file and the memory model (KH1_HOST_SHOT, host/null/present.c); 0 = none */
 extern void (*kh1_dma_after_send)(u32 tadr);
+/* Session 135: 1 walks the chains (the register file, the memory model, the present) without the
+ * send's "dma ch" line, the ~7 lines a frame the Vita wrote through an unbuffered log; 0 (the host's
+ * default) prints them.  Levels 3-5's extra lines still print. */
+extern int kh1_dma_quiet;
 
 #endif
