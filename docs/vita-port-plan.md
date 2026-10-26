@@ -294,7 +294,7 @@ What closed the 109 undefined of 5.1a:
 
 | what | where | notes |
 | --- | --- | --- |
-| 8 fixed-map D_ | host/port/memmap.c | one 25 MiB block (0x6A0000-0x1FE0000, aligned 0x40000) with each D_ at its offset, so the regions keep their order and distances (heap.c compares with D_009A0000; objslot.c maps an address to its 0x40000 slot) |
+| 8 fixed-map D_ | host/port/memmap.c | one 25.4 MiB block (0x6A0000-0x2000000 since session 133, through the stack area: the fade-out capture writes 0x10000 bytes past 0x1FE0000; aligned 0x40000) with each D_ at its offset, so the regions keep their order and distances (heap.c compares with D_009A0000; objslot.c maps an address to its 0x40000 slot) |
 | D_12000000 | memmap.c | GS PMODE, written by src/screen/fade.c's func_00113ab0: a plain u64 until gs.h takes the write |
 | 13 D_ below 0x100000 | memmap.c | **offsets, not addresses**: src/gummi/gumisave.c adds &D_00009B38 ... &D_0000AC20 to the Gummi save block func_00232cc0(4) returns; absolute symbols (`.set D_00009B38, 0x9B38`) |
 | 20 SDK func_ | host/port/sdk_host.c | named (docs/sdk.md "Session 62"): libc / libm wrappers, `__main` a no-op, sceGsSyncVCallback keeps the callback (kh1_vsync_cb), the data blob's table entries empty; plus newlib's rand / srand and `__assert` argument order |

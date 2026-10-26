@@ -16,7 +16,25 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 132, 2026-10-26)
+## Where we stopped (end of session 133, 2026-10-26)
+
+- **Session 133** (with the Mac): **the native title on the real disc and in Vita3K.**
+  - Host runner on the user's KH1_BIG.iso (staged in 390 MB parts through a Remote Control `split`, rejoined
+    in the scratchpad, SHA-256 9ad74868… checked): `dktitle.x loaded: native C`; logo, press start, New Game's
+    game mode / camera / sound pages and the confirm all run from the C (pad script in
+    docs/native-overlays.md "Session 133"). **Fixed**: the fade-out's screen capture (512 x 384 CT24 at
+    0x1F60000) ran past the memory map's end 0x1FE0000 over the host's pointers; host/port/memmap.c now
+    runs to 0x2000000. The game then makes 33 disc reads and calls **dkmovie.x** (the opening movie), which
+    has no native C: the stub's answers loop it forever. That is the next boundary.
+  - **Vita3K**: the s133 VPK draws the title (logo and art) with no crash in 3 minutes, ~20 fps then ~6.5
+    (software present). kh1.log lacks the `kh1-ovl:` line (open question). The Mac had ~229 MB free after.
+  - Matching: no new dktitle match (59 / 71). func_00f25528 24 -> 6 words (strlen's argument picked by
+    if / else; nonmatchings/session133/, drafts.tsv). func_00f26710 (every store order of its 8-line block,
+    672 tries), func_00f241c8 (pos placement and forms) and func_00f20a98 (9 accessor forms) stayed: all
+    register allocation. decomp-permuter could not be run this session (running the freshly cloned
+    repository was refused by the session's permission check).
+  - kh1.elf byte-identical (6,981 / 6,988); `make test` PASS. Session 101's card still unanswered; no
+    psp2cgc in vitasdk 2026.08.
 
 - **Session 132** (static, no Mac): **dktitle.x decompiled and linked into the port as native C.**
   - Built on PR #139's overlay build (`make ovl`, `KH1_OVL=dktitle`; its branch was merged in, so this
@@ -777,25 +795,20 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 133 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 134 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **With the Mac: the title on the real disc.** Ask the user once whether a Remote Control session may split a copy
-   of the ISO into 390 MB parts in ~/Downloads/kh1-test/isoparts (`split -b 390m`); stage them into the scratchpad,
-   `cat` them back, check the SHA-256 (never into the repo or project files). Then `make host-census` and
-   `KH1_HOST_ISO=... KH1_HOST_SHOT=512:448::DIR KH1_HOST_FRAMES=1200 out/host/kh1-host`: the log should say
-   "kh1-ovl: dktitle.x loaded: native C"; look at the shots (the logo fades, press start), script the pad
-   (KH1_HOST_PAD) to pick new game and see whether the title's own func_00109558(2) takes the boot on. Note
-   what breaks (the drafts are the first suspects). Never commit the frames.
-2. **With the Mac: a Vita build with the native title** (tools/vita/build.py, docs/vita-build.md), run in
-   Vita3K or on the Vita, bring back ux0:data/kh1/kh1.log.
-3. **Match dktitle.x's 12 left** (nonmatchings/session132/NOTES.md table; the 3 within 2 words first). Each
-   match: `hand.py keep`, drop its drafts.tsv row, `make ovl OVL=dktitle`, `make ovl-report OVL=dktitle`.
-4. **With the Mac: finish the boot route** (docs/float-untested.md): KH1_BIG.iso already holds KH1_F131; if
-   reach_check or the float set changed, rebuild and re-patch through a Remote Control session. Play a fight
-   (lock-on, damage numbers, a level-up if near), a shop (buy and sell), the warp drive, a movie; then move the
-   proven rows into docs/shiftable-plan.md and clear them.
-5. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears; (c) once PR #139 merges,
-   rebase this branch's successor on main.
-6. End with `make progress-update SESSION=133`, refresh the per-phase table and the overlay table in
-   docs/progress.md, commit, open a PR, and refresh this prompt.
-7. **Once the PR is merged, message the coordinator to start the next session** (session 134) with this prompt.
+1. **dkmovie.x native** (the next boundary on the real disc): once the "Match the remaining functions"
+   thread's dkmovie work is merged (83 / 122 matched when session 133 ran), link it the way dktitle.x is
+   (docs/native-overlays.md: ovl/dkmovie/relocs.tsv, drafts.tsv for the unmatched, tools/host/ovlnative.py).
+   The movie itself needs `PlatMovie*` (5.1ad): a port can answer "movie ended" at first. Then rerun the
+   host on the real disc with session 133's pad script (docs/native-overlays.md) and see whether the new
+   game reaches Dive to the Heart.
+2. **With the Mac**: the ISO parts may still be in ~/Downloads/kh1-test/isoparts (9 parts, `cat` them back,
+   SHA-256 9ad74868…). Free disk space on the Mac first (~229 MB free after session 133). A Vita3K run
+   with pad input (keyboard) through the menu, and why kh1.log lacks `kh1-ovl:`.
+3. **Match dktitle.x's 12 left** (nonmatchings/session132/NOTES.md table and session 133's notes above);
+   the permuter needs the user's OK to run the cloned decomp-permuter.
+4. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears.
+5. End with `make progress-update SESSION=134`, refresh docs/progress.md's tables, commit, open a PR, and
+   refresh this prompt.
+6. **Once the PR is merged, message the coordinator to start the next session** (session 135) with this prompt.
