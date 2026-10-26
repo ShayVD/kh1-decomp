@@ -20,6 +20,7 @@
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
 #include <psp2/kernel/processmgr.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,6 +58,18 @@ static int log_write(void *cookie, const char *buf, int n) {
     return n;
 }
 
+/* this file's own lines go straight to the log too, whatever stdio does */
+static void vlog(const char *fmt, ...) {
+    char buf[256];
+    va_list ap;
+    int n;
+    va_start(ap, fmt);
+    n = vsnprintf(buf, sizeof buf, fmt, ap);
+    va_end(ap);
+    if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
+    if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
+}
+
 unsigned long kh1_host_frame(void) { return frames; }
 
 extern int kh1_counts_on; /* host/null/counts.c */
@@ -70,7 +83,7 @@ void kh1_host_vblank(void) {
     if (in_vblank) return;
     in_vblank = 1;
     frames++;
-    if (frames % 60 == 0) printf("kh1-vita: frame %lu, %u disc reads\n", frames, kh1_host_cd_reads);
+    if (frames % 60 == 0) vlog("kh1-vita: frame %lu, %u disc reads\n", frames, kh1_host_cd_reads);
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
@@ -78,7 +91,7 @@ void kh1_host_vblank(void) {
     sceDisplayWaitVblankStart();
     in_vblank = 0;
     if (max_frames && frames >= max_frames) {
-        printf("kh1-vita: %lu frames: stop\n", frames);
+        vlog("kh1-vita: %lu frames: stop\n", frames);
         fflush(stdout);
         sceKernelExitProcess(0);
     }
@@ -92,10 +105,10 @@ void kh1_host_vblank(void) {
 static unsigned long ovl_calls;
 int kh1_ovl_entry(int cmd, int arg) {
     ovl_calls++;
-    printf("kh1-vita: frame %lu: overlay entry D_00F20000(%d, %d) answered 0 (no overlay is decompiled)\n", frames,
+    vlog("kh1-vita: frame %lu: overlay entry D_00F20000(%d, %d) answered 0 (no overlay is decompiled)\n", frames,
            cmd, arg);
     if (title_state >= 0 && cmd == 0) {
-        printf("kh1-vita: title: func_00109558(%d)\n", title_state);
+        vlog("kh1-vita: title: func_00109558(%d)\n", title_state);
         func_00109558(title_state);
         title_state = -1;
     }
@@ -123,7 +136,7 @@ static void config(char *iso, int n) {
 
 /* no disc image: a red screen until START, then exit */
 static void no_disc(const char *iso) {
-    printf("kh1-vita: %s: no disc image (put your own dump at %s/kh1.iso, see docs/vita-build.md)\n", iso,
+    vlog("kh1-vita: %s: no disc image (put your own dump at %s/kh1.iso, see docs/vita-build.md)\n", iso,
            kh1_vita_dir);
     fflush(stdout);
     kh1_vita_fill(0xFF0000A0u);
@@ -144,7 +157,12 @@ int main(int argc, char **argv) {
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
     log_fd = sceIoOpen(log, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_TRUNC, 0777);
     if (log_fd >= 0) {
-        FILE *f = funopen(0, 0, log_write, 0, 0);
+        FILE *f;
+        /* newlib sets the standard streams up at its first stdio call on them (__sinit), which
+         * would put the console's back over ours: make that happen first */
+        fflush(stdout);
+        fflush(stderr);
+        f = funopen(0, 0, log_write, 0, 0);
         if (f) {
             setvbuf(f, 0, _IONBF, 0);
             stdout = f;
@@ -154,9 +172,9 @@ int main(int argc, char **argv) {
         }
         sceIoWrite(log_fd, "kh1-vita: log open\n", 19);
     }
-    printf("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
+    vlog("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
     if (kh1_vita_display_init(D_002A6890)) {
-        printf("kh1-vita: no framebuffer\n");
+        vlog("kh1-vita: no framebuffer\n");
         sceKernelExitProcess(1);
     }
     snprintf(iso, sizeof iso, "%s/kh1.iso", kh1_vita_dir);
@@ -165,16 +183,16 @@ int main(int argc, char **argv) {
         snprintf(iso, sizeof iso, "%s/kh1.bin", kh1_vita_dir);
         if (!kh1_cd_image_open(iso)) no_disc(iso);
     }
-    printf("kh1-vita: disc image %s\n", iso);
+    vlog("kh1-vita: disc image %s\n", iso);
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host) */
     if (kh1_host_trace < 2) kh1_host_trace = 2;
     kh1_gsmem_flat(1);  /* the clears, fades and letterbox filled into the model */
     kh1_present_pal(1); /* the indexed decodes through the port's palette cache */
     kh1_present_tex(1); /* the textured sprites through the port's texture cache */
     kh1_vita_present_on();
-    printf("kh1-vita: func_00100558 (the game's main)\n");
+    vlog("kh1-vita: func_00100558 (the game's main)\n");
     func_00100558(argc, argv);
-    printf("kh1-vita: func_00100558 returned after %lu frames, %u disc reads, %lu overlay calls\n", frames,
+    vlog("kh1-vita: func_00100558 returned after %lu frames, %u disc reads, %lu overlay calls\n", frames,
            kh1_host_cd_reads, ovl_calls);
     fflush(stdout);
     sceKernelExitProcess(0);
