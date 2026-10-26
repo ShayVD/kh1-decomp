@@ -26,7 +26,14 @@ static void shader_of(const KH1DrawRegs *r, const KH1DrawState *d, KH1ShaderKey 
         k->sv = d->sampler.v.shader;
     }
     k->fog = r->prim >> 5 & 1;
-    if (d->blend.kind == KH1_BLEND_FETCH) k->fetch = d->blend.enable ? 1 : 2;
+    if (d->blend.kind == KH1_BLEND_FETCH) {
+        u32 fpsm = r->frame_lo >> 24 & 63, i;
+        k->fetch = d->blend.enable ? 1 : 2;
+        k->fabcd = k->fetch == 1 ? d->blend.abcd : 0;
+        k->fpsm = fpsm == 0x01 ? 1 : fpsm == 0x02 || fpsm == 0x0A ? 2 : 0;
+        for (i = 0; i < 4; i++) k->fbm[i] = (u8)(r->frame_hi >> i * 8);
+        if (k->fpsm == 1) k->fbm[3] = 0; /* no alpha stored */
+    }
     if (k->fetch == 1) return;
     k->pre_a = (u8)(d->blend.pre_a + 2);
     k->pre_d = (u8)(d->blend.pre_d + 2);
@@ -109,7 +116,7 @@ const char *kh1_pipekey_str(const KH1PipeKey *k) {
     static const char *tfx[] = { "mod", "decal", "hl", "hl2" };
     static const char *at[] = { "never", "always", "lt", "le", "eq", "ge", "gt", "ne" };
     static const char *ss[] = { "", "c", "t" };
-    static char b[160];
+    static char b[200];
     const KH1ShaderKey *s = &k->shader;
     char *p = b;
     p += sprintf(p, "%s", cls[k->cls & 3]);
@@ -125,7 +132,10 @@ const char *kh1_pipekey_str(const KH1PipeKey *k) {
     else
         p += sprintf(p, " flat");
     if (s->fog) p += sprintf(p, " fog");
-    if (s->fetch) p += sprintf(p, s->fetch == 1 ? " fetch" : " fetch-mask");
+    if (s->fetch == 1) p += sprintf(p, " fetch %02x", s->fabcd);
+    if (s->fetch == 2) p += sprintf(p, " fetch-mask");
+    if (s->fetch && (s->fbm[0] | s->fbm[1] | s->fbm[2] | s->fbm[3]))
+        p += sprintf(p, " fbmsk %02x%02x%02x%02x", s->fbm[3], s->fbm[2], s->fbm[1], s->fbm[0]);
     if (s->fetch != 1 && (s->pre_a != 2 || s->pre_d != 3))
         p += sprintf(p, " pre %d,%d%s%s", s->pre_a - 2, s->pre_d - 2, s->csel == 1 ? " ad" : s->csel == 2 ? " fix" : "",
                      s->pre_floor == 1 ? " floor" : s->pre_floor == 2 ? " ceil" : "");

@@ -19,7 +19,12 @@
  *             tested: depth STORE).  Frame 2 clears the 3D target first: frame 1's last 3D pass DISCARD.
  *             Frame 3 samples the 3D target before drawing it: frame 2's last pass STORE (next frame).
  *             Frame 4: 16 full-screen sprites under 32-pixel column scissors clear the target (the game's
- *             strips; one command after the column group), 15 of them do not. */
+ *             strips; one command after the column group), 15 of them do not.
+ *   gxm       (session 128) columns, partial and transfers again, each frame walked by host/port/gxmrec.c into
+ *             GXM calls and only the calls replayed (programs from the frame's pipeline table, uniforms read
+ *             from the ring at SET_UNIFORMS, textures and palettes by slot, target uploads and the CLUT
+ *             read-back): the same pixels; a DONT_CARE scene that is cleared starts from garbage, a DISCARD
+ *             scene ends in garbage, and that still gives the same pixels. */
 #include "common.h"
 #include "../../host/null/gsregs.h"
 #include "../../host/null/gsmem.h"
@@ -27,6 +32,7 @@
 #include "platform/canvas.h"
 #include "platform/palcache.h"
 #include "platform/texcache.h"
+#include "platform/gxmrec.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -114,9 +120,12 @@ static void tri(const KH1GpuVert *a, const KH1GpuVert *b, const KH1GpuVert *c, s
 }
 
 static void replay_x(const KH1CmdRec *r);
+static void replay_gxm(const KH1CmdRec *r);
 static int do_replay;       /* 1 the frame's draws replayed into img; 2 session 127's transfer frame (replay_x) */
+static int use_gxm;         /* session 128: replay the frame's GXM calls instead (replay_gxm) */
 static void replay(const KH1CmdRec *r) {
     u32 i, j;
+    if (use_gxm) { replay_gxm(r); return; }
     if (do_replay == 2) { replay_x(r); return; }
     for (i = 0; i < r->ncmd; i++) {
         const KH1Cmd *c = &r->cmd[i];
@@ -378,6 +387,29 @@ static void psprite(u32 frame_lo, u32 test_lo, u32 zmsk, u32 prim, u32 tex0_lo, 
 #define Z_ALWAYS_W (1 << 16 | 1 << 17)   /* TEST: ZTE, ZTST ALWAYS */
 #define Z_GEQUAL (1 << 16 | 2 << 17)
 
+static KH1GxmRec gxp; /* session 128: frame 1's GXM calls */
+
+/* the scenes of a frame's GXM calls against its passes: one BEGIN / END pair a pass, in order, each with its loads
+ * and stores */
+static int gxm_scenes_match(const KH1CmdRec *r, const KH1GxmRec *g) {
+    u32 i, n = 0, open = 0;
+    for (i = 0; i < g->n; i++) {
+        const KH1GxmCall *c = &g->call[i];
+        const KH1CmdPass *p = &r->pass[n < r->npass ? n : 0];
+        if (c->op == KH1_GXM_BEGIN_SCENE) {
+            if (open || n >= r->npass || c->rt != p->rt || c->load != p->load || (p->depth && c->dload != p->dload)) return 0;
+            open = 1;
+        } else if (c->op == KH1_GXM_END_SCENE) {
+            if (!open || c->store != p->store || (p->depth && p->zwrite && c->dstore != p->dstore)) return 0;
+            open = 0;
+            n++;
+        } else if (c->op == KH1_GXM_DRAW && !open) {
+            return 0;
+        }
+    }
+    return !open && n == r->npass;
+}
+
 static void passes(void) {
     const KH1CmdPass *a, *b, *c, *d;
     kh1_cmd_init(&pr, pvm, sizeof pvm[0], pum, sizeof pum[0]);
@@ -405,6 +437,12 @@ static void passes(void) {
     CHECK("passes: the 3D target drawn again loads colour and depth; its store waits for the next frame",
           d->load == KH1_LOAD_LOAD && d->dload == KH1_LOAD_LOAD && d->store == KH1_STORE_OPEN &&
           d->dstore == KH1_STORE_OPEN);
+    kh1_gxm_clear(&gxp);
+    kh1_gxm_frame(&gxp, &pr);
+    CHECK("passes: frame 1's GXM calls: a scene a pass with its loads and stores, 5 draws",
+          gxm_scenes_match(&pr, &gxp) && gxp.frame.scenes == 4 && gxp.frame.draws == 5 &&
+          gxp.call[0].op == KH1_GXM_BEGIN_SCENE && gxp.call[0].cleared && gxp.call[0].load == KH1_LOAD_DONT_CARE &&
+          gxp.call[0].dload == KH1_LOAD_DONT_CARE);
     kh1_cmd_reset_frame(&pr);
     /* frame 2: cleared first, so frame 1's last 3D pass is discarded */
     psprite(F_MAIN, Z_ALWAYS_W, 0, 0x6, 0, S_MAIN, 0, 0, 512, 384);
@@ -412,6 +450,8 @@ static void passes(void) {
     kh1_cmd_frame(&pr);
     CHECK("passes: frame 2's clear discards frame 1's last 3D pass (colour and depth)", pr.total.discards >= 1 &&
           pr.total.ddiscards >= 1 && pr.total.why[2] == 0 && pr.pass[0].load == KH1_LOAD_DONT_CARE);
+    kh1_gxm_frame(&gxp, &pr);
+    CHECK("passes: frame 2's GXM calls match its passes", gxm_scenes_match(&pr, &gxp) && gxp.total.frames == 2);
     kh1_cmd_reset_frame(&pr);
     /* frame 3: the 3D target sampled before it is drawn: frame 2's last pass is stored */
     psprite(F_SLOT, 0, 1, 0x116, T_MAIN, S_SLOT, 0, 0, 256, 192);
@@ -533,6 +573,140 @@ static void replay_x(const KH1CmdRec *r) {
     rt_h = IH;
 }
 
+/* ---- session 128: the frame's GXM calls replayed (host/port/gxmrec.c) ---- */
+static KH1GxmRec gx;
+static u32 gx_scrambled, gx_draws;
+
+static void scramble(u32 *p, u32 n) {
+    u32 i;
+    for (i = 0; i < n; i++) p[i] = 0xA5A5A5A5u ^ i * 0x9E3779B1u;
+    gx_scrambled++;
+}
+
+static void target_image(u32 rt, u32 **pix, s32 *w, s32 *h) {
+    if (rt == KH1_RT_OFFSCREEN) { *pix = &offimg[0][0]; *w = *h = 64; }
+    else if (rt == KH1_RT_CLUT) { *pix = &clutimg[0][0]; *w = *h = 16; }
+    else { *pix = &img[0][0]; *w = IW; *h = IH; }
+}
+
+static void replay_gxm(const KH1CmdRec *r) {
+    const KH1TexCache *tc = kh1_pipes_texcache();
+    const KH1PalCache *pc = kh1_pipes_palcache();
+    const KH1GpuVert *vb = (const KH1GpuVert *)(r->vring.base + r->vring.cur * r->vring.slot);
+    const u8 *ub = r->uring.base + r->uring.cur * r->uring.slot;
+    const KH1PipeKey *pk = 0;
+    const f32 *u = 0;
+    u8 tgt_rt[KH1_CMD_TARGETS];
+    s32 readback = -1, sx0 = 0, sy0 = 0, sx1 = 0, sy1 = 0, w, h;
+    u32 i, j, e, *pix;
+    if (do_replay == 2) { /* the transfer frame's checks read the commands */
+        nxc = r->ncmd < 64 ? r->ncmd : 64;
+        nxp = r->npass < 16 ? r->npass : 16;
+        memcpy(xc, r->cmd, nxc * sizeof *xc);
+        memcpy(xp, r->pass, nxp * sizeof *xp);
+    }
+    memset(tgt_rt, KH1_RT_OTHER, sizeof tgt_rt);
+    kh1_gxm_frame(&gx, r);
+    x_tex = x_pal = 0;
+    x_img = 0;
+    for (i = 0; i < gx.n; i++) {
+        const KH1GxmCall *c = &gx.call[i];
+        switch (c->op) {
+        case KH1_GXM_BEGIN_SCENE:
+            if (c->tgt < KH1_CMD_TARGETS) tgt_rt[c->tgt] = c->rt;
+            target_image(c->rt, &rt_img, &rt_w, &rt_h);
+            if (c->load == KH1_LOAD_DONT_CARE && c->cleared) scramble(rt_img, (u32)(rt_w * rt_h));
+            pk = 0;
+            break;
+        case KH1_GXM_END_SCENE:
+            if (c->store == KH1_STORE_DISCARD) { target_image(c->rt, &pix, &w, &h); scramble(pix, (u32)(w * h)); }
+            break;
+        case KH1_GXM_TARGET_UPLOAD: { /* the CPU's texels (GS memory at the upload's BITBLTBUF) */
+            const KH1CmdXfer *x = &r->cmd[c->cmd].x;
+            if (!c->tgt || c->tgt > KH1_CMD_TARGETS) break;
+            target_image(tgt_rt[c->tgt - 1], &pix, &w, &h);
+            for (j = 0; j < c->h; j++)
+                for (e = 0; e < c->w; e++) {
+                    u32 g = kh1_gsmem_read_pixel(KH1_PSMCT32, x->bb_hi & 0x3FFF, x->bb_hi >> 16 & 63, c->dx + e, c->dy + j);
+                    if ((s32)(c->dx + e) < w && (s32)(c->dy + j) < h)
+                        pix[(c->dy + j) * w + c->dx + e] = (g & 0xFFFFFF) | kh1_blend_store_alpha(g >> 24) << 24;
+                }
+            break;
+        }
+        case KH1_GXM_PAL_READBACK: /* the CLUT pass's pixels as a palette: entries 8-15 / 16-23 of each 32 swapped */
+            for (e = 0; e < 256; e++) {
+                u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g = clutimg[p >> 4][p & 15];
+                xpal[e] = (g & 0xFFFFFF) | kh1_blend_load_alpha(g >> 24) << 24;
+            }
+            readback = c->slot;
+            break;
+        case KH1_GXM_SET_PROGRAMS:
+            pk = c->pipe < gx.npipe ? &gx.pipe[c->pipe] : 0;
+            break;
+        case KH1_GXM_SET_TEXTURE:
+            x_tw = 1u << (c->tex0_lo >> 26 & 15);
+            x_th = 1u << ((c->tex0_lo >> 30 | c->tex0_hi << 2) & 15);
+            x_psm = c->tex0_lo >> 20 & 63;
+            x_img = c->src ? offimg : 0;
+            x_tex = !c->src && c->slot >= 0 ? tc->slot[c->slot].tex : 0;
+            x_pal = c->pslot < 0 ? 0 : c->pslot == readback ? xpal : pc->slot[c->pslot].col;
+            break;
+        case KH1_GXM_SET_REGION:
+            sx0 = c->sx0; sy0 = c->sy0; sx1 = c->sx1; sy1 = c->sy1;
+            break;
+        case KH1_GXM_SET_UNIFORMS:
+            u = (const f32 *)(ub + c->uoff);
+            break;
+        case KH1_GXM_DRAW: { /* the pipeline's blend and the shader's pre-scale, FIX from the uniforms */
+            KH1BlendState st;
+            const KH1GpuVert *v = vb + c->v0;
+            if (!pk || !u || c->stencil == 2 || c->cls != KH1_PA_TRIANGLES) break;
+            if (pk->shader.tex && !x_img && !x_tex) break;
+            memset(&st, 0, sizeof st);
+            st.enable = pk->blend;
+            st.eq = pk->eq;
+            st.fs = pk->fs;
+            st.fd = pk->fd;
+            st.pre_a = (s8)(pk->shader.pre_a - 2);
+            st.pre_d = (s8)(pk->shader.pre_d - 2);
+            st.pre_floor = pk->shader.pre_floor;
+            st.csel = pk->shader.csel;
+            st.fix = (u8)u[1];
+            st.mask = pk->mask;
+            st.kind = KH1_BLEND_EXACT;
+            fetch = pk->shader.tex ? fetch_tex : texel;
+            for (j = 0; j + 2 < c->nv; j += 3) tri(&v[j], &v[j + 1], &v[j + 2], sx0, sy0, sx1, sy1, pk->shader.tex != 0, &st, 0, 0);
+            gx_draws++;
+            break;
+        }
+        }
+    }
+    fetch = texel;
+    rt_img = &img[0][0];
+    rt_w = IW;
+    rt_h = IH;
+}
+
+static void columns(int partial);
+static void transfers(void);
+static void gxm(void) {
+    u32 i;
+    gx_scrambled = gx_draws = 0;
+    kh1_gxm_clear(&gx);
+    use_gxm = 1;
+    columns(0);
+    columns(1);
+    transfers();
+    use_gxm = 0;
+    for (i = 0; i < gx.n; i++) printf("cmdbuf_test: gxm: %2u %s\n", i + 1, kh1_gxm_call_str(&gx.call[i]));
+    printf("cmdbuf_test: gxm: %u frames, %u calls, %u scenes, %u draws, %u program sets, %u scenes scrambled\n",
+           gx.total.frames, gx.total.calls, gx.total.scenes, gx.total.draws, gx.total.programs, gx_scrambled);
+    CHECK("gxm: columns, partial and transfers replayed from the GXM calls alone (same checks, same pixels)",
+          gx.total.frames >= 3 && gx_draws && !gx.total.lost);
+    CHECK("gxm: the transfer frame's calls: a target upload and a palette read-back, each after its scene ended",
+          gx.frame.target_uploads == 1 && gx.frame.pal_readbacks == 1);
+}
+
 /* an upload of w x h pixels in psm at block bp, width bw, to (x, y): n words of IMAGE data */
 static void xupload(u32 bp, u32 bw, u32 psm, u32 x, u32 y, u32 w, u32 h, const u32 *data, u32 n) {
     W(0x50, 0, bp | bw << 16 | psm << 24);
@@ -557,12 +731,13 @@ static void transfers(void) {
     static u32 a[256], b[256], cc[64], pal_t[256], idx[64];
     u32 i, x, y, bad = 0, ntex = 0, ndraw = 0, ups = 0;
     s32 d1 = -1, d2 = -1, d8 = -1, clut = -1, off_pass = -1, clut_pass = -1;
+    u32 salt = use_gxm ? 0x030201 : 0; /* the gxm run's texels differ: the caches decode and fill again */
     for (i = 0; i < 256; i++) {
-        a[i] = (0x20 + i % 0x61) << 24 | (i * 3) << 16 | (255 - i) << 8 | (i * 7 & 0xFF);
-        b[i] = (0x80 - i % 0x50) << 24 | (i * 5 & 0xFF) << 16 | (i * 11 & 0xFF) << 8 | (200 - i % 200);
-        pal_t[i] = (i % 0x81) << 24 | (i * 13 & 0xFF) << 16 | (i ^ 0x5A) << 8 | (i * 29 & 0xFF);
+        a[i] = ((0x20 + i % 0x61) << 24 | (i * 3) << 16 | (255 - i) << 8 | (i * 7 & 0xFF)) ^ salt;
+        b[i] = ((0x80 - i % 0x50) << 24 | (i * 5 & 0xFF) << 16 | (i * 11 & 0xFF) << 8 | (200 - i % 200)) ^ salt;
+        pal_t[i] = ((i % 0x81) << 24 | (i * 13 & 0xFF) << 16 | (i ^ 0x5A) << 8 | (i * 29 & 0xFF)) ^ salt;
     }
-    for (i = 0; i < 64; i++) cc[i] = 0x7F000000u | (i * 4) << 16 | 0x40 << 8 | (i * 3);
+    for (i = 0; i < 64; i++) cc[i] = (0x7F000000u | (i * 4) << 16 | 0x40 << 8 | (i * 3)) ^ salt;
     for (i = 0; i < 64; i++) /* 256 indices, bytes */
         idx[i] = ((i * 4 + 0) * 37 & 0xFF) | ((i * 4 + 1) * 37 & 0xFF) << 8 | ((i * 4 + 2) * 37 & 0xFF) << 16 |
                  (u32)((i * 4 + 3) * 37 & 0xFF) << 24;
@@ -655,6 +830,7 @@ int main(void) {
     bevel();
     passes();
     transfers();
+    gxm();
     printf("cmdbuf_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }

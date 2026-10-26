@@ -26,7 +26,7 @@
  * func_001f18e8 a number (all in text.nofill.c).  Mode 0/1/2 aligns x
  * left / right / centre; the end position is left in D_0063F74C /
  * D_0063F750, and D_0063F740 is the line height.  func_001f1fc8 and
- * func_001f2630 (still assembly) draw at once; func_001f2a50 ... func_001f2d68
+ * func_001f2630 (text.nofill.c) draw at once; func_001f2a50 ... func_001f2d68
  * build a packet in a scratch buffer and send it through path 2.
  * func_001f2eb8 (text.nofill.c) uploads the font image D_003E9660 and its
  * CLUT D_003F1660 and sets up the packet headers of D_003F1A70, D_003F1E70,
@@ -610,8 +610,7 @@ s32 func_001f1f58(s32 mode, s32 color, s32 x, s32 y, s32 id, s32 sc) {
     return func_001f1fc8(mode, color, x, y, func_001efbb8(id), sc);
 }
 
-/* func_001f1fc8 and func_001f2630 are not matched (nonmatchings/session7,
- * session23-match). */
+/* func_001f1fc8 and func_001f2630: in text.nofill.c (matched in session 128). */
 
 s32 func_001f2a50(u32 color, s32 x, s32 y, u8 *str, s32 sc) {
     u64 *buf;

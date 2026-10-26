@@ -46,7 +46,7 @@ REVIEWED = {
     ("00674bc0", "D_00675018"): "crt0's .bss clear (src/asm), not run on the host",
     ("D_003C5830", "D_003C5898"): "func_0010d470 (unmatched, its draft runs): D_003C5830[c] for a text control byte; "
                                   "the analysis' bound ends at D_003C5898",
-    ("D_00490A80", "004901c0"): "func_001f1fc8 (unmatched, its draft runs): an index read 0x8c0 below; check when it matches",
+    ("D_00490A80", "004901c0"): "func_001f1fc8 (matched in session 128): its jump table; an index read 0x8c0 below",
     ("00490d90", "D_00492730"): "func_001f94f0: no name owns 0x00490D90 (a constant the analysis took as a base)",
     ("D_004F6DB0", "D_004F45B0"): "heap.c sets the walk pointer to &D_004F45B0[1] by name",
     ("D_0052AE98", "D_0052CB18"): "partystat.c compares with D_0052AE98 + 32, its own end",

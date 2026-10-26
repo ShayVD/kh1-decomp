@@ -732,6 +732,22 @@ from dead code. Read the allocation first, then find the source change.
 - A partial tail shared between two switch cases is jump2 cross-jumping two identical full copies;
   writing one shared copy in source (goto, merged cases) over-merges (0010d470).
 
+## Session 128 (nonmatchings/session128/NOTES.md)
+
+- Matched 001f1fc8 and 001f2630 (6,981): "stuck in one pass" was wrong for them. The leftover store-order
+  words went away when a statement *after* the climbed block moved (`cx += adv;` after the final
+  `sceGsSyncPath`). Climbs that only permute the block itself miss this; let the permuter (or a climb)
+  move the statements around the block too.
+- decomp-permuter turns every other function definition into a prototype unless it is `inline`, so
+  CONTEXT_ONLY copies are lost and score 0 can be impossible. Mark them `inline`, compile with
+  `-fno-inline -ffunction-sections`, rename the other `.text.X` sections to `.ctx.X,"a"` in the .s and
+  `.weak` their names (recipe in the session 128 notes). Pins: `T v;` in base.c, turned back into
+  `register T v asm(...)` by sed in compile.sh.
+- sched1 tie-breaks after priority and reg weight on the number of *forward* dependences: a store of a
+  pinned FP/GPR value gets anti-dependences from every later call that clobbers that register, so it
+  outranks unpinned stores whatever their LUID. Reg weight of a store is -1 per register dying in it
+  (value and base address can both die: -2). gdb: `break schedule_insn`, `p h_i_d[uid]`.
+
 ## Session 56 (platform wrappers)
 
 - `D = f()` compiles differently when f's return type is not D's exact type node: with any conversion

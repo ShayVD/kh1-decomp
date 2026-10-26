@@ -22,12 +22,21 @@
  *   floor-or-ceil(Cs x C / 0x80) + pre_d x Cs, clamped); the alpha written, min(As, 0x80) on the 0x80
  *   scale (blend.h kh1_blend_store_alpha); the colour out / 255.
  *
- * DATE's set-up shader samples the target's alpha and discards where (A == 1.0) != DATM.  Not generated
- * (kh1_shader_frag_cg returns 0): a frame read (fetch 1 / 2: a FETCH blend or a per-bit FBMSK) and the
- * sampler's own taps (KH1_SHADER_TAPS, REGION_REPEAT with a fix or a narrow mask).  Of the main ELF's 27
- * static fragment shaders (drawpipes.py) one needs a frame read: the shadow casters' FBMSK 0x00000001 (fetch
- * 2, R's lowest bit kept: func_001284a0's environment); no TAPS.  Both need the Vita's colour-surface read
- * (programmable blending) or integer ops: 4.13 "Session 127".
+ * DATE's set-up shader samples the target's alpha and discards where (A == 1.0) != DATM.
+ *
+ * A frame read (session 128, 4.13 "Session 128"): fetch 1 (a FETCH blend) and fetch 2 (no blend, a per-bit
+ * FBMSK) take the target's pixel as an input `dst` (the Vita's programmable blending: the colour surface's
+ * value at the fragment, as its 8-bit unsigned bytes), and the pipeline blends nothing.  Fetch 1 runs the
+ * GS's formula (kh1_blend_gs) on Cs and the target (Ad read back from the 0x80 scale, 0x80 on a CT24 frame)
+ * with A / B / C / D from the key; then both merge FBMSK's bits: per colour byte, a mask of the low k bits
+ * (kept from the target) or the high 8 - k bits, and an alpha byte 0 or 0xFF.  Not generated
+ * (kh1_shader_frag_cg returns 0): another mask shape (no float form; integer ops would do it), a CT16 / CT16S
+ * frame with a frame read (the 5551 target's bits) and the sampler's own taps (KH1_SHADER_TAPS,
+ * REGION_REPEAT with a fix or a narrow mask).  Of the main ELF's 27 static fragment shaders (drawpipes.py)
+ * one has a frame read: the shadow casters' FBMSK 0x00000001 (fetch 2, R's lowest bit kept: func_001284a0's
+ * environment), now generated; no TAPS.  The input's declaration (`__nativecolor __regformat unsigned char4
+ * dst : COLOR`) is this generator's reading of psp2cgc's colour-surface input: to be checked by the first
+ * psp2cgc compile (the Vita build).
  *
  * The uniforms the code reads are kh1_shader_uniforms' 16 floats (one 64-byte uniform slot, ring.h):
  *   u_a = (AREF, FIX, TA0, TA1)   u_b = (AEM, FOGCOL R, G, B)   u_r = REGION_CLAMP's texel-centre bounds
@@ -47,6 +56,7 @@ void kh1_shader_uniforms(const KH1DrawState *d, f32 out[16]);
 /* the interpreter's variables: inputs, uniforms, registers, outputs */
 enum {
     KH1_SV_COL, KH1_SV_TC, KH1_SV_FOG, KH1_SV_POS,       /* inputs (fragment: as interpolated; vertex: the attributes) */
+    KH1_SV_DST,                                          /* a frame read's target pixel, 8-bit (0 .. 255) */
     KH1_SV_UA, KH1_SV_UB, KH1_SV_UR, KH1_SV_UC, KH1_SV_UXF, /* uniforms */
     KH1_SV_R0, KH1_SV_R1, KH1_SV_R2, KH1_SV_R3, KH1_SV_R4, KH1_SV_R5, KH1_SV_R6, KH1_SV_R7, /* registers */
     KH1_SV_OCOLOR, KH1_SV_OPOS, KH1_SV_OCOL, KH1_SV_OTC, KH1_SV_OFOG, /* outputs */
