@@ -100,3 +100,11 @@ int PlatOvlCall(int cmd, int arg, int *ret) {
 }
 
 const char *PlatOvlCurrent(void) { return current ? current->file : 0; }
+
+/* include/platform/ovlsdk.h: func_0024e640(stack, size, fn, arg) runs fn(arg) on a stack of its
+ * own; a port's thread already has one */
+void PlatCallOnStack(void *stack, int size, void (*fn)(void *), void *arg) {
+    (void)stack;
+    (void)size;
+    fn(arg);
+}

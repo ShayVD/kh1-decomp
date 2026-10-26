@@ -105,7 +105,7 @@ def build(cc, cflags, out, nm):
         mine, bad = [], []
         for s in srcs:
             obj = os.path.join(od, s.replace("/", "__") + ".o")
-            r = subprocess.run([cc] + cflags + ["-Iovl/" + name, "-include", hdr, "-c", "-o", obj, s], cwd=ROOT,
+            r = subprocess.run([cc] + cflags + ["-Iovl/" + name, "-include", "platform/ovlsdk.h", "-include", hdr, "-c", "-o", obj, s], cwd=ROOT,
                                capture_output=True, text=True, env=dict(os.environ, LC_ALL="C"))
             if r.returncode:
                 bad.append((s, (r.stderr.strip().splitlines() or ["?"])[-1]))

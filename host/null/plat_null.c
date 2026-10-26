@@ -132,6 +132,11 @@ int PlatFsReset(void) { return 0; }
 int PlatFsOpen(const char *name, int flag) { return 0; }
 int PlatFsClose(int fd) { return 0; }
 int PlatFsRead(int fd, void *buf, int n) { return 0; }
+int PlatFsWrite(int fd, const void *buf, int n) { return -1; } /* session 132: no HDD */
+int PlatFsSync(const char *dev, int flag) { return -1; }
+int PlatFsRemove(const char *name) { return -1; }
+int PlatFsMkdir(const char *name, int mode) { return -1; }
+int PlatFsFormat(const char *dev, const char *blockdev, void *arg, int arglen) { return -1; }
 int PlatFsLseek(int fd, int offset, int whence) { return 0; }
 s64 PlatFsLseek64(int fd, s64 offset, int whence) { return 0; }
 int PlatFsIoctl2(int fd, int req, void *arg, unsigned int arglen, void *buf, unsigned int buflen) { return 0; }
