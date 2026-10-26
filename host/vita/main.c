@@ -60,6 +60,7 @@ void kh1_host_vblank(void) {
     if (in_vblank) return;
     in_vblank = 1;
     frames++;
+    if (frames % 60 == 0) printf("kh1-vita: frame %lu, %u disc reads\n", frames, kh1_host_cd_reads);
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
@@ -131,10 +132,16 @@ int main(int argc, char **argv) {
     }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
-    freopen(log, "w", stdout);
-    freopen(log, "a", stderr);
-    setvbuf(stdout, 0, _IOLBF, 0);
-    setvbuf(stderr, 0, _IONBF, 0);
+    /* one FILE for both, unbuffered: a crash loses nothing (the first Vita3K run's freopen'd log
+     * stayed empty) */
+    {
+        FILE *f = fopen(log, "w");
+        if (f) {
+            setvbuf(f, 0, _IONBF, 0);
+            stdout = f;
+            stderr = f;
+        }
+    }
     printf("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
     if (kh1_vita_display_init(D_002A6890)) {
         printf("kh1-vita: no framebuffer\n");
