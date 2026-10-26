@@ -337,6 +337,9 @@ def try_function(addr: int) -> tuple[int, bool, str, str]:
     for c in raw:
         p = permute.preprocess(c, _protos, _cc, loc)
         cands += [p, *permute.variants(p)]
+        pf = permute.pad_frame(p, loc)
+        if pf != p:
+            cands += [pf, *permute.variants(pf)]
         k = permute.known_prototypes(p, _protos)
         if k != p:
             cands += [k, *permute.variants(k)]

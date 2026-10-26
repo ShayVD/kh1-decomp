@@ -190,6 +190,37 @@ def stack_buffer(code: str, locals_size: int) -> str:
     return head + f"\n    s32 sp[{(locals_size + 3) // 4}];" + body
 
 
+def pad_frame(code: str, locals_size: int) -> str:
+    """The original frame has locals the draft never uses (an unused matrix:
+    wm func_00f60448): declare a buffer of that size so the frame matches."""
+    if locals_size < 16 or re.search(r"\bsp\b|\[\d+\];|\b(?:OvlVec|OvlMtx)\b", code):
+        return code
+    start = re.search(r"^\S.*\)\s*\{\s*$", code, re.M)
+    if not start:
+        return code
+    n = locals_size // 16
+    return code[: start.end()] + f"\n    f32 unused_frame[{n}][4] __attribute__((aligned(16)));" + code[start.end():]
+
+
+VARDECL_RE = re.compile(r"^([ \t]+)([A-Za-z_][\w \t]*?\**)[ \t]*\b(var_[a-z]\w*?)(?:_(\d+))?;[ \t]*\n", re.M)
+
+
+def merge_splits(code: str) -> str:
+    """m2c splits one variable the original reuses (a loop counter in three
+    loops: wm func_00f64c78) into var_a3, var_a3_2, ...; merge those of one type."""
+    groups: dict[str, set[str]] = {}
+    for m in VARDECL_RE.finditer(code):
+        groups.setdefault(m.group(3), set()).add(m.group(2).strip())
+    out = code
+    for base, types in groups.items():
+        names = re.findall(rf"\b{base}_\d+\b", out)
+        if len(types) != 1 or not names:
+            continue
+        out = re.sub(rf"^[ \t]+[^\n;]*\b{base}_\d+;[ \t]*\n", "", out, flags=re.M)
+        out = re.sub(rf"\b{base}_\d+\b", base, out)
+    return out
+
+
 # --------------------------------------------------------------------------- variants
 
 def variants(code: str) -> list[str]:
@@ -245,6 +276,9 @@ def variants(code: str) -> list[str]:
         w = callee_stubs(v)
         if w != v:
             out.append(w)
+    v = merge_splits(code)
+    if v != code:
+        out.append(v)
     # float arguments m2c passed as their bit patterns (`func(5, arg0, 0x42C80000)`)
     v = float_args(code)
     if v != code:
