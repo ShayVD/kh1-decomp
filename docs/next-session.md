@@ -30,7 +30,9 @@ items.
   for gsmem.c's pixels, the scenes' loads / stores), shadergen_test 17 (every FETCH form, Ad read back for all
   256 bytes, 10 FBMSK shapes). `KH1_HOST_TRACE=5` adds a `gxm:` line. kh1.elf byte-identical, no float-untested
   row; selftest PASS. The Vita build thread (PR #131) was told about gxmrec.h.
-  Matching: one worker took another run at the smallest holdouts (results in nonmatchings/session128/NOTES.md).
+  **Matching**: func_001f1fc8 and func_001f2630 matched (6,981 / 6,988; the pen advance after sceGsSyncPath,
+  found by decomp-permuter once its context-only callee copies were kept: nonmatchings/session128/NOTES.md);
+  func_001fd858 and sceGsDefDispEnv stay (reorg's annulled-branch choice, sched2's priority). 7 left.
 
 - **Session 127** (static, vita-port-plan 5.1bo): **the transfers in the command list, the shaders as Cg.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). cmdbuf.h's
@@ -687,11 +689,12 @@ items.
   install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu gcc-multilib gdb` (indcheck needs clang, present in the cloud image) (after `dpkg --add-architecture
   i386`), `make toolchain`, the ELF, a plain `make shift` and tools/shift/data_owners.py before `fcheck.sh base`.
 
-## What is left (9 functions)
+## What is left (7 functions)
 
 Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.md). Counts are LCS words.
 
-1. **1-4 words**: 001fd858 (1, reorg liveness), 001f2630 (1, nofill), 001f1fc8 (2, nofill), 00265608 (4, closed).
+1. **1-4 words**: 001fd858 (1, reorg liveness), 00265608 (4, closed). (001f2630 and 001f1fc8 matched in session 128;
+   the permuter recipe that keeps context-only callee copies is in nonmatchings/session128/NOTES.md.)
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
@@ -820,7 +823,8 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    the shadow pass's Zs against Z16S's 0xFFFF (a clamp would flatten them), the FGE draws' FOGCOL and F
    range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
 
-5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
+5. **Matching (optional, 1 worker)**: only with a new idea; session 128's permuter recipe (the context-only
+   callee copies kept) has not been tried on 001c62a0 or 00200e28 yet.
 6. End with `make progress-update SESSION=129`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
