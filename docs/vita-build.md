@@ -145,9 +145,11 @@ the software GS model drawing each frame (host/null/gsmem.c) and the present:
   texture cache's copy is taken before the draw, as the general loop reads it).
 - tex_scan (a textured draw's page stamp, asked twice a draw) remembers its last answer until a
   page mark moves.
-- **The log**: the chain walk printed a "dma ch" line per send, ~7 a frame, through the Vita's
-  unbuffered sceIoWrite log. dmawalk.c's `kh1_dma_quiet` drops that line; the Vita sets it unless
-  config.txt says `trace=2` or more (the host: `KH1_HOST_QUIET=1`).
+- **The log**: the chain walk prints a "dma ch" line per send, ~7 a frame. dmawalk.c's
+  `kh1_dma_quiet` drops that line; the Vita sets it unless config.txt says `trace=2` or more (the
+  host: `KH1_HOST_QUIET=1`). In Vita3K no printf reaches kh1.log at all (session 134: only main.c's
+  `vlog` lines do, the funopen'd stdout never writes), so today this saves only the formatting; it
+  is needed before printf is routed to the log.
 - **The present is drawn by the GPU** (host/vita/display.c): the display buffer read once with
   `kh1_gsmem_read_rect` into a 512 x 512 GXM texture and drawn as one bilinear quad through the
   canvas map by vita2d (vitasdk's 2D library, whose shaders come compiled; the port's own Cg from
@@ -173,6 +175,19 @@ with and without the caches. **Not measured in Vita3K or on a Vita yet**: qemu's
 relative, the real art's sprites are unknown here (the fake disc has none), and the frame pacing
 still waits for the Vita's vblank after each game vblank, so the title reaches 60 only when a
 frame's work fits in 16.7 ms.
+
+**In Vita3K** (the same Mac and disc as session 133, two minutes each, frames a second from the
+watchdog lines):
+
+| title stage | session 133 VPK | session 135 VPK |
+|---|---|---|
+| the logo (to frame ~960) | ~20 | ~60 |
+| the art starting to fade in | ~8.5 | ~21 |
+| the art up (steady) | ~6.7 | ~13 |
+
+No crash in either. The art stage is still far from 60: its draws are not the fake disc's, so they
+need profiling on the real disc. The watchdog line now also gives, of each 2 s, the ms spent in the
+vblank wait and in the present; the rest is the game and the chain walk (the GS model's drawing).
 
 ## What next, in order
 

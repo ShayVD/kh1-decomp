@@ -17,6 +17,7 @@
  * is drawn again with the strip.  Not part of the PS2 build. */
 #include <psp2/display.h>
 #include <psp2/gxm.h>
+#include <psp2/kernel/processmgr.h>
 #include <vita2d.h>
 #include "common.h"
 #include "gsregs.h"
@@ -38,6 +39,7 @@ static u32 pic_w, pic_lines;               /* the texture's picture: columns, th
 static unsigned long status_frames, drawn_at; /* the last vblank's; the vblank of the last draw */
 static unsigned status_reads;
 volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown; /* the watchdog's (main.c) */
+volatile u32 kh1_vita_us_present; /* session 135: microseconds in present_buffer (the watchdog's) */
 
 int kh1_vita_display_init(const void *frame_copy_send) {
     if (vita2d_init() < 0) return -1;
@@ -79,8 +81,10 @@ static void draw(void) {
 /* the model's buffer (FRAME's FBP, FBW, PSM) into the texture as ABGR, then drawn */
 static void present_buffer(u32 bp, u32 bw, u32 psm, u32 lines) {
     u32 w = bw * 64 < TEX_W ? bw * 64 : TEX_W, stride, x, y, *p;
+    SceUInt64 t0;
     if (psm != KH1_PSMCT32 && psm != KH1_PSMCT24 && psm != KH1_PSMCT16 && psm != KH1_PSMCT16S) return;
     if (!bw || lines > TEX_H) return;
+    t0 = sceKernelGetProcessTimeWide();
     vita2d_wait_rendering_done(); /* the GPU is done with the last frame's texture */
     p = vita2d_texture_get_datap(tex);
     stride = vita2d_texture_get_stride(tex) / 4;
@@ -97,6 +101,7 @@ static void present_buffer(u32 bp, u32 bw, u32 psm, u32 lines) {
     shown++;
     kh1_vita_shown = shown;
     draw();
+    kh1_vita_us_present += (u32)(sceKernelGetProcessTimeWide() - t0);
 }
 
 /* host/null/dmawalk.c's hook after each send: the frame copy's FRAME is the display buffer */
