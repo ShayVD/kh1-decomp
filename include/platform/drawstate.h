@@ -53,8 +53,13 @@ typedef struct {
     u8 discard;   /* atest.h's KH1_DISCARD_* */
     u8 atst;      /* the compare when it discards (else 0) */
     u8 su, sv;    /* sampler.h's KH1_SHADER_* on each axis (with a texture) */
-    u8 setup;     /* 1: DATE's set-up shader (samples the target's alpha, discards, no colour) */
+    u8 setup;     /* 1: DATE's set-up shader (samples the target's alpha, discards, no colour); 2: its clear
+                   * (session 129: no sample, no discard, no colour) */
     u8 datm;      /* the set-up's DATM: it keeps the pixels whose stored alpha is 1.0 when 1, below it when 0 */
+    /* a frame read's own (fetch 1 / 2, else 0; renderer-spec 4.13 "Session 128"): */
+    u8 fabcd;     /* fetch 1: ALPHA's A / B / C / D byte (the shader runs the GS's formula with it) */
+    u8 fpsm;      /* the frame: 0 CT32, 1 CT24 (Ad is 0x80, no alpha stored), 2 CT16 / CT16S */
+    u8 fbm[4];    /* FBMSK's bytes R, G, B, A: the bits the shader keeps from the target */
 } KH1ShaderKey;
 
 /* one GPU pipeline */
@@ -65,7 +70,8 @@ typedef struct {
     u8 mask;      /* the colour write mask: bit 0 R, 1 G, 2 B, 3 A */
     u8 ztest;     /* depth.h's KH1_ZTST_ALWAYS / GEQUAL / GREATER (ALWAYS: the test off) */
     u8 zwrite;    /* the depth write */
-    u8 stencil;   /* 0 none, 1 the draw tests stencil == 1 (DATE), 2 the set-up writes stencil 1 */
+    u8 stencil;   /* 0 none, 1 the draw tests stencil == 1 (DATE), 2 the set-up writes stencil 1, 3 the set-up's
+                   * clear writes stencil 0 (ALWAYS, REPLACE) */
     KH1ShaderKey shader;
 } KH1PipeKey;
 
@@ -83,8 +89,9 @@ typedef struct {
 typedef struct {
     u8 n;                    /* GPU draws: 0 (nothing is written), 1 or 2 */
     KH1PipeKey pipe[2];
-    u8 setup;                /* 1: DATE's set-up draw comes first */
-    KH1PipeKey setup_pipe;
+    u8 setup;                /* 1: DATE's set-up draws come first (its clear, then setup_pipe) */
+    KH1PipeKey setup_pipe;   /* the set-up: the draw's own primitives (its class and vertices), stencil 1 where
+                              * the target's alpha is DATM; session 129: kh1_date_clear_pipe's clear before it */
     KH1DrawUniforms u;
     KH1Sampler sampler;      /* with a texture */
     u32 tex0_lo, tex0_hi;    /* the texture binding: TEX0 with CLD and the CLUT fields cleared */
@@ -98,6 +105,9 @@ typedef struct {
 void kh1_drawstate_of(const KH1DrawRegs *r, KH1DrawState *out);
 /* a key as text (for traces): "tri blend add/1/1-sa mask f z ge/w | tex p8 mod tcc ..." */
 const char *kh1_pipekey_str(const KH1PipeKey *k);
+/* DATE's clear before the set-up (session 129, renderer-spec 4.13 "Session 129"): stencil 0 over the same
+ * primitives, so the set-up's discards leave 0, not what an earlier DATE command or the scene's load left */
+void kh1_date_clear_pipe(const KH1PipeKey *setup, KH1PipeKey *out);
 
 /* a set of distinct pipelines, fragment shaders and samplers, counted over draw states */
 #define KH1_PIPESET_MAX 256

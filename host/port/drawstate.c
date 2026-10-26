@@ -26,7 +26,14 @@ static void shader_of(const KH1DrawRegs *r, const KH1DrawState *d, KH1ShaderKey 
         k->sv = d->sampler.v.shader;
     }
     k->fog = r->prim >> 5 & 1;
-    if (d->blend.kind == KH1_BLEND_FETCH) k->fetch = d->blend.enable ? 1 : 2;
+    if (d->blend.kind == KH1_BLEND_FETCH) {
+        u32 fpsm = r->frame_lo >> 24 & 63, i;
+        k->fetch = d->blend.enable ? 1 : 2;
+        k->fabcd = k->fetch == 1 ? d->blend.abcd : 0;
+        k->fpsm = fpsm == 0x01 ? 1 : fpsm == 0x02 || fpsm == 0x0A ? 2 : 0;
+        for (i = 0; i < 4; i++) k->fbm[i] = (u8)(r->frame_hi >> i * 8);
+        if (k->fpsm == 1) k->fbm[3] = 0; /* no alpha stored */
+    }
     if (k->fetch == 1) return;
     k->pre_a = (u8)(d->blend.pre_a + 2);
     k->pre_d = (u8)(d->blend.pre_d + 2);
@@ -88,16 +95,25 @@ void kh1_drawstate_of(const KH1DrawRegs *r, KH1DrawState *out) {
     for (i = 0; i < out->n; i++) pipe_of(out, &sk, cls, &out->atest.draw[i], &out->pipe[i]);
     if (out->n && out->pipe[0].shader.discard) out->u.aref = out->atest.aref;
     if (out->n && out->atest.date) {
-        /* the set-up: the rectangle's triangles, no colour, no depth, stencil written, its own shader */
+        /* the set-up: the draw's own primitives (session 129: its class, so a line or point draw marks its
+         * own pixels), no colour, no depth, stencil written, its own shader */
         KH1PipeKey *p = &out->setup_pipe;
         out->setup = 1;
-        p->cls = KH1_PA_TRIANGLES;
+        p->cls = (u8)cls;
         p->ztest = KH1_ZTST_ALWAYS;
         p->stencil = 2;
         p->shader.setup = 1;
         p->shader.datm = out->atest.datm;
         p->shader.discard = KH1_DISCARD_FAIL;
     }
+}
+
+void kh1_date_clear_pipe(const KH1PipeKey *setup, KH1PipeKey *out) {
+    *out = *setup;
+    out->stencil = 3;
+    out->shader.setup = 2;
+    out->shader.datm = 0;
+    out->shader.discard = KH1_DISCARD_NONE;
 }
 
 const char *kh1_pipekey_str(const KH1PipeKey *k) {
@@ -109,14 +125,15 @@ const char *kh1_pipekey_str(const KH1PipeKey *k) {
     static const char *tfx[] = { "mod", "decal", "hl", "hl2" };
     static const char *at[] = { "never", "always", "lt", "le", "eq", "ge", "gt", "ne" };
     static const char *ss[] = { "", "c", "t" };
-    static char b[160];
+    static char b[200];
     const KH1ShaderKey *s = &k->shader;
     char *p = b;
     p += sprintf(p, "%s", cls[k->cls & 3]);
     if (k->blend) p += sprintf(p, " %s/1/%s", eq[k->eq % 3], bf[k->fd % 6]);
     p += sprintf(p, " mask %x z %s%s", k->mask, zt[k->ztest & 3], k->zwrite ? "/w" : "");
-    if (k->stencil) p += sprintf(p, " stencil %s", k->stencil == 1 ? "test" : "set");
+    if (k->stencil) p += sprintf(p, " stencil %s", k->stencil == 1 ? "test" : k->stencil == 3 ? "clear" : "set");
     p += sprintf(p, " |");
+    if (s->setup == 2) { sprintf(p, " date-clear"); return b; }
     if (s->setup) { sprintf(p, " date-setup datm %u", s->datm); return b; }
     if (s->tex)
         p += sprintf(p, " %s%s %s%s %s%s%s%s", fmt[s->tex % 5], s->texa ? "+texa" : "", tfx[s->tfx & 3],
@@ -125,7 +142,10 @@ const char *kh1_pipekey_str(const KH1PipeKey *k) {
     else
         p += sprintf(p, " flat");
     if (s->fog) p += sprintf(p, " fog");
-    if (s->fetch) p += sprintf(p, s->fetch == 1 ? " fetch" : " fetch-mask");
+    if (s->fetch == 1) p += sprintf(p, " fetch %02x", s->fabcd);
+    if (s->fetch == 2) p += sprintf(p, " fetch-mask");
+    if (s->fetch && (s->fbm[0] | s->fbm[1] | s->fbm[2] | s->fbm[3]))
+        p += sprintf(p, " fbmsk %02x%02x%02x%02x", s->fbm[3], s->fbm[2], s->fbm[1], s->fbm[0]);
     if (s->fetch != 1 && (s->pre_a != 2 || s->pre_d != 3))
         p += sprintf(p, " pre %d,%d%s%s", s->pre_a - 2, s->pre_d - 2, s->csel == 1 ? " ad" : s->csel == 2 ? " fix" : "",
                      s->pre_floor == 1 ? " floor" : s->pre_floor == 2 ? " ceil" : "");
@@ -158,7 +178,12 @@ void kh1_pipeset_add(KH1PipeSet *s, const KH1DrawState *d) {
     u8 smp[4];
     s->states++;
     if (!d->n) { s->empty++; return; }
-    if (d->setup) add_pipe(s, &d->setup_pipe);
+    if (d->setup) {
+        KH1PipeKey c;
+        kh1_date_clear_pipe(&d->setup_pipe, &c);
+        add_pipe(s, &c);
+        add_pipe(s, &d->setup_pipe);
+    }
     for (i = 0; i < d->n; i++) add_pipe(s, &d->pipe[i]);
     if (!d->pipe[0].shader.tex) return;
     smp[0] = d->sampler.u.addr;

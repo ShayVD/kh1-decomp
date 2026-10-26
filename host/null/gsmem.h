@@ -77,6 +77,12 @@ extern const u32 *(*kh1_gsmem_palette)(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u3
  * as kh1_gsmem_read_pixel gives) and read GS memory when it returns 0 (a render target's texture).
  * host/null/present.c sets it; the texels must equal GS memory's, so the pixels do not move */
 extern const u32 *(*kh1_gsmem_texels)(u32 tex0_lo, u32 tex0_hi);
+/* session 127 (the command recorder's transfers, include/platform/cmdbuf.h, host/null/pipes.c): when set,
+ * called at each TRXDIR 0 (an upload starts: its IMAGE data follows) or 2 (after the copy) with the
+ * transfer's registers, and after each CLUT buffer load with the TEX0 that loaded it (after
+ * kh1_gsmem_clut_loaded) */
+extern void (*kh1_gsmem_xfer_hook)(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi);
+extern void (*kh1_gsmem_clut_hook)(u32 tex0_lo, u32 tex0_hi);
 /* a texture cache's key check: the newest write sequence number of any 8 KB page the texture's
  * w x h texels lie in (0: never written since the reset), and the CLUT buffer's load count */
 u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);

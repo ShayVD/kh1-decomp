@@ -8,14 +8,78 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## The Mac
 
-**The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 126 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+**The Mac should be reachable from about 09:00 UTC on Monday 2026-10-26** (session 128 asked at 00:07 UTC; the
+user said it would be there in 9 hours and to do static work until then; sessions 49 to 130 ran without it;
+session 130 finished at about 07:00 UTC, before the Mac was back). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 126, 2026-10-25)
+## Where we stopped (end of session 130, 2026-10-26)
+
+- **Session 130** (static, vita-port-plan 5.1br): **the vertex programs' GXM tables as a port builds them.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). vertex.h's
+  `kh1_vertex_gxm_attrs`: a variant's `kh1_vertex_attrs` rows as the SceGxmVertexAttribute array and
+  SceGxmVertexStream a port hands to sceGxmShaderPatcherCreateVertexProgram (`KH1GxmVtxAttr` / `KH1GxmVtxStream`,
+  the SDK's layouts; U8N 4, F32 9, INDEX_16BIT 0 recalled from vitasdk's psp2/gxm.h, unverified), regIndex from
+  a lookup by name the port supplies (0 when the program lacks an input). shadergen_test 26 ("gxmattr": a
+  stand-in program from each generated Cg's input order). **No psp2cgc in the container** (vitasdk has none), so
+  the shaders are still uncompiled. Item 4d waited: PR #131 still open. kh1.elf byte-identical, no float-untested
+  row; selftest PASS. **Matching**: no new match (6,981 / 6,988); **00110618 93 -> 90 words** (decomp-permuter
+  with PENALTY_REGALLOC 50: the first cz's numerator computed into az first;
+  nonmatchings/session130/s130__00110618_90w_aznum.c, shift/drafts.tsv points at it; notes in
+  nonmatchings/session130/NOTES.md).
+
+- **Session 129** (static, vita-port-plan 5.1bq): **the vertex stream as GXM reads it, DATE's set-up area.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). vertex.h's
+  `kh1_vertex_attrs`: each vertex variant's SceGxmVertexAttribute rows (input name for the regIndex lookup,
+  offset, F32 / U8N, components) and `KH1_VTX_STRIDE` 32; the UV variants now declare `float2 tc`; GXM draws are
+  indexed, so a port keeps one static U16 index buffer 0 .. n. DATE: the set-up over the command's own vertices
+  is the exact area (the GS tests only the pixels a draw writes), made exact by a stencil clear before each
+  set-up (drawstate.h `kh1_date_clear_pipe`: KH1PipeKey stencil 3, KH1ShaderKey setup 2), the set-up in the
+  draw's own primitive class, and one batch per DATE primitive (batch.c). Static set now **43 pipelines / 28
+  fragment shaders** (the clear). Tests: shadergen_test 22 ("layout"), cmdbuf_test 49 ("date": an overlapping
+  DATE frame replayed from the GXM calls with a garbage stencil gives the GS's pixels; without the clear it
+  does not), batch_test 14, drawstate_test 23. kh1.elf byte-identical, no float-untested row; selftest PASS.
+  Item 4d waited: PR #131 (the Vita build, another thread) was still open; that thread was told about both
+  interface changes. **Matching**: no new match (6,981 / 6,988); 001c62a0's draft 15 -> 14 words (an `lk0`
+  local; nonmatchings/session129/NOTES.md), 00200e28's natural-type draft 24 (ties the best). The permuter's
+  default score does not track the word count on these two: raise its register penalty and re-score every
+  output with the real build (the notes).
+
+- **Session 128** (static, vita-port-plan 5.1bp): **the frame read, the command list as GXM calls.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). shadergen.c
+  now generates the fetch 1 / 2 fragment shaders: the target's pixel as an input `dst` (programmable blending;
+  the declaration `__nativecolor __regformat unsigned char4 dst : COLOR` is unverified until the first psp2cgc
+  compile), fetch 1 running the GS's formula with A / B / C / D from the key (KH1ShaderKey's new `fabcd`, `fpsm`,
+  `fbm[4]`, set only for a frame read), both merging FBMSK's bits where a byte's mask is a low or high run (split
+  bits, a partial alpha byte and CT16 frames not generated). All 27 static fragment shaders generate.
+  The shadow casters' 1-bit mask can be dropped (static, inferred: within 1 of 255 in red on the receivers,
+  renderer-spec 4.13 "Session 128"). New include/platform/gxmrec.h / host/port/gxmrec.c (a "null GXM"): a
+  frame's commands as the calls a Vita renderer makes; tests/host/cmdbuf_test.c 46 checks (the calls replayed
+  for gsmem.c's pixels, the scenes' loads / stores), shadergen_test 17 (every FETCH form, Ad read back for all
+  256 bytes, 10 FBMSK shapes). `KH1_HOST_TRACE=5` adds a `gxm:` line. kh1.elf byte-identical, no float-untested
+  row; selftest PASS. The Vita build thread (PR #131) was told about gxmrec.h.
+  **Matching**: func_001f1fc8 and func_001f2630 matched (6,981 / 6,988; the pen advance after sceGsSyncPath,
+  found by decomp-permuter once its context-only callee copies were kept: nonmatchings/session128/NOTES.md);
+  func_001fd858 and sceGsDefDispEnv stay (reorg's annulled-branch choice, sched2's priority). 7 left.
+
+- **Session 127** (static, vita-port-plan 5.1bo): **the transfers in the command list, the shaders as Cg.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). cmdbuf.h's
+  list now holds UPLOAD / COPY / CLUT / TEXTURE commands between the draws (each draw names its texture cache
+  entry `tslot` and palette slot `pslot`; a transfer on a render target splits the scene, stores the target
+  before, loads it after); host/null/gsmem.c's `kh1_gsmem_xfer_hook` / `kh1_gsmem_clut_hook` feed pipes.c,
+  which keeps its own texture and palette caches; `KH1_HOST_TRACE=5` adds a `transfers:` line. New
+  include/platform/shadergen.h / host/port/shadergen.c: every fragment (KH1ShaderKey) and vertex variant as
+  Cg from one table of 16 statement forms, read back by a CPU interpreter; cmdbuf.c's uniform slots now hold
+  the 16 floats the shaders read (`kh1_shader_uniforms`). tests/host/cmdbuf_test.c 29 checks (a replayed
+  frame with uploads, an upload into `0x3A00`, a CLUT read back from the CLUT pass: gsmem.c's pixels); new
+  tests/host/shadergen_test.c 13 checks (texfunc / fog / blend / atest / texfmt / sampler against the text,
+  six deliberate breaks caught). Static set: 26 of 27 fragment shaders generate; the one not is the shadow
+  casters' FBMSK `0x00000001` (a frame read). `KH1_HOST_SHADERS=DIR` writes a run's .cg files; drawpipes.py
+  prints a `Cg:` line. kh1.elf byte-identical, no float-untested row; selftest PASS. PR #131 (the Vita build,
+  another thread) globs host/port/*.c: shadergen.c is plain C (memset only).
 
 - **Session 126** (static, vita-port-plan 5.1bn): **the draw list as GPU commands, each pass's load / store.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). batch.c now
@@ -663,15 +727,16 @@ items.
   install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu gcc-multilib gdb` (indcheck needs clang, present in the cloud image) (after `dpkg --add-architecture
   i386`), `make toolchain`, the ELF, a plain `make shift` and tools/shift/data_owners.py before `fcheck.sh base`.
 
-## What is left (9 functions)
+## What is left (7 functions)
 
 Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.md). Counts are LCS words.
 
-1. **1-4 words**: 001fd858 (1, reorg liveness), 001f2630 (1, nofill), 001f1fc8 (2, nofill), 00265608 (4, closed).
-2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
-3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
+1. **1-4 words**: 001fd858 (1, reorg liveness), 00265608 (4, closed). (001f2630 and 001f1fc8 matched in session 128;
+   the permuter recipe that keeps context-only callee copies is in nonmatchings/session128/NOTES.md.)
+2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
+3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 127 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 131 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -723,7 +788,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    walkcheck at 0, the PS2 ELF byte-identical).
    **Add (session 123)**: the end-of-run `kh1-host: pipelines:` line and its `pipe N` lines for the title and the
    room run (`KH1_HOST_TRACE=5`): how many GPU pipelines and fragment shaders the real draws need against
-   drawpipes.py's 42 / 27 (renderer A's TEX0_2 / CLAMP_2 from the disc, the real ZBUF under the 2D packets), into
+   drawpipes.py's 43 / 28 (session 129; renderer A's TEX0_2 / CLAMP_2 from the disc, the real ZBUF under the 2D packets), into
    renderer-spec 4.13 "Session 123"; and every `port target` line a known kind (an `OTHER` target or an unknown
    depth buffer is a new one for host/port/target.c's table).
    **Add (session 124)**: the `batches:` lines of the title and the room run (`KH1_HOST_TRACE=5`): draw calls,
@@ -734,6 +799,15 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    column copy that does not merge on the real disc means its columns' vertices differ; note the send) and the
    `ring:` line (a frame's vertex bytes against 4 MiB and uniform bytes against 256 KiB, for the title, the
    room, the menu blur), into renderer-spec 4.13 "Session 125".
+   **Add (session 127)**: the `transfers:` line of the title, the room run and the menu blur (uploads into a
+   render target, CLUT loads read back from the CLUT pass `0x3E00`, palette fills and texture decodes a frame,
+   split scenes) into renderer-spec 4.13 "Session 127"; one room run with `KH1_HOST_SHADERS=DIR` (in the
+   scratchpad): the `Cg:` line, any fragment shader past the static 27 and any not generated (a frame read or
+   TAPS: note the draw).
+   **Add (session 128)**: the `gxm:` line for the title, the room run and the menu blur (calls and scenes a
+   frame, program / texture sets, palette read-backs, target uploads: the Vita's CPU cost a frame) into
+   renderer-spec 4.13 "Session 128"; and in a shadow scene, whether the shadow casters' FBMSK `0x00000001` ever
+   meets a target whose R has bit 0 set (the `fetch-mask` pipeline's draws in `--draws`).
    **Add (session 126)**: each distinct frame's pass list and the `commands:` / `passes:` / `depth:` lines for
    the title, the room run and the menu blur (`KH1_HOST_TRACE=5`): the scenes a frame opens, which return to
    the 3D target after a capture (LOAD, and the scene before STORE, colour and depth), whether the real disc's
@@ -758,18 +832,19 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    Session 123: if inventory.py finds GIF chains in the overlay, count the pipelines they add with
    tools/host/drawpipes.py's walk (a `--elf`-style run over the overlay's chains).
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests are skipped): (a) **the user's
-   answer on the full-width rules** (session 101's card, still unanswered at session 126): "keep them 4:3" means
+   answer on the full-width rules** (session 101's card, still unanswered at session 130): "keep them 4:3" means
    deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session
-   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the transfers in the command list** (the
-   next step after 5.1bn): the uploads, local copies and CLUT loads between commands (kh1_batch_break's causes)
-   recorded as commands of their own (a texture upload into the texture cache's entry, a copy between targets,
-   a palette fill), with the texture cache's decode points and the palette cache's fills placed in the list, so
-   a frame's list is complete; a test that replays a frame with an upload between two sprites and a CLUT pass
-   read back (texcache_test's `0x3A00` case) through the recorder and compares with gsmem.c; (c) **the shaders
-   as source**: generate the fragment shader variants (KH1ShaderKey: texfmt / texfunc / sampler / fog / atest /
-   blend pre-scale) and the vertex shader variants as Cg text (the Vita's shader language, compiled offline to
-   .gxp) from one table, and check a CPU interpretation of the generated code's operations against the
-   existing models (texfunc.c, sampler.c, fog.c, blend.c) on their tests' cases; (d) `KH1_HOST_DMAC=defer` as the default,
+   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **compiling the shaders**: session 130 built the attribute arrays
+   (`kh1_vertex_gxm_attrs`) but no psp2cgc was reachable; if the user has a psp2cgc, or the Vita thread finds a
+   runtime route (vitaGL's SceShaccCg from the user's own libshacccg.suprx), compile the 7 vertex and 28 fragment
+   shaders once and record which fail (the frame read's `dst` declaration is the one most in doubt); otherwise
+   skip; (c) **the DATE clear's cost**: the fake disc and the
+   static sends have one DATE draw (brightfade); confirm in the real-disc run (item 2) that no other DATE draw
+   appears (`--draws`, TEST bit 14), else count the extra draw calls; (d) if PR #131 is merged, **wire gxmrec into
+   host/vita/** behind a `KH1_VITA_GXM` switch only as a stub that logs the calls (no renderer yet), so the
+   first Vita3K / hardware run shows the per-frame call counts, and add static asserts there that vertex.h's
+   `KH1_GXM_ATTR_U8N` / `_F32` / `KH1_GXM_INDEX_16BIT` and the sizes of `KH1GxmVtxAttr` / `KH1GxmVtxStream` equal
+   psp2/gxm.h's (session 130 recalled them); (e) `KH1_HOST_DMAC=defer` as the default,
    argcheck's 3 value uses and the callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
    --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
    every CLUT upload not in clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13
@@ -788,9 +863,12 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    the shadow pass's Zs against Z16S's 0xFFFF (a clamp would flatten them), the FGE draws' FOGCOL and F
    range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
 
-5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=127`, refresh the per-phase table in docs/progress.md (between its
+5. **Matching (optional, 1 worker)**: only with a new idea. Session 130's raised-penalty permuter took 00110618
+   from 93 to 90 words in ~170k iterations, then stalled (nonmatchings/session130/NOTES.md); its draft is still
+   16 bytes long (fb reloaded from the stack). Sessions 129 / 130 notes list what is left on 001c62a0 (14) and
+   00200e28 (24). Untried: 0010d470 (170, jump2 cross-jumping) by the permuter on the s14m 129w probe.
+6. End with `make progress-update SESSION=131`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 128) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 132) with this
    prompt: the user wants each session to start the next one without being asked.

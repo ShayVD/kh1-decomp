@@ -198,6 +198,9 @@ static u32 psm_bytes(u32 psm) {
     return 0;
 }
 
+void (*kh1_gsmem_xfer_hook)(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi);
+void (*kh1_gsmem_clut_hook)(u32 lo, u32 hi);
+
 void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi) {
     u32 dpsm = bb_hi >> 24 & 63, dbp = bb_hi & 0x3FFF, dbw = bb_hi >> 16 & 63;
     u32 dx = pos_hi & 2047, dy = pos_hi >> 16 & 2047, w = reg_lo & 0xFFF, h = reg_hi & 0xFFF;
@@ -223,6 +226,7 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
         trx.acc = trx.nacc = 0;
         trx.bytes = psm_bytes(dpsm);
         trx.log = l;
+        if (kh1_gsmem_xfer_hook) kh1_gsmem_xfer_hook(dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
         return;
     }
     /* local->local, in the pixel order TRXPOS.DIR gives (0 from the top left, 1 bottom left, 2 top
@@ -231,7 +235,11 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
         u32 spsm = bb_lo >> 24 & 63, sbp = bb_lo & 0x3FFF, sbw = bb_lo >> 16 & 63;
         u32 sx = pos_lo & 2047, sy = pos_lo >> 16 & 2047, order = pos_hi >> 27 & 3, i, j;
         st.copies++;
-        if (!known(spsm) || !known(dpsm)) { if (known(dpsm)) st.unsupported++; return; }
+        if (!known(spsm) || !known(dpsm)) {
+            if (known(dpsm)) st.unsupported++;
+            if (kh1_gsmem_xfer_hook) kh1_gsmem_xfer_hook(dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
+            return;
+        }
         for (j = 0; j < h; j++) {
             u32 y = order & 1 ? h - 1 - j : j;
             for (i = 0; i < w; i++) {
@@ -241,6 +249,7 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
         }
         if (l) l->pixels = w * h;
     }
+    if (kh1_gsmem_xfer_hook) kh1_gsmem_xfer_hook(dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
 }
 
 static void trx_pixel(u32 v) {
@@ -317,6 +326,7 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
         }
     }
     if (kh1_gsmem_clut_loaded) kh1_gsmem_clut_loaded(lo, hi);
+    if (kh1_gsmem_clut_hook) kh1_gsmem_clut_hook(lo, hi);
 }
 
 /* a CT16 colour (or CLUT entry) to RGBA8: 5 bits a channel shifted up 3, A from TEXA (TA1 with the

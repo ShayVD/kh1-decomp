@@ -75,3 +75,33 @@ u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask) {
     if (mask) *mask = m;
     return n;
 }
+
+u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[4]) {
+    u32 tex = index >= 5 ? KH1_VTX_STQ : index >= 3 ? KH1_VTX_UV : KH1_VTX_NONE, fog = index && !(index & 1), n = 0;
+    if (index > 6) return 0;
+    /* the order is shadergen.c's kh1_shader_vert_cg: pos, col, tc, fog */
+    out[n].name = "pos", out[n].offset = 0, out[n].format = KH1_VFMT_F32, out[n++].count = 3;
+    if (index) out[n].name = "col", out[n].offset = 24, out[n].format = KH1_VFMT_U8N, out[n++].count = 4;
+    if (tex) out[n].name = "tc", out[n].offset = 12, out[n].format = KH1_VFMT_F32, out[n++].count = tex == KH1_VTX_STQ ? 3 : 2;
+    if (fog) out[n].name = "fog", out[n].offset = 28, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
+    return n;
+}
+
+const char *kh1_vfmt_str(u32 format) { return format == KH1_VFMT_F32 ? "F32" : format == KH1_VFMT_U8N ? "U8N" : "?"; }
+
+u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAttr out[4], KH1GxmVtxStream *stream) {
+    KH1VtxAttr a[4];
+    u32 i, n = kh1_vertex_attrs(index, a);
+    for (i = 0; i < n; i++) {
+        s32 reg = reg_of(prog, a[i].name);
+        if (reg < 0) return 0;
+        out[i].streamIndex = 0;
+        out[i].offset = a[i].offset;
+        out[i].format = a[i].format == KH1_VFMT_F32 ? KH1_GXM_ATTR_F32 : KH1_GXM_ATTR_U8N;
+        out[i].componentCount = a[i].count;
+        out[i].regIndex = (u16)reg;
+    }
+    stream->stride = KH1_VTX_STRIDE;
+    stream->indexSource = KH1_GXM_INDEX_16BIT;
+    return n;
+}

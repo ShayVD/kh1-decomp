@@ -2817,6 +2817,93 @@ and docs only, no float-untested row. selftest PASS (batch_test 14 checks, cmdbu
   modes), and whether a scene per pass entry fits the frame budget.
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bo Session 127: the transfers in the command list, the shaders as Cg source
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host, tool and test code
+and docs only, no float-untested row. selftest PASS (cmdbuf_test 29 checks, shadergen_test 13, batch_test 14).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **Transfers as commands** (item 4b): cmdbuf.h's UPLOAD, COPY, CLUT and TEXTURE commands between the draws;
+  each draw names its texture entry and palette slot; a transfer on a render target splits the scene, stores
+  the target before and loads it after. gsmem.c's `kh1_gsmem_xfer_hook` / `kh1_gsmem_clut_hook`; pipes.c's own
+  texture and palette caches; a `transfers:` report line. tests/host/cmdbuf_test.c replays a frame with two
+  uploads at one address, an upload into `0x3A00` between two reads of it and a CLUT read back from the CLUT
+  pass: gsmem.c's pixels (renderer-spec 4.13 "Session 127").
+- **The shaders as Cg** (item 4c): new include/platform/shadergen.h / host/port/shadergen.c write every
+  fragment and vertex variant as Cg from one table of statement forms and read it back with a CPU
+  interpreter; tests/host/shadergen_test.c runs the text against texfunc / fog / blend / atest / texfmt /
+  sampler. 26 of the static set's 27 fragment shaders generate; the one not is the shadow casters' 1-bit
+  FBMSK (a frame read). Command uniform slots now hold the 16 floats the shaders read. `KH1_HOST_SHADERS=DIR`
+  writes a run's shaders.
+- **For PR #131's Vita build**: shadergen.c is plain C (memset only, no libm); cmdbuf.c now calls it, so the
+  host/port/*.c glob covers both. The .cg files are what the Vita build compiles (psp2cgc, or SceShaccCg at
+  boot); nothing is compiled here yet.
+- **To check on the real disc**: the `transfers:` line (uploads into targets, CLUT loads from the CLUT pass,
+  decodes a frame), the room run's split scenes, `Cg:` (any shader past the static 27, any not generated).
+- **To check on the Vita**: the Cg compiles (WPOS, clip, the forms), f32 or fp16 varyings, the shadow casters'
+  1-bit mask (drop it or programmable blending).
+- **Still waiting for the Mac**: as 5.1bf.
+
+### 5.1bp Session 128: the frame read, the command list as GXM calls
+
+Static only (Monday 2026-10-26; the user said the Mac is back about 9 hours later, so items 1 to 3 wait for the
+next session). kh1.elf byte-identical; host, tool and test code and docs only, no float-untested row. selftest PASS
+(shadergen_test 17 checks, cmdbuf_test 46).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The frame read** (item 4b): the fetch 1 / 2 fragment shaders generate, with the target's pixel as an input
+  (programmable blending); fetch 1 runs the GS's formula, both merge FBMSK's bits where a byte's mask is a low or
+  high run. All 27 static fragment shaders now generate. The shadow casters' 1-bit mask can be dropped (static,
+  inferred: within 1 of 255 in red on the receivers; renderer-spec 4.13 "Session 128").
+- **GXM calls** (item 4c): new include/platform/gxmrec.h / host/port/gxmrec.c record the calls a Vita renderer
+  makes for a frame's commands (scenes with loads / stores, texture uploads, palette fills and read-backs,
+  target uploads, blits, program / texture / region / uniform sets, draws); cmdbuf_test replays them through its
+  rasteriser for the same pixels. pipes.c prints a `gxm:` line under `KH1_HOST_TRACE=5`.
+- **For PR #131's Vita build**: gxmrec.c is plain C (memset / memcmp / sprintf / strlen), under the
+  host/port/*.c glob. The fragment program input `dst` needs the first psp2cgc compile to confirm its declaration.
+- **Still waiting for the Mac**: as 5.1bf, plus the real-disc `gxm:` line (calls and scenes a frame).
+
+### 5.1bq Session 129: the vertex stream as GXM reads it, DATE's set-up area
+
+Static only (Monday 2026-10-26 before 09:00 UTC; the Mac is expected back then, so items 1 to 3 wait). kh1.elf
+byte-identical; host, tool and test code and docs only, no float-untested row. selftest PASS (shadergen_test 22
+checks, cmdbuf_test 49, batch_test 14, drawstate_test 23).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The vertex stream** (item 4b): vertex.h's `kh1_vertex_attrs` gives each of the 7 vertex variants'
+  SceGxmVertexAttribute rows (name, offset, F32 / U8N, components) and `KH1_VTX_STRIDE` the stream; the UV variants
+  read 2 floats. A port needs a static U16 index buffer 0 .. n (GXM draws are indexed). shadergen_test "layout"
+  checks the table against every generated vertex shader (renderer-spec 4.13 "Session 129").
+- **DATE's set-up area** (item 4c): the draw's own primitives are exactly what the GS tests, so gxmrec.c's set-up
+  over the command's vertices is the right area; made exact by a stencil clear before each set-up, the set-up in
+  the draw's own primitive class, and one batch per DATE primitive. Static set 43 pipelines / 28 fragment shaders.
+  cmdbuf_test "date" replays an overlapping DATE frame from the GXM calls with a garbage stencil: the GS's pixels.
+- **Item 4d** (gxmrec in host/vita/): PR #131 is not merged yet, so not started.
+- **Still waiting for the Mac**: as 5.1bp.
+
+### 5.1br Session 130: the vertex programs' GXM tables as a port builds them
+
+Static only (Monday 2026-10-26 before 09:00 UTC; the Mac is expected back then, so items 1 to 3 wait). kh1.elf
+byte-identical; host and test code and docs only, no float-untested row. selftest PASS (shadergen_test 26 checks).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The GXM vertex programs from the table** (item 4b): vertex.h's new `kh1_vertex_gxm_attrs` turns a variant's
+  `kh1_vertex_attrs` rows into the SceGxmVertexAttribute array and SceGxmVertexStream a port passes to
+  sceGxmShaderPatcherCreateVertexProgram (`KH1GxmVtxAttr` / `KH1GxmVtxStream`, the SDK's 8- and 4-byte layouts;
+  formats U8N 4 / F32 9, INDEX_16BIT 0, recalled from vitasdk's psp2/gxm.h and not yet compiled against it). regIndex
+  comes from a lookup by name that the port supplies (on the Vita sceGxmProgramFindParameterByName and
+  sceGxmProgramParameterGetResourceIndex on the compiled program), and a program missing an input gives no table,
+  so nothing assumes the compiler's register order. shadergen_test "gxmattr" stands a lookup built from each
+  generated Cg's input order in for the compiled program and checks every variant: stream 0, offsets, formats,
+  components, regIndex by name, attributes' bytes inside the 32-byte stride with no overlap. **No psp2cgc in the
+  container** (vitasdk does not ship one; the Vita thread's vitasdk was not installed here), so the 7 vertex / 28
+  fragment shaders are still uncompiled. Options for that step: Sony's psp2cgc where the user has it, or compiling
+  the Cg text at run time on the device with vitaGL's route (SceShaccCg from the console's own libshacccg.suprx,
+  which the user extracts from their own Vita; never in the repo).
+- **Item 4d** (gxmrec in host/vita/): PR #131 is still open, so not started. When it lands, the Vita side should
+  check the recalled enum values with static asserts against psp2/gxm.h.
+- **Still waiting for the Mac**: as 5.1bp.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

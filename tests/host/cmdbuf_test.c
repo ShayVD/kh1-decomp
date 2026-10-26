@@ -19,12 +19,26 @@
  *             tested: depth STORE).  Frame 2 clears the 3D target first: frame 1's last 3D pass DISCARD.
  *             Frame 3 samples the 3D target before drawing it: frame 2's last pass STORE (next frame).
  *             Frame 4: 16 full-screen sprites under 32-pixel column scissors clear the target (the game's
- *             strips; one command after the column group), 15 of them do not. */
+ *             strips; one command after the column group), 15 of them do not.
+ *   gxm       (session 128) columns, partial and transfers again, each frame walked by host/port/gxmrec.c into
+ *             GXM calls and only the calls replayed (programs from the frame's pipeline table, uniforms read
+ *             from the ring at SET_UNIFORMS, textures and palettes by slot, target uploads and the CLUT
+ *             read-back): the same pixels; a DONT_CARE scene that is cleared starts from garbage, a DISCARD
+ *             scene ends in garbage, and that still gives the same pixels.
+ *   date      (session 129) DATE (DATM 1, brightfade's form) on two overlapping flat sprites over a target whose
+ *             alpha bit 7 is striped: the first writes alpha 0, so the second must skip the overlap's marked
+ *             pixels.  Replayed from the GXM calls with a stencil buffer that starts as garbage (all 1): each
+ *             sprite a command of its own, its clear and set-up over its own vertices, then the draw; the same
+ *             RGB and alpha bit 7 as the GS's DATE (gsmem.c's copy, then the rule applied sprite by sprite in the
+ *             GS's order).  Without the clear the replay differs (the check sees it). */
 #include "common.h"
 #include "../../host/null/gsregs.h"
 #include "../../host/null/gsmem.h"
 #include "platform/cmdbuf.h"
 #include "platform/canvas.h"
+#include "platform/palcache.h"
+#include "platform/texcache.h"
+#include "platform/gxmrec.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -33,6 +47,9 @@ void *memcpy(void *, const void *, __SIZE_TYPE__);
 void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state);
 void kh1_pipes_frame(void);
 extern void (*kh1_pipes_frame_hook)(const KH1CmdRec *r);
+const KH1CmdRec *kh1_pipes_recorder(void);
+const KH1PalCache *kh1_pipes_palcache(void);
+const KH1TexCache *kh1_pipes_texcache(void);
 
 static int fails, checks;
 #define CHECK(name, cond) do { checks++; if (!(cond)) { printf("cmdbuf_test: %s\n", name); fails++; } } while (0)
@@ -56,6 +73,13 @@ static int edge_in(f32 ax, f32 ay, f32 bx, f32 by, f32 px, f32 py, int ccw, f32 
     return (by - ay) < 0 || ((by - ay) == 0 && (bx - ax) > 0); /* top-left edges keep their pixels */
 }
 
+/* session 127: the image a replayed draw writes and its texture fetch (by default img and texel) */
+static u32 *rt_img = &img[0][0];
+static s32 rt_w = IW, rt_h = IH;
+static u32 texel(f32 s, f32 t);
+static u32 (*fetch)(f32 s, f32 t) = texel;
+#define PX(x, y) rt_img[(y) * rt_w + (x)]
+
 static u32 texel(f32 s, f32 t) {
     s32 tx = (s32)(s * 64 + 0x10000) - 0x10000, ty = (s32)(t * 64 + 0x10000) - 0x10000;
     if (tx < 0) tx = 0;
@@ -64,6 +88,11 @@ static u32 texel(f32 s, f32 t) {
     if (ty > 63) ty = 63;
     return kh1_gsmem_read_pixel(KH1_PSMCT32, TBP, 1, (u32)tx, (u32)ty);
 }
+
+/* session 129: the stencil a replayed GXM draw tests or writes (img only): tri_stencil 0 none, 1 draw where it is 1,
+ * 2 the DATE set-up (1 where the target's alpha is DATM: tri_datm), 3 the clear (0) */
+static u8 stn[IH][IW];
+static int tri_stencil, tri_datm;
 
 /* one triangle into img under the scissor; blend: 0 the GPU's blend.h state st, 1 the GS's formula (alpha) */
 static void tri(const KH1GpuVert *a, const KH1GpuVert *b, const KH1GpuVert *c, s32 sx0, s32 sy0, s32 sx1, s32 sy1,
@@ -75,34 +104,50 @@ static void tri(const KH1GpuVert *a, const KH1GpuVert *b, const KH1GpuVert *c, s
     if (area < 0) area = -area;
     if (sx0 < 0) sx0 = 0;
     if (sy0 < 0) sy0 = 0;
-    if (sx1 > IW) sx1 = IW;
-    if (sy1 > IH) sy1 = IH;
+    if (sx1 > rt_w) sx1 = rt_w;
+    if (sy1 > rt_h) sy1 = rt_h;
     for (y = sy0; y < sy1; y++)
         for (x = sx0; x < sx1; x++) {
             f32 px = x + 0.5f, py = y + 0.5f, e0, e1, e2, l0, l1, l2;
-            u32 cs, d = img[y][x];
+            u32 cs, d = PX(x, y);
             if (!edge_in(b->x, b->y, c->x, c->y, px, py, ccw, &e0) || !edge_in(c->x, c->y, a->x, a->y, px, py, ccw, &e1) ||
                 !edge_in(a->x, a->y, b->x, b->y, px, py, ccw, &e2))
                 continue;
+            if (tri_stencil == 3) { stn[y][x] = 0; continue; }
+            if (tri_stencil == 2) {
+                KH1AtestState as;
+                memset(&as, 0, sizeof as);
+                as.date = 1;
+                as.datm = (u8)tri_datm;
+                if (kh1_atest_date_mark(&as, d >> 24)) stn[y][x] = 1;
+                continue;
+            }
+            if (tri_stencil == 1 && stn[y][x] != 1) continue;
             l0 = e0 / area;
             l1 = e1 / area;
             l2 = e2 / area;
             if (tex)
-                cs = texel(l0 * a->s + l1 * b->s + l2 * c->s, l0 * a->t + l1 * b->t + l2 * c->t); /* DECAL, TCC */
+                cs = fetch(l0 * a->s + l1 * b->s + l2 * c->s, l0 * a->t + l1 * b->t + l2 * c->t); /* DECAL, TCC */
             else
                 cs = (u32)c->rgba[0] | (u32)c->rgba[1] << 8 | (u32)c->rgba[2] << 16 | (u32)c->rgba[3] << 24; /* flat */
             if (gs) {
-                img[y][x] = kh1_blend_gs(alpha_lo, 0, cs, d & 0xFFFFFF, KH1_PSMCT32) & 0xFFFFFF;
+                PX(x, y) = kh1_blend_gs(alpha_lo, 0, cs, d & 0xFFFFFF, KH1_PSMCT32) & 0xFFFFFF;
             } else if (st->enable) {
-                img[y][x] = kh1_blend_gpu(st, cs, d);
+                PX(x, y) = kh1_blend_gpu(st, cs, d);
             } else {
-                img[y][x] = (cs & 0xFFFFFF) | kh1_blend_store_alpha(cs >> 24) << 24;
+                PX(x, y) = (cs & 0xFFFFFF) | kh1_blend_store_alpha(cs >> 24) << 24;
             }
         }
 }
 
+static void replay_x(const KH1CmdRec *r);
+static void replay_gxm(const KH1CmdRec *r);
+static int do_replay;       /* 1 the frame's draws replayed into img; 2 session 127's transfer frame (replay_x) */
+static int use_gxm;         /* session 128: replay the frame's GXM calls instead (replay_gxm) */
 static void replay(const KH1CmdRec *r) {
     u32 i, j;
+    if (use_gxm) { replay_gxm(r); return; }
+    if (do_replay == 2) { replay_x(r); return; }
     for (i = 0; i < r->ncmd; i++) {
         const KH1Cmd *c = &r->cmd[i];
         const KH1GpuVert *v = kh1_cmd_verts(r, c);
@@ -115,15 +160,20 @@ static void replay(const KH1CmdRec *r) {
 /* ---- the frames ---- */
 static KH1CmdRec snap_hdr;  /* the last frame's counts */
 static u32 snap_ncmd, snap_nv, snap_sx0, snap_sx1;
-static int do_replay;
 
 static void hook(const KH1CmdRec *r) {
     u32 i;
-    snap_ncmd = r->ncmd;
-    snap_nv = 0;
-    for (i = 0; i < r->ncmd; i++) snap_nv += r->cmd[i].nv;
-    snap_sx0 = r->ncmd ? (u32)r->cmd[0].k.sx0 : 0;
-    snap_sx1 = r->ncmd ? (u32)r->cmd[r->ncmd - 1].k.sx1 : 0;
+    s32 first = -1, last = -1;
+    snap_ncmd = snap_nv = 0;
+    for (i = 0; i < r->ncmd; i++) /* the draw commands (session 127: the texture decodes are commands too) */
+        if (r->cmd[i].kind == KH1_CMD_DRAW) {
+            snap_ncmd++;
+            snap_nv += r->cmd[i].nv;
+            if (first < 0) first = (s32)i;
+            last = (s32)i;
+        }
+    snap_sx0 = first >= 0 ? (u32)r->cmd[first].k.sx0 : 0;
+    snap_sx1 = last >= 0 ? (u32)r->cmd[last].k.sx1 : 0;
     snap_hdr.frame = r->frame;
     if (do_replay) replay(r);
 }
@@ -191,7 +241,7 @@ static void columns(int partial) {
     if (!partial) {
         CHECK("columns: 2 commands with the union scissor and 12 vertices", snap_ncmd == 2 && snap_nv == 12 &&
               snap_sx0 == 0 && snap_sx1 == IW);
-        CHECK("columns: 7 columns merged", snap_hdr.frame.cmds == 2);
+        CHECK("columns: 7 columns merged", snap_hdr.frame.cmds == 2 + snap_hdr.frame.textures);
         CHECK("columns: the same pixels as gsmem.c's sprites", same_as_gs("columns"));
     } else {
         printf("cmdbuf_test: partial: %u commands, %u vertices\n", snap_ncmd, snap_nv);
@@ -358,6 +408,29 @@ static void psprite(u32 frame_lo, u32 test_lo, u32 zmsk, u32 prim, u32 tex0_lo, 
 #define Z_ALWAYS_W (1 << 16 | 1 << 17)   /* TEST: ZTE, ZTST ALWAYS */
 #define Z_GEQUAL (1 << 16 | 2 << 17)
 
+static KH1GxmRec gxp; /* session 128: frame 1's GXM calls */
+
+/* the scenes of a frame's GXM calls against its passes: one BEGIN / END pair a pass, in order, each with its loads
+ * and stores */
+static int gxm_scenes_match(const KH1CmdRec *r, const KH1GxmRec *g) {
+    u32 i, n = 0, open = 0;
+    for (i = 0; i < g->n; i++) {
+        const KH1GxmCall *c = &g->call[i];
+        const KH1CmdPass *p = &r->pass[n < r->npass ? n : 0];
+        if (c->op == KH1_GXM_BEGIN_SCENE) {
+            if (open || n >= r->npass || c->rt != p->rt || c->load != p->load || (p->depth && c->dload != p->dload)) return 0;
+            open = 1;
+        } else if (c->op == KH1_GXM_END_SCENE) {
+            if (!open || c->store != p->store || (p->depth && p->zwrite && c->dstore != p->dstore)) return 0;
+            open = 0;
+            n++;
+        } else if (c->op == KH1_GXM_DRAW && !open) {
+            return 0;
+        }
+    }
+    return !open && n == r->npass;
+}
+
 static void passes(void) {
     const KH1CmdPass *a, *b, *c, *d;
     kh1_cmd_init(&pr, pvm, sizeof pvm[0], pum, sizeof pum[0]);
@@ -385,6 +458,12 @@ static void passes(void) {
     CHECK("passes: the 3D target drawn again loads colour and depth; its store waits for the next frame",
           d->load == KH1_LOAD_LOAD && d->dload == KH1_LOAD_LOAD && d->store == KH1_STORE_OPEN &&
           d->dstore == KH1_STORE_OPEN);
+    kh1_gxm_clear(&gxp);
+    kh1_gxm_frame(&gxp, &pr);
+    CHECK("passes: frame 1's GXM calls: a scene a pass with its loads and stores, 5 draws",
+          gxm_scenes_match(&pr, &gxp) && gxp.frame.scenes == 4 && gxp.frame.draws == 5 &&
+          gxp.call[0].op == KH1_GXM_BEGIN_SCENE && gxp.call[0].cleared && gxp.call[0].load == KH1_LOAD_DONT_CARE &&
+          gxp.call[0].dload == KH1_LOAD_DONT_CARE);
     kh1_cmd_reset_frame(&pr);
     /* frame 2: cleared first, so frame 1's last 3D pass is discarded */
     psprite(F_MAIN, Z_ALWAYS_W, 0, 0x6, 0, S_MAIN, 0, 0, 512, 384);
@@ -392,6 +471,8 @@ static void passes(void) {
     kh1_cmd_frame(&pr);
     CHECK("passes: frame 2's clear discards frame 1's last 3D pass (colour and depth)", pr.total.discards >= 1 &&
           pr.total.ddiscards >= 1 && pr.total.why[2] == 0 && pr.pass[0].load == KH1_LOAD_DONT_CARE);
+    kh1_gxm_frame(&gxp, &pr);
+    CHECK("passes: frame 2's GXM calls match its passes", gxm_scenes_match(&pr, &gxp) && gxp.total.frames == 2);
     kh1_cmd_reset_frame(&pr);
     /* frame 3: the 3D target sampled before it is drawn: frame 2's last pass is stored */
     psprite(F_SLOT, 0, 1, 0x116, T_MAIN, S_SLOT, 0, 0, 256, 192);
@@ -425,6 +506,424 @@ static void passes(void) {
     CHECK("passes: every pass counted once", pr.total.stores + pr.total.discards + pr.total.open == pr.total.passes);
 }
 
+/* ---- session 127: the transfers as commands ----
+ * One frame through gsregs.c and pipes.c with every kind of transfer between the draws, replayed the way a GPU
+ * would run the list (replay_x): the textures from the recorder's texture cache entries the draws name, an
+ * upload into a render target written into that target's image, the CLUT read back from the CLUT pass's
+ * image, a target's texture from its image; the 3D target's pixels against gsmem.c's. */
+#define XW 128
+#define XH 16
+static u32 offimg[64][64], clutimg[16][16];
+static KH1Cmd xc[64];
+static KH1CmdPass xp[16];
+static u32 nxc, nxp, xpal[256], xpal_ok, xpal_bad;
+static const u32 *x_tex, *x_pal;
+static u32 x_tw, x_th, x_psm;
+static u32 (*x_img)[64];
+
+static u32 fetch_tex(f32 s, f32 t) {
+    s32 tx = (s32)(s * x_tw + 0x10000) - 0x10000, ty = (s32)(t * x_th + 0x10000) - 0x10000;
+    u32 v;
+    if (tx < 0) tx = 0;
+    if (ty < 0) ty = 0;
+    if (tx >= (s32)x_tw) tx = (s32)x_tw - 1;
+    if (ty >= (s32)x_th) ty = (s32)x_th - 1;
+    if (x_img) { /* a render target's own texture: the stored alpha back on the GS's scale */
+        v = x_img[ty][tx];
+        return (v & 0xFFFFFF) | kh1_blend_load_alpha(v >> 24) << 24;
+    }
+    v = x_tex[ty * x_tw + (u32)tx];
+    return x_psm == KH1_PSMT8 ? x_pal[v & 0xFF] : v;
+}
+
+static void replay_x(const KH1CmdRec *r) {
+    const KH1TexCache *tc = kh1_pipes_texcache();
+    const KH1PalCache *pc = kh1_pipes_palcache();
+    u32 i, j, e;
+    nxc = r->ncmd < 64 ? r->ncmd : 64;
+    nxp = r->npass < 16 ? r->npass : 16;
+    memcpy(xc, r->cmd, nxc * sizeof *xc);
+    memcpy(xp, r->pass, nxp * sizeof *xp);
+    x_pal = 0;
+    for (i = 0; i < r->ncmd; i++) {
+        const KH1Cmd *c = &r->cmd[i];
+        const KH1GpuVert *v;
+        if (c->kind == KH1_CMD_UPLOAD && c->x.dst) { /* into the off-screen buffer's image */
+            for (j = 0; j < c->x.h; j++)
+                for (e = 0; e < c->x.w; e++) {
+                    u32 g = kh1_gsmem_read_pixel(KH1_PSMCT32, c->x.bb_hi & 0x3FFF, c->x.bb_hi >> 16 & 63, c->x.dx + e, c->x.dy + j);
+                    offimg[c->x.dy + j][c->x.dx + e] = (g & 0xFFFFFF) | kh1_blend_store_alpha(g >> 24) << 24;
+                }
+            continue;
+        }
+        if (c->kind == KH1_CMD_CLUT) {
+            if (c->x.src) { /* read back from the CLUT pass's image: entries 8-15 / 16-23 of each 32 swapped */
+                for (e = 0; e < 256; e++) {
+                    u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g = clutimg[p >> 4][p & 15];
+                    xpal[e] = (g & 0xFFFFFF) | kh1_blend_load_alpha(g >> 24) << 24;
+                }
+                x_pal = xpal;
+                xpal_ok = c->x.slot >= 0;
+                xpal_bad = 0;
+                for (e = 0; xpal_ok && e < 256; e++)
+                    if (xpal[e] != pc->slot[c->x.slot].col[e]) xpal_bad++;
+            } else if (c->x.slot >= 0) {
+                x_pal = pc->slot[c->x.slot].col;
+            }
+            continue;
+        }
+        if (c->kind != KH1_CMD_DRAW) continue;
+        /* the target's image */
+        if (c->k.rt == KH1_RT_OFFSCREEN) { rt_img = &offimg[0][0]; rt_w = rt_h = 64; }
+        else if (c->k.rt == KH1_RT_CLUT) { rt_img = &clutimg[0][0]; rt_w = rt_h = 16; }
+        else { rt_img = &img[0][0]; rt_w = IW; rt_h = IH; }
+        x_tw = 1u << (c->d.tex0_lo >> 26 & 15);
+        x_th = 1u << ((c->d.tex0_lo >> 30 | c->d.tex0_hi << 2) & 15);
+        x_psm = c->d.tex0_lo >> 20 & 63;
+        x_img = c->samples ? offimg : 0;
+        x_tex = !c->samples && c->tslot >= 0 ? tc->slot[c->tslot].tex : 0;
+        if (!x_img && !x_tex) continue;
+        fetch = fetch_tex;
+        v = kh1_cmd_verts(r, c);
+        for (j = 0; j + 2 < c->nv; j += 3)
+            tri(&v[j], &v[j + 1], &v[j + 2], c->k.sx0, c->k.sy0, c->k.sx1, c->k.sy1, 1, &c->d.blend, 0, 0);
+    }
+    fetch = texel;
+    rt_img = &img[0][0];
+    rt_w = IW;
+    rt_h = IH;
+}
+
+/* ---- session 128: the frame's GXM calls replayed (host/port/gxmrec.c) ---- */
+static KH1GxmRec gx;
+static u32 gx_scrambled, gx_draws;
+static int gx_no_clear;     /* session 129's deliberate break: DATE's stencil clears skipped */
+static u32 gx_clears, gx_setups;
+
+static void scramble(u32 *p, u32 n) {
+    u32 i;
+    for (i = 0; i < n; i++) p[i] = 0xA5A5A5A5u ^ i * 0x9E3779B1u;
+    gx_scrambled++;
+}
+
+static void target_image(u32 rt, u32 **pix, s32 *w, s32 *h) {
+    if (rt == KH1_RT_OFFSCREEN) { *pix = &offimg[0][0]; *w = *h = 64; }
+    else if (rt == KH1_RT_CLUT) { *pix = &clutimg[0][0]; *w = *h = 16; }
+    else { *pix = &img[0][0]; *w = IW; *h = IH; }
+}
+
+static void replay_gxm(const KH1CmdRec *r) {
+    const KH1TexCache *tc = kh1_pipes_texcache();
+    const KH1PalCache *pc = kh1_pipes_palcache();
+    const KH1GpuVert *vb = (const KH1GpuVert *)(r->vring.base + r->vring.cur * r->vring.slot);
+    const u8 *ub = r->uring.base + r->uring.cur * r->uring.slot;
+    const KH1PipeKey *pk = 0;
+    const f32 *u = 0;
+    u8 tgt_rt[KH1_CMD_TARGETS];
+    s32 readback = -1, sx0 = 0, sy0 = 0, sx1 = 0, sy1 = 0, w, h;
+    u32 i, j, e, *pix;
+    if (do_replay == 2) { /* the transfer frame's checks read the commands */
+        nxc = r->ncmd < 64 ? r->ncmd : 64;
+        nxp = r->npass < 16 ? r->npass : 16;
+        memcpy(xc, r->cmd, nxc * sizeof *xc);
+        memcpy(xp, r->pass, nxp * sizeof *xp);
+    }
+    memset(tgt_rt, KH1_RT_OTHER, sizeof tgt_rt);
+    kh1_gxm_frame(&gx, r);
+    x_tex = x_pal = 0;
+    x_img = 0;
+    for (i = 0; i < gx.n; i++) {
+        const KH1GxmCall *c = &gx.call[i];
+        switch (c->op) {
+        case KH1_GXM_BEGIN_SCENE:
+            if (c->tgt < KH1_CMD_TARGETS) tgt_rt[c->tgt] = c->rt;
+            target_image(c->rt, &rt_img, &rt_w, &rt_h);
+            if (c->load == KH1_LOAD_DONT_CARE && c->cleared) scramble(rt_img, (u32)(rt_w * rt_h));
+            if (rt_img == &img[0][0]) memset(stn, 1, sizeof stn); /* the depth-stencil's garbage: every pixel marked */
+            pk = 0;
+            break;
+        case KH1_GXM_END_SCENE:
+            if (c->store == KH1_STORE_DISCARD) { target_image(c->rt, &pix, &w, &h); scramble(pix, (u32)(w * h)); }
+            break;
+        case KH1_GXM_TARGET_UPLOAD: { /* the CPU's texels (GS memory at the upload's BITBLTBUF) */
+            const KH1CmdXfer *x = &r->cmd[c->cmd].x;
+            if (!c->tgt || c->tgt > KH1_CMD_TARGETS) break;
+            target_image(tgt_rt[c->tgt - 1], &pix, &w, &h);
+            for (j = 0; j < c->h; j++)
+                for (e = 0; e < c->w; e++) {
+                    u32 g = kh1_gsmem_read_pixel(KH1_PSMCT32, x->bb_hi & 0x3FFF, x->bb_hi >> 16 & 63, c->dx + e, c->dy + j);
+                    if ((s32)(c->dx + e) < w && (s32)(c->dy + j) < h)
+                        pix[(c->dy + j) * w + c->dx + e] = (g & 0xFFFFFF) | kh1_blend_store_alpha(g >> 24) << 24;
+                }
+            break;
+        }
+        case KH1_GXM_PAL_READBACK: /* the CLUT pass's pixels as a palette: entries 8-15 / 16-23 of each 32 swapped */
+            for (e = 0; e < 256; e++) {
+                u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g = clutimg[p >> 4][p & 15];
+                xpal[e] = (g & 0xFFFFFF) | kh1_blend_load_alpha(g >> 24) << 24;
+            }
+            readback = c->slot;
+            break;
+        case KH1_GXM_SET_PROGRAMS:
+            pk = c->pipe < gx.npipe ? &gx.pipe[c->pipe] : 0;
+            break;
+        case KH1_GXM_SET_TEXTURE:
+            x_tw = 1u << (c->tex0_lo >> 26 & 15);
+            x_th = 1u << ((c->tex0_lo >> 30 | c->tex0_hi << 2) & 15);
+            x_psm = c->tex0_lo >> 20 & 63;
+            x_img = c->src ? offimg : 0;
+            x_tex = !c->src && c->slot >= 0 ? tc->slot[c->slot].tex : 0;
+            x_pal = c->pslot < 0 ? 0 : c->pslot == readback ? xpal : pc->slot[c->pslot].col;
+            break;
+        case KH1_GXM_SET_REGION:
+            sx0 = c->sx0; sy0 = c->sy0; sx1 = c->sx1; sy1 = c->sy1;
+            break;
+        case KH1_GXM_SET_UNIFORMS:
+            u = (const f32 *)(ub + c->uoff);
+            break;
+        case KH1_GXM_DRAW: { /* the pipeline's blend and the shader's pre-scale, FIX from the uniforms */
+            KH1BlendState st;
+            const KH1GpuVert *v = vb + c->v0;
+            if (!pk || !u || c->cls != KH1_PA_TRIANGLES) break;
+            if (c->stencil == 3) gx_clears++;
+            if (c->stencil == 2) gx_setups++;
+            if (c->stencil == 3 && gx_no_clear) break;
+            if (pk->shader.tex && !x_img && !x_tex) break;
+            memset(&st, 0, sizeof st);
+            st.enable = pk->blend;
+            st.eq = pk->eq;
+            st.fs = pk->fs;
+            st.fd = pk->fd;
+            st.pre_a = (s8)(pk->shader.pre_a - 2);
+            st.pre_d = (s8)(pk->shader.pre_d - 2);
+            st.pre_floor = pk->shader.pre_floor;
+            st.csel = pk->shader.csel;
+            st.fix = (u8)u[1];
+            st.mask = pk->mask;
+            st.kind = KH1_BLEND_EXACT;
+            fetch = pk->shader.tex ? fetch_tex : texel;
+            tri_stencil = rt_img == &img[0][0] ? c->stencil : 0;
+            tri_datm = pk->shader.datm;
+            for (j = 0; j + 2 < c->nv; j += 3) tri(&v[j], &v[j + 1], &v[j + 2], sx0, sy0, sx1, sy1, pk->shader.tex != 0, &st, 0, 0);
+            tri_stencil = 0;
+            gx_draws++;
+            break;
+        }
+        }
+    }
+    fetch = texel;
+    rt_img = &img[0][0];
+    rt_w = IW;
+    rt_h = IH;
+}
+
+static void columns(int partial);
+static void transfers(void);
+static void gxm(void) {
+    u32 i;
+    gx_scrambled = gx_draws = 0;
+    kh1_gxm_clear(&gx);
+    use_gxm = 1;
+    columns(0);
+    columns(1);
+    transfers();
+    use_gxm = 0;
+    for (i = 0; i < gx.n; i++) printf("cmdbuf_test: gxm: %2u %s\n", i + 1, kh1_gxm_call_str(&gx.call[i]));
+    printf("cmdbuf_test: gxm: %u frames, %u calls, %u scenes, %u draws, %u program sets, %u scenes scrambled\n",
+           gx.total.frames, gx.total.calls, gx.total.scenes, gx.total.draws, gx.total.programs, gx_scrambled);
+    CHECK("gxm: columns, partial and transfers replayed from the GXM calls alone (same checks, same pixels)",
+          gx.total.frames >= 3 && gx_draws && !gx.total.lost);
+    CHECK("gxm: the transfer frame's calls: a target upload and a palette read-back, each after its scene ended",
+          gx.frame.target_uploads == 1 && gx.frame.pal_readbacks == 1);
+}
+
+/* ---- session 129: DATE's set-up from the GXM calls ---- */
+static void flat_sprite(u32 rgba, s32 x0, s32 y0, s32 x1, s32 y1) {
+    W(0x00, 0x6, 0);                 /* SPRITE, flat, no blend */
+    W(0x01, rgba, 0x3F800000);       /* RGBAQ */
+    W(0x05, x16(x0) | x16(y0) << 16, 0);
+    W(0x05, x16(x1) | x16(y1) << 16, 0);
+}
+
+/* the GS's DATE in its order: the copy's pixels (gsmem.c's sprite), then each flat sprite writes where Ad's bit 7
+ * is DATM (1) at the moment it draws (gsmem.c's model draws no flat sprite, so the test applies the rule) */
+static const struct { u32 rgba; s32 x0, y0, x1, y1; } date_spr[2] = {
+    { 0x00309020, 10, 4, 70, 20 },   /* alpha 0: the second sprite fails where this one drew */
+    { 0x807010C0, 40, 10, 110, 30 }, /* alpha 0x80, overlapping it */
+};
+static u32 gs_date[IH][IW];
+
+/* img against the GS's pixels: RGB, and alpha bit 7 (what DATE reads) against "stored 1.0" */
+static u32 date_diff(void) {
+    u32 x, y, bad = 0, i;
+    for (y = 0; y < IH; y++)
+        for (x = 0; x < IW; x++) gs_date[y][x] = kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, x, y);
+    for (i = 0; i < 2; i++)
+        for (y = (u32)date_spr[i].y0; y < (u32)date_spr[i].y1 && y < IH; y++)
+            for (x = (u32)date_spr[i].x0; x < (u32)date_spr[i].x1 && x < IW; x++)
+                if (gs_date[y][x] >> 31 == 1) gs_date[y][x] = date_spr[i].rgba;
+    for (y = 0; y < IH; y++)
+        for (x = 0; x < IW; x++) {
+            u32 g = gs_date[y][x], c = img[y][x];
+            if ((g & 0xFFFFFF) != (c & 0xFFFFFF) || (g >> 31) != ((c >> 24) == 255)) {
+                if (bad < 6 && !gx_no_clear) printf("cmdbuf_test: date: pixel (%u, %u) GS %08x, GXM %08x\n", x, y, g, c);
+                bad++;
+            }
+        }
+    return bad;
+}
+
+static u32 date_frame(int no_clear) {
+    u32 x, y;
+    kh1_gsmem_reset();
+    for (y = 0; y < 64; y++) /* the stripes: alpha 0x80 (bit 7) or 0x30 */
+        for (x = 0; x < 64; x++)
+            kh1_gsmem_write_pixel(KH1_PSMCT32, TBP, 1, x, y, ((x / 3 + y / 2) & 1 ? 0x80u : 0x30u) << 24 | (x * 4) << 8 | y * 8);
+    /* (the GS's flat sprites are applied by date_diff: gsmem.c draws the copy only) */
+    memset(img, 0, sizeof img);
+    env();
+    W(0x00, 0x116, 0); /* the striped copy over the whole target */
+    copy(0);
+    W(0x47, 1 << 14 | 1 << 15, 0); /* TEST_1: DATE, DATM 1 */
+    for (x = 0; x < 2; x++) flat_sprite(date_spr[x].rgba, date_spr[x].x0, date_spr[x].y0, date_spr[x].x1, date_spr[x].y1);
+    W(0x47, 0, 0);
+    gx_no_clear = no_clear;
+    use_gxm = do_replay = 1;
+    kh1_pipes_frame();
+    use_gxm = do_replay = 0;
+    x = date_diff();
+    gx_no_clear = 0;
+    return x;
+}
+
+static void date(void) {
+    u32 bad, broken, s0, ncmd;
+    gx_clears = gx_setups = 0;
+    bad = date_frame(0);
+    ncmd = snap_ncmd;
+    s0 = gx_clears;
+    printf("cmdbuf_test: date: %u commands, %u stencil clears, %u set-ups, %u pixels differ\n", ncmd, gx_clears,
+           gx_setups, bad);
+    CHECK("date: each DATE sprite a command of its own, its clear and set-up before its draw", ncmd == 3 &&
+          gx_clears == 2 && gx_setups == 2);
+    CHECK("date: the GXM calls with the stencil give gsmem.c's DATE pixels (RGB and alpha bit 7)", bad == 0);
+    broken = date_frame(1);
+    CHECK("date: without the clear the replay differs (the stencil's garbage and the first sprite's marks)",
+          broken != 0 && gx_clears == s0 + 2);
+}
+
+/* an upload of w x h pixels in psm at block bp, width bw, to (x, y): n words of IMAGE data */
+static void xupload(u32 bp, u32 bw, u32 psm, u32 x, u32 y, u32 w, u32 h, const u32 *data, u32 n) {
+    W(0x50, 0, bp | bw << 16 | psm << 24);
+    W(0x51, 0, x | y << 16);
+    W(0x52, w, h);
+    W(0x53, 0, 0);
+    kh1_gsmem_image(data, n);
+}
+
+static void xsprite(s32 x0, s32 x1) {
+    W(0x00, 0x116, 0); /* SPRITE | TME | FST */
+    W(0x03, 0, 0);
+    W(0x05, x16(x0) | x16(0) << 16, 0);
+    W(0x03, 16 * 16 | (16u * 16) << 16, 0);
+    W(0x05, x16(x1) | x16(16) << 16, 0);
+}
+
+#define TEX16(bp, bw, psm) ((bp) | (bw) << 14 | (psm) << 20 | 4u << 26 | 0u << 30)
+#define TEX16_HI (1 | 1 << 2 | 1 << 3) /* TH 4, TCC, DECAL */
+
+static void transfers(void) {
+    static u32 a[256], b[256], cc[64], pal_t[256], idx[64];
+    u32 i, x, y, bad = 0, ntex = 0, ndraw = 0, ups = 0;
+    s32 d1 = -1, d2 = -1, d8 = -1, clut = -1, off_pass = -1, clut_pass = -1;
+    u32 salt = use_gxm ? 0x030201 : 0; /* the gxm run's texels differ: the caches decode and fill again */
+    for (i = 0; i < 256; i++) {
+        a[i] = ((0x20 + i % 0x61) << 24 | (i * 3) << 16 | (255 - i) << 8 | (i * 7 & 0xFF)) ^ salt;
+        b[i] = ((0x80 - i % 0x50) << 24 | (i * 5 & 0xFF) << 16 | (i * 11 & 0xFF) << 8 | (200 - i % 200)) ^ salt;
+        pal_t[i] = ((i % 0x81) << 24 | (i * 13 & 0xFF) << 16 | (i ^ 0x5A) << 8 | (i * 29 & 0xFF)) ^ salt;
+    }
+    for (i = 0; i < 64; i++) cc[i] = (0x7F000000u | (i * 4) << 16 | 0x40 << 8 | (i * 3)) ^ salt;
+    for (i = 0; i < 64; i++) /* 256 indices, bytes */
+        idx[i] = ((i * 4 + 0) * 37 & 0xFF) | ((i * 4 + 1) * 37 & 0xFF) << 8 | ((i * 4 + 2) * 37 & 0xFF) << 16 |
+                 (u32)((i * 4 + 3) * 37 & 0xFF) << 24;
+    kh1_gsmem_reset();
+    memset(img, 0, sizeof img);
+    memset(offimg, 0, sizeof offimg);
+    memset(clutimg, 0, sizeof clutimg);
+    env();
+    W(0x08, 5, 0); /* CLAMP_1: CLAMP */
+    xupload(0x2800, 1, KH1_PSMCT32, 0, 0, 16, 16, a, 256);       /* texture A */
+    W(0x06, TEX16(0x2800, 1, KH1_PSMCT32), TEX16_HI);
+    xsprite(0, 16);                                                /* the 3D target from A */
+    xupload(0x2800, 1, KH1_PSMCT32, 0, 0, 16, 16, b, 256);       /* the same place: B */
+    xsprite(16, 32);                                               /* from B */
+    W(0x4C, 0x1D0 | 4 << 16, 0);                                   /* the off-screen buffer 0x3A00 */
+    W(0x40, 255u << 16, 255u << 16);
+    xsprite(0, 16);                                                /* B into it */
+    W(0x4C, 0xD0 | 8 << 16, 0);
+    W(0x40, 511u << 16, 383u << 16);
+    W(0x06, TEX16(0x3A00, 4, KH1_PSMCT32), TEX16_HI);
+    xsprite(32, 48);                                               /* the 3D target samples it */
+    xupload(0x3A00, 4, KH1_PSMCT32, 4, 4, 8, 8, cc, 64);         /* an upload into the off-screen buffer */
+    xsprite(48, 64);                                               /* sampled again */
+    xupload(0x2900, 1, KH1_PSMCT32, 0, 0, 16, 16, pal_t, 256);   /* the CLUT pass's source */
+    W(0x4C, 0x1F0 | 1 << 16, 0);                                   /* the CLUT pass 0x3E00 */
+    W(0x40, 15u << 16, 15u << 16);
+    W(0x06, TEX16(0x2900, 1, KH1_PSMCT32), TEX16_HI);
+    xsprite(0, 16);
+    xupload(0x2A00, 2, KH1_PSMT8, 0, 0, 16, 16, idx, 64);        /* an 8-bit texture */
+    W(0x4C, 0xD0 | 8 << 16, 0);
+    W(0x40, 511u << 16, 383u << 16);
+    W(0x06, TEX16(0x2A00, 2, KH1_PSMT8), TEX16_HI | 0x3E00u << 5 | 1u << 29); /* CBP 0x3E00, CT32, CLD 1: a load */
+    xsprite(64, 80);
+    do_replay = 2;
+    kh1_pipes_frame();
+    do_replay = 0;
+    for (i = 0; i < nxc; i++) {
+        const KH1Cmd *c = &xc[i];
+        printf("cmdbuf_test: transfers: %2u %s\n", i + 1, kh1_cmd_str(kh1_pipes_recorder(), c));
+        if (c->kind == KH1_CMD_TEXTURE) ntex++;
+        if (c->kind == KH1_CMD_UPLOAD) ups++;
+        if (c->kind == KH1_CMD_CLUT) clut = (s32)i;
+        if (c->kind != KH1_CMD_DRAW) continue;
+        ndraw++;
+        if (c->k.rt == KH1_RT_MAIN && d1 < 0) d1 = (s32)i;
+        else if (c->k.rt == KH1_RT_MAIN && d2 < 0) d2 = (s32)i;
+        if (c->k.rt == KH1_RT_MAIN) d8 = (s32)i;
+        if (c->k.rt == KH1_RT_OFFSCREEN) off_pass = (s32)c->pass;
+        if (c->k.rt == KH1_RT_CLUT) clut_pass = (s32)c->pass;
+    }
+    for (i = 0; i < nxp; i++) printf("cmdbuf_test: transfers: pass %u: %s\n", i + 1, kh1_cmd_pass_str(&xp[i]));
+    CHECK("transfers: 7 draws, 5 uploads, one CLUT load", ndraw == 7 && ups == 5 && clut >= 0);
+    CHECK("transfers: A and B are two texture entries, each decoded by a TEXTURE command before its draw",
+          d1 >= 1 && d2 > d1 && xc[d1].tslot >= 0 && xc[d2].tslot >= 0 && xc[d1].tslot != xc[d2].tslot &&
+          xc[d1 - 1].kind == KH1_CMD_TEXTURE && xc[d1 - 1].x.slot == xc[d1].tslot && xc[d2 - 1].kind == KH1_CMD_TEXTURE &&
+          xc[d2 - 1].x.slot == xc[d2].tslot);
+    CHECK("transfers: the off-screen buffer is stored (sampled, then written by an upload)", off_pass >= 0 &&
+          xp[off_pass].store == KH1_STORE_STORE && xp[off_pass].why == (KH1_WHY_SAMPLED | KH1_WHY_REDRAWN));
+    CHECK("transfers: the CLUT load reads the CLUT pass back (stored for it), filling a palette slot",
+          clut >= 0 && xc[clut].x.src && xc[clut].x.fill && xc[clut].x.slot >= 0 && clut_pass >= 0 &&
+          xp[clut_pass].store == KH1_STORE_STORE && xp[clut_pass].why == KH1_WHY_SAMPLED);
+    CHECK("transfers: the indexed draw binds the loaded palette", d8 > clut && xc[d8].pslot == xc[clut].x.slot);
+    CHECK("transfers: the palette read back from the CLUT pass is the palette cache's (gsmem.c's CLUT)", xpal_ok &&
+          !xpal_bad);
+    CHECK("transfers: counted (5 uploads, 1 CLUT load and fill, 1 target read, 1 target write, 1 split scene)",
+          snap_hdr.frame.uploads == 5 && snap_hdr.frame.cluts == 1 && snap_hdr.frame.pal_fills == 1 &&
+          snap_hdr.frame.tgt_reads == 1 && snap_hdr.frame.tgt_writes == 1 && snap_hdr.frame.splits == 1 &&
+          snap_hdr.frame.textures == ntex);
+    for (y = 0; y < XH; y++)
+        for (x = 0; x < 80; x++) {
+            u32 g = kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, x, y), c = img[y][x];
+            g = (g & 0xFFFFFF) | kh1_blend_store_alpha(g >> 24) << 24;
+            if (g != c) {
+                if (!bad) printf("cmdbuf_test: transfers: pixel (%u, %u) GS %08x, commands %08x\n", x, y, g, c);
+                bad++;
+            }
+        }
+    CHECK("transfers: the list replayed gives gsmem.c's pixels (A, B, the target before and after the upload, the "
+          "CLUT pass's palette)", !bad);
+}
+
 int main(void) {
     kh1_gs_reset();
     kh1_gsmem_reset();
@@ -435,6 +934,9 @@ int main(void) {
     held();
     bevel();
     passes();
+    transfers();
+    gxm();
+    date();
     printf("cmdbuf_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }

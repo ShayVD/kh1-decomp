@@ -2024,6 +2024,169 @@ surface has force-load and force-store modes (vitasdk `sceGxmDepthStencilSurface
 `SetForceStoreMode`) to set from `dload` / `dstore`; how a colour surface's load is skipped is to check on the
 Vita (5.1bn).
 
+**Session 127 (vita-port-plan 5.1bo): the transfers in the command list, the shaders as Cg source.**
+*Transfers as commands* (include/platform/cmdbuf.h, host/port/cmdbuf.c): batch.h's breaks are now commands of
+their own where they fall between the draws, so a frame's list is everything a GPU port runs: **UPLOAD**
+(TRXDIR 0: the CPU's copy of GS memory; GPU work only when the rectangle lies in a render target's pages:
+then the texels go into the target, stored before and loaded after), **COPY** (TRXDIR 2: a blit when the
+source or destination is a target, else the CPU's), **CLUT** (a CLUT load: the palette cache's slot and
+whether it was filled now, one palette upload; read back from the GPU target when CBP lies in one: the CLUT
+pass at `0x3E00`), **TEXTURE** (the texture cache's decode: one texture upload into its entry, before the
+first draw that binds it). Each draw names its texture entry (`tslot`, -1 for a target's own texture) and
+palette slot (`pslot`). Neither cache refills an entry a draw of the frame uses (texcache.h, palcache.h),
+so uploads and fills never change what an earlier command of the same scene samples and do not end the
+scene; a transfer that reads or writes a render target does (a tiled GPU runs the scene's draws at its end):
+the next draw opens a new pass (`splits`), the target's last pass STOREs (sampled by a read, redrawn by a
+write) and its next pass LOADs. Targets are found by page (a CT32 page's 64 x 32, FBW wide, the pass's rows),
+as gsmem.c marks them. host/null/gsmem.c has two hooks (`kh1_gsmem_xfer_hook` at each TRXDIR 0 / 2,
+`kh1_gsmem_clut_hook` after each CLUT load); host/null/pipes.c keeps a texture cache and a palette cache of the
+recorder's own (made at the run's start under `KH1_HOST_TRACE=5`) and looks the draw's TEX0 up when its
+state or a transfer may have moved the binding; the report adds a `transfers:` line. Fake disc: 4 uploads, 4
+CLUT loads (1 palette fill), 0 decodes (its kicks are untextured), nothing on a target.
+
+*The check* (tests/host/cmdbuf_test.c "transfers", 8 more checks, 29 in all): one frame through gsregs.c with
+texture A uploaded and drawn, B uploaded at the same blocks and drawn, B drawn into the off-screen buffer
+`0x3A00`, that buffer sampled by the 3D target, an upload into it, sampled again, a CLUT pass into `0x3E00`
+from an uploaded texture, an 8-bit texture uploaded and drawn with a CLUT loaded from the pass. Replayed the
+way a GPU runs the list (textures from the texture cache's entries the draws name, the upload into the target
+written into its image, the palette read back from the CLUT pass's image): **the 3D target's pixels are
+gsmem.c's**; A and B are two entries each decoded before its draw; the off-screen pass STOREs (sampled,
+redrawn); the CLUT load reads the CLUT pass back (STORE: sampled), fills a palette slot, and the read-back
+palette equals the palette cache's (gsmem.c's CLUT); one scene split.
+
+*The shaders as Cg* (include/platform/shadergen.h, host/port/shadergen.c): each fragment variant (KH1ShaderKey)
+and each of the 7 vertex variants written as Cg, the Vita's language (psp2cgc offline to .gxp, or SceShaccCg at
+boot as vitaShaRK does), from one table of 16 statement forms (`r = floor(a * b + c)`, `step`, `lerp`,
+`clamp`, `tex2D`, `clip`...). The fragment shader runs in the GS's integer units: every UNORM input taken back
+to 8 bits (floor(x x 255 + 0.5)), then the GS's steps exactly in f32 (below 2^24): Cv; UV or ST / Q divided;
+REGION_CLAMP's coordinate clamp; tex2D; A1B5G5R5's 5 bits x 8 and TEXA's alpha (TA1 with the bit, TA0, or 0
+for black with AEM); TFX / TCC (floor(Ct x Cv x 2^-7), min 255); fog (floor((F x C + (255 - F) x FOGCOL) x
+2^-8)); the alpha test's discard (step-built compares, clip); the blend's pre-scale (floor / ceil of pre_a x
+Cs x C x 2^-7, + pre_d x Cs, clamped); the alpha written (floor(As x 255 / 128 + 0.5), min 255); out / 255.
+DATE's set-up samples the target at WPOS and discards where (A == 255) != DATM. The uniforms are one 64-byte
+slot of 16 floats (`kh1_shader_uniforms`: u_a = AREF, FIX, TA0, TA1; u_b = AEM, FOGCOL; u_r = REGION_CLAMP's
+texel-centre bounds, normalised; u_c = ABCD, PSM), now what cmdbuf.c writes into each command's slot; the
+vertex shader reads the pass's u_xf (2 / w, 2 / h, -1, -1). **Not generated**: a frame read (fetch 1 / 2) and
+the sampler's own taps (TAPS).
+
+*The check* (tests/host/shadergen_test.c, 13 checks): the same table reads the text back (a CPU interpreter:
+each body line matched against the forms and run in f32), so the generated text itself is run against the
+models: TFX 0-3 x TCC over 10648 texel / vertex colour pairs = kh1_texfunc; 62436 fog cases = kh1_fog_gs; 181
+ALPHA forms (every one blend.h does not FETCH; 62 FETCH) x 968 colours, As to 0xFF, through the GPU's
+fixed-function blend = kh1_blend_gpu; ATST x AFAIL x AREF over every alpha: each draw's discard = kh1_atest;
+DATE's set-up = kh1_atest_date_mark; CT32 / CT24 / CT16 / CT16S / T8 / T4 under three TEXA values: the texel
+after the format's steps = kh1_texfmt_sample from the GPU's sample of kh1_texfmt_convert's upload;
+REGION_CLAMP on both axes, point and bilinear: the clamp then the GPU's sample = kh1_sampler_port; ST / Q
+divided; the vertex shaders map vertex.h's pixels to clip space and back. 4096 swept keys parse, every form
+used. Six deliberate breaks (ceil as floor, no clamp, HIGHLIGHT's + Av dropped, AEM ignored, 256 - F,
+NOTEQUAL as EQUAL) each fail it.
+
+| Set | Fragment shaders | Generated | Not | Vertex shaders |
+|---|---|---|---|---|
+| static (drawpipes.py, 42 pipelines) | 27 | 26 (at most 1587 bytes of Cg) | 1: the shadow casters (func_001284a0's environment, FBMSK `0x00000001`: R's lowest bit kept, fetch 2) | 5, all generated |
+| fake disc (`KH1_HOST_TRACE=5`) | 2 | 2 | 0 | 2 |
+
+`KH1_HOST_SHADERS=DIR` (with `KH1_HOST_TRACE=5`) writes a run's fragment shaders as `frag_N.cg` and its vertex
+variants as `vert_N.cg`; the report's `Cg:` line counts them; drawpipes.py prints the static set's. **To check
+on the Vita**: that psp2cgc / SceShaccCg take the text (WPOS for the set-up, `clip`, scalar-to-vector `min`),
+that `float` varyings are f32 or that the 8-bit rounding absorbs fp16 (an input k / 255 in fp16 is within 0.13
+of k x 255: it rounds back), the viewport's Z (scale 1, offset 0), and the shadow casters' 1-bit mask: drop it
+(R's LSB of a shadow mask) or read the colour surface (programmable blending).
+
+**Session 128 (vita-port-plan 5.1bp): the frame read, the command list as GXM calls.** *The frame read*: the
+fetch 1 / 2 fragment shaders (a FETCH blend, a per-bit FBMSK) now generate (host/port/shadergen.c). They take the
+target's pixel as an input `dst` (`__nativecolor __regformat unsigned char4 dst : COLOR`: the Vita's programmable
+blending, the colour surface's 8-bit bytes at the fragment; the exact declaration is this generator's reading of
+psp2cgc and is checked by the first compile) and the pipeline blends nothing. Fetch 1 runs the GS's formula on Cs
+(after fog and the alpha test) and the target: Cd as stored, Ad read back from the 0x80 scale (`floor((a8 x 128 +
+127.5) / 255)`, exact for every byte) or 0x80 on a CT24 frame, C = As / Ad / FIX, `clamp(floor((A - B) x C x 2^-7)
++ D, 0, 255)`; A / B / C / D come from the key (KH1ShaderKey's new `fabcd`, `fpsm`, `fbm[4]`, set only for a frame
+read, so the static counts are unchanged). Then FBMSK's bits: per colour byte a mask of the low k bits (kept from
+the target) or of the high 8 - k bits is a float merge, `floor(X x 2^-k) x 2^k + Y - floor(Y x 2^-k) x 2^k` (X the
+byte whose high bits stay, Y the one whose low k bits stay); an alpha byte 0x00 / 0xFF writes or keeps the stored
+alpha. **Not generated**: another mask shape (split bits: integer ops would do it), a partial alpha byte (the 0x80
+scale has no bits to merge), a CT16 / CT16S frame with a frame read (the 5551 target), and TAPS.
+
+*The check* (tests/host/shadergen_test.c, 17 checks): every FETCH form of the blend sweep (50 of the 270 A / B /
+C / D x FIX forms on CT32 and CT24 frames) over 968 colour / target pairs is kh1_blend_gpu's FETCH pixel (the GS's
+formula on what the target holds; 48400 cases); Ad's read-back for all 256 stored bytes; 10 FBMSK shapes (the
+shadow casters' `0x00000001`, low and high runs in each byte, a kept alpha byte), with no blend and under the
+normal blend, keep the GS's bits; five shapes with no float form are not generated.
+
+| Set | Fragment shaders | Generated | Not |
+|---|---|---|---|
+| static (drawpipes.py) | 27 | **27** (the shadow casters' merge is 4 statements) | 0 |
+| fake disc | 2 | 2 | 0 |
+
+*The shadow casters' 1-bit mask.* `D_004F7820`'s FRAME_1 / 2 `FBMSK=1` keeps R's bit 0 of the off-screen buffer
+through the window's clear (RGBA 0) and the black silhouettes (§3.4), so that bit is whatever the buffer held
+before (a crossfade's or eye overlay's copy, or an earlier shadow). The only reader found is the next step: the
+bilinear copy into `0x3600` (TCC 1, `(Cs - Cd) x As + Cd`) that the receivers (renderer A P1) sample, where an R of
+0 or 1 changes the darkened floor by at most 1 of 255 in red. None of the image stores the C makes (menubg, the half
+capture and blur, vm_lib's capture, the flare: 5.1ar) reads `0x3A00`. So (static, inferred) **the mask
+can be dropped** (a plain colour write) with no visible change; the frame-read shader is exact and costs 4
+statements, so a port can keep it where programmable blending is cheap. Why the game masks the bit is not known.
+
+*GXM calls* (new include/platform/gxmrec.h / host/port/gxmrec.c, a "null GXM"): one frame of cmdbuf.h's recorder
+walked into the calls a Vita renderer makes: BEGIN_SCENE (the pass's target and depth buffer, colour / depth
+load) and END_SCENE (stores), TEX_UPLOAD (a texture cache entry), PAL_FILL / PAL_READBACK (a palette slot, from
+the CPU or the CLUT pass's target), TARGET_UPLOAD / BLIT (a transfer on a target: the open scene ends first),
+SET_PROGRAMS (a pipeline of the frame's deduplicated table, its fragment program and vertex.h's vertex program),
+SET_TEXTURE (an entry or a target's own texture, an indexed texture's palette slot), SET_REGION (the scissor),
+SET_UNIFORMS (the command's 64-byte slot) and DRAW (a vertex range of the frame's ring). Only state that changes
+is set again within a scene; a DATE command draws its set-up pipeline, then each GPU draw. tests/host/cmdbuf_test.c
+"gxm" (46 checks in all) replays columns, partial and transfers from the calls alone (programs from the pipeline
+table, FIX read from the ring at SET_UNIFORMS, textures and palettes by slot, the target upload and the CLUT
+read-back): the same pixels as gsmem.c; frames 1 and 2 of "passes" give one BEGIN / END pair a pass with its loads
+and stores. `KH1_HOST_TRACE=5` prints a `gxm:` line (fake disc: 3 frames, 32 calls, at most 18 a frame, 5 scenes,
+5 draws). The Vita build (host/vita/) turns each call into its sceGxm* call.
+
+**Session 129 (vita-port-plan 5.1bq): the vertex stream as GXM reads it, DATE's set-up area.** *The vertex
+stream* (include/platform/vertex.h `kh1_vertex_attrs`): one stream (stride 32, `KH1_VTX_STRIDE`; every attribute
+stream 0) and per vertex variant the SceGxmVertexAttribute rows in the shader's input order, named by the input so a
+port finds regIndex with sceGxmProgramFindParameterByName:
+
+| Input | Offset | Format | Components | Variants |
+|---|---|---|---|---|
+| `pos` | 0 | F32 | 3 | all 7 |
+| `col` | 24 | U8N | 4 | 1-6 (not DATE's set-up / clear) |
+| `tc` | 12 | F32 | 2 (UV) / 3 (ST / Q) | 3-4 / 5-6 |
+| `fog` | 28 | U8N | 1 | 2, 4, 6 |
+
+The UV variants' shader now declares `float2 tc` (it wrote q = 1 itself already). GXM has no non-indexed draw:
+gxmrec.h's draws are 0 .. nv - 1, so a port keeps one static U16 index buffer 0, 1, 2 ... (at most 65536 vertices a
+draw; the largest static send is 864) and sets the stream at the ring's address + v0 x 32. tests/host/shadergen_test.c
+"layout" reads each generated vertex shader's inputs back (names, order, `floatN` against the component count) and
+checks the offsets against KH1GpuVert's fields (offsetof); two deliberate table breaks are caught.
+
+*DATE's set-up area.* The GS tests DATE per pixel as the draw writes it, so the pixels the set-up must mark are
+exactly the draw's own: drawing the set-up with the command's own vertices (as gxmrec.c does) is the exact area,
+provided (1) it is drawn in the draw's primitive class (drawstate.c set it to triangles: a DATE line or point draw
+would have read its vertices as triangles; now the draw's class), (2) the stencil holds 0 there before the set-up
+(its discards leave the stencil as it was: an earlier DATE command's marks, or the scene's depth-stencil load or
+garbage, would let the draw through where the GS refuses), and (3) the command holds one primitive (overlapping
+primitives that change the tested alpha see the marks from before the others wrote). Session 129 makes all three
+hold: **a clear before each set-up** (drawstate.h `kh1_date_clear_pipe`: the same primitives, stencil ALWAYS /
+REPLACE 0, no colour, no depth, no discard; KH1PipeKey stencil 3, KH1ShaderKey setup 2, a fragment shader that only
+writes 0 under a 0 colour mask) and **one batch per DATE primitive** (batch.c). A DATE command is now three GPU
+draws (clear, set-up, draw); the game's one DATE draw (brightfade `D_002A6AA0`, one sprite) costs one more draw
+call. Static set (drawpipes.py): **43 pipelines, 28 fragment shaders** (were 42 / 27: the clear), all generated;
+vertex shaders still 5. tests/host/cmdbuf_test.c "date" (49 checks in all): two overlapping DATM 1 sprites over a
+target with a striped alpha bit 7, the first writing alpha 0, replayed from the GXM calls with a stencil that
+starts as all 1 (garbage): 3 commands, 2 clears, 2 set-ups, the same RGB and bit 7 as the GS's rule applied sprite
+by sprite (gsmem.c's model draws only the copy); without the clears the replay differs.
+
+**Session 130 (vita-port-plan 5.1br): the attribute arrays as a port builds them.** vertex.h's
+`kh1_vertex_gxm_attrs(index, reg_of, prog, out, stream)` turns the table above into SceGxmVertexAttribute rows
+(streamIndex 0, the offset, SCE_GXM_ATTRIBUTE_FORMAT_F32 9 / U8N 4, the component count, regIndex from `reg_of`)
+and the one SceGxmVertexStream (stride 32, SCE_GXM_INDEX_SOURCE_INDEX_16BIT 0). `reg_of` is the port's lookup of
+an input by name in the compiled program (sceGxmProgramFindParameterByName, then
+sceGxmProgramParameterGetResourceIndex); an input the program lacks makes the call return 0, so a port never
+creates a vertex program from a partial table. The enum values are recalled from vitasdk's psp2/gxm.h, unverified
+until the Vita build compiles against it. tests/host/shadergen_test.c "gxmattr" (26 checks in all) runs every
+variant against a stand-in program whose inputs are the generated Cg's, in its order. No shader compiler was
+reachable in the container, so the shaders are still uncompiled.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

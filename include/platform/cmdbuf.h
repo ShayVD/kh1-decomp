@@ -13,7 +13,8 @@
  *                 scissor (a column group's widened to the union), the pass's target and depth buffer
  *   its vertices  a range of ring.h's per-frame vertex ring (32-byte vertex.h vertices, contiguous: only
  *                 the last command grows, and a replayed column is appended as a new command)
- *   its uniforms  a 64-byte slot of the uniform ring (KH1DrawUniforms); each pass takes one more (the
+ *   its uniforms  a 64-byte slot of the uniform ring (session 127: shadergen.h's kh1_shader_uniforms, the 16
+ *                 floats the generated shaders read); each pass takes one more (the
  *                 vertex shader's pixel-to-clip vec4: 2 / w, 2 / h, -1, -1)
  *   its state     the KH1DrawState that opened it (what a GPU binds; a replayed primitive's is its own)
  *
@@ -42,16 +43,54 @@
  * (`depth_joins` counts those).
  *
  * A command that samples the target it draws into (feedback, batch.c never merges those) is counted:
- * on a tiled GPU it ends the scene (store, then sample).  Not part of the PS2 build. */
+ * on a tiled GPU it ends the scene (store, then sample).
+ *
+ * Session 127 (4.13 "Session 127", vita-port-plan 5.1bo): **the transfers are commands too**, so a frame's
+ * list is complete.  batch.h's breaks (an upload, a local copy, a CLUT load) are recorded where they
+ * fall, between the draws, as
+ *
+ *   UPLOAD   TRXDIR 0 (BITBLTBUF's destination, TRXPOS, TRXREG): the CPU's copy of GS memory written.
+ *            Nothing for the GPU, unless the rectangle lies in a render target's pages (`dst`): then the
+ *            texels go into the GPU target too (the target stored before it, loaded after)
+ *   COPY     TRXDIR 2: a copy between targets (`src` and / or `dst`: a GPU blit; the source stored
+ *            first) or in GS memory only (the CPU's)
+ *   CLUT     a CLUT buffer load: the palette cache's slot (include/platform/palcache.h) and whether it
+ *            was filled now (one palette upload); `src` when CBP lies in a render target (the texture
+ *            animations' CLUT pass at 0x3E00: the palette is read back from the GPU target, which is
+ *            stored first)
+ *   TEXTURE  the texture cache's decode (include/platform/texcache.h): a GPU texture upload into the
+ *            cache's entry `slot`, placed before the first draw that binds it
+ *
+ * and each draw command names what it binds: `tslot` (the texture cache's entry, -1 a render target's
+ * own texture or none) and `pslot` (the palette slot of the last CLUT load, for an indexed texture).
+ * Neither cache refills an entry a draw of this frame uses, so an upload or a fill never changes what
+ * an earlier command of the same scene samples: they do not end the scene.  A transfer that reads or
+ * writes a render target does: the next draw starts a new pass (`splits` when it is the same target),
+ * the target's last pass is stored (sampled by a read, redrawn by a write) and its next pass loads.
+ * A pass's commands are its range (cmd0, ncmd: the transfers between its draws included, ndraw draws).
+ * Not part of the PS2 build. */
 #ifndef KH1_PS2
 #define KH1_CMD_MAX 1024     /* commands a frame */
 #define KH1_CMD_PASSES 256   /* passes a frame */
 #define KH1_CMD_TARGETS 32   /* distinct colour targets (rt, fbp) tracked across frames */
 
 enum { KH1_LOAD_DONT_CARE, KH1_LOAD_LOAD };
+/* a command's kind (KH1Cmd.kind) */
+enum { KH1_CMD_DRAW, KH1_CMD_UPLOAD, KH1_CMD_COPY, KH1_CMD_CLUT, KH1_CMD_TEXTURE };
 enum { KH1_STORE_DISCARD, KH1_STORE_STORE, KH1_STORE_OPEN };
 /* why a pass stores (KH1CmdPass.why bits) */
 enum { KH1_WHY_SAMPLED = 1, KH1_WHY_REDRAWN = 2, KH1_WHY_NEXT = 4, KH1_WHY_DISPLAY = 8 };
+
+/* session 127: a transfer command's fields */
+typedef struct {
+    u32 bb_lo, bb_hi;  /* UPLOAD / COPY: BITBLTBUF (the source in lo, the destination in hi) */
+    u16 sx, sy, dx, dy, w, h; /* TRXPOS's source / destination corners, TRXREG */
+    u32 tex0_lo, tex0_hi; /* CLUT: the TEX0 that loaded; TEXTURE: the binding */
+    s16 slot;          /* CLUT: the palette cache's slot; TEXTURE: the texture cache's entry; -1 uncached */
+    u8 fill;           /* CLUT: the slot filled now (a palette upload); TEXTURE: always 1 (a texture upload) */
+    u8 src, dst;       /* 1 + the KH1CmdRec.tgt index the transfer reads (COPY, CLUT) / writes (UPLOAD, COPY) */
+    u32 texels;        /* TEXTURE: texels uploaded */
+} KH1CmdXfer;
 
 typedef struct {
     KH1BatchKey k;
@@ -63,13 +102,17 @@ typedef struct {
     u8 lost;           /* a vertex or uniform allocation did not fit */
     u8 samples;        /* 1 + the KH1CmdRec.tgt index it samples, 0 none */
     u8 hasv;           /* its vertices were given (not a count-only primitive) */
+    u8 kind;           /* session 127: KH1_CMD_* (the fields above are a draw's) */
+    s16 tslot, pslot;  /* a draw's texture cache entry and palette slot (-1 none) */
+    KH1CmdXfer x;      /* a transfer's */
 } KH1Cmd;
 
 typedef struct {
     u8 rt, psm, depth;
     u16 fbp, fbw;
     u32 w, h;
-    u32 cmd0, ncmd;
+    u32 cmd0, ncmd;    /* its commands' range (session 127: the transfers between its draws included) */
+    u32 ndraw;         /* its draw commands */
     u32 uoff;          /* the pass's uniform slot */
     u8 tgt;            /* its colour target's index in KH1CmdRec.tgt */
     u8 load, store, why;
@@ -88,6 +131,11 @@ typedef struct {
     u32 dpasses, dloads, dstores, ddiscards, dopen;
     u32 feedback, lost;
     u32 depth_joins;   /* batch.h passes joined into the scene before them: only the depth binding differed */
+    /* session 127: the transfers */
+    u32 uploads, copies, cluts, textures;  /* commands of each kind */
+    u32 pal_fills, texels;                 /* CLUT loads that filled a palette slot; texels the decodes upload */
+    u32 tgt_reads, tgt_writes;             /* transfers reading / writing a render target (GPU work) */
+    u32 splits;                            /* scenes split by a transfer touching their own target */
     u32 max_passes, max_cmds;
 } KH1CmdCount;
 
@@ -118,6 +166,10 @@ typedef struct {
     u32 tgt[KH1_CMD_TARGETS];
     u8 tdrawn[KH1_CMD_TARGETS];
     u8 ddrawn[3];               /* depth buffers written in an earlier frame (KH1_DS_*) */
+    u32 tpages[KH1_CMD_TARGETS]; /* session 127: the pages each target spans (FBW x its rows' page rows) */
+    s32 cur;                    /* session 127: the open draw command, -1 none */
+    s16 tslot, pslot;           /* the texture entry / palette slot the next draw binds */
+    u8 split;                   /* a transfer touched a target: the next draw starts a pass */
     /* the previous frame's last pass on each target / depth buffer, its store still open */
     KH1CmdPass prev[KH1_CMD_PASSES];
     u32 nprev;
@@ -128,8 +180,20 @@ typedef struct {
 void kh1_cmd_init(KH1CmdRec *r, void *vmem, u32 vslot, void *umem, u32 uslot);
 /* a primitive drawn in d / p: its n GPU vertices (v 0: counted, not written), sig as batch.h's */
 void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, u32 sig);
-/* a transfer or CLUT load */
+/* a transfer or CLUT load, not recorded (batch.h's break only) */
 void kh1_cmd_break(KH1CmdRec *r);
+/* session 127: TRXDIR dir (0 an upload, 2 a copy) with BITBLTBUF, TRXPOS and TRXREG: an UPLOAD or COPY command
+ * (and the break) */
+void kh1_cmd_upload(KH1CmdRec *r, u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi);
+/* a CLUT load by TEX0 (lo, hi) into the palette cache's slot (-1 uncached), filled now or not: a CLUT command
+ * (and the break); the next indexed draws bind the slot */
+void kh1_cmd_clut(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill);
+/* the texture cache's answer for the next draw's TEX0: its entry (-1 not kept: a render target's texture, or
+ * full), decoded now (a TEXTURE command of `texels` texels, before the draw) or not */
+void kh1_cmd_texture(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int decoded, u32 texels);
+/* a command as text: "draw ...", "upload 2000 bw 1 psm 00 16 x 16 at (0, 0)", "clut 3e00 slot 2 fill (from CLUT
+ * pass)", ... */
+const char *kh1_cmd_str(const KH1CmdRec *r, const KH1Cmd *c);
 /* the commands that may be submitted now (those before a held column group, and not the open one) */
 u32 kh1_cmd_ready(const KH1CmdRec *r);
 /* the frame's vertices of a command */

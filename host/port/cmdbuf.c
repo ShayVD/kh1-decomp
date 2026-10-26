@@ -1,10 +1,12 @@
 /* The draw list as GPU commands (include/platform/cmdbuf.h, docs/renderer-spec.md 4.13 "Session 126"):
  * batch.h's batches recorded with their vertices and uniforms in ring.h's rings, column groups held
- * until they end, and each pass's load / store needs decided at the frame end.  Checked by
+ * until they end, and each pass's load / store needs decided at the frame end.  Session 127 (4.13
+ * "Session 127"): the transfers, CLUT loads and texture decodes recorded between the draws.  Checked by
  * tests/host/cmdbuf_test.c and run over a host run (host/null/pipes.c, KH1_HOST_TRACE=5) and the ELF's
  * static packets (tools/host/drawpipes.py --passes).  Not part of the PS2 build (it lives outside src/). */
 #include "common.h"
 #include "platform/cmdbuf.h"
+#include "platform/shadergen.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
@@ -21,7 +23,24 @@ static u32 tgt_find(KH1CmdRec *r, u32 key, int add) {
     if (!add || r->ntgt == KH1_CMD_TARGETS) return ~0u;
     r->tgt[r->ntgt] = key;
     r->tdrawn[r->ntgt] = 0;
+    r->tpages[r->ntgt] = 0;
     return r->ntgt++;
+}
+
+/* session 127: 1 + the target whose pages the rectangle (x, y) w x h of a buffer at block bp, bw wide lies in
+ * (page granularity, a CT32 page's 64 x 32 pixels, as host/null/gsmem.c marks them), 0 none */
+static u8 tgt_at(const KH1CmdRec *r, u32 bp, u32 bw, u32 x, u32 y, u32 w, u32 h) {
+    u32 p0, p1, i;
+    if (!bw) bw = 1;
+    if (!w) w = 1;
+    if (!h) h = 1;
+    p0 = bp / 32 + y / 32 * bw + x / 64;
+    p1 = bp / 32 + (y + h - 1) / 32 * bw + (x + w - 1) / 64;
+    for (i = 0; i < r->ntgt; i++) {
+        u32 f = r->tgt[i] >> 8 & 0xFFF;
+        if (p0 < f + r->tpages[i] && p1 >= f) return (u8)(i + 1);
+    }
+    return 0;
 }
 
 /* the same scene: the same colour target, and the same depth buffer or none on one side (a draw that neither
@@ -49,6 +68,10 @@ static void new_pass(KH1CmdRec *r, const KH1BatchKey *k, const KH1RenderPass *rp
     p->cmd0 = r->ncmd;
     t = tgt_find(r, tgt_key(k->rt, k->fbp, k->fbw), 1);
     p->tgt = t == ~0u ? 0xFF : (u8)t;
+    if (t != ~0u) { /* the GS pages it spans: FBW by its rows (the pass's height unscaled) */
+        u32 rows = (u32)(rp->scale > 0.0f ? rp->h / rp->scale + 0.5f : (f32)rp->h), n = (k->fbw ? k->fbw : 1) * ((rows + 31) / 32);
+        if (n > r->tpages[t]) r->tpages[t] = n;
+    }
     u = (f32 *)kh1_ring_alloc(&r->uring, KH1_RING_UNIFORM_SLOT, KH1_RING_UNIFORM_SLOT);
     if (u) {
         u[0] = rp->w ? 2.0f / rp->w : 0.0f;
@@ -63,24 +86,34 @@ static void new_pass(KH1CmdRec *r, const KH1BatchKey *k, const KH1RenderPass *rp
 static void new_cmd(KH1CmdRec *r, const KH1BatchKey *k, const KH1DrawState *d, const KH1RenderPass *rp) {
     KH1Cmd *c;
     u8 *u;
-    if (!r->npass || !same_pass(&r->pass[r->npass - 1], k)) new_pass(r, k, rp);
+    int same = r->npass && same_pass(&r->pass[r->npass - 1], k);
+    if (same && r->split) r->frame.splits++;
+    if (!same || r->split) new_pass(r, k, rp);
     else if (r->pass[r->npass - 1].depth != k->depth && k->depth != KH1_DS_NONE) {
         r->pass[r->npass - 1].depth = k->depth; /* the scene binds the depth buffer from its start */
         r->frame.depth_joins++;
     } else if (r->pass[r->npass - 1].depth != k->depth) {
         r->frame.depth_joins++;
     }
-    if (r->ncmd == KH1_CMD_MAX) { r->dropped++; return; }
+    r->split = 0;
+    if (r->ncmd == KH1_CMD_MAX || !r->npass) { r->dropped++; r->cur = -1; return; }
+    r->cur = (s32)r->ncmd;
     c = &r->cmd[r->ncmd++];
     memset(c, 0, sizeof *c);
     c->k = *k;
     c->d = *d;
+    c->kind = KH1_CMD_DRAW;
+    c->tslot = d->pipe[0].shader.tex ? r->tslot : -1;
+    c->pslot = d->pipe[0].shader.tex ? r->pslot : -1;
     c->pass = r->npass - 1;
-    r->pass[c->pass].ncmd++;
+    r->pass[c->pass].ncmd = r->ncmd - r->pass[c->pass].cmd0;
+    r->pass[c->pass].ndraw++;
     u = (u8 *)kh1_ring_alloc(&r->uring, KH1_RING_UNIFORM_SLOT, KH1_RING_UNIFORM_SLOT);
-    if (u) {
+    if (u) { /* session 127: what the generated shaders read (shadergen.h: u_a, u_b, u_r, u_c) */
+        f32 fu[16];
         memset(u, 0, KH1_RING_UNIFORM_SLOT);
-        memcpy(u, &d->u, sizeof d->u);
+        kh1_shader_uniforms(d, fu);
+        memcpy(u, fu, sizeof fu < KH1_RING_UNIFORM_SLOT ? sizeof fu : KH1_RING_UNIFORM_SLOT);
         c->uoff = (u32)(u - (r->uring.base + r->uring.cur * r->uring.slot));
     } else {
         c->lost = 1;
@@ -166,6 +199,7 @@ static void clears(const KH1CmdRec *r, KH1CmdPass *p) {
     for (j = p->cmd0; j < end && !p->cleared; j++) {
         const KH1Cmd *c = &r->cmd[j];
         const KH1PipeKey *k = &c->d.pipe[0];
+        if (c->kind != KH1_CMD_DRAW) continue;
         if (reads_dst(&c->d, p->psm) || (c->samples && c->samples - 1 == p->tgt)) break;
         if (c->d.n == 1 && !k->shader.discard && k->ztest == KH1_ZTST_ALWAYS && cover_cmd(r, p, c)) p->cleared = all_cells(p);
     }
@@ -174,6 +208,7 @@ static void clears(const KH1CmdRec *r, KH1CmdPass *p) {
     for (j = p->cmd0; j < end && !p->zcleared; j++) {
         const KH1Cmd *c = &r->cmd[j];
         const KH1PipeKey *k = &c->d.pipe[0];
+        if (c->kind != KH1_CMD_DRAW) continue;
         if (k->ztest != KH1_ZTST_ALWAYS) break;
         if (k->zwrite && c->d.n == 1 && !k->shader.discard && !c->d.setup && cover_cmd(r, p, c)) p->zcleared = all_cells(p);
     }
@@ -198,8 +233,8 @@ static void prim(KH1CmdRec *r, const KH1BatchKey *k, u32 src) {
         r->open_pending = 0;
         new_cmd(r, k, d, rp);
     }
-    if (!r->ncmd || r->dropped) return;
-    c = &r->cmd[r->ncmd - 1];
+    if (r->cur < 0 || r->dropped) return;
+    c = &r->cmd[r->cur];
     p = &r->pass[c->pass];
     if (d->pipe[0].ztest != KH1_ZTST_ALWAYS) {
         p->ztest = 1;
@@ -243,11 +278,12 @@ static void on_event(void *ctx, u32 what, const KH1BatchKey *k, u32 arg) {
         }
         break;
     case KH1_BEV_GROUP:
-        r->held = arg && r->ncmd ? (s32)r->ncmd - 1 : -1;
+        r->held = arg && r->cur >= 0 ? r->cur : -1;
         break;
     case KH1_BEV_WIDEN:
         if (r->held >= 0)
-            for (i = r->held; i < (s32)r->ncmd; i++) r->cmd[i].k.sx1 = (s32)arg;
+            for (i = r->held; i < (s32)r->ncmd; i++)
+                if (r->cmd[i].kind == KH1_CMD_DRAW) r->cmd[i].k.sx1 = (s32)arg;
         break;
     case KH1_BEV_END:
         r->held = -1;
@@ -264,6 +300,8 @@ void kh1_cmd_init(KH1CmdRec *r, void *vmem, u32 vslot, void *umem, u32 uslot) {
     kh1_ring_init(&r->vring, vmem, vslot);
     kh1_ring_init(&r->uring, umem, uslot);
     r->held = -1;
+    r->cur = -1;
+    r->tslot = r->pslot = -1;
 }
 
 void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, u32 sig) {
@@ -276,9 +314,75 @@ void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, c
 
 void kh1_cmd_break(KH1CmdRec *r) { kh1_batch_break(&r->b); }
 
+/* session 127: a transfer command at the end of the list (0 when the table is full) */
+static KH1Cmd *xfer_cmd(KH1CmdRec *r, u32 kind) {
+    KH1Cmd *c;
+    if (r->ncmd == KH1_CMD_MAX) { r->dropped++; return 0; }
+    c = &r->cmd[r->ncmd++];
+    memset(c, 0, sizeof *c);
+    c->kind = (u8)kind;
+    c->pass = r->npass ? r->npass - 1 : ~0u;
+    c->tslot = c->pslot = -1;
+    c->x.slot = -1;
+    return c;
+}
+
+void kh1_cmd_upload(KH1CmdRec *r, u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi) {
+    KH1Cmd *c;
+    kh1_batch_break(&r->b);
+    c = xfer_cmd(r, dir == 2 ? KH1_CMD_COPY : KH1_CMD_UPLOAD);
+    if (!c) return;
+    c->x.bb_lo = bb_lo;
+    c->x.bb_hi = bb_hi;
+    c->x.sx = (u16)(pos_lo & 2047);
+    c->x.sy = (u16)(pos_lo >> 16 & 2047);
+    c->x.dx = (u16)(pos_hi & 2047);
+    c->x.dy = (u16)(pos_hi >> 16 & 2047);
+    c->x.w = (u16)(reg_lo & 0xFFF);
+    c->x.h = (u16)(reg_hi & 0xFFF);
+    c->x.dst = tgt_at(r, bb_hi & 0x3FFF, bb_hi >> 16 & 63, c->x.dx, c->x.dy, c->x.w, c->x.h);
+    if (dir == 2) c->x.src = tgt_at(r, bb_lo & 0x3FFF, bb_lo >> 16 & 63, c->x.sx, c->x.sy, c->x.w, c->x.h);
+    if (c->x.src || c->x.dst) r->split = 1;
+}
+
+void kh1_cmd_clut(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill) {
+    KH1Cmd *c;
+    u32 psm = tex0_lo >> 20 & 63, bits8 = psm == 0x13 || psm == 0x1B;
+    kh1_batch_break(&r->b);
+    r->pslot = (s16)slot;
+    c = xfer_cmd(r, KH1_CMD_CLUT);
+    if (!c) return;
+    c->x.tex0_lo = tex0_lo;
+    c->x.tex0_hi = tex0_hi;
+    c->x.slot = (s16)slot;
+    c->x.fill = fill != 0;
+    /* the entries' rectangle at CBP: 16 x 16 for an 8-bit PSM, 8 x 2 for a 4-bit one (CSM 1) */
+    c->x.src = tgt_at(r, tex0_hi >> 5 & 0x3FFF, 1, 0, 0, bits8 ? 16 : 8, bits8 ? 16 : 2);
+    if (c->x.src) r->split = 1;
+}
+
+void kh1_cmd_texture(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int decoded, u32 texels) {
+    KH1Cmd *c;
+    /* the open draw binds the same TEX0 to another entry: the next primitive must open a new command */
+    if (r->cur >= 0) {
+        const KH1Cmd *o = &r->cmd[r->cur];
+        if (o->d.pipe[0].shader.tex && o->tslot != slot && o->d.tex0_lo == tex0_lo && !((o->d.tex0_hi ^ tex0_hi) & 3))
+            kh1_batch_break(&r->b);
+    }
+    r->tslot = (s16)slot;
+    if (!decoded) return;
+    c = xfer_cmd(r, KH1_CMD_TEXTURE);
+    if (!c) return;
+    c->x.tex0_lo = tex0_lo;
+    c->x.tex0_hi = tex0_hi;
+    c->x.slot = (s16)slot;
+    c->x.fill = 1;
+    c->x.texels = texels;
+}
+
 u32 kh1_cmd_ready(const KH1CmdRec *r) {
     if (r->held >= 0) return (u32)r->held;
-    return r->ncmd ? r->ncmd - 1 : 0;
+    return r->cur >= 0 ? (u32)r->cur : r->ncmd;
 }
 
 const KH1GpuVert *kh1_cmd_verts(const KH1CmdRec *r, const KH1Cmd *c) {
@@ -344,25 +448,52 @@ static void settle_prev(KH1CmdRec *r) {
     r->nprev = 0;
 }
 
+/* session 127: a transfer command at its place in the frame: a target it reads is stored for it (sampled), one it
+ * writes is stored first (redrawn) and counts as drawn for the next pass's load (xw) */
+static void xfer_walk(KH1CmdRec *r, const KH1Cmd *c, const s32 *w, u8 *xw) {
+    KH1CmdCount *fc = &r->frame;
+    switch (c->kind) {
+    case KH1_CMD_UPLOAD: fc->uploads++; break;
+    case KH1_CMD_COPY: fc->copies++; break;
+    case KH1_CMD_CLUT: fc->cluts++; fc->pal_fills += c->x.fill; break;
+    case KH1_CMD_TEXTURE: fc->textures++; fc->texels += c->x.texels; break;
+    default: return;
+    }
+    if (c->x.src) {
+        need(r, w, c->x.src - 1u, KH1_WHY_SAMPLED);
+        fc->tgt_reads++;
+    }
+    if (c->x.dst) {
+        need(r, w, c->x.dst - 1u, KH1_WHY_REDRAWN);
+        xw[c->x.dst - 1] = 1;
+        fc->tgt_writes++;
+    }
+}
+
 void kh1_cmd_frame(KH1CmdRec *r) {
     s32 w[KH1_CMD_TARGETS], dw[3];
-    u32 i, j, *f, *t;
+    u32 i, j, *f, *t, next = 0;
+    u8 xw[KH1_CMD_TARGETS];
     KH1CmdCount *fc = &r->frame;
     kh1_batch_frame(&r->b); /* a repeat cut short is replayed first */
     r->held = -1;
     for (i = 0; i < KH1_CMD_TARGETS; i++) w[i] = -1;
     dw[0] = dw[1] = dw[2] = -1;
+    memset(xw, 0, sizeof xw);
     for (i = 0; i < r->npass; i++) {
         KH1CmdPass *p = &r->pass[i];
         u32 tg = p->tgt;
         int earlier;
+        /* the transfers before the pass, then those between its draws (none touches its target: that splits) */
+        for (; next < p->cmd0 + p->ncmd && next < r->ncmd; next++) xfer_walk(r, &r->cmd[next], w, xw);
         clears(r, p);
-        earlier = r->assume_drawn || (tg < KH1_CMD_TARGETS && (w[tg] >= 0 || r->tdrawn[tg]));
+        earlier = r->assume_drawn || (tg < KH1_CMD_TARGETS && (w[tg] >= 0 || r->tdrawn[tg] || xw[tg]));
         p->load = earlier && !p->cleared ? KH1_LOAD_LOAD : KH1_LOAD_DONT_CARE;
         if (p->load == KH1_LOAD_LOAD) need(r, w, tg, KH1_WHY_REDRAWN);
         for (j = p->cmd0; j < p->cmd0 + p->ncmd && j < r->ncmd; j++) {
             u32 s = r->cmd[j].samples;
             if (!s) continue;
+            if (r->cmd[j].kind != KH1_CMD_DRAW) continue;
             if (s - 1 == tg) fc->feedback++;
             else need(r, w, s - 1, KH1_WHY_SAMPLED);
         }
@@ -374,11 +505,15 @@ void kh1_cmd_frame(KH1CmdRec *r) {
             fc->dpasses++;
             if (p->dload == KH1_LOAD_LOAD) fc->dloads++;
         }
-        if (tg < KH1_CMD_TARGETS) w[tg] = (s32)i;
+        if (tg < KH1_CMD_TARGETS) {
+            w[tg] = (s32)i;
+            xw[tg] = 0;
+        }
         if (p->load == KH1_LOAD_LOAD) fc->loads++;
         else fc->dont_care++;
         if (p->cleared) fc->cleared++;
     }
+    for (; next < r->ncmd; next++) xfer_walk(r, &r->cmd[next], w, xw); /* the frame's last transfers */
     settle_prev(r);
     for (i = 0; i < r->npass; i++) {
         KH1CmdPass *p = &r->pass[i];
@@ -425,6 +560,8 @@ void kh1_cmd_reset_frame(KH1CmdRec *r) {
     r->npass = 0;
     r->dropped = 0;
     r->held = -1;
+    r->cur = -1;
+    r->split = 0;
     r->open_pending = 0;
     memset(&r->frame, 0, sizeof r->frame);
     kh1_ring_frame(&r->vring);
@@ -438,6 +575,41 @@ void kh1_cmd_finish(KH1CmdRec *r) {
         if (r->prev[j].dstore == KH1_STORE_OPEN && r->prev[j].zwrite) r->total.dopen++;
     }
     r->nprev = 0;
+}
+
+const char *kh1_cmd_str(const KH1CmdRec *r, const KH1Cmd *c) {
+    static char buf[160];
+    char tg[2][48];
+    u32 i;
+    for (i = 0; i < 2; i++) {
+        u32 t = i ? c->x.dst : c->x.src;
+        tg[i][0] = 0;
+        if (t && t - 1 < r->ntgt) sprintf(tg[i], " (%s target %04x)", i ? "into" : "from", (r->tgt[t - 1] >> 8 & 0xFFF) * 32);
+    }
+    switch (c->kind) {
+    case KH1_CMD_UPLOAD:
+        sprintf(buf, "upload %04x bw %u psm %02x %u x %u at (%u, %u)%s", c->x.bb_hi & 0x3FFF, c->x.bb_hi >> 16 & 63,
+                c->x.bb_hi >> 24 & 63, c->x.w, c->x.h, c->x.dx, c->x.dy, tg[1]);
+        break;
+    case KH1_CMD_COPY:
+        sprintf(buf, "copy %04x (%u, %u) -> %04x (%u, %u) %u x %u%s%s", c->x.bb_lo & 0x3FFF, c->x.sx, c->x.sy,
+                c->x.bb_hi & 0x3FFF, c->x.dx, c->x.dy, c->x.w, c->x.h, tg[0], tg[1]);
+        break;
+    case KH1_CMD_CLUT:
+        sprintf(buf, "clut %04x csa %u slot %d%s%s", c->x.tex0_hi >> 5 & 0x3FFF, c->x.tex0_hi >> 24 & 31, c->x.slot,
+                c->x.fill ? " fill" : "", tg[0]);
+        break;
+    case KH1_CMD_TEXTURE:
+        sprintf(buf, "texture %04x psm %02x %u x %u into entry %d (%u texels)", c->x.tex0_lo & 0x3FFF,
+                c->x.tex0_lo >> 20 & 63, 1u << (c->x.tex0_lo >> 26 & 15), 1u << ((c->x.tex0_lo >> 30 | c->x.tex0_hi << 2) & 15),
+                c->x.slot, c->x.texels);
+        break;
+    default:
+        sprintf(buf, "draw pass %u: %u prims, %u vertices, texture entry %d palette %d%s", c->pass + 1, c->prims, c->nv,
+                c->tslot, c->pslot, c->samples ? " (samples a target)" : "");
+        break;
+    }
+    return buf;
 }
 
 const char *kh1_cmd_pass_str(const KH1CmdPass *p) {
@@ -454,7 +626,7 @@ const char *kh1_cmd_pass_str(const KH1CmdPass *p) {
         if (p->why >> b & 1) n += sprintf(why + n, "%s%s", n ? ", " : " (", wn[b]);
     if (n) sprintf(why + n, ")");
     sprintf(buf, "%s (%04x)%s: %u cmds, load %s%s store %s%s", p->rt < KH1_RT_COUNT ? rt[p->rt] : "?",
-            (u32)p->fbp * 32, p->depth < 3 ? ds[p->depth] : " depth ?", p->ncmd,
+            (u32)p->fbp * 32, p->depth < 3 ? ds[p->depth] : " depth ?", p->ndraw,
             p->load ? "LOAD" : "DONT_CARE", p->cleared ? " (cleared)" : "", st[p->store], why);
     if (p->depth != KH1_DS_NONE && p->depth < 3)
         sprintf(buf + strlen(buf), ", depth load %s store %s%s", p->dload ? "LOAD" : "DONT_CARE",

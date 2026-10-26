@@ -66,6 +66,55 @@ u32 kh1_vertkey_index(const KH1VertKey *k);
 const char *kh1_vertkey_str(u32 index);
 /* the distinct vertex shaders a pipeline set's pipelines use: the count, and a bit per index in *mask */
 u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask);
+
+/* The vertex stream as GXM reads it (renderer-spec 4.13 "Session 129", vita-port-plan 5.1bq): one stream
+ * (SceGxmVertexStream: stride KH1_VTX_STRIDE, streamIndex 0 for every attribute) and, per variant, the
+ * attributes its vertex shader declares, in the shader's order (SceGxmVertexAttribute: offset, format,
+ * componentCount; regIndex is the program's, found by `name` with sceGxmProgramFindParameterByName and
+ * sceGxmProgramParameterGetResourceIndex).  The formats are SceGxmAttributeFormat's without the SDK:
+ * KH1_VFMT_F32 is SCE_GXM_ATTRIBUTE_FORMAT_F32, KH1_VFMT_U8N SCE_GXM_ATTRIBUTE_FORMAT_U8N (x / 255, which
+ * the shaders expect: texfunc.h and fog.h take 0x80 and F back from it).  UV reads 2 floats (q is 1 and the
+ * shader writes 1), ST / Q 3.  sceGxmDraw always takes indices: gxmrec.h's draws are 0 .. nv - 1, so a port
+ * keeps one static U16 index buffer 0, 1, 2 ... (SCE_GXM_INDEX_SOURCE_INDEX_16BIT; at most 65536 vertices a
+ * draw) and passes the ring's vertex address + v0 x 32 as the stream (sceGxmSetVertexStream).  The test
+ * (tests/host/shadergen_test.c "layout") reads each generated vertex shader's inputs back and checks names,
+ * component counts and offsets against KH1GpuVert. */
+#define KH1_VTX_STRIDE 32
+enum { KH1_VFMT_U8N, KH1_VFMT_F32 };
+typedef struct {
+    const char *name; /* the vertex shader's input */
+    u8 offset;        /* in KH1GpuVert */
+    u8 format;        /* KH1_VFMT_* */
+    u8 count;         /* components */
+} KH1VtxAttr;
+
+/* variant `index`'s attributes into out[0 ..] (at most 4): the count, 0 for an unknown index */
+u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[4]);
+const char *kh1_vfmt_str(u32 format);
+
+/* The same table as a port hands it to sceGxmShaderPatcherCreateVertexProgram (vita-port-plan 5.1br, session 130):
+ * SceGxmVertexAttribute's and SceGxmVertexStream's layouts and the SDK's enum values, without the SDK
+ * (vitasdk's psp2/gxm.h: SCE_GXM_ATTRIBUTE_FORMAT_U8N 4, _F32 9, SCE_GXM_INDEX_SOURCE_INDEX_16BIT 0; recalled,
+ * not compiled against it yet: the Vita build checks them with static asserts once host/vita/ uses this).
+ * `reg_of` is the program's lookup of an input by name (on the Vita sceGxmProgramFindParameterByName, then
+ * sceGxmProgramParameterGetResourceIndex; < 0 when the program has no such input), so regIndex is the
+ * compiled program's, never assumed.  The test (tests/host/shadergen_test.c "gxmattr") stands a lookup built
+ * from the generated Cg's input order in for the compiled program. */
+#define KH1_GXM_ATTR_U8N 4
+#define KH1_GXM_ATTR_F32 9
+#define KH1_GXM_INDEX_16BIT 0
+typedef struct {
+    u16 streamIndex, offset;
+    u8 format, componentCount;
+    u16 regIndex;
+} KH1GxmVtxAttr; /* SceGxmVertexAttribute, 8 bytes */
+typedef struct {
+    u16 stride, indexSource;
+} KH1GxmVtxStream; /* SceGxmVertexStream, 4 bytes */
+typedef s32 (*KH1GxmRegOf)(void *prog, const char *name);
+/* variant `index`'s attributes and its one stream: the attribute count, 0 for an unknown index or an input
+ * the program lacks (a port must not create a vertex program from a partial table) */
+u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAttr out[4], KH1GxmVtxStream *stream);
 #endif
 
 #endif
