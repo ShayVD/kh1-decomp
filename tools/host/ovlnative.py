@@ -11,6 +11,12 @@ memory map's overlay area, where the game's loader puts the file. The overlay is
 every function of its layout is defined; otherwise it is left out (and its calls answered as
 before: host/null/main.c's KH1_HOST_OVL=stub) and the missing functions are printed.
 
+An overlay with ovl/NAME/platform.tsv (`func<TAB>replacement` rows) has parts a port replaces
+with its own code (dkmovie.x's player: include/platform/movie.h): those functions' data pointers
+(relocs.tsv) are pointed at the replacement, and only the functions the entry and the remaining
+pointers reach through the C are compiled (the files that define them); the rest of the layout
+is not needed.
+
 out/.../ovl/modules.c holds kh1_ovl_modules: each linked overlay's file name, pin (size, SHA-256),
 entry and the data pointers to fix up after a load (ovl/NAME/relocs.tsv).
 """
@@ -59,6 +65,42 @@ def sources(name):
     return sorted(out)
 
 
+def platform(name):
+    """ovl/NAME/platform.tsv: {func: the port's replacement}"""
+    path = os.path.join(ROOT, "ovl", name, "platform.tsv")
+    out = {}
+    if os.path.exists(path):
+        for line in open(path):
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) >= 2 and parts[0].startswith("func_"):
+                out[parts[0]] = parts[1]
+    return out
+
+
+def bodies(srcs):
+    """{func: (source, the names its body uses)}, a body running to the next definition"""
+    out = {}
+    for s in srcs:
+        text = open(os.path.join(ROOT, s), errors="replace").read()
+        heads = list(HEAD_RX.finditer(text))
+        for i, m in enumerate(heads):
+            end = heads[i + 1].start() if i + 1 < len(heads) else len(text)
+            out[m.group(1)] = (s, set(NAME_RX.findall(text[m.end():end])))
+    return out
+
+
+def reached(roots, body, stop):
+    """the functions the roots reach through the C, not following the replaced ones"""
+    seen, todo = set(), list(roots)
+    while todo:
+        f = todo.pop()
+        if f in seen or f in stop:
+            continue
+        seen.add(f)
+        todo += [n for n in body.get(f, ("", ()))[1] if n.startswith("func_")]
+    return seen
+
+
 def relocs(name):
     path = os.path.join(ROOT, "ovl", name, "relocs.tsv")
     rows = []
@@ -83,6 +125,12 @@ def build(cc, cflags, out, nm):
         if not srcs or not os.path.exists(os.path.join(ROOT, "ovl", name, "relocs.tsv")):
             continue
         funcs = layout(name)
+        plat = platform(name)
+        if plat:  # the port's own code replaces part of the overlay: only what the rest reaches
+            body = bodies(srcs)
+            keep = reached([funcs[0]] + ["func_%08x" % t for _a, t, k in relocs(name) if k == "func"], body, plat)
+            funcs = [f for f in funcs if f in keep]
+            srcs = sorted(set(body[f][0] for f in funcs if f in body))
         names = set(funcs)
         heads = set()
         for s in srcs:
@@ -126,6 +174,9 @@ def build(cc, cflags, out, nm):
         fix = []
         for a, t, k in rows:
             fn = "func_%08x" % t
+            if k == "func" and fn in plat:
+                fix.append((a, t, plat[fn]))
+                continue
             if k == "func" and fn not in funcs:
                 continue
             fix.append((a, t, name + "_" + fn[5:] if k == "func" else None))
