@@ -768,7 +768,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    walkcheck at 0, the PS2 ELF byte-identical).
    **Add (session 123)**: the end-of-run `kh1-host: pipelines:` line and its `pipe N` lines for the title and the
    room run (`KH1_HOST_TRACE=5`): how many GPU pipelines and fragment shaders the real draws need against
-   drawpipes.py's 42 / 27 (renderer A's TEX0_2 / CLAMP_2 from the disc, the real ZBUF under the 2D packets), into
+   drawpipes.py's 43 / 28 (session 129; renderer A's TEX0_2 / CLAMP_2 from the disc, the real ZBUF under the 2D packets), into
    renderer-spec 4.13 "Session 123"; and every `port target` line a known kind (an `OTHER` target or an unknown
    depth buffer is a new one for host/port/target.c's table).
    **Add (session 124)**: the `batches:` lines of the title and the room run (`KH1_HOST_TRACE=5`): draw calls,
