@@ -13,6 +13,16 @@ int sprintf(char *, const char *, ...);
 int kh1_null_pad_load(const char *path);
 
 int kh1_host_trace;
+/* the goto lines' game state (session 136): the player at the origin, a camera whose turn only
+ * mirrors x (camera/view.c func_00124d58's with the angle 0) */
+static f32 player[8] __attribute__((aligned(16)));
+u8 *D_002E26A0[3] = { (u8 *)player };
+float D_004F77E0;
+void func_00124d58(void *v, void *out, float cam, float w) {
+    ((f32 *)out)[0] = -((f32 *)v)[0];
+    ((f32 *)out)[1] = 0.0f;
+    ((f32 *)out)[2] = ((f32 *)v)[2];
+}
 static unsigned long frame;
 unsigned long kh1_host_frame(void) { return frame; }
 
@@ -43,6 +53,16 @@ int main(int argc, char **argv) {
     CHECK("frame order", load(dir, "10 START\n5 -\n") < 0);
     CHECK("stick range", load(dir, "10 - 1 2 3 256\n") < 0);
     CHECK("stick count", load(dir, "10 - 1 2\n") < 0);
+    CHECK("goto needs X Z", load(dir, "10 - goto 5\n") < 0);
+    CHECK("goto", load(dir, "10 CROSS goto 0 100 20\n") == 1);
+    frame = 10;
+    CHECK("goto: the buttons", game_bits(buf) == PAD_CROSS);
+    CHECK("goto: the stick toward +z (down here: y is +z after the turn)", buf[4] > 118 && buf[4] < 138 && buf[5] > 240);
+    player[6] = 90.0f;
+    CHECK("goto: centred within R", game_bits(buf) == PAD_CROSS && buf[4] == 128 && buf[5] == 128);
+    player[6] = 100.0f;
+    player[4] = 100.0f; /* (100, 100): the target is to -x, which the mirror makes the stick's +x */
+    CHECK("goto: the stick toward -x", (game_bits(buf), buf[4] > 240 && buf[5] > 118 && buf[5] < 138));
     CHECK("script", load(dir, "# the title\n\n100 START   # press\n102 -\n150 CIRCLE+UP 128 128 255 0\n"
                               "152 0x4000\n200 out\n260 -\n") == 6);
     frame = 0;

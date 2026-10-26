@@ -52,7 +52,7 @@ near-miss drafts here (dktitle/), listed in ovl/dktitle/drafts.tsv so the port c
 | func_00f21ca0 | 94 | gcse's hoisted `lui 0xf3` registers permuted |
 | func_00f23aa8 | 104 | the shared 20 divisor, `div` only |
 | func_00f24330 | 176 | tag offset set in the branches |
-| func_00f25c40 | 245 (47 aligned) | retry loop's s6 / s7 roles |
+| func_00f25c40 | matched (session 136) | ovl/dktitle/hand/func_00f25c40.c: permuter output plus the retry check before each sceCdSync |
 | func_00f24b60 | 598 | first full draft, allocation |
 | func_00f228c8 | 746 | case 18 falls into 19-21's bodies, cross-jumped menus |
 

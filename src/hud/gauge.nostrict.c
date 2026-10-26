@@ -193,7 +193,7 @@ extern I4b D_00454680[];
 extern I4b D_004546C0[];
 extern I4b D_00454700[];
 CONTEXT_ONLY void func_0023d528(Gauge *o, s32 *p1, s32 *p2) {
-    s32 r[2];
+    s32 r[4]; /* session 136: func_0024ac08 writes four words */
     register I4b *t KH1_REG("$5");
     switch (o->unk0) {
     case 0:

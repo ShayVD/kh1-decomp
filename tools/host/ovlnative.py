@@ -27,7 +27,9 @@ import subprocess
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE = 0x00F20000
 MEM_BASE = 0x6A0000
-NAME_RX = re.compile(r"\b(func_00f2[0-9a-f]{4}|D_00F2[0-9A-F]{4})\b")
+# the overlay area's names: its functions, and data anywhere up to 0x00FE0000 (session 136:
+# xs_dh_break.x's buffers past its file, D_00F317F0 ... D_00FA2400)
+NAME_RX = re.compile(r"\b(func_00f2[0-9a-f]{4}|D_00F[2-9A-D][0-9A-F]{4})\b")
 # a function definition: the name, its parameters and `{` (a prototype has its `;` first)
 HEAD_RX = re.compile(r"\b(func_00f2[0-9a-f]{4})\s*\([^;{]*?\)\s*\{")
 

@@ -91,6 +91,9 @@ void PlatOvlLoaded(const char *name, void *buf, s32 size) {
         printf("kh1-ovl: %s loaded: native C (%d pointers fixed up)\n", name, m->nfix);
         return;
     }
+    i = (int)strlen(name);
+    if (i > 2 && name[i - 2] == '.' && (name[i - 1] | 0x20) == 'x') /* session 136: music also loads here */
+        printf("kh1-ovl: %s loaded (%d bytes): no native C\n", name, (int)size);
 }
 
 int PlatOvlCall(int cmd, int arg, int *ret) {

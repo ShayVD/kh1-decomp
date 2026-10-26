@@ -221,23 +221,23 @@ ret1:
 
 /* func_00177440 (from hand/text_00170000_h11.c). */
 s32 func_00119688(void *);
+/* session 136: one record (the ray's start, its way, the hit, the hit's id), as the callees read
+ * it from the start's address: two locals made the host's callee write past the start. */
+typedef struct { f32 v[4]; f32 a[4]; f32 b[4]; s16 c; u8 pad[14]; } M30;
 s32 func_00177440(void *a, void *b) {
-    f32 v[4];
-    f32 m[12];
-    PlatVu0SubVector(m, b, a);
-    PlatVu0CopyVector(v, a);
-    return func_00119688(v) != -1;
+    M30 m;
+    PlatVu0SubVector(m.a, b, a);
+    PlatVu0CopyVector(m.v, a);
+    return func_00119688(&m) != -1;
 }
 
 /* func_00177608 (from hand/text_00170000_h11.c). */
 void func_00118d78(void *);
-typedef struct { f32 a[4]; f32 b[4]; s16 c; u8 pad[14]; } M30;
 s32 func_00177608(void *out, void *a, void *b) {
-    f32 v[4];
     M30 m;
-    PlatVu0SubVector(&m, b, a);
-    PlatVu0CopyVector(v, a);
-    func_00118d78(v);
+    PlatVu0SubVector(m.a, b, a);
+    PlatVu0CopyVector(m.v, a);
+    func_00118d78(&m);
     if (m.c != -1) {
         PlatVu0CopyVector(out, m.b);
         return 1;
