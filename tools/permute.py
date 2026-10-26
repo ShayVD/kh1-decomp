@@ -245,6 +245,10 @@ def variants(code: str) -> list[str]:
         w = callee_stubs(v)
         if w != v:
             out.append(w)
+    # float arguments m2c passed as their bit patterns (`func(5, arg0, 0x42C80000)`)
+    v = float_args(code)
+    if v != code:
+        out.append(v)
     # overlay data defined above the function: gcc then fills delay slots with
     # its %lo loads (gb func_00f3c1d8)
     for v in list(out[-2:]) + [code]:
@@ -282,6 +286,60 @@ def callee_stubs(code: str) -> str:
         body = "{}" if rt == "void" else "{ return 0; }"
         return f"CONTEXT_ONLY {rt} {name}({params}) {body}"
     return PROTO_RE.sub(stub, code)
+
+
+FLOAT_BITS_RE = re.compile(r"^0x([34BC][0-9A-F]{3}0000)$")
+
+
+def float_args(code: str) -> str:
+    """Call arguments that are float bit patterns (low half zero, |x| in 2^-8..2^24) as
+    float literals, with that parameter of the callee's prototype made f32."""
+    fixes: dict[str, set[int]] = {}
+    out, k = [], 0
+    for m in re.finditer(r"\b(\w+)\(", code):
+        if m.start() < k or m.group(1) in ("if", "while", "for", "switch", "return", "sizeof"):
+            continue
+        start = m.end() - 1
+        end = _group_end(code, start)
+        if end < 0:
+            continue
+        args, depth, last = [], 0, start + 1
+        for i in range(start + 1, end - 1):
+            c = code[i]
+            if c in "([":
+                depth += 1
+            elif c in ")]":
+                depth -= 1
+            elif c == "," and depth == 0:
+                args.append((last, i))
+                last = i + 1
+        args.append((last, end - 1))
+        for n, (a, b) in enumerate(args):
+            t = code[a:b].strip()
+            fm = FLOAT_BITS_RE.match(t)
+            if not fm:
+                continue
+            bits = int(fm.group(1), 16)
+            if not 0x3B800000 <= bits & 0x7FFFFFFF < 0x4B800000:
+                continue
+            sp = _spellings(bits)
+            lit = next((x for x in sp if "e" not in x and float(x) == struct.unpack("<f", struct.pack("<I", bits))[0]), sp[0])
+            out.append(code[k:a] + " " * (code[a:b].startswith(" ")) + lit + "f")
+            k = b
+            fixes.setdefault(m.group(1), set()).add(n)
+    if not fixes:
+        return code
+    new = "".join(out) + code[k:]
+    for name, idx in fixes.items():
+        def proto(pm: re.Match) -> str:
+            ps = [x.strip() for x in pm.group(2).split(",")]
+            if not all(i < len(ps) for i in idx) or "..." in ps:
+                return pm.group(0)
+            for i in idx:
+                ps[i] = "f32"
+            return f"{pm.group(1)}{name}({', '.join(ps)});"
+        new = re.sub(rf"^(\S[^\n;{{}}()]*\b){name}\(([^;{{}}()]*)\);", proto, new, flags=re.M)
+    return new
 
 
 DATA_RE = re.compile(r"^extern (?!volatile\b)([A-Za-z_][\w ]*?[\s*]+)(D_([0-9A-F]{8}))((?:\[[^\]]*\])*);", re.M)
