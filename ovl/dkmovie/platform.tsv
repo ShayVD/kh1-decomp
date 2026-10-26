@@ -1,0 +1,13 @@
+# dkmovie.x's player functions a port replaces (include/platform/movie.h): the front end reaches the
+# player only through these entries of its table D_00F28478 (ovl/dkmovie/relocs.tsv), so a port
+# points them at its own player and links only the functions the front end reaches
+# (tools/host/ovlnative.py). The player's ~116 functions (IPU decoder, MMI colour conversion, SPU
+# audio over SIF DMA) are PS2-only.
+func	replacement	table
+func_00f27680	PlatMovieOpen	+0x00
+func_00f27808	PlatMovieStart	+0x04
+func_00f27840	PlatMovieClose	+0x08
+func_00f278c0	PlatMovieStatus	+0x0C
+func_00f27950	PlatMovieFrame	+0x10
+func_00f27a10	PlatMoviePause	+0x20
+func_00f27a78	PlatMovieStopped	+0x24

@@ -113,18 +113,22 @@ s32 func_0010c4b0(void) {
 #undef D_002BC1B0
 
 /* func_0010c540 (from auto/text_00100000_12.c). */
-M2C_UNK func_00106cd0(void *, s32);
+s32 func_00106cd0(void *, s32);
 void *func_00106ca8(s32);
-void func_0010c540(s32 arg0, void **arg1) {
+/* returns func_00106cd0's DMA tag (the caller func_0010e4f0 sends it): on the EE the value is
+ * $v0 left by the call (portability.md rule 10) */
+s32 func_0010c540(s32 arg0, void **arg1) {
     s32 temp_s1;
     void *temp_v0;
+    s32 tag;
 
     temp_s1 = (arg0 * 3) + 1;
     temp_v0 = func_00106ca8(temp_s1);
     M2C_FIELD(temp_v0, s64 *, 8) = 0x535316;
     M2C_FIELD(temp_v0, s64 *, 0) = (s64) (arg0 | 0x8000 | ((s64) 0xC800 << 0x2F));
-    func_00106cd0(temp_v0, temp_s1);
+    tag = func_00106cd0(temp_v0, temp_s1);
     *arg1 = temp_v0 + 0x10;
+    return tag;
 }
 
 /* func_0010c5c8 (from hand/text_00100000_h51.c). */

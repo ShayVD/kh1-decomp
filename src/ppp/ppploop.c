@@ -28,11 +28,10 @@ void pppMoveLoopCon(s32 arg0, void *arg1) {
 }
 
 /* pppMoveLoopReset (from auto/text_00180000_5.c). */
-#define pppMoveLoopCon ((M2C_UNK (*)()) pppMoveLoopCon)
-void pppMoveLoopReset(void) {
-    pppMoveLoopCon();
+/* the reset gets the constructor's arguments and passes them on (portability.md rule 10) */
+void pppMoveLoopReset(s32 arg0, void *arg1) {
+    pppMoveLoopCon(arg0, arg1);
 }
-#undef pppMoveLoopCon
 
 /* pppMoveLoopFrame (from hand/text_00180000_h40.c). */
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
@@ -94,11 +93,10 @@ void pppAngMoveLoopCon(s32 arg0, PppEntry *arg1) {
 }
 
 /* pppAngMoveLoopReset (from auto/text_00180000_5.c). */
-#define pppAngMoveLoopCon ((M2C_UNK (*)()) pppAngMoveLoopCon)
-void pppAngMoveLoopReset(void) {
-    pppAngMoveLoopCon();
+/* the reset gets the constructor's arguments and passes them on (portability.md rule 10) */
+void pppAngMoveLoopReset(s32 arg0, PppEntry *arg1) {
+    pppAngMoveLoopCon(arg0, arg1);
 }
-#undef pppAngMoveLoopCon
 
 /* pppAngMoveLoopFrame (from hand/text_00180000_h40.c). */
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
@@ -137,11 +135,10 @@ void pppSclMoveLoopCon(s32 arg0, void *arg1) {
 }
 
 /* pppSclMoveLoopReset (from auto/text_00180000_5.c). */
-#define pppSclMoveLoopCon ((M2C_UNK (*)()) pppSclMoveLoopCon)
-void pppSclMoveLoopReset(void) {
-    pppSclMoveLoopCon();
+/* the reset gets the constructor's arguments and passes them on (portability.md rule 10) */
+void pppSclMoveLoopReset(s32 arg0, void *arg1) {
+    pppSclMoveLoopCon(arg0, arg1);
 }
-#undef pppSclMoveLoopCon
 
 /* pppSclMoveLoopFrame (from hand/text_00180000_h40.c). */
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))

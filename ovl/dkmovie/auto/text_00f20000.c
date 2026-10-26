@@ -2,7 +2,6 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-M2C_UNK func_00100ab0();
 M2C_UNK func_001559f0(M2C_UNK, M2C_UNK);
 M2C_UNK func_0024b9e0(M2C_UNK);
 M2C_UNK func_0024b9f0(M2C_UNK);
@@ -11,31 +10,16 @@ M2C_UNK func_002694f8();
 M2C_UNK func_00f255f0();
 M2C_UNK sceClose();
 M2C_UNK sceGsSyncV();
-extern M2C_UNK (*D_00F28484)();
 extern M2C_UNK D_0003DF44;
 extern M2C_UNK D_00F283D0;
 extern M2C_UNK D_00F283E0;
 extern M2C_UNK D_00F28420;
 extern s16 D_00F28610;
-extern s32 D_002BBE14;
-extern s32 D_002C5958;
-extern s32 D_0035C6F0;
 extern s32 D_00F28464;
 extern volatile s16 D_00F28478[];
 s32 func_0024b9c0();
 s32 func_0024b9d0();
 s32 func_00f22cf8(s32, s32, s64);
-
-void func_00f200f8(void) {
-    D_002BBE14 = 0;
-    func_00100ab0();
-    D_0035C6F0 = 1;
-    D_002C5958 &= ~0x40;
-}
-
-void func_00f20230(void) {
-    D_00F28484();
-}
 
 void func_00f20388(void) {
     func_001559f0(0xF, 0x14);

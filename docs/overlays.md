@@ -145,7 +145,7 @@ Kept up to date by the session that changes them (`make ovl-progress`).
 
 | Overlay | Functions | Matched | Notes |
 |---|---|---|---|
-| dkmovie | 122 | 95 | session 131b; f205a4 / f205f4 are hand-written sq/daddiu asm loops |
+| dkmovie | 122 | 95 | session 131b; f205a4 / f205f4 are hand-written sq/daddiu asm loops; session 134: the front end is native in the port, the player is `PlatMovie*` (docs/native-overlays.md) |
 | dktitle | 71 | 59 | session 132: native C in the port (docs/native-overlays.md), notes in nonmatchings/session132/NOTES.md |
 | gb | 533 | 367 | session 131b; most of its code is wm's (twins.py) |
 | wm | 1109 | 747 | session 131b |

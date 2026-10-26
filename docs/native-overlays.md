@@ -15,7 +15,8 @@ same for the others once each has C for every function.
 | `host/port/ovl.c` | when the buffer is the overlay area and a module of that file name is linked: checks the bytes against the pin (size and SHA-256 of `ovl/overlays.tsv`), rewrites the data's pointers into the overlay, makes it the current overlay; `PlatOvlCall` runs the current module's entry |
 | `ovl/NAME/relocs.tsv` | the data words that hold a pointer into the overlay (`tools/ovl/relocs.py NAME`, addresses only): a function's start (rewritten to the native function) or a data address (rewritten to the memory map's). Words pointing inside a function are gcc's jump tables for the PS2 switches and are left alone. Its presence marks the overlay as prepared for a native run |
 | `ovl/NAME/drafts.tsv` | optional `func_X<TAB>path` rows: near-miss drafts (under nonmatchings/) the port uses for functions not matched yet, like shift/drafts.tsv for the main ELF |
-| `tools/host/ovlnative.py` | run by tools/host/census.py's link step (so `make host-census`, `tools/vita/build.py` and `make vita-armcheck` all take it): compiles each prepared overlay whose every layout function has C, with `names.h` forced in front |
+| `ovl/NAME/platform.tsv` | optional `func_X<TAB>replacement` rows (session 134): overlay functions a port replaces with its own code. Their pointers in relocs.tsv get the replacement, and only the functions the entry and the other pointers reach through the C are compiled (dkmovie.x: 6 of 122) |
+| `tools/host/ovlnative.py` | run by tools/host/census.py's link step (so `make host-census`, `tools/vita/build.py` and `make vita-armcheck` all take it): compiles each prepared overlay whose every needed function has C, with `names.h` forced in front |
 
 Names: the same address is other code in each overlay, so `names.h` renames the overlay's
 `func_00f2xxxx` to `NAME_00f2xxxx` and its `D_00F2xxxx` to `NAME_D_00F2xxxx` (one module per
@@ -79,3 +80,50 @@ runs on the fake disc.
   open question, the loader's printf may not reach the funopen log on the Vita.
 - The Mac had only ~229 MB free after this run: free space before the next Vita3K run (its log at
   TRACE filled the disk once).
+
+## Session 134: dkmovie.x, past the opening movie
+
+- **dkmovie.x is two parts.** Its front end (6 functions: the entry func_00f20000, the open
+  func_00f20258, the per-frame callback func_00f20140 that func_00f20258 installs with
+  `func_0011ef10(0x2E630, ...)`, the display set-up func_00f20320 and clean-up func_00f200f8, the
+  status func_00f20230) reaches the player only through the function table `D_00F28478`
+  (relocs.tsv's 7 function rows; layout in include/platform/movie.h). The player (the other 116:
+  the KINGDOM.IMG stream reader, two sa_task tasks func_00f23750 / func_00f23ae8 that demux and
+  decode through the IPU, the MMI colour conversion func_00f203a4 ..., SPU audio over SIF DMA) is
+  PS2 hardware code. So the port links only the front end and points the table at
+  `PlatMovie*` (ovl/dkmovie/platform.tsv, tools/host/ovlnative.py); the 27 unmatched functions
+  other than func_00f20140 / func_00f20258 (drafts, 29 and 3 words) are never needed by a port.
+- **The PS2 player's ending**, which host/port/movie.c copies: the decoder task sets flag 0x8000
+  (status 4, ended), then on each later step 0x40000 (status 5); on 5 the front end runs
+  `func_001111b0` (the clean-up: entry(4), `D_002BCB34` = 1) and returns 4 so its callback is
+  dropped. A player that stays at 4 keeps the callback alive after the game reuses the overlay
+  area: it then calls a zeroed table (the first host run crashed that way 900 frames later).
+- host/port/movie.c has no decoder: open = status 2 (ready), start = 3, the next frame 4, then 5.
+  The table's width (+0x18) stays the file's 0, so the frame copy (brightfade.c case 2) draws a
+  0-wide picture while the movie "plays". A real player sets +0x14 / +0x18 / +0x28.
+- **Real disc** (KH1_BIG.iso again, the session 133 pad script: START 1300, CIRCLE every 200
+  frames from 2000): `kh1-ovl: dkmovie.x loaded: native C (8 pointers fixed up)`,
+  `kh1-movie: open 0 (opn.dat)` (the opening movie, from the event script: commands 584 / 585 /
+  489 / 490), then the opening's black screen with the monologue text fading in and out, 9,000
+  frames with no crash. Two register passthroughs (portability.md rule 10) crashed it on the way,
+  both fixed with unchanged objects: ppploop.c's three `*MoveLoopReset` called their constructor
+  with no arguments (now `(arg0, arg1)`), and fldtext.c's func_0010c540 was void although
+  func_0010e4f0 sends the DMA tag it leaves in $v0 (now returns func_00106cd0's result). Neither
+  was in argcheck's list: both calls went through m2c's `#define f ((M2C_UNK (*)()) f)` casts.
+- **Open: the monologue shows one glyph per line** (shots from frame ~3300: 残 over 僕, fading
+  together). func_0010d0c0 returns the full count (10 of 10, gdb) and func_0010c540 builds a
+  REGLIST packet of n glyphs (TEX0 RGBAQ UV XYZ2 UV XYZ2), so the glyphs are sent; either their
+  positions / textures (func_0010cb80, the session 12 draft of func_0010d470 which lays the
+  glyphs out) or the GS model's handling of them. **No disc read follows the movie**, in 15,000
+  frames with CIRCLE every 200 frames up to 14,000 either: the game does not leave the monologue.
+  The next question is what it waits on. `KH1_HOST_SND=trace` from the movie to frame 5,000:
+  music 0 starts, sound effects 20208-20210 (bank -8) and 21102 (bank -1) are played and the
+  null IOP ends them at once (`end se`), and then **se-volume of 21102 every other frame for the
+  rest of the run** (917 times): something keeps adjusting a voice the game believes is still
+  playing, or waits for its end in a way the null IOP's answer does not give (a guess: 21102 is
+  the monologue's voice or ambience; read who sends 0x08 for it).
+- **Vita3K: why kh1.log has no `kh1-ovl:` line.** Session 133's log (Downloads/kh1-test/vita3k-s133)
+  has no printf line at all, not even plat_null.c's `PlatCdRead` lines at trace 2: only main.c's
+  `vlog` lines (straight sceIoWrite) arrive. The funopen'd stdout never reaches the file in
+  Vita3K. Routing printf through vlog would also bring the DMA walk's line per send at trace 2
+  (main.c forces 2), so a fix needs a quiet DMA log first (another thread's change, 2026-10-26).
