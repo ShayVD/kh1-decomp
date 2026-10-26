@@ -2863,6 +2863,24 @@ next session). kh1.elf byte-identical; host, tool and test code and docs only, n
   host/port/*.c glob. The fragment program input `dst` needs the first psp2cgc compile to confirm its declaration.
 - **Still waiting for the Mac**: as 5.1bf, plus the real-disc `gxm:` line (calls and scenes a frame).
 
+### 5.1bq Session 129: the vertex stream as GXM reads it, DATE's set-up area
+
+Static only (Monday 2026-10-26 before 09:00 UTC; the Mac is expected back then, so items 1 to 3 wait). kh1.elf
+byte-identical; host, tool and test code and docs only, no float-untested row. selftest PASS (shadergen_test 22
+checks, cmdbuf_test 49, batch_test 14, drawstate_test 23).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The vertex stream** (item 4b): vertex.h's `kh1_vertex_attrs` gives each of the 7 vertex variants'
+  SceGxmVertexAttribute rows (name, offset, F32 / U8N, components) and `KH1_VTX_STRIDE` the stream; the UV variants
+  read 2 floats. A port needs a static U16 index buffer 0 .. n (GXM draws are indexed). shadergen_test "layout"
+  checks the table against every generated vertex shader (renderer-spec 4.13 "Session 129").
+- **DATE's set-up area** (item 4c): the draw's own primitives are exactly what the GS tests, so gxmrec.c's set-up
+  over the command's vertices is the right area; made exact by a stencil clear before each set-up, the set-up in
+  the draw's own primitive class, and one batch per DATE primitive. Static set 43 pipelines / 28 fragment shaders.
+  cmdbuf_test "date" replays an overlapping DATE frame from the GXM calls with a garbage stencil: the GS's pixels.
+- **Item 4d** (gxmrec in host/vita/): PR #131 is not merged yet, so not started.
+- **Still waiting for the Mac**: as 5.1bp.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

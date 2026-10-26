@@ -66,6 +66,31 @@ u32 kh1_vertkey_index(const KH1VertKey *k);
 const char *kh1_vertkey_str(u32 index);
 /* the distinct vertex shaders a pipeline set's pipelines use: the count, and a bit per index in *mask */
 u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask);
+
+/* The vertex stream as GXM reads it (renderer-spec 4.13 "Session 129", vita-port-plan 5.1bq): one stream
+ * (SceGxmVertexStream: stride KH1_VTX_STRIDE, streamIndex 0 for every attribute) and, per variant, the
+ * attributes its vertex shader declares, in the shader's order (SceGxmVertexAttribute: offset, format,
+ * componentCount; regIndex is the program's, found by `name` with sceGxmProgramFindParameterByName and
+ * sceGxmProgramParameterGetResourceIndex).  The formats are SceGxmAttributeFormat's without the SDK:
+ * KH1_VFMT_F32 is SCE_GXM_ATTRIBUTE_FORMAT_F32, KH1_VFMT_U8N SCE_GXM_ATTRIBUTE_FORMAT_U8N (x / 255, which
+ * the shaders expect: texfunc.h and fog.h take 0x80 and F back from it).  UV reads 2 floats (q is 1 and the
+ * shader writes 1), ST / Q 3.  sceGxmDraw always takes indices: gxmrec.h's draws are 0 .. nv - 1, so a port
+ * keeps one static U16 index buffer 0, 1, 2 ... (SCE_GXM_INDEX_SOURCE_INDEX_16BIT; at most 65536 vertices a
+ * draw) and passes the ring's vertex address + v0 x 32 as the stream (sceGxmSetVertexStream).  The test
+ * (tests/host/shadergen_test.c "layout") reads each generated vertex shader's inputs back and checks names,
+ * component counts and offsets against KH1GpuVert. */
+#define KH1_VTX_STRIDE 32
+enum { KH1_VFMT_U8N, KH1_VFMT_F32 };
+typedef struct {
+    const char *name; /* the vertex shader's input */
+    u8 offset;        /* in KH1GpuVert */
+    u8 format;        /* KH1_VFMT_* */
+    u8 count;         /* components */
+} KH1VtxAttr;
+
+/* variant `index`'s attributes into out[0 ..] (at most 4): the count, 0 for an unknown index */
+u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[4]);
+const char *kh1_vfmt_str(u32 format);
 #endif
 
 #endif

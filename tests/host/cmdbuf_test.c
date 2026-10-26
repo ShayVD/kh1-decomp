@@ -24,7 +24,13 @@
  *             GXM calls and only the calls replayed (programs from the frame's pipeline table, uniforms read
  *             from the ring at SET_UNIFORMS, textures and palettes by slot, target uploads and the CLUT
  *             read-back): the same pixels; a DONT_CARE scene that is cleared starts from garbage, a DISCARD
- *             scene ends in garbage, and that still gives the same pixels. */
+ *             scene ends in garbage, and that still gives the same pixels.
+ *   date      (session 129) DATE (DATM 1, brightfade's form) on two overlapping flat sprites over a target whose
+ *             alpha bit 7 is striped: the first writes alpha 0, so the second must skip the overlap's marked
+ *             pixels.  Replayed from the GXM calls with a stencil buffer that starts as garbage (all 1): each
+ *             sprite a command of its own, its clear and set-up over its own vertices, then the draw; the same
+ *             RGB and alpha bit 7 as the GS's DATE (gsmem.c's copy, then the rule applied sprite by sprite in the
+ *             GS's order).  Without the clear the replay differs (the check sees it). */
 #include "common.h"
 #include "../../host/null/gsregs.h"
 #include "../../host/null/gsmem.h"
@@ -83,6 +89,11 @@ static u32 texel(f32 s, f32 t) {
     return kh1_gsmem_read_pixel(KH1_PSMCT32, TBP, 1, (u32)tx, (u32)ty);
 }
 
+/* session 129: the stencil a replayed GXM draw tests or writes (img only): tri_stencil 0 none, 1 draw where it is 1,
+ * 2 the DATE set-up (1 where the target's alpha is DATM: tri_datm), 3 the clear (0) */
+static u8 stn[IH][IW];
+static int tri_stencil, tri_datm;
+
 /* one triangle into img under the scissor; blend: 0 the GPU's blend.h state st, 1 the GS's formula (alpha) */
 static void tri(const KH1GpuVert *a, const KH1GpuVert *b, const KH1GpuVert *c, s32 sx0, s32 sy0, s32 sx1, s32 sy1,
                 int tex, const KH1BlendState *st, int gs, u32 alpha_lo) {
@@ -102,6 +113,16 @@ static void tri(const KH1GpuVert *a, const KH1GpuVert *b, const KH1GpuVert *c, s
             if (!edge_in(b->x, b->y, c->x, c->y, px, py, ccw, &e0) || !edge_in(c->x, c->y, a->x, a->y, px, py, ccw, &e1) ||
                 !edge_in(a->x, a->y, b->x, b->y, px, py, ccw, &e2))
                 continue;
+            if (tri_stencil == 3) { stn[y][x] = 0; continue; }
+            if (tri_stencil == 2) {
+                KH1AtestState as;
+                memset(&as, 0, sizeof as);
+                as.date = 1;
+                as.datm = (u8)tri_datm;
+                if (kh1_atest_date_mark(&as, d >> 24)) stn[y][x] = 1;
+                continue;
+            }
+            if (tri_stencil == 1 && stn[y][x] != 1) continue;
             l0 = e0 / area;
             l1 = e1 / area;
             l2 = e2 / area;
@@ -576,6 +597,8 @@ static void replay_x(const KH1CmdRec *r) {
 /* ---- session 128: the frame's GXM calls replayed (host/port/gxmrec.c) ---- */
 static KH1GxmRec gx;
 static u32 gx_scrambled, gx_draws;
+static int gx_no_clear;     /* session 129's deliberate break: DATE's stencil clears skipped */
+static u32 gx_clears, gx_setups;
 
 static void scramble(u32 *p, u32 n) {
     u32 i;
@@ -616,6 +639,7 @@ static void replay_gxm(const KH1CmdRec *r) {
             if (c->tgt < KH1_CMD_TARGETS) tgt_rt[c->tgt] = c->rt;
             target_image(c->rt, &rt_img, &rt_w, &rt_h);
             if (c->load == KH1_LOAD_DONT_CARE && c->cleared) scramble(rt_img, (u32)(rt_w * rt_h));
+            if (rt_img == &img[0][0]) memset(stn, 1, sizeof stn); /* the depth-stencil's garbage: every pixel marked */
             pk = 0;
             break;
         case KH1_GXM_END_SCENE:
@@ -660,7 +684,10 @@ static void replay_gxm(const KH1CmdRec *r) {
         case KH1_GXM_DRAW: { /* the pipeline's blend and the shader's pre-scale, FIX from the uniforms */
             KH1BlendState st;
             const KH1GpuVert *v = vb + c->v0;
-            if (!pk || !u || c->stencil == 2 || c->cls != KH1_PA_TRIANGLES) break;
+            if (!pk || !u || c->cls != KH1_PA_TRIANGLES) break;
+            if (c->stencil == 3) gx_clears++;
+            if (c->stencil == 2) gx_setups++;
+            if (c->stencil == 3 && gx_no_clear) break;
             if (pk->shader.tex && !x_img && !x_tex) break;
             memset(&st, 0, sizeof st);
             st.enable = pk->blend;
@@ -675,7 +702,10 @@ static void replay_gxm(const KH1CmdRec *r) {
             st.mask = pk->mask;
             st.kind = KH1_BLEND_EXACT;
             fetch = pk->shader.tex ? fetch_tex : texel;
+            tri_stencil = rt_img == &img[0][0] ? c->stencil : 0;
+            tri_datm = pk->shader.datm;
             for (j = 0; j + 2 < c->nv; j += 3) tri(&v[j], &v[j + 1], &v[j + 2], sx0, sy0, sx1, sy1, pk->shader.tex != 0, &st, 0, 0);
+            tri_stencil = 0;
             gx_draws++;
             break;
         }
@@ -705,6 +735,81 @@ static void gxm(void) {
           gx.total.frames >= 3 && gx_draws && !gx.total.lost);
     CHECK("gxm: the transfer frame's calls: a target upload and a palette read-back, each after its scene ended",
           gx.frame.target_uploads == 1 && gx.frame.pal_readbacks == 1);
+}
+
+/* ---- session 129: DATE's set-up from the GXM calls ---- */
+static void flat_sprite(u32 rgba, s32 x0, s32 y0, s32 x1, s32 y1) {
+    W(0x00, 0x6, 0);                 /* SPRITE, flat, no blend */
+    W(0x01, rgba, 0x3F800000);       /* RGBAQ */
+    W(0x05, x16(x0) | x16(y0) << 16, 0);
+    W(0x05, x16(x1) | x16(y1) << 16, 0);
+}
+
+/* the GS's DATE in its order: the copy's pixels (gsmem.c's sprite), then each flat sprite writes where Ad's bit 7
+ * is DATM (1) at the moment it draws (gsmem.c's model draws no flat sprite, so the test applies the rule) */
+static const struct { u32 rgba; s32 x0, y0, x1, y1; } date_spr[2] = {
+    { 0x00309020, 10, 4, 70, 20 },   /* alpha 0: the second sprite fails where this one drew */
+    { 0x807010C0, 40, 10, 110, 30 }, /* alpha 0x80, overlapping it */
+};
+static u32 gs_date[IH][IW];
+
+/* img against the GS's pixels: RGB, and alpha bit 7 (what DATE reads) against "stored 1.0" */
+static u32 date_diff(void) {
+    u32 x, y, bad = 0, i;
+    for (y = 0; y < IH; y++)
+        for (x = 0; x < IW; x++) gs_date[y][x] = kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, x, y);
+    for (i = 0; i < 2; i++)
+        for (y = (u32)date_spr[i].y0; y < (u32)date_spr[i].y1 && y < IH; y++)
+            for (x = (u32)date_spr[i].x0; x < (u32)date_spr[i].x1 && x < IW; x++)
+                if (gs_date[y][x] >> 31 == 1) gs_date[y][x] = date_spr[i].rgba;
+    for (y = 0; y < IH; y++)
+        for (x = 0; x < IW; x++) {
+            u32 g = gs_date[y][x], c = img[y][x];
+            if ((g & 0xFFFFFF) != (c & 0xFFFFFF) || (g >> 31) != ((c >> 24) == 255)) {
+                if (bad < 6 && !gx_no_clear) printf("cmdbuf_test: date: pixel (%u, %u) GS %08x, GXM %08x\n", x, y, g, c);
+                bad++;
+            }
+        }
+    return bad;
+}
+
+static u32 date_frame(int no_clear) {
+    u32 x, y;
+    kh1_gsmem_reset();
+    for (y = 0; y < 64; y++) /* the stripes: alpha 0x80 (bit 7) or 0x30 */
+        for (x = 0; x < 64; x++)
+            kh1_gsmem_write_pixel(KH1_PSMCT32, TBP, 1, x, y, ((x / 3 + y / 2) & 1 ? 0x80u : 0x30u) << 24 | (x * 4) << 8 | y * 8);
+    /* (the GS's flat sprites are applied by date_diff: gsmem.c draws the copy only) */
+    memset(img, 0, sizeof img);
+    env();
+    W(0x00, 0x116, 0); /* the striped copy over the whole target */
+    copy(0);
+    W(0x47, 1 << 14 | 1 << 15, 0); /* TEST_1: DATE, DATM 1 */
+    for (x = 0; x < 2; x++) flat_sprite(date_spr[x].rgba, date_spr[x].x0, date_spr[x].y0, date_spr[x].x1, date_spr[x].y1);
+    W(0x47, 0, 0);
+    gx_no_clear = no_clear;
+    use_gxm = do_replay = 1;
+    kh1_pipes_frame();
+    use_gxm = do_replay = 0;
+    x = date_diff();
+    gx_no_clear = 0;
+    return x;
+}
+
+static void date(void) {
+    u32 bad, broken, s0, ncmd;
+    gx_clears = gx_setups = 0;
+    bad = date_frame(0);
+    ncmd = snap_ncmd;
+    s0 = gx_clears;
+    printf("cmdbuf_test: date: %u commands, %u stencil clears, %u set-ups, %u pixels differ\n", ncmd, gx_clears,
+           gx_setups, bad);
+    CHECK("date: each DATE sprite a command of its own, its clear and set-up before its draw", ncmd == 3 &&
+          gx_clears == 2 && gx_setups == 2);
+    CHECK("date: the GXM calls with the stencil give gsmem.c's DATE pixels (RGB and alpha bit 7)", bad == 0);
+    broken = date_frame(1);
+    CHECK("date: without the clear the replay differs (the stencil's garbage and the first sprite's marks)",
+          broken != 0 && gx_clears == s0 + 2);
 }
 
 /* an upload of w x h pixels in psm at block bp, width bw, to (x, y): n words of IMAGE data */
@@ -831,6 +936,7 @@ int main(void) {
     passes();
     transfers();
     gxm();
+    date();
     printf("cmdbuf_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }

@@ -2141,6 +2141,41 @@ read-back): the same pixels as gsmem.c; frames 1 and 2 of "passes" give one BEGI
 and stores. `KH1_HOST_TRACE=5` prints a `gxm:` line (fake disc: 3 frames, 32 calls, at most 18 a frame, 5 scenes,
 5 draws). The Vita build (host/vita/) turns each call into its sceGxm* call.
 
+**Session 129 (vita-port-plan 5.1bq): the vertex stream as GXM reads it, DATE's set-up area.** *The vertex
+stream* (include/platform/vertex.h `kh1_vertex_attrs`): one stream (stride 32, `KH1_VTX_STRIDE`; every attribute
+stream 0) and per vertex variant the SceGxmVertexAttribute rows in the shader's input order, named by the input so a
+port finds regIndex with sceGxmProgramFindParameterByName:
+
+| Input | Offset | Format | Components | Variants |
+|---|---|---|---|---|
+| `pos` | 0 | F32 | 3 | all 7 |
+| `col` | 24 | U8N | 4 | 1-6 (not DATE's set-up / clear) |
+| `tc` | 12 | F32 | 2 (UV) / 3 (ST / Q) | 3-4 / 5-6 |
+| `fog` | 28 | U8N | 1 | 2, 4, 6 |
+
+The UV variants' shader now declares `float2 tc` (it wrote q = 1 itself already). GXM has no non-indexed draw:
+gxmrec.h's draws are 0 .. nv - 1, so a port keeps one static U16 index buffer 0, 1, 2 ... (at most 65536 vertices a
+draw; the largest static send is 864) and sets the stream at the ring's address + v0 x 32. tests/host/shadergen_test.c
+"layout" reads each generated vertex shader's inputs back (names, order, `floatN` against the component count) and
+checks the offsets against KH1GpuVert's fields (offsetof); two deliberate table breaks are caught.
+
+*DATE's set-up area.* The GS tests DATE per pixel as the draw writes it, so the pixels the set-up must mark are
+exactly the draw's own: drawing the set-up with the command's own vertices (as gxmrec.c does) is the exact area,
+provided (1) it is drawn in the draw's primitive class (drawstate.c set it to triangles: a DATE line or point draw
+would have read its vertices as triangles; now the draw's class), (2) the stencil holds 0 there before the set-up
+(its discards leave the stencil as it was: an earlier DATE command's marks, or the scene's depth-stencil load or
+garbage, would let the draw through where the GS refuses), and (3) the command holds one primitive (overlapping
+primitives that change the tested alpha see the marks from before the others wrote). Session 129 makes all three
+hold: **a clear before each set-up** (drawstate.h `kh1_date_clear_pipe`: the same primitives, stencil ALWAYS /
+REPLACE 0, no colour, no depth, no discard; KH1PipeKey stencil 3, KH1ShaderKey setup 2, a fragment shader that only
+writes 0 under a 0 colour mask) and **one batch per DATE primitive** (batch.c). A DATE command is now three GPU
+draws (clear, set-up, draw); the game's one DATE draw (brightfade `D_002A6AA0`, one sprite) costs one more draw
+call. Static set (drawpipes.py): **43 pipelines, 28 fragment shaders** (were 42 / 27: the clear), all generated;
+vertex shaders still 5. tests/host/cmdbuf_test.c "date" (49 checks in all): two overlapping DATM 1 sprites over a
+target with a striped alpha bit 7, the first writing alpha 0, replayed from the GXM calls with a stencil that
+starts as all 1 (garbage): 3 commands, 2 clears, 2 set-ups, the same RGB and bit 7 as the GS's rule applied sprite
+by sprite (gsmem.c's model draws only the copy); without the clears the replay differs.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

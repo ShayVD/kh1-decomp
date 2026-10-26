@@ -103,14 +103,19 @@ static void begin_scene(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 pass) {
 static void draw(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 ci) {
     const KH1Cmd *k = &r->cmd[ci];
     const KH1DrawState *d = &k->d;
-    const KH1PipeKey *ps[3];
+    const KH1PipeKey *ps[4];
+    KH1PipeKey clear;
     KH1GxmCall *c;
     u32 n = 0, i;
     if (b->open != (int)k->pass + 1) {
         end_scene(g, r, b);
         begin_scene(g, r, b, k->pass);
     }
-    if (d->setup) ps[n++] = &d->setup_pipe;
+    if (d->setup) { /* the clear, then the set-up (drawstate.h kh1_date_clear_pipe) */
+        kh1_date_clear_pipe(&d->setup_pipe, &clear);
+        ps[n++] = &clear;
+        ps[n++] = &d->setup_pipe;
+    }
     for (i = 0; i < d->n; i++) ps[n++] = &d->pipe[i];
     if (!n || !k->nv) return;
     /* the texture: the cache's entry or a target's own (the same for every GPU draw of the command) */
@@ -301,7 +306,8 @@ const char *kh1_gxm_call_str(const KH1GxmCall *c) {
         sprintf(p, " at %u", c->uoff);
         break;
     case KH1_GXM_DRAW:
-        sprintf(p, " %s %u from %u%s", cls[c->cls & 3], c->nv, c->v0, c->stencil == 2 ? " (stencil set-up)" : c->stencil ? " (stencil test)" : "");
+        sprintf(p, " %s %u from %u%s", cls[c->cls & 3], c->nv, c->v0, c->stencil == 3 ? " (stencil clear)" : c->stencil == 2 ? " (stencil set-up)" :
+                c->stencil ? " (stencil test)" : "");
         break;
     }
     return b;

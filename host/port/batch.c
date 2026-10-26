@@ -41,7 +41,9 @@ static int plain(KH1Batcher *b, const KH1BatchKey *kp, u32 nv, u32 src) {
     KH1BatchKey k = *kp;
     KH1BatchCount *f = &b->frame;
     int opened = 0;
-    if (!b->open || b->broken || memcmp(&k, &b->cur, sizeof k)) {
+    /* session 129: a DATE primitive is a batch of its own: its set-up marks the pixels before any of the batch
+     * draws, so primitives that overlap would see the marks from before the others wrote (atest.h) */
+    if (!b->open || b->broken || k.setup || memcmp(&k, &b->cur, sizeof k)) {
         const KH1BatchKey *c = &b->cur;
         if (!b->open || k.rt != c->rt || k.psm != c->psm || k.depth != c->depth || k.fbp != c->fbp || k.fbw != c->fbw)
             f->passes++;
@@ -58,7 +60,7 @@ static int plain(KH1Batcher *b, const KH1BatchKey *kp, u32 nv, u32 src) {
         b->cur = k;
         b->open = 1;
         f->batches++;
-        f->draws += k.n + k.setup;
+        f->draws += k.n + 2 * k.setup; /* DATE: the clear and the set-up */
         opened = 1;
         ev(b, KH1_BEV_OPEN, &k, 0);
     }

@@ -34,8 +34,12 @@
  *   DRAW            sceGxmDraw: triangles / lines / points (`cls`) of nv vertices from v0 of the frame's vertex
  *                   ring slot (32-byte vertex.h vertices, no index buffer: 0 .. nv - 1)
  *
- * A draw command with DATE first draws its set-up pipeline (stencil written), then each of its one or two GPU
- * draws (atest.h: the pass draw and AFAIL's fail draw) with its own SET_PROGRAMS.  Only state that changes
+ * A draw command with DATE first draws its clear (stencil 0 over its primitives: `stencil` 3) and its set-up
+ * pipeline (stencil 1 where the target's alpha is DATM: 2), both with the command's own vertices, then each of
+ * its one or two GPU draws (atest.h: the pass draw and AFAIL's fail draw: 1) with its own SET_PROGRAMS.  The
+ * GS tests only the pixels a draw writes, so the draw's own primitives are the exact set-up area; the clear
+ * makes it independent of what an earlier DATE command or the scene's depth-stencil load left (session 129,
+ * renderer-spec 4.13 "Session 129").  Only state that changes
  * is set again (a scene starts with nothing set).  A transfer that reads or writes a GPU target ends the open
  * scene first (cmdbuf.h starts a new pass after it).  UPLOADs and COPYs in GS memory only are the CPU's and
  * give no call.  Plain C with no libc but memset / memcmp / sprintf / strlen (the Vita build compiles host/port/).
@@ -59,7 +63,7 @@ typedef struct {
     u8 load, store, dload, dstore; /* BEGIN_SCENE: loads; END_SCENE: stores (cmdbuf.h's KH1_LOAD_* / KH1_STORE_*) */
     u8 cleared;       /* BEGIN_SCENE: the pass's leading draws cover the target (why its load is DONT_CARE) */
     u8 cls;           /* DRAW: primasm.h's KH1_PA_* */
-    u8 stencil;       /* DRAW: 0, 1 tests DATE's stencil, 2 the set-up writes it */
+    u8 stencil;       /* DRAW: 0, 1 tests DATE's stencil, 2 the set-up writes it, 3 the clear zeroes it */
     u8 psm;           /* BEGIN_SCENE: the target's PSM */
     s16 slot, pslot;  /* TEX_UPLOAD / PAL_*: the slot; SET_TEXTURE: the texture entry (-1 none) and palette slot */
     s16 sx0, sy0, sx1, sy1; /* SET_REGION */
