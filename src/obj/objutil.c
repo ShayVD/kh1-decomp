@@ -157,12 +157,15 @@ s32 func_00137660(void *arg0) {
 
 /* func_00137688 (from auto/text_00130000.c). */
 f32 func_0026b6f8(f32);
-f32 func_0026b7d0();
+f32 func_0026b7d0(f32);
+/* The facing (+0x30) from angle fparg0: sin, 0, cos.  m2c read the sinf call
+ * without its argument (fparg0 is still in $f12 from the entry); a port must
+ * pass it (session 135: the host's garbage there made the player's facing NaN). */
 void func_00137688(void *arg0, f32 fparg0) {
     f32 temp_f0;
 
     if (!(((u64) M2C_FIELD(arg0, u64 *, 0x370) >> 0x2C) & 1)) {
-        M2C_FIELD(arg0, f32 *, 0x30) = func_0026b7d0();
+        M2C_FIELD(arg0, f32 *, 0x30) = func_0026b7d0(fparg0);
         M2C_FIELD(arg0, s32 *, 0x34) = 0;
         temp_f0 = func_0026b6f8(fparg0);
         M2C_FIELD(arg0, f32 *, 0x3C) = fparg0;

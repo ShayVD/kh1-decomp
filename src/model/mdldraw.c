@@ -120,9 +120,9 @@ void func_00162110(s32 *arg0, void **arg1) {
 #undef memset
 
 /* func_001621e0 (from auto/text_00160000_5.c). */
-M2C_UNK func_001606d0();
-void func_001621e0(void *o, s32 m, void *p, void *arg) {
-    func_001606d0(o, m, p, arg);
+void *func_001606d0();
+void *func_001621e0(void *o, s32 m, void *p, void *arg) {
+    return func_001606d0(o, m, p, arg);
 }
 
 /* func_001621f8 (from auto/text_00160000_5.c). */

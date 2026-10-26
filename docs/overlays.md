@@ -139,6 +139,25 @@ recurring ones: an endless loop that calls a function without saving $ra (gb
 func_00f50db0, wm func_00f77ea8; gcc always saves it, maybe asm), and the angle-wrap
 helpers (gb func_00f25a68, wm func_00f35800 / func_00f4cb60, register allocation).
 
+## decomp-permuter on an overlay function (session 135)
+
+tools/permuter.py works in overlay mode as it is (KH1_OVL points kh1tool at the overlay's layout,
+the directory goes under out/ovl/NAME/permuter/):
+
+```sh
+KH1_OVL=dktitle python3 tools/permuter.py import func_00f26710 --file nonmatchings/session132/dktitle/func_00f26710.c
+KH1_OVL=dktitle python3 tools/permuter.py run func_00f26710 -j2 --stop-on-zero
+KH1_OVL=dktitle python3 tools/autodecomp.py try func_00f26710 --file out/ovl/dktitle/permuter/func_00f26710/output-0-1/source.c
+```
+
+A draft named `func_X.<mode>.c` is compiled with that flag mode (session 135). The draft's own
+`#include "ovl.h"` is what the preprocessing needs (hand.py's drafts without it need one added).
+`static inline` helpers survive (the permuter keeps inline definitions); `register ... KH1_REG`
+pins do not parse (session 128's sed recipe). Session 135 ran each of dktitle's 12 drafts and
+dkmovie's two for 20 minutes on two threads (about 10 compiles a second): func_00f20258 matched
+(the callee func_0011ef10 returns a value: declared void it scheduled the `lui` early), see
+nonmatchings/session132/NOTES.md for the rest.
+
 ## Results
 
 Kept up to date by the session that changes them (`make ovl-progress`).

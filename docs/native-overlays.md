@@ -127,3 +127,49 @@ runs on the fake disc.
   `vlog` lines (straight sceIoWrite) arrive. The funopen'd stdout never reaches the file in
   Vita3K. Routing printf through vlog would also bring the DMA walk's line per send at trace 2
   (main.c forces 2), so a fix needs a quiet DMA log first (another thread's change, 2026-10-26).
+
+## Session 135: past the monologue (Dive to the Heart)
+
+- **The "monologue" is Dive to the Heart, and it was waiting for the player.** Script VM trace (gdb
+  `dprintf` on the 32 opcode handlers of `D_0037A198`, `func_001dcad0` for the library calls): after
+  the movie the event VM shows the lines and ends (`func_001cd7e8` waits for the SEs, `func_001cd830`
+  messages the field); the game is in the field (`D_002BBDE0` = 3) with 9 VMs, and VM 0 adds trigger
+  box 2 (`func_001d6250`: centre (0, -127, 0), size 255) then loops at pc 697-753 until save byte
+  0x901 (script variable 0xB01 = 2817, op 12) is 4 (with 0xC81 = 0) or 10. The last line on screen
+  is さあ 歩き出してごらん / ここまで来られるかい――? ("step forward"): the game waits for Sora to walk.
+  He is invisible because the null platform draws no 3D (no VU1). With the stick held (pad script
+  `FRAME - 128 128 128 0`) the footstep SEs 11038 / 11046 play.
+- **Two host bugs made the player's facing and position NaN** (found with hardware watchpoints on
+  the player at `D_002C64A0 + 1200`, `D_002E26A0[0]`):
+  - objutil.c `func_00137688` sets the facing (+0x30) to (sin a, 0, cos a). m2c had read the sinf
+    call (`func_0026b7d0`) as `func_0026b7d0()` with no argument: on the EE `a` is still in $f12, on
+    x86 sinf read garbage. Now `func_0026b7d0(fparg0)` (object unchanged). The NaN facing went into
+    the player's matrix (objdraw `func_00136d38`), the camera's targets (`func_00177900` ->
+    `func_001ca0f8`), the camera angle `D_004F77E0` and the stick's move direction (view.c
+    `func_00124e08`), and so into the position from frame 4,681.
+  - `PlatVu0Normalize3` (include/platform/vu.h, the host's sceVu0Normalize): the VU's `vdiv`
+    1 / 0 is +max, so a zero vector normalizes to 0; the host's 1 / 0 was infinity and 0 x inf NaN.
+    Now q = FLT_MAX for a zero length (a still pad's direction is a zero vector each frame).
+  With both, Sora walks: script variable 2817 goes 0 -> 1 -> 4 at frame ~6,400 (position z 462),
+  he moves around the platform, and the game reads the disc again (lsn 107050 and 78094). The
+  shots (pad script: START 1300, CIRCLE every 200 frames 2000-4600, stick up from 4800, right from
+  7000, down from 8000) then show the doves' SEs (35207 / 35208, frame ~6,200) and the next lines,
+  キミの中に眠る力―― and カタチは力を与える (the weapon pedestals), and the tutorial's ✕でジャンプ!
+  (frame ~7,000): Dive to the Heart runs on. Choosing a weapon needs the pedestals' positions (the
+  3D is not drawn: read them from the trigger boxes / objects with gdb, or draw the 3D).
+- **The one glyph a line**: fldtext.c `func_0010c720` (one glyph's GS packet) was void, but
+  `func_0010cb80` stores the cursor it leaves in $v0 (`sw v0, 0(sp)` after the `jal`; the callee's
+  last act is `addiu v0, s1, 48; sw v0, 0(s8)`). On x86 the caller kept a garbage cursor, so each
+  glyph of a line overwrote the same slot. Now it returns `*pp = p + 6` (object unchanged); the
+  whole lines draw (残された時間は少ない, 僕はもう戻れない, けれど急がないで, 恐れないで,
+  扉はまだ閉ざされている, さあ 歩き出してごらん).
+- **tools/host/argcheck.py** finds both kinds now: definitions in src/sdk count (sinf is defined there
+  under its name; functions.tsv maps it to func_0026b7d0), and a value use of a void function in its
+  own file is checked when the call goes through m2c's `#define f ((T (*)()) f)` cast. One more real
+  hit fixed: objdraw `func_00136428` returns the model draw's result (mdldraw.c `func_001621e0` ->
+  `func_001606d0`'s `DObj25 *`), which `func_00136768` passes to `func_0012bce0` (objects unchanged).
+  Left, read but not fixed (each `return f(...)` of a void f, its value passed on): memberitem.c
+  `func_0014a058` and roomobj.c `func_00131f40` (their callers drop it), class1b `func_00152140`
+  (an object step function, objtask.nostrict.c case 9: whether the task reads its value is not
+  checked), atkhit.c `func_0014ab18` (no caller found in src/), and the three winmenu / winpart hits
+  from before.

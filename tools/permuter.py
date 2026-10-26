@@ -71,7 +71,9 @@ def cmd_import(args, cfg) -> int:
     d = OUTDIR / sym
     d.mkdir(parents=True, exist_ok=True)
     out_dir = getattr(args, "out_dir", None) or "src/auto"
-    fl = K.flags_for(cfg, f"{out_dir}/x.c")
+    # a draft named NAME.<mode>.c (func_00f21808.nostrict.c) is compiled with that kh1.toml flag mode
+    mode = Path(args.file).suffixes[-2] if args.file and len(Path(args.file).suffixes) > 1 else ""
+    fl = K.flags_for(cfg, f"{out_dir}/x{mode}.c")
     tc = K.TOOLCHAIN_DIR / fl.compiler / "bin"
     # base.c: preprocessed, since the permuter parses it with pycparser
     raw = d / "raw.c"
