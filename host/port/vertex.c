@@ -88,3 +88,20 @@ u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[4]) {
 }
 
 const char *kh1_vfmt_str(u32 format) { return format == KH1_VFMT_F32 ? "F32" : format == KH1_VFMT_U8N ? "U8N" : "?"; }
+
+u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAttr out[4], KH1GxmVtxStream *stream) {
+    KH1VtxAttr a[4];
+    u32 i, n = kh1_vertex_attrs(index, a);
+    for (i = 0; i < n; i++) {
+        s32 reg = reg_of(prog, a[i].name);
+        if (reg < 0) return 0;
+        out[i].streamIndex = 0;
+        out[i].offset = a[i].offset;
+        out[i].format = a[i].format == KH1_VFMT_F32 ? KH1_GXM_ATTR_F32 : KH1_GXM_ATTR_U8N;
+        out[i].componentCount = a[i].count;
+        out[i].regIndex = (u16)reg;
+    }
+    stream->stride = KH1_VTX_STRIDE;
+    stream->indexSource = KH1_GXM_INDEX_16BIT;
+    return n;
+}

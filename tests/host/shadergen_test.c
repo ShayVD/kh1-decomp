@@ -20,6 +20,9 @@
  *   layout    (session 129) vertex.h's GXM attribute table against each generated vertex shader's inputs:
  *             names and order, components (floatN), offsets and sizes inside the 32-byte KH1GpuVert; two
  *             deliberate breaks of the table caught
+ *   gxmattr   (session 130) the SceGxmVertexAttribute arrays and stream a port builds from that table, regIndex
+ *             looked up by name in a stand-in for the compiled program (the Cg's input order); a program
+ *             missing an input gives no table
  *   fetch     (session 128) the frame read: every FETCH form of the blend sweep on CT32 and CT24 frames is
  *             kh1_blend_gpu's pixel (the GS's formula on what the target holds), Ad read back for every
  *             stored byte, and FBMSK's per-bit merges (the shadow casters' 0x00000001 among them) are the
@@ -729,6 +732,73 @@ static void layout(void) {
     CHECK("layout: no variant past 6", kh1_vertex_attrs(7, a) == 0);
 }
 
+/* ---- the GXM attribute arrays a port builds (vertex.h kh1_vertex_gxm_attrs) ---- */
+/* A stand-in for a compiled vertex program: its inputs in the generated Cg's order, each given the next free
+ * 4-register slot (the real resource indices come from psp2cgc's output; only the lookup by name matters). */
+typedef struct {
+    const char *name[8];
+    u32 len[8], n;
+} FakeProg;
+static void fake_prog(FakeProg *f, const char *cg) {
+    const char *p = cg;
+    f->n = 0;
+    while (*p && !(p[0] == '(' && p[1] == '\n')) p++;
+    if (!*p) return;
+    p += 2;
+    for (;;) {
+        while (*p == ' ') p++;
+        if (p[0] != 'f' || p[1] != 'l' || f->n == 8) break;
+        p += 5;
+        if (*p >= '1' && *p <= '4') p++;
+        f->name[f->n] = ++p;
+        f->len[f->n] = 0;
+        while (p[f->len[f->n]] && p[f->len[f->n]] != ' ') f->len[f->n]++;
+        f->n++;
+        while (*p && *p++ != '\n') {}
+    }
+}
+static s32 fake_reg_of(void *prog, const char *name) {
+    FakeProg *f = (FakeProg *)prog;
+    u32 i;
+    for (i = 0; i < f->n; i++)
+        if (same(f->name[i], name, f->len[i])) return (s32)(i * 4);
+    return -1;
+}
+static void gxmattr(void) {
+    u32 i, j, bad = 0;
+    KH1VtxAttr a[4];
+    KH1GxmVtxAttr g[4];
+    KH1GxmVtxStream st;
+    FakeProg f;
+    CHECK("gxmattr: SceGxmVertexAttribute is 8 bytes, SceGxmVertexStream 4", sizeof(KH1GxmVtxAttr) == 8 && sizeof(KH1GxmVtxStream) == 4);
+    for (i = 0; i < 7; i++) {
+        u32 n = kh1_vertex_attrs(i, a), used = 0;
+        kh1_shader_vert_cg(i, text, sizeof text);
+        fake_prog(&f, text);
+        memset(&st, 0, sizeof st);
+        if (kh1_vertex_gxm_attrs(i, fake_reg_of, &f, g, &st) != n || n != f.n) { bad++; continue; }
+        if (st.stride != KH1_VTX_STRIDE || st.indexSource != KH1_GXM_INDEX_16BIT) bad++;
+        for (j = 0; j < n; j++) {
+            u32 size = g[j].format == KH1_GXM_ATTR_F32 ? 4 : 1, k, bytes = 0;
+            if (g[j].streamIndex || g[j].offset != a[j].offset || g[j].componentCount != a[j].count ||
+                g[j].format != (a[j].format == KH1_VFMT_F32 ? KH1_GXM_ATTR_F32 : KH1_GXM_ATTR_U8N) ||
+                g[j].regIndex != fake_reg_of(&f, a[j].name))
+                bad++;
+            /* the attributes' bytes inside the stride never overlap */
+            for (k = 0; k < g[j].componentCount * size; k++) bytes |= 1u << (g[j].offset + k);
+            if (g[j].offset + g[j].componentCount * size > KH1_VTX_STRIDE || (used & bytes)) bad++;
+            used |= bytes;
+        }
+    }
+    CHECK("gxmattr: each variant's attribute array and stream, regIndex looked up by name", !bad);
+    /* a program without one of the inputs gives no table */
+    kh1_shader_vert_cg(6, text, sizeof text);
+    fake_prog(&f, text);
+    f.n--; /* drop "fog" */
+    CHECK("gxmattr: a program missing an input gives 0", kh1_vertex_gxm_attrs(6, fake_reg_of, &f, g, &st) == 0);
+    CHECK("gxmattr: no variant past 6", kh1_vertex_gxm_attrs(7, fake_reg_of, &f, g, &st) == 0);
+}
+
 int main(void) {
     parse();
     texfunc();
@@ -739,6 +809,7 @@ int main(void) {
     sampler();
     vertex();
     layout();
+    gxmattr();
     fetch();
     printf("shadergen_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
