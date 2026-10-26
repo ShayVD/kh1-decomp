@@ -2176,6 +2176,17 @@ target with a striped alpha bit 7, the first writing alpha 0, replayed from the 
 starts as all 1 (garbage): 3 commands, 2 clears, 2 set-ups, the same RGB and bit 7 as the GS's rule applied sprite
 by sprite (gsmem.c's model draws only the copy); without the clears the replay differs.
 
+**Session 130 (vita-port-plan 5.1br): the attribute arrays as a port builds them.** vertex.h's
+`kh1_vertex_gxm_attrs(index, reg_of, prog, out, stream)` turns the table above into SceGxmVertexAttribute rows
+(streamIndex 0, the offset, SCE_GXM_ATTRIBUTE_FORMAT_F32 9 / U8N 4, the component count, regIndex from `reg_of`)
+and the one SceGxmVertexStream (stride 32, SCE_GXM_INDEX_SOURCE_INDEX_16BIT 0). `reg_of` is the port's lookup of
+an input by name in the compiled program (sceGxmProgramFindParameterByName, then
+sceGxmProgramParameterGetResourceIndex); an input the program lacks makes the call return 0, so a port never
+creates a vertex program from a partial table. The enum values are recalled from vitasdk's psp2/gxm.h, unverified
+until the Vita build compiles against it. tests/host/shadergen_test.c "gxmattr" (26 checks in all) runs every
+variant against a stand-in program whose inputs are the generated Cg's, in its order. No shader compiler was
+reachable in the container, so the shaders are still uncompiled.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

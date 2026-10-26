@@ -9,14 +9,27 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac should be reachable from about 09:00 UTC on Monday 2026-10-26** (session 128 asked at 00:07 UTC; the
-user said it would be there in 9 hours and to do static work until then; sessions 49 to 129 ran without it;
-session 129 finished at about 02:00 UTC, before the Mac was back). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+user said it would be there in 9 hours and to do static work until then; sessions 49 to 130 ran without it;
+session 130 finished at about 07:00 UTC, before the Mac was back). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 129, 2026-10-26)
+## Where we stopped (end of session 130, 2026-10-26)
+
+- **Session 130** (static, vita-port-plan 5.1br): **the vertex programs' GXM tables as a port builds them.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). vertex.h's
+  `kh1_vertex_gxm_attrs`: a variant's `kh1_vertex_attrs` rows as the SceGxmVertexAttribute array and
+  SceGxmVertexStream a port hands to sceGxmShaderPatcherCreateVertexProgram (`KH1GxmVtxAttr` / `KH1GxmVtxStream`,
+  the SDK's layouts; U8N 4, F32 9, INDEX_16BIT 0 recalled from vitasdk's psp2/gxm.h, unverified), regIndex from
+  a lookup by name the port supplies (0 when the program lacks an input). shadergen_test 26 ("gxmattr": a
+  stand-in program from each generated Cg's input order). **No psp2cgc in the container** (vitasdk has none), so
+  the shaders are still uncompiled. Item 4d waited: PR #131 still open. kh1.elf byte-identical, no float-untested
+  row; selftest PASS. **Matching**: no new match (6,981 / 6,988); **00110618 93 -> 90 words** (decomp-permuter
+  with PENALTY_REGALLOC 50: the first cz's numerator computed into az first;
+  nonmatchings/session130/s130__00110618_90w_aznum.c, shift/drafts.tsv points at it; notes in
+  nonmatchings/session130/NOTES.md).
 
 - **Session 129** (static, vita-port-plan 5.1bq): **the vertex stream as GXM reads it, DATE's set-up area.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). vertex.h's
@@ -713,10 +726,10 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 
 1. **1-4 words**: 001fd858 (1, reorg liveness), 00265608 (4, closed). (001f2630 and 001f1fc8 matched in session 128;
    the permuter recipe that keeps context-only callee copies is in nonmatchings/session128/NOTES.md.)
-2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
-3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
+2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
+3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 130 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 131 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -812,17 +825,19 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    Session 123: if inventory.py finds GIF chains in the overlay, count the pipelines they add with
    tools/host/drawpipes.py's walk (a `--elf`-style run over the overlay's chains).
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests are skipped): (a) **the user's
-   answer on the full-width rules** (session 101's card, still unanswered at session 129): "keep them 4:3" means
+   answer on the full-width rules** (session 101's card, still unanswered at session 130): "keep them 4:3" means
    deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session
-   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the GXM vertex programs from the table**: a host check
-   that builds each SceGxmVertexAttribute array from `kh1_vertex_attrs` the way a port would (regIndex by name
-   from the generated Cg's input order) and, if a psp2cgc / vitasdk is reachable in the container (the Vita
-   thread installed one), compile the 7 vertex and 28 fragment shaders once and record which fail (the frame
-   read's `dst` declaration is the one most in doubt); (c) **the DATE clear's cost**: the fake disc and the
+   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **compiling the shaders**: session 130 built the attribute arrays
+   (`kh1_vertex_gxm_attrs`) but no psp2cgc was reachable; if the user has a psp2cgc, or the Vita thread finds a
+   runtime route (vitaGL's SceShaccCg from the user's own libshacccg.suprx), compile the 7 vertex and 28 fragment
+   shaders once and record which fail (the frame read's `dst` declaration is the one most in doubt); otherwise
+   skip; (c) **the DATE clear's cost**: the fake disc and the
    static sends have one DATE draw (brightfade); confirm in the real-disc run (item 2) that no other DATE draw
    appears (`--draws`, TEST bit 14), else count the extra draw calls; (d) if PR #131 is merged, **wire gxmrec into
    host/vita/** behind a `KH1_VITA_GXM` switch only as a stub that logs the calls (no renderer yet), so the
-   first Vita3K / hardware run shows the per-frame call counts; (e) `KH1_HOST_DMAC=defer` as the default,
+   first Vita3K / hardware run shows the per-frame call counts, and add static asserts there that vertex.h's
+   `KH1_GXM_ATTR_U8N` / `_F32` / `KH1_GXM_INDEX_16BIT` and the sizes of `KH1GxmVtxAttr` / `KH1GxmVtxStream` equal
+   psp2/gxm.h's (session 130 recalled them); (e) `KH1_HOST_DMAC=defer` as the default,
    argcheck's 3 value uses and the callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
    --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
    every CLUT upload not in clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13
@@ -841,12 +856,12 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    the shadow pass's Zs against Z16S's 0xFFFF (a clamp would flatten them), the FGE draws' FOGCOL and F
    range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
 
-5. **Matching (optional, 1 worker)**: only with a new idea. Session 129 ran the permuter on 001c62a0 (14 words:
-   base / b register swap and a hoisted constant) and 00200e28 (24: scheduler tie-breaks in one block); see
-   nonmatchings/session129/NOTES.md. Untried: 00110618 (93, an FP register permutation; its draft is 16 bytes
-   long) with the raised register penalty.
-6. End with `make progress-update SESSION=130`, refresh the per-phase table in docs/progress.md (between its
+5. **Matching (optional, 1 worker)**: only with a new idea. Session 130's raised-penalty permuter took 00110618
+   from 93 to 90 words in ~170k iterations, then stalled (nonmatchings/session130/NOTES.md); its draft is still
+   16 bytes long (fb reloaded from the stack). Sessions 129 / 130 notes list what is left on 001c62a0 (14) and
+   00200e28 (24). Untried: 0010d470 (170, jump2 cross-jumping) by the permuter on the s14m 129w probe.
+6. End with `make progress-update SESSION=131`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 130) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 132) with this
    prompt: the user wants each session to start the next one without being asked.

@@ -2881,6 +2881,29 @@ checks, cmdbuf_test 49, batch_test 14, drawstate_test 23).
 - **Item 4d** (gxmrec in host/vita/): PR #131 is not merged yet, so not started.
 - **Still waiting for the Mac**: as 5.1bp.
 
+### 5.1br Session 130: the vertex programs' GXM tables as a port builds them
+
+Static only (Monday 2026-10-26 before 09:00 UTC; the Mac is expected back then, so items 1 to 3 wait). kh1.elf
+byte-identical; host and test code and docs only, no float-untested row. selftest PASS (shadergen_test 26 checks).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The GXM vertex programs from the table** (item 4b): vertex.h's new `kh1_vertex_gxm_attrs` turns a variant's
+  `kh1_vertex_attrs` rows into the SceGxmVertexAttribute array and SceGxmVertexStream a port passes to
+  sceGxmShaderPatcherCreateVertexProgram (`KH1GxmVtxAttr` / `KH1GxmVtxStream`, the SDK's 8- and 4-byte layouts;
+  formats U8N 4 / F32 9, INDEX_16BIT 0, recalled from vitasdk's psp2/gxm.h and not yet compiled against it). regIndex
+  comes from a lookup by name that the port supplies (on the Vita sceGxmProgramFindParameterByName and
+  sceGxmProgramParameterGetResourceIndex on the compiled program), and a program missing an input gives no table,
+  so nothing assumes the compiler's register order. shadergen_test "gxmattr" stands a lookup built from each
+  generated Cg's input order in for the compiled program and checks every variant: stream 0, offsets, formats,
+  components, regIndex by name, attributes' bytes inside the 32-byte stride with no overlap. **No psp2cgc in the
+  container** (vitasdk does not ship one; the Vita thread's vitasdk was not installed here), so the 7 vertex / 28
+  fragment shaders are still uncompiled. Options for that step: Sony's psp2cgc where the user has it, or compiling
+  the Cg text at run time on the device with vitaGL's route (SceShaccCg from the console's own libshacccg.suprx,
+  which the user extracts from their own Vita; never in the repo).
+- **Item 4d** (gxmrec in host/vita/): PR #131 is still open, so not started. When it lands, the Vita side should
+  check the recalled enum values with static asserts against psp2/gxm.h.
+- **Still waiting for the Mac**: as 5.1bp.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
