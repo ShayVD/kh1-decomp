@@ -38,6 +38,9 @@ rewrite matched code.
    sceGsPutDrawEnv, the GS CSR at 0x12001000 / 0x12000000 read and written
    directly), src/screen/capture.c (sceGsExecStoreImage / LoadImage of the
    frame) and src/game/framectl.c's func_0010f658 (the display flip).
+   Session 132 added include/platform/ovl.h (PlatOvlLoaded in the loader task, empty on the
+   PS2: a port runs the overlays' C as native modules, docs/native-overlays.md) and
+   include/platform/ovlsdk.h (the overlays' own SCE calls mapped onto these wrappers for a port).
    Session 91 added include/platform/view.h: the 3D view's visible x range in canvas
    pixels (`PLAT_VIEW_X0` / `PLAT_VIEW_X1`, the literals 0 / 512 on the PS2), for code
    that hides a 2D part off the 4:3 screen (objwin.nostrict.c); a port with a wide screen

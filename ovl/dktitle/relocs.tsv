@@ -1,0 +1,8 @@
+# dktitle.x data words that point into the overlay (tools/ovl/relocs.py): a port rewrites them after each load. 44 words pointing inside functions (jump tables) left out.
+addr	target	kind
+00f26da4	00f26d20	data
+00f26ea0	00f23de8	func
+00f27220	00f26710	func
+00f27224	00f26c98	func
+00f27228	00f26c88	func
+00f2722c	00f26c90	func

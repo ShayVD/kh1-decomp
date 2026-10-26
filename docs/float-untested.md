@@ -7,6 +7,21 @@ proves into docs/shiftable-plan.md (and clears them here).
 
 Last booted default: **KH1_F29_N** (session 29, reach_check with nest-carry). Everything below is newer.
 
+**Session 131 boot (partial, KH1_F131 = the default with every row below, plus session 131's reach_check change):**
+reach_check now scans only each overlay's code part (`--ovl-data-as-code` for the old whole-file scan, which no
+longer finished: wm.x's data part grew the fixpoint past 10 GB; docs/shiftable-plan.md "Session 131"). shift-ld
+reports 2,009 floated variables. Booted from KH1_BIG.iso in PCSX2 and played: the title screen, the load
+menu, save 06 (Agrabah storage room) into the field with the HUD and the party gauges, the in-game menu's top
+menu and the item, equipment, abilities (Sora's list), customize, status (pages 1-2), journal (story entry,
+character file with the 3D model) and config pages (auto-lock changed and back), the open / close blur, the save
+point's party change (Goofy out, Aladdin in: **only the chosen members appear**, session 87's question), a room
+change to the plaza, attacks and a Firaga (effects drawn), the summon list, a console reset, save 05 (End of
+the World), the Gummi Ship's world map (wm.x) and a normal drive to Hollow Bastion (gb.x's flight with its HUD,
+radar and score; it went back to the world map after about 16 s of firing). **Nothing broke.**
+Not reached: a fight with enemies, a shop, saving to the card (not attempted), the warp drive, a movie, a level-up,
+a game over. So the rows below stay until a session plays those (a shop for sessions 34 / 69, a fight and the
+lock-on for 30 / 34's atan tables).
+
 ## The route
 
 `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` (after tools/shift/data_owners.py and staging out/overlays from

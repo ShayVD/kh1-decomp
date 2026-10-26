@@ -11,7 +11,8 @@
  * reboot.  On the matching PS2 build each wrapper is a macro for the sifdev
  * call.  The Vita port maps the names onto its own file system (the game's
  * data directory); the HDD calls answer "no drive" (PlatFsDevctl < 0), so
- * the HDD install is never offered. */
+ * the HDD install is never offered.  Session 132: dktitle.x's install screens
+ * (include/platform/ovlsdk.h) add PlatFsWrite / Sync / Remove / Mkdir / Format. */
 #ifndef KH1_PLATFORM_FILE_H
 #define KH1_PLATFORM_FILE_H
 
@@ -23,6 +24,11 @@
 #define PlatFsOpen(name, flag) sceOpen((const char *)(name), (flag))
 #define PlatFsClose(fd) sceClose(fd)
 #define PlatFsRead(fd, buf, n) sceRead((fd), (void *)(buf), (n))
+#define PlatFsWrite(fd, buf, n) sceWrite((fd), (const void *)(buf), (n))
+#define PlatFsSync(dev, flag) sceSync((const char *)(dev), (flag))
+#define PlatFsRemove(name) sceRemove((const char *)(name))
+#define PlatFsMkdir(name, mode) sceMkdir((const char *)(name), (mode))
+#define PlatFsFormat(dev, blockdev, arg, arglen) sceFormat((const char *)(dev), (const char *)(blockdev), (void *)(arg), (arglen))
 #define PlatFsLseek(fd, offset, whence) sceLseek((fd), (offset), (whence))
 #define PlatFsLseek64(fd, offset, whence) sceLseek64((fd), (offset), (whence))
 #define PlatFsIoctl2(fd, req, arg, arglen, buf, buflen) \
@@ -40,6 +46,12 @@ int PlatFsReset(void);
 int PlatFsOpen(const char *name, int flag);
 int PlatFsClose(int fd);
 int PlatFsRead(int fd, void *buf, int n);
+/* session 132: dktitle.x's HDD install (include/platform/ovlsdk.h); no drive on a port */
+int PlatFsWrite(int fd, const void *buf, int n);
+int PlatFsSync(const char *dev, int flag);
+int PlatFsRemove(const char *name);
+int PlatFsMkdir(const char *name, int mode);
+int PlatFsFormat(const char *dev, const char *blockdev, void *arg, int arglen);
 int PlatFsLseek(int fd, int offset, int whence);
 s64 PlatFsLseek64(int fd, s64 offset, int whence);
 int PlatFsIoctl2(int fd, int req, void *arg, unsigned int arglen, void *buf, unsigned int buflen);

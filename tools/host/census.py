@@ -34,6 +34,9 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ovlnative  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, "out", "host")
 
@@ -302,6 +305,9 @@ def link_census(results, cc):
                     print("null platform: host/%s/%s does not compile:\n%s" % (d, f, p.stderr))
                 else:
                     null_objs.append(obj)
+    # the overlays whose every function has C (tools/host/ovlnative.py, include/platform/ovl.h)
+    ovl_objs, _linked = ovlnative.build(cc, CFLAGS, OUT, nm)
+    null_objs += ovl_objs
     objs = ok_objs + data_objs + null_objs
     defined = nm(objs, True)
     # functions.tsv names: C defines the name, the data blob's .word uses func_<addr>
@@ -335,6 +341,12 @@ def link_census(results, cc):
                 f.write("".join("PROVIDE(%s = %s + 0x%x);\n" % (n, d, off) for n, d, off, _sz in inside))
             link_census.script = src
             undefined -= set(n for n, *_r in inside)
+    if ovlnative.build.script:
+        src = os.path.join(OUT, "aliases.ld")
+        with open(src, "a" if link_census.script else "w") as f:
+            f.write(ovlnative.build.script)
+        link_census.script = src
+        undefined -= set(re.findall(r"PROVIDE\((\w+) =", ovlnative.build.script))
     # where the missing names are defined on the PS2 side
     failing_defs, asm_defs = set(), set()
     for p, ok, _ in results:

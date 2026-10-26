@@ -185,7 +185,7 @@ extern s32 D_002BC134;
 extern void func_0014f658(O16 *, s32);
 extern T16 *func_001383d8(s32, void *);
 extern void func_0013f198(void);
-extern void func_0013ab08(void);
+extern void func_0013ab08(void *);
 extern void func_00146718(void);
 extern void func_0014f410(void);
 extern void func_00151268(void);

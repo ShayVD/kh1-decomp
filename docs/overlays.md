@@ -131,7 +131,7 @@ Kept up to date by the session that changes them (`make ovl-progress`).
 | Overlay | Functions | Matched | Notes |
 |---|---|---|---|
 | dkmovie | 122 | see progress | |
-| dktitle | (no layout yet) | 0 | left to the phase 5 session (132) |
+| dktitle | 71 | 59 | session 132: native C in the port (docs/native-overlays.md), notes in nonmatchings/session132/NOTES.md |
 | gb | 533 | see progress | |
 | wm | 1109 | see progress | |
 | xl_limit | 76 | 39 | |
