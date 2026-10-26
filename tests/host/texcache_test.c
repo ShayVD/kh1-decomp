@@ -203,10 +203,12 @@ int main(void) {
     }
     report("0x3600 slot, three draws an upload");
     CHECK("slot x3: no stale texture", stale == 0);
-    CHECK("slot x3: the stamp decodes once an upload", cache[KEY_STAMP].decodes == 3);
-    CHECK("slot x3: both: one decode, a hash an upload", cache[KEY_BOTH].decodes == 1 &&
-          cache[KEY_BOTH].hashed == 3 * 64 * 64 && cache[KEY_BYTES].hashed == 9 * 64 * 64);
-    CHECK("slot x3: the port cache is `both`", port_as_both() && port.stamp_hits == 6 && port.hash_hits == 2);
+    /* session 135: an upload of the bytes already there keeps the stamp (host/null/gsmem.c's mark), so
+     * the second and third frames' uploads miss nothing */
+    CHECK("slot x3: the stamp decodes once", cache[KEY_STAMP].decodes == 1);
+    CHECK("slot x3: both: one decode, one hash", cache[KEY_BOTH].decodes == 1 &&
+          cache[KEY_BOTH].hashed == 64 * 64 && cache[KEY_BYTES].hashed == 9 * 64 * 64);
+    CHECK("slot x3: the port cache is `both`", port_as_both() && port.stamp_hits == 8 && port.hash_hits == 0);
 
     /* (2) texanim's scroll: the 16 x 8 destination at 0x2900 and a 16 x 8 room texture at 0x2902 (the
      * same page, other blocks), both drawn each step, two cycles of 8 steps (y 1 .. 7, 0) */

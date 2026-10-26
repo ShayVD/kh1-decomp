@@ -149,14 +149,22 @@ static void st32(u32 w, u32 v) {
 #endif
 }
 static u32 rd32(u32 w) { const u8 *p = vm + w * 4; return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24; }
+/* a write into page pg: the bits no longer a draw's, and the page's stamp moved when the stored bits
+ * changed.  Session 135: the same bits again keep the stamp (the title uploads every texture and CLUT
+ * again each frame, the same bytes; a texture's stamp, kh1_gsmem_tex_stamp, then stays and the
+ * present's cache hits without reading the texels back: docs/vita-build.md "Speed") */
+static void mark(u32 pg, int changed, u32 bits) {
+    if (changed) page_seq[pg] = seq;
+    else if (!(page_drawn[pg] & bits)) return;
+    page_drawn[pg] &= ~bits;
+    marks++;
+}
 /* bits: the word bits the write stores, no longer a draw's */
 static void wr32(u32 w, u32 v, u32 bits) {
-    u8 *p = vm + w * 4;
-    p[0] = v; p[1] = v >> 8; p[2] = v >> 16; p[3] = v >> 24;
+    u32 o = ld32(w);
+    st32(w, v);
     if (flat_raw) return; /* a flat sprite's pixels stay the draw's (kh1_gsmem_flat_sprite) */
-    page_seq[w >> 11] = seq;
-    page_drawn[w >> 11] &= ~bits;
-    marks++;
+    mark(w >> 11, o != v, bits);
 }
 
 /* a pixel's stored bits at address a (kh1_gsmem_addr's units for the PSM) */
@@ -186,17 +194,24 @@ static void put_at(u32 psm, u32 a, u32 v) {
     case KH1_PSMT4HL: wr32(a, (rd32(a) & 0xF0FFFFFFu) | (v & 15) << 24, 0x0F000000); return;
     case KH1_PSMT4HH: wr32(a, (rd32(a) & 0x0FFFFFFF) | v << 28, 0xF0000000u); return;
     /* the 16-, 8- and 4-bit layouts do not share CT32's word: the page is no longer a draw's */
-    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S:
+    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: {
+        u32 o = vm[a * 2] | vm[a * 2 + 1] << 8;
         vm[a * 2] = v; vm[a * 2 + 1] = v >> 8;
-        if (!flat_raw) { page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; marks++; }
+        if (!flat_raw) mark(a >> 12, o != (v & 0xFFFF), ~0u);
         return;
-    case KH1_PSMT8:   vm[a] = v; page_seq[a >> 13] = seq; page_drawn[a >> 13] = 0; marks++; return;
-    case KH1_PSMT4:
-        vm[a >> 1] = (vm[a >> 1] & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
-        page_seq[a >> 14] = seq;
-        page_drawn[a >> 14] = 0;
-        marks++;
+    }
+    case KH1_PSMT8: {
+        u32 o = vm[a];
+        vm[a] = v;
+        mark(a >> 13, o != (v & 0xFF), ~0u);
         return;
+    }
+    case KH1_PSMT4: {
+        u32 o = vm[a >> 1];
+        vm[a >> 1] = (o & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
+        mark(a >> 14, o != vm[a >> 1], ~0u);
+        return;
+    }
     }
 }
 
@@ -377,6 +392,14 @@ void kh1_gsmem_image(const u32 *w, u32 n) {
 
 /* the CLUT formats (CPSM): CT32, CT16 and CT16S */
 static int clut_psm(u32 cpsm) { return cpsm == KH1_PSMCT32 || cpsm == KH1_PSMCT16 || cpsm == KH1_PSMCT16S; }
+/* session 135: TEX0's CPSM, CT24 (1) read as CT32: the GS manual lists only the three, but dktitle.x's
+ * menu lines (func_00f22238's TEX0s, CLD 1) give CPSM 1 with an alpha ramp in the entries (CBP 0x38F5:
+ * black, alpha 0 .. 0x80, the glyphs' coverage), which the title shows as its text, so the entry's
+ * alpha is the CLUT's own (a CT32 load), not TEXA's */
+static u32 cpsm_of(u32 hi) {
+    u32 c = hi >> 19 & 15;
+    return c == KH1_PSMCT24 ? KH1_PSMCT32 : c;
+}
 static int bits8(u32 psm) { return psm == KH1_PSMT8 || psm == KH1_PSMT8H; }
 static int indexed(u32 psm) { return bits8(psm) || psm == KH1_PSMT4 || psm == KH1_PSMT4HL || psm == KH1_PSMT4HH; }
 
@@ -385,7 +408,7 @@ const u32 *(*kh1_gsmem_palette)(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi);
 const u32 *(*kh1_gsmem_texels)(u32 lo, u32 hi);
 
 void kh1_gsmem_tex0(u32 lo, u32 hi) {
-    u32 psm = lo >> 20 & 63, cbp = hi >> 5 & 0x3FFF, cpsm = hi >> 19 & 15, csm = hi >> 23 & 1;
+    u32 psm = lo >> 20 & 63, cbp = hi >> 5 & 0x3FFF, cpsm = cpsm_of(hi), csm = hi >> 23 & 1;
     u32 csa = hi >> 24 & 31, cld = hi >> 29 & 7, e, p, v;
     if (!indexed(psm)) return;
     switch (cld) {
@@ -454,7 +477,7 @@ static u32 texel_rgba(u32 psm, u32 tbp, u32 tbw, u32 cpsm, u32 csa, u32 x, u32 y
  * for a 4-bit one.  Returns the count, or 0 for a PSM that is not indexed or a CLUT the model does not
  * have. */
 int kh1_gsmem_clut(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
-    u32 psm = lo >> 20 & 63, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31, n, e, i;
+    u32 psm = lo >> 20 & 63, cpsm = cpsm_of(hi), csa = hi >> 24 & 31, n, e, i;
     if (!indexed(psm) || hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa)) return 0;
     n = bits8(psm) ? 256 : 16;
     for (i = 0; i < n; i++) {
@@ -466,14 +489,14 @@ int kh1_gsmem_clut(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
 
 /* the texture TEX0 names can be read (a PSM the model has, an indexed one's CLUT too) */
 static int tex_ok(u32 lo, u32 hi) {
-    u32 psm = lo >> 20 & 63, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31;
+    u32 psm = lo >> 20 & 63, cpsm = cpsm_of(hi), csa = hi >> 24 & 31;
     if (!known(psm) || (lo >> 26 & 15) > 10 || ((lo >> 30 | hi << 2) & 15) > 10) return 0;
     return !indexed(psm) || !(hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa));
 }
 
 int kh1_gsmem_read_tex(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
-    u32 th = (lo >> 30 | hi << 2) & 15, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31, w, h, x, y;
+    u32 th = (lo >> 30 | hi << 2) & 15, cpsm = cpsm_of(hi), csa = hi >> 24 & 31, w, h, x, y;
     if (!known(psm) || tw > 10 || th > 10) { st.unsupported++; return -1; }
     if (indexed(psm) && (hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa))) {
         st.unsupported++;
@@ -662,7 +685,7 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     if (tex_ok(s->tex0_lo, s->tex0_hi) && indexed(s->tex0_lo >> 20 & 63) && kh1_gsmem_palette)
         pal = kh1_gsmem_palette(s->tex0_lo, s->tex0_hi, s->texa_lo, s->texa_hi);
     if (tex_ok(s->tex0_lo, s->tex0_hi) && (pal || kh1_gsmem_texels)) {
-        u32 psm = s->tex0_lo >> 20 & 63, cpsm = s->tex0_hi >> 19 & 15, csa = s->tex0_hi >> 24 & 31;
+        u32 psm = s->tex0_lo >> 20 & 63, cpsm = cpsm_of(s->tex0_hi), csa = s->tex0_hi >> 24 & 31;
         const u32 *tt = kh1_gsmem_texels ? kh1_gsmem_texels(s->tex0_lo, s->tex0_hi) : 0;
         for (y = 0; y < h; y++)
             for (x = 0; x < w; x++) {
@@ -798,7 +821,7 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     u32 tme = p >> 4 & 1, tfx = s->tex0_hi >> 3 & 3, tcc = s->tex0_hi >> 2 & 1, wms = s->clamp_lo & 3;
     u32 wmt = s->clamp_lo >> 2 & 3, tw = 1u << (s->tex0_lo >> 26 & 15), th = 1u << ((s->tex0_lo >> 30 | s->tex0_hi << 2) & 15);
     u32 tpsm = s->tex0_lo >> 20 & 63, tbp = s->tex0_lo & 0x3FFF, tbw = s->tex0_lo >> 14 & 63;
-    u32 cpsm = s->tex0_hi >> 19 & 15, csa = s->tex0_hi >> 24 & 31, t, tx, ty;
+    u32 cpsm = cpsm_of(s->tex0_hi), csa = s->tex0_hi >> 24 & 31, t, tx, ty;
     s32 x0, y0, x1, y1, px0, px1, py0, py1, k, c, cv[4], cs[4], col[4], ad, f, u0 = 0, v0 = 0, u1 = 0, v1 = 0;
     const u32 *pal = 0, *tt = 0;
     int fsplit = 0, tsplit = 0;
