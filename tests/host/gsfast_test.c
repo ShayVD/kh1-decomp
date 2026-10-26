@@ -79,6 +79,10 @@ static void make(KH1GsSprite *s, int shape) {
     s->z = R();
     s->f = R();
     s->fogcol = R();
+    if (R() % 4 == 0) { /* session 135: a TRISTRIP rectangle's corner colours (gsregs.c's gs_quad) */
+        s->quad = 1;
+        for (i = 0; i < 4; i++) s->rgbav[i] = R() % 2 ? 0x00808080u | (R() & 0xFF) << 24 : R();
+    }
     if (shape) {
         s->prim = 0x106 | (R() % 4 ? 0x10 : 0) | (R() % 2 ? 0x40 : 0);
         s->frame_lo = (s->frame_lo & 0xFFFFFF) | (R() % 2) << 24;
@@ -111,6 +115,9 @@ static int run(u32 seed, int fast, int cached, int flat, u32 *hash, KH1GsMemStat
     kh1_gsmem_palette = cached ? palette : 0;
     for (i = 0; i < 20000; i++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0, 16, R() % 1024, R() % 1024, R());
     make(&s, shape);
+    /* and over the texture's own blocks, so that its every byte matters (CT24's top one too) */
+    for (i = 0; i < 8000; i++)
+        kh1_gsmem_write_pixel(KH1_PSMCT32, s.tex0_lo & 0x3FFF, s.tex0_lo >> 14 & 63, R() % 128, R() % 128, R());
     if (R() % 3) kh1_gsmem_tex0(s.tex0_lo, s.tex0_hi | 2u << 29); /* a CLUT */
     r = flat ? kh1_gsmem_flat_sprite(&s) : kh1_gsmem_sprite(&s);
     /* the same sprite again: the memos (tex_scan, the tables) answer the second */
@@ -118,6 +125,44 @@ static int run(u32 seed, int fast, int cached, int flat, u32 *hash, KH1GsMemStat
     *hash = snap_hash();
     *st = *kh1_gsmem_stats();
     return r;
+}
+
+/* session 135: uploads (the kept addresses, trx_addrs; CT32's word a pixel): seed's memory, then the
+ * same few rectangles uploaded twice in random pieces, then again with other bytes; the memory, the
+ * stamps of textures over them and the counters must not depend on the fast paths */
+static const u32 upsms[] = { KH1_PSMCT32, KH1_PSMCT24, KH1_PSMCT16, KH1_PSMCT16S, KH1_PSMT8, KH1_PSMT4,
+                             KH1_PSMT8H, KH1_PSMT4HL, KH1_PSMT4HH, KH1_PSMZ32, KH1_PSMZ16 };
+static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
+    static u32 words[4096];
+    u32 i, j, r, stamps = 0, st0 = 0, st1;
+    rs = seed;
+    kh1_gsmem_reset();
+    kh1_gsmem_fast(fast);
+    for (i = 0; i < 5000; i++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0, 16, R() % 1024, R() % 1024, R());
+    for (r = 0; r < 3; r++) {
+        u32 psm = upsms[R() % 11], bp = R() % 0x4000, bw = 1 + R() % 8, x = R() % 64, y = R() % 64;
+        u32 w = 1 + R() % 80, h = 1 + R() % 40, pass, data = R();
+        u32 lo = bp | bw << 14 | psm << 20 | 7u << 26 | 7u << 30;
+        for (pass = 0; pass < 3; pass++) {
+            u32 left = (w * h * (psm == KH1_PSMT4 || psm == KH1_PSMT4HL || psm == KH1_PSMT4HH ? 4 : psm == KH1_PSMCT32 || psm == KH1_PSMZ32 ? 32 :
+                        psm == KH1_PSMCT24 ? 24 : psm == KH1_PSMCT16 || psm == KH1_PSMCT16S || psm == KH1_PSMZ16 ? 16 : 8) + 31) / 32;
+            u32 ds = pass == 2 ? data + 1 : data;
+            kh1_gsmem_trxdir(0, 0, bp | bw << 16 | psm << 24, 0, x | y << 16, w, h);
+            for (i = 0; i < left; i++) { ds = ds * 1103515245u + 12345u; words[i] = ds ^ ds >> 16; }
+            for (i = 0; i < left; i += j) { /* pieces of 1 .. 64 words */
+                j = 1 + R() % 64;
+                if (j > left - i) j = left - i;
+                kh1_gsmem_image(words + i, j);
+            }
+            /* the stamp's moves (its value counts every write since the start, not reset) */
+            st1 = kh1_gsmem_tex_stamp(lo, 1);
+            stamps = stamps * 3 + (pass ? (st1 != st0) + 1 : 0);
+            st0 = st1;
+        }
+    }
+    *hash = snap_hash();
+    *st = *kh1_gsmem_stats();
+    return stamps;
 }
 
 int main(void) {
@@ -136,6 +181,14 @@ int main(void) {
         drawn += (r1 & 1) != 0;
     }
     CHECK("most sprites draw", drawn > 200);
+    for (it = 0; it < 150; it++) {
+        u32 s0v = run_up(it * 104729u + 7, 0, &h0, &s0), s1v = run_up(it * 104729u + 7, 1, &h1, &s1);
+        if (s0v != s1v || h0 != h1 || memcmp(&s0, &s1, sizeof s0)) {
+            printf("gsfast_test: uploads %u: stamps %08x / %08x, memory %08x / %08x%s\n", it, s0v, s1v, h0, h1,
+                   memcmp(&s0, &s1, sizeof s0) ? ", counters differ" : "");
+            fails++;
+        }
+    }
     kh1_gsmem_texels = 0;
     kh1_gsmem_palette = 0;
     /* kh1_gsmem_read_rect against kh1_gsmem_read_pixel, every PSM, inside and across the 0x4000 wrap */
@@ -168,6 +221,6 @@ int main(void) {
         CHECK("and moves the stamp", kh1_gsmem_tex_stamp(lo, 1) != st1);
     }
     CHECK("read_rect refuses a PSM the model has not", kh1_gsmem_read_rect(0x3B, 0, 1, 0, 0, 4, 4, rect, 256) == -1);
-    printf("gsfast_test: %s (600 sprites both ways, %u drawn; 200 rectangles)\n", fails ? "FAIL" : "PASS", drawn);
+    printf("gsfast_test: %s (600 sprites both ways, %u drawn; 150 upload runs; 200 rectangles)\n", fails ? "FAIL" : "PASS", drawn);
     return fails != 0;
 }

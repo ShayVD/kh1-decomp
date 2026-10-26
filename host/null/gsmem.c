@@ -52,7 +52,17 @@ static struct {
     u32 active, psm, bp, bw, x0, y0, w, h, x, y;
     u32 acc, nacc, bytes; /* the pixel being assembled, its bytes so far, bytes a pixel (0: 4 bits) */
     KH1GsUpload *log;
+    const u32 *at; u32 ai; /* session 135: the pixels' addresses (trx_addrs), 0 for none; the next's */
 } trx;
+
+/* Session 135: an upload's addresses kept (the title uploads the same rectangles, ~800,000 pixels,
+ * every frame: kh1_gsmem_addr's swizzle per pixel was a fifth of the frame), each pixel's in the
+ * transfer's order; the store starts again when full */
+#define AT_POOL (1u << 20)
+#define AT_KEYS 64
+static u32 at_pool[AT_POOL], at_used, at_n;
+static struct { u32 psm, bp, bw, x, y, w, h, off; } at_key[AT_KEYS];
+static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h);
 
 void kh1_gsmem_reset(void) {
     memset(vm, 0, sizeof vm);
@@ -335,6 +345,8 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
         trx.acc = trx.nacc = 0;
         trx.bytes = psm_bytes(dpsm);
         trx.log = l;
+        trx.at = trx.active ? trx_addrs(dpsm, dbp, dbw, dx, dy, w, h) : 0;
+        trx.ai = 0;
         if (kh1_gsmem_xfer_hook) kh1_gsmem_xfer_hook(dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
         return;
     }
@@ -361,8 +373,26 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
     if (kh1_gsmem_xfer_hook) kh1_gsmem_xfer_hook(dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
 }
 
+static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h) {
+    u32 i, x, y, *a;
+    if (!fast_on || !known(psm) || !w || !h || w * h > AT_POOL) return 0;
+    for (i = 0; i < at_n; i++)
+        if (at_key[i].psm == psm && at_key[i].bp == bp && at_key[i].bw == bw && at_key[i].x == x0 && at_key[i].y == y0 &&
+            at_key[i].w == w && at_key[i].h == h)
+            return at_pool + at_key[i].off;
+    if (at_n == AT_KEYS || at_used + w * h > AT_POOL) at_n = at_used = 0;
+    a = at_pool + at_used;
+    for (y = 0; y < h; y++)
+        for (x = 0; x < w; x++) *a++ = kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y);
+    at_key[at_n].psm = psm; at_key[at_n].bp = bp; at_key[at_n].bw = bw; at_key[at_n].x = x0; at_key[at_n].y = y0;
+    at_key[at_n].w = w; at_key[at_n].h = h; at_key[at_n].off = at_used;
+    at_used += w * h;
+    return at_pool + at_key[at_n++].off;
+}
+
 static void trx_pixel(u32 v) {
-    if (known(trx.psm)) put(trx.psm, trx.bp, trx.bw, trx.x, trx.y, v);
+    if (trx.at) put_at(trx.psm, trx.at[trx.ai++], v);
+    else if (known(trx.psm)) put(trx.psm, trx.bp, trx.bw, trx.x, trx.y, v);
     st.pixels++;
     if (trx.log) trx.log->pixels++;
     if (++trx.x == trx.x0 + trx.w) {
@@ -375,6 +405,10 @@ void kh1_gsmem_image(const u32 *w, u32 n) {
     u32 i, b;
     if (!trx.active) { st.extra++; return; }
     seq++; /* session 118: each piece of an upload a write of its own (a texture read between two is a miss) */
+    if (trx.bytes == 4 && !trx.nacc) { /* session 135: CT32's pixel a whole word */
+        for (i = 0; i < n && trx.active; i++) trx_pixel(w[i]);
+        return;
+    }
     for (i = 0; i < n * 4 && trx.active; i++) {
         b = w[i >> 2] >> (i & 3) * 8 & 0xFF;
         if (!trx.bytes) { /* 4 bits a pixel, the low nibble first */
@@ -652,6 +686,18 @@ static int atst(u32 m, u32 a, u32 ref);
 /* session 135: a sprite's tables (addr_split): the frame's address parts, each column's and row's texel,
  * the texture's address parts */
 static u32 sp_cx[2048], sp_ry[2048], sp_tx[2048], sp_ty[2048], sp_tcx[1024], sp_try[1024];
+static u32 sp_pm[256];         /* session 135: a palette's entries after the texture function */
+static s32 qfx[2048], qfy[2048]; /* session 135: a quad's weights (kh1_gsmem_flat_sprite) */
+
+/* a quad's colour at weights fx, fy: the top corners' mix, the bottom's, then between the two */
+static void quad_cv(const KH1GsSprite *s, s32 fx, s32 fy, s32 *cv) {
+    u32 i;
+    for (i = 0; i < 4; i++) {
+        s32 top = (s32)(s->rgbav[0] >> i * 8 & 0xFF) * (256 - fx) + (s32)(s->rgbav[1] >> i * 8 & 0xFF) * fx;
+        s32 bot = (s32)(s->rgbav[2] >> i * 8 & 0xFF) * (256 - fx) + (s32)(s->rgbav[3] >> i * 8 & 0xFF) * fx;
+        cv[i] = (top * (256 - fy) + bot * fy) >> 16;
+    }
+}
 
 int kh1_gsmem_sprite(const KH1GsSprite *s) {
     static u32 tex[64 * 64];
@@ -879,15 +925,26 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
             if (!tt) tsplit = addr_split(SPLIT_TEX, tpsm, tbp, tbw, 0, (s32)tw, 0, (s32)th, sp_tcx, sp_try);
         }
     }
+    /* session 135: a quad's weights a column / row: the pixel centre's place between the corners, 0 .. 256 */
+    if (s->quad && px1 > px0 && py1 > py0) {
+        for (c = px0; c < px1; c++) {
+            s32 fx = x1 > x0 ? ((c * 16 + 8 - x0) << 8) / (x1 - x0) : 0;
+            qfx[c - px0] = fx < 0 ? 0 : fx > 256 ? 256 : fx;
+        }
+        for (k = py0; k < py1; k++) {
+            s32 fy = y1 > y0 ? ((k * 16 + 8 - y0) << 8) / (y1 - y0) : 0;
+            qfy[k - py0] = fy < 0 ? 0 : fy > 256 ? 256 : fy;
+        }
+    }
     flat_raw = 1;
     /* session 135: the title's every-frame work in three loops of their own, the same pixels as the loop
      * below (tests/host/gsfast_test.c): an untextured fill (the clears) and a textured copy with nothing
      * between texel and pixel (the frame copy: no blend, no FBMSK, no alpha test, DECAL or MODULATE by
      * 0x80, a CT32 / CT24 texture), into a CT32 / CT24 frame whose addresses split; and a cached
      * texture's art with its blend */
-    if (fsplit && !c16 && !fbmsk && !s->quad) {
+    if (fsplit && !c16 && !fbmsk) {
         u32 keep = fpsm == KH1_PSMCT24 ? 0xFF000000u : 0, set;
-        if (!tme && !(p >> 6 & 1)) {
+        if (!tme && !(p >> 6 & 1) && !s->quad) {
             set = (cv[0] | cv[1] << 8 | cv[2] << 16 | (u32)cv[3] << 24) & ~keep;
             for (k = py0; k < py1; k++) {
                 u32 fr = sp_ry[k - py0];
@@ -899,7 +956,7 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
             n = (u32)((px1 - px0) * (py1 - py0));
             goto done;
         }
-        if (tme && !(p >> 6 & 1) && !pal && !(s->test_lo & 1) && (tt || tsplit) && (tpsm == KH1_PSMCT32 || tpsm == KH1_PSMCT24) &&
+        if (tme && !(p >> 6 & 1) && !s->quad && !pal && !(s->test_lo & 1) && (tt || tsplit) && (tpsm == KH1_PSMCT32 || tpsm == KH1_PSMCT24) &&
             (tfx || (cv[0] == 0x80 && cv[1] == 0x80 && cv[2] == 0x80 && (!tcc || cv[3] == 0x80)))) {
             u32 amask = tcc ? 0xFF000000u : 0, aset = tcc ? 0 : (u32)cv[3] << 24;
             /* value_rgba's CT24 alpha: TA0, or 0 for black with AEM */
@@ -923,30 +980,63 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
             goto done;
         }
         /* the art and the fades: a cached texture (the present's texture and palette caches: a copy
-         * taken before the draw) or none, any TFX the flat sprite takes, the alpha test (AFAIL KEEP)
-         * and any blend */
-        if (tt || !tme) {
+         * taken before the draw), a CT32 / CT24 one read in place (a render target's: the art behind
+         * the logo) or none, any TFX the flat sprite takes, the alpha test (AFAIL KEEP), any blend,
+         * the menu's quads (their colour a pixel from qfx / qfy) */
+        if (tt || !tme || (tsplit && (tpsm == KH1_PSMCT32 || tpsm == KH1_PSMCT24))) {
             u32 sa = s->alpha_lo & 3, sb = s->alpha_lo >> 2 & 3, sc = s->alpha_lo >> 4 & 3, sd = s->alpha_lo >> 6 & 3;
             u32 abe = p >> 6 & 1, ate = s->test_lo & 1, am = s->test_lo >> 1 & 7, aref = s->test_lo >> 4 & 0xFF;
+            u32 t24 = tpsm == KH1_PSMCT24;
             s32 fix = (s32)(s->alpha_hi & 0xFF), v3[3], mix = sa == 0 && sb == 1 && sd == 1;
+            /* a palette's entries as the texture function makes them, once a sprite (not with a quad's
+             * colours, which change a pixel) */
+            int pm = tme && pal && !s->quad;
+            if (pm) {
+                u32 ne = bits8(tpsm) ? 256 : 16;
+                for (i = 0; i < ne; i++) {
+                    t = pal[i];
+                    if (tfx) {
+                        col[0] = t & 0xFF; col[1] = t >> 8 & 0xFF; col[2] = t >> 16 & 0xFF;
+                        col[3] = tcc ? (s32)(t >> 24) : cv[3];
+                    } else {
+                        col[0] = clamp255((s32)(t & 0xFF) * cv[0] >> 7);
+                        col[1] = clamp255((s32)(t >> 8 & 0xFF) * cv[1] >> 7);
+                        col[2] = clamp255((s32)(t >> 16 & 0xFF) * cv[2] >> 7);
+                        col[3] = tcc ? clamp255((s32)(t >> 24) * cv[3] >> 7) : cv[3];
+                    }
+                    sp_pm[i] = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
+                }
+            }
             for (k = py0; k < py1; k++) {
                 u32 fr = sp_ry[k - py0];
-                const u32 *trow = tme ? tt + sp_ty[k - py0] * tw : 0;
+                const u32 *trow = tt ? tt + sp_ty[k - py0] * tw : 0;
+                u32 tr = tme && !tt ? sp_try[sp_ty[k - py0]] : 0;
                 for (c = px0; c < px1; c++) {
                     u32 a = sp_cx[c - px0] + fr, dv;
+                    if (s->quad) quad_cv(s, qfx[c - px0], qfy[k - py0], cv);
                     if (!tme) {
                         col[0] = cv[0]; col[1] = cv[1]; col[2] = cv[2]; col[3] = cv[3];
                     } else {
-                        t = trow[sp_tx[c - px0]];
-                        t = pal ? pal[t] : value_rgba(tpsm, t, cpsm, csa, s->texa_lo, s->texa_hi);
-                        if (tfx) {
-                            col[0] = t & 0xFF; col[1] = t >> 8 & 0xFF; col[2] = t >> 16 & 0xFF;
-                            col[3] = tcc ? (s32)(t >> 24) : cv[3];
+                        if (tt) {
+                            t = trow[sp_tx[c - px0]];
                         } else {
-                            col[0] = clamp255((s32)(t & 0xFF) * cv[0] >> 7);
-                            col[1] = clamp255((s32)(t >> 8 & 0xFF) * cv[1] >> 7);
-                            col[2] = clamp255((s32)(t >> 16 & 0xFF) * cv[2] >> 7);
-                            col[3] = tcc ? clamp255((s32)(t >> 24) * cv[3] >> 7) : cv[3];
+                            t = ld32(sp_tcx[sp_tx[c - px0]] + tr);
+                            if (t24) t &= 0xFFFFFF;
+                        }
+                        if (pm) {
+                            t = sp_pm[t];
+                            col[0] = t & 0xFF; col[1] = t >> 8 & 0xFF; col[2] = t >> 16 & 0xFF; col[3] = (s32)(t >> 24);
+                        } else {
+                            t = pal ? pal[t] : value_rgba(tpsm, t, cpsm, csa, s->texa_lo, s->texa_hi);
+                            if (tfx) {
+                                col[0] = t & 0xFF; col[1] = t >> 8 & 0xFF; col[2] = t >> 16 & 0xFF;
+                                col[3] = tcc ? (s32)(t >> 24) : cv[3];
+                            } else {
+                                col[0] = clamp255((s32)(t & 0xFF) * cv[0] >> 7);
+                                col[1] = clamp255((s32)(t >> 8 & 0xFF) * cv[1] >> 7);
+                                col[2] = clamp255((s32)(t >> 16 & 0xFF) * cv[2] >> 7);
+                                col[3] = tcc ? clamp255((s32)(t >> 24) * cv[3] >> 7) : cv[3];
+                            }
                         }
                     }
                     if (tme && ate && !atst(am, (u32)col[3], aref)) continue;
@@ -980,16 +1070,7 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
         u32 fr = fsplit ? sp_ry[k - py0] : 0, a;
         ty = tme ? sp_ty[k - py0] : 0;
         for (c = px0; c < px1; c++) {
-            if (s->quad) { /* session 135: the corners' colours at the pixel's centre */
-                s32 fx = x1 > x0 ? ((c * 16 + 8 - x0) << 8) / (x1 - x0) : 0, fy = y1 > y0 ? ((k * 16 + 8 - y0) << 8) / (y1 - y0) : 0;
-                fx = fx < 0 ? 0 : fx > 256 ? 256 : fx;
-                fy = fy < 0 ? 0 : fy > 256 ? 256 : fy;
-                for (i = 0; i < 4; i++) {
-                    s32 top = (s32)(s->rgbav[0] >> i * 8 & 0xFF) * (256 - fx) + (s32)(s->rgbav[1] >> i * 8 & 0xFF) * fx;
-                    s32 bot = (s32)(s->rgbav[2] >> i * 8 & 0xFF) * (256 - fx) + (s32)(s->rgbav[3] >> i * 8 & 0xFF) * fx;
-                    cv[i] = (top * (256 - fy) + bot * fy) >> 16;
-                }
-            }
+            if (s->quad) quad_cv(s, qfx[c - px0], qfy[k - py0], cv);
             for (i = 0; i < 4; i++) col[i] = cv[i];
             if (tme) { /* the texel at the pixel's left / top edge, as kh1_gsmem_sprite */
                 tx = sp_tx[c - px0];
