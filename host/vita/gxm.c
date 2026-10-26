@@ -114,6 +114,13 @@ static void *heap_alloc(Heap *h, u32 len) {
     return 0;
 }
 
+static u32 heap_largest(const Heap *h) {
+    u32 i, n = 0;
+    for (i = 0; i < h->nfree; i++)
+        if (h->free[i].len > n) n = h->free[i].len;
+    return n;
+}
+
 static u32 heap_free_bytes(const Heap *h) {
     u32 i, n = 0;
     for (i = 0; i < h->nfree; i++) n += h->free[i].len;
@@ -410,34 +417,74 @@ typedef struct {
     u8 *mem;
     u8 rt;         /* KH1_RT_* */
     u8 drawn;      /* a scene drew it (since the run started) */
+    Heap *heap;    /* CDRAM, or LPDDR when CDRAM had no room (session 136) */
     SceGxmColorSurface surf;
     SceGxmRenderTarget *gxrt;
 } Target;
 static Target tgt[KH1_CMD_TARGETS];
 
+/* GXM's render target objects, one a size; when the table is full the one used longest ago (never one of
+ * this frame: sceGxmFinish at the frame's start covers the older) is destroyed for the new size */
+#define RTOBJS 32
 typedef struct {
-    u32 w, h;
+    u32 w, h, used; /* used: the frame it last began a scene */
     SceGxmRenderTarget *rt;
 } RtObj;
-static RtObj rtobj[16];
-static u32 nrtobj;
+static RtObj rtobj[RTOBJS];
+static u32 nrtobj, gxm_frame_no;
+static char rt_why[96]; /* the last failure (the skip log's) */
 
 static SceGxmRenderTarget *rt_of(u32 w, u32 h) {
     SceGxmRenderTargetParams p;
+    RtObj *e;
     u32 i;
+    int err;
     for (i = 0; i < nrtobj; i++)
-        if (rtobj[i].w == w && rtobj[i].h == h) return rtobj[i].rt;
-    if (nrtobj == 16) return 0;
+        if (rtobj[i].w == w && rtobj[i].h == h) {
+            rtobj[i].used = gxm_frame_no;
+            return rtobj[i].rt;
+        }
+    if (nrtobj < RTOBJS) e = &rtobj[nrtobj];
+    else {
+        e = 0;
+        for (i = 0; i < RTOBJS; i++)
+            if (rtobj[i].used != gxm_frame_no && (!e || rtobj[i].used < e->used)) e = &rtobj[i];
+        if (!e) {
+            snprintf(rt_why, sizeof rt_why, "%u render target sizes in one frame", RTOBJS);
+            return 0;
+        }
+        sceGxmDestroyRenderTarget(e->rt);
+        e->rt = 0;
+        e->w = e->h = 0;
+    }
     memset(&p, 0, sizeof p);
     p.width = (u16)w;
     p.height = (u16)h;
     p.scenesPerFrame = 8;
     p.multisampleMode = SCE_GXM_MULTISAMPLE_NONE;
     p.driverMemBlock = -1;
-    if (sceGxmCreateRenderTarget(&p, &rtobj[nrtobj].rt) < 0) return 0;
-    rtobj[nrtobj].w = w;
-    rtobj[nrtobj].h = h;
-    return rtobj[nrtobj++].rt;
+    err = sceGxmCreateRenderTarget(&p, &e->rt);
+    if (err < 0) {
+        snprintf(rt_why, sizeof rt_why, "sceGxmCreateRenderTarget %u x %u: 0x%08x", w, h, (u32)err);
+        e->rt = 0;
+        return 0;
+    }
+    e->w = w;
+    e->h = h;
+    e->used = gxm_frame_no;
+    if (e == &rtobj[nrtobj]) nrtobj++;
+    return e->rt;
+}
+
+/* a GPU surface: CDRAM first, LPDDR (uncached) when CDRAM has no span that large */
+static void *surface_alloc(u32 len, Heap **from) {
+    void *p = heap_alloc(&vram, len);
+    *from = &vram;
+    if (!p) {
+        p = heap_alloc(&tram, len);
+        *from = &tram;
+    }
+    return p;
 }
 
 static u32 pow2_up(u32 v) {
@@ -451,8 +498,8 @@ static Target *target(u32 i, u32 rt, u32 w, u32 h) {
     Target *t;
     if (i >= KH1_CMD_TARGETS || !w || !h) return 0;
     t = &tgt[i];
-    if (t->mem && t->w == w && t->h == h) return t;
-    heap_free(&vram, t->mem, t->bytes);
+    if (t->mem && t->w == w && t->h == h) return (t->gxrt = rt_of(w, h)) ? t : 0;
+    if (t->mem) heap_free(t->heap, t->mem, t->bytes);
     memset(t, 0, sizeof *t);
     t->w = w;
     t->h = h;
@@ -460,13 +507,16 @@ static Target *target(u32 i, u32 rt, u32 w, u32 h) {
     t->stride = (w + 31) & ~31u;
     /* room below for a texture of the pass's power-of-two height (TEX0's TH) read in place, and a row past it */
     t->bytes = t->stride * 4 * (pow2_up(h) + 1);
-    t->mem = (u8 *)heap_alloc(&vram, t->bytes);
-    if (!t->mem) return 0;
+    t->mem = (u8 *)surface_alloc(t->bytes, &t->heap);
+    if (!t->mem) {
+        snprintf(rt_why, sizeof rt_why, "%u KiB for its pixels", t->bytes >> 10);
+        return 0;
+    }
     memset(t->mem, 0, t->bytes);
     if (sceGxmColorSurfaceInit(&t->surf, SCE_GXM_COLOR_FORMAT_A8B8G8R8, SCE_GXM_COLOR_SURFACE_LINEAR,
                                SCE_GXM_COLOR_SURFACE_SCALE_NONE, SCE_GXM_OUTPUT_REGISTER_SIZE_32BIT, w, h, t->stride,
                                t->mem) < 0 || !(t->gxrt = rt_of(w, h))) {
-        heap_free(&vram, t->mem, t->bytes);
+        heap_free(t->heap, t->mem, t->bytes);
         t->mem = 0;
         return 0;
     }
@@ -477,6 +527,7 @@ typedef struct {
     u32 w, h, bytes;
     void *mem;
     SceGxmDepthStencilSurface surf;
+    Heap *heap;
 } Depth;
 static Depth depth[3]; /* KH1_DS_NONE (DATE's stencil only), MAIN, SHADOW */
 
@@ -484,13 +535,13 @@ static Depth *depth_of(u32 d, u32 w, u32 h) {
     Depth *z = &depth[d < 3 ? d : 0];
     u32 sw, sh;
     if (z->mem && z->w >= w && z->h >= h) return z;
-    heap_free(&vram, z->mem, z->bytes);
+    if (z->mem) heap_free(z->heap, z->mem, z->bytes);
     z->w = w > z->w ? w : z->w;
     z->h = h > z->h ? h : z->h;
     sw = (z->w + 31) & ~31u;
     sh = (z->h + 31) & ~31u;
     z->bytes = sw * sh * 4;
-    z->mem = heap_alloc(&vram, z->bytes);
+    z->mem = surface_alloc(z->bytes, &z->heap);
     if (!z->mem) return 0;
     sceGxmDepthStencilSurfaceInit(&z->surf, SCE_GXM_DEPTH_STENCIL_FORMAT_S8D24, SCE_GXM_DEPTH_STENCIL_SURFACE_TILED, sw,
                                   z->mem, 0);
@@ -598,9 +649,10 @@ static u32 frames, draws, skipped, scenes; /* the watchdog's */
 
 /* session 136: why a draw (or a scene, or a frame) is skipped, each reason's first case logged with what was
  * asked, and the counts every 600 frames while they grow */
-enum { W_RING, W_TARGET, W_DEPTH, W_SCENE, W_PIPE, W_TEX, W_RANGE, W_STATE, W_N };
+enum { W_RING, W_TARGET, W_DEPTH, W_SCENE, W_NOSCENE, W_PIPE, W_TEX, W_RANGE, W_STATE, W_N };
 static const char *const why_s[W_N] = { "the frame's vertices overflow the ring", "no render target", "no depth buffer",
-                                        "sceGxmBeginScene refused", "no pipeline", "no texture", "vertices out of range",
+                                        "sceGxmBeginScene refused", "in a scene that did not begin",
+                                        "no pipeline", "no texture", "vertices out of range",
                                         "no uniforms or primitive class" };
 static u32 why[W_N];
 static void skip(u32 w, const char *detail) {
@@ -668,6 +720,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         return;
     }
     loose_frame++;
+    gxm_frame_no++;
     if (frames % 600 == 0 && skipped) {
         static u32 last;
         if (skipped != last) {
@@ -692,17 +745,18 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             u32 j, dstore = 0;
             cur = c->tgt < KH1_CMD_TARGETS ? target(c->tgt, c->rt, c->w, c->h) : 0;
             if (!cur) {
-                char d[96];
-                snprintf(d, sizeof d, "target %u (rt %u) %u x %u; %u KiB of CDRAM free", c->tgt, c->rt, c->w, c->h,
-                         heap_free_bytes(&vram) >> 10);
+                char d[256];
+                snprintf(d, sizeof d, "target %u (rt %u) %u x %u: %s; %u KiB of CDRAM free (largest %u), %u of LPDDR",
+                         c->tgt, c->rt, c->w, c->h, rt_why, heap_free_bytes(&vram) >> 10, heap_largest(&vram) >> 10,
+                         heap_free_bytes(&tram) >> 10);
                 skip(W_TARGET, d);
                 break;
             }
             z = depth_of(c->depth, c->w, c->h);
             if (!z) {
-                char d[96];
-                snprintf(d, sizeof d, "depth %u %u x %u; %u KiB of CDRAM free", c->depth, c->w, c->h,
-                         heap_free_bytes(&vram) >> 10);
+                char d[256];
+                snprintf(d, sizeof d, "depth %u %u x %u; %u KiB of CDRAM free (largest %u), %u of LPDDR", c->depth, c->w,
+                         c->h, heap_free_bytes(&vram) >> 10, heap_largest(&vram) >> 10, heap_free_bytes(&tram) >> 10);
                 skip(W_DEPTH, d);
                 cur = 0;
                 break;
@@ -866,7 +920,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                                                          SCE_GXM_PRIMITIVE_LINES, SCE_GXM_PRIMITIVE_TRIANGLES };
             u32 per = c->cls == KH1_PA_TRIANGLES ? 3 : c->cls == KH1_PA_LINES ? 2 : 1, v0 = c->v0, left = c->nv;
             void *vb, *fb;
-            if (!cur) { skip(W_TARGET, "a draw outside a scene that began"); break; }
+            if (!cur) { skip(W_NOSCENE, 0); break; }
             if (bad_pipe || !pk || !fp) { skip(W_PIPE, pk ? pipe_why : "no pipeline set"); break; }
             if (pk->shader.tex && pk->shader.setup != 2 && !have_tex) { skip(W_TEX, tex_why); break; }
             if ((u64)(v0 + left) * 32 > r->vring.head) { skip(W_RANGE, 0); break; }

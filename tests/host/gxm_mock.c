@@ -181,6 +181,10 @@ int sceGxmCreateRenderTarget(const SceGxmRenderTargetParams *p, SceGxmRenderTarg
     *rt = (SceGxmRenderTarget *)malloc(4);
     return 0;
 }
+int sceGxmDestroyRenderTarget(SceGxmRenderTarget *rt) {
+    free(rt);
+    return 0;
+}
 int sceGxmColorSurfaceInit(SceGxmColorSurface *s, SceGxmColorFormat f, SceGxmColorSurfaceType t, SceGxmColorSurfaceScaleMode sm,
                            SceGxmOutputRegisterSize o, unsigned int w, unsigned int h, unsigned int stride, void *data) {
     (void)f; (void)t; (void)sm; (void)o;
