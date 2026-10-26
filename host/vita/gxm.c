@@ -288,11 +288,38 @@ static u8 factor(u8 f) {
     return f < 6 ? m[f] : SCE_GXM_BLEND_FACTOR_ONE;
 }
 
+/* a frame read's stand-in when its shader cannot be had (session 136): Vita3K takes no __nativecolor (that
+ * needs SceShaccCgExt's patches, shark_init).  FBMSK's bits are written whole and the blend is the fixed
+ * function's when blend.h has one without the mask (FIX taken as 0x80); 0: none (the draw is skipped) */
+static int unfetch(const KH1PipeKey *p, KH1PipeKey *o) {
+    KH1BlendState b;
+    *o = *p;
+    o->shader.fetch = o->shader.fabcd = o->shader.fpsm = 0;
+    memset(o->shader.fbm, 0, sizeof o->shader.fbm);
+    if (p->shader.fetch == 2) return 1;
+    kh1_blend_state(p->shader.fabcd, 0x80, 1, p->shader.fpsm == 1 ? 0x01 : 0x00, 0, &b);
+    if (b.kind == KH1_BLEND_FETCH) return 0;
+    o->shader.pre_a = (u8)(b.pre_a + 2);
+    o->shader.pre_d = (u8)(b.pre_d + 2);
+    o->shader.pre_floor = b.pre_floor;
+    o->shader.csel = b.pre_a ? b.csel : 0;
+    o->blend = b.enable;
+    o->eq = b.eq;
+    o->fs = b.fs;
+    o->fd = b.fd;
+    return 1;
+}
+
 static SceGxmFragmentProgram *prog_of(const KH1PipeKey *p, u32 vi, FragShader **fs) {
     FragProg *e;
     SceGxmBlendInfo bi;
+    KH1PipeKey alt;
     u32 i;
     *fs = frag_of(&p->shader);
+    if (!*fs && p->shader.fetch && unfetch(p, &alt)) {
+        p = &alt;
+        *fs = frag_of(&p->shader);
+    }
     if (!*fs || !vert[vi].vp) return 0;
     for (i = 0; i < nprog; i++) {
         e = &prog[i];
@@ -838,14 +865,19 @@ void kh1_vita_gxm_stats(u32 *f, u32 *d, u32 *s, u32 *sc) {
 
 /* the compiler, the shaders the frame needs before any draw (the vertex variants, the present's pair), the
  * GPU memory.  0 when the GPU path can run */
+int kh1_vita_shacc_ext = 1; /* config.txt's shacc_ext= (main.c) */
 int kh1_vita_gxm_init(void) {
     u32 i;
     ctx = vita2d_get_context();
     patcher = vita2d_get_shader_patcher();
     if (!ctx || !patcher) return -1;
     sceIoMkdir(SHADER_DIR, 0777);
-    shark_ok = shark_init_simple(0) >= 0;
-    kh1_vita_log("kh1-gxm: shader compiler %s\n", shark_ok ? "loaded (ur0:data/libshacccg.suprx)"
+    /* session 136: SceShaccCgExt's extensions (the Vita's own Cg: __nativecolor, the frame reads) where they
+     * load, else the plain compiler (Vita3K's; the frame reads get unfetch's stand-ins) */
+    if (kh1_vita_shacc_ext && shark_init(0) >= 0) shark_ok = 2;
+    else shark_ok = shark_init_simple(0) >= 0;
+    kh1_vita_log("kh1-gxm: shader compiler %s\n", shark_ok == 2 ? "loaded with its extensions (ur0:data/libshacccg.suprx)"
+                 : shark_ok ? "loaded without its extensions (ur0:data/libshacccg.suprx; no frame reads)"
                  : "not loaded: only shaders already in " SHADER_DIR " can be used");
     for (i = 1; i < 7; i++)
         if (vert_load(i)) {

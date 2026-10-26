@@ -219,6 +219,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "trace") == 0) kh1_host_trace = atoi(v);
         else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
+        else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
     }
     fclose(f);
 }

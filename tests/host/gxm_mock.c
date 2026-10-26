@@ -109,6 +109,7 @@ static void parse_params(MockProg *p) {
 
 static SceShaccCgCompileOutput no_output;
 int shark_init_simple(const char *path) { (void)path; return 0; }
+int shark_init(const char *path) { (void)path; return 0; }
 void shark_clear_output(void) {}
 const SceShaccCgCompileOutput *shark_get_internal_compile_output(void) { return &no_output; }
 SceGxmProgram *shark_compile_shader_extended(const char *src, uint32_t *size, shark_type type, shark_opt opt,

@@ -13,6 +13,7 @@ void kh1_vita_draw(void);
 
 /* gxm.c (session 136): the GPU renderer.  init: 0 when it can run; frame: one frame of the command recorder
  * (host/null/pipes.c's kh1_pipes_frame_hook); present: the display target into vita2d's open scene */
+extern int kh1_vita_shacc_ext; /* gxm.c: try SceShaccCgExt's extensions (shark_init) first */
 int kh1_vita_gxm_init(void);
 int kh1_vita_gxm_ready(void);
 int kh1_vita_gxm_present(float x, float y, float w, float h);
