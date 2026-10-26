@@ -113,8 +113,10 @@ What the hand matches needed, most often first:
   that blocks a tail call.
 - Arguments m2c lost or added: pass-through arguments, the variadic `func_001c01b0(s32,
   void (*)(), ...)`, an argument computed into a local before the call.
-- Float literals: gcc 2.96 reads some short spellings one ulp off; twelve significant
-  digits are safe (`0.349065810442f`, `3.14159250259f`).
+- Float literals: gcc 2.96 reads some decimal spellings one ulp off, and no one length is
+  always right: wm func_00f2f188 needs `0.349065810442f` (12 digits), the pi of wm's
+  RotMatrixX calls `3.141592503f` (10; `3.14159250259f` is one ulp off), `0.3f` gives the
+  target's 0x3E999999. Try a few spellings.
 - Frame size: an unused local OvlMtx or array.
 
 Near misses and open questions are in the session's notes (docs/next-session.md); two
