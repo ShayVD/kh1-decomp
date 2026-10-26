@@ -40,6 +40,34 @@ def add_prototypes(code: str, sigs: dict[str, str]) -> str:
     return ("\n".join(missing) + "\n" + code) if missing else code
 
 
+GSTORE_RE = re.compile(r"^(\s+)(?:M2C_FIELD\(&?(D_[0-9A-F]{8}), [^,]+, (0x[0-9A-F]+|\d+)\)"
+                       r"|(D_[0-9A-F]{8})(?:\[(0x[0-9A-F]+|\d+)\])?)( = [^;=]+;)$")
+
+
+def sort_stores(code: str) -> str:
+    """Runs of two or more `D_X[...] = v;` / `M2C_FIELD(&D_X, T, off) = v;` lines sorted
+    by address (symbol, then offset or index)."""
+    lines = code.split("\n")
+    out, i = [], 0
+    while i < len(lines):
+        j = i
+        while j < len(lines) and GSTORE_RE.match(lines[j]):
+            j += 1
+        run = lines[i:j]
+        if len(run) > 1:
+            def key(ln: str) -> tuple[int, int]:
+                m = GSTORE_RE.match(ln)
+                sym, off = (m.group(2), m.group(3)) if m.group(2) else (m.group(4), m.group(5))
+                return int(sym[2:], 16), int(off or "0", 0)
+            run = sorted(run, key=key)
+            out += run
+            i = j
+        else:
+            out.append(lines[i])
+            i += 1
+    return "\n".join(out)
+
+
 EXTERN_PROTO_RE = re.compile(r"^[^\n;{}]*?\b(\w+)\([^;{}]*\);\s*/\* extern \*/[^\n]*$", re.M)
 
 
@@ -279,6 +307,11 @@ def variants(code: str) -> list[str]:
     v = merge_splits(code)
     if v != code:
         out.append(v)
+    # runs of stores to globals in address order: the scheduler reorders
+    # independent stores, so m2c's order is not the source's (wm func_00f2cba8)
+    v = sort_stores(code)
+    if v != code:
+        out.append(v)
     # float arguments m2c passed as their bit patterns (`func(5, arg0, 0x42C80000)`)
     v = float_args(code)
     if v != code:
@@ -323,6 +356,10 @@ def callee_stubs(code: str) -> str:
 
 
 FLOAT_BITS_RE = re.compile(r"^0x([34BC][0-9A-F]{3}0000)$")
+# float parameters of the libvu0 calls: any bit pattern passed there is a float
+VU0_FLOAT_PARAMS = {"sceVu0RotMatrixX": 2, "sceVu0RotMatrixY": 2, "sceVu0RotMatrixZ": 2,
+                    "sceVu0ScaleVector": 2, "sceVu0ScaleVectorXYZ": 2, "sceVu0DivVector": 2,
+                    "sceVu0DivVectorXYZ": 2, "sceVu0InterVector": 3, "sceVu0InterVectorXYZ": 3}
 
 
 def float_args(code: str) -> str:
@@ -351,13 +388,20 @@ def float_args(code: str) -> str:
         for n, (a, b) in enumerate(args):
             t = code[a:b].strip()
             fm = FLOAT_BITS_RE.match(t)
-            if not fm:
+            if VU0_FLOAT_PARAMS.get(m.group(1)) == n and re.fullmatch(r"0x[0-9A-F]{1,8}", t):
+                bits = int(t, 16)
+            elif not fm:
                 continue
-            bits = int(fm.group(1), 16)
-            if not 0x3B800000 <= bits & 0x7FFFFFFF < 0x4B800000:
-                continue
+            else:
+                bits = int(fm.group(1), 16)
+                if not 0x3B800000 <= bits & 0x7FFFFFFF < 0x4B800000:
+                    continue
             sp = _spellings(bits)
-            lit = next((x for x in sp if "e" not in x and float(x) == struct.unpack("<f", struct.pack("<I", bits))[0]), sp[0])
+            # twelve digits: gcc's decimal reader can be one ulp off on the shortest
+            # spelling (0.34906587f, wm func_00f2f188 needs 0.349065810442f)
+            lit = next((x for x in sp if "e" not in x and struct.pack("<f", float(x)) == struct.pack("<I", bits)), sp[0])
+            if "." in lit and len(lit.replace("-", "").replace(".", "").lstrip("0")) < 12 and lit.split(".")[1] != "0":
+                lit = f"{struct.unpack('<f', struct.pack('<I', bits))[0]:.12g}"
             out.append(code[k:a] + " " * (code[a:b].startswith(" ")) + lit + "f")
             k = b
             fixes.setdefault(m.group(1), set()).add(n)
