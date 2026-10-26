@@ -314,9 +314,10 @@ def variants(code: str) -> list[str]:
     if v != code:
         out.append(v)
     # float arguments m2c passed as their bit patterns (`func(5, arg0, 0x42C80000)`)
-    v = float_args(code)
-    if v != code:
-        out.append(v)
+    for digits in (12, 10):
+        v = float_args(code, digits)
+        if v != code:
+            out.append(v)
     # overlay data defined above the function: gcc then fills delay slots with
     # its %lo loads (gb func_00f3c1d8)
     for v in list(out[-2:]) + [code]:
@@ -363,7 +364,7 @@ VU0_FLOAT_PARAMS = {"sceVu0RotMatrixX": 2, "sceVu0RotMatrixY": 2, "sceVu0RotMatr
                     "sceVu0DivVectorXYZ": 2, "sceVu0InterVector": 3, "sceVu0InterVectorXYZ": 3}
 
 
-def float_args(code: str) -> str:
+def float_args(code: str, digits: int = 12) -> str:
     """Call arguments that are float bit patterns (low half zero, |x| in 2^-8..2^24) as
     float literals, with that parameter of the callee's prototype made f32."""
     fixes: dict[str, set[int]] = {}
@@ -398,11 +399,11 @@ def float_args(code: str) -> str:
                 if not 0x3B800000 <= bits & 0x7FFFFFFF < 0x4B800000:
                     continue
             sp = _spellings(bits)
-            # twelve digits: gcc's decimal reader can be one ulp off on the shortest
-            # spelling (0.34906587f, wm func_00f2f188 needs 0.349065810442f)
+            # gcc 2.96's decimal reader can be one ulp off: wm func_00f2f188 needs
+            # 0.349065810442f (12 digits), the pi of wm's RotMatrixX calls 3.141592503f (10)
             lit = next((x for x in sp if "e" not in x and struct.pack("<f", float(x)) == struct.pack("<I", bits)), sp[0])
-            if "." in lit and len(lit.replace("-", "").replace(".", "").lstrip("0")) < 12 and lit.split(".")[1] != "0":
-                lit = f"{struct.unpack('<f', struct.pack('<I', bits))[0]:.12g}"
+            if "." in lit and len(lit.replace("-", "").replace(".", "").lstrip("0")) < digits and lit.split(".")[1] != "0":
+                lit = f"{struct.unpack('<f', struct.pack('<I', bits))[0]:.{digits}g}"
             out.append(code[k:a] + " " * (code[a:b].startswith(" ")) + lit + "f")
             k = b
             fixes.setdefault(m.group(1), set()).add(n)
