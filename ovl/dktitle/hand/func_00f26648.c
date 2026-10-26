@@ -1,0 +1,17 @@
+/* dktitle.x func_00f26648: matched by hand. */
+#include "ovl.h"
+
+s32 func_00120748(s32, s32, void *, s32);
+void func_0024e468(s32);
+extern s32 D_00F2C8A0;
+extern void func_00f26638(void);
+s32 func_00f26648(s32 a0, s32 a1, s32 align, s32 *out) {
+    D_00F2C8A0 = -1;
+    func_00120748(a0, a1, func_00f26638, 0);
+    while (D_00F2C8A0 == -1) {
+        func_0024e468(1);
+    }
+    if (out != 0) *out = D_00F2C8A0;
+    if (align == 0) return a1 + D_00F2C8A0;
+    { s32 m = align - 1; return (a1 + D_00F2C8A0 + m) & ~m; }
+}

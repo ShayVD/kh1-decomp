@@ -12,6 +12,12 @@ one-sector "dktitle.x" that is not code, which the boot loads through the
 loader thread before it calls the overlay) and a DIR\\FILE.BIN to test a path
 search. It tests the search and the read, not the
 game: the real run needs the user's own disc.
+
+    python3 -I tests/host/fake_disc.py OUT.iso --dktitle out/overlays/dktitle.x
+
+puts the user's own dktitle.x in place of the one-sector stand-in (session 132: the title's
+native C, host/port/ovl.c, runs only on the pinned file). The image then holds the user's
+bytes: keep it out of the repo.
 """
 import struct
 import sys
@@ -56,17 +62,21 @@ def directory(entries, self_lba, parent_lba):
 
 def main():
     out = sys.argv[1]
+    title = b"kh1-host fake dktitle.x: not code\n"
+    if len(sys.argv) == 4 and sys.argv[2] == "--dktitle":
+        title = open(sys.argv[3], "rb").read()
+    tsec = (len(title) + S - 1) // S
     root, sub, cnf, idx, fbin, img = 19, 20, 21, 22, 23, 24
     cnf_data = b"BOOT2 = cdrom0:\\SLPS_251.98;1\r\nVER = 1.00\r\nVMODE = NTSC\r\n"
     ovl = img + 4
     ents = sorted([(kh_hash("kingdom.img"), 0, img - cnf, 4 * S),
-                   (kh_hash("dktitle.x"), 0, ovl - cnf, S)])
+                   (kh_hash("dktitle.x"), 0, ovl - cnf, len(title) if tsec > 1 else S)])
     idx_data = b"".join(struct.pack("<4I", *e) for e in ents) + bytes(16)
     fbin_data = b"kh1-host fake disc\n"
     sectors = [bytes(S)] * 16
     pvd = bytearray(S)
     pvd[0:7] = b"\x01CD001\x01"
-    pvd[80:88] = both32(ovl + 1)
+    pvd[80:88] = both32(ovl + tsec)
     pvd[120:124] = both16(1)
     pvd[124:128] = both16(1)
     pvd[128:132] = both16(S)
@@ -81,7 +91,7 @@ def main():
     for d in (cnf_data, idx_data, fbin_data):
         sectors.append(d.ljust(S, b"\0"))
     sectors += [bytes(S)] * 4
-    sectors.append(b"kh1-host fake dktitle.x: not code\n".ljust(S, b"\0"))
+    sectors.append(title.ljust(tsec * S, b"\0"))
     open(out, "wb").write(b"".join(sectors))
     print("%s: %d sectors" % (out, len(sectors)))
 

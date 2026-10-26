@@ -16,6 +16,7 @@
 #include "common.h"
 #include "platform/file.h"
 #include "platform/cd.h"
+#include "platform/ovl.h"
 #include "platform/iop.h"
 #include "platform/thread.h"
 #include "platform/math.h"
@@ -251,6 +252,7 @@ s32 func_00120678(LoadTask *t) {
     PlatFlushCache(0);
 #endif
     PlatFlushCache(2);
+    PlatOvlLoaded(t->name, t->buf, r->result); /* a port's native overlays (no code on the PS2) */
     if (t->cb) t->cb(r->result, t->user, r->buf);
     func_00120038(r);
     return 4;

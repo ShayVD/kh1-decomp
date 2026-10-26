@@ -27,6 +27,9 @@
  *                       the boot does next is the main ELF's own (docs/vita-port-plan.md 5.1h).
  *                       KH1_HOST_OVL=stub:N also asks for game state N at the title's entry call.
  *                       Not under valgrind, which runs the overlay's bytes instead of faulting.
+ *                       Session 132: an overlay with native C (dktitle.x: ovl/dktitle/, host/port/ovl.c)
+ *                       runs that C when the game calls the entry, with or without the switch; the
+ *                       stub answers only the overlays that have none.
  *   KH1_HOST_WIDE=W:H   (session 91) a hor+ view for a W:H screen (KH1_HOST_WIDE=1: 960:544): the
  *                       culls' frustum and the markers' / objwin's bounds widen (host/port/view.c,
  *                       docs/renderer-spec.md 5.4); the null platform draws nothing, so a run shows
@@ -66,6 +69,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "platform/ovl.h"
 
 void func_00100558(int argc, char **argv);
 int kh1_cd_image_open(const char *path);
@@ -164,6 +168,9 @@ extern unsigned char kh1_memmap[];
  * game: func_00109770's case 2 runs func_00109588 and func_001095b0). */
 int func_00109558(int state);
 static int ovl_entry(int cmd, int arg) {
+    int ret;
+    if (PlatOvlCall(cmd, arg, &ret)) /* a native overlay (host/port/ovl.c) */
+        return ret;
     ovl_calls++;
     printf("kh1-host: frame %lu: overlay entry D_00F20000(%d, %d) answered 0\n", frames, cmd, arg);
     if (ovl_state >= 0 && cmd == 0) {
@@ -176,7 +183,7 @@ static int ovl_entry(int cmd, int arg) {
 static int ovl_return(siginfo_t *si, void *uc) {
     greg_t *r = ((ucontext_t *)uc)->uc_mcontext.gregs;
     unsigned long a = (unsigned long)si->si_addr - (unsigned long)kh1_memmap + KH1_MEM_BASE;
-    if (!ovl_stub || (void *)r[REG_EIP] != si->si_addr || a < KH1_OVL_BASE || a >= KH1_OVL_END)
+    if (!(ovl_stub || PlatOvlCurrent()) || (void *)r[REG_EIP] != si->si_addr || a < KH1_OVL_BASE || a >= KH1_OVL_END)
         return 0;
     /* every call in src/ is to the entry; a fault further in means the bytes ran (valgrind
      * does not keep data from running, so the stub cannot work under it) */
