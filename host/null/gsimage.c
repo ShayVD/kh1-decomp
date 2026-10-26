@@ -89,7 +89,11 @@ int PlatGsExecLoadImage(void *lp, void *src) {
     while (done < bytes) { /* in words, as the IMAGE qwords bring it (src need not be aligned) */
         u32 k = bytes - done < sizeof buf ? bytes - done : sizeof buf, i;
         for (i = 0; i < (k + 3) / 4; i++) buf[i] = 0;
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        __builtin_memcpy(buf, s + done, k); /* session 135: the same words, without a shift a byte */
+#else
         for (i = 0; i < k; i++) buf[i >> 2] |= (u32)s[done + i] << (i & 3) * 8;
+#endif
         kh1_gsmem_image(buf, (k + 3) / 4);
         done += k;
     }

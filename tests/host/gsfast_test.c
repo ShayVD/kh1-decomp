@@ -139,6 +139,8 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
     kh1_gsmem_reset();
     kh1_gsmem_fast(fast);
     for (i = 0; i < 5000; i++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0, 16, R() % 1024, R() % 1024, R());
+    /* a draw's pages (a render target) under some of them */
+    for (i = 0; i < 3; i++) kh1_gsmem_draw((R() % 512) | (1 + R() % 8) << 16, 0, 0, 0, (R() % 512) << 16, (R() % 512) << 16, 0);
     for (r = 0; r < 3; r++) {
         u32 psm = upsms[R() % 11], bp = R() % 0x4000, bw = 1 + R() % 8, x = R() % 64, y = R() % 64;
         u32 w = 1 + R() % 80, h = 1 + R() % 40, pass, data = R();
@@ -157,6 +159,7 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
             /* the stamp's moves (its value counts every write since the start, not reset) */
             st1 = kh1_gsmem_tex_stamp(lo, 1);
             stamps = stamps * 3 + (pass ? (st1 != st0) + 1 : 0);
+            stamps = stamps * 7 + kh1_gsmem_tex_target(lo, 1);
             st0 = st1;
         }
     }

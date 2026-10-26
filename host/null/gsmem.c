@@ -401,10 +401,71 @@ static void trx_pixel(u32 v) {
     }
 }
 
+/* Session 135: a piece of a CT32 / Z32, PSMT8 or PSMT4 upload with its addresses kept, put_at's writes
+ * and marks without a call a pixel (the title's ~800,000 a frame); then the count and the position as
+ * trx_pixel leaves them.  0 for another PSM */
+static int trx_bulk(const u32 *w, u32 n) {
+    u32 left = trx.w * trx.h - trx.ai, k, j, a, o, v;
+    const u32 *at = trx.at + trx.ai;
+    switch (trx.psm) {
+    case KH1_PSMCT32: case KH1_PSMZ32:
+        k = n < left ? n : left;
+        for (j = 0; j < k; j++) {
+            a = at[j];
+            v = w[j];
+            o = ld32(a);
+            if (o != v) {
+                st32(a, v);
+                page_seq[a >> 11] = seq;
+            } else if (!page_drawn[a >> 11]) {
+                continue;
+            }
+            page_drawn[a >> 11] = 0;
+            marks++;
+        }
+        break;
+    case KH1_PSMT8:
+        k = n * 4 < left ? n * 4 : left;
+        for (j = 0; j < k; j++) {
+            a = at[j];
+            v = w[j >> 2] >> (j & 3) * 8 & 0xFF;
+            o = vm[a];
+            vm[a] = (u8)v;
+            mark(a >> 13, o != v, ~0u);
+        }
+        break;
+    case KH1_PSMT4:
+        k = n * 8 < left ? n * 8 : left;
+        for (j = 0; j < k; j++) {
+            a = at[j];
+            v = w[j >> 3] >> (j & 7) * 4 & 15;
+            o = vm[a >> 1];
+            vm[a >> 1] = (u8)((o & (0xF0 >> (a & 1) * 4)) | v << (a & 1) * 4);
+            mark(a >> 14, o != vm[a >> 1], ~0u);
+        }
+        break;
+    default:
+        return 0;
+    }
+    st.pixels += k;
+    if (trx.log) trx.log->pixels += k;
+    trx.ai += k;
+    if (trx.ai == trx.w * trx.h) {
+        trx.active = 0;
+        trx.x = trx.x0;
+        trx.y = trx.y0 + trx.h;
+    } else {
+        trx.x = trx.x0 + trx.ai % trx.w;
+        trx.y = trx.y0 + trx.ai / trx.w;
+    }
+    return 1;
+}
+
 void kh1_gsmem_image(const u32 *w, u32 n) {
     u32 i, b;
     if (!trx.active) { st.extra++; return; }
     seq++; /* session 118: each piece of an upload a write of its own (a texture read between two is a miss) */
+    if (trx.at && !trx.nacc && !flat_raw && trx_bulk(w, n)) return;
     if (trx.bytes == 4 && !trx.nacc) { /* session 135: CT32's pixel a whole word */
         for (i = 0; i < n && trx.active; i++) trx_pixel(w[i]);
         return;
@@ -687,6 +748,7 @@ static int atst(u32 m, u32 a, u32 ref);
  * the texture's address parts */
 static u32 sp_cx[2048], sp_ry[2048], sp_tx[2048], sp_ty[2048], sp_tcx[1024], sp_try[1024];
 static u32 sp_pm[256];         /* session 135: a palette's entries after the texture function */
+static u32 sp_al[256];         /* session 135: a texel's alpha after it, in bits 24-31 */
 static s32 qfx[2048], qfy[2048]; /* session 135: a quad's weights (kh1_gsmem_flat_sprite) */
 
 /* a quad's colour at weights fx, fy: the top corners' mix, the bottom's, then between the two */
@@ -1006,6 +1068,38 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
                     }
                     sp_pm[i] = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
                 }
+            }
+            /* the art's own case: (Cs - Cd) x As + Cd into CT32 from a palette's entries or CT32 texels
+             * that the texture function leaves (DECAL, or MODULATE by 0x80), no alpha test; As 0 keeps
+             * Cd and As 0x80 is Cs, exactly */
+            if (tme && abe && mix && sc == 0 && !ate && !s->quad && !keep &&
+                (pm || (tpsm == KH1_PSMCT32 && (tfx || (cv[0] == 0x80 && cv[1] == 0x80 && cv[2] == 0x80))))) {
+                for (i = 0; i < 256; i++) sp_al[i] = (tcc ? (tfx ? i : (u32)clamp255((s32)i * cv[3] >> 7)) : (u32)cv[3]) << 24;
+                for (k = py0; k < py1; k++) {
+                    u32 fr = sp_ry[k - py0];
+                    const u32 *trow = tt ? tt + sp_ty[k - py0] * tw : 0;
+                    u32 tr = !tt ? sp_try[sp_ty[k - py0]] : 0;
+                    for (c = px0; c < px1; c++) {
+                        u32 a = sp_cx[c - px0] + fr, sv;
+                        t = tt ? trow[sp_tx[c - px0]] : ld32(sp_tcx[sp_tx[c - px0]] + tr);
+                        sv = pm ? sp_pm[t] : (t & 0xFFFFFF) | sp_al[t >> 24];
+                        f = (s32)(sv >> 24);
+                        d = ld32(a);
+                        if (f == 0) {
+                            sv = (d & 0xFFFFFF) | (sv & 0xFF000000u);
+                        } else if (f != 0x80) {
+                            u32 o = sv & 0xFF000000u;
+                            for (i = 0; i < 3; i++) {
+                                s32 cd1 = (s32)(d >> i * 8 & 0xFF), m = ((s32)(sv >> i * 8 & 0xFF) - cd1) * f;
+                                o |= (u32)clamp255((m >= 0 ? m >> 7 : -((-m + 127) >> 7)) + cd1) << i * 8;
+                            }
+                            sv = o;
+                        }
+                        st32(a, sv);
+                    }
+                }
+                n = (u32)((px1 - px0) * (py1 - py0));
+                goto done;
             }
             for (k = py0; k < py1; k++) {
                 u32 fr = sp_ry[k - py0];
