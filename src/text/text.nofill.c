@@ -2,7 +2,8 @@
  * message id, from 1, to its string) and four GIF packet builders
  * (docs/modules.md "Session 37"): func_001f0ea8 draws a two-byte string,
  * func_001f12c0 an ASCII one, func_001f15f0 one glyph and func_001f18e8 a
- * number; func_001f2eb8 sets up the font.  func_001f0ea8 needs the CONTEXT_ONLY copies of its callees from
+ * number; func_001f1fc8 and func_001f2630 (session 128) draw a message string
+ * and a two-byte string at once; func_001f2eb8 sets up the font.  func_001f0ea8 needs the CONTEXT_ONLY copies of its callees from
  * text.c above it.
  *
  * func_001f18e8 (session 18, s18m1, from s11w52's 2-word draft) keeps a dead
@@ -14,7 +15,10 @@
  * last puts li t1,1 after li 66.  Without the pin: 6 words; without the dead
  * test: 6 words. */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "data/pieces/D_003E8E28.h"
+#include "data/pieces/D_003E8E08.h"
 #include "data/pieces/D_003F1A70.h"
 
 typedef Glyph_3e8e28 Glyph;
@@ -61,6 +65,10 @@ extern s32 D_003F1A68;
 void func_0011fb78(Q *, s32, Q *);
 Q *func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, u32, Q *, Q *);
 void func_001f3110(void);
+u8 *func_00122048(s32, s32);
+void func_001220b8(u8 *);
+s32 func_001f0448(s32, s32, u8 *, s32);
+s32 func_001f2d68(s32, s32, s32, s32, s32, s32, s32, s32);
 
 u8 *func_001efc10(s32 a) {
     return &D_003E5ED8[D_003E890E[a]];
@@ -497,6 +505,368 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
     D_0063F74C = (val - 0x7000) >> 4;
     D_0063F750 = (cy - 0x7400) >> 4;
     return p;
+}
+
+/* func_001f1fc8: MATCHED (session 128), hand/nofill, rodata (jump table at
+ * 0x00490a80).  Draws a message string at once: the font header, then one
+ * sprite per glyph sent through path 2 (the control codes below 21 move the
+ * pen, set the colour or size, or draw a nested string or number from
+ * D_003E8E08's argument list).  From s11w32's 2-word draft
+ * (nonmatchings/session11/w32__001f1fc8_2w.c); a long decomp-permuter run found
+ * the last two words: `cx += adv;` written after the sceGsSyncPath call
+ * instead of between the two sends, which moves the `one` (sd 24) and x30
+ * stores of the glyph block to the original's places.  Needs the
+ * CONTEXT_ONLY copy of func_001f0148 above it. */
+CONTEXT_ONLY s32 func_001f0148(u8 *s, s32 sz)
+{
+    s32 w = 0;
+    u8 **a = (u8 **)D_003E8E08;
+    s32 c;
+    Glyph *g;
+
+    for (;;) {
+        if (*s < 21) {
+            switch (*s) {
+            case 1:
+                w += (sz << 8) / 18;
+                s++;
+                break;
+            case 12:
+                sz = s[1];
+                s += 2;
+                break;
+            case 7:
+            case 15:
+                s += 2;
+                break;
+            case 10:
+                if (*a) w += func_001f0148(*a, sz) << 4;
+                a++;
+                s++;
+                break;
+            case 4:
+            case 5:
+            case 6:
+            case 9:
+                s++;
+                break;
+            case 11:
+                w += func_001f0448(s[2], s[3], *a, sz) << 4;
+                a++;
+                s += 4;
+                break;
+            case 13:
+                w += (s16)(s[1] | (s[2] << 8)) * sz * 16 / 18;
+                s += 3;
+                break;
+            case 8:
+                s += 5;
+                break;
+            case 14:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+                s += 3;
+                break;
+            case 0:
+            case 2:
+            case 3:
+            case 16:
+                return w >> 4;
+            default:
+                s++;
+                break;
+            }
+        } else {
+            if (*s == 24) {
+                c = (s[1] << 8) - 0x1820;
+                s += 2;
+            } else if (*s < 32) {
+                c = ((s[0] << 8) | s[1]) - 0x1820;
+                s += 2;
+            } else {
+                c = *s - 32;
+                s++;
+            }
+            g = &D_003E8E28[c];
+            w += ((g->w << 4) + func_001efb88()) * sz / 18;
+        }
+    }
+}
+
+/* the glyph sprite of func_001f1fc8's packet: tag, colour, then UV, XYZ, UV, XYZ */
+typedef struct {
+    u64 d[2];
+    u64 col, one;
+    s32 x20, x24, x28, x2c;
+    s32 x30, x34, x38, x3c;
+    s32 x40, x44, x48, x4c;
+    s32 x50, x54, x58, x5c;
+} Gl;
+
+#define SETX_MSG() \
+    switch (mode) { \
+    case 0: \
+    default: \
+        cx = x * 16 + 0x7000; \
+        break; \
+    case 1: \
+        cx = (x - func_001f0148(str, sc)) * 16 + 0x7000; \
+        break; \
+    case 2: \
+        cx = (x - func_001f0148(str, sc) / 2) * 16 + 0x7000; \
+        break; \
+    }
+
+/* rodata (jump table at 0x00490a80) */
+s32 func_001f1fc8(s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 sc) {
+    u8 *buf;
+    u32 ua;
+    u64 *d;
+    Q *p;
+    Gl *g;
+    Glyph *gl;
+    s32 cx, cy, k, w, s, h, adv;
+    s32 *argp;
+    s32 defcol;
+    s32 f2, f4;
+    u8 f7;
+
+    func_001efb78(0);
+    h = sc << 4;
+    func_001efb98(0);
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F2270));
+    buf = func_00122048(1024, 128);
+    ua = PLAT_DMA_SPR_ADDR(buf);
+    p = (Q *)(buf + 16);
+    d = (u64 *)p;
+    d[0] = 0x1000000000000003;
+    d[1] = 14;
+    d[3] = 63;
+    d[4] = 0x4007ff8001300000;
+    cy = y * 16 + 0x7400;
+    defcol = color;
+    d[2] = 0;
+    d[5] = 22;
+    d[6] = 68;
+    d[7] = 66;
+    d[8] = 0x60ab400000008001;
+    d[9] = 0x4343ee;
+    p = (Q *)(buf + 96);
+    *(u64 *)buf = 0x7000000b;
+    argp = D_003E8E08;
+    SETX_MSG();
+    for (;;) {
+        if (*str < 21) {
+            switch (*str) {
+            case 0:
+            case 16:
+                goto done;
+            case 1:
+                str++;
+                cx += (sc << 8) / 18;
+                break;
+            case 3:
+                str++;
+                D_0063F740 = *str << 4;
+            case 2:
+                str++;
+                cy += D_0063F740;
+                SETX_MSG();
+                break;
+            case 4: str++; mode = 0; break;
+            case 5: str++; mode = 1; break;
+            case 6: str++; mode = 2; break;
+            case 7:
+                if (str[1]) color = D_003E8D00[str[1] + 1];
+                else color = defcol;
+                str += 2;
+                break;
+            case 8:
+                color = str[1] | (str[2] << 8) | (str[3] << 16) | (str[4] << 24);
+                str += 5;
+                break;
+            case 9:
+                str++;
+                color = *argp++;
+                break;
+            case 10:
+                if (*argp) {
+                    cx = func_001f1fc8(0, color, cx >> 4, cy >> 4, (u8 *)*argp, sc) << 4;
+                    cy = D_0063F750 << 4;
+                }
+                str++;
+                argp++;
+                break;
+            case 11:
+                cx = func_001f2d68(str[1], str[2], str[3], cx >> 4, cy >> 4, *argp, sc, color) << 4;
+                argp++;
+                str += 4;
+                cy = D_0063F750 << 4;
+                break;
+            case 12:
+                sc = str[1];
+                str += 2;
+                h = sc << 4;
+                break;
+            case 13:
+                cx += (s16)(str[1] | (str[2] << 8)) << 4;
+                str += 3;
+                break;
+            case 14:
+                cy += (s16)(str[1] | (str[2] << 8)) << 4;
+                str += 3;
+                break;
+            case 15: str += 2; break;
+            case 17:
+            case 19:
+                x = (s16)(str[1] | (str[2] << 8));
+                str += 3;
+                cx = x * 16 + 0x7000;
+                break;
+            case 18:
+            case 20:
+                cy = ((s16)(str[1] | (str[2] << 8)) << 4) + 0x7400;
+                str += 3;
+                break;
+            default:
+                str++;
+                break;
+            }
+        } else {
+            if (*str == 24) {
+                k = (str[1] << 8) - 0x1820;
+                str += 2;
+            } else if (*str < 32) {
+                k = ((str[0] << 8) | str[1]) - 0x1820;
+                str += 2;
+            } else {
+                k = *str - 32;
+                str++;
+            }
+            gl = &D_003E8E28[k];
+            w = gl->w << 4;
+            s = w * sc / 18;
+            adv = (w + func_001efb88()) * sc / 18;
+            f2 = gl->f2;
+            f4 = gl->f4;
+            g = (Gl *)p;
+            f7 = gl->f7;
+            g->d[0] = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
+            g->d[1] = 22;
+            g->col = (u32)color;
+            g->one = 1;
+            g->x20 = f2;
+            g->x24 = f4;
+            g->x30 = cx;
+            g->x34 = cy;
+            g->x38 = 0x100000;
+            g->x3c = 0x8000;
+            g->x40 = f2 + w;
+            g->x44 = f4 + 288;
+            g->x50 = cx + s;
+            g->x54 = cy + h;
+            g->x58 = 0x100000;
+            g->x5c = 0;
+            PlatDmaSend(PlatDmaGetChan(2), ua);
+            PlatGsSyncPath(0, 0);
+            cx += adv;
+        }
+    }
+done:
+    func_001220b8(buf);
+    D_0063F74C = (cx - 0x7000) >> 4;
+    D_0063F750 = (cy - 0x7400) >> 4;
+    return D_0063F74C;
+}
+
+/* func_001f2630: MATCHED (session 128), hand/nofill.  Draws a two-byte string
+ * at once (the func_001f0ea8 glyph walk, one sprite per glyph sent through
+ * path 2; '\n' starts a new line D_0063F740 lower).  KH1_V0: the callers read
+ * D_0063F74C back from v0 (portability rule 10).  From s11w32's 1-word draft
+ * (nonmatchings/session11/w32__001f2630_1w.c); the last word (the x2c store
+ * issued right after d[1]) went with the same change as func_001f1fc8's:
+ * `cx += a;` written after the sceGsSyncPath call. */
+KH1_V0(s32) func_001f2630(s32 mode, u32 a1, s32 x, s32 y, u8 *str, s32 sc) {
+    u64 *d;
+    Q *buf;
+    void *dma;
+    Pg *g;
+    Glyph *gl;
+    s32 cx, cy, c, w, s, h;
+    u8 f7;
+    s32 f2, f4, a;
+
+    func_001efb78(0);
+    func_001efb98(0);
+    h = sc * 16;
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F2270));
+    buf = (Q *)func_00122048(1024, 128);
+    dma = (void *)PLAT_DMA_SPR_ADDR(buf);
+    g = (Pg *)(buf + 1);
+    d = (u64 *)g;
+    d[0] = 0x4000000000000001;
+    d[1] = 0xeeee;
+    d[2] = 0;
+    d[3] = 0x3f;
+    d[4] = 0x4007ff8001300000;
+    d[5] = 22;
+    d[6] = 68;
+    d[7] = 66;
+    d[8] = a1;
+    d[9] = 1;
+    d[10] = 0x50ab400000008001;
+    d[11] = 0x4343e;
+    *(u64 *)buf = 0x7000000b;
+    g = (Pg *)(buf + 7);
+    cy = y * 16 + 0x7400;
+    SETX();
+    for (;;) {
+        c = *str;
+        if (c == 0) goto done;
+        if (c == '\n') {
+            str++;
+            cy += D_0063F740;
+            SETX();
+            continue;
+        }
+        c |= str[1] << 8;
+        str += 2;
+        if (c == 0x4081) {
+            cx += (sc << 8) / 18;
+            continue;
+        }
+        gl = &D_003E8E28[func_001eff50(c)];
+        w = gl->w << 4;
+        s = w * sc / 18;
+        a = (w + func_001efb88()) * sc / 18;
+        f7 = gl->f7;
+        f4 = gl->f4;
+        g->d[0] = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
+        g->x24 = cy;
+        g->x40 = cx + s;
+        g->d[1] = 22;
+        g->x2c = 0x8000;
+        g->x20 = cx;
+        f2 = gl->f2;
+        g->x28 = 0x100000;
+        g->x30 = f2 + w;
+        g->x34 = f4 + 288;
+        g->x48 = 0x100000;
+        g->x44 = cy + h;
+        g->x10 = f2;
+        g->x14 = f4;
+        g->x4c = 0;
+        PlatDmaSend(PlatDmaGetChan(2), dma);
+        PlatGsSyncPath(0, 0);
+        cx += a;
+    }
+done:
+    func_001220b8((u8 *)buf);
+    D_0063F74C = (cx - 0x7000) >> 4;
+    D_0063F750 = (cy - 0x7400) >> 4;
+    KH1_V0_RETURN(D_0063F74C);
 }
 
 void func_001f2eb8(void) {

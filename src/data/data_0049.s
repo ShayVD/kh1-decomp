@@ -93,30 +93,6 @@
 	PIECE D_00490910, 0x18, 8
 	PIECE D_00490928, 0x18, 8
 	PIECE D_00490940, 0x20, 16
-	PIECE_BEGIN D_00490A80, 0x60, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	.word func_001f1fc8+0x608
-	.word func_001f1fc8+0x1e0
-	.word func_001f1fc8+0x220
-	.word func_001f1fc8+0x208
-	.word func_001f1fc8+0x278
-	.word func_001f1fc8+0x288
-	.word func_001f1fc8+0x298
-	.word func_001f1fc8+0x2a8
-	.word func_001f1fc8+0x2d8
-	.word func_001f1fc8+0x310
-	.word func_001f1fc8+0x330
-	.word func_001f1fc8+0x378
-	.word func_001f1fc8+0x3c0
-	.word func_001f1fc8+0x3d8
-	.word func_001f1fc8+0x400
-	.word func_001f1fc8+0x428
-	.word func_001f1fc8+0x608
-	.word func_001f1fc8+0x430
-	.word func_001f1fc8+0x460
-	.word func_001f1fc8+0x430
-	.word func_001f1fc8+0x460
-	PIECE_BYTES D_00490A80, 0x54, 0xc
-	PIECE_END D_00490A80, 0x60
 	PIECE D_00490AE0, 0x10, 16  /* data/pieces/D_00490AE0.h */
 	PIECE D_00490F10, 0x10, 16
 	PIECE D_00490F58, 0x18, 8
