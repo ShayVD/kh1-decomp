@@ -66,6 +66,8 @@ static void on_clut(u32 lo, u32 hi) {
 static void tex_read(u32 lo, u32 hi, u32 *out, void *ctx) {
     u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), x, y;
     (void)ctx;
+    /* session 136: the rectangle through gsmem.c's address tables (the Vita's GPU renderer decodes with this) */
+    if (!kh1_gsmem_read_rect(lo >> 20 & 63, lo & 0x3FFF, lo >> 14 & 63, 0, 0, w, h, out, w)) return;
     for (y = 0; y < h; y++)
         for (x = 0; x < w; x++) out[y * w + x] = kh1_gsmem_read_pixel(lo >> 20 & 63, lo & 0x3FFF, lo >> 14 & 63, x, y);
 }

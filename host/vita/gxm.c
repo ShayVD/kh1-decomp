@@ -177,7 +177,9 @@ static SceGxmProgram *program_of(const char *text, u32 len, int frag) {
     }
     if (!shark_ok) { failed++; return 0; }
     {
-        SceGxmProgram *c = shark_compile_shader_extended(text, &size, frag ? SHARK_FRAGMENT_SHADER : SHARK_VERTEX_SHADER,
+        SceGxmProgram *c;
+        size = len; /* in: the source's length (vitaShaRK passes it on as the source's size); out: the program's */
+        c = shark_compile_shader_extended(text, &size, frag ? SHARK_FRAGMENT_SHADER : SHARK_VERTEX_SHADER,
                                                          SHARK_OPT_DEFAULT, SHARK_DISABLE, SHARK_DISABLE, SHARK_DISABLE);
         if (!c || !size) {
             const SceShaccCgCompileOutput *o = shark_get_internal_compile_output();
@@ -481,6 +483,55 @@ static void tex_upload(const KH1TexCache *tc, s32 slot, u32 lo, u32 hi) {
     m->psm = psm;
 }
 
+/* A texture neither cache keeps nor the recorder maps to a colour target (on the title: a full-screen CT24 layer at
+ * 0x0E00, in the depth buffer's pages, which the game uploads into each frame): read from GS memory as the frame
+ * left it, kept while its page stamp holds, never refilled in a frame that drew it (the GPU reads it later) */
+#define LOOSE 8
+typedef struct {
+    u32 lo, hi, stamp, frame, bytes;
+    void *mem;
+} Loose;
+static Loose loose[LOOSE];
+static u32 loose_frame, loose_reads;
+
+static const TexMem *tex_loose(u32 lo, u32 hi) {
+    static TexMem m;
+    static u32 buf[1024 * 1024];
+    u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), psm = lo >> 20 & 63, stamp, i, n;
+    Loose *e = 0;
+    if (w > 1024 || h > 1024 || !(n = kh1_texfmt_stride(psm, w) * h)) return 0;
+    stamp = kh1_gsmem_tex_stamp(lo, hi);
+    for (i = 0; i < LOOSE; i++)
+        if (loose[i].mem && loose[i].lo == lo && loose[i].hi == hi) { e = &loose[i]; break; }
+    if (e && e->stamp != stamp && e->frame == loose_frame) return 0; /* drawn this frame with other bytes */
+    if (!e)
+        for (i = 0; i < LOOSE; i++)
+            if (loose[i].frame != loose_frame && (!e || loose[i].frame < e->frame)) e = &loose[i];
+    if (!e) return 0;
+    if (!e->mem || e->lo != lo || e->hi != hi || e->stamp != stamp) {
+        if (e->bytes < n) {
+            heap_free(&tram, e->mem, e->bytes);
+            e->mem = heap_alloc(&tram, n);
+            e->bytes = e->mem ? n : 0;
+            if (!e->mem) return 0;
+        }
+        if (kh1_gsmem_read_rect(psm, lo & 0x3FFF, lo >> 14 & 63, 0, 0, w, h, buf, w)) return 0;
+        kh1_texfmt_convert(psm, buf, w, h, e->mem);
+        e->lo = lo;
+        e->hi = hi;
+        e->stamp = stamp;
+        loose_reads++;
+    }
+    e->frame = loose_frame;
+    m.mem = e->mem;
+    m.lo = lo;
+    m.hi = hi;
+    m.w = w;
+    m.h = h;
+    m.psm = psm;
+    return &m;
+}
+
 static SceGxmTextureFormat tex_format(u32 fmt) {
     switch (fmt) {
     case KH1_TEXFMT_A1B5G5R5: return SCE_GXM_TEXTURE_FORMAT_U1U5U5U5_ABGR;
@@ -553,6 +604,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     kh1_gxm_frame(&rec, r);
     sceGxmFinish(ctx); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
     if (r->vring.head > vbuf_bytes) { skipped++; return; }
+    loose_frame++;
     memcpy(vbuf, vsrc, r->vring.head);
     memset(&t, 0, sizeof t);
     for (i = 0; i < rec.n; i++) {
@@ -663,9 +715,9 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 if (sceGxmTextureInitLinearStrided(&t, s->mem, SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR, w, h, s->stride * 4) < 0)
                     break;
             } else {
-                TexMem *m = c->slot >= 0 && c->slot < KH1_TEXCACHE_SLOTS ? &tex[c->slot] : 0;
+                const TexMem *m = c->slot >= 0 && c->slot < KH1_TEXCACHE_SLOTS ? &tex[c->slot] : tex_loose(c->tex0_lo, c->tex0_hi);
                 u32 fmt;
-                if (!m || !m->mem || m->lo != (c->tex0_lo & 0xFFFFFFFFu) || m->w != w || m->h != h) break;
+                if (!m || !m->mem || m->lo != c->tex0_lo || m->w != w || m->h != h) break;
                 fmt = kh1_texfmt_of(m->psm);
                 if (sceGxmTextureInitLinear(&t, m->mem, tex_format(fmt), w, h, 0) < 0) break;
                 if (fmt == KH1_TEXFMT_P8 || fmt == KH1_TEXFMT_P4) {
@@ -763,6 +815,19 @@ int kh1_vita_gxm_present(f32 x, f32 y, f32 w, f32 h) {
 }
 
 int kh1_vita_gxm_ready(void) { return ready; }
+
+/* a target's pixels for a check (tools/vita/gxmcheck.sh): the last one of port kind rt, its size and stride */
+const void *kh1_vita_gxm_target(u32 rt, u32 *w, u32 *h, u32 *stride) {
+    s32 i;
+    for (i = KH1_CMD_TARGETS - 1; i >= 0; i--)
+        if (tgt[i].mem && tgt[i].drawn && tgt[i].rt == rt) {
+            *w = tgt[i].w;
+            *h = tgt[i].h;
+            *stride = tgt[i].stride;
+            return tgt[i].mem;
+        }
+    return 0;
+}
 
 void kh1_vita_gxm_stats(u32 *f, u32 *d, u32 *s, u32 *sc) {
     *f = frames;
