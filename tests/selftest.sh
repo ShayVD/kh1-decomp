@@ -171,6 +171,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsmem_test" > "$W/gsmem.log" || { grep -v '^kh1-host:' "$W/gsmem.log"; exit 1; }
   tail -n 1 "$W/gsmem.log"
+  # its fast paths against the model with them off (host/null/gsmem.c, session 135)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsfast_test" \
+      "$ROOT/tests/host/gsfast_test.c" "$ROOT/host/null/gsmem.c"
+  "$W/gsfast_test" > "$W/gsfast.log" || { cat "$W/gsfast.log"; exit 1; }
+  tail -n 1 "$W/gsfast.log"
   # the 2D canvas map and the full-screen rules (host/port/canvas.c, session 93)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/canvas_test" \
       "$ROOT/tests/host/canvas_test.c" "$ROOT/host/port/canvas.c" "$ROOT/host/port/view.c"

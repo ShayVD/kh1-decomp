@@ -45,6 +45,7 @@ static u32 ntgt, useq, tgt_useq[TARGETS]; /* useq counts uploads, copies and pix
 static u32 page_drawn[512];          /* the word bits a draw changed and no upload wrote since */
 static int flat_on, flat_raw;        /* session 95: kh1_gsmem_flat's switch; a flat sprite's writes in progress */
 static u8 page_tgt[512];             /* 1 + the target that drew there last */
+static u32 marks;                    /* session 135: moves with page_seq / page_drawn / page_tgt (tex_scan's memo) */
 
 /* the transfer in progress */
 static struct {
@@ -62,6 +63,7 @@ void kh1_gsmem_reset(void) {
     memset(tgt, 0, sizeof tgt);
     memset(page_drawn, 0, sizeof page_drawn);
     memset(page_tgt, 0, sizeof page_tgt);
+    marks++;
     cbp0 = cbp1 = clut_seq = nlog = ntgt = useq = 0;
     /* session 118: seq goes on counting, so a texture cache's stamp from before a reset is never one
      * after it (the pages start again at 0, which only memory never written since a reset has) */
@@ -126,6 +128,26 @@ u32 kh1_gsmem_addr(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
     return ~0u;
 }
 
+/* session 135: a whole word as rd32 / wr32 read and write it, in one access on a little-endian host
+ * (the PS2, x86 and the Vita all are); no page mark */
+static u32 ld32(u32 w) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    u32 v;
+    __builtin_memcpy(&v, vm + w * 4, 4);
+    return v;
+#else
+    const u8 *p = vm + w * 4;
+    return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24;
+#endif
+}
+static void st32(u32 w, u32 v) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    __builtin_memcpy(vm + w * 4, &v, 4);
+#else
+    u8 *p = vm + w * 4;
+    p[0] = v; p[1] = v >> 8; p[2] = v >> 16; p[3] = v >> 24;
+#endif
+}
 static u32 rd32(u32 w) { const u8 *p = vm + w * 4; return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24; }
 /* bits: the word bits the write stores, no longer a draw's */
 static void wr32(u32 w, u32 v, u32 bits) {
@@ -134,10 +156,11 @@ static void wr32(u32 w, u32 v, u32 bits) {
     if (flat_raw) return; /* a flat sprite's pixels stay the draw's (kh1_gsmem_flat_sprite) */
     page_seq[w >> 11] = seq;
     page_drawn[w >> 11] &= ~bits;
+    marks++;
 }
 
-u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
-    u32 a = kh1_gsmem_addr(psm, bp, bw, x, y);
+/* a pixel's stored bits at address a (kh1_gsmem_addr's units for the PSM) */
+static u32 read_at(u32 psm, u32 a) {
     switch (psm) {
     case KH1_PSMCT32: case KH1_PSMZ32: return rd32(a);
     case KH1_PSMCT24: case KH1_PSMZ24: return rd32(a) & 0xFFFFFF;
@@ -151,8 +174,11 @@ u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
     return 0;
 }
 
-static void put(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
-    u32 a = kh1_gsmem_addr(psm, bp, bw, x, y);
+u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
+    return read_at(psm, kh1_gsmem_addr(psm, bp, bw, x, y));
+}
+
+static void put_at(u32 psm, u32 a, u32 v) {
     switch (psm) {
     case KH1_PSMCT32: case KH1_PSMZ32: wr32(a, v, ~0u); return;
     case KH1_PSMCT24: case KH1_PSMZ24: wr32(a, (rd32(a) & 0xFF000000u) | (v & 0xFFFFFF), 0x00FFFFFF); return;
@@ -162,15 +188,83 @@ static void put(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
     /* the 16-, 8- and 4-bit layouts do not share CT32's word: the page is no longer a draw's */
     case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S:
         vm[a * 2] = v; vm[a * 2 + 1] = v >> 8;
-        if (!flat_raw) { page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; }
+        if (!flat_raw) { page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; marks++; }
         return;
-    case KH1_PSMT8:   vm[a] = v; page_seq[a >> 13] = seq; page_drawn[a >> 13] = 0; return;
+    case KH1_PSMT8:   vm[a] = v; page_seq[a >> 13] = seq; page_drawn[a >> 13] = 0; marks++; return;
     case KH1_PSMT4:
         vm[a >> 1] = (vm[a >> 1] & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
         page_seq[a >> 14] = seq;
         page_drawn[a >> 14] = 0;
+        marks++;
         return;
     }
+}
+
+static void put(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) { put_at(psm, kh1_gsmem_addr(psm, bp, bw, x, y), v); }
+
+/* Session 135 (the Vita's speed, docs/vita-build.md "Speed"): a rectangle's addresses as a column part
+ * plus a row part, so the sprites and the present compute two short tables instead of the swizzle for
+ * every pixel.  The CT32 / CT16 / CT16S layouts' block and in-block numbers are fields of x's and y's
+ * bits that do not overlap, so kh1_gsmem_addr(x, y) = cx[x - x0] + ry[y - y0] as long as the block
+ * number does not wrap at 0x4000.  0 (the caller uses kh1_gsmem_addr) for T8 / T4 (their word order
+ * swaps by row), the Z formats (the block XOR), a wrap, or under kh1_gsmem_fast(0), which the tests use
+ * to compare (tests/host/gsfast_test.c). */
+static int fast_on = 1;
+void kh1_gsmem_fast(int on) { fast_on = on; }
+
+/* slot: which pair of tables (SPLIT_*), each keeping the rectangle it holds: the frame copy's 16 strips
+ * read one texture, the present one buffer, every frame */
+enum { SPLIT_FRAME, SPLIT_TEX, SPLIT_RECT, SPLITS };
+static struct { u32 psm, bp, bw; s32 x0, x1, y0, y1; int ok; } split_had[SPLITS];
+static int addr_split(int slot, u32 psm, u32 bp, u32 bw, s32 x0, s32 x1, s32 y0, s32 y1, u32 *cx, u32 *ry) {
+    u32 a0, bmax;
+    s32 i;
+    if (split_had[slot].ok && fast_on && split_had[slot].psm == psm && split_had[slot].bp == bp &&
+        split_had[slot].bw == bw && split_had[slot].x0 == x0 && split_had[slot].x1 == x1 &&
+        split_had[slot].y0 == y0 && split_had[slot].y1 == y1)
+        return 1;
+    split_had[slot].ok = 0;
+    if (!fast_on || x0 < 0 || y0 < 0 || x1 <= x0 || y1 <= y0 || x1 > 2048 || y1 > 2048) return 0;
+    switch (psm) {
+    case KH1_PSMCT32: case KH1_PSMCT24: case KH1_PSMT8H: case KH1_PSMT4HL: case KH1_PSMT4HH:
+        bmax = bp + ((u32)(y1 - 1) >> 5) * bw * 32 + ((u32)(x1 - 1) >> 6) * 32 + 31;
+        break;
+    case KH1_PSMCT16: case KH1_PSMCT16S:
+        bmax = bp + ((u32)(y1 - 1) >> 6) * bw * 32 + ((u32)(x1 - 1) >> 6) * 32 + 31;
+        break;
+    default:
+        return 0;
+    }
+    if (bmax > 0x3FFF) return 0;
+    a0 = kh1_gsmem_addr(psm, bp, bw, x0, y0);
+    for (i = 0; i < x1 - x0; i++) cx[i] = kh1_gsmem_addr(psm, bp, bw, x0 + i, y0);
+    for (i = 0; i < y1 - y0; i++) ry[i] = kh1_gsmem_addr(psm, bp, bw, x0, y0 + i) - a0;
+    split_had[slot].psm = psm; split_had[slot].bp = bp; split_had[slot].bw = bw;
+    split_had[slot].x0 = x0; split_had[slot].x1 = x1; split_had[slot].y0 = y0; split_had[slot].y1 = y1;
+    split_had[slot].ok = 1;
+    return 1;
+}
+
+int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride) {
+    static u32 cx[2048], ry[2048];
+    u32 x, y;
+    if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u || x0 + w > 2048 || y0 + h > 2048) return -1;
+    if (!w || !h) return 0;
+    if (addr_split(SPLIT_RECT, psm, bp, bw, (s32)x0, (s32)(x0 + w), (s32)y0, (s32)(y0 + h), cx, ry)) {
+        for (y = 0; y < h; y++, out += stride) {
+            u32 r = ry[y];
+            if (psm == KH1_PSMCT32)
+                for (x = 0; x < w; x++) out[x] = ld32(cx[x] + r);
+            else if (psm == KH1_PSMCT24)
+                for (x = 0; x < w; x++) out[x] = ld32(cx[x] + r) & 0xFFFFFF;
+            else
+                for (x = 0; x < w; x++) out[x] = read_at(psm, cx[x] + r);
+        }
+        return 0;
+    }
+    for (y = 0; y < h; y++, out += stride)
+        for (x = 0; x < w; x++) out[x] = kh1_gsmem_read_pixel(psm, bp, bw, x0 + x, y0 + y);
+    return 0;
 }
 
 void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
@@ -408,7 +502,15 @@ static u32 psm_bits(u32 psm) {
 static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
     u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
     u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, a, page, s = 0, bits;
+    static u32 m_lo, m_hi, m_marks, m_s, m_t, m_ok;
     *t = 0;
+    /* session 135: the frame copy's 16 strips scan the same 512 x 512 texture twice each with no page
+     * mark between: the last answer again while no mark moved */
+    if (m_ok && fast_on && m_lo == lo && m_hi == hi && m_marks == marks) {
+        *t = m_t;
+        return m_s;
+    }
+    m_ok = 0;
     if (!known(psm)) return 0;
     bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
     bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
@@ -422,6 +524,7 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
             if (page_seq[page] > s) s = page_seq[page];
             if (!*t && page_drawn[page] & bits) *t = page_tgt[page];
         }
+    m_lo = lo; m_hi = hi; m_marks = marks; m_s = s; m_t = *t; m_ok = 1;
     return s;
 }
 
@@ -480,6 +583,7 @@ static void draw_into(u32 fbp, u32 bw, u32 psm, u32 cols, u32 h, u32 mask) {
             page_drawn[p] |= t->mask;
             page_tgt[p] = i + 1;
             page_seq[p] = seq;
+            marks++;
         }
     tgt_useq[i] = useq;
 }
@@ -522,6 +626,10 @@ static s32 lerp_floor(s32 a, s32 n, s32 d, s32 m) {
 
 static int atst(u32 m, u32 a, u32 ref);
 
+/* session 135: a sprite's tables (addr_split): the frame's address parts, each column's and row's texel,
+ * the texture's address parts */
+static u32 sp_cx[2048], sp_ry[2048], sp_tx[2048], sp_ty[2048], sp_tcx[1024], sp_try[1024];
+
 int kh1_gsmem_sprite(const KH1GsSprite *s) {
     static u32 tex[64 * 64];
     u32 p = s->prim, fpsm = s->frame_lo >> 24 & 63, fbp = (s->frame_lo & 0x1FF) * 32, fbw = s->frame_lo >> 16 & 63;
@@ -531,6 +639,7 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     u32 zte = s->test_lo >> 16 & 1, zpsm = 0x30 | (s->zbuf_lo >> 24 & 15), zbp = (s->zbuf_lo & 0x1FF) * 32, z = s->z, zw, zb;
     s32 x0, y0, x1, y1, u0, v0, u1, v1, px0, px1, py0, py1, k, c, col[4], as, ad, f;
     const u32 *pal;
+    int fsplit = 0;
     if ((p & 7) != 6 || (p & 0x110) != 0x110 || s->tex1_lo & 0x1E0 || tfx > 1 || wms > 1 || wmt > 1) return 0;
     if (p >> 5 & 1 && !(s->tests & 4)) return 0;                             /* FGE */
     if (fpsm != KH1_PSMCT32 && fpsm != KH1_PSMCT24) return 0;
@@ -581,11 +690,16 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     for (i = 0; i < 4; i++) cv[i] = s->rgba >> i * 8 & 0xFF;
     seq++;
     useq++;
+    /* session 135: the frame's addresses and each column's / row's texel as tables (addr_split) */
+    if (px1 > px0 && py1 > py0) {
+        fsplit = addr_split(SPLIT_FRAME, fpsm, fbp, fbw, px0, px1, py0, py1, sp_cx, sp_ry);
+        for (c = px0; c < px1; c++) sp_tx[c - px0] = texel((u32)umax0(lerp_floor(u0, c * 16 - x0, u1 - u0, x1 - x0)) >> 4, w, wms);
+        for (k = py0; k < py1; k++) sp_ty[k - py0] = texel((u32)lerp_floor(v0, k * 16 - y0, v1 - v0, y1 - y0) >> 4, h, wmt);
+    }
     for (k = py0; k < py1; k++)
         for (c = px0; c < px1; c++) {
-            x = texel((u32)umax0(lerp_floor(u0, c * 16 - x0, u1 - u0, x1 - x0)) >> 4, w, wms);
-            y = texel((u32)lerp_floor(v0, k * 16 - y0, v1 - v0, y1 - y0) >> 4, h, wmt);
-            t = tex[y * w + x];
+            u32 a = fsplit ? sp_cx[c - px0] + sp_ry[k - py0] : kh1_gsmem_addr(fpsm, fbp, fbw, c, k);
+            t = tex[sp_ty[k - py0] * w + sp_tx[c - px0]];
             for (i = 0; i < 4; i++) ct[i] = t >> i * 8 & 0xFF;
             for (i = 0; i < 3; i++) col[i] = tfx ? ct[i] : clamp255(ct[i] * cv[i] >> 7);
             col[3] = tcc ? (tfx ? ct[3] : clamp255(ct[3] * cv[3] >> 7)) : cv[3];
@@ -600,7 +714,7 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
                 if (ztst == 0 || (ztst == 2 && z < zb) || (ztst == 3 && z <= zb)) continue;
                 zw = !(s->zbuf_hi & 1);
             }
-            d = kh1_gsmem_read_pixel(fpsm, fbp, fbw, c, k);
+            d = read_at(fpsm, a);
             pmsk = fbmsk;
             /* session 121 (s->tests): DATE passes where Ad's bit 7 is DATM; a failed alpha test writes
              * by AFAIL: KEEP nothing, FB_ONLY the frame, ZB_ONLY the Z buffer (session 122: written
@@ -627,7 +741,7 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
             }
             v = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
             v = (d & pmsk) | (v & ~pmsk);
-            put(fpsm, fbp, fbw, c, k, v);
+            put_at(fpsm, a, v);
             if (zw) put(zpsm, zbp, fbw, c, k, z);
             n++;
         }
@@ -687,6 +801,7 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     u32 cpsm = s->tex0_hi >> 19 & 15, csa = s->tex0_hi >> 24 & 31, t, tx, ty;
     s32 x0, y0, x1, y1, px0, px1, py0, py1, k, c, cv[4], cs[4], col[4], ad, f, u0 = 0, v0 = 0, u1 = 0, v1 = 0;
     const u32 *pal = 0, *tt = 0;
+    int fsplit = 0, tsplit = 0;
     if (!flat_on) return 0;
     if ((p & 7) != 6 || p >> 5 & 1) return 0;                                /* a SPRITE, FGE 0 */
     /* session 96: a textured one the exact model refused (the frame copy D_002A6890: the 3D target,
@@ -732,20 +847,127 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     /* session 118: the stored texels from the present's texture cache; 0 (a render target's texture,
      * the frame copy's 3D target, or not kept) reads GS memory */
     if (tme && kh1_gsmem_texels) tt = kh1_gsmem_texels(s->tex0_lo, s->tex0_hi);
+    /* session 135: the frame's addresses and each column's / row's texel as tables (addr_split) */
+    if (px1 > px0 && py1 > py0) {
+        fsplit = addr_split(SPLIT_FRAME, fpsm, fbp, fbw, px0, px1, py0, py1, sp_cx, sp_ry);
+        if (tme) {
+            for (c = px0; c < px1; c++) sp_tx[c - px0] = texel((u32)umax0(lerp_floor(u0, c * 16 - x0, u1 - u0, x1 - x0)) >> 4, tw, wms);
+            for (k = py0; k < py1; k++) sp_ty[k - py0] = texel((u32)lerp_floor(v0, k * 16 - y0, v1 - v0, y1 - y0) >> 4, th, wmt);
+            if (!tt) tsplit = addr_split(SPLIT_TEX, tpsm, tbp, tbw, 0, (s32)tw, 0, (s32)th, sp_tcx, sp_try);
+        }
+    }
     flat_raw = 1;
-    for (k = py0; k < py1; k++)
+    /* session 135: the title's every-frame work in three loops of their own, the same pixels as the loop
+     * below (tests/host/gsfast_test.c): an untextured fill (the clears) and a textured copy with nothing
+     * between texel and pixel (the frame copy: no blend, no FBMSK, no alpha test, DECAL or MODULATE by
+     * 0x80, a CT32 / CT24 texture), into a CT32 / CT24 frame whose addresses split; and a cached
+     * texture's art with its blend */
+    if (fsplit && !c16 && !fbmsk) {
+        u32 keep = fpsm == KH1_PSMCT24 ? 0xFF000000u : 0, set;
+        if (!tme && !(p >> 6 & 1)) {
+            set = (cv[0] | cv[1] << 8 | cv[2] << 16 | (u32)cv[3] << 24) & ~keep;
+            for (k = py0; k < py1; k++) {
+                u32 fr = sp_ry[k - py0];
+                for (c = px0; c < px1; c++) {
+                    u32 a = sp_cx[c - px0] + fr;
+                    st32(a, (ld32(a) & keep) | set);
+                }
+            }
+            n = (u32)((px1 - px0) * (py1 - py0));
+            goto done;
+        }
+        if (tme && !(p >> 6 & 1) && !pal && !(s->test_lo & 1) && (tt || tsplit) && (tpsm == KH1_PSMCT32 || tpsm == KH1_PSMCT24) &&
+            (tfx || (cv[0] == 0x80 && cv[1] == 0x80 && cv[2] == 0x80 && (!tcc || cv[3] == 0x80)))) {
+            u32 amask = tcc ? 0xFF000000u : 0, aset = tcc ? 0 : (u32)cv[3] << 24;
+            /* value_rgba's CT24 alpha: TA0, or 0 for black with AEM */
+            u32 t24 = tpsm == KH1_PSMCT24, ta0 = (s->texa_lo & 0xFF) << 24, aem = s->texa_lo >> 15 & 1;
+            for (k = py0; k < py1; k++) {
+                u32 fr = sp_ry[k - py0], trow;
+                ty = sp_ty[k - py0];
+                trow = tt ? ty * tw : sp_try[ty];
+                for (c = px0; c < px1; c++) {
+                    u32 a = sp_cx[c - px0] + fr;
+                    tx = sp_tx[c - px0];
+                    t = tt ? tt[trow + tx] : ld32(sp_tcx[tx] + trow);
+                    if (t24) {
+                        t &= 0xFFFFFF;
+                        t |= aem && !t ? 0 : ta0;
+                    }
+                    st32(a, (ld32(a) & keep) | (((t & (0xFFFFFF | amask)) | aset) & ~keep));
+                }
+            }
+            n = (u32)((px1 - px0) * (py1 - py0));
+            goto done;
+        }
+        /* the art and the fades: a cached texture (the present's texture and palette caches: a copy
+         * taken before the draw) or none, any TFX the flat sprite takes, the alpha test (AFAIL KEEP)
+         * and any blend */
+        if (tt || !tme) {
+            u32 sa = s->alpha_lo & 3, sb = s->alpha_lo >> 2 & 3, sc = s->alpha_lo >> 4 & 3, sd = s->alpha_lo >> 6 & 3;
+            u32 abe = p >> 6 & 1, ate = s->test_lo & 1, am = s->test_lo >> 1 & 7, aref = s->test_lo >> 4 & 0xFF;
+            s32 fix = (s32)(s->alpha_hi & 0xFF), v3[3], mix = sa == 0 && sb == 1 && sd == 1;
+            for (k = py0; k < py1; k++) {
+                u32 fr = sp_ry[k - py0];
+                const u32 *trow = tme ? tt + sp_ty[k - py0] * tw : 0;
+                for (c = px0; c < px1; c++) {
+                    u32 a = sp_cx[c - px0] + fr, dv;
+                    if (!tme) {
+                        col[0] = cv[0]; col[1] = cv[1]; col[2] = cv[2]; col[3] = cv[3];
+                    } else {
+                        t = trow[sp_tx[c - px0]];
+                        t = pal ? pal[t] : value_rgba(tpsm, t, cpsm, csa, s->texa_lo, s->texa_hi);
+                        if (tfx) {
+                            col[0] = t & 0xFF; col[1] = t >> 8 & 0xFF; col[2] = t >> 16 & 0xFF;
+                            col[3] = tcc ? (s32)(t >> 24) : cv[3];
+                        } else {
+                            col[0] = clamp255((s32)(t & 0xFF) * cv[0] >> 7);
+                            col[1] = clamp255((s32)(t >> 8 & 0xFF) * cv[1] >> 7);
+                            col[2] = clamp255((s32)(t >> 16 & 0xFF) * cv[2] >> 7);
+                            col[3] = tcc ? clamp255((s32)(t >> 24) * cv[3] >> 7) : cv[3];
+                        }
+                    }
+                    if (tme && ate && !atst(am, (u32)col[3], aref)) continue;
+                    d = ld32(a);
+                    if (abe) { /* ((A - B) x C >> 7) + D, as the loop below */
+                        s32 cdv[4], f;
+                        cdv[0] = d & 0xFF; cdv[1] = d >> 8 & 0xFF; cdv[2] = d >> 16 & 0xFF; cdv[3] = d >> 24;
+                        f = sc == 0 ? col[3] : sc == 1 ? (fpsm == KH1_PSMCT24 ? 0x80 : cdv[3]) : fix;
+                        if (mix) /* (Cs - Cd) x C + Cd, the usual one */
+                            for (i = 0; i < 3; i++) {
+                                s32 m = (col[i] - cdv[i]) * f;
+                                v3[i] = clamp255((m >= 0 ? m >> 7 : -((-m + 127) >> 7)) + cdv[i]);
+                            }
+                        else
+                            for (i = 0; i < 3; i++) {
+                                s32 cs = col[i], m;
+                                m = (sel(sa, cs, cdv[i]) - sel(sb, cs, cdv[i])) * f;
+                                v3[i] = clamp255((m >= 0 ? m >> 7 : -((-m + 127) >> 7)) + sel(sd, cs, cdv[i]));
+                            }
+                        col[0] = v3[0]; col[1] = v3[1]; col[2] = v3[2];
+                    }
+                    dv = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
+                    st32(a, (d & keep) | (dv & ~keep));
+                    n++;
+                }
+            }
+            goto done;
+        }
+    }
+    for (k = py0; k < py1; k++) {
+        u32 fr = fsplit ? sp_ry[k - py0] : 0, a;
+        ty = tme ? sp_ty[k - py0] : 0;
         for (c = px0; c < px1; c++) {
             for (i = 0; i < 4; i++) col[i] = cv[i];
             if (tme) { /* the texel at the pixel's left / top edge, as kh1_gsmem_sprite */
-                tx = texel((u32)umax0(lerp_floor(u0, c * 16 - x0, u1 - u0, x1 - x0)) >> 4, tw, wms);
-                ty = texel((u32)lerp_floor(v0, k * 16 - y0, v1 - v0, y1 - y0) >> 4, th, wmt);
-                t = tt ? tt[ty * tw + tx] : kh1_gsmem_read_pixel(tpsm, tbp, tbw, tx, ty);
+                tx = sp_tx[c - px0];
+                t = tt ? tt[ty * tw + tx] : tsplit ? read_at(tpsm, sp_tcx[tx] + sp_try[ty]) : kh1_gsmem_read_pixel(tpsm, tbp, tbw, tx, ty);
                 t = pal ? pal[t] : value_rgba(tpsm, t, cpsm, csa, s->texa_lo, s->texa_hi);
                 for (i = 0; i < 3; i++) col[i] = tfx ? (s32)(t >> i * 8 & 0xFF) : clamp255((s32)(t >> i * 8 & 0xFF) * cv[i] >> 7);
                 col[3] = tcc ? (tfx ? (s32)(t >> 24) : clamp255((s32)(t >> 24) * cv[3] >> 7)) : cv[3];
                 if (s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)col[3], s->test_lo >> 4 & 0xFF)) continue;
             }
-            d = kh1_gsmem_read_pixel(fpsm, fbp, fbw, c, k);
+            a = fsplit ? sp_cx[c - px0] + fr : kh1_gsmem_addr(fpsm, fbp, fbw, c, k);
+            d = read_at(fpsm, a);
             if (c16) d = from16(d);
             if (p >> 6 & 1) { /* ABE: ((A - B) x C >> 7) + D */
                 for (i = 0; i < 4; i++) { cd[i] = d >> i * 8 & 0xFF; cs[i] = col[i]; }
@@ -760,9 +982,11 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
             }
             v = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
             v = (d & fbmsk) | (v & ~fbmsk);
-            put(fpsm, fbp, fbw, c, k, c16 ? to16(v) : v);
+            put_at(fpsm, a, c16 ? to16(v) : v);
             n++;
         }
+    }
+done:
     flat_raw = 0;
     if (tme) {
         st.tex_sprites++;

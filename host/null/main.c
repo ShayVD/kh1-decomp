@@ -57,6 +57,8 @@
  *                       KH1_HOST_SHOT, which feed the GS memory model).  Session 118: and the
  *                       texture cache's stamp hits, hash hits, decodes, render targets and the
  *                       texels hashed / decoded a frame (host/port/texcache.c)
+ *   KH1_HOST_QUIET=1    (session 135) the chain walk without its "dma ch" line per send, as the Vita
+ *                       build runs it (host/null/dmawalk.h kh1_dma_quiet)
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -88,6 +90,7 @@ extern unsigned char D_002A6890[]; /* brightfade.c's frame copy (renderer-spec 5
 int kh1_host_stop_at_cdread = 1;
 int kh1_host_trace;
 extern const char *kh1_host_texdump; /* host/null/dmawalk.c */
+extern int kh1_dma_quiet;                 /* host/null/dmawalk.c (session 135) */
 unsigned int kh1_host_cd_reads, kh1_host_cd_sectors;
 static unsigned long frames, max_frames = 600;
 static int ovl_stub;
@@ -253,6 +256,7 @@ int main(int argc, char **argv) {
         const char *tr = getenv("KH1_HOST_TRACE");
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
+        kh1_dma_quiet = getenv("KH1_HOST_QUIET") != 0; /* session 135: no send lines, as on the Vita */
         if (kh1_host_trace >= 5) kh1_dma_draw_state = kh1_pipes_draw; /* session 123: the GPU pipelines */
         if (kh1_host_trace >= 5) kh1_gs_prim_hook = kh1_pipes_prim; /* session 124: the batches */
         if (kh1_host_trace >= 5) kh1_pipes_start(); /* session 127: the recorder sees the first transfers */

@@ -11,7 +11,8 @@
  *                             title screen itself is dktitle.x: once its C is complete
  *                             (session 132, host/port/ovl.c) the title runs and this is unused;
  *                             until then nothing draws it: see kh1_ovl_entry.
- *       trace=N               the host's KH1_HOST_TRACE levels into the log (default 1: disc reads)
+ *       trace=N               the host's KH1_HOST_TRACE levels into the log (default 1: disc reads;
+ *                             2 adds the chain walk's line per DMA send, which costs speed)
  *       frames=N              exit after N frames (default 0: never)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
@@ -31,6 +32,7 @@
 #include "present.h"
 #include "gsmem.h"
 #include "vita.h"
+#include "dmawalk.h"
 
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
@@ -207,8 +209,12 @@ int main(int argc, char **argv) {
         if (!kh1_cd_image_open(iso)) no_disc(iso);
     }
     vlog("kh1-vita: disc image %s\n", iso);
-    /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host) */
-    if (kh1_host_trace < 2) kh1_host_trace = 2;
+    /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
+     * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */
+    if (kh1_host_trace < 2) {
+        kh1_host_trace = 2;
+        kh1_dma_quiet = 1;
+    }
     kh1_gsmem_flat(1);  /* the clears, fades and letterbox filled into the model */
     kh1_present_pal(1); /* the indexed decodes through the port's palette cache */
     kh1_present_tex(1); /* the textured sprites through the port's texture cache */

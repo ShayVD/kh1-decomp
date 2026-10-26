@@ -15,8 +15,9 @@ the Vita's Cortex-A9 with vitasdk and packs `out/vita/kh1-decomp.vpk`:
   pad.c), the shared port code (host/port/), and the Vita platform (host/vita/):
   - `main.c`: the entry, the data directory, the log, the frame pacing on the Vita's vblank, the
     overlay stub (below);
-  - `display.c`: a 960 x 544 framebuffer showing the GS model's display buffer after each frame copy
-    (the host's `KH1_HOST_SHOT` present, point-sampled, 4:3 pillarboxed), plus a status strip;
+  - `display.c`: the GS model's display buffer after each frame copy (the host's `KH1_HOST_SHOT`
+    present, 4:3 pillarboxed), plus a status strip; since session 135 drawn by the GPU through
+    vita2d (one bilinear textured quad, "Speed" below);
   - `pad.c`: sceCtrl in libpad2's layout (Vita L / R are L1 / R1; L2 / R2 / L3 / R3 are the rear touch
     pad's quarters: upper left, upper right, lower left, lower right; circle confirms);
   - `context.S` + `include/ucontext.h`: the four ucontext calls threads.c / tasks.c use, as an ARM
@@ -90,8 +91,8 @@ What a run can show, at best:
 - **No 3D.** The VIF1 / VU1 path (renderer A / B, PATH1) is not replaced: chains are walked but
   their models are not drawn. The picture is the GS model's 2D: clears, fades, uploads, sprites,
   copies (whatever the boot draws on PATH3).
-- **Not the GXM renderer.** The picture is software (the model's display buffer copied to the
-  framebuffer after each frame copy). The port code from sessions 116 to 122 (palette and texture
+- **Not the GXM renderer.** The picture is software (the model's display buffer; since session 135
+  shown as one GXM textured quad through vita2d, "Speed" below). The port code from sessions 116 to 122 (palette and texture
   caches, texture formats, TFX, sampler, blend, alpha / destination-alpha tests, depth, fog, primitive
   assembly) is linked and feeds the model's present, but nothing draws with GXM yet.
 - **No sound** (host/null/sound.c's null server keeps the status the game polls), **no saves** (no
@@ -120,6 +121,58 @@ Mix ISO, `Vita3K --frontend sdl -r KHDC00001`, log level ERROR (its TRACE defaul
 - **About 10 frames a second** in Vita3K on the M3 with the new game, 20 at the title: the software
   present (a GS model read per pixel) and the chain walk, emulated. Not a measure of a real Vita.
 - **The picture is black**, as expected: no title (the overlay), no 3D. The status strip moves.
+
+## Speed (session 135, 2026-10-26)
+
+Vita3K showed the title at ~20 frames a second, ~6.5 once the large art was up. The game itself is
+not the cost: the host runner takes 0.05 s for 600 title frames without the picture. All of it was
+the software GS model drawing each frame (host/null/gsmem.c) and the present:
+
+- **Every pixel's address through the swizzle, and two divisions** (the DDA's `lerp_floor`, a
+  library call on the Cortex-A9, which has no divide instruction). Each frame draws the frame copy
+  (16 strips of 32 x 448 from the 3D target, CT24, bilinear in TEX1 but point-sampled here), the
+  3D target's clear (16 strips of 32 x 384) and the art, then the present read 512 x 448 pixels
+  again one by one. Now each sprite builds two short tables: the frame's addresses as a column
+  part plus a row part (`addr_split`: the CT32 / CT16 / CT16S block and in-block numbers are bit
+  fields of x and y that do not overlap, so the address is a sum while the block number does not
+  wrap at 0x4000; T8 / T4 and the Z formats keep the per-pixel swizzle), and each column's and
+  row's texel. The tables are kept per rectangle, so the 16 strips reading one texture build its
+  table once.
+- **Three loops of their own** in kh1_gsmem_flat_sprite for the title's shapes, into a CT32 / CT24
+  frame with no FBMSK: an unblended untextured fill (the clears), an unblended texel-for-pixel
+  copy from a CT32 / CT24 texture with DECAL or MODULATE by 0x80 (the frame copy), and a cached
+  texture or an untextured fill with any blend and the alpha test (the art and the fades; the
+  texture cache's copy is taken before the draw, as the general loop reads it).
+- tex_scan (a textured draw's page stamp, asked twice a draw) remembers its last answer until a
+  page mark moves.
+- **The log**: the chain walk printed a "dma ch" line per send, ~7 a frame, through the Vita's
+  unbuffered sceIoWrite log. dmawalk.c's `kh1_dma_quiet` drops that line; the Vita sets it unless
+  config.txt says `trace=2` or more (the host: `KH1_HOST_QUIET=1`).
+- **The present is drawn by the GPU** (host/vita/display.c): the display buffer read once with
+  `kh1_gsmem_read_rect` into a 512 x 512 GXM texture and drawn as one bilinear quad through the
+  canvas map by vita2d (vitasdk's 2D library, whose shaders come compiled; the port's own Cg from
+  shadergen.c still has no compiler in vitasdk, docs/vita-port-plan.md). Before, the CPU wrote all 960 x 544 pixels
+  point-sampled. The status strip is drawn with it (and redrawn with the last picture when no frame
+  copy came for 30 vblanks).
+
+Measured on the fake disc with the user's dktitle.x (the title's frame loop without its art):
+
+| | before | after |
+|---|---|---|
+| host runner, 600 title frames, KH1_HOST_SHOT=64:36 (x86, -O1) | 9.5 s | 0.77 s |
+| one title frame's GS work (clear, copy, present read), ARM -O2 under qemu-arm | 130 ms | 4.7 ms |
+| the same plus a full-screen blended T8 art layer (after: through the caches) | ~205 ms | ~16 ms |
+| ARM runner under qemu-arm, 600 frames | | 4.3 s, every shot equal to the old x86 code's |
+
+The pixels do not move: tests/host/gsfast_test.c draws 600 random sprites (the title's shapes and
+every other) from the same memory with the fast paths on and off (`kh1_gsmem_fast(0)`) and compares
+all 4 MB, the answer and the counters, plus kh1_gsmem_read_rect against kh1_gsmem_read_pixel and the
+memo against a write and a draw (three deliberate breaks caught). Outside the repo, ~25,000 random
+sprites gave the same memory as the session 133 gsmem.c linked side by side (its symbols renamed),
+with and without the caches. **Not measured in Vita3K or on a Vita yet**: qemu's numbers are only
+relative, the real art's sprites are unknown here (the fake disc has none), and the frame pacing
+still waits for the Vita's vblank after each game vblank, so the title reaches 60 only when a
+frame's work fits in 16.7 ms.
 
 ## What next, in order
 

@@ -55,7 +55,8 @@ TARGETS = {
         out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA"],
         dirs=[("null", ("main.c", "pad.c")), ("port", ()), ("vita", ())],
         link=["-Wl,-q", "-Wl,--no-warn-rwx-segments"],
-        libs=["-lSceDisplay_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lm"]),
+        libs=["-lvita2d", "-lSceDisplay_stub", "-lSceGxm_stub", "-lSceSysmodule_stub", "-lSceCommonDialog_stub",
+              "-lSceAppMgr_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lm"]),
     "linux-arm": dict(
         out="out/armlinux", prefix="arm-linux-gnueabihf-", defines=["-DKH1_HOST", "-fno-pic", "-fno-stack-protector"],
         dirs=[("null", ()), ("port", ()), ("vita", ("main.c", "pad.c", "display.c")), ("armlinux", ())],
