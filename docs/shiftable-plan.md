@@ -3670,3 +3670,18 @@ copy in func_00241d60), which cover_check keeps in every order, so **the float s
 - A jump table whose first word is not code in the function (a table of another function's addresses, or data) is
   still not read; none was seen.
 - Session 31's widening / partial loop_entry mechanisms stay (they change event sets in random orders, not names).
+
+## Session 131: reach_check scans only the overlays' code, and the first boot since session 29
+
+- **The overlay scan did not finish.** reach_check decodes each overlay as one straight-line region; it used to
+  decode the whole file, data part included. With Python 3.13 in the container, wm.x's region (158k "instructions",
+  97k of them code) grew the fixpoint state past 10 GB in 50 minutes, still inside wm.x's data part (py-spy:
+  `analyse` -> `merge` -> `join`, a multi-base index set growing). Decoding data as code only adds noise, so the
+  scan now stops at each overlay's last `jr ra` + delay slot (the code end tools/ovl/inventory.py reports;
+  `--ovl-data-as-code` restores the old scan). The whole check now takes 20 minutes.
+- The resulting default (KH1_F131: m12, float; shift-ld "2009 floated", every M12-FLOAT check OK, 12 overlay
+  fixup tables) **booted in PCSX2** and played the title, the load menu, two saves, the field, every in-game
+  menu page, the save point's party change, a room change, the world map and a Gummi flight
+  (docs/float-untested.md "Session 131 boot"). Its float set was not compared name by name with session 86's
+  (the old scan does not finish here); the next session with the Mac plays a fight and a shop before the rows
+  in float-untested.md move here.

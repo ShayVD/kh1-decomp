@@ -8,15 +8,38 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## The Mac
 
-**The Mac should be reachable from about 09:00 UTC on Monday 2026-10-26** (session 128 asked at 00:07 UTC; the
-user said it would be there in 9 hours and to do static work until then; sessions 49 to 130 ran without it;
-session 130 finished at about 07:00 UTC, before the Mac was back). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
-item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
-is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
-still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
-items.
+**The Mac was back on 2026-10-26** (session 131 used it from 09:17 UTC). How it worked in session 131: the
+connect card gives folder tools for ~/Downloads (stage files into the container, commit files back), but the
+Mac's sandbox shell (`device_bash`) did not start, so anything that must *run* on the Mac (patching the 3.5 GB
+KH1_BIG.iso with patch_iso.py) went through a Remote Control session (one command, then stopped; folder tools
+are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full tier; the grant expires after
+30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
+Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 130, 2026-10-26)
+## Where we stopped (end of session 131, 2026-10-26)
+
+- **Session 131** (with the Mac): **the first float boot since session 29, every overlay inventoried.**
+  - reach_check never finished on wm.x (it decoded the overlays' data as code; >10 GB): it now scans each
+    overlay's code part only (`--ovl-data-as-code` for the old scan; 20 min). KH1_F131 (m12 float, "2009
+    floated") **booted in PCSX2**: title, load menu, saves 06 and 05, field and HUD, every in-game menu page
+    (journal's 3D model, config), the save point's party change (only the chosen members appear: session 87's
+    question answered), a room change, attacks / Firaga, the world map (wm.x) and a Gummi flight (gb.x).
+    Not reached: a fight with enemies, a shop, the warp drive, a movie (docs/float-untested.md "Session 131
+    boot"; its rows stay until a fight and a shop are played).
+  - All 12 overlays inventoried (vita-port-plan 5.2a's table); **dktitle.x is built with the main ELF's
+    ee-gcc 2.96** (8 of 9 hand-written small functions byte-identical with `-O2 -G0 -fno-strict-aliasing`,
+    nonmatchings/session131/ovl_toolcheck/). The overlay questions of sessions 68-130 answered in 5.2a: dktitle
+    asks for states 2 / 11 / 16, dkmovie stores 2 to `D_002BBE04` and 1 to `D_002BBE18`, wm.x calls
+    `func_00110a48` (wide frustum) and gb.x does not, xl_limit vibrates with patterns 3 / 4, and the summon
+    overlays' task in `D_00304B6C` reads the object: **summon.c's `func_0013ab08` now passes it** (bytes
+    unchanged; indcheck row READ).
+  - Item 2 (host run on the real disc) not done: the ISO is 3.5 GB and staging takes at most 400 MB a file.
+  - Session 101's card still unanswered ("widen" stays); PR #131 still open (4d waited). kh1.elf
+    byte-identical; selftest PASS. **Matching**: no new match (6,981 / 6,988); 0010d470's probe 129 -> 108
+    words with a permuter-found dead store (nonmatchings/session131/NOTES.md; still 40 bytes short: the
+    cross-jump).
+  - **The user asked (session 131) for session 132's main item to be decompiling dktitle.x**, the step towards
+    a Vita build that boots to the title screen.
 
 - **Session 130** (static, vita-port-plan 5.1br): **the vertex programs' GXM tables as a port builds them.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). vertex.h's
@@ -736,139 +759,32 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 131 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 132 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
-   stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s108 and /mnt/project-files/kh1-runtime/s108, patch KH1_BIG.iso, and run the route in
-   docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
-   merged its counts), customize, status, config and journal pages with each journal section, changing a config
-   option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
-   **session 87: after the save point's party choice, does a member appear who was not chosen?**
-   savemenu.c `func_00228588`), loading a save from the title screen, a new game's name entry if one is reachable,
-   buying and selling in an item shop and a Gummi shop, the Gummi garage (session 87 read its lists), the Moogle's
-   synthesis, a list that pages (session 70 merged the list callback), the title screen left idle until its demo,
-   a battle with the HUD (the HP / MP gauges, the command menu including its second kind-4 menu (session 70:
-   D_00650120[6]), lock-on and the target's gauge, damage numbers, an "obtained" notice), the world map's gauge, a
-   minigame with a timer or score if one is near, a level-up, a Trinity mark if one is near, a summon if one is
-   available, enemy drops picked up, the pause, a game over and its continue, a room change and a world change, a
-   movie, music and sound effects throughout (session 86 moved the sound status block's message buffer), a
-   controller pulled out for a second (the system-message band, renderer-spec 4.15), a scene with the screen
-   spin if one is near (renderer-spec 4.16: the picture turning into itself), **session 88's effects** (renderer-spec
-   4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
-   sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
-   a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 126: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
-   session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
-   session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
-   the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
-2. **Host run on the real disc (with the Mac)**: ask once for the user's ISO (Downloads; the unpatched original,
-   not KH1_BIG.iso) to be copied into the container's scratchpad (never into the repo or project files), and run:
-   `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host`, once under valgrind, `KH1_HOST_TRACE=2` (every DMA chain
-   walked: a chain leaving host memory or ending inside a packet is a bug; record the windows' per-draw packets),
-   `KH1_HOST_TRACE=5` with `gsstate.py RUN.txt --sends --draws --uploads --targets --nodes` (compare with
-   renderer-spec 3.2 / 4.7-4.16 and 5.1; every node in drawkeys.py's map; the targets `0x1A00`, Z24 `0x0E00`, the
-   display buffer, `0x3A00`), `KH1_HOST_TEXDUMP=DIR` (look at the decoded message font: readable glyphs settle
-   gsmem.c's swizzle and 4.9's 2-bits-a-layer inference), then **`KH1_HOST_OVL=stub:2`** (Dive to the Heart's
-   files are on the real disc: record how far the room parse func_00132790 gets), and the `KH1_HOST_TRACE=5` room
-   run once more with `KH1_HOST_DMAC=defer` (same `--nodes` order expected; pending only at frame-end waits; the
-   texture steps' dir-2 copies in `--uploads`; key 50000's P3 upload and chain 3, `D_0047E220` / `D_00482260`,
-   with its tags in map section 1). Run each with `KH1_HOST_SND=trace` and `python3 -I tools/host/sndlog.py
-   RUN.txt` (the boot's bank transfers, the title / Dive to the Heart music starts, SEs played and ended, no
-   frame near 256 records; the transfer count back to 0). **Session 87: the pad is connected by default now**;
-   compare one run with `KH1_HOST_PAD=none` (it should sit in the "no controller" band from frame 32), and once
-   the room run gets further, try a `KH1_HOST_PAD` script (START at the title, CIRCLE, the menu with
-   TRIANGLE?; session 88: start from tests/host/pads/title.txt and move its frames to what the run shows). Read the
-   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 89: find the message font's button glyph codes** (circle, cross, triangle, square, L1 / R1 ... in the decoded font and the message files) **and the disc's HUD / menu textures that show a button** (`KH1_HOST_TEXDUMP`), for 5.1ac's swap lists; record the HUD draws' rectangles for renderer-spec 5.3.1's anchor table (**`gsstate.py RUN.txt --extents`**, session 91: one row per HUD part keyed `ENV > D_00351E10`; check each row of 5.3.1, the kind-3 gauge, the one-shot and the minigame timer's x / y). **Session 91: run the room once with `KH1_HOST_WIDE=1`** (the culls let more through: compare the draw-list node counts with and without it); **session 92: with `KH1_HOST_WIDE=1` and `--extents` each HUD part in host/port/hudanchor.c's table should move by -82.8 / +82.8 px (centre ones and markers not); a part that moves wrong or a HUD environment missing from the table is a table fix**; **session 93: every full-screen send (the clear, display clear, frame copy, fade, letterbox, the copies) at -82.8 .. 594.8 with "(scissor: the view)", and a full-screen send that stays 0 .. 512 is a missing `host/port/fullscreen.c` row**, **session 94: one run with `KH1_HOST_SHOT=960:544:DIR` (DIR in the scratchpad, never committed; look at a few frames: the uploads and 2D sprites the model holds, pillarboxed; session 95: the clears, fades and letterbox now show their colours, and the shot line counts the flat sprites) and, if the lens grid is reached, its `CLAMP_1` MAXU 676 under `KH1_HOST_WIDE=1`**, and **list the actors with spawn flag `0x20000`** (renderer-spec 5.4 "Bit 35's readers": gdb after `func_00132c70`, each of roomobj.c's four lists' 0x78-byte records with `flags & 0x20000`) and scan the room's object scripts for the halfword `0xA30B` (`func_0012a030`). **Session 88 / 96: record the high-water marks of countcheck's
-   DATA rows** with **`KH1_HOST_COUNTS=1`** on every real-disc run (session 96, host/null/counts.c: printed at the
-   end; an "OVER" row is a real overrun, on the PS2 too: write it into countcheck's REVIEWED entry; the collision
-   count is a lower bound). **Session 96: the display shot now goes through the frame copy** (the target's
-   contents point-sampled): look at a `KH1_HOST_SHOT` frame of the title and of Dive to the Heart (**session 97**: under `KH1_HOST_WIDE` the display shot starts at canvas x 82.8 by design; compare one `:target` shot; **session 98**: with `--extents`, the stored frame back `D_002B66B0` (capture.c, a fade from a stored frame: the menu or a world change?) should now be at -83.5 .. 594.1; note which scenes send it, and whether the spin copy / strip or the copy into the Z area appear; **session 99**: every full-screen send fscheck.py lists should show at -82.8 .. 594.8 under `KH1_HOST_WIDE`, the half-size captures `D_002B6760` / `D_002A5A90` at the view's half: open the menu (the blur `D_002A4B60` / `D_002A4DD0`), a world change (the cross-fade `D_002B65E0`) and, if reached, an event's depth blur and the shaped wipe `D_002A6A40` / `D_002A6AA0`; the display shot now shows canvas 0 .. 512 unshifted; **session 100**: the menu's backdrop gradient at -82.8 .. 594.8 (menubg's four, built in C; not a send, so in `--draws`), and, in a scene with vm_lib's screen effects (a zoom, cross-fade or tint of the stored frame), `D_003DAE30` / `D_003DAF60` / `D_003DB050` at -82.8 .. 594.8; **session 101**: the image loads now reach the model, so `--uploads` lists them (timload, roombg, objwin, hud, fldtext, opimage, mdlpkt, capture's halves) and `KH1_HOST_TEXDUMP` should show more decoded textures; a store now returns the model's bytes (menubg's backdrop colours, the blur's empty test); in a menu with a full-width rule (top menu, journal, load screen) the rule's flat sprite at -82.8 .. 594.8 in `--draws`; if a lens flare is reached, record its key's e / f (the box `e x 8` by `f x 4`, at most 4096 pixels); **session 102**: a flare's Z24 store of a box the draws wrote now reads 0, so the flare shows at full strength on the host ("all visible"); a flare that is dim or hidden means the Z area held uploaded or copied bytes there: note the scene; session 103's flare_test shows what the count gives for each case; **session 104**: without `KH1_HOST_SHOT` expect the menu to send the empty pass `D_002A4DD0` (the half capture reads zeros) and the backdrop gradient black; note whether a `KH1_HOST_SHOT` run sends the blur `D_002A4B60` instead; **session 105**: it should when the display is not black (storeread_test); under `KH1_HOST_SHOT` + `KH1_HOST_WIDE` the menu blur shows canvas -82.8 .. 429 stretched (5.1as; **session 106**: the fill no longer wraps into blocks 0x3900 .. 0x393F, so a broken texture right after the menu opens is a new bug), and an event's depth blur the whole view (5.1at)). **Session 112**: on the host the HUD's marks and counters now end when their actor goes (`func_001375d8` returned 0 before), a crossfade's second texture loads its CLUT and writes no Z (a crossfade drawing black or wrong colours before 112 was this), and summon.nostrict.c's `x370` bit 52 and objdraw's object flags 45 / 57 are set and cleared (before: neither; `~0` cleared nothing). Fix host-only causes the way
-   sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
-   walkcheck at 0, the PS2 ELF byte-identical).
-   **Add (session 123)**: the end-of-run `kh1-host: pipelines:` line and its `pipe N` lines for the title and the
-   room run (`KH1_HOST_TRACE=5`): how many GPU pipelines and fragment shaders the real draws need against
-   drawpipes.py's 43 / 28 (session 129; renderer A's TEX0_2 / CLAMP_2 from the disc, the real ZBUF under the 2D packets), into
-   renderer-spec 4.13 "Session 123"; and every `port target` line a known kind (an `OTHER` target or an unknown
-   depth buffer is a new one for host/port/target.c's table).
-   **Add (session 124)**: the `batches:` lines of the title and the room run (`KH1_HOST_TRACE=5`): draw calls,
-   primitives and GPU vertices a frame (average and most), and how many render passes a frame opens, into
-   renderer-spec 4.13 "Session 124"'s table (the Vita's draw-call budget); and the `vertex shaders:` line (any
-   variant past the static 5?).
-   **Add (session 125)**: the `column groups:` line (columns merged in the menu blur / depth blur / spin: a
-   column copy that does not merge on the real disc means its columns' vertices differ; note the send) and the
-   `ring:` line (a frame's vertex bytes against 4 MiB and uniform bytes against 256 KiB, for the title, the
-   room, the menu blur), into renderer-spec 4.13 "Session 125".
-   **Add (session 127)**: the `transfers:` line of the title, the room run and the menu blur (uploads into a
-   render target, CLUT loads read back from the CLUT pass `0x3E00`, palette fills and texture decodes a frame,
-   split scenes) into renderer-spec 4.13 "Session 127"; one room run with `KH1_HOST_SHADERS=DIR` (in the
-   scratchpad): the `Cg:` line, any fragment shader past the static 27 and any not generated (a frame read or
-   TAPS: note the draw).
-   **Add (session 128)**: the `gxm:` line for the title, the room run and the menu blur (calls and scenes a
-   frame, program / texture sets, palette read-backs, target uploads: the Vita's CPU cost a frame) into
-   renderer-spec 4.13 "Session 128"; and in a shadow scene, whether the shadow casters' FBMSK `0x00000001` ever
-   meets a target whose R has bit 0 set (the `fetch-mask` pipeline's draws in `--draws`).
-   **Add (session 126)**: each distinct frame's pass list and the `commands:` / `passes:` / `depth:` lines for
-   the title, the room run and the menu blur (`KH1_HOST_TRACE=5`): the scenes a frame opens, which return to
-   the 3D target after a capture (LOAD, and the scene before STORE, colour and depth), whether the real disc's
-   3D target is cleared by strips (DONT_CARE) or loaded, any command sampling its own target, any `lost`, into
-   renderer-spec 4.13 "Session 126"'s table.
-
-3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
-   `python3 -I tools/ovl/inventory.py dktitle.x --tsv out/ovl/dktitle.layout.tsv`, record the counts (not the bytes)
-   in §5.2, then the toolchain check of §5.2 step 2 on 5-8 small leaf functions. Check argcheck's 3 value uses and
-   func_002066b0's BENIGN entry against dktitle.x's calls into the main ELF, and indcheck's OVERLAY rows
-   (does dktitle.x call the setters func_001c06c0 / func_001468f8 / func_0012cab8 or write vm_lib's hooks? what do
-   the targets take?). Does it call func_00109558, and with which states (session 68 guessed 2 = new game)? Does it
-   call drawlist's flushes (func_00237f20 / func_002380c0 / func_00238258) or the push func_002376c8, gspkt.c's
-   func_002372e0 / func_00237318, and which of the 16 sound entry points with no main-ELF caller (sound-spec 3)? Session 95: does any overlay call prim.c's senders `func_00238440` (3D lines through `D_00648070`), `func_002384e0`, `func_00238768` or `func_002386c0`, and under which environment?
-   Does dkmovie.x (the same folder) store 2 to `D_002BBE04` (the movie copy from `0x118000`, renderer-spec 4.15),
-   and does any overlay read the field parity `D_002BBDE8`? Session 87: does any overlay call func_001fb3e0 /
-   func_001fbb50 (wintext's number draws with no main-ELF caller) and with which digit counts, or store 1 / 4 to
-   `D_002BBE04` (the screen spin)? Session 88: who calls padrec.c's recorder / replay / button script / idle timer
-   (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
-   `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
-   second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
-   Session 123: if inventory.py finds GIF chains in the overlay, count the pipelines they add with
-   tools/host/drawpipes.py's walk (a `--elf`-style run over the overlay's chains).
-4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests are skipped): (a) **the user's
-   answer on the full-width rules** (session 101's card, still unanswered at session 130): "keep them 4:3" means
-   deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session
-   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **compiling the shaders**: session 130 built the attribute arrays
-   (`kh1_vertex_gxm_attrs`) but no psp2cgc was reachable; if the user has a psp2cgc, or the Vita thread finds a
-   runtime route (vitaGL's SceShaccCg from the user's own libshacccg.suprx), compile the 7 vertex and 28 fragment
-   shaders once and record which fail (the frame read's `dst` declaration is the one most in doubt); otherwise
-   skip; (c) **the DATE clear's cost**: the fake disc and the
-   static sends have one DATE draw (brightfade); confirm in the real-disc run (item 2) that no other DATE draw
-   appears (`--draws`, TEST bit 14), else count the extra draw calls; (d) if PR #131 is merged, **wire gxmrec into
-   host/vita/** behind a `KH1_VITA_GXM` switch only as a stub that logs the calls (no renderer yet), so the
-   first Vita3K / hardware run shows the per-frame call counts, and add static asserts there that vertex.h's
-   `KH1_GXM_ATTR_U8N` / `_F32` / `KH1_GXM_INDEX_16BIT` and the sizes of `KH1GxmVtxAttr` / `KH1GxmVtxStream` equal
-   psp2/gxm.h's (session 130 recalled them); (e) `KH1_HOST_DMAC=defer` as the default,
-   argcheck's 3 value uses and the callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
-   --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
-   every CLUT upload not in clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13
-   "Session 115", and the ppp effect slots' CLUT blocks (clutupload's `UNRESOLVED`; does any render target
-   draw over them? fscheck's `RT_CLUT_EXPECTED`); with `KH1_HOST_COUNTS=1` and `KH1_HOST_SHOT`, **the palette
-   cache's line** (loads, fills, the most fills in a frame, uncached draws: 64 slots enough?), **the texture
-   cache's line** (stamp hits against hash hits, decodes and texels decoded a frame, texels held: 128 entries
-   and 4M texels enough?) and the bytes the slot `0x3600` takes a frame (`--uploads`), into renderer-spec 4.13
-   "Session 117" / "Session 118"; and (session 120) the draws' TEX0 TFX / TCC (any HIGHLIGHT among the
-   meshes' TEX0_2 or renderer B's per-draw TEX0?), CLAMP_2 and TEX1_2 (`--draws`), for 4.13 "Session 120"'s
-   tables; and (session 121) **the blend's As**: count the `0x44` (normal blend) draws whose As can pass 0x80
-   (a texel alpha above 0x80 under MODULATE, or a vertex alpha above it: renderer A / B's meshes), and any
-   render target sampled with TCC 1 whose stored alpha went past 0x80, for 4.13 "Session 121" (if either is
-   not 0, those draws need the shader's frame read); and (session 122) the depth and primitive forms the disc
-   adds: the ZBUF / TEST pairs in `--draws` (any Z32, Z16 or another ZTST than 4.13 "Session 122"'s table?),
-   the shadow pass's Zs against Z16S's 0xFFFF (a clamp would flatten them), the FGE draws' FOGCOL and F
-   range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
-
-5. **Matching (optional, 1 worker)**: only with a new idea. Session 130's raised-penalty permuter took 00110618
-   from 93 to 90 words in ~170k iterations, then stalled (nonmatchings/session130/NOTES.md); its draft is still
-   16 bytes long (fb reloaded from the stack). Sessions 129 / 130 notes list what is left on 001c62a0 (14) and
-   00200e28 (24). Untried: 0010d470 (170, jump2 cross-jumping) by the permuter on the s14m 129w probe.
-6. End with `make progress-update SESSION=131`, refresh the per-phase table in docs/progress.md (between its
-   `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
-   Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 132) with this
-   prompt: the user wants each session to start the next one without being asked.
+1. **Decompile dktitle.x (the user's choice, the main item).** The overlay is the user's file (Downloads/kh1-test/ovl,
+   stage it into out/overlays; never commit it). (a) vita-port-plan 5.2 step 3: an overlay build target in kh1tool
+   (an overlay config in kh1.toml: file `out/overlays/dktitle.x`, base 0xF20000, layout from
+   `tools/ovl/inventory.py --tsv out/ovl/dktitle.layout.tsv` committed as `ovl/dktitle/layout.tsv` (addresses and
+   sizes only), the main ELF's names as externs), linking src/ovl/dktitle/*.c at their addresses and patching a
+   copy of the file, verified byte-identical, with objdiff units for it; start from
+   nonmatchings/session131/ovl_toolcheck/ (8 functions already byte-identical; the flags per file as in the main
+   ELF, nostrict where needed). (b) Then match its 71 functions (27,852 bytes of code; autodecomp / m2c / permuter
+   as for the main ELF, with the overlay's own data as `D_00F2xxxx`); its data part (2,284 bytes, 29 strings)
+   stays a blob extracted at build time like the main ELF's data. (c) Report progress per function in
+   docs/progress.md (a new overlay row). (d) Once it links, replace the host's `KH1_HOST_OVL=stub` path for
+   dktitle.x with the real C (host/null: call `ovl_dktitle_entry` when the title loads it), so the host build
+   reaches the title screen; note what PR #131's Vita build needs to do the same.
+2. **With the Mac: finish the boot route** (docs/float-untested.md): KH1_BIG.iso already holds KH1_F131; if
+   reach_check or the float set changed, rebuild and re-patch through a Remote Control session. Play a fight
+   (lock-on, damage numbers, a level-up if near), a shop (buy and sell), the warp drive, a movie; then move the
+   proven rows into docs/shiftable-plan.md and clear them.
+3. **Host run on the real disc (with the Mac)**: the ISO is 3.5 GB; ask the user once whether a Remote Control
+   session may split a copy into 390 MB parts in ~/Downloads/kh1-test/isoparts (`split -b 390m`), stage the parts
+   into the scratchpad, `cat` them back and check the SHA-256 against the original's (never into the repo or
+   project files), then run session 130's item 2 list (in full in `git show d82f248:docs/next-session.md`, "Session 131 plan" item 2 and item 4's "Add to item 2").
+4. **Static**: (a) session 101's card; (b) shader compile if a psp2cgc appears; (d) PR #131 is merged (2026-10-26): the
+   gxmrec stub and the static asserts (session 131's item 4d).
+5. **Matching (optional)**: only with a new idea (0010d470: the cross-jump; 00110618, 001c62a0, 00200e28 notes).
+6. End with `make progress-update SESSION=132`, refresh the per-phase table in docs/progress.md, commit, open a PR,
+   and refresh this prompt.
+7. **Once the PR is merged, message the coordinator to start the next session** (session 133) with this prompt.

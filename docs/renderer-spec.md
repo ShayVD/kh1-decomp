@@ -2314,7 +2314,7 @@ DISPLAY1 rectangle (scaled with the frame), cleared when PMODE goes back to 0x22
 script's screen effects 1 / 4 (objscmd.c `func_0012b450`, vm_lib.c), 3 after a movie (dkmovie.c
 `func_001111b0`, gamestate.c's state macro), whose case 3 clears to black and goes back to 0). So the
 movie frames reach the screen through `0x118000` and case 2 only when the movie overlay dkmovie.x sets it
-(inferred; for the overlay check, vita-port-plan 5.2). `func_0010b6c0` (objwin.nostrict.c) also draws
+(inferred; **session 131: confirmed**, dkmovie.x stores 2 there, and 1 to `D_002BBE18`: vita-port-plan 5.2a). `func_0010b6c0` (objwin.nostrict.c) also draws
 there (§3.1).
 
 ### 4.16 The script's screen spin: `func_00102da8`, the frame copy's cases 1 / 4 (session 87, static)
@@ -2969,7 +2969,8 @@ ppp effects (`func_00182148`, pppapi.c) and the sound listener (`func_0011ddd0`,
 points them at `D_002E2700` / `D_002E2740` (gamestate.c `func_001095b0`), the journal and the top menu at
 their own views, and gummi/ship.c's setter `func_001bb858` has **no main-ELF caller** (the Gummi overlay's).
 The Gummi ship and the world map run in overlay code: whether they call `func_00110a48` (and so get the
-wide frustum) or build their own is for the overlay check.
+wide frustum) or build their own is for the overlay check. **Session 131** (vita-port-plan 5.2a): the world map
+(wm.x) calls `func_00110a48`, so it gets the wide frustum; the Gummi overlay (gb.x) does not, it builds its own view.
 
 **Bit 35's readers need the disc's files** (5.4's open item; the plan). The spawn flag is the `flags`
 word (+0x4) of the room's 0x78-byte object records (`W32Rec`: id +0x0, flags +0x4, key +0x4C), which
