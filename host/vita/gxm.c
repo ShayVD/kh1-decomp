@@ -192,9 +192,20 @@ static SceGxmProgram *program_of(const char *text, u32 len, int frag) {
     if (!shark_ok) { failed++; return 0; }
     {
         SceGxmProgram *c;
-        size = len; /* in: the source's length (vitaShaRK passes it on as the source's size); out: the program's */
-        c = shark_compile_shader_extended(text, &size, frag ? SHARK_FRAGMENT_SHADER : SHARK_VERTEX_SHADER,
-                                                         SHARK_OPT_DEFAULT, SHARK_DISABLE, SHARK_DISABLE, SHARK_DISABLE);
+        static const int opts[3] = { SHARK_OPT_DEFAULT, SHARK_OPT_SAFE, SHARK_OPT_SLOW };
+        int o;
+        /* session 137v: the REGION_REPEAT fragment shaders stop SceShaccCg's -O2 with "fatal internal error";
+         * a lower optimisation level is tried before giving up */
+        for (o = 0, c = 0; o < 3 && !(c && size); o++) {
+            if (o) {
+                kh1_vita_log("kh1-gxm: a %s shader failed at the optimisation level before, trying level %d\n",
+                             frag ? "fragment" : "vertex", 2 - o);
+                shark_clear_output();
+            }
+            size = len; /* in: the source's length (vitaShaRK passes it on as the source's size); out: the program's */
+            c = shark_compile_shader_extended(text, &size, frag ? SHARK_FRAGMENT_SHADER : SHARK_VERTEX_SHADER,
+                                              opts[o], SHARK_DISABLE, SHARK_DISABLE, SHARK_DISABLE);
+        }
         if (!c || !size) {
             const SceShaccCgCompileOutput *o = shark_get_internal_compile_output();
             int i;
