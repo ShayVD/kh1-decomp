@@ -1,6 +1,6 @@
 # dive.txt for the English-patched disc (session 139, the default test disc since 2026-10-27:
 # docs/next-session.md "The test disc"), through Dive to the Heart and on into Destiny Islands:
-#   KH1_HOST_CD=go KH1_HOST_ISO=en.iso KH1_HOST_PAD=tests/host/pads/dive_en.txt KH1_HOST_FRAMES=77500 \
+#   KH1_HOST_CD=go KH1_HOST_ISO=en.iso KH1_HOST_PAD=tests/host/pads/dive_en.txt KH1_HOST_FRAMES=91000 \
 #   KH1_HOST_QUIET=1 KH1_HOST_TRACE=1 out/host/kh1-host
 # en.iso: SHA-256 c8ee8c77..., 3,542,579,200 bytes. Two changes from dive.txt (the Japanese disc's):
 #   25400       goto vm 2 (the box) for goto -9060 -14920: the box goes to (-9060, -14920) or
@@ -9,7 +9,7 @@
 #   32400       no second CIRCLE: on this disc the CIRCLEs of 29,100-30,900 already reached the islander
 #               beside Sora (VM 4), so a CIRCLE at 32,400 opened his talk again and the goto to the
 #               next islander could not move Sora
-# Then 70,000-77,500: Kairi's errand and the two logs (comments below).
+# Then 70,000-77,500: Kairi's errand and the two logs; 77,600-91,000 (session 140): the cloth and the next room (comments below).
 #   1300        START at the title; CIRCLE every 200 frames to 4600: New Game, its three pages, yes
 #   4800-6600   stick up: Sora walks to the sword's pedestal (0, 580); 6600 CROSS jumps onto it
 #   7000-7600   CIRCLE: the sword's lines, "this power?" yes, "what will you give up?"
@@ -1950,3 +1950,144 @@
 77266 -
 77462 CIRCLE
 77466 -
+# 77600-91000 (session 140, English disc): the cloth (item 193) and on into the next room. Planned with
+# tools/host/collmap.py (the room's collision: floors, a path search, slices) and KH1_HOST_POS=N:
+#   77600-79000 off the islet by its south-west walkway into the sea, through the water to the lagoon
+#   79000-80300 up the slope at (700, 690) onto the -155 ring, the steps at (-9, 585) onto the -254 band
+#   80300-82400 along the -254 band round the cliff's foot to the west end (-1811, -740)
+#   82700-83450 CROSS every 40 frames: up the rocks at (-2024, -740) / (-2028, -527) / (-1862, -340)
+#   83450-84850 the -450..-575 path along the cliff's top, a jump at (-665, 270) onto the -706 deck
+#   84950-85600 round the box at (-680, 535) and into the ladder (a 0x000d0120 wall at (-683, 547)) from
+#               its south side: Sora climbs to the -974 deck by ~85,700
+#   86000-87700 west along the -1055 top, round the ring walkway (its railings leave a way in at
+#               (-1450, -150)) and south on the long ledge to VM 18 (entity 40000 at (-1201, -1093, 401)):
+#               walking up to it gives "Obtained Cloth." (~87,550; items[193] = 1, no button needed)
+#   88000-90060 back round the ring, down the ladder's deck edge at (-552, 469) (a drop to the -254 band),
+#               south along the band to the exit floor t1293 (attribute bit 0x1000) at (-836, 1506): the
+#               next room (D_002BC130 = 10, Sora at (4623, -9003, -1069)) loads at ~90,110 (191 disc reads)
+77600 - goto 4500 350 40
+77800 - goto 4000 500 40
+78000 - goto 3500 750 40
+78200 - goto 3000 1000 40
+78400 - goto 2500 1250 40
+78600 - goto 1535 878 40
+79000 - goto 1297 725 40
+79200 - goto 900 680 40
+79400 - goto 700 690 40
+79550 - goto 520 700 40
+79700 - goto 400 700 40
+79850 - goto 157 550 40
+80000 - goto -9 585 40
+80150 - goto -132 637 40
+80300 - goto -300 800 40
+80500 - goto -467 724 40
+80650 - goto -454 549 40
+80800 - goto -430 362 40
+80950 - goto -432 272 40
+81050 - goto -468 186 40
+81150 - goto -542 -30 40
+81350 - goto -662 -263 40
+81550 - goto -820 -409 40
+81700 - goto -990 -470 40
+81850 - goto -1200 -491 40
+82050 - goto -1335 -500 40
+82150 - goto -1611 -765 40
+82400 - goto -1811 -740 40
+82700 CROSS goto -2024 -740 40
+82704 - goto -2024 -740 40
+82740 CROSS goto -2024 -740 40
+82744 - goto -2024 -740 40
+82780 CROSS goto -2024 -740 40
+82784 - goto -2024 -740 40
+82820 CROSS goto -2024 -740 40
+82824 - goto -2024 -740 40
+82860 CROSS goto -2024 -740 40
+82864 - goto -2024 -740 40
+82900 CROSS goto -2028 -527 40
+82904 - goto -2028 -527 40
+82940 CROSS goto -2028 -527 40
+82944 - goto -2028 -527 40
+82980 CROSS goto -2028 -527 40
+82984 - goto -2028 -527 40
+83020 CROSS goto -2028 -527 40
+83024 - goto -2028 -527 40
+83060 CROSS goto -2028 -527 40
+83064 - goto -2028 -527 40
+83100 CROSS goto -2010 -437 40
+83104 - goto -2010 -437 40
+83140 CROSS goto -2010 -437 40
+83144 - goto -2010 -437 40
+83180 CROSS goto -2010 -437 40
+83184 - goto -2010 -437 40
+83220 CROSS goto -2010 -437 40
+83224 - goto -2010 -437 40
+83250 CROSS goto -1862 -340 40
+83254 - goto -1862 -340 40
+83290 CROSS goto -1862 -340 40
+83294 - goto -1862 -340 40
+83330 CROSS goto -1862 -340 40
+83334 - goto -1862 -340 40
+83370 CROSS goto -1862 -340 40
+83374 - goto -1862 -340 40
+83410 CROSS goto -1862 -340 40
+83414 - goto -1862 -340 40
+83450 - goto -1705 -361 40
+83600 - goto -1517 -261 40
+83750 - goto -1438 -312 40
+83850 - goto -1378 -236 40
+83950 - goto -1252 -247 40
+84050 - goto -1134 -236 40
+84150 - goto -998 -188 40
+84300 - goto -834 -66 40
+84450 - goto -762 9 40
+84550 - goto -731 57 40
+84650 - goto -696 132 40
+84650 CROSS goto -665 270 40
+84654 - goto -665 270 40
+84690 CROSS goto -665 270 40
+84694 - goto -665 270 40
+84730 CROSS goto -665 270 40
+84734 - goto -665 270 40
+84770 CROSS goto -665 270 40
+84774 - goto -665 270 40
+84810 CROSS goto -665 270 40
+84814 - goto -665 270 40
+84850 - goto -652 431 40
+84950 - goto -683 470 40
+85150 - goto -590 470 40
+85300 - goto -590 620 40
+85450 - goto -683 620 40
+85600 - goto -683 520 40
+86000 - goto -769 474 40
+86100 - goto -813 290 40
+86250 - goto -873 212 40
+86350 - goto -940 142 40
+86450 - goto -1036 76 40
+86600 - goto -1136 58 40
+86700 - goto -1150 -100 40
+86800 - goto -1250 -220 40
+86920 - goto -1400 -260 40
+87040 - goto -1450 -150 40
+87140 - goto -1450 50 40
+87260 - goto -1400 250 40
+87380 - goto -1260 400 40
+87580 - goto vm 18 40
+87830 -
+88000 - goto -1400 250 40
+88150 - goto -1450 50 40
+88270 - goto -1450 -150 40
+88390 - goto -1300 -250 40
+88510 - goto -1150 -100 40
+88660 - goto -1050 60 40
+88760 - goto -940 142 40
+88860 - goto -813 290 40
+88980 - goto -685 394 40
+89100 - goto -552 469 40
+89200 - goto -454 549 40
+89350 - goto -467 724 40
+89470 - goto -501 896 40
+89590 - goto -613 1104 40
+89710 - goto -678 1326 40
+89860 - goto -836 1506 40
+90060 - goto -900 1600 40
+90150 -

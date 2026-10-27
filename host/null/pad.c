@@ -30,6 +30,8 @@
  *                        (D_0038D170[K].obj, +0x10) where it is each frame: a place the script
  *                        chooses at run time (the second station's box goes to one of two sides
  *                        by the collision group Sora stands on when the crate breaks).
+ *                        Session 140: a goto stands still while there is no player (a room change).
+ *                        KH1_HOST_POS=N prints the player's position every N frames (at pad reads).
  *
  * KH1_HOST_TRACE >= 1 prints "kh1-host: pad FRAME BUTTONS" when what the game reads changes.  Not
  * part of the PS2 build. */
@@ -273,6 +275,10 @@ static void steer(const NullPadLine *L, u8 *data) {
     float gx = L->gx, gz = L->gz, dx, dz, best = -2.0f, d;
     float v[4] __attribute__((aligned(16))), out[4] __attribute__((aligned(16)));
     int k, bk = 0;
+    if (!D_002E26A0[0]) { /* no player (a room change, session 140): stand still */
+        data[4] = data[5] = 128;
+        return;
+    }
     if (L->vm >= 0) {
         const u8 *e = L->vm < D_0039A570 ? (const u8 *)D_0038D170[L->vm].obj : 0;
         if (!e) { /* no such VM or no entity (yet): stand still */
@@ -314,8 +320,27 @@ static void steer(const NullPadLine *L, u8 *data) {
     data[5] = (u8)(128.0f - 127.0f * cosf(bk * 0.0981747704f));
 }
 
+/* KH1_HOST_POS=N (session 140): print the player's position every N frames, to plan and check
+ * goto lines without gdb */
+static void pos_trace(void) {
+    static int every = -1;
+    static unsigned long last;
+    unsigned long f = kh1_host_frame();
+    const float *pos;
+    if (every < 0) {
+        const char *s = getenv("KH1_HOST_POS");
+        every = 0;
+        while (s && *s >= '0' && *s <= '9') every = every * 10 + *s++ - '0';
+    }
+    if (!every || (last && f < last + every) || !D_002E26A0[0]) return;
+    last = f;
+    pos = (const float *)(D_002E26A0[0] + 0x10);
+    printf("kh1-host: pos %lu %.1f %.1f %.1f\n", f, pos[0], pos[1], pos[2]);
+}
+
 int PlatPadRead(int socket, u8 *data) {
     const NullPadLine *L = now();
+    pos_trace();
     if (null_pad_none || L->out) {
         data[0] = data[1] = 0xFF;
         return -1;
