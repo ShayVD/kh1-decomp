@@ -35,6 +35,8 @@ void *memset(void *, int, __SIZE_TYPE__);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
 
 void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
+u32 (*kh1_vu1_clock)(void);
+u32 kh1_vu1_us, kh1_vu1_kick_us;
 int kh1_vu1_verbose; /* 1: a line per program run (KH1_HOST_VU1=2) */
 u32 kh1_vu1_snap_run; /* with kh1_vu1_verbose: the run (counted from 1) whose start state vu1_snap.bin keeps */
 static u32 st_runs_all;
@@ -687,7 +689,11 @@ static void kick(u32 a) {
         u32 k;
         for (k = 0; k < n; k++) printf("kh1-vu1:   %08x %08x %08x %08x\n", kbuf[k][0], kbuf[k][1], kbuf[k][2], kbuf[k][3]);
     }
-    if (kh1_vu1_kick) kh1_vu1_kick(&kbuf[0][0], n);
+    if (kh1_vu1_kick && kh1_vu1_clock) {
+        u32 t0 = kh1_vu1_clock();
+        kh1_vu1_kick(&kbuf[0][0], n);
+        kh1_vu1_kick_us += kh1_vu1_clock() - t0;
+    } else if (kh1_vu1_kick) kh1_vu1_kick(&kbuf[0][0], n);
 }
 
 /* ------------------------------------------------------------------ the run */
@@ -915,7 +921,19 @@ static void tr_check(int prog, u32 pc) {
     }
 }
 
+static void start_run(u32 pc);
 static void start(u32 pc) {
+    u32 t0;
+    if (!kh1_vu1_clock) {
+        start_run(pc);
+        return;
+    }
+    t0 = kh1_vu1_clock();
+    start_run(pc);
+    kh1_vu1_us += kh1_vu1_clock() - t0;
+}
+
+static void start_run(u32 pc) {
     int prog;
     top = tops;
     itop = itops;
@@ -933,7 +951,7 @@ static void start(u32 pc) {
             st.runs++;
             st_runs_all++;
             st.tr_runs++;
-            if (tr_lost && !tr_bad++) printf("kh1-vu1: translated program P%d lost its way (a JR)\n", tr_progs[prog].n);
+            if (tr_lost && !tr_bad++) printf("kh1-vu1: translated program P%d lost its way (a JR)\n", tr_progs[prog].num);
             return;
         }
     }

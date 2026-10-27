@@ -45,6 +45,11 @@ typedef struct {
     u32 tr_differ;   /* and of those, the ones whose results differ */
 } KH1Vu1Stats;
 
+/* a microsecond clock (the Vita's): then kh1_vu1_us counts the time in programs (MSCAL to the end), and
+ * kh1_vu1_kick_us the part of it spent in kh1_vu1_kick (the GIF path past the VU) */
+extern u32 (*kh1_vu1_clock)(void);
+extern u32 kh1_vu1_us, kh1_vu1_kick_us;
+
 /* 1 (the default): a program out/gen/vu1_tr.c has runs as its C; 0: the interpreter only; 2: both, compared */
 extern int kh1_vu1_tr;
 

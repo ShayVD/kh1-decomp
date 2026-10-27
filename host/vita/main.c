@@ -98,6 +98,7 @@ void kh1_vita_log(const char *fmt, ...) {
 }
 
 unsigned long kh1_host_frame(void) { return frames; }
+static u32 vita_us(void) { return (u32)sceKernelGetProcessTimeWide(); }
 
 extern int kh1_counts_on; /* host/null/counts.c */
 void kh1_counts_sample(void);
@@ -180,7 +181,7 @@ extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu;
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
-    u32 wait0 = 0, present0 = 0, gpu0 = 0, rec0 = 0, frame0 = 0, draw0 = 0;
+    u32 wait0 = 0, present0 = 0, gpu0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
     for (;;) {
@@ -202,7 +203,12 @@ static int watchdog(SceSize args, void *argp) {
                  "slowest frame %u.%u ms\n", (us_record - rec0) / 1000, (us_frame - frame0) / 1000,
                  (us_draw - draw0) / 1000, us_worst / 1000, us_worst / 100 % 10);
             us_worst = 0;
+            /* session 137v: of the rest, the VU1 programs (the kicks they hand on included, then alone) */
+            vlog("kh1-vita: vu1: %u ms in programs, %u ms of it passing their kicks on\n", (kh1_vu1_us - vu0) / 1000,
+                 (kh1_vu1_kick_us - kick0) / 1000);
         }
+        vu0 = kh1_vu1_us;
+        kick0 = kh1_vu1_kick_us;
         rec0 = us_record;
         frame0 = us_frame;
         draw0 = us_draw;
@@ -288,6 +294,7 @@ int main(int argc, char **argv) {
     }
     snprintf(iso, sizeof iso, "%s/kh1.iso", kh1_vita_dir);
     kh1_dma_vu1 = 1; /* the 3D (config.txt's vu1=) */
+    kh1_vu1_clock = vita_us;
     config(iso, sizeof iso);
     if (!kh1_cd_image_open(iso)) {
         snprintf(iso, sizeof iso, "%s/kh1.bin", kh1_vita_dir);
