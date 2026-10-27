@@ -23,6 +23,8 @@
  *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
  *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
  *                             interpreter only; 2 both, compared (slow; differences go to the log)
+ *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
+ *                             ("kh1-gxm: shadertest" lines; gxm.c)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -178,10 +180,10 @@ int kh1_ovl_entry(int cmd, int arg) {
 /* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
  * means no vblank: this says whether DMA sends still move) */
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
-extern volatile u32 kh1_vita_us_gpu;
+extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes;
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
-    u32 wait0 = 0, present0 = 0, gpu0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
+    u32 wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
     for (;;) {
@@ -196,8 +198,9 @@ static int watchdog(SceSize args, void *argp) {
         if (gpu_on) { /* session 136: the GPU frame's CPU time (its waits for the GPU included), its counts */
             u32 f, d, sk, sc;
             kh1_vita_gxm_stats(&f, &d, &sk, &sc);
-            vlog("kh1-vita: gpu: %u ms submitting; %u frames, %u scenes, %u draws, %u skipped\n",
-                 (kh1_vita_us_gpu - gpu0) / 1000, f, sc, d, sk);
+            vlog("kh1-vita: gpu: %u ms submitting (%u ms of it in %u waits for the GPU); %u frames, %u scenes, %u draws, "
+                 "%u skipped\n", (kh1_vita_us_gpu - gpu0) / 1000, (kh1_vita_us_finish - fin0) / 1000,
+                 kh1_vita_finishes - nfin0, f, sc, d, sk);
             /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
             vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
                  "slowest frame %u.%u ms\n", (us_record - rec0) / 1000, (us_frame - frame0) / 1000,
@@ -213,6 +216,8 @@ static int watchdog(SceSize args, void *argp) {
         frame0 = us_frame;
         draw0 = us_draw;
         gpu0 = kh1_vita_us_gpu;
+        fin0 = kh1_vita_us_finish;
+        nfin0 = kh1_vita_finishes;
         wait0 = kh1_vita_us_wait;
         present0 = kh1_vita_us_present;
         last = frames;
@@ -244,6 +249,7 @@ static void config(char *iso, int n) {
             kh1_vita_pad_script = pad;
         }
         else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
+        else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
     }
     fclose(f);
 }
