@@ -52,6 +52,18 @@ CFLAGS = [
     "-Wno-error=incompatible-pointer-types", "-Wno-error=implicit-int",
 ]
 
+# --asan (session 137): AddressSanitizer on the stack and heap only, for portability.md rule 15 (a
+# callee that reads past the local it was given). Globals stay uninstrumented: their redzones would
+# move the D_ variables apart that the game reads as one block.
+ASAN_CFLAGS = ["-fsanitize=address", "-fsanitize-recover=address", "--param", "asan-globals=0", "-fno-omit-frame-pointer"]
+
+# --init zero|pattern (session 138): every local starts as zeros or as gcc's 0xFE pattern, into
+# out/host-init-KIND/. Two builds that differ only there and part ways in a run show a local read
+# before it is written; --init-files FILE (one game path a line) gives the flag to those files only,
+# to bisect which one.
+INIT_ONLY = None
+INIT_FLAG = []
+
 # (cause, regex on the error text). First match wins.
 CAUSES = [
     ("asm: MIPS instruction", r"Error: (no such instruction|invalid instruction suffix|bad register name|unknown pseudo-op|invalid char)"),
@@ -111,7 +123,8 @@ def first_error(stderr):
 def compile_one(cc, path):
     obj = os.path.join(OUT, path + ".o")
     os.makedirs(os.path.dirname(obj), exist_ok=True)
-    p = subprocess.run([cc] + CFLAGS + ["-c", "-o", obj, path], cwd=ROOT,
+    init = INIT_FLAG if INIT_ONLY is None or path in INIT_ONLY else []
+    p = subprocess.run([cc] + CFLAGS + init + ["-c", "-o", obj, path], cwd=ROOT,
                        capture_output=True, text=True, env=dict(os.environ, LC_ALL="C"))
     errs = first_error(p.stderr)
     if p.returncode == 0:
@@ -384,7 +397,8 @@ def link_exe(objs, cc):
     """Link out/host/kh1-host from the census objects against the host libc."""
     exe = os.path.join(OUT, "kh1-host")
     extra = [link_census.script] if link_census.script else []
-    p = subprocess.run([cc, "-m32", "-no-pie", "-o", exe] + objs + extra + ["-lm"], cwd=ROOT,
+    asan = [f for f in ASAN_CFLAGS if f.startswith("-fsanitize")] if ASAN_CFLAGS[0] in CFLAGS else []
+    p = subprocess.run([cc, "-m32", "-no-pie"] + asan + ["-o", exe] + objs + extra + ["-lm"], cwd=ROOT,
                        capture_output=True, text=True, env=dict(os.environ, LC_ALL="C"))
     if p.returncode:
         errs = [l for l in p.stderr.splitlines() if "undefined reference" in l or "multiple definition" in l]
@@ -394,7 +408,7 @@ def link_exe(objs, cc):
         return 1
     if os.path.exists(os.path.join(OUT, "link.log")):
         os.remove(os.path.join(OUT, "link.log"))
-    print("exe: out/host/kh1-host linked (%d objects)" % len(objs))
+    print("exe: %s linked (%d objects)" % (os.path.relpath(exe, ROOT), len(objs)))
     return 0
 
 
@@ -406,8 +420,29 @@ def main():
     ap.add_argument("--show", metavar="FILE", help="print one file's errors")
     ap.add_argument("--link", action="store_true", help="also count the symbols left undefined (see above)")
     ap.add_argument("--exe", action="store_true", help="also link out/host/kh1-host (see above)")
+    ap.add_argument("--asan", action="store_true",
+                    help="build with AddressSanitizer (stack and heap) into out/host-asan/; run with "
+                         "ASAN_OPTIONS=handle_segv=0:detect_leaks=0 (overlay calls are SIGSEGVs main.c redirects)")
+    ap.add_argument("--init", choices=["zero", "pattern"],
+                    help="-ftrivial-auto-var-init=KIND on the game files, into out/host-init-KIND/ (see above)")
+    ap.add_argument("--init-files", metavar="FILE", help="with --init: only the game paths listed in FILE")
+    ap.add_argument("--cflags", default="", help="extra host compiler flags (e.g. \"-msse2 -mfpmath=sse\": "
+                    "single-precision float math, as on the Vita, instead of x87's)")
+    ap.add_argument("--out", help="output directory (default out/host, out/host-asan or out/host-init-KIND)")
     ap.add_argument("-j", type=int, default=os.cpu_count() or 4)
     a = ap.parse_args()
+    global OUT, INIT_ONLY
+    if a.asan:
+        OUT = os.path.join(ROOT, "out", "host-asan")
+        CFLAGS.extend(ASAN_CFLAGS)
+    if a.init:
+        OUT = os.path.join(ROOT, "out", "host-init-" + a.init)
+        INIT_FLAG.append("-ftrivial-auto-var-init=" + a.init)
+        if a.init_files:
+            INIT_ONLY = set(l.strip() for l in open(a.init_files) if l.strip())
+    if a.out:
+        OUT = os.path.abspath(a.out)
+    CFLAGS.extend(a.cflags.split())
 
     files = [a.show] if a.show else game_files() + draft_files()
     with ThreadPoolExecutor(a.j) as ex:

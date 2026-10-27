@@ -106,8 +106,7 @@ s32 func_00177ac0(void) {
     f32 v50[4];
     f32 v60[4];
     f32 v70[4];
-    f32 v80[4];
-    f32 unk[3][4];
+    f32 v80[4][4]; /* session 137: one matrix (it was v80 plus unk[3][4]; rule 15) */
     Seg7A s;
     s32 ok, a, b;
     f32 ang, d;

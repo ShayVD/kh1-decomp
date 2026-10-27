@@ -250,6 +250,9 @@ rewrite matched code.
     callee's return type can change its same-file callers' code
     (func_00111130's did func_001111b0's), so only change the ones a caller
     reads.
+    Session 138: a task (a callback given to func_0011ef10 / func_0011f090) is such a
+    caller: proc.c's func_0011f130 drops the task when its value has bit 2 set, so a void
+    task (objcmd.nostrict.c func_00133a88) vanished on the host when eax held a 4.
     Session 65: a call through a pointer (`w->cb()`, `D_xxx[i].fn()`) has
     no name for argcheck to look up. `python3 -I tools/host/indcheck.py`
     (clang syntax trees) lists them with the targets it can find (data
@@ -374,6 +377,18 @@ rewrite matched code.
     far: the ray casts func_00118d78 / func_00119688 (start, way, hit, id: fieldcam.c, partyctl.c)
     and func_0024ac08's four-word position (gauge.c, popup.c, cmdmenu.c). A crash with a register
     that held a pointer now holding a small number right after a call is this.
+    Session 137: `python3 -I tools/host/localcheck.py` finds them statically (each call that passes
+    a local's address, against how far the EE callee reads or writes through that register; it
+    finds all six of session 136's). Fixed from its list: partyai.nostrict.c's two `f32 v[3]` for
+    sceVu0ScaleVectorXYZ (writes w), effect.c func_001df698's 12-byte local for func_001315c0's
+    quadword copy, actmark.nostrict.c's `XY` for func_00237a48 (four words), motion.nostrict.c's
+    `G2Ray` (func_00118590 runs to 0x40); then, from the ASan run, the func_001636d0 draft's `IkRay`
+    (the same record), fieldcam.nostrict.c func_00177ac0's `v80` (sceVu0RotMatrixY writes a matrix
+    over it and the `unk[3][4]` after it) and actor.nostrict.c's `t` (read as a quadword). Its "reads only" hits left (a vector's w read by
+    sceVu0CopyVector-style quadword loads, a loop over `cnt` pairs) are harmless. For the paths a
+    run takes, `python3 -I tools/host/census.py --exe --asan` builds out/host-asan/kh1-host with
+    AddressSanitizer on the stack and heap (not globals); run it with
+    `ASAN_OPTIONS=handle_segv=0:detect_leaks=0:allow_user_segv_handler=1`.
 
 ## Known absolute addresses in matched code
 

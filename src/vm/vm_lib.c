@@ -4058,7 +4058,7 @@ s32 func_001d9c60(VmRec *vm) {
 }
 
 s32 func_001d9cb0(VmRec *vm) {
-    f32 v[3];
+    f32 v[4]; /* func_001515d0 copies it as a quadword (portability.md rule 15, session 138) */
     v[0] = vm->stk[vm->sp - 2];
     v[1] = vm->stk[vm->sp - 1];
     v[2] = vm->stk[vm->sp];
@@ -4225,7 +4225,7 @@ s32 func_001da260(VmRec *vm) {
 /* Message 23 with the point func_00105c70 gives for stk[sp-1] (in 1/128). */
 s32 func_001da2c8(VmRec *vm) {
     VmMsg m;
-    s32 buf[3];
+    s32 buf[4]; /* func_00105c70 writes a quadword (portability.md rule 15, session 138) */
     func_00105c70(vm->stk[vm->sp - 1], buf);
     m.type = 23;
     m.v[0] = buf[0] * 0.0078125f;

@@ -668,11 +668,18 @@ s32 func_001df630(VmRec *vm) {
 }
 
 typedef struct { f32 x, y, z; } EvVec3;
+/* session 137: func_001315c0 writes a whole quadword (PlatVu0CopyVector): on the host the local needs
+ * the fourth word (portability.md rule 15); the EE frame has it already. */
+#ifdef KH1_HOST
+typedef struct { f32 x, y, z, w; } EvVec4;
+#else
+typedef EvVec3 EvVec4;
+#endif
 
 /* Every frame: put the instance at bone f18 of the entity (h20's Vec3
  * locals: f32 buf[4] would change the frame). */
 s32 func_001df698(EvTask *c) {
-    EvVec3 v;
+    EvVec4 v;
     EvVec3 *p;
     if (c->f10->f14 & 2) return 4;
     func_001315c0(c->f14->obj, c->f18, (f32 *)&v, c->f1c);

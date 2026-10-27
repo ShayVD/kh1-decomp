@@ -130,7 +130,7 @@ void func_00142388(f32 *, f32 *);
 void func_001223b8(void);
 void func_0014f658(C01Act3 *, s32);
 #define func_00133868 ((C01Ev *(*)(C01Act3 *, C01Cmd *)) func_00133868)
-void func_00133a88(void) {
+KH1_V0(s32) func_00133a88(void) {
     C01Cmd *c;
     C01Act3 *a;
     C01Ev *e;
@@ -339,6 +339,9 @@ void func_00133a88(void) {
         }
         if (c) func_001c4788(c);
     }
+    /* a task (proc.c func_0011f130 drops it when bit 2 of the value is set): the EE leaves
+     * func_001c45e8's 0 in v0 (portability.md rule 10; the ASan build lost this task, session 138) */
+    KH1_V0_RETURN(0);
 }
 #undef func_00133868
 

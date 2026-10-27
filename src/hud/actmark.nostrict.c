@@ -14,7 +14,8 @@ typedef struct { s32 x, y, z, w; } I4;
 typedef struct { u8 pad[0x60]; I4 c[4]; I4 p[4]; } Pkt;
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
 typedef struct { s32 unk0; s32 unk4; u32 unk8; f32 unkC; s32 unk10; s32 unk14; } Msg3;
-typedef struct { s32 x, y; } XY;
+/* session 137: func_00237a48 writes four words (portability.md rule 15) */
+typedef struct { s32 x, y, z, w; } XY;
 
 Pkt D_006626D0 ALIGNED(16);
 QW *D_006626C0 ALIGNED(16);

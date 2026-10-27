@@ -621,7 +621,9 @@ typedef struct {
     f32 (*p168)[4];      /* 0x168 */
     G2Lnk *p16C;         /* 0x16C */
 } G2Mdl;
-typedef struct { f32 p[4]; f32 d[4]; f32 out[4]; s16 hit; } G2Ray;
+/* session 137: the record func_00118590 reads and writes runs to 0x40 (the hit's id at 0x30, the
+ * other id at 0x34), as fieldcam.c's M30 (portability.md rule 15). */
+typedef struct { f32 p[4]; f32 d[4]; f32 out[4]; s16 hit; u8 pad[14]; } G2Ray;
 void func_00118590(G2Ray *, s32);
 void func_001627d0(f32 *, f32 *, f32 *);
 void func_001628a0(G2Mtx, G2Mtx, f32 *);

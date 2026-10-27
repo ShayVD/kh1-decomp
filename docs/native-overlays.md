@@ -214,3 +214,95 @@ runs on the fake disc.
   and nothing happens in 5,000 frames of CIRCLE. Next time: read its event script / trigger boxes
   (session 135's VM trace) instead of guessing.
 - qemu-arm (`make vita-armcheck`, then the runner on the disc) takes the same path to frame 19,000.
+
+## Session 137: through Dive to the Heart's second station
+
+- **What the station waited on**, read from its scripts rather than guessed: `tools/host/vmdis.py FRAME
+  --pad FILE --iso DISC` runs the host under gdb to a frame and disassembles the field's VMs (table
+  `D_0038D170`, count `D_0039A570`) label by label, with each VM's pc, entity and position, the
+  opcode names (script_vm.c), opcode 1's operations (vm_calc.c) and opcode 24's library functions
+  (`D_003D9FE0`). At frame 18,600 VM 0 (the station's master script) was in `waitvm` on VM 1, and VM 1
+  in library call 33 (`func_001cc470`, msgwin.c: wait while a message window other than id 7 is
+  open): the tutorial window これはフィールアイコンです (the field icon) was up. CIRCLE alone did not close
+  it; UP (the command menu wraps from たたかう to its 4th slot) then CIRCLE did.
+- **The station's order** (VM 0's loop at pc 107-388, save bytes 780 / 781, D_003C2D30 bytes
+  3202 / 3203 / 3205, story byte 2817): しらべる on the door (VM 5, entity 0x40002 at (-8670, -15430)):
+  それじゃ あけられないや… (3202 = 1); near the chest (-8670, -14250) the 「?」 command window (3203 = 2);
+  開ける opens it (780 = 3); attacking the crate at (-8670, -14880) breaks it, the potion
+  (func_001d3610(1), the party's count of item 1, rises above the count saved in variable 2320) runs the
+  event that sets 781 = 4 and puts a box at (-9060, -14920) (or (-8280, ...) by variable 2560);
+  もちあげる lifts it (なげる while carried) and VM 2's entity going away with 781 = 5 sets 2817 = 49;
+  then しらべる on the door opens it, and walking in loads the next area at frame ~28,000 (white, then
+  the SELECT look-around tutorial, 「たたかう」コマンドが「はなす」にかわりました, and a Destiny Islands
+  question, あなたにとって一番たいせつなものって、何?, answered by a CIRCLE). tests/host/pads/dive.txt
+  now runs to frame 32,000. The player is then actor 3 at (-2001, -468, -2810); the kind-4 actors
+  6-8 at (-1349, -1040), (-2159, -619), (-1590, -477) are the likely islanders (not checked).
+- **Rule 15, statically and with ASan** (portability.md rule 15): `tools/host/localcheck.py` lists
+  each call that passes a local's address where the EE callee reaches further (it finds all six of
+  session 136's); `tools/host/census.py --exe --asan` builds out/host-asan/kh1-host. Fixed, objects
+  unchanged: partyai.nostrict.c's `f32 v[3]` x2 (sceVu0ScaleVectorXYZ writes w), effect.c
+  func_001df698, actmark.nostrict.c's `XY` (four words), motion.nostrict.c's `G2Ray` and the
+  func_001636d0 draft's `IkRay` (func_00118590 runs to 0x40), fieldcam.nostrict.c func_00177ac0's
+  `v80` (a matrix: it was a vector plus `unk[3][4]`), actor.nostrict.c's `t` (read as a quadword).
+  The ASan build then runs to frame 19,500 with no report.
+- **Register passthrough** (rule 10) found by the ASan build's different stack: pppsys.c
+  func_00183878 called `pppStepPrograms()` through a `(void)` prototype, while it takes (sys, draw)
+  in a0 / a1, the caller's own two arguments (func_00181b30 passes the draw flag). The plain build
+  read whatever the stack held. argcheck.py now checks calls by functions.tsv names too (it
+  matched only `func_XXXXXXXX` calls); its one other hit, dkmovie.c's sceIpuSync, is in the
+  never-called func_00111238 (BENIGN).
+- **An uninitialised read the original has too**: func_0011b6a0 (colobj.c) switches on the flags
+  word (+0x28) of the record func_00118868 / func_00118b58 (mapcoll.c) build on the stack, and the
+  EE code never stores it (sp+2168 is not written: the PS2 reads its stack's leftover). valgrind
+  showed it; the host now gives 0 (the default case) under `#ifdef KH1_HOST`.
+- **Open: the ASan build takes another path** from frame ~4,700 (its second room load comes 178
+  frames earlier and Sora does not walk at 6,400), with the frame time `D_002BBDFC` the same; not
+  traced. A host bug that depends on the stack layout (an uninitialised local) is the likely kind;
+  valgrind cannot follow past dkmovie.x (it runs the overlay area's bytes).
+  **Traced in session 138**: not an uninitialised local, a task's return value (below).
+
+## Session 138: Dive to the Heart to its end, and the ASan build's other path
+
+- **The islanders** (tests/host/pads/dive.txt, frames 32,200-36,304): the three are script VMs 2-4
+  (entities 20000-20002) at (-1412, -2900), (-1489, -2333) and (-2080, -2800); VM 0 loops until VM
+  variables 2320 / 2324 / 2328 are all 1 (each islander's label 5 sets its own after the answer).
+  はなす (CIRCLE when beside one) asks the question, more CIRCLEs take the first answer. Those VM
+  variables are s32 words of `D_0038ACC4` (or `D_0038B4C4` when the VM's flag bit 5 is set) at index
+  variable - 2304 (script_vm.c func_001c11d8). Session 137's "Selphie's question answered" was VM
+  0's own intro line; no islander had been answered. Then キミの旅は... and the confirm (まあ いっか /
+  そんなの イヤだ: CIRCLE takes the first), その日は遠くて近い, and the next station at ~37,800.
+- **The station after** (station byte 2817 below 76 on arrival): the menu tutorial (closed by CIRCLE
+  presses), 8 Shadows round Sora (actors 1-9 of `D_002C64A0`, kind 3 in the top half of word 1)
+  beaten with CIRCLE every 30 frames by ~43,500 (攻撃力アップ!!), the save point tutorial at ~44,500.
+  The glass stairs are collision groups 132-160 (byte 11 of the 20-byte triangles `D_002A6238`,
+  count `D_002A6258`; vertices `D_002A624C`, 12 bytes): their centres, read from the triangles at
+  the station, are the goto points; group 131 is the top station, 130 the start, 100-129 walls
+  beside the steps. `func_001057b8(group, on)` sets each triangle's bit 0 (1 = off: VM lib 133 /
+  func_001d0500; lib 132 turns a group on). VM 1 turns the walls off a few steps ahead as Sora climbs
+  (`func_001059d0`, the group under the player). Trigger box 5 at (-2200, -1750, 7900), 600 wide,
+  starts 光に近づけば近づくほど... and Darkside (~49,000); CIRCLE every 30 frames until ~61,000,
+  then だけど 恐れないで, キミは世界で一番強い武器を持っている..., and the Destiny Islands opening
+  (わわッ!, なぁ カイリ ...) loads; dive.txt runs to 70,000. xl_limit.x is loaded four times on the
+  way (41,000-50,800) with no native C; nothing calls into it (its loader's callback only flags it
+  loaded), so the run is unaffected.
+- **The ASan build's other path** (open since session 137). `census.py --init zero|pattern` builds
+  the host with every local zeroed or filled with 0xFE (out/host-init-KIND/; `--init-files` limits
+  it to listed files, for a bisection): both followed the plain build exactly to frame 8,000, so no
+  uninitialised local. The two builds part at frame 3,133: in the ASan build the task `func_00133a88`
+  (objcmd.nostrict.c, the VMs' commands to the game, key 79998) left the main task list, so the
+  command that puts Sora at (0, 0, -670) was never run. proc.c's `func_0011f130` drops a task whose
+  return value has bit 2 set; `func_00133a88` was `void` (its loop ends when `func_001c45e8` returns
+  0, which the EE leaves in v0), so x86 returned whatever eax held. Now `KH1_V0(s32)` with
+  `KH1_V0_RETURN(0)` (portability.md rule 10; the object unchanged). Every other function handed to
+  `func_0011ef10` / `func_0011f090` (about 170) is defined with an int return.
+  Then ASan reported two locals a callee copies a quadword into or out of (rule 15): vm_lib.c
+  `func_001d9cb0`'s `v` (read by class1b func_001515d0) and `func_001da2c8`'s `buf` (written by
+  mapdata.c func_00105c70), both now four words (objects unchanged). With those, the ASan build runs
+  dive.txt to 70,000 with no report.
+- **x87 float precision**: the ASan and plain builds still differ slightly (171 / 174 disc reads by
+  70,000): positions part by 0.01 from frame ~24,000 and the fight's timing follows. `census.py
+  --cflags "-msse2 -mfpmath=sse" --out DIR` builds with single-precision float maths; the plain and
+  ASan builds made that way take exactly the same path (182 reads each), and dive.txt still gets
+  through Dive to the Heart and into Destiny Islands with it (a Vita-like float model: the script
+  does not depend on x87's excess precision).
+- tools/host/vmdis.py `--exe` runs another host build (ASan's with its ASAN_OPTIONS).

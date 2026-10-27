@@ -33,6 +33,8 @@ CALL_RX = re.compile(r"\b(func_[0-9a-f]{8})\s*\(")
 BENIGN = {
     ("src/game/dkmovie.c", "func_0024b138"):
         "func_00111238 names the disc / IPU calls and is never called (no jal, j or pointer to it)",
+    ("src/game/dkmovie.c", "sceIpuSync"):
+        "the same never-called func_00111238 (session 137, seen once named calls were checked)",
     # Value uses whose value nobody reads (session 63): the caller returns it, and
     # every caller of that caller drops it.
     ("src/menu/loadmenu.c", "func_00207bb0"):
@@ -160,25 +162,30 @@ def main():
                 continue
             n, var = nparams(p)
             defs.setdefault(name, (n, var, ret, f))
+    # calls by functions.tsv names too (session 137: pppsys.c called pppStepPrograms with none of
+    # its two arguments through a `(void)` prototype)
+    call_rx = re.compile(r"(?<![\w.>])(func_[0-9a-f]{8}|" + "|".join(sorted(map(re.escape, alias), key=len, reverse=True))
+                         + r")\s*\(")
     rows = []
     for f, s in sorted(srcs.items()):
-        for m in CALL_RX.finditer(s):
-            name = m.group(1)
+        for m in call_rx.finditer(s):
+            spelt = m.group(1)
+            name = alias.get(spelt, spelt)
             if name not in defs:
                 continue
             line_start = s.rfind("\n", 0, m.start()) + 1
             line = s[line_start:s.find("\n", m.start())]
-            if re.match(r"\s*(#define|extern\b|[A-Za-z_][\w \t\*]*\b" + name + r"\s*\(\s*\)\s*;)", line):
+            if re.match(r"\s*(#define|extern\b|[A-Za-z_][\w \t\*]*\b" + spelt + r"\s*\(\s*\)\s*;)", line):
                 continue
             # a prototype at file level (`void f(void);`, `void f(), g();`): only the calls matter
             if re.match(r"[A-Za-z_][^=]*;\s*$", line) and not re.match(r"(return|else|do)\b", line):
                 continue
-            if (f, name) in BENIGN:
+            if (f, name) in BENIGN or (f, spelt) in BENIGN:
                 continue
             n = call_args(s, m.end() - 1)
             pn, var, ret, df = defs[name]
             if n is not None and n < pn:
-                rows.append(("args", f, s.count("\n", 0, m.start()) + 1, name, n, pn, df))
+                rows.append(("args", f, s.count("\n", 0, m.start()) + 1, spelt, n, pn, df))
     voids = {n for n, d in defs.items() if d[2] == "void"}
     for f, s in sorted(srcs.items()):
         for m in CALL_RX.finditer(s):
