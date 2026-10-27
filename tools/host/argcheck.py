@@ -15,7 +15,11 @@ PS2 build cannot see, so this reads the source:
 lists (file, line, callee, args passed, params defined) for calls with fewer
 arguments than the definition in src/ (or a draft of shift/drafts.tsv), and the
 calls of void-defined functions whose value is used (assigned, returned,
-compared, passed on).
+compared, passed on), and the void functions handed to the task lists as tasks
+(`task` rows: func_0011f090's callback, or a wrapper's that passes its own
+parameter on, like func_0011ef10): func_0011f130 drops a task whose value has
+bit 2 set, so a void one is removed or kept by whatever x86 / ARM leaves in the
+return register (session 138's func_00133a88).
 Variadic definitions and `(void)` are understood; K&R definitions count their
 identifier list. A heuristic over the text: check each hit by hand.
 """
@@ -121,6 +125,99 @@ def call_args(s, i):
     return None
 
 
+def split_args(s, i):
+    """The argument texts of the call whose '(' is at s[i] (None if unbalanced)."""
+    depth, out, cur = 0, [], ""
+    for j in range(i, len(s)):
+        c = s[j]
+        if c in "([{":
+            depth += 1
+            if depth == 1:
+                continue
+        elif c in ")]}":
+            depth -= 1
+            if depth == 0:
+                return out + [cur.strip()] if cur.strip() or out else []
+        elif c == "," and depth == 1:
+            out.append(cur.strip())
+            cur = ""
+            continue
+        cur += c
+    return None
+
+
+def body_end(s, i):
+    """The index past the '}' that closes the '{' at or after s[i]."""
+    i = s.find("{", i)
+    depth = 0
+    for j in range(i, len(s)):
+        if s[j] == "{":
+            depth += 1
+        elif s[j] == "}":
+            depth -= 1
+            if depth == 0:
+                return j + 1
+    return len(s)
+
+
+# The task lists' adders: callee -> the index of its task callback argument (proc.nostrict.c
+# func_0011f090(list, key, fn)); wrappers that pass a parameter of theirs on are found below.
+TASK_ADDERS = {"func_0011f090": 2}
+
+
+def task_rows(srcs, defs, alias):
+    """('task', file, line, callee, adder, 'void', definition) for void functions passed as tasks."""
+    adders = dict(TASK_ADDERS)
+    bodies = []  # (file, name, param names, body start, body end)
+    for f, s in srcs.items():
+        for m in DEF_RX.finditer(s):
+            name = alias.get(m.group(2), m.group(2))
+            if not name.startswith("func_") or m.group(1).strip() in ("return", "else", "if"):
+                continue
+            if not re.match(r"\s*\{", s[m.end() - 1:m.end() + 40]):
+                continue
+            names = [re.findall(r"\w+", x)[-1] if re.findall(r"\w+", x) else ""
+                     for x in m.group(3).split(",")]
+            bodies.append((f, name, names, m.end() - 1, body_end(s, m.end() - 1)))
+    rx = lambda: re.compile(r"(?<![\w.>])(" + "|".join(map(re.escape, adders)) + r")\s*\(")
+    grew = True
+    while grew:  # wrappers of wrappers
+        grew = False
+        r = rx()
+        for f, name, names, b0, b1 in bodies:
+            if name in adders:
+                continue
+            for m in r.finditer(srcs[f], b0, b1):
+                args = split_args(srcs[f], m.end() - 1) or []
+                k = adders[m.group(1)]
+                a = re.sub(r"^\((?:[^()]|\([^()]*\))*\)\s*", "", args[k]) if k < len(args) else ""
+                if a in names:
+                    adders[name] = names.index(a)
+                    grew = True
+                    break
+    rows = []
+    r = rx()
+    for f, s in sorted(srcs.items()):
+        for m in r.finditer(s):
+            line_start = s.rfind("\n", 0, m.start()) + 1
+            if re.match(r"\s*(#|extern\b)", s[line_start:m.start()]) or s[m.end():m.end() + 1] == "*":
+                continue
+            args = split_args(s, m.end() - 1)
+            k = adders[m.group(1)]
+            if not args or k >= len(args):
+                continue
+            a = args[k]
+            while True:  # casts and &
+                b = re.sub(r"^\((?:[^()]|\([^()]*\))*\)\s*(?=[\w&(])", "", a).lstrip("&").strip()
+                if b == a:
+                    break
+                a = b
+            a = alias.get(a, a)
+            if a in defs and defs[a][2] == "void":
+                rows.append(("task", f, s.count("\n", 0, m.start()) + 1, a, m.group(1), "void", defs[a][3]))
+    return rows
+
+
 def enclosing(s, pos):
     """The DEF_RX match of the function definition that contains pos (None if not found)."""
     last = None
@@ -216,10 +313,12 @@ def main():
                 if (f, name) in BENIGN or (encl and (f, name, encl.group(2)) in BENIGN):
                     continue
                 rows.append(("ret", f, s.count("\n", 0, m.start()) + 1, name, "value used", "void", defs[name][3]))
+    rows += task_rows(srcs, defs, alias)
     for r in rows:
         print("\t".join(str(x) for x in r))
-    print("%d calls with too few arguments, %d value uses of a void function"
-          % (sum(1 for r in rows if r[0] == "args"), sum(1 for r in rows if r[0] == "ret")), file=sys.stderr)
+    print("%d calls with too few arguments, %d value uses of a void function, %d void tasks"
+          % (sum(1 for r in rows if r[0] == "args"), sum(1 for r in rows if r[0] == "ret"),
+             sum(1 for r in rows if r[0] == "task")), file=sys.stderr)
     if a.tsv:
         os.makedirs(os.path.dirname(a.tsv), exist_ok=True)
         with open(a.tsv, "w") as fh:

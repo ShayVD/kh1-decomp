@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste this to start the next session (session 139).
+Paste this to start the next session (session 140).
 
 ---
 
@@ -18,8 +18,10 @@ stage those and `cat part_a? > en.iso`). Its `SLPS_251.98` is the patch's (SHA-2
 - **The decomp target does not change**: kh1.toml's retail `SLPS_251.98` (1993a4da…) is still what
   `make` matches against, and kh1.elf must stay byte-identical to it. Never put the English ELF in
   the repo root as SLPS_251.98 (only a scratch copy for `make KH1_EN_TARGET=1`).
-- Pad scripts (tests/host/pads/dive.txt) run the same on it; only the text on screen is English, so
-  expect English lines where older notes quote Japanese ones.
+- Pad scripts: **tests/host/pads/dive_en.txt is the English disc's** (session 139); dive.txt stays
+  the Japanese disc's. They differ in two places where the run's own state decides (the box's side,
+  an islander's talk; docs/native-overlays.md "Session 139"), so a script made on one disc needs a
+  check on the other. Expect English lines where older notes quote Japanese ones.
 - Code that changes text layout (fonts, glyph widths, the patched functions in
   docs/english-patch.md) has two sides: keep `KH1_EN` / `KH1_GLYPH` and test with both discs.
 - The Japanese discs (KH1_BIG.iso 9ad74868…, the retail ISO) still work and stay Japanese; the old
@@ -28,6 +30,9 @@ stage those and `cat part_a? > en.iso`). Its `SLPS_251.98` is the patch's (SHA-2
 
 ## The Mac
 
+**Session 139 (2026-10-27)**: a grant for the whole ~/Downloads was refused by the tool's safety
+check; asking for `~/Downloads/kh1-test/isoparts-en` itself went through (connect card first, then
+`device_request_folder_access` on that path; 9 parts staged one per call, ~8 minutes).
 **The Mac was back on 2026-10-27** (session 138 staged the ISO parts from it at 12:27 UTC: a connect card, then a folder grant for ~/Downloads, then one part per stage call; ~8 minutes for the 9). How it worked in session 131: the
 connect card gives folder tools for ~/Downloads (stage files into the container, commit files back), but the
 Mac's sandbox shell (`device_bash`) did not start, so anything that must *run* on the Mac (patching the 3.5 GB
@@ -36,7 +41,25 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 138, 2026-10-27)
+## Where we stopped (end of session 139, 2026-10-27)
+
+- **Session 139** (the Mac for staging only; the English disc, en.iso SHA-256 c8ee8c77..., with PR #149's
+  English mode merged into the branch): **Dive to the Heart on the English disc, and Destiny Islands'
+  first free roam** (docs/native-overlays.md "Session 139").
+  - dive.txt stalls on the English disc (second station); **tests/host/pads/dive_en.txt** gets through
+    (the box placed by the run's own state, now reached with the new pad line `goto vm K`; one CIRCLE
+    fewer at the islanders) and on to 77,500: Kairi's errand (two logs, one cloth, one rope) and both
+    logs (item 192 = 2 at ~76,400).
+  - **SSE single precision is the host's default now** (the user's choice): census.py adds
+    `-msse2 -mfpmath=sse` unless `--x87`. Default and ASan builds take the identical path to 77,500
+    (188 disc reads), no ASan report.
+  - ASan + SSE found objfx.nostrict.c func_0012bd98 passing one vector where func_00121a78 reads three
+    rows (rule 15), fixed; localcheck.py now follows loop-indexed reach (the only new hit).
+    argcheck.py lists void tasks handed to the task lists (none).
+  - Matching: no new match. xl_limit func_00f20ff0 (the limit set-up, case 3) to 2 words off (one register of D_00F23208's load; nonmatchings/session139/NOTES.md). The English disc's overlays are the pinned ones except wm.x, so overlay matching works from it.
+  - kh1.elf byte-identical (6,981 / 6,988); every changed object unchanged; `make test` PASS.
+
+## Where we stopped before (end of session 138, 2026-10-27)
 
 - **Session 138** (the Mac for staging only; ISO SHA-256 9ad74868… checked): **Dive to the Heart played
   to its end on the host** (docs/native-overlays.md "Session 138"). tests/host/pads/dive.txt now runs to
@@ -930,7 +953,28 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 139 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 140 plan (at most 3 workers, docs/workflow.md "Resource limit")
+
+Shay's goal: **Dive to the Heart fully working on the Vita.** Host work serves that first.
+
+1. **With the Mac, after the Vita display thread's PR (#150)**: a Vita3K run with pad input through Dive
+   to the Heart on the English disc (Vita3K's ux0:data/kh1/kh1.iso is still the Japanese one: ask the
+   user before swapping it, and check no other thread is using Vita3K). Sessions 135-139's host fixes
+   all matter there; the Vita build needs a pad script or real input (the host's goto lines are
+   host/null only).
+2. **Destiny Islands on the host** (dive_en.txt to 77,500, then on): the cloth / rope (item 193 is VM 18
+   up on the ledges at (-1201, -1093, 401); the other item is in another room: the shack or the cove),
+   then back to Kairi. Plan gotos from a collision map (dump `D_002A6238` / `D_002A624C` with gdb;
+   native-overlays.md "Session 139"), read pickups with vmdis.py.
+3. **dive.txt on the Japanese disc** with `goto vm 2` at 25,400 (only if the Mac's old isoparts are
+   staged): if it still passes, the two scripts could share that line.
+4. **Matching**: xl_limit.x's left functions (it loads in Dive to the Heart); then dktitle's.
+5. End with `make progress-update SESSION=140`, refresh docs/progress.md's tables, commit, open a PR,
+   and refresh this prompt.
+6. **Once the PR is merged, message the coordinator to start the next session** (session 141) with
+   this prompt.
+
+## Session 139 plan (done; kept for reference) (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Destiny Islands on the host** (tests/host/pads/dive.txt to 70,000, then on): the opening's
    lines and the first free roam (Sora playable at ~69,000 in the SSE build). Read its VMs with

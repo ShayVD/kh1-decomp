@@ -306,3 +306,51 @@ runs on the fake disc.
   through Dive to the Heart and into Destiny Islands with it (a Vita-like float model: the script
   does not depend on x87's excess precision).
 - tools/host/vmdis.py `--exe` runs another host build (ASan's with its ASAN_OPTIONS).
+
+## Session 139: the English disc, Destiny Islands, single precision by default
+
+- **The English-patched disc on the host** (the default test disc since 2026-10-27; docs/next-session.md
+  "The test disc"; en.iso SHA-256 c8ee8c77..., 3,542,579,200 bytes, with PR #149's English mode built
+  in). The host logs `kh1-lang: the disc's ELF is the English patch's` and draws English text. Its
+  overlays are the pinned ones (ovl/overlays.tsv) except wm.x. tests/host/pads/dive.txt does **not** get
+  through it: 90 disc reads by 70,000, stuck at the second station. Two places depend on the run's own
+  state rather than the disc's timing alone, so the English disc has its own script,
+  **tests/host/pads/dive_en.txt** (dive.txt is left as the Japanese disc's, unchanged):
+  - The box after the crate (frame ~25,400) goes to (-9060, -14920) or (-8280, -14920) by the
+    collision group Sora stands on when the crate breaks (VM 0 pc 256: lib 379 func_001d3948, the group
+    under the player, into VM variable 2560; 105 puts it at -9060). On this disc it went to -8280. New
+    pad line **`FRAME BUTTONS goto vm K [R]`** (host/null/pad.c, tested in pad_test.c) steers to script
+    VM K's entity (`D_0038D170[K].obj` +0x10) wherever it is that frame; dive_en.txt uses `goto vm 2`.
+  - The islanders: the CIRCLEs of 29,100-30,900 already reached the islander beside Sora (VM 4; his
+    variable 2328 = 1 by 31,000), so 32,400's CIRCLE opened his talk again and the goto to the next one
+    could not move Sora. dive_en.txt drops it.
+  With those two, dive_en.txt reaches 70,000 with 182 disc reads (the Japanese SSE run's count).
+- **Destiny Islands, the first free roam** (dive_en.txt 70,000-77,500). Sora is free on the beach at
+  ~69,500 (player actor 6 at (1997, -79, 2863); VM 0 idles). Kairi is VM 4 (entity 20008, beside Sora);
+  her talk (label 5) gives the errand: two logs, one cloth, one rope ("Bring everything back here").
+  The pickups are 0x4xxxx entities whose label 6 adds an item (lib 258 func_001d3858, the party's item
+  count `D_00304BE8->items[N]`): the logs are item 192, VM 16 (entity 40023 at (2212, 558)) and VM 15
+  (40022 at (4782, -219), on the islet); VM 18 (40000 at (-1201, -1093, 401), up on the ledges) gives
+  item 193. The other errand item is not in this room. UP + CIRCLE (the command menu's 4th slot,
+  Examine) takes a log. Straight north from Kairi is blocked by the shack's round wall at z ~2135:
+  the script goes round it at x 2700. The islet's edge needs a jump: CROSS every 40 frames while
+  steering (`FRAME CROSS goto vm 15 60`) climbs on. Both logs by ~76,400 (items[192] = 2).
+  - A top-down map of the room's collision helps to plan gotos: dump `D_002A6238` (count
+    `D_002A6258`, 20-byte entries, `s16 v[4]` vertex indices) and `D_002A624C` (12-byte `Vtx`) with gdb at
+    a frame and draw the floors (normal y) and walls (scratch script; not committed).
+  - `KH1_HOST_SHOT=640:448::DIR KH1_HOST_SHOT_EVERY=100` gives the 2D layer (text, menus) as PAM images:
+    the way to read what the game says on the null platform.
+- **Single-precision float maths is the host default** (the user's choice, 2026-10-27).
+  tools/host/census.py adds `-msse2 -mfpmath=sse` (`FLOAT_CFLAGS`) unless `--x87`. Before the switch,
+  dive_en.txt to 77,500 on the x87, SSE and ASan + SSE builds: 188 disc reads each, positions within 0.1
+  (x87 vs SSE). After: the default and ASan builds take the identical path (every goto's start
+  position the same) with no ASan report. The Vita build sets its own flags (tools/vita/build.py) and
+  is unaffected.
+- **A host stack bug ASan found** (rule 15): objfx.nostrict.c func_0012bd98 passed one `V4 m` to
+  func_00121a78 (vecutil.nostrict.c), which normalizes three 16-byte rows from it: on the EE m, a and b
+  sit at sp+0 / 16 / 32. Now `struct { V4 m, a, b; } r3` (the object unchanged). localcheck.py missed it
+  because the callee reaches the rows through a loop index (`addu a1, s2, a0` with `a0 = i << 4`,
+  `slti i, 3`); it now follows such an index to its bound and finds this call (the only new hit).
+- argcheck.py also lists `task` rows: a void function handed to the task lists (func_0011f090's
+  callback, or a wrapper's that passes its parameter on, like func_0011ef10), session 138's kind of bug.
+  None today.
