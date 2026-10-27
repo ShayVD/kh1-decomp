@@ -123,7 +123,12 @@ Mix (SLPS-25198, the English patch included) saves load: the US / European Kingd
 **Checked (2026-10-27)** with the user's card (kh1-test/memcards/KH1_FM_save.ps2: saves 04, 05, 06,
 level 100) on the English disc: tests/host/pads/load_en.txt picks LOAD, slot 1 lists the saves with
 the newest (06) under the cursor, and it loads into the field (party HUD; the host draws no 3D); the
-run reads but writes nothing. The world map (wm.x) and the gummi ship (gb.x), the summons (xs_*.x)
+run reads but writes nothing. **In Vita3K** (the same day, the VPK installed as KHDC00002 beside the
+main install, the saves in ux0:data/kh1/mc0, the Japanese ISO): kh1.log says `memory card 1:
+ux0:data/kh1/mc0 (found)`; at the title DOWN, CIRCLE (LOAD), CIRCLE (slot 1), CIRCLE (the newest save)
+loads into the field at 27-60 fps: the command menu (Attack / Magic / Items / Save) draws, the party's
+portraits and the HUD panels are garbled textures, and the Load Menu's windows and text do not draw
+(the GPU path's 2D, not the card). The world map (wm.x) and the gummi ship (gb.x), the summons (xs_*.x)
 and limits (xl_limit.x) are overlays with no native C yet, so a save there or a call into one still
 stops the port.
 
