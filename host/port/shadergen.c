@@ -242,6 +242,7 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
         if (k->fog) put(&g, "    float fog : TEXCOORD1,\n");
         if (k->tex) put(&g, "    uniform sampler2D tex,\n");
         put(&g, "    uniform float4 u_a,\n    uniform float4 u_b,\n    uniform float4 u_r,\n");
+        if (k->tex && (k->su == KH1_SHADER_TAPS || k->sv == KH1_SHADER_TAPS)) put(&g, "    uniform float4 u_c,\n"); /* the region offset */
         if (nat) put(&g, "    __regformat unsigned char4 dst : FRAGCOLOR,\n"); /* the target's pixel */
     }
     put(&g, nat ? "    out __regformat unsigned char4 ocolor : COLOR)\n{\n" : "    out float4 ocolor : COLOR)\n{\n");

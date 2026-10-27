@@ -348,6 +348,17 @@ by a hash of micro memory at MSCAL, the interpreter as the fallback and the refe
 translation is checked against, bit for bit, on snapshots). Until then the Vita build shows the 3D at a
 few frames a second.
 
+**Vita3K, 2026-10-27** (branch at c53bb99, Japanese disc, `vu1=1`, `pad=ux0:data/kh1/dive.txt`,
+`frames=8000`): the first Dive station draws, Sora on the stained-glass platform with both
+pedestals and the dialogue. The title and menus run at about 56 fps; the 3D from frame 5000 at
+about 11.5 fps, slowest frame 176 ms (189 ms recording, 169 ms the frame's commands). Found there:
+the REGION_REPEAT fragment shader read `u_c` without declaring it, so Vita3K's compiler refused it
+and its draws were skipped ("no pipeline"); fixed, with a shadergen_test check. Still open: up to
+77k "no texture" skips (the first, target 1 sampled by its own scene), one "no render target"
+skip (target 5, rt 7, 0 x 448), and Vita3K's write-protect / EXC_BAD_ACCESS messages, which do
+not stop the game. Building the VPK needs `out/gen/data.tsv` from the PS2 build, so a Mac without
+ee-gcc builds it in a Linux container.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and

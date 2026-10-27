@@ -149,6 +149,7 @@ static void parse(void) {
     k.tex = KH1_TEXFMT_RGBA8;
     k.su = KH1_SHADER_TAPS;
     CHECK("parse: a TAPS key is generated (session 137v)", frag(&k) && find_str(text, "u_c.z"));
+    CHECK("parse: the TAPS key declares u_c (session 137v: Vita3K's compiler refused it undeclared)", find_str(text, "uniform float4 u_c"));
     for (i = 0; i < 7; i++) {
         u32 len = kh1_shader_vert_cg(i, text, sizeof text);
         memset(&run, 0, sizeof run);
