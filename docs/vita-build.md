@@ -360,6 +360,31 @@ skip (target 5, rt 7, 0 x 448), and Vita3K's write-protect / EXC_BAD_ACCESS mess
 not stop the game. Building the VPK needs `out/gen/data.tsv` from the PS2 build, so a Mac without
 ee-gcc builds it in a Linux container.
 
+**The programs as C (session 137v).** tools/vu/vu1_translate.py reads the 22 VU1 programs out of the
+user's own ELF (tools/vu/find_vu1.py) at build time and writes out/gen/vu1_tr.c (never committed),
+which host/port/vu1.c includes under `KH1_VU1_TR` (tools/host/census.py regenerates it when stale).
+The interpreter's timing is resolved statically: each node of the generated code is a pc plus an
+abstract pipeline state (pending VF writes, the flag FIFO, Q / P and their latencies, the VI backup,
+the branch delay and the E bit), with pending writes nothing reads before they land dropped, dead
+values forgotten, the MAC flag computed only by the FMACs whose flag a later FMAND / FMEQ / FMOR reads,
+and JR targets taken from BAL links and `IADDIU r, vi00, addr` constants. 20 of the 22 programs
+translate (P9 and P21 jump outside themselves and stay on the interpreter). At MSCAL micro memory is
+matched against each program's words (cached until the next MPG), so a program the chains change is
+never run as C. `vu1tr=` (`KH1_HOST_VU1TR` on the host): 0 the interpreter, 1 the C (default), 2 both,
+each run compared register for register and memory for memory (`tr_check`): 0 differences over ~800K
+runs to frame 8000 on the host. The four lanes of an FMAC are one NEON operation on ARM (`vu_op`; the
+scalar code elsewhere), 0 differences over 757 dumped runs under qemu-arm (`KH1_HOST_VU1DUMP=DIR:N`).
+On x86 a pair costs ~5 ns translated against ~35 interpreted; i386 builds take `fpmath=sse` for
+vu1.c so both paths round as IEEE single.
+
+**Vita3K, English disc, 3d-e (NEON):** 23 to 24 fps from frame 6400 (the interpreter's was 11.5): of
+each 2 s, ~515 ms in VU1 programs (~245 of it handing kicks to the recorder), ~600 ms in the frame's
+GXM commands, ~140 ms recording, ~500 ms waiting for vblank. Texture skips fell from ~134K to ~1K
+(the loose texture slots raised from 8 to 32). One fragment shader (P8, modulate, ST/Q, REGION_REPEAT
+on both axes, fog, discard where GREATER fails) stops SceShaccCg with "fatal internal error" at every
+optimisation level (~4,900 skipped draws); `shadertest=1` bisects it, and meanwhile its draws use the
+plain wrap.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
