@@ -106,6 +106,35 @@ void kh1_vita_log(const char *fmt, ...) {
     if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
 }
 
+/* session 137v: the game's and host/null's printf straight into the log. Pointing newlib's stdout at the
+ * log reached neither its global nor its per-thread stream on the Vita (no "kh1-host:" line ever
+ * showed), so these take the place of libc's own (gcc turns a bare printf("...\n") into puts) */
+int vprintf(const char *fmt, va_list ap) {
+    char buf[1024];
+    int n = vsnprintf(buf, sizeof buf, fmt, ap);
+    if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
+    if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
+    return n;
+}
+
+int printf(const char *fmt, ...) {
+    va_list ap;
+    int n;
+    va_start(ap, fmt);
+    n = vprintf(fmt, ap);
+    va_end(ap);
+    return n;
+}
+
+int puts(const char *s) {
+    int n = (int)strlen(s);
+    if (log_fd >= 0) {
+        sceIoWrite(log_fd, s, n);
+        sceIoWrite(log_fd, "\n", 1);
+    }
+    return n + 1;
+}
+
 unsigned long kh1_host_frame(void) { return frames; }
 static u32 vita_us(void) { return (u32)sceKernelGetProcessTimeWide(); }
 
@@ -318,10 +347,6 @@ int main(int argc, char **argv) {
             stderr = f;
             _GLOBAL_REENT->_stdout = f;
             _GLOBAL_REENT->_stderr = f;
-            /* session 137v: vitasdk's newlib keeps a reent per thread: the main thread's (where the game and its
-             * coroutines print) is not the global one, and its printf went nowhere */
-            _REENT->_stdout = f;
-            _REENT->_stderr = f;
         }
         sceIoWrite(log_fd, "kh1-vita: log open\n", 19);
     }
