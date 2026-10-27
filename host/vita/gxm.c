@@ -453,6 +453,11 @@ typedef struct {
     Heap *heap;    /* CDRAM, or LPDDR when CDRAM had no room (session 136) */
     SceGxmColorSurface surf;
     SceGxmRenderTarget *gxrt;
+    /* session 137v: uploads into it not yet written (the union of their rectangles, BITBLTBUF's destination): GS
+     * memory is read as the frame left it, so each upload of a frame writes the same bytes, and they are written
+     * once, before the target's next use (pend_flush) */
+    u8 pend;
+    u32 pend_bb, px0, py0, px1, py1;
 } Target;
 static Target tgt[KH1_CMD_TARGETS];
 
@@ -758,6 +763,37 @@ static void target_upload(Target *t, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w,
     }
 }
 
+/* the pending uploads written (one wait for the GPU for them all); `only` one target's, or all */
+static void pend_flush(Target *only) {
+    u32 i;
+    int any = 0;
+    for (i = 0; i < KH1_CMD_TARGETS; i++) {
+        Target *t = &tgt[i];
+        KH1CmdXfer x;
+        if (!t->pend || (only && t != only)) continue;
+        if (!any) finish();
+        any = 1;
+        t->pend = 0;
+        if (!t->mem) continue;
+        memset(&x, 0, sizeof x);
+        x.bb_hi = t->pend_bb;
+        target_upload(t, &x, t->px0, t->py0, t->px1 - t->px0, t->py1 - t->py0);
+    }
+}
+static void pend_add(Target *t, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
+    if (t->pend && t->pend_bb != x->bb_hi) pend_flush(t);
+    if (!t->pend) {
+        t->pend = 1;
+        t->pend_bb = x->bb_hi;
+        t->px0 = dx, t->py0 = dy, t->px1 = dx + w, t->py1 = dy + h;
+        return;
+    }
+    if (dx < t->px0) t->px0 = dx;
+    if (dy < t->py0) t->py0 = dy;
+    if (dx + w > t->px1) t->px1 = dx + w;
+    if (dy + h > t->py1) t->py1 = dy + h;
+}
+
 void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     const KH1TexCache *tc = kh1_pipes_texcache();
     const KH1PalCache *pc = kh1_pipes_palcache();
@@ -777,6 +813,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     kh1_gxm_frame(&rec, r);
     kh1_vita_us_part[0] += (u32)(sceKernelGetProcessTimeWide() - t0);
     finish(); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
+    pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
     if (r->vring.head > vbuf_bytes) {
         char d[64];
         snprintf(d, sizeof d, "%u bytes, room for %u", (u32)r->vring.head, (u32)vbuf_bytes);
@@ -834,6 +871,14 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 cur = 0;
                 break;
             }
+            {   /* the pending uploads into this target, and into those its draws sample */
+                int need = cur->pend;
+                for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++)
+                    if (rec.call[j].op == KH1_GXM_SET_TEXTURE && rec.call[j].src && rec.call[j].src <= KH1_CMD_TARGETS &&
+                        tgt[rec.call[j].src - 1].pend)
+                        need = 1;
+                if (need) pend_flush(0);
+            }
             for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++) ;
             if (j < rec.n) dstore = rec.call[j].dstore != KH1_STORE_DISCARD;
             sceGxmDepthStencilSurfaceSetForceLoadMode(&z->surf, c->depth != KH1_DS_NONE && c->dload == KH1_LOAD_LOAD
@@ -882,6 +927,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             Target *s = c->src && c->src <= KH1_CMD_TARGETS ? &tgt[c->src - 1] : 0;
             u32 e, *o = (u32 *)pal_rb;
             if (!s || !s->mem) break;
+            pend_flush(s);
             finish();
             for (e = 0; e < 256; e++) {
                 u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g;
@@ -894,8 +940,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         case KH1_GXM_TARGET_UPLOAD: {
             Target *d = c->tgt && c->tgt <= KH1_CMD_TARGETS ? &tgt[c->tgt - 1] : 0;
             if (!d || !d->mem || !k) break;
-            finish();
-            target_upload(d, &k->x, c->dx, c->dy, c->w, c->h);
+            pend_add(d, &k->x, c->dx, c->dy, c->w, c->h);
             break;
         }
         case KH1_GXM_BLIT: { /* target to target (GS memory on either side keeps the CPU model's bytes) */
@@ -903,8 +948,9 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             Target *d = c->tgt && c->tgt <= KH1_CMD_TARGETS ? &tgt[c->tgt - 1] : 0;
             u32 y, w, sx, sy;
             if (!d || !d->mem || !k) break;
+            if (!s || !s->mem) { pend_add(d, &k->x, c->dx, c->dy, c->w, c->h); break; }
+            pend_flush(0);
             finish();
-            if (!s || !s->mem) { target_upload(d, &k->x, c->dx, c->dy, c->w, c->h); break; }
             sx = k->x.sx;
             sy = k->x.sy;
             for (y = 0; y < c->h; y++) {
@@ -1023,6 +1069,8 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         kh1_vita_us_part[part] += (u32)(sceKernelGetProcessTimeWide() - t1);
     }
     if (open) sceGxmEndScene(ctx, 0, 0);
+    if (display >= 0 && tgt[display].pend) pend_flush(&tgt[display]); /* the present reads it; the rest wait for
+                                                                      * the next frame's start */
     frames++;
     kh1_vita_us_gpu += (u32)(sceKernelGetProcessTimeWide() - t0);
 }
