@@ -310,6 +310,7 @@ int main(int argc, char **argv) {
     kh1_vu1_clock = vita_us;
     config(iso, sizeof iso);
     if (!kh1_cd_image_open(iso)) {
+        vlog("kh1-vita: %s: not found or not readable\n", iso);
         snprintf(iso, sizeof iso, "%s/kh1.bin", kh1_vita_dir);
         if (!kh1_cd_image_open(iso)) no_disc(iso);
     }
