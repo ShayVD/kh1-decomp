@@ -9,6 +9,7 @@
  * D_003F76BC (0 when cancelled).  What each one asks is not known; not
  * proved by a boot. */
 #include "common.h"
+#include "lang.h"
 #include "text/textwin.h"
 
 extern s32 D_003F34A4;
@@ -38,7 +39,7 @@ void func_0022d728(void) {
 
 
 void func_0022da10(TextWin *arg0) {
-    func_001f9438(arg0, 2, 0x100, 0x90, 0x5F, 0x12, 0x801E4696);
+    func_001f9438(arg0, 2, 0x100, 0x90, 0x5F, KH1_GLYPH, 0x801E4696);
 }
 
 

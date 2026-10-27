@@ -10,6 +10,11 @@ BINUTILS  ?= mips-linux-gnu-
 AS        := $(BINUTILS)as
 LD        := $(BINUTILS)ld
 INCLUDES  := -Iinclude -Isrc
+# `make KH1_EN_TARGET=1` with the English patch's ELF as SLPS_251.98 (in a copy of the repo): the
+# English variants of the patched functions, checked against that ELF (docs/english-patch.md)
+ifneq ($(KH1_EN_TARGET),)
+INCLUDES  += -DKH1_EN_TARGET
+endif
 GEN       := out/gen
 PATCHED   := out/kh1.elf
 LINKED    := out/linked.elf

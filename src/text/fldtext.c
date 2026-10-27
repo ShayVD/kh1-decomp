@@ -5,6 +5,7 @@
  * func_0010ea70 ...) around the unmatched layout func_0010d470. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "lang.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/bss_0049.h"
@@ -219,7 +220,7 @@ u64 *func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
         }
         return *pp = p + 6;
     } else {
-        page = id / 441;
+        page = id / (KH1_EN ? 336 : 441);
         switch (page) {
         case 0:
             k = id;
@@ -227,17 +228,17 @@ u64 *func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
             row = k / 21;
             break;
         case 1:
-            k = id - 441;
+            k = id - (KH1_EN ? 336 : 441);
             col = k % 21;
             row = k / 21;
             break;
         case 2:
-            k = id - 882;
+            k = id - (KH1_EN ? 672 : 882);
             col = k % 21;
             row = k / 21;
             break;
         case 3:
-            k = id - 1323;
+            k = id - (KH1_EN ? 1008 : 1323);
             col = k % 21;
             row = k / 21;
             break;
@@ -248,6 +249,13 @@ u64 *func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
             p[4] = 0;
             p[3] = 0xFFFFFFFE73C06FC0ULL;
             p[5] = 0xFFFFFFFE73C06FC0ULL;
+        } else if (KH1_EN) {
+            /* the English font: 16 rows of 24 x 32 cells a page, the glyph 2 px higher and 28
+             * (w 20) or 32 px tall whatever w */
+            p[2] = uv(col * 24, row * 32);
+            p[4] = uv(col * 24 + 24, row * 32 + 32);
+            p[3] = xyz(x, y - 2);
+            p[5] = xyz(x + w, y + (w == 20 ? 26 : 30));
         } else {
             p[2] = uv(col * 24, row * 24);
             p[4] = uv(col * 24 + 24, row * 24 + 24);

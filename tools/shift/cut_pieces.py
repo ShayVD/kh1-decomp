@@ -7,7 +7,8 @@
 Each `PIECE D_XXXXXXXX, size, align` line (include/data/piece.inc) names an
 address and a size; the bytes at that address of the user's ELF are written to
 OUT_DIR/D_XXXXXXXX.bin, which the piece's `.incbin` reads. Files are rewritten
-only when their bytes change. The ELF must match the SHA-256 in kh1.toml.
+only when their bytes change. The ELF must match the SHA-256 in kh1.toml (the retail
+target, or [english]'s for the English variants' check).
 Build output only: out/ is gitignored and never committed."""
 from __future__ import annotations
 
@@ -35,7 +36,10 @@ def main() -> int:
     cfg = K.load_config()
     path = a.elf or K.orig_path(cfg)
     raw = path.read_bytes()
-    if hashlib.sha256(raw).hexdigest() != cfg["target"]["sha256"].lower():
+    # the English fan patch's ELF is accepted too (kh1.toml [english], docs/english-patch.md): only
+    # for checking the KH1_EN_TARGET variants against it, never for the matching build
+    pins = (cfg["target"]["sha256"].lower(), cfg.get("english", {}).get("sha256", "").lower())
+    if hashlib.sha256(raw).hexdigest() not in pins:
         sys.exit(f"error: {path}: SHA-256 does not match kh1.toml")
     elf = Elf(raw, path)
     a.out_dir.mkdir(parents=True, exist_ok=True)

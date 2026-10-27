@@ -20,6 +20,7 @@
  * data D_003C5640-D_003C5890, which sits between the camera's D_003C5510
  * and opcode 1's D_003C5898 (src/vm/vm_calc.c), as the code does. */
 #include "common.h"
+#include "lang.h"
 #include "msgwin/msgwin.h"
 #include "vm/vm_mgr.h"
 #include "data/types/vm_rec.h"
@@ -78,7 +79,7 @@ void func_001ca9f8(void) {
 }
 
 void func_001caa20(void) {
-    func_0010ef70(&D_0062A130, &D_003C5808, &func_001ca9f8);
+    func_0010ef70(&D_0062A130, KH1_EN_AT(D_003C5808, 0x8, D_003C5808), &func_001ca9f8);
 }
 
 s32 func_001caa50(void) {
@@ -239,17 +240,17 @@ s32 func_001cb120(VmRec *vm) {
         case 0: D_00388480[D_00389C80] = D_003C5660; break;
         case 12: D_00388480[D_00389C80] = D_003C5680; break;
         case 13: D_00388480[D_00389C80] = D_003C56A0; break;
-        case 2: D_00388480[D_00389C80] = D_003C5750; break;
-        case 3: D_00388480[D_00389C80] = D_003C5780; break;
-        case 4: D_00388480[D_00389C80] = D_003C57B0; break;
-        case 1: D_00388480[D_00389C80] = D_003C5728; break;
+        case 2: D_00388480[D_00389C80] = KH1_EN_AT(D_003C5728, 0x18, D_003C5750); break;
+        case 3: D_00388480[D_00389C80] = KH1_EN_AT(D_003C5750, 0x18, D_003C5780); break;
+        case 4: D_00388480[D_00389C80] = KH1_EN_AT(D_003C5780, 0x18, D_003C57B0); break;
+        case 1: D_00388480[D_00389C80] = KH1_EN_AT(D_003C56F0, 0x28, D_003C5728); break;
         }
         break;
     case 1:
         if (e->s == 11) {
             D_002BBAB8 = e->b1;
             D_002BBAC8 = e->s;
-            D_00388480[D_00389C80] = D_003C56F0;
+            D_00388480[D_00389C80] = KH1_EN_AT(D_003C56C0, 0x28, D_003C56F0);
             if (!((sv->xdc4 >> 4) & 1)) {
                 sv->xdc4 |= 0x10;
                 func_0011ef10(50000, func_001caa50);
@@ -274,7 +275,7 @@ s32 func_001cb3c0(VmRec *vm) {
     n = vm->stk[vm->sp];
     i = (*(union { s32 i; u16 h; }(*))&D_00389C80).i;
     h = (*(union { s32 i; u16 h; }(*))&D_00389C80).h;
-    D_00388480[i] = D_003C57E0;
+    D_00388480[i] = KH1_EN_AT(D_003C57B0, 0x18, D_003C57E0);
     k = b->cnt[n];
     b->cnt[n] = k + 1;
     ((u16 *)b)[8 + n * 256 + k] = h;
@@ -296,16 +297,16 @@ s32 func_001cb440(VmRec *vm) {
         if ((u32)(n - 1) < 16) D_006298F0[k].v40[0] = func_0010f098(D_003C5660);
         else if ((u32)(n - 142) < 16) D_006298F0[k].v40[0] = func_0010f098(D_003C5680);
         else if ((u32)(n - 192) < 64) D_006298F0[k].v40[0] = func_0010f098(D_003C56A0);
-        else if ((u32)(n - 81) < 22) D_006298F0[k].v40[0] = func_0010f098(D_003C5750);
-        else if ((u32)(n - 103) < 16) D_006298F0[k].v40[0] = func_0010f098(D_003C5780);
-        else if ((u32)(n - 119) < 16) D_006298F0[k].v40[0] = func_0010f098(D_003C57B0);
-        else if ((u32)(n - 17) < 64) D_006298F0[k].v40[0] = func_0010f098(D_003C5728);
+        else if ((u32)(n - 81) < 22) D_006298F0[k].v40[0] = func_0010f098(KH1_EN_AT(D_003C5728, 0x18, D_003C5750));
+        else if ((u32)(n - 103) < 16) D_006298F0[k].v40[0] = func_0010f098(KH1_EN_AT(D_003C5750, 0x18, D_003C5780));
+        else if ((u32)(n - 119) < 16) D_006298F0[k].v40[0] = func_0010f098(KH1_EN_AT(D_003C5780, 0x18, D_003C57B0));
+        else if ((u32)(n - 17) < 64) D_006298F0[k].v40[0] = func_0010f098(KH1_EN_AT(D_003C56F0, 0x28, D_003C5728));
         break;
     case 1:
         if (e->s == 11) {
             D_002BBAB8 = e->b1;
             D_002BBAC8 = e->s;
-            D_006298F0[k].v40[0] = func_0010f098(D_003C56F0);
+            D_006298F0[k].v40[0] = func_0010f098(KH1_EN_AT(D_003C56C0, 0x28, D_003C56F0));
         } else {
             D_002BBAB8 = e->b1;
             D_002BBAC8 = e->s;

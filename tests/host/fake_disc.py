@@ -18,6 +18,11 @@ game: the real run needs the user's own disc.
 puts the user's own dktitle.x in place of the one-sector stand-in (session 132: the title's
 native C, host/port/ovl.c, runs only on the pinned file). The image then holds the user's
 bytes: keep it out of the repo.
+
+    python3 -I tests/host/fake_disc.py OUT.iso --elf PATH
+
+adds PATH as \\SLPS_251.98;1 (host/port/lang.c checks the disc's ELF: with the English patch's
+the port runs in English, docs/english-patch.md). The options combine; the same caution holds.
 """
 import struct
 import sys
@@ -63,8 +68,16 @@ def directory(entries, self_lba, parent_lba):
 def main():
     out = sys.argv[1]
     title = b"kh1-host fake dktitle.x: not code\n"
-    if len(sys.argv) == 4 and sys.argv[2] == "--dktitle":
-        title = open(sys.argv[3], "rb").read()
+    elf = None
+    opts = sys.argv[2:]
+    while opts:
+        if len(opts) >= 2 and opts[0] == "--dktitle":
+            title = open(opts[1], "rb").read()
+        elif len(opts) >= 2 and opts[0] == "--elf":
+            elf = open(opts[1], "rb").read()
+        else:
+            sys.exit("usage: fake_disc.py OUT.iso [--dktitle FILE] [--elf FILE]")
+        opts = opts[2:]
     tsec = (len(title) + S - 1) // S
     root, sub, cnf, idx, fbin, img = 19, 20, 21, 22, 23, 24
     cnf_data = b"BOOT2 = cdrom0:\\SLPS_251.98;1\r\nVER = 1.00\r\nVMODE = NTSC\r\n"
@@ -76,7 +89,8 @@ def main():
     sectors = [bytes(S)] * 16
     pvd = bytearray(S)
     pvd[0:7] = b"\x01CD001\x01"
-    pvd[80:88] = both32(ovl + tsec)
+    esec = (len(elf) + S - 1) // S if elf else 0
+    pvd[80:88] = both32(ovl + tsec + esec)
     pvd[120:124] = both16(1)
     pvd[124:128] = both16(1)
     pvd[128:132] = both16(S)
@@ -86,12 +100,15 @@ def main():
     sectors.append(bytes(S))  # 18: path table (unused)
     sectors.append(directory([("SYSTEM.CNF;1", cnf, len(cnf_data), False),
                               ("KINGDOM.IDX;1", idx, len(idx_data), False),
-                              ("DIR", sub, S, True)], root, root))
+                              ("DIR", sub, S, True)]
+                             + ([("SLPS_251.98;1", ovl + tsec, len(elf), False)] if elf else []), root, root))
     sectors.append(directory([("FILE.BIN;1", fbin, len(fbin_data), False)], sub, root))
     for d in (cnf_data, idx_data, fbin_data):
         sectors.append(d.ljust(S, b"\0"))
     sectors += [bytes(S)] * 4
     sectors.append(title.ljust(tsec * S, b"\0"))
+    if elf:
+        sectors.append(elf.ljust(esec * S, b"\0"))
     open(out, "wb").write(b"".join(sectors))
     print("%s: %d sectors" % (out, len(sectors)))
 

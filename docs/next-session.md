@@ -6,6 +6,26 @@ Paste this to start the next session (session 139).
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it); in a cloud container a copy is in the project files' uploads folder (check its SHA-256 against kh1.toml).
 
+## The test disc: English by default (from 2026-10-27)
+
+The user's English-patched ISO is now the default disc for host and Vita runs
+(`~/Downloads/Kingdom Hearts Final Mix (English v2026-02-26)/Kingdom Hearts Final Mix (English v2026-06-26).iso`,
+3,542,579,200 bytes, already split in `~/Downloads/kh1-test/isoparts-en/part_aa..ai`, 380 MB each:
+stage those and `cat part_a? > en.iso`). Its `SLPS_251.98` is the patch's (SHA-256 53eca29e…, kh1.toml
+`[english]`), so the port runs in English (docs/english-patch.md); check for the log line
+`kh1-lang: the disc's ELF is the English patch's`. What stays the same:
+
+- **The decomp target does not change**: kh1.toml's retail `SLPS_251.98` (1993a4da…) is still what
+  `make` matches against, and kh1.elf must stay byte-identical to it. Never put the English ELF in
+  the repo root as SLPS_251.98 (only a scratch copy for `make KH1_EN_TARGET=1`).
+- Pad scripts (tests/host/pads/dive.txt) run the same on it; only the text on screen is English, so
+  expect English lines where older notes quote Japanese ones.
+- Code that changes text layout (fonts, glyph widths, the patched functions in
+  docs/english-patch.md) has two sides: keep `KH1_EN` / `KH1_GLYPH` and test with both discs.
+- The Japanese discs (KH1_BIG.iso 9ad74868…, the retail ISO) still work and stay Japanese; the old
+  isoparts are kept. Vita3K's ux0:data/kh1/kh1.iso was still the Japanese one on 2026-10-27.
+- wm.x (the world map) is replaced by the patch: when it is made native, pin the English file too.
+
 ## The Mac
 
 **The Mac was back on 2026-10-27** (session 138 staged the ISO parts from it at 12:27 UTC: a connect card, then a folder grant for ~/Downloads, then one part per stage call; ~8 minutes for the 9). How it worked in session 131: the

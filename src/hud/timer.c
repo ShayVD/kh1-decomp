@@ -11,6 +11,7 @@
  * (the markers of src/hud/marker.c move down for them).  Most likely the
  * minigames' display; not proved by a boot. */
 #include "common.h"
+#include "lang.h"
 #include "data/types/text_00240000_h50.h"
 #include "data/pieces/D_00467408.h"
 #include "data/pieces/D_00431F30.h"
@@ -171,7 +172,7 @@ void func_00247cf8(MgHud *p) {
         sprintf(buf, "%01d", p->a);
         DRAW_TEXT(69, 22, col, 1.0f, buf, D_00467408);
         if (p->on) {
-            sprintf(buf, "/");
+            sprintf(buf, KH1_EN ? "f" : "/");
             DRAW_TEXT(84, 22, col, 1.0f, buf, D_00467408);
             sprintf(buf, "%01d", p->b);
             DRAW_TEXT(97, 22, col, 1.0f, buf, D_00467408);
@@ -181,7 +182,7 @@ void func_00247cf8(MgHud *p) {
         sprintf(buf, D_004917D8, p->a);
         DRAW_TEXT(69, 22, col, 1.0f, buf, D_00467408);
         if (p->on) {
-            sprintf(buf, "/");
+            sprintf(buf, KH1_EN ? "f" : "/");
             DRAW_TEXT(97, 22, col, 1.0f, buf, D_00467408);
             sprintf(buf, D_004917D8, p->b);
             DRAW_TEXT(110, 22, col, 1.0f, buf, D_00467408);
@@ -191,7 +192,7 @@ void func_00247cf8(MgHud *p) {
         sprintf(buf, "%03d", p->a);
         DRAW_TEXT(69, 22, col, 1.0f, buf, D_00467408);
         if (p->on) {
-            sprintf(buf, "/");
+            sprintf(buf, KH1_EN ? "f" : "/");
             DRAW_TEXT(110, 22, col, 1.0f, buf, D_00467408);
             sprintf(buf, "%03d", p->b);
             DRAW_TEXT(123, 22, col, 1.0f, buf, D_00467408);
@@ -201,7 +202,7 @@ void func_00247cf8(MgHud *p) {
         sprintf(buf, "%04d", p->a);
         DRAW_TEXT(69, 22, col, 1.0f, buf, D_00467408);
         if (p->on) {
-            sprintf(buf, "/");
+            sprintf(buf, KH1_EN ? "f" : "/");
             DRAW_TEXT(123, 22, col, 1.0f, buf, D_00467408);
             sprintf(buf, "%04d", p->b);
             DRAW_TEXT(136, 22, col, 1.0f, buf, D_00467408);

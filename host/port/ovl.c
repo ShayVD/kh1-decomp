@@ -16,7 +16,7 @@ extern u8 kh1_memmap[];
 
 static const KH1OvlModule *current;
 
-/* SHA-256 (FIPS 180-4), for the pin check */
+/* SHA-256 (FIPS 180-4), for the pin check (and lang.c's check of the disc's ELF) */
 static const u32 K[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -43,7 +43,7 @@ static void sha_block(u32 h[8], const u8 *p) {
     }
     h[0] += a, h[1] += b, h[2] += c, h[3] += d, h[4] += e, h[5] += f, h[6] += g, h[7] += k;
 }
-static void sha256_hex(const u8 *p, u32 n, char out[65]) {
+void kh1_sha256_hex(const u8 *p, u32 n, char out[65]) {
     u32 h[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
     u8 last[128];
     u32 i, rest = n % 64, tail;
@@ -77,7 +77,7 @@ void PlatOvlLoaded(const char *name, void *buf, s32 size) {
             printf("kh1-ovl: %s: %d bytes, not the pinned %u: its native C stays off\n", name, (int)size, m->size);
             return;
         }
-        sha256_hex(D_00F20000, m->size, hex);
+        kh1_sha256_hex(D_00F20000, m->size, hex);
         if (strcmp(hex, m->sha256) != 0) {
             printf("kh1-ovl: %s is not the pinned file (sha256 %.12s...): its native C stays off\n", name, hex);
             return;
