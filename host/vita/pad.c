@@ -4,7 +4,9 @@
  * right x / y then left x / y, 0-255 with 128 the centre.  The Vita has two shoulder buttons: they
  * are L1 / R1 (the game's lock-on and camera); L2 / R2 / L3 / R3 are the rear touch pad's four
  * quarters (upper left L2, upper right R2, lower left L3, lower right R3).  Circle confirms and
- * cross cancels, as on the Japanese PS2.  Vibration is a no-op.  Not part of the PS2 build. */
+ * cross cancels, as on the Japanese PS2.  Vibration is a no-op.  Session 137v: config.txt's pad=FILE plays a
+ * host pad script (host/null/pad.c, tests/host/pads/) instead, so a run reaches a place unattended.  Not part of
+ * the PS2 build. */
 #include <psp2/ctrl.h>
 #include <psp2/touch.h>
 #include "common.h"
@@ -51,19 +53,26 @@ unsigned int kh1_vita_buttons(void) {
     return cur;
 }
 
+extern const char *kh1_vita_pad_script; /* host/null/pad.c */
+int kh1_script_PadGetState(int socket);
+int kh1_script_PadGetButtonProfile(int socket, void *profile);
+int kh1_script_PadRead(int socket, u8 *data);
+
 int PlatDbcInit(void) { return 0; }
 int PlatPadInit(int mode) { return 0; }
 int PlatPadCreateSocket(void *param, void *addr) { return 0; }
 /* the Vita's own controls are always in: stable */
-int PlatPadGetState(int socket) { return 1; }
+int PlatPadGetState(int socket) { return kh1_vita_pad_script ? kh1_script_PadGetState(socket) : 1; }
 /* a DualShock 2's: every digital button and both sticks */
 int PlatPadGetButtonProfile(int socket, void *profile) {
     u8 *p = profile;
+    if (kh1_vita_pad_script) return kh1_script_PadGetButtonProfile(socket, profile);
     p[0] = p[1] = p[2] = p[3] = 0xFF;
     return 4;
 }
 int PlatPadRead(int socket, u8 *data) {
     u8 stick[4];
+    if (kh1_vita_pad_script) return kh1_script_PadRead(socket, data);
     sample(stick);
     data[0] = ~cur & 0xFF;
     data[1] = (~cur >> 8) & 0xFF;

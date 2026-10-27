@@ -49,6 +49,7 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
      Dive to the Heart; `-1` stays in the title state);
    - `frames=N` exit after N frames (0, the default: never);
    - `vu1=0` skips the VIF1 / VU1 path (session 137v, "The 3D path" below; 1, the default, runs it).
+   - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
    written through sceIoWrite (a funopen FILE): newlib's own fopen'd / freopen'd log stayed empty in

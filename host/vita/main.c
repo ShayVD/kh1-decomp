@@ -17,6 +17,8 @@
  *       gpu=N                 session 136: 1 (the default) draws with the GPU (host/vita/gxm.c) when its
  *                             shaders can be had (ur0:data/libshacccg.suprx, or the cache in
  *                             ux0:data/kh1/shaders/); 0 keeps the GS model's software picture
+ *       pad=PATH              session 137v: a host pad script (tests/host/pads/, host/null/pad.c) played instead of
+ *                             the Vita's controls, e.g. ux0:data/kh1/dive.txt
  *       vu1=N                 1 (the default) runs VIF1 and the VU1 microprograms (host/port/vu1.c), so the 3D
  *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
  *   ux0:data/kh1/kh1.log      stdout and stderr
@@ -62,6 +64,7 @@ static unsigned long frames, max_frames;
 static volatile u32 kh1_vita_us_wait; /* session 135: microseconds in the vblank wait (the watchdog's) */
 extern volatile u32 kh1_vita_us_present; /* display.c */
 static int title_state = 2;
+extern const char *kh1_vita_pad_script; /* host/null/pad.c */
 static int use_gpu = 1; /* session 136: config.txt's gpu= */
 static int gpu_on;      /* the GPU renderer runs (gxm.c) */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
@@ -225,6 +228,11 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
         else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
+        else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
+            static char pad[160];
+            snprintf(pad, sizeof pad, "%s", v);
+            kh1_vita_pad_script = pad;
+        }
         else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
     }
     fclose(f);
@@ -282,6 +290,7 @@ int main(int argc, char **argv) {
         if (!kh1_cd_image_open(iso)) no_disc(iso);
     }
     vlog("kh1-vita: disc image %s\n", iso);
+    vlog("kh1-vita: vu1=%d (the 3D), pad %s\n", kh1_dma_vu1, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
      * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */
     if (kh1_host_trace < 2) {
