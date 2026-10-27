@@ -711,6 +711,9 @@ static void skip(u32 w, const char *detail) {
 }
 
 volatile u32 kh1_vita_us_gpu; /* microseconds in kh1_vita_gxm_frame (the watchdog's) */
+/* session 137v: of it, by part: 0 turning the commands into calls (gxmrec), 1 the vertex copy, 2 the scenes'
+ * begin / end, 3 the draws (programs, textures, sceGxmDraw), 4 the transfers (texture, palette, target uploads) */
+volatile u32 kh1_vita_us_part[5];
 volatile u32 kh1_vita_us_finish, kh1_vita_finishes; /* of it, waiting in sceGxmFinish, and how many */
 static void finish(void) {
     SceUInt64 t0 = sceKernelGetProcessTimeWide();
@@ -769,6 +772,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     if (!ready) return;
     t0 = sceKernelGetProcessTimeWide();
     kh1_gxm_frame(&rec, r);
+    kh1_vita_us_part[0] += (u32)(sceKernelGetProcessTimeWide() - t0);
     finish(); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
     if (r->vring.head > vbuf_bytes) {
         char d[64];
@@ -793,11 +797,18 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             last = skipped;
         }
     }
-    memcpy(vbuf, vsrc, r->vring.head);
+    {
+        SceUInt64 t1 = sceKernelGetProcessTimeWide();
+        memcpy(vbuf, vsrc, r->vring.head);
+        kh1_vita_us_part[1] += (u32)(sceKernelGetProcessTimeWide() - t1);
+    }
     memset(&t, 0, sizeof t);
     for (i = 0; i < rec.n; i++) {
         const KH1GxmCall *c = &rec.call[i];
         const KH1Cmd *k = c->cmd < r->ncmd ? &r->cmd[c->cmd] : 0;
+        SceUInt64 t1 = sceKernelGetProcessTimeWide();
+        u32 part = c->op == KH1_GXM_BEGIN_SCENE || c->op == KH1_GXM_END_SCENE ? 2
+                   : c->op == KH1_GXM_DRAW || c->op == KH1_GXM_SET_PROGRAMS || c->op == KH1_GXM_SET_TEXTURE ? 3 : 4;
         switch (c->op) {
         case KH1_GXM_BEGIN_SCENE: {
             Depth *z;
@@ -1006,6 +1017,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             break;
         }
         }
+        kh1_vita_us_part[part] += (u32)(sceKernelGetProcessTimeWide() - t1);
     }
     if (open) sceGxmEndScene(ctx, 0, 0);
     frames++;

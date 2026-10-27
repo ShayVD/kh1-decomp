@@ -180,10 +180,10 @@ int kh1_ovl_entry(int cmd, int arg) {
 /* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
  * means no vblank: this says whether DMA sends still move) */
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
-extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes;
+extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
-    u32 wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
+    u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
     for (;;) {
@@ -201,6 +201,10 @@ static int watchdog(SceSize args, void *argp) {
             vlog("kh1-vita: gpu: %u ms submitting (%u ms of it in %u waits for the GPU); %u frames, %u scenes, %u draws, "
                  "%u skipped\n", (kh1_vita_us_gpu - gpu0) / 1000, (kh1_vita_us_finish - fin0) / 1000,
                  kh1_vita_finishes - nfin0, f, sc, d, sk);
+            vlog("kh1-vita: gpu parts: %u ms the calls from the commands, %u the vertex copy, %u scenes, %u draws, "
+                 "%u transfers\n", (kh1_vita_us_part[0] - part0[0]) / 1000, (kh1_vita_us_part[1] - part0[1]) / 1000,
+                 (kh1_vita_us_part[2] - part0[2]) / 1000, (kh1_vita_us_part[3] - part0[3]) / 1000,
+                 (kh1_vita_us_part[4] - part0[4]) / 1000);
             /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
             vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
                  "slowest frame %u.%u ms\n", (us_record - rec0) / 1000, (us_frame - frame0) / 1000,
@@ -217,6 +221,7 @@ static int watchdog(SceSize args, void *argp) {
         draw0 = us_draw;
         gpu0 = kh1_vita_us_gpu;
         fin0 = kh1_vita_us_finish;
+        memcpy(part0, (const u32 *)kh1_vita_us_part, sizeof part0);
         nfin0 = kh1_vita_finishes;
         wait0 = kh1_vita_us_wait;
         present0 = kh1_vita_us_present;
