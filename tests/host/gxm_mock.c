@@ -277,11 +277,65 @@ static struct {
 SceGxmContext *vita2d_get_context(void) { static int c; return (SceGxmContext *)&c; }
 SceGxmShaderPatcher *vita2d_get_shader_patcher(void) { static int p; return (SceGxmShaderPatcher *)&p; }
 void *vita2d_pool_memalign(unsigned int size, unsigned int align) { static u8 pool[4096] __attribute__((aligned(64))); (void)align; return size <= sizeof pool ? pool : 0; }
-void sceGxmFinish(SceGxmContext *c) { (void)c; }
+/* session 137v: the GPU runs a scene after its end, as late as sceGxmFinish, on the memory as it is then (a
+ * texture, palette or vertex the CPU rewrote after the draw was issued is what the GPU reads): the scenes and
+ * their draws are queued, each draw with the context's state at its call, and run at sceGxmFinish (and after
+ * each frame, where gxm.c's next frame starts with one) */
+typedef struct {
+    int op;                                /* 0 begin, 1 draw, 2 end */
+    SceGxmColorSurface cs;                 /* begin */
+    SceGxmDepthStencilSurface ds;          /* as it is at the begin (its load / store modes) */
+    SceGxmPrimitiveType t;                 /* draw */
+    const void *ix;
+    unsigned n;
+    u8 st[sizeof g];                       /* the context at the draw */
+} Queued;
+static Queued *queue;
+static u32 nqueue, capqueue;
+static Queued *enqueue(int op) {
+    if (nqueue == capqueue) {
+        capqueue = capqueue ? capqueue * 2 : 256;
+        queue = realloc(queue, capqueue * sizeof *queue);
+    }
+    queue[nqueue].op = op;
+    return &queue[nqueue++];
+}
+static void do_begin(const SceGxmColorSurface *cs, const SceGxmDepthStencilSurface *ds);
+static void do_end(void);
+static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n);
+static void flush(void) {
+    u32 i;
+    for (i = 0; i < nqueue; i++) {
+        Queued *q = &queue[i];
+        if (q->op == 0) do_begin(&q->cs, &q->ds);
+        else if (q->op == 2) do_end();
+        else {
+            /* the draw's state, keeping the scene's surfaces and the counters */
+            u32 *col = g.col, cs = g.cstride, cw = g.cw, ch = g.ch, *z = g.z, zs = g.zstride, *zsave = g.zsave;
+            SceGxmDepthStencilSurface *dsf = g.ds;
+            u32 draws = g.draws, tris = g.tris, pixels = g.pixels, lost = g.lost, a = g.n_in, b = g.n_disc, c = g.n_zfail;
+            int raster = g.raster;
+            memcpy(&g, q->st, sizeof g);
+            g.col = col; g.cstride = cs; g.cw = cw; g.ch = ch; g.z = z; g.zstride = zs; g.zsave = zsave; g.ds = dsf;
+            g.draws = draws; g.tris = tris; g.pixels = pixels; g.lost = lost; g.n_in = a; g.n_disc = b; g.n_zfail = c;
+            g.raster = raster;
+            do_draw(q->t, q->ix, q->n);
+        }
+    }
+    nqueue = 0;
+}
+void sceGxmFinish(SceGxmContext *c) { (void)c; flush(); }
 
 int sceGxmBeginScene(SceGxmContext *c, unsigned int flags, const SceGxmRenderTarget *rt, const SceGxmValidRegion *vr,
                      SceGxmSyncObject *vs, SceGxmSyncObject *fs, const SceGxmColorSurface *cs, const SceGxmDepthStencilSurface *ds) {
+    Queued *q = enqueue(0);
     (void)c; (void)flags; (void)rt; (void)vr; (void)vs; (void)fs;
+    q->cs = *cs;
+    q->ds = *ds;
+    g.clip_mode = SCE_GXM_REGION_CLIP_NONE;
+    return 0;
+}
+static void do_begin(const SceGxmColorSurface *cs, const SceGxmDepthStencilSurface *ds) {
     g.col = (u32 *)(uintptr_t)cs->pbeEmitWords[0];
     g.cstride = cs->pbeEmitWords[1];
     g.cw = cs->pbeEmitWords[2];
@@ -298,17 +352,18 @@ int sceGxmBeginScene(SceGxmContext *c, unsigned int flags, const SceGxmRenderTar
         for (y = 0; y < g.ch; y++)
             for (x = 0; x < g.cw; x++) g.z[y * g.zstride + x] = 0xFFFFFF;
     }
-    g.clip_mode = SCE_GXM_REGION_CLIP_NONE;
-    return 0;
 }
 int sceGxmEndScene(SceGxmContext *c, const SceGxmNotification *vn, const SceGxmNotification *fn) {
     (void)c; (void)vn; (void)fn;
+    enqueue(2);
+    return 0;
+}
+static void do_end(void) {
     /* not stored: the scene's depth stays on chip and the surface's memory keeps what an earlier scene stored
      * (session 137v: the mock used to scribble it, which a later scene's load of that earlier store, past a scene
      * that only tests depth, does not see on the GPU) */
     if (g.ds && !(g.ds->zlsControl & 4)) memcpy(g.z, g.zsave, (size_t)g.ch * g.zstride * 4);
     g.col = 0;
-    return 0;
 }
 void sceGxmSetViewport(SceGxmContext *c, float xo, float xs, float yo, float ys, float zo, float zs) {
     (void)c;
@@ -588,13 +643,21 @@ static void triangle(const Vary *a, const Vary *b, const Vary *c) {
 }
 
 int sceGxmDraw(SceGxmContext *c, SceGxmPrimitiveType t, SceGxmIndexFormat f, const void *ix, unsigned int n) {
+    Queued *q = enqueue(1);
+    (void)c; (void)f;
+    q->t = t;
+    q->ix = ix;
+    q->n = n;
+    memcpy(q->st, &g, sizeof g);
+    return 0;
+}
+static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
     const u16 *idx = (const u16 *)ix;
     unsigned i;
-    (void)c; (void)f;
     g.draws++;
-    if (!g.raster || !g.col || !g.vp || !g.fp) return 0;
-    if (!g.vp->p->kh1 || !g.fp->p->kh1) return 0; /* the present's own pair: not interpreted */
-    if (t != SCE_GXM_PRIMITIVE_TRIANGLES) { g.lost++; return 0; }
+    if (!g.raster || !g.col || !g.vp || !g.fp) return;
+    if (!g.vp->p->kh1 || !g.fp->p->kh1) return; /* the present's own pair: not interpreted */
+    if (t != SCE_GXM_PRIMITIVE_TRIANGLES) { g.lost++; return; }
     for (i = 0; i + 2 < n; i += 3) {
         Vary v[3];
         vertex(idx[i], &v[0]);
@@ -609,7 +672,6 @@ int sceGxmDraw(SceGxmContext *c, SceGxmPrimitiveType t, SceGxmIndexFormat f, con
         printf("kh1-gxm-mock:     %u pixels covered, %u discarded, %u failed depth\n", g.n_in, g.n_disc, g.n_zfail);
         g.n_in = g.n_disc = g.n_zfail = 0;
     }
-    return 0;
 }
 
 /* ---- the check ---- */
@@ -683,6 +745,7 @@ static void hook(const KH1CmdRec *r) {
     g.raster = n >= (u32)every - 2;
     g.draws = g.tris = g.pixels = 0;
     kh1_vita_gxm_frame(r);
+    flush(); /* the GPU done (gxm.c's next frame waits for it) */
     if (n == (u32)every - 1 && getenv("KH1_HOST_GXM_CALLS")) { /* the frame's calls and pipelines */
         static KH1GxmRec gr;
         u32 i;
