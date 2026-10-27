@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste this to start the next session (session 137).
+Paste this to start the next session (session 138).
 
 ---
 
@@ -16,7 +16,30 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 136, 2026-10-26)
+## Where we stopped (end of session 137, 2026-10-27)
+
+- **Session 137** (the Mac for staging only: the 9 ISO parts staged one per call with the folder tools
+  from ~/Downloads/kh1-test/isoparts, joined, SHA-256 9ad74868… checked): **through Dive to the
+  Heart's second station to the Destiny Islands questions** (docs/native-overlays.md "Session 137").
+  - **tools/host/vmdis.py FRAME --pad FILE --iso DISC**: the field's script VMs at a frame, pc,
+    entity and code with names. The station waited on its field-icon tutorial window (UP then CIRCLE
+    closes it); then しらべる on the door, the chest (開ける), the crate (attacks, the potion), the box
+    (もちあげる), the door again; the next area loads at ~28,000. tests/host/pads/dive.txt runs to
+    32,000 (the SELECT look-around tutorial, はなす, Selphie's question answered).
+  - **Rule 15 tools**: tools/host/localcheck.py (static: locals a callee reaches past) and
+    `census.py --exe --asan` (out/host-asan/kh1-host). 8 locals fixed (objects unchanged); the ASan
+    build runs to 19,500 with no report.
+  - **pppsys.c func_00183878** passed none of pppStepPrograms' two arguments (rule 10); argcheck.py
+    now checks calls by functions.tsv names. **colobj.c func_0011b6a0's flags** are never set by its
+    two mapcoll.c callers on the EE either: the host gives 0 (`#ifdef KH1_HOST`).
+  - **Open**: the ASan build leaves the plain build's path at frame ~4,700 (a layout-dependent read,
+    not traced).
+  - Matching: decomp-permuter on xs_dh_break func_00f20b38 for 20 minutes: 62 -> 56 words (score
+    14 -> 23, worse by its measure), not kept.
+  - kh1.elf byte-identical (6,981 / 6,988); dktitle / dkmovie / xs_dh_break overlays byte-identical;
+    every object unchanged; `make test` PASS.
+
+## Where we stopped before (end of session 136, 2026-10-26)
 
 - **Session 136** (no Mac; ISO staged by the coordinator, SHA-256 9ad74868… checked): **through Dive to
   the Heart's weapon choice and attack tutorial** on the host (docs/native-overlays.md "Session 136").
@@ -848,7 +871,7 @@ Ask for the Mac at the start; if the user says it is away, do the static items.
   `python3 -I tools/host/census.py --exe`), then `out/host/kh1-host` (gdb works: objects have -g; `gdb -batch -ex
   "break kh1_host_vblank if frames >= N" -ex run -ex bt out/host/kh1-host` shows where frame N is); `--files
   CAUSE` / `--show FILE`; out/host/undefined.txt. `python3 -I tools/host/argcheck.py --tsv out/host/argcheck.tsv`
-  lists the passthrough calls, `python3 -I tools/host/abicheck.py` the argument-class mismatches. `python3 -I tools/host/vu2c.py FILE LINE` turns one VU0 asm statement into PlatVu0
+  lists the passthrough calls, `python3 -I tools/host/abicheck.py` the argument-class mismatches. `python3 -I tools/host/localcheck.py` the locals a callee reaches past (session 137), `python3 -I tools/host/census.py --exe --asan` an AddressSanitizer build (out/host-asan/), `python3 -I tools/host/vmdis.py FRAME --pad F --iso D` the field's script VMs at a frame. `python3 -I tools/host/vu2c.py FILE LINE` turns one VU0 asm statement into PlatVu0
   calls. `python3 -I tools/host/walkcheck.py` lists pointer walks across loops, `tools/host/countcheck.py` counts across functions, `python3 -I tools/host/hudcheck.py [-v]` the HUD's environments against hudanchor.c's tables (session 93) and each staging send's environment (session 94), `python3 -I tools/host/viewcheck.py [--wide 960:544]` checks host/port/view.c's camera matrices against the ELF's func_00110618 (needs the ELF and gcc -m32), `python3 -I tools/host/sndlog.py
   RUN.txt` a run's sound commands (with `KH1_HOST_SND=trace`). A quick "did any object change" check: `find out/build -name '*.o' | sort | xargs sha1sum` before the
   first edit and after (sessions 62 to 66 did this), or build origin/main in a `git worktree`
@@ -866,7 +889,24 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 137 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 138 plan (at most 3 workers, docs/workflow.md "Resource limit")
+
+1. **The Destiny Islands questions** (tests/host/pads/dive.txt to frame 32,000): find the three
+   islanders with `tools/host/vmdis.py` (their VMs' entities and positions; actors 6-8 are the
+   guess), talk to each (はなす is the command menu's first slot now), answer, and on to the next
+   boundary (the station with the save point, then Darkside). Extend dive.txt as you go.
+2. **The ASan build's other path** (from frame ~4,700): compare the two builds' state at the
+   second room load (the frame the room's read starts, the pad state, the event VMs with
+   vmdis.py) to find the read that depends on the stack; then run the ASan build along dive.txt.
+3. **With the Mac, after the Vita display thread's PR**: a Vita3K run with pad input into Dive to
+   the Heart (the fixes of sessions 135-137 matter there too).
+4. **Matching**: dktitle's 11 left; xs_dh_break's 4 drafts.
+5. End with `make progress-update SESSION=138`, refresh docs/progress.md's tables, commit, open a PR,
+   and refresh this prompt.
+6. **Once the PR is merged, message the coordinator to start the next session** (session 139) with
+   this prompt.
+
+## Session 137 plan (done; kept for reference)
 
 1. **The station after the Shadows** (tests/host/pads/dive.txt to frame ~18,000): read what it waits
    on from the event script (session 135's VM trace: gdb `dprintf` on `D_0037A198`'s handlers) and its

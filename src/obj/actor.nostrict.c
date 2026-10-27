@@ -77,7 +77,7 @@ void func_0014e668(V53 *, s32, V53 *, f32, f32);
 float atan2f(float, float);
 void func_00123b40(Obj3b *o, V53 *out) {
     Info3b *in = o->info;
-    f32 t[3];
+    f32 t[4]; /* session 137: func_00123ab8 copies a quadword from it (rule 15) */
     V53 d;
     s32 k;
     switch (in->x54) {

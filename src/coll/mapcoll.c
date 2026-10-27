@@ -1857,6 +1857,11 @@ s32 func_00118868(Mov *o) {
     PlatVu0AddVector(a, o->x0, o->x10);
     obj.r = o->x20;
     obj.h = 0.0f;
+#ifdef KH1_HOST
+    /* session 137: func_0011b6a0 switches on flags (+0x28), which the EE code never sets either (its
+     * stack's leftover there); the host gives the default case so runs repeat (valgrind) */
+    obj.flags = 0;
+#endif
     func_001047c8();
 loop:
     hit = 0;
@@ -1924,6 +1929,9 @@ s32 func_00118b58(Probe52 *o) {
     PlatVu0AddVector(pt, o->pos, o->dir);
     s.r = o->x20;
     s.x24 = 0;
+#ifdef KH1_HOST
+    *(s32 *)s.pad = 0; /* session 137: func_0011b6a0's flags (+0x28), unset on the EE too (see func_00118868) */
+#endif
     if (func_0011b6a0(&s, pt, 1)) return 1;
     func_001047c8();
     box.mn[0] = pt[0] - o->x20;

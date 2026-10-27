@@ -1099,13 +1099,15 @@ typedef struct H39Sys {
     u8 pad86[0x2A];
     u64 flags;         /* +0xB0 */
 } H39Sys;
-void pppStepPrograms(void);
+/* session 137: both arguments pass straight through in a0 / a1 (the draw flag func_00181b30 gives);
+ * `(void)` worked on the EE only (portability.md rule 10) */
+void pppStepPrograms(H39Sys *, s32);
 #define D_00615E60 (*(H39Sys **)&D_00615E60)
-s32 func_00183878(H39Sys *s) {
+s32 func_00183878(H39Sys *s, s32 draw) {
     s32 t;
 
     D_00615E60 = s;
-    pppStepPrograms();
+    pppStepPrograms(s, draw);
     func_001823d8(s);
     if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
         return 0;
