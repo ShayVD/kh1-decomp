@@ -192,28 +192,35 @@ static SceGxmProgram *program_of(const char *text, u32 len, int frag) {
     if (!shark_ok) { failed++; return 0; }
     {
         SceGxmProgram *c;
-        static const int opts[3] = { SHARK_OPT_DEFAULT, SHARK_OPT_SAFE, SHARK_OPT_SLOW };
+        static const int opts[4] = { SHARK_OPT_DEFAULT, SHARK_OPT_DEFAULT, SHARK_OPT_SAFE, SHARK_OPT_SLOW };
         int o;
-        /* session 137v: the REGION_REPEAT fragment shaders stop SceShaccCg's -O2 with "fatal internal error";
-         * a lower optimisation level is tried before giving up */
-        for (o = 0, c = 0; o < 3 && !(c && size); o++) {
+        /* session 137v: after some hundred compiles SceShaccCg answers shaders it compiles at start (shadertest=1)
+         * with "fatal internal error": the compiler is restarted and the shader tried again, then at lower
+         * optimisation levels */
+        for (o = 0, c = 0; o < 4 && !(c && size); o++) {
             if (o) {
-                kh1_vita_log("kh1-gxm: a %s shader failed at the optimisation level before, trying level %d\n",
-                             frag ? "fragment" : "vertex", 2 - o);
                 shark_clear_output();
+                if (o == 1) {
+                    kh1_vita_log("kh1-gxm: a %s shader failed: restarting the compiler\n", frag ? "fragment" : "vertex");
+                    shark_end();
+                    shark_ok = shark_ok == 2 ? (shark_init(0) >= 0 ? 2 : 0) : shark_init_simple(0) >= 0;
+                    if (!shark_ok) break;
+                } else {
+                    kh1_vita_log("kh1-gxm: trying optimisation level %d\n", 3 - o);
+                }
             }
             size = len; /* in: the source's length (vitaShaRK passes it on as the source's size); out: the program's */
             c = shark_compile_shader_extended(text, &size, frag ? SHARK_FRAGMENT_SHADER : SHARK_VERTEX_SHADER,
                                               opts[o], SHARK_DISABLE, SHARK_DISABLE, SHARK_DISABLE);
         }
         if (!c || !size) {
-            const SceShaccCgCompileOutput *o = shark_get_internal_compile_output();
+            const SceShaccCgCompileOutput *o = shark_ok ? shark_get_internal_compile_output() : 0;
             int i;
             kh1_vita_log("kh1-gxm: a %s shader did not compile:\n%s", frag ? "fragment" : "vertex", text);
             for (i = 0; o && i < o->diagnosticCount; i++)
                 kh1_vita_log("kh1-gxm:   line %d: %s\n", o->diagnostics[i].location ? o->diagnostics[i].location->lineNumber : 0,
                              o->diagnostics[i].message);
-            shark_clear_output();
+            if (shark_ok) shark_clear_output();
             failed++;
             return 0;
         }

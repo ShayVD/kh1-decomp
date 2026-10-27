@@ -16,7 +16,7 @@
  * KH1_HOST_GXM=N turns it on: gxm.c takes every frame's commands (uploads always), the rasteriser draws the two
  * frames before each Nth and the display target is compared with the GS model's display buffer (RGB) at each
  * Nth; KH1_HOST_GXM_POINT=1 samples point (the model's sprites are point-sampled), KH1_HOST_GXM_PPM=DIR writes
- * both pictures.  Run with KH1_HOST_SHOT so the model draws its pixels.  Not part of the PS2 build. */
+ * both pictures, KH1_HOST_GXM_FROM=F checks every frame from F.  Run with KH1_HOST_SHOT so the model draws its pixels.  Not part of the PS2 build. */
 #include <psp2/gxm.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
@@ -111,6 +111,7 @@ static SceShaccCgCompileOutput no_output;
 int shark_init_simple(const char *path) { (void)path; return 0; }
 int shark_init(const char *path) { (void)path; return 0; }
 void shark_clear_output(void) {}
+void shark_end(void) {}
 const SceShaccCgCompileOutput *shark_get_internal_compile_output(void) { return &no_output; }
 SceGxmProgram *shark_compile_shader_extended(const char *src, uint32_t *size, shark_type type, shark_opt opt,
                                              int32_t fm, int32_t fp, int32_t fi) {
@@ -675,8 +676,10 @@ static int compare(const char *what, u32 rt, u32 bp, u32 rows) {
     return diff != 0;
 }
 
+static u32 from; /* KH1_HOST_GXM_FROM=F: rasterise and compare every frame from F */
 static void hook(const KH1CmdRec *r) {
     u32 n = frame % (u32)every;
+    if (from && frame >= from) n = (u32)every - 1; /* KH1_HOST_GXM_FROM: every frame from there */
     g.raster = n >= (u32)every - 2;
     g.draws = g.tris = g.pixels = 0;
     kh1_vita_gxm_frame(r);
@@ -702,6 +705,7 @@ __attribute__((constructor)) static void start(void) {
     const char *e = getenv("KH1_HOST_GXM");
     if (!e || (every = atoi(e)) < 2) return;
     g.point = getenv("KH1_HOST_GXM_POINT") != 0;
+    from = getenv("KH1_HOST_GXM_FROM") ? (u32)atoi(getenv("KH1_HOST_GXM_FROM")) : 0;
     ppm = getenv("KH1_HOST_GXM_PPM");
     if (kh1_vita_gxm_init()) {
         printf("kh1-gxm-mock: gxm.c did not start\n");
