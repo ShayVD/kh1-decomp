@@ -1,11 +1,12 @@
-/* xl_limit.x func_00f20ff0: near miss (session 139), 2 words off: D_00F23208's lui / lw take v0, the original v1. */
+/* xl_limit.x func_00f20ff0: matched by hand (session 139; the last step by decomp-permuter). */
 #include "ovl.h"
 
 void func_00f20130(void *);
 void func_0014f830(s32, s32, void *, void *, void *, void *, void *, void *, s32);
 void func_0014f658(void *, s32);
 void func_00130340(void *, s32, f32);
-void func_00130578(void *, s32, f32);
+/* returns the motion task (Res * in func_00f21d90); declared u8 here, as the match wants */
+u8 func_00130578(void *, s32, f32);
 s32 func_00148968(void *, s32, s32);
 void func_00f20a20(void);
 void func_00f20a78(void);

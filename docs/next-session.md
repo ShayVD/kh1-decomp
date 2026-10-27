@@ -56,7 +56,7 @@ Ask for the Mac at the start; if the user says it is away, do the static items.
   - ASan + SSE found objfx.nostrict.c func_0012bd98 passing one vector where func_00121a78 reads three
     rows (rule 15), fixed; localcheck.py now follows loop-indexed reach (the only new hit).
     argcheck.py lists void tasks handed to the task lists (none).
-  - Matching: no new match. xl_limit func_00f20ff0 (the limit set-up, case 3) to 2 words off (one register of D_00F23208's load; nonmatchings/session139/NOTES.md). The English disc's overlays are the pinned ones except wm.x, so overlay matching works from it.
+  - Matching: **xl_limit func_00f20ff0 matched** (69 / 76; a store-order search, then decomp-permuter; nonmatchings/session139/NOTES.md). The English disc's overlays are the pinned ones except wm.x, so overlay matching works from it.
   - kh1.elf byte-identical (6,981 / 6,988); every changed object unchanged; `make test` PASS.
 
 ## Where we stopped before (end of session 138, 2026-10-27)
