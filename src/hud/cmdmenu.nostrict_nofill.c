@@ -47,7 +47,7 @@ void func_0023a318(s32 a0, s32 a1, s32 a2, s32 a3, Obj1C4 *o, s32 a5, s32 a6, f3
 }
 
 void func_0023a490(s32 a0, Btn *b, s32 x, s32 y, f32 f) {
-    s32 pos[2];
+    s32 pos[4]; /* session 136: func_0024ac08 writes four words */
     s32 i, k;
     u8 *p;
     D_00650DD4 = D_00650DD0 = f;

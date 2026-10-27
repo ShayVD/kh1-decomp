@@ -173,3 +173,44 @@ runs on the fake disc.
   (an object step function, objtask.nostrict.c case 9: whether the task reads its value is not
   checked), atkhit.c `func_0014ab18` (no caller found in src/), and the three winmenu / winpart hits
   from before.
+
+## Session 136: through Dive to the Heart's first stations
+
+- **The weapon choice on the host.** Nothing 3D is drawn on the null platform, so the pedestals'
+  places come from the actor table (gdb on `D_002C64A0`, 1200-byte entries; position at +0x10): the
+  first station has three pedestals (kind 4) at (0, 580), (-500, -300), (500, -300) with their weapons
+  (kind 2) on top, 100 high. Sora stops at a pedestal's edge; CROSS (jump, the "✕でジャンプ!" hint) puts
+  him on top and the lines start: (0, 580) is the sword (攻めこむ力 ... 破壊の刃), (500, -300) the staff
+  (ふしぎな力 ... 破滅の杖). Choosing the sword, giving up the staff and confirming
+  (これがキミのカタチなんだね? うん、そうだ) all run from the C.
+- **Pad scripts can walk to a place**: `FRAME BUTTONS goto X Z [R]` (host/null/pad.c) steers the left
+  stick to field point (X, Z) and centres it within R. The stick's way is turned the way the game turns
+  it (camera/view.c func_00124d58 with the camera angle D_004F77E0, tried at 64 angles), since the
+  camera swings round the player; the player is `D_002E26A0[0]` (an index into the actor table that
+  changes per room). Estimating the turn from how the player moved did not work: he turns before he
+  moves, slides along walls, and the pad is read every other frame. pad_test.c checks the parser and
+  the aim. The whole run: tests/host/pads/dive.txt.
+- **xs_dh_break.x is native** (the floor breaking into 2,500 falling shards after the confirm): 5 of
+  its 9 functions were matched in session 131b; the other 4 have drafts (nonmatchings/session136/
+  xs_dh_break/, ovl/xs_dh_break/drafts.tsv: func_00f20b38 the set-up 62 words off, func_00f20820 one
+  shard's set-up, func_00f20288 the per-frame task, func_00f20128 never called). Its data has no
+  pointers into itself (relocs.tsv is empty); its buffers lie past the file's end up to 0x00FA2400, so
+  tools/host/ovlnative.py now renames and places data names anywhere in the overlay area
+  (D_00F2xxxx - D_00FDxxxx), not only D_00F2xxxx. host/port/ovl.c prints `kh1-ovl: NAME.x loaded
+  (N bytes): no native C` for an overlay without native C (music files load there too: only `.x`).
+- **Two kinds of host stack bugs** (the PS2 objects unchanged; portability.md rule 15):
+  - The camera's ray casts (`func_00118d78` / `func_00119688` read a record: the start, the way, the
+    hit, the hit's id) were given the start's 16-byte local only, with the rest in other locals:
+    fieldcam.c func_00177440 / func_00177608 and partyctl.nostrict.c func_001689d0. On the EE the
+    locals are adjacent in that order; on x86 the callee wrote past the start (crashed at the attack
+    tutorial in sceVu0CopyVector). Now one struct each.
+  - `func_0024ac08` (hud/ui.c) writes four words; gauge.c / gauge.nostrict.c func_0023d528,
+    popup.c and cmdmenu.nostrict_nofill.c gave it `s32 [2]` (the EE frame has 16 bytes there): the
+    HUD gauge's saved register was overwritten at the first Shadow. Now `[4]`.
+- **The attack tutorial runs**: 君が手に入れた力 それは「たたかう」力, ○で攻撃!, the command menu
+  (たたかう) and Sora's face; with CIRCLE pressed every 30 frames the Shadows (actors 16-20, kind 3)
+  come and go, and at frame ~17,800 the next station loads (the player at (-8840, -14304), two kind-4
+  actors at (-8670, -15430)). **Open**: what that station wants; a goto to its objects is blocked ~150 short at (-8784, -15336)
+  and nothing happens in 5,000 frames of CIRCLE. Next time: read its event script / trigger boxes
+  (session 135's VM trace) instead of guessing.
+- qemu-arm (`make vita-armcheck`, then the runner on the disc) takes the same path to frame 19,000.

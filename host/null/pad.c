@@ -21,6 +21,11 @@
  *                        "#" starts a comment.  E.g. press START at frame 300 for two frames:
  *                            300 START
  *                            302 -
+ *                        Session 136: FRAME BUTTONS goto X Z [R] steers the left stick to the
+ *                        field point (X, Z) instead (the player D_002E26A0[0]'s position, +0x10), and
+ *                        centres it within R (16) of it, turning the stick by the camera as the
+ *                        game does (steer below).  Nothing 3D is drawn on the null platform,
+ *                        so this is how a run walks to a place read from the actors with gdb.
  *
  * KH1_HOST_TRACE >= 1 prints "kh1-host: pad FRAME BUTTONS" when what the game reads changes.  Not
  * part of the PS2 build. */
@@ -41,12 +46,22 @@ void *realloc(void *, unsigned long);
 void exit(int);
 extern int kh1_host_trace;
 unsigned long kh1_host_frame(void);
+double strtod(const char *, char **);
+float atan2f(float, float);
+float sinf(float);
+float cosf(float);
+float sqrtf(float);
+extern u8 *D_002E26A0[]; /* the player's actor (the actor table D_002C64A0's entry it has) */
+extern float D_004F77E0; /* the camera's angle round y */
+void func_00124d58(void *, void *, float, float);
 
 typedef struct {
     unsigned long frame;
     int out;          /* pulled out */
     u32 buttons;      /* the game's decoded bits (active high) */
     u8 stick[4];      /* rx, ry, lx, ly */
+    int go;           /* session 136: steer to (gx, gz) */
+    float gx, gz, gr;
 } NullPadLine;
 
 static NullPadLine *null_pad_lines;
@@ -133,6 +148,24 @@ int kh1_null_pad_load(const char *path) {
             return fclose(f), bad(path, ln, "lines out of frame order", w) - 1;
         if (!word(s, &i, w, sizeof w)) return fclose(f), bad(path, ln, "no buttons", s) - 1;
         if (!buttons(w, &L.buttons, &L.out)) return fclose(f), bad(path, ln, "not a button", w) - 1;
+        L.go = 0;
+        {
+            int j = i;
+            if (word(s, &j, w, sizeof w) && strcmp(w, "goto") == 0) {
+                char *e2;
+                L.go = 1;
+                L.gr = 16.0f;
+                for (k = 0; k < 4; k++) L.stick[k] = 128;
+                if (!word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "goto X Z [R]", s) - 1;
+                L.gx = (float)strtod(w, &e2);
+                if (!word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "goto X Z [R]", s) - 1;
+                L.gz = (float)strtod(w, &e2);
+                if (word(s, &j, w, sizeof w)) L.gr = (float)strtod(w, &e2);
+                null_pad_lines = realloc(null_pad_lines, (n + 1) * sizeof *null_pad_lines);
+                null_pad_lines[n++] = L;
+                continue;
+            }
+        }
         for (k = 0; k < 4; k++) {
             L.stick[k] = 128;
             if (word(s, &i, w, sizeof w)) {
@@ -157,7 +190,7 @@ int kh1_null_pad_load(const char *path) {
 
 /* the line that holds at this frame (0: before the first, or no script: connected, nothing) */
 static const NullPadLine *now(void) {
-    static const NullPadLine idle = { 0, 0, 0, { 128, 128, 128, 128 } };
+    static const NullPadLine idle = { 0, 0, 0, { 128, 128, 128, 128 }, 0, 0, 0, 0 };
     unsigned long fr = kh1_host_frame();
     int lo = 0, hi;
     if (null_pad_n < 0) {
@@ -214,6 +247,45 @@ int PlatPadGetButtonProfile(int socket, void *profile) {
     p[0] = p[1] = p[2] = p[3] = 0xFF;
     return 4;
 }
+/* the left stick for a goto line (session 136): of 64 ways round, the one the game's own turn
+ * (camera/view.c func_00124d58: the camera's angle D_004F77E0, as plact.c func_00124e08 applies it to
+ * the stick of padread.c func_0011f370) sends closest to the point */
+static void steer(const NullPadLine *L, u8 *data) {
+    static const NullPadLine *last;
+    static int moving;
+    const float *pos = (const float *)(D_002E26A0[0] + 0x10);
+    float dx = L->gx - pos[0], dz = L->gz - pos[2], best = -2.0f, d = sqrtf(dx * dx + dz * dz);
+    float v[4] __attribute__((aligned(16))), out[4] __attribute__((aligned(16)));
+    int k, bk = 0;
+    if (L != last) {
+        last = L;
+        moving = 0;
+        if (kh1_host_trace >= 1)
+            printf("kh1-host: pad %lu goto %.1f %.1f from %.1f %.1f %.1f\n", kh1_host_frame(), L->gx, L->gz,
+                   pos[0], pos[1], pos[2]);
+    }
+    if (d <= L->gr) {
+        if (moving && kh1_host_trace >= 1)
+            printf("kh1-host: pad %lu at %.1f %.1f %.1f\n", kh1_host_frame(), pos[0], pos[1], pos[2]);
+        moving = 0;
+        data[4] = data[5] = 128;
+        return;
+    }
+    moving = 1;
+    for (k = 0; k < 64; k++) {
+        float c;
+        v[0] = sinf(k * 0.0981747704f);
+        v[1] = 0.0f;
+        v[2] = -cosf(k * 0.0981747704f); /* the stick's y: up is negative */
+        v[3] = 0.0f;
+        func_00124d58(v, out, D_004F77E0, 0.0f);
+        c = (out[0] * dx + out[2] * dz) / d;
+        if (c > best) best = c, bk = k;
+    }
+    data[4] = (u8)(128.0f + 127.0f * sinf(bk * 0.0981747704f));
+    data[5] = (u8)(128.0f - 127.0f * cosf(bk * 0.0981747704f));
+}
+
 int PlatPadRead(int socket, u8 *data) {
     const NullPadLine *L = now();
     if (null_pad_none || L->out) {
@@ -226,6 +298,7 @@ int PlatPadRead(int socket, u8 *data) {
     data[3] = L->stick[1];
     data[4] = L->stick[2];
     data[5] = L->stick[3];
+    if (L->go) steer(L, data);
     return 6;
 }
 int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data) { return 0; }

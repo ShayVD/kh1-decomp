@@ -178,27 +178,26 @@ typedef struct {
 s32 func_00119688(f32 *);
 f32 func_00162a58(f32 *);
 void func_001689d0(Chr *self, L60 *l) {
-    f32 a[4];
-    f32 b[4];
-    f32 c[8];
+    /* session 136: one record (the ray's start, its way, the hit), as func_00119688 reads it */
+    struct { f32 a[4]; f32 b[4]; f32 c[8]; } r;
     if (((s32)((s64)(l->w38 << 22) >> 32) & 1) || l->tgt == 0) {
         if (l->fE4 < 0.0f) {
-            PlatVu0AddVector(a, D_0035BD40.chr[0]->pos, l->v20);
-            PlatVu0SubVector(b, self->pos, D_0035BD40.chr[0]->pos);
+            PlatVu0AddVector(r.a, D_0035BD40.chr[0]->pos, l->v20);
+            PlatVu0SubVector(r.b, self->pos, D_0035BD40.chr[0]->pos);
         } else {
-            PlatVu0AddVector(a, self->pos, l->v20);
-            PlatVu0SubVector(b, D_0035BD40.chr[0]->pos, self->pos);
+            PlatVu0AddVector(r.a, self->pos, l->v20);
+            PlatVu0SubVector(r.b, D_0035BD40.chr[0]->pos, self->pos);
         }
     } else {
         if (l->fA0 < 0.0f) {
-            PlatVu0AddVector(a, l->tgt->pos, l->v20);
-            PlatVu0SubVector(b, self->pos, l->tgt->pos);
+            PlatVu0AddVector(r.a, l->tgt->pos, l->v20);
+            PlatVu0SubVector(r.b, self->pos, l->tgt->pos);
         } else {
-            PlatVu0AddVector(a, self->pos, l->v20);
-            PlatVu0SubVector(b, l->tgt->pos, self->pos);
+            PlatVu0AddVector(r.a, self->pos, l->v20);
+            PlatVu0SubVector(r.b, l->tgt->pos, self->pos);
         }
     }
-    if (func_00119688(a) < 0 && func_00162a58(b) < 500.0f) l->w58 = 0;
+    if (func_00119688(r.a) < 0 && func_00162a58(r.b) < 500.0f) l->w58 = 0;
 }
 
 /* func_00168b30 (from hand/nostrict/text_00160000_h60.c). */

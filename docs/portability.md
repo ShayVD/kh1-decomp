@@ -364,6 +364,16 @@ rewrite matched code.
     address. Since session 74 it also lists any data word (a piece's original bytes, a C
     table) with no relocation that is a PS2 .text address or a variable's start, unless
     data_relocs.tsv rejected it with a reason. Keep it at 0.
+15. **A local the callee reads as a record is one record** (session 136). On the EE the locals
+    of a frame sit at fixed offsets, so matched C can hand a callee one 16-byte local while the
+    callee reads and writes the 48 bytes after it (the next locals), or a `s32 [2]` that the callee
+    fills with four words: the original frame happens to have the room. On the host and the Vita
+    the compiler places locals as it likes, and the callee writes over other locals or the saved
+    registers. Declare the record the callee uses (a struct of the adjacent locals in their EE
+    order, or the array at the size the callee writes): the objects stay byte-identical. Found so
+    far: the ray casts func_00118d78 / func_00119688 (start, way, hit, id: fieldcam.c, partyctl.c)
+    and func_0024ac08's four-word position (gauge.c, popup.c, cmdmenu.c). A crash with a register
+    that held a pointer now holding a small number right after a call is this.
 
 ## Known absolute addresses in matched code
 

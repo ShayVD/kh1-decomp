@@ -64,7 +64,7 @@ void func_00243e58(s32 x, s32 y, s32 a2, C3 *c, f32 f) {
 #endif
 
 void func_00243ef8(s32 flag, Spr26 *r, Spr26 *m, Spr26 *l, Spr26 *e, s32 a5, s32 b6, s32 x, s32 y, s32 n, s32 w0, s32 w1, s32 w2, s32 *c13, s32 *c14, f32 f) {
-    s32 t[2];
+    s32 t[4]; /* session 136: func_0024ac08 writes four words */
     s32 i, j, k, cnt;
     Spr26 *p;
     for (i = 0, p = l; i < 6; i++, p++) func_00243d18(flag, p, a5, x, y, f, (s32)c13);

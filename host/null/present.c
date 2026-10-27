@@ -34,6 +34,8 @@ int printf(const char *, ...);
 void *malloc(__SIZE_TYPE__);
 int memcmp(const void *, const void *, __SIZE_TYPE__);
 unsigned long kh1_host_frame(void);
+char *getenv(const char *);
+int atoi(const char *);
 
 /* a buffer's pixel as RGB (R in bits 0-7): CT32 / CT24 as stored, CT16 / CT16S widened */
 static u32 rgb_of(u32 psm, u32 v) {
@@ -71,7 +73,7 @@ int kh1_present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines) {
 
 static s32 shot_w, shot_h, shot_target, shot_side16;
 static const char *shot_dir;
-static u32 shot_send, shot_n;
+static u32 shot_send, shot_n, shot_every; /* session 136: KH1_HOST_SHOT_EVERY=N, frames N apart (N or N + 1) */
 static u8 *shot_rgb;
 
 static void present_after(u32 tadr) {
@@ -81,6 +83,7 @@ static void present_after(u32 tadr) {
     char path[512], wide[160];
     void *f;
     if (tadr != shot_send) return;
+    if (shot_every && kh1_host_frame() % shot_every > 1) return; /* the copy can fall on odd frames */
     if (shot_target) { /* TEX0: TBP0, TBW, PSM */
         bp = r->lo & 0x3FFF;
         bw = r->lo >> 14 & 63;
@@ -99,7 +102,10 @@ static void present_after(u32 tadr) {
         printf("kh1-host: shot frame %lu: psm %02x bw %u not presentable\n", kh1_host_frame(), psm, bw);
         return;
     }
-    sprintf(path, "%.400s/shot_%05u.pam", shot_dir, shot_n++);
+    if (shot_every) /* named by the frame */
+        sprintf(path, "%.400s/shot_f%06lu.pam", shot_dir, kh1_host_frame());
+    else
+        sprintf(path, "%.400s/shot_%05u.pam", shot_dir, shot_n++);
     f = fopen(path, "wb");
     if (!f) {
         printf("kh1-host: shot frame %lu: %s: cannot write\n", kh1_host_frame(), path);
@@ -118,6 +124,7 @@ void kh1_present_wide(s32 side16) { shot_side16 = side16; }
 int kh1_present_init(s32 w, s32 h, int target, const char *dir, const void *send) {
     if (w <= 0 || h <= 0 || w > 4096 || h > 4096) return -1;
     shot_rgb = malloc((__SIZE_TYPE__)w * h * 3);
+    shot_every = getenv("KH1_HOST_SHOT_EVERY") ? (u32)atoi(getenv("KH1_HOST_SHOT_EVERY")) : 0;
     if (!shot_rgb) return -1;
     shot_w = w;
     shot_h = h;

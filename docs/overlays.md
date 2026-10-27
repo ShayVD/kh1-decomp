@@ -158,6 +158,12 @@ dkmovie's two for 20 minutes on two threads (about 10 compiles a second): func_0
 (the callee func_0011ef10 returns a value: declared void it scheduled the `lui` early), see
 nonmatchings/session132/NOTES.md for the rest.
 
+Session 136: func_00f25c40's best output (7 -> 1 word: D_00F27214 stored before D_00F2C904) and one
+hand change (the read's wait checks the retry bit before each sceCdSync, as a `for (;;)` with the
+check first) matched it. dkmovie func_00f20140: the best output (13 words) only wraps the two packet
+stores in `do { } while (0)`; not kept. A draft that includes a header of its own (xs_dh_break's
+shard.h) must have it pasted in before `import` (the permuter's copy is compiled elsewhere).
+
 ## Results
 
 Kept up to date by the session that changes them (`make ovl-progress`).
@@ -165,12 +171,12 @@ Kept up to date by the session that changes them (`make ovl-progress`).
 | Overlay | Functions | Matched | Notes |
 |---|---|---|---|
 | dkmovie | 122 | 95 | session 131b; f205a4 / f205f4 are hand-written sq/daddiu asm loops; session 134: the front end is native in the port, the player is `PlatMovie*` (docs/native-overlays.md) |
-| dktitle | 71 | 59 | session 132: native C in the port (docs/native-overlays.md), notes in nonmatchings/session132/NOTES.md |
+| dktitle | 71 | 60 | session 132: native C in the port (docs/native-overlays.md), notes in nonmatchings/session132/NOTES.md; session 136: func_00f25c40 |
 | gb | 533 | 367 | session 131b; most of its code is wm's (twins.py) |
 | wm | 1109 | 747 | session 131b |
 | xl_limit | 76 | 68 | session 131b |
 | xs_bambi | 13 | 13 | complete |
-| xs_dh_break | 9 | 5 | session 131b |
+| xs_dh_break | 9 | 5 | session 131b; session 136: native in the port with drafts for the other 4 (docs/native-overlays.md) |
 | xs_dumbo | 54 | 48 | session 131b |
 | xs_genie | 64 | 58 | session 131b |
 | xs_mushu | 24 | 22 | session 131b |

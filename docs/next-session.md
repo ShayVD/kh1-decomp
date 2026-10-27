@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste this to start the next session (session 136).
+Paste this to start the next session (session 137).
 
 ---
 
@@ -16,7 +16,27 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 135, 2026-10-26)
+## Where we stopped (end of session 136, 2026-10-26)
+
+- **Session 136** (no Mac; ISO staged by the coordinator, SHA-256 9ad74868… checked): **through Dive to
+  the Heart's weapon choice and attack tutorial** on the host (docs/native-overlays.md "Session 136").
+  - Pad scripts can walk: `FRAME BUTTONS goto X Z [R]` (host/null/pad.c; pad_test.c) turns the stick by
+    the camera as func_00124d58 does. Positions come from the actor table with gdb (nothing 3D drawn).
+    The run: tests/host/pads/dive.txt (sword taken, staff given up, confirmed).
+  - **xs_dh_break.x native** (the floor breaking): drafts for its 4 unmatched functions
+    (nonmatchings/session136/xs_dh_break/), ovlnative.py places data names anywhere in the overlay area.
+  - **Two kinds of host stack bugs** (portability.md rule 15, objects unchanged): ray-cast records split
+    over locals (fieldcam.c x2, partyctl.nostrict.c) and four-word positions in `s32 [2]` (gauge.c,
+    gauge.nostrict.c, popup.c, cmdmenu.nostrict_nofill.c). The attack tutorial and the Shadows run; the
+    next station loads at frame ~17,800 and waits for something (open).
+  - func_00152140's value (argcheck): its task func_00137ea8 overwrites $v0 right after the call: harmless.
+  - **dktitle func_00f25c40 matched** (permuter output + the retry check before each sceCdSync): 60 / 71.
+  - host present: `KH1_HOST_SHOT_EVERY=N` writes only every Nth frame's shot, named by frame.
+  - kh1.elf byte-identical (6,981 / 6,988); dktitle / dkmovie / xs_dh_break overlays byte-identical;
+    `make test` PASS; `make vita-armcheck` links the three native overlays and qemu-arm follows the same
+    path to frame 19,000.
+
+## Where we stopped before (end of session 135, 2026-10-26)
 
 - **Session 135** (no Mac; ISO staged by the coordinator, SHA-256 9ad74868… checked): **past the "monologue".**
   - That screen was **Dive to the Heart** waiting for the player: its last line さあ 歩き出してごらん
@@ -846,7 +866,25 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 136 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 137 plan (at most 3 workers, docs/workflow.md "Resource limit")
+
+1. **The station after the Shadows** (tests/host/pads/dive.txt to frame ~18,000): read what it waits
+   on from the event script (session 135's VM trace: gdb `dprintf` on `D_0037A198`'s handlers) and its
+   trigger boxes rather than guessing; the two kind-4 actors at (-8670, -15430) are a lead. Then on
+   through Dive to the Heart (the doors / chest tutorials, the Destiny Islands questions, Darkside).
+2. **Rule 15 sweep**: look for more locals handed to a callee that reads past them (a host-only
+   checker comparing each call's local size with the EE frame's room would find them; the gdb tell
+   is a callee-saved register turned to a small number).
+3. **With the Mac, after the Vita display thread's PR**: a Vita3K run with pad input into Dive to the
+   Heart (sessions 135-136's fixes matter there too).
+4. **Matching**: dktitle's 11 left (00f228c8 and 00f24b60 still never permuted); xs_dh_break's 4
+   drafts (func_00f20b38 is 62 words / score 14: the permuter's inputs need shard.h pasted in, docs/overlays.md).
+5. End with `make progress-update SESSION=137`, refresh docs/progress.md's tables, commit, open a PR,
+   and refresh this prompt.
+6. **Once the PR is merged, message the coordinator to start the next session** (session 138) with
+   this prompt.
+
+## Session 136 plan (done; kept for reference)
 
 1. **Through Dive to the Heart on the host**: pick a weapon at the pedestals (read their positions
    from the field's objects / trigger boxes with gdb, since nothing 3D is drawn), answer the

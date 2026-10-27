@@ -324,7 +324,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   tail -n 1 "$W/sound.log"
   # the null pad and its script (host/null/pad.c, session 87)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/pad_test" \
-      "$ROOT/tests/host/pad_test.c" "$ROOT/host/null/pad.c"
+      "$ROOT/tests/host/pad_test.c" "$ROOT/host/null/pad.c" -lm
   "$W/pad_test" "$W" > "$W/pad.log" 2>&1 || { cat "$W/pad.log"; exit 1; }
   tail -n 1 "$W/pad.log"
   # the camera matrices' C twin (host/port/view.c) against the original's func_00110618
