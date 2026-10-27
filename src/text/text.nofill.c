@@ -15,6 +15,7 @@
  * last puts li t1,1 after li 66.  Without the pin: 6 words; without the dead
  * test: 6 words. */
 #include "common.h"
+#include "lang.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_003E8E28.h"
@@ -30,6 +31,7 @@ typedef Glyph_3e8e28 Glyph;
 #include "data/pieces/D_003F2670.h"
 #include "data/pieces/D_003F1660.h"
 #include "data/pieces/D_003F2720.h"
+extern u8 D_003E4658[]; /* the English patch's message table (lang.h) */
 typedef union { s32 i; f32 f; } UF;
 /* one sprite: tag, then UV, XYZ, UV, XYZ */
 typedef struct {
@@ -71,7 +73,7 @@ s32 func_001f0448(s32, s32, u8 *, s32);
 s32 func_001f2d68(s32, s32, s32, s32, s32, s32, s32, s32);
 
 u8 *func_001efc10(s32 a) {
-    return &D_003E5ED8[D_003E890E[a]];
+    return (u8 *)KH1_EN_AT(D_003E4658, 0x1180, D_003E5ED8) + D_003E890E[a];
 }
 
 #define SETX() \
@@ -165,13 +167,13 @@ Q *func_001f0ea8(Q *pk, s32 a1, s32 mode, u32 a3, s32 x, s32 y, u8 *str, s32 sc)
         c |= str[1] << 8;
         str += 2;
         if (c == 0x4081) {
-            cx += (sc << 8) / 18;
+            cx += (sc << (KH1_EN ? 6 : 8)) / KH1_GLYPH;
             continue;
         }
         gl = &D_003E8E28[func_001eff50(c)];
         w = gl->w << 4;
-        s = w * sc / 18;
-        c = (w + func_001efb88()) * sc / 18;
+        s = w * sc / KH1_GLYPH;
+        c = (w + func_001efb88()) * sc / KH1_GLYPH;
         g = (Pg *)p;
 /*P*/
         f7 = gl->f7;
@@ -185,7 +187,7 @@ Q *func_001f0ea8(Q *pk, s32 a1, s32 mode, u32 a3, s32 x, s32 y, u8 *str, s32 sc)
         g->x28 = 0x100000;
         g->x2c = 0x8000;
         g->x30 = f2 + w;
-        g->x34 = f4 + 288;
+        g->x34 = f4 + KH1_GLYPH * 16;
         g->x44 = cy + h;
         g->x48 = 0x100000;
         g->x10 = f2;
@@ -215,7 +217,7 @@ Q *func_001f12c0(Q *p, s32 a1, u32 a2, s32 x, s32 y, u8 *str, s32 sc) {
     s32 k, cx, cy, w, s, h, x16, t, hh;
     u8 f7;
     s32 f2, f4;
-    s32 dv = 18;
+    s32 dv = KH1_GLYPH;
     u32 c;
 
     tag = p + 7;
@@ -274,7 +276,7 @@ Q *func_001f12c0(Q *p, s32 a1, u32 a2, s32 x, s32 y, u8 *str, s32 sc) {
         g->x30 = f2 + w;
         g->d[1] = 22;
         g->x2c = 0x8000;
-        g->x34 = f4 + 288;
+        g->x34 = f4 + KH1_GLYPH * 16;
         g->x44 = cy + h;
         g->x10 = f2;
         g->x48 = 0x100000;
@@ -339,7 +341,7 @@ Q *func_001f15f0(Q *pk, s32 a1, u32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
     p->xa4 = z;
     p->xa8 = 0x100000;
     p->xcc = 0;
-    p->xb4 = f4 + 288;
+    p->xb4 = f4 + KH1_GLYPH * 16;
     p->xc0 = y + s;
     p->xc8 = 0x100000;
     p->xc4 = z + h;
@@ -451,7 +453,7 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
         gl = D_003E8CD0;
         f7 = gl->f7;
         w = gl->w << 4;
-        s = w * sc / 18;
+        s = w * sc / KH1_GLYPH;
         g = (Pg *)p;
         g->d[0] = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
         g->x20 = i = val + ((h - s) >> 1);
@@ -465,7 +467,7 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
         g->x2c = 0x8000;
         g->x30 = f2 + w;
         g->x40 = cx = i + s;
-        g->x34 = f4 + 288;
+        g->x34 = f4 + KH1_GLYPH * 16;
         g->x4c = 0;
         ((UF *)&g->x44)->i = cy + h;
         g->x48 = 0x100000;
@@ -479,7 +481,7 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
         gl = D_003E8CD8[dig[n]];
         f7 = gl ->f7;
         w = gl ->w << 4;
-        s = w * sc / 18;
+        s = w * sc / KH1_GLYPH;
         g = (Pg *)p;
         g ->d[0] = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
         g ->x20 = i = val + ((h - s) >> 1);
@@ -493,7 +495,7 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
         g ->x2c = 0x8000;
         g ->x30 = f2 + w;
         g ->x40 = cx = i + s;
-        ((UF *)&g ->x34)->i = f4 + 288;
+        ((UF *)&g ->x34)->i = f4 + KH1_GLYPH * 16;
         g ->x44 = cy + h;
         g ->x48 = 0x100000;
         g ->x4c = 0;
@@ -665,7 +667,7 @@ s32 func_001f1fc8(s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 sc) {
                 goto done;
             case 1:
                 str++;
-                cx += (sc << 8) / 18;
+                cx += (sc << 8) / KH1_GLYPH;
                 break;
             case 3:
                 str++;
@@ -747,8 +749,8 @@ s32 func_001f1fc8(s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 sc) {
             }
             gl = &D_003E8E28[k];
             w = gl->w << 4;
-            s = w * sc / 18;
-            adv = (w + func_001efb88()) * sc / 18;
+            s = w * sc / KH1_GLYPH;
+            adv = (w + func_001efb88()) * sc / KH1_GLYPH;
             f2 = gl->f2;
             f4 = gl->f4;
             g = (Gl *)p;
@@ -764,7 +766,7 @@ s32 func_001f1fc8(s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 sc) {
             g->x38 = 0x100000;
             g->x3c = 0x8000;
             g->x40 = f2 + w;
-            g->x44 = f4 + 288;
+            g->x44 = f4 + KH1_GLYPH * 16;
             g->x50 = cx + s;
             g->x54 = cy + h;
             g->x58 = 0x100000;
@@ -834,13 +836,13 @@ KH1_V0(s32) func_001f2630(s32 mode, u32 a1, s32 x, s32 y, u8 *str, s32 sc) {
         c |= str[1] << 8;
         str += 2;
         if (c == 0x4081) {
-            cx += (sc << 8) / 18;
+            cx += (sc << 8) / KH1_GLYPH;
             continue;
         }
         gl = &D_003E8E28[func_001eff50(c)];
         w = gl->w << 4;
-        s = w * sc / 18;
-        a = (w + func_001efb88()) * sc / 18;
+        s = w * sc / KH1_GLYPH;
+        a = (w + func_001efb88()) * sc / KH1_GLYPH;
         f7 = gl->f7;
         f4 = gl->f4;
         g->d[0] = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
@@ -852,7 +854,7 @@ KH1_V0(s32) func_001f2630(s32 mode, u32 a1, s32 x, s32 y, u8 *str, s32 sc) {
         f2 = gl->f2;
         g->x28 = 0x100000;
         g->x30 = f2 + w;
-        g->x34 = f4 + 288;
+        g->x34 = f4 + KH1_GLYPH * 16;
         g->x48 = 0x100000;
         g->x44 = cy + h;
         g->x10 = f2;

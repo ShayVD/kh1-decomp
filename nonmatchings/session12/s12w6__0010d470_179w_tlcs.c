@@ -1,5 +1,6 @@
 /* 0010d470 near miss: 179 words off by true DP LCS (orig unmatched; 217 ours-unmatched; was 196 w73), size 4120 vs 3968, hand strict, rodata RO=48cdf0. Changes vs w73 (all natural): case 10 reads its middle byte into c2 (orig keeps every byte read in a3 = c2: cases 9-15, 25 and the copy loop), case 10 written 'if (str[pos] == 0) {...} else scale = o->x14;' (orig bnezl+lwc1 shape), PUT_TAIL store order y, col, a, sc (matches the orig tail exactly), final stores n, nl, w, x8. Left: c2 is allocated 3rd by global-alloc (priority 5*refs/len ~6-7) and gets a1 (orig a3: the orig must allocate it after c=t0 and after the copy-loop givs a1/a2; adding the copy-loop read 'c2 = sub[k]' (orig a3 there too) raises it further and gives c2=t0/c=t1, size 3936), so case 25 n<<4 gets a2 and case 24's PUT copy is not cross-jumped into 25 (52 words); case 9 address form (orig: sll a0; addiu a0,16; addu a1,b,a0; move a0,a1, sc stored via the copy); copy-loop registers. */
 #include "common.h"
+#include "lang.h"
 typedef struct { u8 pad0[4]; u8 *x4; u16 x8; u16 xa; u8 padc[4]; u8 x10; u8 pad11[2]; u8 x13; f32 x14; f32 x18; f32 x1c; } TObj;
 typedef struct { u16 code; u16 col; u16 x; u16 y; s16 w; s16 a; f32 sc; } TGl;
 typedef struct { u16 n; s16 nl; f32 w; s32 x8; u8 pad[1]; u8 xd; u8 pade[2]; TGl g[384]; f32 lw[16]; f32 lk[16]; } TBuf;
@@ -109,7 +110,7 @@ void func_0010d470(TObj *o, TBuf *b) {
                 b->g[n].code = 9999;
                 if (D_004D59E4 == 0) {
                     b->g[n].x = x;
-                    x += fs * 12.0f + 0.0f;
+                    x += fs * (KH1_EN ? 8.0f : 12.0f) + 0.0f; /* the English patch's space */
                 } else {
                     b->g[n].x = x + (24.0f - WD(code) * fs) * 0.5f;
                     x += D_004D59E8;

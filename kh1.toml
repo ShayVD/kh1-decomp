@@ -14,6 +14,12 @@ text_end = "0x00272c70"
 # Value of $gp if the game uses small data (-G > 0). Empty = not used.
 gp = ""
 
+[english]
+# The community English patch's SLPS_251.98 (crazycatz00's ISOMaker, July 2025 import folder), the
+# user's own patched copy. Not a target: only `make KH1_EN_TARGET=1` (the English variants of the
+# patched functions, checked against it) and the port's disc check use it. docs/english-patch.md.
+sha256 = "53eca29e315f43f6cb63960f32d1737b2ea3f95e3954d6b7027f4054ca64954d"
+
 [toolchain]
 # A compiler id from tools/toolchains.tsv (decomp.me naming).
 # ee-gcc 2.96 + -O2 -G0 matched 8/8 probe functions (docs/toolchain.md).

@@ -42,7 +42,8 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
 
 1. Install out/vita/kh1-decomp.vpk with VitaShell (title id KHDC00001, "Kingdom Hearts (kh1-decomp)").
 2. Copy your own disc image to `ux0:data/kh1/kh1.iso` (2048-byte sectors; a raw 2352-byte image as
-   `kh1.bin`). Without one the app shows a red screen until START.
+   `kh1.bin`). Without one the app shows a red screen until START. The English fan patch's ISO works
+   too: the app sees the patch's ELF on it and runs in English (docs/english-patch.md).
 3. Optional `ux0:data/kh1/config.txt`, `key=value` lines:
    - `iso=ux0:...` another image path;
    - `title=N` the game state asked for at the title overlay's first call (default 2: a new game,

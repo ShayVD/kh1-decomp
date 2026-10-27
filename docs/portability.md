@@ -250,6 +250,9 @@ rewrite matched code.
     callee's return type can change its same-file callers' code
     (func_00111130's did func_001111b0's), so only change the ones a caller
     reads.
+    Session 138: a task (a callback given to func_0011ef10 / func_0011f090) is such a
+    caller: proc.c's func_0011f130 drops the task when its value has bit 2 set, so a void
+    task (objcmd.nostrict.c func_00133a88) vanished on the host when eax held a 4.
     Session 65: a call through a pointer (`w->cb()`, `D_xxx[i].fn()`) has
     no name for argcheck to look up. `python3 -I tools/host/indcheck.py`
     (clang syntax trees) lists them with the targets it can find (data

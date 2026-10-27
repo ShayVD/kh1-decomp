@@ -4,6 +4,7 @@
  * and func_001fb428 a number (D_003E8CD0 the minus sign, D_003E8CD8 the
  * digits), scaled like func_001f94f0 (wintext.nostrict.c). */
 #include "common.h"
+#include "lang.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
@@ -51,6 +52,14 @@ KH1_V0(s32) func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32
     f32 fa, fb, t0, t1, t2, t3;
 
 
+#ifndef KH1_EN_NOHOOK
+    /* the English patch enters through its helper at 0x257D10 (docs/english-patch.md), which
+     * moves the 4th argument register up 2 and scales the 6th by 4/3 */
+    if (KH1_EN) {
+        y -= 2;
+        sz = (sz << 2) / 3;
+    }
+#endif
     PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
@@ -92,7 +101,7 @@ KH1_V0(s32) func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32
         fx = o->x74;
         fy = o->x78;
     }
-    n = 18;
+    n = KH1_GLYPH;
     for (;;) {
         c = *s;
         if (c == 0) goto done;
@@ -116,7 +125,7 @@ KH1_V0(s32) func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32
         c |= s[1] << 8;
         s += 2;
         if (c == 0x4081) {
-            xx += (sz << 8) / n;
+            xx += (sz << (KH1_EN ? 6 : 8)) / n;
             continue;
         }
         g = &D_003E8E28[func_001eff50(c)];
@@ -135,7 +144,7 @@ KH1_V0(s32) func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32
         ((GP *)q)->w[4] = xx;
         ((GP *)q)->w[7] = 0x8000;
         ((GP *)q)->w[8] = f2 + w;
-        ((GP *)q)->w[9] = f4 + 288;
+        ((GP *)q)->w[9] = f4 + KH1_GLYPH * 16;
         ((GP *)q)->w[0] = f2;
         ((GP *)q)->w[1] = f4;
         ((GP *)q)->w[5] = yy;
@@ -193,6 +202,15 @@ void func_001fa8b0(TextWin *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
 
 
 
+#ifndef KH1_EN_NOHOOK
+    /* the English patch enters through its helper at 0x257D10 (docs/english-patch.md), which
+     * moves the 4th argument register up 2 and scales the 6th by 4/3: here the
+     * string and the colour, as the patched game does */
+    if (KH1_EN) {
+        s -= 2;
+        col = (col << 2) / 3;
+    }
+#endif
     PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
     x16 = x * 16;
     sz16 = sz * 16;
@@ -224,7 +242,7 @@ void func_001fa8b0(TextWin *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
         fx = o->x74;
         fy = o->x78;
     }
-    n = 18;
+    n = KH1_GLYPH;
     z = 0x100000;
     for (;;) {
         c = *s;
@@ -268,7 +286,7 @@ void func_001fa8b0(TextWin *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
         ((GP *)q)->w[12] = x40;
         ((GP *)q)->w[6] = z;
         ((GP *)q)->w[14] = z;
-        ((GP *)q)->w[9] = f4 + 288;
+        ((GP *)q)->w[9] = f4 + KH1_GLYPH * 16;
         ((GP *)q)->w[15] = 0;
         ((GP *)q)->w[13] = y44;
 /*Q*/
@@ -408,11 +426,11 @@ KH1_V0(s32) func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s
         f7 = g->f7;
         f4 = g->f4;
         tex = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
-        t = w * sz / 18;
+        t = w * sz / KH1_GLYPH;
         f2 = g->f2;
         ((GP *)p)->w[1] = f4;
         x0 = val + ((sz16 - t) >> 1);
-        ((GP *)p)->w[9] = f4 + 288;
+        ((GP *)p)->w[9] = f4 + KH1_GLYPH * 16;
         ((GP *)p)->d1 = 22;
         ((GP *)p)->w[5] = yy;
         ((GP *)p)->w[6] = 0x100000;
@@ -440,14 +458,14 @@ KH1_V0(s32) func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s
         f7 = g->f7;
         w = g->w << 4;
         f4 = g->f4;
-        t = w * sz / 18;
+        t = w * sz / KH1_GLYPH;
         f2 = g->f2;
         tex = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
         ((GP *)p)->d1 = 22;
         ((GP *)p)->w[0] = f2;
         ((GP *)p)->d0 = tex;
         ((GP *)p)->w[1] = f4;
-        ((GP *)p)->w[9] = f4 + 288;
+        ((GP *)p)->w[9] = f4 + KH1_GLYPH * 16;
         x0 = val + ((sz16 - t) >> 1);
         ((GP *)p)->w[8] = f2 + w;
         ((GP *)p)->w[5] = yy;

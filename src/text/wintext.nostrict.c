@@ -7,6 +7,7 @@
  * func_001fcdc8 an icon of the sprite table D_003E9138 (in a window, rotated,
  * on the screen).  Each builds a GIF packet and sends it through path 2. */
 #include "common.h"
+#include "lang.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
@@ -79,6 +80,14 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     s32 c, k, r;
     Glyph *g;
 
+#ifndef KH1_EN_NOHOOK
+    /* the English patch enters through its helper at 0x257D10 (docs/english-patch.md), which
+     * moves the 4th argument register up 2 and scales the 6th by 4/3 */
+    if (KH1_EN) {
+        y -= 2;
+        sz = (sz << 2) / 3;
+    }
+#endif
     PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
     sz16 = sz << 4;
     base = func_00122048(1024, 128);
@@ -126,7 +135,7 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
         if (*s < 21) {
             switch (*s) {
             case 1:
-                cx += (sz << 8) / 18;
+                cx += (sz << 8) / (KH1_EN ? 77 : 18);
                 s++;
                 break;
             case 3:
@@ -272,8 +281,8 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
             g = &D_003E8E28[c];
             w = g->w << 4;
             f4 = g->f4;
-            adv = (w + D_003E8E00) * sz / 18;
-            t = w * sz / 18;
+            adv = (w + D_003E8E00) * sz / KH1_GLYPH;
+            t = w * sz / KH1_GLYPH;
             f7 = g->f7;
             f2 = g->f2;
             tex = ((u64)D_003E8D00[f7 >> 4] << 20) | ((u64)(f7 & 0xf) << 56) | (0xfff0ULL << 35);
@@ -289,7 +298,7 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
             ((GP4 *)p)->w[6] = 0x100000;
             ((GP4 *)p)->w[13] = y1 = y + sz16;
             ((GP4 *)p)->w[12] = x1 = cx + t;
-            ((GP4 *)p)->w[9] = f4 + 288;
+            ((GP4 *)p)->w[9] = f4 + KH1_GLYPH * 16;
             ((GP4 *)p)->w[15] = 0;
             ((GP4 *)p)->w[14] = 0x100000;
             ((GP4 *)p)->w[0] = f2;
@@ -347,8 +356,8 @@ KH1_V0(s32) func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     gv = gl->f4;
     X = ox + (x << 4);
     ww = w + D_003E8E00;
-    a = w * sz / 18;
-    b = ww * sz / 18;
+    a = w * sz / KH1_GLYPH;
+    b = ww * sz / KH1_GLYPH;
     tex = ((u64)D_003E8D00[gl->f7 >> 4] << 20) | ((u64)(gl->f7 & 0xf) << 56) | (0xfff0ULL << 35);
     p->g.u0 = gu;
     p->g.v0 = gv;
@@ -359,7 +368,7 @@ KH1_V0(s32) func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     p->g.f0 = 0x8000;
     p->g.y0 = Y;
     p->g.u1 = gu + w;
-    p->g.v1 = gv + 288;
+    p->g.v1 = gv + KH1_GLYPH * 16;
     p->g.y1 = Y + (sz << 4);
     p->g.z0 = z;
     p->g.f1 = 0;

@@ -259,3 +259,50 @@ runs on the fake disc.
   frames earlier and Sora does not walk at 6,400), with the frame time `D_002BBDFC` the same; not
   traced. A host bug that depends on the stack layout (an uninitialised local) is the likely kind;
   valgrind cannot follow past dkmovie.x (it runs the overlay area's bytes).
+  **Traced in session 138**: not an uninitialised local, a task's return value (below).
+
+## Session 138: Dive to the Heart to its end, and the ASan build's other path
+
+- **The islanders** (tests/host/pads/dive.txt, frames 32,200-36,304): the three are script VMs 2-4
+  (entities 20000-20002) at (-1412, -2900), (-1489, -2333) and (-2080, -2800); VM 0 loops until VM
+  variables 2320 / 2324 / 2328 are all 1 (each islander's label 5 sets its own after the answer).
+  はなす (CIRCLE when beside one) asks the question, more CIRCLEs take the first answer. Those VM
+  variables are s32 words of `D_0038ACC4` (or `D_0038B4C4` when the VM's flag bit 5 is set) at index
+  variable - 2304 (script_vm.c func_001c11d8). Session 137's "Selphie's question answered" was VM
+  0's own intro line; no islander had been answered. Then キミの旅は... and the confirm (まあ いっか /
+  そんなの イヤだ: CIRCLE takes the first), その日は遠くて近い, and the next station at ~37,800.
+- **The station after** (station byte 2817 below 76 on arrival): the menu tutorial (closed by CIRCLE
+  presses), 8 Shadows round Sora (actors 1-9 of `D_002C64A0`, kind 3 in the top half of word 1)
+  beaten with CIRCLE every 30 frames by ~43,500 (攻撃力アップ!!), the save point tutorial at ~44,500.
+  The glass stairs are collision groups 132-160 (byte 11 of the 20-byte triangles `D_002A6238`,
+  count `D_002A6258`; vertices `D_002A624C`, 12 bytes): their centres, read from the triangles at
+  the station, are the goto points; group 131 is the top station, 130 the start, 100-129 walls
+  beside the steps. `func_001057b8(group, on)` sets each triangle's bit 0 (1 = off: VM lib 133 /
+  func_001d0500; lib 132 turns a group on). VM 1 turns the walls off a few steps ahead as Sora climbs
+  (`func_001059d0`, the group under the player). Trigger box 5 at (-2200, -1750, 7900), 600 wide,
+  starts 光に近づけば近づくほど... and Darkside (~49,000); CIRCLE every 30 frames until ~61,000,
+  then だけど 恐れないで, キミは世界で一番強い武器を持っている..., and the Destiny Islands opening
+  (わわッ!, なぁ カイリ ...) loads; dive.txt runs to 70,000. xl_limit.x is loaded four times on the
+  way (41,000-50,800) with no native C; nothing calls into it (its loader's callback only flags it
+  loaded), so the run is unaffected.
+- **The ASan build's other path** (open since session 137). `census.py --init zero|pattern` builds
+  the host with every local zeroed or filled with 0xFE (out/host-init-KIND/; `--init-files` limits
+  it to listed files, for a bisection): both followed the plain build exactly to frame 8,000, so no
+  uninitialised local. The two builds part at frame 3,133: in the ASan build the task `func_00133a88`
+  (objcmd.nostrict.c, the VMs' commands to the game, key 79998) left the main task list, so the
+  command that puts Sora at (0, 0, -670) was never run. proc.c's `func_0011f130` drops a task whose
+  return value has bit 2 set; `func_00133a88` was `void` (its loop ends when `func_001c45e8` returns
+  0, which the EE leaves in v0), so x86 returned whatever eax held. Now `KH1_V0(s32)` with
+  `KH1_V0_RETURN(0)` (portability.md rule 10; the object unchanged). Every other function handed to
+  `func_0011ef10` / `func_0011f090` (about 170) is defined with an int return.
+  Then ASan reported two locals a callee copies a quadword into or out of (rule 15): vm_lib.c
+  `func_001d9cb0`'s `v` (read by class1b func_001515d0) and `func_001da2c8`'s `buf` (written by
+  mapdata.c func_00105c70), both now four words (objects unchanged). With those, the ASan build runs
+  dive.txt to 70,000 with no report.
+- **x87 float precision**: the ASan and plain builds still differ slightly (171 / 174 disc reads by
+  70,000): positions part by 0.01 from frame ~24,000 and the fight's timing follows. `census.py
+  --cflags "-msse2 -mfpmath=sse" --out DIR` builds with single-precision float maths; the plain and
+  ASan builds made that way take exactly the same path (182 reads each), and dive.txt still gets
+  through Dive to the Heart and into Destiny Islands with it (a Vita-like float model: the script
+  does not depend on x87's excess precision).
+- tools/host/vmdis.py `--exe` runs another host build (ASan's with its ASAN_OPTIONS).

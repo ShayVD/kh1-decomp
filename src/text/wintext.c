@@ -9,6 +9,7 @@
  * 18, or with a one-pixel outline in a second colour (func_001fa318 ...).
  * W16(f) is a window field in 1/16 pixels as pixels, W32(f) half of it. */
 #include "common.h"
+#include "lang.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
@@ -227,15 +228,15 @@ s32 func_001f9020(void) {
 }
 
 s32 func_001f9030(TextWin *w, s32 id) {
-    return func_001f9078(w, id, 18);
+    return func_001f9078(w, id, KH1_GLYPH);
 }
 
 s32 func_001f9048(TextWin *w, u8 *s) {
-    return func_001f9098(w, s, 18);
+    return func_001f9098(w, s, KH1_GLYPH);
 }
 
 void func_001f9060(TextWin *w, u8 *s) {
-    func_001f90b8(w, s, 18);
+    func_001f90b8(w, s, KH1_GLYPH);
 }
 
 s32 func_001f9078(TextWin *w, s32 id, s32 sz) {
@@ -251,15 +252,15 @@ void func_001f90b8(TextWin *w, u8 *s, s32 sz) {
 }
 
 s32 func_001f90d8(TextWin *w, s32 id, u32 col) {
-    return func_001f9138(w, id, 18, col);
+    return func_001f9138(w, id, KH1_GLYPH, col);
 }
 
 s32 func_001f90f8(TextWin *w, u8 *s, u32 col) {
-    return func_001f9180(w, s, 18, col);
+    return func_001f9180(w, s, KH1_GLYPH, col);
 }
 
 void func_001f9118(TextWin *w, u8 *s, u32 col) {
-    func_001f91c8(w, s, 18, col);
+    func_001f91c8(w, s, KH1_GLYPH, col);
 }
 
 s32 func_001f9138(TextWin *w, s32 id, s32 sz, u32 col) {
@@ -299,15 +300,15 @@ void func_001f92f0(TextWin *w, s32 mode, s32 x, u8 *s, s32 sz, u32 col) {
 }
 
 s32 func_001f9330(TextWin *w, s32 mode, s32 x, s32 y, s32 id) {
-    return func_001f9378(w, mode, x, y, id, 18);
+    return func_001f9378(w, mode, x, y, id, KH1_GLYPH);
 }
 
 s32 func_001f9348(TextWin *w, s32 mode, s32 x, s32 y, u8 *s) {
-    return func_001f9398(w, mode, x, y, s, 18);
+    return func_001f9398(w, mode, x, y, s, KH1_GLYPH);
 }
 
 void func_001f9360(TextWin *w, s32 mode, s32 x, s32 y, u8 *s) {
-    func_001f93b8(w, mode, x, y, s, 18);
+    func_001f93b8(w, mode, x, y, s, KH1_GLYPH);
 }
 
 s32 func_001f9378(TextWin *w, s32 mode, s32 x, s32 y, s32 id, s32 sz) {
@@ -323,15 +324,15 @@ void func_001f93b8(TextWin *w, s32 mode, s32 x, s32 y, u8 *s, s32 sz) {
 }
 
 s32 func_001f93d8(TextWin *w, s32 mode, s32 x, s32 y, s32 id, u32 col) {
-    return func_001f9438(w, mode, x, y, id, 18, col);
+    return func_001f9438(w, mode, x, y, id, KH1_GLYPH, col);
 }
 
 s32 func_001f93f8(TextWin *w, s32 mode, s32 x, s32 y, u8 *s, u32 col) {
-    return func_001f94f0(w, mode, x, y, s, 18, col);
+    return func_001f94f0(w, mode, x, y, s, KH1_GLYPH, col);
 }
 
 void func_001f9418(TextWin *w, s32 mode, s32 x, s32 y, u8 *s, u32 col) {
-    func_001f9e48(w, mode, x, y, s, 18, col);
+    func_001f9e48(w, mode, x, y, s, KH1_GLYPH, col);
 }
 
 s32 func_001f9438(TextWin *w, s32 mode, s32 x, s32 y, s32 id, s32 sz, u32 col) {
@@ -382,15 +383,15 @@ void func_001fa5b0(TextWin *a, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 c, s32
 }
 
 s32 func_001fa6d0(TextWin *w, s32 y, s32 id) {
-    return func_001fa718(w, y, id, 18);
+    return func_001fa718(w, y, id, KH1_GLYPH);
 }
 
 s32 func_001fa6e8(TextWin *w, s32 y, u8 *s) {
-    return func_001fa748(w, y, s, 18);
+    return func_001fa748(w, y, s, KH1_GLYPH);
 }
 
 void func_001fa700(TextWin *w, s32 y, u8 *s) {
-    func_001fa778(w, y, s, 18);
+    func_001fa778(w, y, s, KH1_GLYPH);
 }
 
 s32 func_001fa718(TextWin *w, s32 y, s32 id, s32 sz) {
@@ -406,15 +407,15 @@ void func_001fa778(TextWin *w, s32 y, u8 *s, s32 sz) {
 }
 
 s32 func_001fa7a8(TextWin *w, s32 y, s32 id, u32 col) {
-    return func_001fa808(w, y, id, 18, col);
+    return func_001fa808(w, y, id, KH1_GLYPH, col);
 }
 
 s32 func_001fa7c8(TextWin *w, s32 y, u8 *s, u32 col) {
-    return func_001fa840(w, y, s, 18, col);
+    return func_001fa840(w, y, s, KH1_GLYPH, col);
 }
 
 void func_001fa7e8(TextWin *w, s32 y, u8 *s, u32 col) {
-    func_001fa878(w, y, s, 18, col);
+    func_001fa878(w, y, s, KH1_GLYPH, col);
 }
 
 s32 func_001fa808(TextWin *w, s32 y, s32 id, s32 sz, u32 col) {
@@ -470,7 +471,7 @@ s32 func_001fb3e0(TextWin *o, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val, 
 }
 
 s32 func_001fb408(TextWin *o, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val, u32 col) {
-    return func_001fb428(o, mode, nd, pad, x, y, val, 18, col);
+    return func_001fb428(o, mode, nd, pad, x, y, val, KH1_GLYPH, col);
 }
 
 /* func_001fb428 is in wintext.nostrict_nogcse.c. */

@@ -3,6 +3,7 @@
  * (control codes as in func_001f0148) into a GIF packet, one sprite per
  * glyph.  It needs the CONTEXT_ONLY copies of its callees from text.c. */
 #include "common.h"
+#include "lang.h"
 
 #include "data/pieces/D_003E8E28.h"
 typedef Glyph_3e8e28 Glyph;
@@ -87,7 +88,7 @@ Q *func_001f0868(Q *pk, s32 a1, s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 
                 goto done;
             case 1:
                 str++;
-                cx += (sc << 8) / 18;
+                cx += (sc << 8) / (KH1_EN ? 77 : 18);
                 break;
             case 3:
                 str++;
@@ -157,8 +158,8 @@ Q *func_001f0868(Q *pk, s32 a1, s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 
             }
             gl = &D_003E8E28[k];
             w = gl->w << 4;
-            s = w * sc / 18;
-            k = (w + func_001efb88()) * sc / 18;
+            s = w * sc / KH1_GLYPH;
+            k = (w + func_001efb88()) * sc / KH1_GLYPH;
             f2 = gl->f2;
             f4 = gl->f4;
             g = (Gl *)p;
@@ -174,7 +175,7 @@ Q *func_001f0868(Q *pk, s32 a1, s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 
             g->x38 = 0x100000;
             g->x3c = 0x8000;
             g->x40 = f2 + w;
-            g->x44 = f4 + 288;
+            g->x44 = f4 + KH1_GLYPH * 16;
             g->x50 = cx + s;
             g->x54 = cy + h;
             g->x58 = 0x100000;
