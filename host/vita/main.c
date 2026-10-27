@@ -186,6 +186,7 @@ int kh1_ovl_entry(int cmd, int arg) {
 
 /* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
  * means no vblank: this says whether DMA sends still move) */
+int kh1_null_threads_state(char *buf, int n);
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 static int watchdog(SceSize args, void *argp) {
@@ -202,6 +203,11 @@ static int watchdog(SceSize args, void *argp) {
              (unsigned long long)(sceKernelGetProcessTimeWide() / 1000), frames, kh1_host_cd_reads,
              kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown, (kh1_vita_us_wait - wait0) / 1000,
              (kh1_vita_us_present - present0) / 1000, frames == last ? " (no vblank since the last)" : "");
+        { /* session 137v: the game's threads (host/null/threads.c): which one a stalled load waits on */
+            char tb[192];
+            kh1_null_threads_state(tb, sizeof tb);
+            vlog("kh1-vita: game threads: %s\n", tb[0] ? tb : "none made");
+        }
         if (gpu_on) { /* session 136: the GPU frame's CPU time (its waits for the GPU included), its counts */
             u32 f, d, sk, sc;
             kh1_vita_gxm_stats(&f, &d, &sk, &sc);
@@ -312,6 +318,10 @@ int main(int argc, char **argv) {
             stderr = f;
             _GLOBAL_REENT->_stdout = f;
             _GLOBAL_REENT->_stderr = f;
+            /* session 137v: vitasdk's newlib keeps a reent per thread: the main thread's (where the game and its
+             * coroutines print) is not the global one, and its printf went nowhere */
+            _REENT->_stdout = f;
+            _REENT->_stderr = f;
         }
         sceIoWrite(log_fd, "kh1-vita: log open\n", 19);
     }

@@ -13,6 +13,7 @@
  * Only the host runner uses this: the Vita build replaces host/null with its own kernel threads.
  * Not part of the PS2 build (it lives outside src/). */
 #define _GNU_SOURCE
+#include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>
 #include "common.h"
@@ -186,4 +187,24 @@ int PlatIReferSemaStatus(int id, void *param) {
     p[4] = 0;
     p[5] = 0;
     return id;
+}
+
+/* session 137v: each game thread's state, for the Vita's watchdog ("1 waits on sema 3 (count 0), 2 ready"): which
+ * one a stalled load waits on */
+int kh1_null_threads_state(char *buf, int n) {
+    static const char *const name[] = { "free", "made", "ready", "wait", "done" };
+    s32 i, k = 0;
+    buf[0] = 0;
+    for (i = 1; i < NULL_THREADS && k < n; i++) {
+        if (thr[i].state == T_FREE)
+            continue;
+        if (thr[i].state == T_WAIT)
+            k += snprintf(buf + k, n - k, "%s%d waits on sema %d (count %d)", k ? ", " : "", (int)i,
+                          (int)thr[i].sema, (int)sem[thr[i].sema].count);
+        else
+            k += snprintf(buf + k, n - k, "%s%d %s", k ? ", " : "", (int)i, name[thr[i].state]);
+    }
+    if (main_wait >= 0 && k < n)
+        snprintf(buf + k, n - k, "%smain waits on sema %d", k ? ", " : "", main_wait);
+    return k;
 }
