@@ -159,6 +159,7 @@ static Heap tram;  /* LPDDR uncached: textures, palettes, vertices, indices */
 
 /* ---- shaders: shadergen's Cg, compiled by SceShaccCg or read back from the cache ---- */
 static int shark_ok;
+extern int kh1_vita_shacc_restart;
 static char tex_why[160], pipe_why[200]; /* the last texture binding's / pipeline's failure (the skip log's) */
 static u32 compiled, cached, failed; /* shaders compiled on the device, read from the cache, refused */
 
@@ -194,10 +195,12 @@ static SceGxmProgram *program_of(const char *text, u32 len, int frag) {
         SceGxmProgram *c;
         static const int opts[4] = { SHARK_OPT_DEFAULT, SHARK_OPT_DEFAULT, SHARK_OPT_SAFE, SHARK_OPT_SLOW };
         int o;
-        /* session 137v: after some hundred compiles SceShaccCg answers shaders it compiles at start (shadertest=1)
-         * with "fatal internal error": the compiler is restarted and the shader tried again, then at lower
-         * optimisation levels */
+        /* session 137v: after some hundred compiles SceShaccCg answered shaders it compiles at start (shadertest=1)
+         * with "fatal internal error" (a heap the English disc's stale frees had corrupted, PR #153, is the
+         * suspect).  Lower optimisation levels are tried; config.txt's shacc_restart=1 first restarts the
+         * compiler (in Vita3K the restarted module reads NULL and the game hangs) */
         for (o = 0, c = 0; o < 4 && !(c && size); o++) {
+            if (o == 1 && !kh1_vita_shacc_restart) continue;
             if (o) {
                 shark_clear_output();
                 if (o == 1) {
@@ -1229,6 +1232,7 @@ static void shadertest(void) {
 /* the compiler, the shaders the frame needs before any draw (the vertex variants, the present's pair), the
  * GPU memory.  0 when the GPU path can run */
 int kh1_vita_shacc_ext = 1; /* config.txt's shacc_ext= (main.c) */
+int kh1_vita_shacc_restart; /* config.txt's shacc_restart= (main.c) */
 int kh1_vita_gxm_init(void) {
     u32 i;
     ctx = vita2d_get_context();

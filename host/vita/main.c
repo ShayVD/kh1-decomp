@@ -25,6 +25,7 @@
  *                             interpreter only; 2 both, compared (slow; differences go to the log)
  *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
  *                             ("kh1-gxm: shadertest" lines; gxm.c)
+ *       shacc_restart=1       session 137v: restart the shader compiler when a shader fails (off: hangs Vita3K)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -255,6 +256,7 @@ static void config(char *iso, int n) {
         }
         else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
         else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
+        else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
     }
     fclose(f);
 }
