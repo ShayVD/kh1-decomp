@@ -43,6 +43,27 @@ static u8 tgt_at(const KH1CmdRec *r, u32 bp, u32 bw, u32 x, u32 y, u32 w, u32 h)
     return 0;
 }
 
+/* session 137v: the GS pages of a buffer rectangle marked (mode 1), cleared (0) or tested (2) as the CPU's latest
+ * write: an upload into a target's pages after its draws (the characters' textures and CLUTs stream into the slot
+ * capture's pages), which the texture and palette caches read from GS memory rather than from the target's pixels.
+ * A page's pixels by the PSM's bits: 32 64 x 32, 16 64 x 64, 8 128 x 64, 4 128 x 128. */
+static int cpu_pages(KH1CmdRec *r, u32 bp, u32 bw, u32 psm, u32 x, u32 y, u32 w, u32 h, int mode) {
+    u32 bits = psm == 0x13 || psm == 0x1B ? 8 : psm == 0x14 || psm == 0x24 || psm == 0x2C ? 4 : psm == 2 || psm == 0xA ||
+               psm == 0x32 || psm == 0x3A ? 16 : 32;
+    u32 pw = bits <= 8 ? 128 : 64, ph = bits == 32 ? 32 : bits == 4 ? 128 : 64, row, p, yy;
+    if (!bw) bw = 1;
+    if (!w) w = 1;
+    if (!h) h = 1;
+    row = (bw * 64 + pw - 1) / pw;
+    for (yy = y / ph; yy <= (y + h - 1) / ph; yy++)
+        for (p = bp / 32 + yy * row + x / pw; p <= bp / 32 + yy * row + (x + w - 1) / pw && p < 512; p++) {
+            if (mode == 2) { if (r->cpu_pages[p >> 5] >> (p & 31) & 1) return 1; }
+            else if (mode) r->cpu_pages[p >> 5] |= 1u << (p & 31);
+            else r->cpu_pages[p >> 5] &= ~(1u << (p & 31));
+        }
+    return 0;
+}
+
 /* the same scene: the same colour target, and the same depth buffer or none on one side (a draw that neither
  * tests nor writes Z draws the same with the pass's depth buffer bound, so the scene goes on; batch.c's pass
  * count still splits there) */
@@ -71,6 +92,10 @@ static void new_pass(KH1CmdRec *r, const KH1BatchKey *k, const KH1RenderPass *rp
     if (t != ~0u) { /* the GS pages it spans: FBW by its rows (the pass's height unscaled) */
         u32 rows = (u32)(rp->scale > 0.0f ? rp->h / rp->scale + 0.5f : (f32)rp->h), n = (k->fbw ? k->fbw : 1) * ((rows + 31) / 32);
         if (n > r->tpages[t]) r->tpages[t] = n;
+        { /* session 137v: the GPU writes these pages from here on */
+            u32 q;
+            for (q = k->fbp; q < k->fbp + n && q < 512; q++) r->cpu_pages[q >> 5] &= ~(1u << (q & 31));
+        }
     }
     u = (f32 *)kh1_ring_alloc(&r->uring, KH1_RING_UNIFORM_SLOT, KH1_RING_UNIFORM_SLOT);
     if (u) {
@@ -120,9 +145,14 @@ static void new_cmd(KH1CmdRec *r, const KH1BatchKey *k, const KH1DrawState *d, c
     }
     if (d->pipe[0].shader.tex) {
         u32 tbp = d->tex0_lo & 0x3FFF, tbw = d->tex0_lo >> 14 & 63, psm = d->tex0_lo >> 20 & 63, t;
+        /* session 137v: not when an upload wrote its pages since the target's last draw (cpu_pages) */
         if (!(tbp & 31)) {
             t = tgt_find(r, tgt_key(kh1_target_id(tbp / 32, tbw, psm), tbp / 32, tbw), 0);
-            if (t != ~0u) c->samples = (u8)(t + 1);
+            if (t != ~0u) { /* the texture's rows inside the target (a 512-row binding of a 384-row target) */
+                u32 th = 1u << ((d->tex0_lo >> 30 | d->tex0_hi << 2) & 15), rows = r->tpages[t] / (tbw ? tbw : 1) * 32;
+                if (!cpu_pages(r, tbp, tbw, psm, 0, 0, 1u << (d->tex0_lo >> 26 & 15), th < rows || !rows ? th : rows, 2))
+                    c->samples = (u8)(t + 1);
+            }
         }
     }
 }
@@ -343,6 +373,7 @@ void kh1_cmd_upload(KH1CmdRec *r, u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32
     c->x.dst = tgt_at(r, bb_hi & 0x3FFF, bb_hi >> 16 & 63, c->x.dx, c->x.dy, c->x.w, c->x.h);
     if (dir == 2) c->x.src = tgt_at(r, bb_lo & 0x3FFF, bb_lo >> 16 & 63, c->x.sx, c->x.sy, c->x.w, c->x.h);
     if (c->x.src || c->x.dst) r->split = 1;
+    if (dir == 0 || dir == 2) cpu_pages(r, bb_hi & 0x3FFF, bb_hi >> 16 & 63, bb_hi >> 24 & 63, c->x.dx, c->x.dy, c->x.w, c->x.h, !c->x.src);
 }
 
 static void clut_cmd(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill, int load) {
@@ -358,6 +389,7 @@ static void clut_cmd(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill,
     c->x.fill = fill != 0;
     /* the entries' rectangle at CBP: 16 x 16 for an 8-bit PSM, 8 x 2 for a 4-bit one (CSM 1) */
     if (!load) return;
+    if (cpu_pages(r, tex0_hi >> 5 & 0x3FFF, 1, 0, 0, 0, bits8 ? 16 : 8, bits8 ? 16 : 2, 2)) return; /* session 137v: GS memory's */
     c->x.src = tgt_at(r, tex0_hi >> 5 & 0x3FFF, 1, 0, 0, bits8 ? 16 : 8, bits8 ? 16 : 2);
     if (c->x.src) r->split = 1;
 }

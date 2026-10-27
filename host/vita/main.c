@@ -17,6 +17,8 @@
  *       gpu=N                 session 136: 1 (the default) draws with the GPU (host/vita/gxm.c) when its
  *                             shaders can be had (ur0:data/libshacccg.suprx, or the cache in
  *                             ux0:data/kh1/shaders/); 0 keeps the GS model's software picture
+ *       vu1=N                 1 (the default) runs VIF1 and the VU1 microprograms (host/port/vu1.c), so the 3D
+ *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -222,6 +224,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "trace") == 0) kh1_host_trace = atoi(v);
         else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
+        else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
         else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
     }
     fclose(f);
@@ -272,6 +275,7 @@ int main(int argc, char **argv) {
         sceKernelExitProcess(1);
     }
     snprintf(iso, sizeof iso, "%s/kh1.iso", kh1_vita_dir);
+    kh1_dma_vu1 = 1; /* the 3D (config.txt's vu1=) */
     config(iso, sizeof iso);
     if (!kh1_cd_image_open(iso)) {
         snprintf(iso, sizeof iso, "%s/kh1.bin", kh1_vita_dir);

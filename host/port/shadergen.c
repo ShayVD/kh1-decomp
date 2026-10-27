@@ -121,6 +121,8 @@ static void key_str(Gen *g, const KH1ShaderKey *k) {
         put(g, k->fst ? " uv" : " stq");
         if (k->su == KH1_SHADER_CLAMP) put(g, " clamp-u");
         if (k->sv == KH1_SHADER_CLAMP) put(g, " clamp-v");
+        if (k->su == KH1_SHADER_TAPS) put(g, " region-u");
+        if (k->sv == KH1_SHADER_TAPS) put(g, " region-v");
     } else {
         put(g, "flat");
     }
@@ -224,7 +226,6 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
         if (k->fbm[3] && k->fbm[3] != 0xFF) return 0;
     }
     if (k->fetch == 1) pa = 0, pd = 1;                                /* the shader blends itself */
-    if (k->tex && (k->su == KH1_SHADER_TAPS || k->sv == KH1_SHADER_TAPS)) return 0; /* the shader's own taps */
     if (pa && k->csel == 1) return 0;                                 /* Cs x Ad: blend.h makes that a FETCH */
     put(&g, "// kh1-decomp fragment shader: ");
     key_str(&g, k);
@@ -268,6 +269,20 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
         else st(&g, "r1.xy", F_DIV, "tc.xy", "tc.zz", 0);
         if (k->su == KH1_SHADER_CLAMP) st(&g, "r1.x", F_CLAMP, "r1.x", "u_r.x", "u_r.y");
         if (k->sv == KH1_SHADER_CLAMP) st(&g, "r1.y", F_CLAMP, "r1.y", "u_r.z", "u_r.w");
+        /* session 137v: REGION_REPEAT, (c & MASK) | FIX, with MASK's low run of ones as a period P and FIX's bits
+         * above it added: the coordinate wrapped into [0, P / n) then moved by FIX / n (kh1_shader_uniforms).  One
+         * tap: exact for point sampling (the textured points' sampler); bilinear blends across the region's
+         * seam where the GS would wrap each tap */
+        if (k->su == KH1_SHADER_TAPS) {
+            st(&g, "r5.x", F_FLOORMUL, "r1.x", "u_r.x", 0);
+            st(&g, "r1.x", F_MAD, "r5.x", "u_r.y", "r1.x");
+            st(&g, "r1.x", F_ADD, "r1.x", "u_c.z", 0);
+        }
+        if (k->sv == KH1_SHADER_TAPS) {
+            st(&g, "r5.y", F_FLOORMUL, "r1.y", "u_r.z", 0);
+            st(&g, "r1.y", F_MAD, "r5.y", "u_r.w", "r1.y");
+            st(&g, "r1.y", F_ADD, "r1.y", "u_c.w", 0);
+        }
         st(&g, "r2", F_TEX, "r1.xy", 0, 0);
         if (k->tex == KH1_TEXFMT_A1B5G5R5) { /* the GS's 5 bits shifted up 3; the STP bit */
             st(&g, "r2.xyz", F_ROUND, "r2.xyz", "31.0", "0.5");
@@ -400,6 +415,17 @@ u32 kh1_shader_vert_cg(u32 index, char *buf, u32 cap) {
     return g.over ? 0 : g.n;
 }
 
+/* session 137v: a REGION_REPEAT axis's (n / P, -P / n) and FIX / n: P is 2 to the run of ones at MASK's bottom (the
+ * period), FIX's bits under P are dropped (the rare mask with a hole in it reads as its low run) */
+static void taps(const KH1SamplerAxis *a, f32 *pq, f32 *fix) {
+    u32 p = 1;
+    if (a->shader != KH1_SHADER_TAPS || !a->n) return;
+    while (p < a->n && a->lo & p) p <<= 1;
+    pq[0] = (f32)a->n / (f32)p;
+    pq[1] = -(f32)p / (f32)a->n;
+    *fix = (f32)(a->hi & (a->n - 1) & ~(p - 1)) / (f32)a->n;
+}
+
 void kh1_shader_uniforms(const KH1DrawState *d, f32 o[16]) {
     const KH1SamplerAxis *u = &d->sampler.u, *v = &d->sampler.v;
     memset(o, 0, 16 * sizeof *o);
@@ -417,6 +443,8 @@ void kh1_shader_uniforms(const KH1DrawState *d, f32 o[16]) {
     o[11] = v->shader == KH1_SHADER_CLAMP && v->n ? (v->hi + 0.5f) / v->n : 1.0f;
     o[12] = (f32)d->u.abcd;
     o[13] = (f32)d->u.psm;
+    taps(u, &o[8], &o[14]);
+    taps(v, &o[10], &o[15]);
 }
 
 /* ---- the interpreter ---- */

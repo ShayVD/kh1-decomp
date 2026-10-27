@@ -256,6 +256,7 @@ static struct {
     u32 *col, cstride, cw, ch; /* the scene's colour surface */
     SceGxmDepthStencilSurface *ds;
     u32 *z, zstride;          /* depth (24 bits) | stencil << 24, linear */
+    u32 *zsave;               /* a scene's depth memory when it is not stored */
     MockVP *vp;
     MockFP *fp;
     SceGxmTexture tex[4];
@@ -269,6 +270,7 @@ static struct {
     u32 smask, swmask, sref;
     f32 vub[64], fub[64];
     u32 draws, tris, pixels, lost;
+    u32 n_in, n_disc, n_zfail; /* KH1_HOST_GXM_CALLS: a draw's covered, discarded and depth-failed pixels */
 } g;
 
 SceGxmContext *vita2d_get_context(void) { static int c; return (SceGxmContext *)&c; }
@@ -286,6 +288,10 @@ int sceGxmBeginScene(SceGxmContext *c, unsigned int flags, const SceGxmRenderTar
     g.ds = (SceGxmDepthStencilSurface *)ds;
     g.z = (u32 *)ds->depthData;
     g.zstride = ds->backgroundControl;
+    if (!(ds->zlsControl & 4)) { /* not to be stored: the memory as it is, put back at the end */
+        g.zsave = realloc(g.zsave, (size_t)g.ch * g.zstride * 4);
+        memcpy(g.zsave, g.z, (size_t)g.ch * g.zstride * 4);
+    }
     if (!(ds->zlsControl & 2)) { /* not loaded: the background depth 1.0, stencil 0 */
         u32 y, x;
         for (y = 0; y < g.ch; y++)
@@ -296,11 +302,10 @@ int sceGxmBeginScene(SceGxmContext *c, unsigned int flags, const SceGxmRenderTar
 }
 int sceGxmEndScene(SceGxmContext *c, const SceGxmNotification *vn, const SceGxmNotification *fn) {
     (void)c; (void)vn; (void)fn;
-    if (g.ds && !(g.ds->zlsControl & 4)) { /* not stored: what is left is garbage */
-        u32 y, x;
-        for (y = 0; y < g.ch; y++)
-            for (x = 0; x < g.cw; x++) g.z[y * g.zstride + x] = 0x5A000000u ^ (x * 2654435761u ^ y * 40503u);
-    }
+    /* not stored: the scene's depth stays on chip and the surface's memory keeps what an earlier scene stored
+     * (session 137v: the mock used to scribble it, which a later scene's load of that earlier store, past a scene
+     * that only tests depth, does not see on the GPU) */
+    if (g.ds && !(g.ds->zlsControl & 4)) memcpy(g.z, g.zsave, (size_t)g.ch * g.zstride * 4);
     g.col = 0;
     return 0;
 }
@@ -487,7 +492,8 @@ static void pixel(s32 x, s32 y, const Vary *v) {
     r.ctx = sp ? &g.tex[sp->index] : 0;
     kh1_shader_run(fp->text, &r);
     if (r.bad) g.lost++;
-    if (r.discarded) return;
+    g.n_in++;
+    if (r.discarded) { g.n_disc++; return; }
     if (!stest(g.sfunc, g.sref & g.smask, st & g.smask)) {
         *z = (*z & 0xFFFFFF) | (((st & ~g.swmask) | (sop(g.sfail, st) & g.swmask)) & 0xFF) << 24;
         return;
@@ -497,6 +503,7 @@ static void pixel(s32 x, s32 y, const Vary *v) {
         zv = (u32)(zf * 16777215.0f + 0.5f);
     }
     if (!ztest(g.zfunc, zv, *z & 0xFFFFFF)) {
+        g.n_zfail++;
         *z = (*z & 0xFFFFFF) | (((st & ~g.swmask) | (sop(g.zfail, st) & g.swmask)) & 0xFF) << 24;
         return;
     }
@@ -597,6 +604,10 @@ int sceGxmDraw(SceGxmContext *c, SceGxmPrimitiveType t, SceGxmIndexFormat f, con
                    v[0].z, v[1].x, v[1].y, v[2].x, v[2].y, v[0].col[0], v[0].col[1], v[0].col[2], v[0].col[3], g.cx0, g.cy0, g.cx1, g.cy1);
         triangle(&v[0], &v[1], &v[2]);
     }
+    if (g.raster && getenv("KH1_HOST_GXM_CALLS")) {
+        printf("kh1-gxm-mock:     %u pixels covered, %u discarded, %u failed depth\n", g.n_in, g.n_disc, g.n_zfail);
+        g.n_in = g.n_disc = g.n_zfail = 0;
+    }
     return 0;
 }
 
@@ -675,6 +686,8 @@ static void hook(const KH1CmdRec *r) {
         kh1_gxm_frame(&gr, r);
         for (i = 0; i < gr.n; i++) printf("kh1-gxm-mock:   %s\n", kh1_gxm_call_str(&gr.call[i]));
         for (i = 0; i < gr.npipe; i++) printf("kh1-gxm-mock:   pipe %u: %s\n", i, kh1_pipekey_str(&gr.pipe[i]));
+        for (i = 0; i < r->ntgt; i++)
+            printf("kh1-gxm-mock:   target %u: rt %u bp %04x bw %u\n", i, r->tgt[i] & 0xFF, (r->tgt[i] >> 8 & 0xFFF) * 32, r->tgt[i] >> 20);
     }
     if (n == (u32)every - 1) {
         checks++;

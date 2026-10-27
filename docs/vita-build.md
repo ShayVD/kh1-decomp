@@ -47,7 +47,8 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    - `iso=ux0:...` another image path;
    - `title=N` the game state asked for at the title overlay's first call (default 2: a new game,
      Dive to the Heart; `-1` stays in the title state);
-   - `frames=N` exit after N frames (0, the default: never).
+   - `frames=N` exit after N frames (0, the default: never);
+   - `vu1=0` skips the VIF1 / VU1 path (session 137v, "The 3D path" below; 1, the default, runs it).
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
    written through sceIoWrite (a funopen FILE): newlib's own fopen'd / freopen'd log stayed empty in
@@ -88,7 +89,7 @@ What a run can show, at best:
   call asks for game state 2 (new game). So the boot loads its files and goes straight to Dive to the
   Heart's room loads, which the host has never run past on a real disc: expect it to stop there or
   soon after (the log's last lines say where).
-- **No 3D.** The VIF1 / VU1 path (renderer A / B, PATH1) is not replaced: chains are walked but
+- **3D since session 137v** ("The 3D path" below), slowly. Before it: **No 3D.** The VIF1 / VU1 path (renderer A / B, PATH1) is not replaced: chains are walked but
   their models are not drawn. The picture is the GS model's 2D: clears, fades, uploads, sprites,
   copies (whatever the boot draws on PATH3).
 - **Not the GXM renderer** (before session 136; now it is, "The GPU renderer" below). The picture was software (the model's display buffer; since session 135
@@ -288,6 +289,63 @@ frame-read shaders compile with the extensions; colour load behaviour between sc
 granularity, a CT32 target sampled as a texture (its alpha reads back doubled: the shader key has no
 "from a target" bit), points and lines. Vita3K logs one `sceGxmTextureSetMinFilter` UNSUPPORTED and an
 `EXC_BAD_ACCESS` a frame that it handles itself (its own memory tracking, the game runs on).
+
+## The 3D path (session 137v, 2026-10-27)
+
+The game's 3D (the rooms' meshes, the characters, the lens grid) reaches the GS only through VU1: the
+channel 1 chains carry VIF codes that fill VU1's data memory and start its microprograms, which
+transform, light, cull and clip and XGKICK GIF packets (PATH1). host/port/vu1.c now runs that machine:
+
+- **VIF1** keeps its registers across sends (CYCLE, MODE, MASK, ROW, COL, BASE / OFST / TOPS / TOP /
+  ITOP / DBF) and runs UNPACK in every format (masks, offset and difference modes, skipping and filling
+  writes, FLG / USN; V2 sets z = x and w = y, V3's w is the next element), MPG, MSCAL / MSCALF / MSCNT
+  (TOP = TOPS, ITOP = ITOPS, DBF toggled, TOPS = BASE or BASE + OFST). The programs are the user's own
+  bytes (uploaded by the chains), never this repository's.
+- **VU1** is an interpreter with the timing the hand-scheduled programs rely on: a pair a cycle, a
+  stall when a VF field written less than 4 cycles before is read, MAC and clip flags seen 4 cycles
+  after issue (a FIFO), Q 7 cycles after DIV / SQRT (13 for RSQRT), P 18, a branch on a VI that an
+  integer instruction in the pair before it wrote sees the old value, the lower instruction reads the
+  registers before the upper one writes, VU floats (no inf / NaN / denormals). vf00 is (0, 0, 0, 1)
+  from the start (without it every Q was 0 and every vertex landed at 0, 0).
+- **XGKICK** copies the whole packets (to EOP) out of data memory; host/null/dmawalk.c hands them to
+  the same GIF reader PATH2 / PATH3 use, so the register file, the GS model and the GPU recorder see the
+  meshes as any other draw. `KH1_HOST_VU1=1` turns it on in the host runner (N > 1: verbose levels,
+  `KH1_HOST_VU1_FRAME=F` dumps frame F's kicks, `KH1_HOST_VU1_SNAP=R` writes run R's start state to
+  vu1_snap.bin), the Vita's `vu1=` (default 1).
+
+Findings, each found on the real disc in Dive to the Heart's first station (frame 6399 of
+tests/host/pads/dive.txt; the game draws on odd frames only, 30 fps):
+
+- **The walk padded DIRECT and MPG data to a qword.** Room meshes put DIRECT anywhere (e.g. the code at
+  0x95e9808, its data at 0x95e980c): padding desynced the stream ("not a VIF code", runaway programs).
+  VIF data follows its code with no padding; the walk no longer pads.
+- **The VI backup is for integer instructions only.** PCSX2's rule (a branch reads a VI as it was
+  before the pair just before it) applied to FCAND / FCOR / FMAND as well culled nearly every
+  triangle: P0 (the stations' floors) tests backfaces with `fmand vi13, vi13` then `ibne vi13` in the
+  next pair, and clips with chains of `fcor vi01` / `ibne vi01`; every Dive program has the pattern
+  (P0, P1, P2, P3, P4, P6, P7, P11 ... P20). With the flag instructions' VI seen at once the floor,
+  Sora, the sword and the effects come out where the GS shows them.
+- **Visible vertices have w > 0**: P0's CLIP is against |w|, and a vertex with w < 0 sets -z, so a
+  floor strip behind the camera is (correctly) all ADC.
+- **Sora's textures stream into the slot capture's pages** (TBP 0x3600, CLUT 0x3700, PSMT8 128 x 128,
+  uploaded before each part), the GS memory the shadow's capture pass renders to. The recorder sampled
+  the target's pixels (a garbled rainbow) and read the palette back from it; host/port/cmdbuf.c now
+  marks GS pages an upload writes after the target's last draw and takes those textures and CLUTs from
+  GS memory (the caches).
+- **The GPU mock scribbled an unstored depth buffer.** A scene that only tests depth (the walls, ZTST
+  ALWAYS) neither loads nor stores it; on the GPU the memory keeps the earlier store, which the next
+  scene loads. tests/host/gxm_mock.c now leaves it (it made the platform fail its depth test).
+- Program use per drawn frame (frame 6399): 730K instruction pairs (794K VU cycles, 2.6 ms of the PS2's
+  VU1): P0 268K (the floor), P18 222K (Sora), P4 86K (the walls, clipped into fans), P11 84K, P10 42K,
+  P1 21K, P2 8K. No skinning programs (P13 / P14 / P17) run in Dive.
+
+**Speed: too slow for the Vita as it is.** The interpreter costs ~435 host instructions a pair (callgrind
+over P0 / P4 / P18 snapshots; 30 ns a pair on the x86 host), ~0.3 s of CPU a drawn frame on the
+Vita's A9 by that count. The plan: (1) VIF1 / VU1 and the GS feed on a second core (the game thread then
+only queues the chains), (2) the programs translated to C at build time from the user's own ELF (keyed
+by a hash of micro memory at MSCAL, the interpreter as the fallback and the reference that the
+translation is checked against, bit for bit, on snapshots). Until then the Vita build shows the 3D at a
+few frames a second.
 
 ## What next, in order
 
