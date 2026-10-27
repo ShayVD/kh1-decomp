@@ -55,6 +55,11 @@ CFLAGS = [
 # --asan (session 137): AddressSanitizer on the stack and heap only, for portability.md rule 15 (a
 # callee that reads past the local it was given). Globals stay uninstrumented: their redzones would
 # move the D_ variables apart that the game reads as one block.
+# Session 139 (the user's choice): single-precision float maths by default, as on the EE and the Vita's
+# VFP; x87 keeps excess precision, and its positions drifted 0.01 apart between the plain and ASan builds
+# (session 138). `--x87` builds the old way.
+FLOAT_CFLAGS = ["-msse2", "-mfpmath=sse"]
+
 ASAN_CFLAGS = ["-fsanitize=address", "-fsanitize-recover=address", "--param", "asan-globals=0", "-fno-omit-frame-pointer"]
 
 # --init zero|pattern (session 138): every local starts as zeros or as gcc's 0xFE pattern, into
@@ -426,8 +431,9 @@ def main():
     ap.add_argument("--init", choices=["zero", "pattern"],
                     help="-ftrivial-auto-var-init=KIND on the game files, into out/host-init-KIND/ (see above)")
     ap.add_argument("--init-files", metavar="FILE", help="with --init: only the game paths listed in FILE")
-    ap.add_argument("--cflags", default="", help="extra host compiler flags (e.g. \"-msse2 -mfpmath=sse\": "
-                    "single-precision float math, as on the Vita, instead of x87's)")
+    ap.add_argument("--cflags", default="", help="extra host compiler flags")
+    ap.add_argument("--x87", action="store_true", help="x87 float maths (the default before session 139) instead "
+                    "of SSE's single precision (FLOAT_CFLAGS)")
     ap.add_argument("--out", help="output directory (default out/host, out/host-asan or out/host-init-KIND)")
     ap.add_argument("-j", type=int, default=os.cpu_count() or 4)
     a = ap.parse_args()
@@ -442,6 +448,8 @@ def main():
             INIT_ONLY = set(l.strip() for l in open(a.init_files) if l.strip())
     if a.out:
         OUT = os.path.abspath(a.out)
+    if not a.x87:
+        CFLAGS.extend(FLOAT_CFLAGS)
     CFLAGS.extend(a.cflags.split())
 
     files = [a.show] if a.show else game_files() + draft_files()
