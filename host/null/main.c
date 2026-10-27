@@ -145,6 +145,7 @@ static void vu1_line(void) {
     printf("kh1-host: vu1 frame %lu: %u runs, %u pairs (%u cycles), %u kicks (%u qwords), %u unpacks (%u filled), "
            "%u programs loaded, %u runaway, %u unknown", frames, v.runs, v.insns, v.cycles, v.kicks, v.kick_qw,
            v.unpacks, v.fill, v.mpg, v.runaway, v.unknown);
+    if (v.tr_runs || v.tr_checked) printf(", %u translated, %u checked (%u differ)", v.tr_runs, v.tr_checked, v.tr_differ);
     if (hi || lo) printf(" (first %08x %08x at %03x)", hi, lo, pc);
     printf("\n");
 }
@@ -277,6 +278,7 @@ int main(int argc, char **argv) {
         kh1_dma_quiet = getenv("KH1_HOST_QUIET") != 0; /* session 135: no send lines, as on the Vita */
         kh1_dma_vu1 = getenv("KH1_HOST_VU1") && atoi(getenv("KH1_HOST_VU1")); /* session 137v: the 3D */
         kh1_vu1_verbose = kh1_dma_vu1 ? atoi(getenv("KH1_HOST_VU1")) - 1 : 0;
+        if (getenv("KH1_HOST_VU1TR")) kh1_vu1_tr = atoi(getenv("KH1_HOST_VU1TR")); /* 0 / 1 / 2: checked */
         if (getenv("KH1_HOST_VU1_SNAP")) kh1_vu1_snap_run = strtoul(getenv("KH1_HOST_VU1_SNAP"), 0, 0);
         if (getenv("KH1_HOST_VU1_FRAME")) kh1_vu1_dump_frame = strtoul(getenv("KH1_HOST_VU1_FRAME"), 0, 0);
         if (getenv("KH1_HOST_VU1_SNAPK")) kh1_vu1_snap_kicks = strtoul(getenv("KH1_HOST_VU1_SNAPK"), 0, 0);

@@ -21,6 +21,8 @@
  *                             the Vita's controls, e.g. ux0:data/kh1/dive.txt
  *       vu1=N                 1 (the default) runs VIF1 and the VU1 microprograms (host/port/vu1.c), so the 3D
  *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
+ *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
+ *                             interpreter only; 2 both, compared (slow; differences go to the log)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -42,6 +44,7 @@
 #include "vita.h"
 #include "dmawalk.h"
 #include "platform/cmdbuf.h"
+#include "platform/vu1.h"
 
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
@@ -228,6 +231,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
         else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
+        else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -290,7 +294,7 @@ int main(int argc, char **argv) {
         if (!kh1_cd_image_open(iso)) no_disc(iso);
     }
     vlog("kh1-vita: disc image %s\n", iso);
-    vlog("kh1-vita: vu1=%d (the 3D), pad %s\n", kh1_dma_vu1, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
+    vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
      * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */
     if (kh1_host_trace < 2) {

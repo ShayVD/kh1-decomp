@@ -40,7 +40,13 @@ typedef struct {
     u32 runaway;     /* programs stopped by the instruction limit (no [E] reached) */
     u32 unknown;     /* instructions the interpreter does not know (run as nops) */
     u32 fill;        /* UNPACK vectors written by a filling write (WL > CL) */
+    u32 tr_runs;     /* runs of a translated program (out/gen/vu1_tr.c) */
+    u32 tr_checked;  /* with kh1_vu1_tr 2: runs both ways */
+    u32 tr_differ;   /* and of those, the ones whose results differ */
 } KH1Vu1Stats;
+
+/* 1 (the default): a program out/gen/vu1_tr.c has runs as its C; 0: the interpreter only; 2: both, compared */
+extern int kh1_vu1_tr;
 
 /* the counts since the last call (zeroed by it) */
 void kh1_vu1_stats(KH1Vu1Stats *out);

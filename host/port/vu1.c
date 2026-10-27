@@ -19,6 +19,11 @@
  * upper one writes.  Floats are the VU's: no infinities, NaNs or denormals (a denormal reads and
  * writes as 0, an overflow writes +-max).  XGKICK copies the GIF packets out at once (the GS reading
  * them later is not modelled; the programs double-buffer their output).  Not part of the PS2 build. */
+#if defined(__i386__) && defined(__GNUC__)
+/* IEEE single steps as on the Vita, not x87's wider registers (the host's -m32): the interpreter and the
+ * translated programs (vu1_tr.c) then give the same bits however each is compiled */
+#pragma GCC target("sse2", "fpmath=sse")
+#endif
 #include "common.h"
 #include "platform/vu1.h"
 
@@ -71,7 +76,7 @@ static u32 unk_hi, unk_lo, unk_pc;
 static u32 row[4], col[4], mask, mode, cl = 1, wl = 1;
 static u32 base, ofst, tops, top, itops, itop, dbf, tpc;
 /* the code whose data is coming */
-static u32 cur, cur_imm, cur_num, need, got, mpg_changed;
+static u32 cur, cur_imm, cur_num, need, got, mpg_changed, micro_gen;
 static u32 dbuf[256 * 4 + 4]; /* an UNPACK's data words (at most 256 vectors of 4 words) */
 
 void kh1_vu1_stats(KH1Vu1Stats *out) {
@@ -139,6 +144,17 @@ static u32 fout(f32 v, int f, u32 *macf) {
     return x.u;
 }
 
+/* a result's bits as the VU writes them, without the MAC flag */
+static u32 fo(f32 v) {
+    Fu x;
+    u32 e;
+    x.f = v;
+    e = x.u & 0x7F800000;
+    if (e == 0x7F800000) x.u = (x.u & 0x80000000) | 0x7F7FFFFF;
+    else if (!e) x.u &= 0x80000000;
+    return x.u;
+}
+
 static u32 ftoi(u32 u, f32 scale) {
     f32 v = fin(u) * scale;
     if (v >= 2147483647.0f) return 0x7FFFFFFF;
@@ -150,6 +166,28 @@ static u32 itof(u32 u, f32 scale) {
     Fu x;
     x.f = (f32)(s32)u / scale;
     return x.u;
+}
+
+static u32 absf(u32 u) {
+    Fu y;
+    y.f = fin(u);
+    return y.u & 0x7FFFFFFF;
+}
+
+/* the clip flag after CLIPw.xyz of fs against |w| */
+static u32 clipw(const u32 *s, u32 wb) {
+    f32 w = fin(wb), v;
+    u32 b = 0;
+    if (w < 0) w = -w;
+    v = fin(s[0]); if (v > w) b |= 1; if (v < -w) b |= 2;
+    v = fin(s[1]); if (v > w) b |= 4; if (v < -w) b |= 8;
+    v = fin(s[2]); if (v > w) b |= 16; if (v < -w) b |= 32;
+    return ((clip_last << 6) | b) & 0xFFFFFF;
+}
+
+static u32 rnext(u32 r) {
+    u32 b = (r >> 4 & 1) ^ (r >> 22 & 1);
+    return (((r << 1) ^ b) & 0x7FFFFF) | 0x3F800000;
 }
 
 /* ------------------------------------------------------------------ timing */
@@ -329,25 +367,14 @@ static u32 upper(u32 hi, u32 lo, u32 pc, u32 *clip) {
         }
         case 0x1D: /* abs */
             for (f = 0; f < 4; f++)
-                if (dest >> (3 - f) & 1) {
-                    Fu y;
-                    y.f = fin(vf[fs][f]);
-                    up_res[f] = y.u & 0x7FFFFFFF;
-                }
+                if (dest >> (3 - f) & 1) up_res[f] = absf(vf[fs][f]);
             up_to = ft;
             up_dest = dest;
             return 0;
-        case 0x1F: { /* clipw.xyz fs, ft.w */
-            f32 w = fin(vf[ft][3]), v;
-            u32 b = 0;
-            if (w < 0) w = -w;
-            v = fin(vf[fs][0]); if (v > w) b |= 1; if (v < -w) b |= 2;
-            v = fin(vf[fs][1]); if (v > w) b |= 4; if (v < -w) b |= 8;
-            v = fin(vf[fs][2]); if (v > w) b |= 16; if (v < -w) b |= 32;
-            clip_last = ((clip_last << 6) | b) & 0xFFFFFF;
+        case 0x1F: /* clipw.xyz fs, ft.w */
+            clip_last = clipw(vf[fs], vf[ft][3]);
             *clip = clip_last | 0x80000000;
             return 0;
-        }
         case 0x1C: case 0x1E: case 0x20: case 0x21: case 0x22: case 0x23:
         case 0x24: case 0x25: case 0x26: case 0x27: { /* mulaq / mulai / addaq / maddaq / addai / maddai / subaq ... */
             static const signed char kk[12] = { K_MUL, -1, K_MUL, -1, K_ADD, K_MADD, K_ADD, K_MADD, K_SUB, K_MSUB, K_SUB, K_MSUB };
@@ -426,6 +453,46 @@ static u32 lower_stall(u32 lo, u32 t) {
 
 static void kick(u32 a);
 
+/* DIV / SQRT / RSQRT's Q from fs's and ft's chosen fields */
+static u32 qop(u32 x, u32 s, u32 t) {
+    f32 a = fin(s), b = fin(t), r;
+    Fu y;
+    if (x == 0x38 && b == 0) { /* x / 0: +-max, the sign of the quotient */
+        y.u = 0x7F7FFFFF | ((s ^ t) & 0x80000000);
+        r = y.f;
+    } else if (x == 0x38) r = a / b;
+    else {
+        b = sqrtf(b < 0 ? -b : b);
+        if (x == 0x39) r = b;
+        else if (b == 0) { y.u = 0x7F7FFFFF | (a < 0 ? 0x80000000 : 0); r = y.f; }
+        else r = a / b;
+    }
+    return fo(r);
+}
+
+static int efu_known(u32 x) {
+    return (x >= 0x70 && x <= 0x73) || x == 0x76 || (x >= 0x78 && x <= 0x7A) || (x >= 0x7C && x <= 0x7E);
+}
+
+/* the EFU's P from vf fs (field fsf for the one-operand forms) */
+static u32 pop(u32 x, const u32 *v, u32 fsf) {
+    f32 a = fin(v[0]), b = fin(v[1]), c = fin(v[2]), d = fin(v[3]), e = fin(v[fsf]), r;
+    switch (x) {
+    case 0x70: r = a * a + b * b + c * c; break;                 /* esadd */
+    case 0x71: r = 1.0f / (a * a + b * b + c * c); break;        /* ersadd */
+    case 0x72: r = sqrtf(a * a + b * b + c * c); break;          /* eleng */
+    case 0x73: r = 1.0f / sqrtf(a * a + b * b + c * c); break;   /* erleng */
+    case 0x76: r = a + b + c + d; break;                         /* esum */
+    case 0x78: r = sqrtf(e < 0 ? -e : e); break;                 /* esqrt */
+    case 0x79: r = 1.0f / sqrtf(e < 0 ? -e : e); break;          /* ersqrt */
+    case 0x7A: r = 1.0f / e; break;                              /* ercpr */
+    case 0x7C: r = sinf(e); break;                               /* esin */
+    case 0x7D: r = atanf(e); break;                              /* eatan */
+    default: r = expf(-e); break;                                /* eexp */
+    }
+    return fo(r);
+}
+
 /* runs the lower instruction; returns 1 and the target when it branches, 2 at an [E]-less stop */
 static int lower(u32 lo, u32 hi, u32 pc, u32 *target) {
     u32 o = lo >> 25, dest = lo >> 21 & 15;
@@ -477,26 +544,12 @@ static int lower(u32 lo, u32 hi, u32 pc, u32 *target) {
                 if (x == 0x35) set_vi(it & 15, vi[it & 15] + 1);
                 return 0;
             }
-            case 0x38: case 0x39: case 0x3A: { /* div / sqrt / rsqrt */
-                f32 a = fin(vf[is][fsf]), b = fin(vf[it][ftf]), r;
-                u32 junk = 0;
-                Fu y;
+            case 0x38: case 0x39: case 0x3A: /* div / sqrt / rsqrt */
                 if (q_busy) { if (cyc < q_ready) cyc = q_ready; q_at(cyc); }
-                if (x == 0x38 && b == 0) { /* x / 0: +-max, the sign of the quotient */
-                    y.u = 0x7F7FFFFF | ((vf[is][fsf] ^ vf[it][ftf]) & 0x80000000);
-                    r = y.f;
-                } else if (x == 0x38) r = a / b;
-                else {
-                    b = sqrtf(b < 0 ? -b : b);
-                    if (x == 0x39) r = b;
-                    else if (b == 0) { y.u = 0x7F7FFFFF | (a < 0 ? 0x80000000 : 0); r = y.f; }
-                    else r = a / b;
-                }
-                q_next = fout(r, 0, &junk);
+                q_next = qop(x, vf[is][fsf], vf[it][ftf]);
                 q_ready = cyc + (x == 0x3A ? 13 : 7);
                 q_busy = 1;
                 return 0;
-            }
             case 0x3B: /* waitq */
                 if (q_busy && cyc < q_ready) cyc = q_ready;
                 q_at(cyc);
@@ -512,10 +565,7 @@ static int lower(u32 lo, u32 hi, u32 pc, u32 *target) {
                 for (f = 0; f < 4; f++) if (dest >> (3 - f) & 1) mem[vi[is & 15] & (DATA_QW - 1)][f] = vi[it & 15];
                 return 0;
             case 0x40: case 0x41: /* rnext / rget */
-                if (x == 0x40) {
-                    u32 b = (r_reg >> 4 & 1) ^ (r_reg >> 22 & 1);
-                    r_reg = (((r_reg << 1) ^ b) & 0x7FFFFF) | 0x3F800000;
-                }
+                if (x == 0x40) r_reg = rnext(r_reg);
                 if (it) { for (f = 0; f < 4; f++) if (dest >> (3 - f) & 1) vf[it][f] = r_reg; wrote_vf(it, dest, 4); }
                 return 0;
             case 0x42: r_reg = 0x3F800000 | (vf[is][fsf] & 0x7FFFFF); return 0;        /* rinit */
@@ -533,25 +583,9 @@ static int lower(u32 lo, u32 hi, u32 pc, u32 *target) {
                 return 0;
             }
             if (x >= 0x70) { /* the EFU: P */
-                f32 a = fin(vf[is][0]), b = fin(vf[is][1]), c = fin(vf[is][2]), d = fin(vf[is][3]);
-                f32 e = fin(vf[is][fsf]), r;
-                u32 junk = 0;
-                switch (x) {
-                case 0x70: r = a * a + b * b + c * c; break;                 /* esadd */
-                case 0x71: r = 1.0f / (a * a + b * b + c * c); break;        /* ersadd */
-                case 0x72: r = sqrtf(a * a + b * b + c * c); break;          /* eleng */
-                case 0x73: r = 1.0f / sqrtf(a * a + b * b + c * c); break;   /* erleng */
-                case 0x76: r = a + b + c + d; break;                         /* esum */
-                case 0x78: r = sqrtf(e < 0 ? -e : e); break;                 /* esqrt */
-                case 0x79: r = 1.0f / sqrtf(e < 0 ? -e : e); break;          /* ersqrt */
-                case 0x7A: r = 1.0f / e; break;                              /* ercpr */
-                case 0x7C: r = sinf(e); break;                               /* esin */
-                case 0x7D: r = atanf(e); break;                              /* eatan */
-                case 0x7E: r = expf(-e); break;                              /* eexp */
-                default: unknown(hi, lo, pc); return 0;
-                }
+                if (!efu_known(x)) { unknown(hi, lo, pc); return 0; }
                 if (p_busy) { if (cyc < p_ready) cyc = p_ready; q_at(cyc); }
-                p_next = fout(r, 0, &junk);
+                p_next = pop(x, vf[is], fsf);
                 p_ready = cyc + 18;
                 p_busy = 1;
                 return 0;
@@ -695,6 +729,17 @@ static u32 code_id(void) {
     return h;
 }
 
+/* a run starts with the pipeline drained (the MSCAL / MSCNT comes long after the last run's results land):
+ * pending flags, Q and P in place, no VF still on its way, no VI backup.  The translated programs
+ * (vu1_tr.c) start from the same */
+static void settle(void) {
+    flags_at(~0u);
+    q_at(~0u);
+    memset(vf_ready, 0, sizeof vf_ready);
+    vib_left = 0;
+    vib_reg = -1;
+}
+
 #ifndef VU1_TRACE
 #define VU1_TRACE(pc)
 #endif
@@ -704,6 +749,7 @@ static void run(u32 pc) {
     st.runs++;
     st_runs_all++;
     if (kh1_vu1_verbose) snap_take();
+    settle();
     pc &= MICRO_N - 1;
     for (;;) {
         u32 lo = micro[pc][0], hi = micro[pc][1], t, mac, clip, br;
@@ -768,11 +814,129 @@ static void run(u32 pc) {
                pairs, cyc - c0, top, itop, code_id(), st.kicks - k0, pairs > MAX_PAIRS ? " RUNAWAY" : "");
 }
 
+/* ------------------------------------------------------------------ the translated programs */
+
+/* KH1_VU1_TR: out/gen/vu1_tr.c, tools/vu/vu1_translate.py's C of the user's own programs (never
+ * committed).  A run whose micro memory holds one of them, from one of its entries, runs that C:
+ * the same state and helpers as the interpreter, its timing worked out at build time */
+int kh1_vu1_tr = 1;   /* 0: always the interpreter; 2: both, every run, compared (kh1_vu1_tr_check) */
+static int tr_lost;   /* a JR went somewhere the translation did not expect */
+typedef struct {
+    const u32 *w;
+    u32 n;
+    int (*run)(u32 pc);
+    int num; /* the program's number (tools/vu/find_vu1.py's list) */
+} TrProg;
+#ifdef KH1_VU1_TR
+#include "vu1_tr.c"
+#else
+static const TrProg tr_progs[1] = { { 0, 0, 0, 0 } };
+#define TR_PROGS 0
+#endif
+static int tr_cur = -1;
+static u32 tr_gen = ~0u;
+
+static int tr_find(void) {
+    int i, best = -1;
+    if (tr_gen == micro_gen) return tr_cur;
+    tr_gen = micro_gen;
+    for (i = 0; i < TR_PROGS; i++)
+        if ((best < 0 || tr_progs[i].n > tr_progs[best].n) && !memcmp(micro, tr_progs[i].w, tr_progs[i].n * 8)) best = i;
+    return tr_cur = best;
+}
+
+/* kh1_vu1_tr == 2: the translation and the interpreter from the same state, every result compared */
+typedef struct {
+    u32 mem[DATA_QW][4], vf[32][4], acc[4], r[11];
+    u16 vi[16];
+} TrSnap;
+static TrSnap tr_a, tr_b;
+static u32 tr_hash, tr_bad;
+static void (*tr_out)(const u32 *q, u32 nqw);
+int sprintf(char *, const char *, ...);
+static void tr_hash_kick(const u32 *q, u32 nqw) {
+    u32 i;
+    for (i = 0; i < nqw * 4; i++) tr_hash = (tr_hash ^ q[i]) * 16777619u;
+    if (tr_out) tr_out(q, nqw);
+}
+static void tr_save(TrSnap *t) {
+    memcpy(t->mem, mem, sizeof mem);
+    memcpy(t->vf, vf, sizeof vf);
+    memcpy(t->acc, acc, sizeof acc);
+    memcpy(t->vi, vi, sizeof vi);
+    t->r[0] = q_reg; t->r[1] = p_reg; t->r[2] = i_reg; t->r[3] = r_reg;
+    t->r[4] = mac_now; t->r[5] = clip_now; t->r[6] = clip_last; t->r[7] = tpc;
+    t->r[8] = top; t->r[9] = itop; t->r[10] = tr_hash;
+}
+static void tr_load(const TrSnap *t) {
+    memcpy(mem, t->mem, sizeof mem);
+    memcpy(vf, t->vf, sizeof vf);
+    memcpy(acc, t->acc, sizeof acc);
+    memcpy(vi, t->vi, sizeof vi);
+    q_reg = t->r[0]; p_reg = t->r[1]; i_reg = t->r[2]; r_reg = t->r[3];
+    mac_now = t->r[4]; clip_now = t->r[5]; clip_last = t->r[6]; tpc = t->r[7];
+}
+static void tr_check(int prog, u32 pc) {
+    static const char *names[11] = { "Q", "P", "I", "R", "MAC", "clip", "clip_last", "tpc", "top", "itop", "the kicks" };
+    static char buf[32];
+    void (*out)(const u32 *, u32) = kh1_vu1_kick;
+    KH1Vu1Stats keep = st;
+    const char *what = 0;
+    u32 i, f;
+    int ok;
+    tr_save(&tr_a);
+    kh1_vu1_kick = tr_hash_kick;
+    tr_out = 0;
+    tr_hash = 2166136261u;
+    tr_lost = 0;
+    ok = tr_progs[prog].run(pc);
+    tr_save(&tr_b);
+    st = keep;
+    tr_load(&tr_a);
+    tr_out = out;
+    tr_hash = 2166136261u;
+    run(pc);
+    settle();
+    kh1_vu1_kick = out;
+    if (!ok) return;
+    tr_save(&tr_a);
+    if (tr_lost) what = "lost (a JR)";
+    for (i = 0; !what && i < 11; i++) if (tr_a.r[i] != tr_b.r[i]) what = names[i];
+    for (i = 0; !what && i < 16; i++) if (tr_a.vi[i] != tr_b.vi[i]) { sprintf(buf, "vi%02u", i); what = buf; }
+    for (i = 0; !what && i < 32; i++)
+        for (f = 0; f < 4; f++) if (!what && tr_a.vf[i][f] != tr_b.vf[i][f]) { sprintf(buf, "vf%02u%c", i, "xyzw"[f]); what = buf; }
+    for (f = 0; !what && f < 4; f++) if (tr_a.acc[f] != tr_b.acc[f]) what = "ACC";
+    for (i = 0; !what && i < DATA_QW; i++)
+        for (f = 0; f < 4; f++) if (!what && tr_a.mem[i][f] != tr_b.mem[i][f]) { sprintf(buf, "mem %03x", i); what = buf; }
+    st.tr_checked++;
+    if (what) {
+        st.tr_differ++;
+        if (tr_bad++ < 20) printf("kh1-vu1: translated program P%d from %03x differs from the interpreter: %s\n", tr_progs[prog].num, pc, what);
+    }
+}
+
 static void start(u32 pc) {
+    int prog;
     top = tops;
     itop = itops;
     if (dbf) { dbf = 0; tops = base; }
     else { dbf = 1; tops = (base + ofst) & (DATA_QW - 1); }
+    settle();
+    prog = kh1_vu1_tr && !kh1_vu1_verbose ? tr_find() : -1;
+    if (prog >= 0 && kh1_vu1_tr == 2) {
+        tr_check(prog, pc);
+        return;
+    }
+    if (prog >= 0) {
+        tr_lost = 0;
+        if (tr_progs[prog].run(pc)) {
+            st.runs++;
+            st_runs_all++;
+            st.tr_runs++;
+            if (tr_lost && !tr_bad++) printf("kh1-vu1: translated program P%d lost its way (a JR)\n", tr_progs[prog].n);
+            return;
+        }
+    }
     run(pc);
 }
 
@@ -894,6 +1058,7 @@ void kh1_vif1_data(u32 w) {
         if (micro[a][k & 1] != w) {
             micro[a][k & 1] = w;
             mpg_changed = 1;
+            micro_gen++;
         }
         if (!need && mpg_changed) { st.mpg++; mpg_changed = 0; }
         return;
