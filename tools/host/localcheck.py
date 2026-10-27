@@ -222,7 +222,7 @@ def locals_of(body):
     """name -> (type name, dims list, pointer?) for the declarations in a function body."""
     out = {}
     for stmt in re.split(r"[;{}]", body):
-        stmt = stmt.strip() + ";"
+        stmt = re.sub(r"__attribute__\s*\(\((?:[^()]|\([^()]*\))*\)\)", "", stmt).strip() + ";"
         m = DECL.match(stmt)
         if not m or m.group(1) in KEYWORDS or m.group(1) == "return":
             continue
@@ -290,7 +290,7 @@ def main():
                     ireg += 1
                     e = arg.strip()
                     while True:  # strip casts and parentheses
-                        cm2 = re.match(r"^\(\s*[A-Za-z_][\w\s\*]*\)\s*(.*)$", e, re.S)
+                        cm2 = re.match(r"^\(\s*[A-Za-z_][\w\s\*]*(?:\(\s*\*\s*\)\s*(?:\[[^\]]*\]\s*)+)?\)\s*(.*)$", e, re.S)
                         if cm2 and not re.match(r"^\(\s*[A-Za-z_]\w*\s*\)$", e):
                             e = cm2.group(1).strip()
                             continue

@@ -55,7 +55,7 @@ CFLAGS = [
 # --asan (session 137): AddressSanitizer on the stack and heap only, for portability.md rule 15 (a
 # callee that reads past the local it was given). Globals stay uninstrumented: their redzones would
 # move the D_ variables apart that the game reads as one block.
-ASAN_CFLAGS = ["-fsanitize=address", "--param", "asan-globals=0", "-fno-omit-frame-pointer"]
+ASAN_CFLAGS = ["-fsanitize=address", "-fsanitize-recover=address", "--param", "asan-globals=0", "-fno-omit-frame-pointer"]
 
 # (cause, regex on the error text). First match wins.
 CAUSES = [

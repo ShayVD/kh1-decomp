@@ -63,6 +63,7 @@ typedef struct {
     f32 p1[4];
     f32 hit[4];
     s16 id;
+    u8 pad[14]; /* session 137: func_00118590 reads and writes up to 0x40 (rule 15) */
 } IkRay;
 
 extern IkMtx D_00351E10[];
