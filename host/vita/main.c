@@ -200,8 +200,12 @@ void kh1_host_vblank(void) {
 static unsigned long ovl_calls;
 int kh1_ovl_entry(int cmd, int arg) {
     int ret;
-    if (PlatOvlCall(cmd, arg, &ret)) /* session 132: a native overlay (dktitle.x, host/port/ovl.c) */
+    if (PlatOvlCall(cmd, arg, &ret)) { /* session 132: a native overlay (dktitle.x, host/port/ovl.c) */
+        static unsigned shown;
+        if (shown++ < 16) /* session 137v: whether the title's entry runs on the Vita */
+            vlog("kh1-vita: frame %lu: %s entry (%d, %d) returned %d\n", frames, PlatOvlCurrent(), cmd, arg, ret);
         return ret;
+    }
     ovl_calls++;
     vlog("kh1-vita: frame %lu: overlay entry D_00F20000(%d, %d) answered 0 (no overlay is decompiled)\n", frames,
            cmd, arg);
@@ -217,7 +221,7 @@ int kh1_ovl_entry(int cmd, int arg) {
  * means no vblank: this says whether DMA sends still move) */
 int kh1_null_threads_state(char *buf, int n);
 extern u8 D_004E4528[], D_002B75A0[];
-extern s32 D_00532B80, D_0063F540;
+extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 static int watchdog(SceSize args, void *argp) {
@@ -251,8 +255,8 @@ static int watchdog(SceSize args, void *argp) {
                 k += snprintf(lb + k, sizeof lb - k, " %.24s (wait %d, result %d)", (const char *)e + 16,
                               *(const s32 *)(e + 64), r ? *(const s32 *)(r + 48) : -2);
             }
-            vlog("kh1-vita: loads: object requests busy %d, sound transfers left %d, worker slots %s %s;%s\n",
-                 D_00532B80, D_0063F540, *(const u32 *)D_002B75A0 ? "used" : "free",
+            vlog("kh1-vita: loads: %d queued so far, object requests busy %d, sound transfers left %d, "
+                 "worker slots %s %s;%s\n", D_004E4520, D_00532B80, D_0063F540, *(const u32 *)D_002B75A0 ? "used" : "free",
                  *(const u32 *)(D_002B75A0 + 12) ? "used" : "free", k ? lb : " no load tasks");
         }
         if (gpu_on) { /* session 136: the GPU frame's CPU time (its waits for the GPU included), its counts */
