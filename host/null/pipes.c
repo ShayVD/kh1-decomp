@@ -63,6 +63,14 @@ static void on_clut(u32 lo, u32 hi) {
     tex_look = 1;
 }
 
+/* the CLUT buffer's entries a draw of TEX0 (lo, hi) reads: 0 for a texture that is not indexed */
+static u32 pal_draw[256], pal_n;
+static int pal_of(u32 lo, u32 hi) {
+    const KH1GsState *s = kh1_gs_state();
+    pal_n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_draw);
+    return pal_n != 0;
+}
+
 static void tex_read(u32 lo, u32 hi, u32 *out, void *ctx) {
     u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), x, y;
     (void)ctx;
@@ -82,6 +90,16 @@ static void tex_lookup(u32 lo, u32 hi) {
     for (i = 0; t && i < KH1_TEXCACHE_SLOTS; i++)
         if (tex->slot[i].tex == t) slot = i;
     kh1_cmd_texture(rec, lo, hi, slot, decoded, decoded && slot >= 0 ? tex->slot[slot].n : 0);
+    /* session 136: an indexed draw reads the CLUT buffer at its own CSA, loaded or not (the GS's rule, and
+     * present.c's pal_for): when its entries are not the bound slot's, bind theirs */
+    if (pal_of(lo, hi)) {
+        const KH1PalSlot *p = rec->pslot >= 0 ? &pal->slot[rec->pslot] : 0;
+        if (!p || p->n != pal_n || memcmp(p->col, pal_draw, pal_n * 4)) {
+            int fill = 0;
+            slot = kh1_palcache_get(pal, pal_draw, pal_n, &fill);
+            kh1_cmd_palette(rec, lo, hi, slot, fill);
+        }
+    }
 }
 
 /* session 126: the recorder and its two rings, made at the first use (only KH1_HOST_TRACE=5 runs use them);

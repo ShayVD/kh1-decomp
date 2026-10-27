@@ -188,6 +188,9 @@ void kh1_cmd_upload(KH1CmdRec *r, u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32
 /* a CLUT load by TEX0 (lo, hi) into the palette cache's slot (-1 uncached), filled now or not: a CLUT command
  * (and the break); the next indexed draws bind the slot */
 void kh1_cmd_clut(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill);
+/* session 136: a draw's palette without a load (CLD 0 with another CSA, or a new frame's first indexed draw): the
+ * CLUT buffer's entries for TEX0 (lo, hi) in the slot; a CLUT command as kh1_cmd_clut's, never read back */
+void kh1_cmd_palette(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill);
 /* the texture cache's answer for the next draw's TEX0: its entry (-1 not kept: a render target's texture, or
  * full), decoded now (a TEXTURE command of `texels` texels, before the draw) or not */
 void kh1_cmd_texture(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int decoded, u32 texels);
