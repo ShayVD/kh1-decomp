@@ -389,6 +389,9 @@ rewrite matched code.
     run takes, `python3 -I tools/host/census.py --exe --asan` builds out/host-asan/kh1-host with
     AddressSanitizer on the stack and heap (not globals); run it with
     `ASAN_OPTIONS=handle_segv=0:detect_leaks=0:allow_user_segv_handler=1`.
+    Session 139: a callee can reach the next locals through a loop index too (func_00121a78
+    normalizes three rows of the vector it is given: objfx.nostrict.c fixed); localcheck.py follows
+    `addu` of the pointer and `index << S` to the loop's `slti` bound.
 
 ## Known absolute addresses in matched code
 

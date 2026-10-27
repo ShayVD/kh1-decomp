@@ -30,9 +30,9 @@ extern s32 func_00176578(s32, s32, u32, s64);
 extern R3 *func_00147ed8(s32, s32, s32, f32 *);
 extern void func_00121a78(V4 *, f32 *);
 R3 *func_0012bd98(E3 *e, s32 kind, u32 c, f32 *out) {
-    V4 m;
-    V4 a;
-    V4 b;
+    /* func_00121a78 reads three rows from &m: m, a and b, adjacent on the EE (sp+0, 16, 32;
+     * portability.md rule 15, session 139) */
+    struct { V4 m, a, b; } r3;
     V4 pad;
     f32 ang[3];
     s32 j;
@@ -59,12 +59,12 @@ R3 *func_0012bd98(E3 *e, s32 kind, u32 c, f32 *out) {
         if (e->f0 & 0x400000) out[1] = e->f2d4;
         break;
     default:
-        PlatVu0SubVector(&a, &D_002C58A0, &e->fc0);
-        PlatVu0OuterProduct(&b, (V4 *)e->f30, &a);
-        PlatVu0Normalize(&b, &b);
-        PlatVu0OuterProduct(&m, &a, &b);
-        PlatVu0Normalize(&m, &m);
-        func_00121a78(&m, ang);
+        PlatVu0SubVector(&r3.a, &D_002C58A0, &e->fc0);
+        PlatVu0OuterProduct(&r3.b, (V4 *)e->f30, &r3.a);
+        PlatVu0Normalize(&r3.b, &r3.b);
+        PlatVu0OuterProduct(&r3.m, &r3.a, &r3.b);
+        PlatVu0Normalize(&r3.m, &r3.m);
+        func_00121a78(&r3.m, ang);
         break;
     }
     r = func_00147ed8(D_0029B410, idx, 10000, out);

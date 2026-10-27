@@ -26,11 +26,16 @@
  *                        centres it within R (16) of it, turning the stick by the camera as the
  *                        game does (steer below).  Nothing 3D is drawn on the null platform,
  *                        so this is how a run walks to a place read from the actors with gdb.
+ *                        Session 139: FRAME BUTTONS goto vm K [R] steers to script VM K's entity
+ *                        (D_0038D170[K].obj, +0x10) where it is each frame: a place the script
+ *                        chooses at run time (the second station's box goes to one of two sides
+ *                        by the collision group Sora stands on when the crate breaks).
  *
  * KH1_HOST_TRACE >= 1 prints "kh1-host: pad FRAME BUTTONS" when what the game reads changes.  Not
  * part of the PS2 build. */
 #include "common.h"
 #include "platform/pad.h"
+#include "data/types/vm_rec.h"
 
 #ifdef KH1_VITA
 /* session 137v: the Vita build links this file too, as config.txt's pad=FILE (host/vita/pad.c calls these
@@ -67,6 +72,8 @@ float cosf(float);
 float sqrtf(float);
 extern u8 *D_002E26A0[]; /* the player's actor (the actor table D_002C64A0's entry it has) */
 extern float D_004F77E0; /* the camera's angle round y */
+extern VmRec D_0038D170[]; /* the field's script VMs (src/vm/script_vm.c) */
+extern s32 D_0039A570;     /* how many */
 void func_00124d58(void *, void *, float, float);
 
 typedef struct {
@@ -76,6 +83,7 @@ typedef struct {
     u8 stick[4];      /* rx, ry, lx, ly */
     int go;           /* session 136: steer to (gx, gz) */
     float gx, gz, gr;
+    int vm;           /* session 139: steer to this VM's entity instead (-1: to gx, gz) */
 } NullPadLine;
 
 static NullPadLine *null_pad_lines;
@@ -163,17 +171,25 @@ int kh1_null_pad_load(const char *path) {
         if (!word(s, &i, w, sizeof w)) return fclose(f), bad(path, ln, "no buttons", s) - 1;
         if (!buttons(w, &L.buttons, &L.out)) return fclose(f), bad(path, ln, "not a button", w) - 1;
         L.go = 0;
+        L.vm = -1;
         {
             int j = i;
             if (word(s, &j, w, sizeof w) && strcmp(w, "goto") == 0) {
                 char *e2;
                 L.go = 1;
                 L.gr = 16.0f;
+                L.gx = L.gz = 0.0f;
                 for (k = 0; k < 4; k++) L.stick[k] = 128;
                 if (!word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "goto X Z [R]", s) - 1;
-                L.gx = (float)strtod(w, &e2);
-                if (!word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "goto X Z [R]", s) - 1;
-                L.gz = (float)strtod(w, &e2);
+                if (strcmp(w, "vm") == 0) {
+                    if (!word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "goto vm K [R]", s) - 1;
+                    L.vm = (int)strtoul(w, &e2, 0);
+                    if (*e2 || L.vm >= 32) return fclose(f), bad(path, ln, "goto vm K [R]: K 0-31", w) - 1;
+                } else {
+                    L.gx = (float)strtod(w, &e2);
+                    if (!word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "goto X Z [R]", s) - 1;
+                    L.gz = (float)strtod(w, &e2);
+                }
                 if (word(s, &j, w, sizeof w)) L.gr = (float)strtod(w, &e2);
                 null_pad_lines = realloc(null_pad_lines, (n + 1) * sizeof *null_pad_lines);
                 null_pad_lines[n++] = L;
@@ -276,14 +292,26 @@ static void steer(const NullPadLine *L, u8 *data) {
     static const NullPadLine *last;
     static int moving;
     const float *pos = (const float *)(D_002E26A0[0] + 0x10);
-    float dx = L->gx - pos[0], dz = L->gz - pos[2], best = -2.0f, d = sqrtf(dx * dx + dz * dz);
+    float gx = L->gx, gz = L->gz, dx, dz, best = -2.0f, d;
     float v[4] __attribute__((aligned(16))), out[4] __attribute__((aligned(16)));
     int k, bk = 0;
+    if (L->vm >= 0) {
+        const u8 *e = L->vm < D_0039A570 ? (const u8 *)D_0038D170[L->vm].obj : 0;
+        if (!e) { /* no such VM or no entity (yet): stand still */
+            data[4] = data[5] = 128;
+            return;
+        }
+        gx = ((const float *)(e + 0x10))[0];
+        gz = ((const float *)(e + 0x10))[2];
+    }
+    dx = gx - pos[0];
+    dz = gz - pos[2];
+    d = sqrtf(dx * dx + dz * dz);
     if (L != last) {
         last = L;
         moving = 0;
         if (kh1_host_trace >= 1)
-            printf("kh1-host: pad %lu goto %.1f %.1f from %.1f %.1f %.1f\n", kh1_host_frame(), L->gx, L->gz,
+            printf("kh1-host: pad %lu goto %.1f %.1f from %.1f %.1f %.1f\n", kh1_host_frame(), gx, gz,
                    pos[0], pos[1], pos[2]);
     }
     if (d <= L->gr) {

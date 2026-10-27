@@ -102,6 +102,18 @@ class Extents:
         self.memo[key] = (None, None)  # recursion guard
         live = {reg: 0}  # register -> offset from the pointer
         best = [None, None]  # reads or writes, writes
+        # session 139: a loop's index (`sll t, i, S` added to the pointer, `slti _, i, N` its bound) reaches
+        # ((N - 1) << S) past it (func_00121a78 normalizes three 16-byte rows through `addu a1, s2, a0`)
+        bound, shl = {}, {}
+        a = f
+        while a < self.ends[f]:
+            mn, ops = self.insns.get(a, ("?", []))
+            a += 4
+            if mn in ("slti", "sltiu") and len(ops) == 3:
+                try:
+                    bound[ops[1]] = max(bound.get(ops[1], 0), int(ops[2], 0))
+                except ValueError:
+                    pass
 
         def reach(n, write):
             best[0] = max(best[0] or 0, n)
@@ -125,6 +137,17 @@ class Extents:
                 else:
                     live.pop(ops[0], None)
                 return
+            if mn == "sll" and len(ops) == 3:
+                shl[ops[0]] = (ops[1], int(ops[2], 0))
+                live.pop(ops[0], None)
+                return
+            if mn in ("addu", "daddu") and len(ops) == 3 and "zero" not in ops[1:] and (ops[1] in live) != (ops[2] in live):
+                p, q = (ops[1], ops[2]) if ops[1] in live else (ops[2], ops[1])
+                if q in shl and shl[q][0] in bound and bound[shl[q][0]] > 0:
+                    live[ops[0]] = live[p] + ((bound[shl[q][0]] - 1) << shl[q][1])
+                else:
+                    live.pop(ops[0], None)
+                return
             if mn in ("addu", "daddu", "or") and len(ops) == 3 and "zero" in ops[1:]:
                 src = ops[1] if ops[2] == "zero" else ops[2]
                 if src in live:
@@ -137,6 +160,8 @@ class Extents:
                 return
             if mn.startswith("b") or mn.startswith("j") or mn in STORES:
                 return
+            if ops:
+                shl.pop(ops[0], None)
             if ops and ops[0] in live:
                 del live[ops[0]]
 

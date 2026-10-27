@@ -3,6 +3,7 @@
  * way src/pad/padread.nostrict.c func_0011f668 reads it. */
 #include "common.h"
 #include "platform/pad.h"
+#include "data/types/vm_rec.h"
 
 typedef struct _IO_FILE FILE;
 FILE *fopen(const char *, const char *);
@@ -23,6 +24,10 @@ void func_00124d58(void *v, void *out, float cam, float w) {
     ((f32 *)out)[1] = 0.0f;
     ((f32 *)out)[2] = ((f32 *)v)[2];
 }
+/* goto vm K (session 139): VM 1 drives an entity at (0, 0, 100); VM 0 has none */
+static f32 entity[8] __attribute__((aligned(16))) = { 0, 0, 0, 0, 0.0f, 0.0f, 100.0f, 0 };
+VmRec D_0038D170[2];
+s32 D_0039A570 = 2;
 static unsigned long frame;
 unsigned long kh1_host_frame(void) { return frame; }
 
@@ -63,6 +68,20 @@ int main(int argc, char **argv) {
     player[6] = 100.0f;
     player[4] = 100.0f; /* (100, 100): the target is to -x, which the mirror makes the stick's +x */
     CHECK("goto: the stick toward -x", (game_bits(buf), buf[4] > 240 && buf[5] > 118 && buf[5] < 138));
+    CHECK("goto vm needs K", load(dir, "10 - goto vm\n") < 0);
+    CHECK("goto vm: K below 32", load(dir, "10 - goto vm 32\n") < 0);
+    CHECK("goto vm", load(dir, "10 - goto vm 1 20\n20 - goto vm 0\n30 - goto vm 5\n") == 3);
+    D_0038D170[1].obj = (struct VmObj *)entity;
+    player[4] = player[6] = 0.0f;
+    frame = 10;
+    CHECK("goto vm: the stick toward the entity (+z)", (game_bits(buf), buf[4] > 118 && buf[4] < 138 && buf[5] > 240));
+    entity[4] = 100.0f;
+    entity[6] = 0.0f; /* the entity moved to (100, 0): to +x, the stick's -x after the mirror */
+    CHECK("goto vm: follows the entity", (game_bits(buf), buf[4] < 16 && buf[5] > 118 && buf[5] < 138));
+    frame = 20;
+    CHECK("goto vm: no entity, the stick centred", (game_bits(buf), buf[4] == 128 && buf[5] == 128));
+    frame = 30;
+    CHECK("goto vm: past the VM count, centred", (game_bits(buf), buf[4] == 128 && buf[5] == 128));
     CHECK("script", load(dir, "# the title\n\n100 START   # press\n102 -\n150 CIRCLE+UP 128 128 255 0\n"
                               "152 0x4000\n200 out\n260 -\n") == 6);
     frame = 0;
