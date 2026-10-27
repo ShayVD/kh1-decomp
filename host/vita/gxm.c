@@ -862,7 +862,12 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 skip(W_TARGET, d);
                 break;
             }
-            z = depth_of(c->depth, c->w, c->h);
+            for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++) ;
+            if (j < rec.n) dstore = rec.call[j].dstore != KH1_STORE_DISCARD;
+            /* session 137v: a scene that neither loads nor stores its depth (its draws do not test it, or only
+             * against what they wrote) runs on the spare buffer, so the GS one's memory is not touched at all
+             * (Dive's floor, drawn in the scene after one such, flickered in Vita3K) */
+            z = depth_of(c->depth != KH1_DS_NONE && c->dload != KH1_LOAD_LOAD && !dstore ? KH1_DS_NONE : c->depth, c->w, c->h);
             if (!z) {
                 char d[256];
                 snprintf(d, sizeof d, "depth %u %u x %u; %u KiB of CDRAM free (largest %u), %u of LPDDR", c->depth, c->w,
@@ -879,8 +884,6 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                         need = 1;
                 if (need) pend_flush(0);
             }
-            for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++) ;
-            if (j < rec.n) dstore = rec.call[j].dstore != KH1_STORE_DISCARD;
             sceGxmDepthStencilSurfaceSetForceLoadMode(&z->surf, c->depth != KH1_DS_NONE && c->dload == KH1_LOAD_LOAD
                                                       ? SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_ENABLED : SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_DISABLED);
             sceGxmDepthStencilSurfaceSetForceStoreMode(&z->surf, c->depth != KH1_DS_NONE && dstore
