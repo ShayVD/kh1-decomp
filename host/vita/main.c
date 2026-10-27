@@ -60,7 +60,6 @@ int _newlib_heap_size_user = 160 * 1024 * 1024;
 #define MAIN_OWN (4 * 1024 * 1024)
 unsigned int sceUserMainThreadStackSize = 8 * 1024 * 1024;
 static u32 costack_bytes;
-unsigned int sceUserMainThreadStackSize = 52 * 1024 * 1024;
 
 const char kh1_vita_dir[] = "ux0:data/kh1";
 
