@@ -77,5 +77,15 @@ One build serves both discs: the disc decides.
   tests/host/fake_disc.py `--elf` (the English ELF on a fake disc) loads all 214 runs (gdb compared
   them with the ELF) and so does `make vita-armcheck`'s ARM build under qemu-arm; with the retail
   ELF or none it stays Japanese.
-- **Not done**: a run on the real English ISO (the Mac); wm.x (the world map) is not native yet,
-  and when it is, its English file (the patch replaces it) needs the same treatment as the ELF.
+- **The real English ISO** (the user's "English v2026-02-26" build, its ELF the pinned one; staged
+  in 380 MB parts from Downloads/kh1-test/isoparts-en, never committed): the host runner with
+  tests/host/pads/dive.txt logs the `kh1-lang:` line and runs through New Game into Dive to the
+  Heart as on the Japanese disc. The title's option pages ("Select vibration setting.", the
+  "Difficulty / Camera / Vibration / Sound" summary, "Proceed? Yes / No"), the monologue ("So much
+  to do,", "Power sleeps within you.", "If you give it form...", "Choose well.") and the pedestal
+  windows ("Is this the power you seek?" with its Yes / No list, "Now, what will you give up in
+  exchange?") all draw in English, spaced and wrapped as they should be.
+- **Vita3K** (the same session's VPK, the English ISO as ux0:data/kh1/kh1.iso): boots to the title
+  with no crash; no key reached the game there (as with earlier builds), so no text was seen.
+- **Not done**: wm.x (the world map) is not native yet, and when it is, its English file (the
+  patch replaces it) needs the same treatment as the ELF.
