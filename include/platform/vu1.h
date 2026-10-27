@@ -53,6 +53,10 @@ extern u32 kh1_vu1_us, kh1_vu1_kick_us;
 /* 1 (the default): a program out/gen/vu1_tr.c has runs as its C; 0: the interpreter only; 2: both, compared */
 extern int kh1_vu1_tr;
 
+/* every kh1_vu1_dump_every-th run's start state to kh1_vu1_dump_dir/vuNNNNN.bin (offline replays; scratch) */
+extern const char *kh1_vu1_dump_dir;
+extern u32 kh1_vu1_dump_every;
+
 /* the counts since the last call (zeroed by it) */
 void kh1_vu1_stats(KH1Vu1Stats *out);
 

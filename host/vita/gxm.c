@@ -583,35 +583,41 @@ static void tex_upload(const KH1TexCache *tc, s32 slot, u32 lo, u32 hi) {
 /* A texture neither cache keeps nor the recorder maps to a colour target (on the title: a full-screen CT24 layer at
  * 0x0E00, in the depth buffer's pages, which the game uploads into each frame): read from GS memory as the frame
  * left it, kept while its page stamp holds, never refilled in a frame that drew it (the GPU reads it later) */
-#define LOOSE 8
+#define LOOSE 32 /* session 137v: 8 ran out in Dive to the Heart on the English disc */
 typedef struct {
     u32 lo, hi, stamp, frame, bytes;
     void *mem;
 } Loose;
 static Loose loose[LOOSE];
 static u32 loose_frame, loose_reads;
+static const char *loose_why; /* why tex_loose gave none */
 
 static const TexMem *tex_loose(u32 lo, u32 hi) {
     static TexMem m;
     static u32 buf[1024 * 1024];
     u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), psm = lo >> 20 & 63, stamp, i, n;
     Loose *e = 0;
+    loose_why = "too big or no format";
     if (w > 1024 || h > 1024 || !(n = kh1_texfmt_stride(psm, w) * h)) return 0;
     stamp = kh1_gsmem_tex_stamp(lo, hi);
     for (i = 0; i < LOOSE; i++)
         if (loose[i].mem && loose[i].lo == lo && loose[i].hi == hi) { e = &loose[i]; break; }
+    loose_why = "drawn this frame with other bytes";
     if (e && e->stamp != stamp && e->frame == loose_frame) return 0; /* drawn this frame with other bytes */
     if (!e)
         for (i = 0; i < LOOSE; i++)
             if (loose[i].frame != loose_frame && (!e || loose[i].frame < e->frame)) e = &loose[i];
+    loose_why = "every loose entry drawn this frame";
     if (!e) return 0;
     if (!e->mem || e->lo != lo || e->hi != hi || e->stamp != stamp) {
         if (e->bytes < n) {
             heap_free(&tram, e->mem, e->bytes);
             e->mem = heap_alloc(&tram, n);
             e->bytes = e->mem ? n : 0;
+            loose_why = "no texture memory";
             if (!e->mem) return 0;
         }
+        loose_why = "GS memory read refused";
         if (kh1_gsmem_read_rect(psm, lo & 0x3FFF, lo >> 14 & 63, 0, 0, w, h, buf, w)) return 0;
         kh1_texfmt_convert(psm, buf, w, h, e->mem);
         e->lo = lo;
@@ -878,7 +884,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 u32 fmt;
                 if (!m || !m->mem || m->lo != c->tex0_lo || m->w != w || m->h != h) {
                     snprintf(tex_why, sizeof tex_why, "tex0 %08x%08x %u x %u (slot %d): %s", c->tex0_hi, c->tex0_lo, w, h,
-                             c->slot, !m ? "in neither cache" : !m->mem ? "not uploaded" : "the slot holds another");
+                             c->slot, !m ? loose_why : !m->mem ? "not uploaded" : "the slot holds another");
                     break;
                 }
                 fmt = kh1_texfmt_of(m->psm);

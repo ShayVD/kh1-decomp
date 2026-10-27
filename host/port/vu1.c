@@ -820,6 +820,102 @@ static void run(u32 pc) {
                pairs, cyc - c0, top, itop, code_id(), st.kicks - k0, pairs > MAX_PAIRS ? " RUNAWAY" : "");
 }
 
+/* ------------------------------------------------------------------ four lanes at once (vu1_tr.c) */
+
+/* t = k(a, b) on all four fields (vu1_tr.c stores the ones the instruction writes), c the ACC for MADD /
+ * MSUB.  The scalar form is the interpreter's fmac() field by field.  On ARM, NEON: its flush of
+ * denormals on input and output is fin() / fout()'s, its overflow to infinity is clamped here as fout()
+ * does; the one difference is a MADD / MSUB whose product alone is denormal (NEON flushes it before the
+ * add, the scalar C keeps it), which only moves a sum of magnitude below 2^-126 */
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+#include <arm_neon.h>
+static __inline__ float32x4_t vfin(uint32x4_t u) {
+    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
+    uint32x4_t m = vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu));
+    return vreinterpretq_f32_u32(vorrq_u32(s, m));
+}
+static __inline__ uint32x4_t vfo(float32x4_t r) { /* an arithmetic result: NEON flushed it already */
+    uint32x4_t u = vreinterpretq_u32_f32(r);
+    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
+    return vorrq_u32(s, vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu)));
+}
+static __inline__ uint32x4_t vflush(uint32x4_t u) { /* a value passed through (MAX / MINI): denormal to 0 */
+    uint32x4_t z = vceqq_u32(vandq_u32(u, vdupq_n_u32(0x7F800000u)), vdupq_n_u32(0));
+    return vbslq_u32(z, vandq_u32(u, vdupq_n_u32(0x80000000u)), u);
+}
+static __inline__ float32x4_t vin(uint32x4_t u, int fi) { /* fi 0: a value the VU wrote, fin() is itself */
+    return fi ? vfin(u) : vreinterpretq_f32_u32(u);
+}
+static __inline__ void vu_k(u32 *t, int k, float32x4_t a, float32x4_t b, const u32 *c, int fc) {
+    float32x4_t r;
+    switch (k) {
+    case K_ADD: r = vaddq_f32(a, b); break;
+    case K_SUB: r = vsubq_f32(a, b); break;
+    case K_MUL: r = vmulq_f32(a, b); break;
+    case K_MADD: r = vaddq_f32(vin(vld1q_u32(c), fc), vmulq_f32(a, b)); break;
+    case K_MSUB: r = vsubq_f32(vin(vld1q_u32(c), fc), vmulq_f32(a, b)); break;
+    default: { /* MAX / MINI: a > b ? a : b, a < b ? a : b (b on a tie, as the interpreter) */
+        uint32x4_t gt = k == K_MAX ? vcgtq_f32(a, b) : vcltq_f32(a, b);
+        vst1q_u32(t, vfo(vreinterpretq_f32_u32(vflush(vbslq_u32(gt, vreinterpretq_u32_f32(a), vreinterpretq_u32_f32(b))))));
+        return;
+    }
+    }
+    vst1q_u32(t, vfo(r));
+}
+/* fa, fb, fc: whether a, b, c need fin() (vu1_translate.py knows when they hold what the VU wrote) */
+static __inline__ void vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
+    vu_k(t, k, vin(vld1q_u32(a), fa), vin(vld1q_u32(b), fb), c, fc);
+}
+static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, int fa, int fb, int fc) {
+    vu_k(t, k, vin(vld1q_u32(a), fa), vin(vdupq_n_u32(b), fb), c, fc);
+}
+static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
+    static const f32 inv[4] = { 1.0f, 1.0f / 16.0f, 1.0f / 4096.0f, 1.0f / 32768.0f };
+    vst1q_u32(t, vreinterpretq_u32_f32(vmulq_n_f32(vcvtq_f32_s32(vreinterpretq_s32_u32(vld1q_u32(a))), inv[sc])));
+}
+static __inline__ void vu_ftoi(u32 *t, const u32 *a, int sc) {
+    static const f32 mul[4] = { 1.0f, 16.0f, 4096.0f, 32768.0f };
+    vst1q_u32(t, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(vfin(vld1q_u32(a)), mul[sc]))));
+}
+#else
+static __inline__ f32 sin1(u32 u, int fi) {
+    Fu x;
+    if (fi) return fin(u);
+    x.u = u;
+    return x.f;
+}
+static __inline__ void vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
+    int f;
+    for (f = 0; f < 4; f++) {
+        f32 x = sin1(a[f], fa), y = sin1(b[f], fb);
+        switch (k) {
+        case K_ADD: t[f] = fo(x + y); break;
+        case K_SUB: t[f] = fo(x - y); break;
+        case K_MUL: t[f] = fo(x * y); break;
+        case K_MADD: t[f] = fo(sin1(c[f], fc) + x * y); break;
+        case K_MSUB: t[f] = fo(sin1(c[f], fc) - x * y); break;
+        case K_MAX: t[f] = fo(x > y ? x : y); break;
+        default: t[f] = fo(x < y ? x : y); break;
+        }
+    }
+}
+static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, int fa, int fb, int fc) {
+    u32 bb[4];
+    bb[0] = bb[1] = bb[2] = bb[3] = b;
+    vu_op(t, k, a, bb, c, fa, fb, fc);
+}
+static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
+    static const f32 d[4] = { 1.0f, 16.0f, 4096.0f, 32768.0f };
+    int f;
+    for (f = 0; f < 4; f++) t[f] = itof(a[f], d[sc]);
+}
+static __inline__ void vu_ftoi(u32 *t, const u32 *a, int sc) {
+    static const f32 d[4] = { 1.0f, 16.0f, 4096.0f, 32768.0f };
+    int f;
+    for (f = 0; f < 4; f++) t[f] = ftoi(a[f], d[sc]);
+}
+#endif
+
 /* ------------------------------------------------------------------ the translated programs */
 
 /* KH1_VU1_TR: out/gen/vu1_tr.c, tools/vu/vu1_translate.py's C of the user's own programs (never
@@ -860,6 +956,9 @@ static TrSnap tr_a, tr_b;
 static u32 tr_hash, tr_bad;
 static void (*tr_out)(const u32 *q, u32 nqw);
 int sprintf(char *, const char *, ...);
+void *fopen(const char *, const char *);
+__SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, void *);
+int fclose(void *);
 static void tr_hash_kick(const u32 *q, u32 nqw) {
     u32 i;
     for (i = 0; i < nqw * 4; i++) tr_hash = (tr_hash ^ q[i]) * 16777619u;
@@ -933,6 +1032,26 @@ static void start(u32 pc) {
     kh1_vu1_us += kh1_vu1_clock() - t0;
 }
 
+/* KH1_HOST_VU1DUMP=DIR:N (host/null/main.c): every Nth run's start (micro memory, then a TrSnap, then the
+ * pc), for tools that replay runs offline (the NEON check under qemu-arm).  The files hold the user's own
+ * programs and data: scratch only, never committed */
+const char *kh1_vu1_dump_dir;
+u32 kh1_vu1_dump_every;
+static void dump_run(u32 pc) {
+    static u32 n, k;
+    char path[256];
+    void *f;
+    if (++n % kh1_vu1_dump_every) return;
+    sprintf(path, "%s/vu%05u.bin", kh1_vu1_dump_dir, k++);
+    f = fopen(path, "wb");
+    if (!f) return;
+    tr_save(&tr_a);
+    fwrite(micro, sizeof micro, 1, f);
+    fwrite(&tr_a, sizeof tr_a, 1, f);
+    fwrite(&pc, sizeof pc, 1, f);
+    fclose(f);
+}
+
 static void start_run(u32 pc) {
     int prog;
     top = tops;
@@ -940,6 +1059,7 @@ static void start_run(u32 pc) {
     if (dbf) { dbf = 0; tops = base; }
     else { dbf = 1; tops = (base + ofst) & (DATA_QW - 1); }
     settle();
+    if (kh1_vu1_dump_dir && kh1_vu1_dump_every) dump_run(pc);
     prog = kh1_vu1_tr && !kh1_vu1_verbose ? tr_find() : -1;
     if (prog >= 0 && kh1_vu1_tr == 2) {
         tr_check(prog, pc);

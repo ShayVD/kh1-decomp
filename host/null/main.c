@@ -279,6 +279,15 @@ int main(int argc, char **argv) {
         kh1_dma_vu1 = getenv("KH1_HOST_VU1") && atoi(getenv("KH1_HOST_VU1")); /* session 137v: the 3D */
         kh1_vu1_verbose = kh1_dma_vu1 ? atoi(getenv("KH1_HOST_VU1")) - 1 : 0;
         if (getenv("KH1_HOST_VU1TR")) kh1_vu1_tr = atoi(getenv("KH1_HOST_VU1TR")); /* 0 / 1 / 2: checked */
+        if (getenv("KH1_HOST_VU1DUMP")) { /* DIR:N, host/port/vu1.c's dump_run */
+            static char dir[200];
+            char *c;
+            snprintf(dir, sizeof dir, "%s", getenv("KH1_HOST_VU1DUMP"));
+            c = strrchr(dir, ':');
+            kh1_vu1_dump_every = c ? strtoul(c + 1, 0, 0) : 1000;
+            if (c) *c = 0;
+            kh1_vu1_dump_dir = dir;
+        }
         if (getenv("KH1_HOST_VU1_SNAP")) kh1_vu1_snap_run = strtoul(getenv("KH1_HOST_VU1_SNAP"), 0, 0);
         if (getenv("KH1_HOST_VU1_FRAME")) kh1_vu1_dump_frame = strtoul(getenv("KH1_HOST_VU1_FRAME"), 0, 0);
         if (getenv("KH1_HOST_VU1_SNAPK")) kh1_vu1_snap_kicks = strtoul(getenv("KH1_HOST_VU1_SNAPK"), 0, 0);

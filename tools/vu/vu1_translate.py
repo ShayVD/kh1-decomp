@@ -592,7 +592,58 @@ class Prog:
         p = s.pp[1] if s.pp else s.p
         return mac, clip, q, p
 
+    # ------------------------------------------------------------ values already as the VU writes them
+    @staticmethod
+    def cbit(r, f):
+        return 1 << (r * 4 + f)
+
+    def canon_out(self, pc, cin):
+        """The fields (bit r*4+f, r 32 = ACC) that hold a finite non-denormal float after pair pc, given cin
+        before it: what fo() / qop() / pop() wrote, or a copy of one.  fin() of those is the value itself."""
+        lo, hi, up, lw = self.code[pc]
+        c = cin
+        B = self.cbit
+        if lw:  # the lower runs first (its writes land before the upper's)
+            n, d, it, is_ = lw.name, lw.dest, lw.it, lw.is_
+            if n in ("move", "mr32") and it:
+                src = [0, 1, 2, 3] if n == "move" else [1, 2, 3, 0]
+                for f in fields(d):
+                    c = (c | B(it, f)) if cin & B(is_, src[f]) else (c & ~B(it, f))
+            elif n in ("rnext", "rget", "mfp") and it:
+                for f in fields(d): c |= B(it, f)
+            elif lw.vfw:
+                r, m = lw.vfw
+                for f in fields(m): c &= ~B(r, f)
+        if up.op in ("fmac", "itof", "abs") and up.to:
+            for f in fields(up.dest): c |= B(up.to, f)
+        elif up.op == "ftoi" and up.to:
+            for f in fields(up.dest): c &= ~B(up.to, f)
+        c |= B(0, 0) | B(0, 1) | B(0, 2) | B(0, 3)
+        return c
+
+    def canon_in(self):
+        """canon[i]: the fields canonical at node i on every path to it (from each entry: only vf00)."""
+        start = self.cbit(0, 0) | self.cbit(0, 1) | self.cbit(0, 2) | self.cbit(0, 3)
+        full = (1 << (33 * 4)) - 1
+        cin = {i: full for i in self.succ}
+        for i in self.entry_nodes.values():
+            cin[i] = start
+        changed = True
+        while changed:
+            changed = False
+            for i, info in self.succ.items():
+                out = self.canon_out(info["pc"], cin[i])
+                for j, _ in self.edges(info["way"]):
+                    v = cin[j] & out
+                    if j in self.entry_nodes.values():
+                        v &= start
+                    if v != cin[j]:
+                        cin[j] = v
+                        changed = True
+        self.canon = cin
+
     def emit(self) -> str:
+        self.canon_in()
         # the ends need their producers kept too
         for i, info in list(self.succ.items()):
             way = info["way"]
@@ -674,9 +725,37 @@ class Prog:
         o.append(f"    cy += {info['stall'] + info['extra'] + 1}; np++;")
         # the upper into temporaries
         commit = []
-        if up.op == "fmac":
+        KN = ["K_ADD", "K_SUB", "K_MADD", "K_MSUB", "K_MAX", "K_MINI", "K_MUL"]
+        dst = "acc" if up.to == 32 else f"vf[{up.to}]"
+        mac = up.op == "fmac" and up.setmac and i in self.mac_nodes
+        if up.op == "fmac" and not mac and up.tsrc[0] != "op":
+            # four lanes at once (vu1.c's vu_op: NEON on the Vita); an operand already canonical skips fin()
+            C, B = self.canon[i], self.cbit
+            ca = all(C & B(up.fs, f) for f in range(4))
+            cc = all(C & B(32, f) for f in range(4))
+            if up.tsrc[0] == "vf":
+                cb = all(C & B(up.ft, f) for f in range(4))
+                call = f"vu_op(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], acc, {int(not ca)}, {int(not cb)}, {int(not cc)});"
+            else:
+                cb = (up.tsrc[0] == "bc" and C & B(up.ft, up.tsrc[1])) or up.tsrc[0] == "q"
+                b = {"bc": f"vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": self.qname(info["q_in"]),
+                     "i": "i_reg"}[up.tsrc[0]]
+                call = f"vu_opb(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {int(not ca)}, {int(not cb)}, {int(not cc)});"
+            direct = up.dest == 0xF and up.to and not self.lower_touches(lw, up.to)
+            if direct:  # nothing in the lower reads or writes the target: straight into it
+                o.append(f"    {{ u32 *u = {dst}; {call} }}")
+            else:
+                o.append(f"    {{ u32 u[4]; {call}")
+                if up.to:
+                    commit.extend(self.store4(dst, "u", up.dest))
+                commit.append("    }")
+        elif up.op in ("itof", "ftoi"):
+            o.append(f"    {{ u32 u[4]; vu_{up.op}(u, vf[{up.fs}], {up.k});")
+            if up.to:
+                commit.extend(self.store4(dst, "u", up.dest))
+            commit.append("    }")
+        elif up.op == "fmac":
             o.append("    {")
-            mac = up.setmac and i in self.mac_nodes
             if mac:
                 o.append("    u32 m = 0;")
             for f in fields(up.dest):
@@ -700,12 +779,11 @@ class Prog:
                 o.append(f"    u32 u{f} = " + (f"fout(r{f}, {f}, &m);" if mac else f"fo(r{f});"))
             if mac:
                 o.append(f"    {self.macname(info['fw'])} = m;")
-            dst = "acc" if up.to == 32 else f"vf[{up.to}]"
             if up.to:
                 for f in fields(up.dest):
                     commit.append(f"    {dst}[{f}] = u{f};")
             commit.append("    }")
-        elif up.op in ("itof", "ftoi", "abs"):
+        elif up.op == "abs":
             o.append("    {")
             sc = ["1.0f", "16.0f", "4096.0f", "32768.0f"]
             for f in fields(up.dest):
@@ -727,6 +805,21 @@ class Prog:
         o.extend(commit)
         o.extend(self.emit_way(i, pc, info))
         return o
+
+    @staticmethod
+    def lower_touches(lw, r):
+        if not lw:
+            return False
+        if r == 32:
+            return False  # no lower instruction reads or writes ACC
+        return any(x == r for x, _ in lw.reads) or (lw.vfw and lw.vfw[0] == r) or \
+            (lw.name in ("move", "mr32", "mfir", "rnext", "rget", "mfp") and lw.it == r)
+
+    @staticmethod
+    def store4(dst, src, dest):
+        if dest == 0xF:
+            return [f"    memcpy({dst}, {src}, 16);"]
+        return [f"    {dst}[{f}] = {src}[{f}];" for f in fields(dest)]
 
     def vi(self, r):
         return f"vi[{r}]"
