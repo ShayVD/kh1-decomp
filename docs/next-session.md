@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste this to start the next session (session 138).
+Paste this to start the next session (session 139).
 
 ---
 
@@ -8,7 +8,7 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## The Mac
 
-**The Mac was back on 2026-10-26** (session 131 used it from 09:17 UTC). How it worked in session 131: the
+**The Mac was back on 2026-10-27** (session 138 staged the ISO parts from it at 12:27 UTC: a connect card, then a folder grant for ~/Downloads, then one part per stage call; ~8 minutes for the 9). How it worked in session 131: the
 connect card gives folder tools for ~/Downloads (stage files into the container, commit files back), but the
 Mac's sandbox shell (`device_bash`) did not start, so anything that must *run* on the Mac (patching the 3.5 GB
 KH1_BIG.iso with patch_iso.py) went through a Remote Control session (one command, then stopped; folder tools
@@ -16,7 +16,28 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 137, 2026-10-27)
+## Where we stopped (end of session 138, 2026-10-27)
+
+- **Session 138** (the Mac for staging only; ISO SHA-256 9ad74868… checked): **Dive to the Heart played
+  to its end on the host** (docs/native-overlays.md "Session 138"). tests/host/pads/dive.txt now runs to
+  70,000: the three islanders (script VMs 2-4) answered, the confirm, the next station's menu tutorial,
+  its 8 Shadows, the save point, the glass stairs (goto points from the map's collision groups 132-160),
+  Darkside (~49,000-61,000), the closing lines and the Destiny Islands opening.
+  - **The ASan build's other path, traced**: not an uninitialised local (new `census.py --init
+    zero|pattern` builds follow the plain one exactly). The task func_00133a88 (objcmd.nostrict.c) was
+    `void` and the scheduler drops a task whose value has bit 2 set: now `KH1_V0(s32)` returning the 0
+    the EE leaves (rule 10). ASan then found two quadword copies into 3-word locals in vm_lib.c
+    (func_001d9cb0, func_001da2c8), fixed. ASan runs dive.txt to 70,000 with no report.
+  - **x87 vs single precision**: the last ASan / plain difference is x87 excess precision (positions
+    0.01 apart from ~24,000). `census.py --cflags "-msse2 -mfpmath=sse" --out DIR`: plain and ASan
+    then take exactly the same path, and dive.txt still reaches Destiny Islands that way.
+  - tools/host/vmdis.py `--exe` (another build). xl_limit.x is loaded 4 times in the run with no
+    native C; nothing calls into it.
+  - Matching: no new match. dktitle 00f228c8 / 00f24b60 permuted 20 minutes each (746 -> 693 words /
+    worse), func_00f241c8 hand variants (still 2 words); nonmatchings/session132/NOTES.md.
+  - kh1.elf byte-identical (6,981 / 6,988); every changed object unchanged; `make test` PASS.
+
+## Where we stopped before (end of session 137, 2026-10-27)
 
 - **Session 137** (the Mac for staging only: the 9 ISO parts staged one per call with the folder tools
   from ~/Downloads/kh1-test/isoparts, joined, SHA-256 9ad74868… checked): **through Dive to the
@@ -889,7 +910,29 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 138 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 139 plan (at most 3 workers, docs/workflow.md "Resource limit")
+
+1. **Destiny Islands on the host** (tests/host/pads/dive.txt to 70,000, then on): the opening's
+   lines and the first free roam (Sora playable at ~69,000 in the SSE build). Read its VMs with
+   vmdis.py, extend the pad script to the next boundary (the raft-building errands), and watch for
+   the next overlay or host bug.
+2. **Single-precision host by default?** Run the whole of dive.txt with `--cflags "-msse2
+   -mfpmath=sse"` and the plain build side by side; if the SSE build is the closer model of the Vita
+   (ARM VFP single precision) and every test passes, propose making it census.py's default (it changes
+   every host run's path, so ask the user first).
+3. **Rule 10 / 15 with the new tools**: an ASan + SSE run of the whole script after each change;
+   argcheck.py could flag `void` functions handed to func_0011ef10 / func_0011f090 (session 138's
+   bug) so the next one is found statically.
+4. **With the Mac, after the Vita display thread's PR**: a Vita3K run with pad input through Dive to
+   the Heart (sessions 135-138's fixes all matter there).
+5. **Matching**: xl_limit.x's 8 unmatched functions (it loads in Dive to the Heart; a native C port
+   needs them) before more time on dktitle's large loops.
+6. End with `make progress-update SESSION=139`, refresh docs/progress.md's tables, commit, open a PR,
+   and refresh this prompt.
+7. **Once the PR is merged, message the coordinator to start the next session** (session 140) with
+   this prompt.
+
+## Session 138 plan (done; kept for reference) (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **The Destiny Islands questions** (tests/host/pads/dive.txt to frame 32,000): find the three
    islanders with `tools/host/vmdis.py` (their VMs' entities and positions; actors 6-8 are the
