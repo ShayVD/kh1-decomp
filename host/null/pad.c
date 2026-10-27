@@ -37,6 +37,20 @@
 #include "platform/pad.h"
 #include "data/types/vm_rec.h"
 
+#ifdef KH1_VITA
+/* session 137v: the Vita build links this file too, as config.txt's pad=FILE (host/vita/pad.c calls these
+ * when a script is given; the Vita's frame count is main.c's, as the host's) */
+#define PlatDbcInit kh1_script_DbcInit
+#define PlatPadInit kh1_script_PadInit
+#define PlatPadCreateSocket kh1_script_PadCreateSocket
+#define PlatPadGetState kh1_script_PadGetState
+#define PlatPadGetButtonProfile kh1_script_PadGetButtonProfile
+#define PlatPadRead kh1_script_PadRead
+#define PlatVibSetActParam kh1_script_VibSetActParam
+const char *kh1_vita_pad_script;
+#define fprintf(f, ...) printf(__VA_ARGS__) /* newlib's stderr is a macro; the log is stdout */
+#endif
+
 typedef struct _IO_FILE FILE;
 FILE *fopen(const char *, const char *);
 char *fgets(char *, int, FILE *);
@@ -210,12 +224,20 @@ static const NullPadLine *now(void) {
     unsigned long fr = kh1_host_frame();
     int lo = 0, hi;
     if (null_pad_n < 0) {
+#ifdef KH1_VITA
+        const char *s = kh1_vita_pad_script;
+#else
         const char *s = getenv("KH1_HOST_PAD");
+#endif
         null_pad_n = 0;
         if (s && strcmp(s, "none") == 0)
             null_pad_none = 1;
         else if (s && *s && kh1_null_pad_load(s) < 0)
+#ifdef KH1_VITA
+            null_pad_n = 0; /* the Vita's own controls (the log says why) */
+#else
             exit(2);
+#endif
     }
     hi = null_pad_n;
     /* the last line with frame <= fr */

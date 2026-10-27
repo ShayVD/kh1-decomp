@@ -53,7 +53,7 @@ CFLAGS_GCC14 = ["-Wno-error=return-mismatch", "-Wno-error=declaration-missing-pa
 TARGETS = {
     "vita": dict(
         out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA"],
-        dirs=[("null", ("main.c", "pad.c")), ("port", ()), ("vita", ())],
+        dirs=[("null", ("main.c",)), ("port", ()), ("vita", ())],
         link=["-Wl,-q", "-Wl,--no-warn-rwx-segments"],
         libs=["-lvita2d", "-lvitashark", "-lSceShaccCgExt", "-lSceShaccCg_stub", "-ltaihen_stub", "-lSceKernelDmacMgr_stub", "-lSceDisplay_stub", "-lSceGxm_stub", "-lSceSysmodule_stub", "-lSceCommonDialog_stub",
               "-lSceAppMgr_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lm"]),

@@ -159,6 +159,7 @@ static Heap tram;  /* LPDDR uncached: textures, palettes, vertices, indices */
 
 /* ---- shaders: shadergen's Cg, compiled by SceShaccCg or read back from the cache ---- */
 static int shark_ok;
+extern int kh1_vita_shacc_restart;
 static char tex_why[160], pipe_why[200]; /* the last texture binding's / pipeline's failure (the skip log's) */
 static u32 compiled, cached, failed; /* shaders compiled on the device, read from the cache, refused */
 
@@ -192,17 +193,37 @@ static SceGxmProgram *program_of(const char *text, u32 len, int frag) {
     if (!shark_ok) { failed++; return 0; }
     {
         SceGxmProgram *c;
-        size = len; /* in: the source's length (vitaShaRK passes it on as the source's size); out: the program's */
-        c = shark_compile_shader_extended(text, &size, frag ? SHARK_FRAGMENT_SHADER : SHARK_VERTEX_SHADER,
-                                                         SHARK_OPT_DEFAULT, SHARK_DISABLE, SHARK_DISABLE, SHARK_DISABLE);
+        static const int opts[4] = { SHARK_OPT_DEFAULT, SHARK_OPT_DEFAULT, SHARK_OPT_SAFE, SHARK_OPT_SLOW };
+        int o;
+        /* session 137v: after some hundred compiles SceShaccCg answered shaders it compiles at start (shadertest=1)
+         * with "fatal internal error" (a heap the English disc's stale frees had corrupted, PR #153, is the
+         * suspect).  Lower optimisation levels are tried; config.txt's shacc_restart=1 first restarts the
+         * compiler (in Vita3K the restarted module reads NULL and the game hangs) */
+        for (o = 0, c = 0; o < 4 && !(c && size); o++) {
+            if (o == 1 && !kh1_vita_shacc_restart) continue;
+            if (o) {
+                shark_clear_output();
+                if (o == 1) {
+                    kh1_vita_log("kh1-gxm: a %s shader failed: restarting the compiler\n", frag ? "fragment" : "vertex");
+                    shark_end();
+                    shark_ok = shark_ok == 2 ? (shark_init(0) >= 0 ? 2 : 0) : shark_init_simple(0) >= 0;
+                    if (!shark_ok) break;
+                } else {
+                    kh1_vita_log("kh1-gxm: trying optimisation level %d\n", 3 - o);
+                }
+            }
+            size = len; /* in: the source's length (vitaShaRK passes it on as the source's size); out: the program's */
+            c = shark_compile_shader_extended(text, &size, frag ? SHARK_FRAGMENT_SHADER : SHARK_VERTEX_SHADER,
+                                              opts[o], SHARK_DISABLE, SHARK_DISABLE, SHARK_DISABLE);
+        }
         if (!c || !size) {
-            const SceShaccCgCompileOutput *o = shark_get_internal_compile_output();
+            const SceShaccCgCompileOutput *o = shark_ok ? shark_get_internal_compile_output() : 0;
             int i;
             kh1_vita_log("kh1-gxm: a %s shader did not compile:\n%s", frag ? "fragment" : "vertex", text);
             for (i = 0; o && i < o->diagnosticCount; i++)
                 kh1_vita_log("kh1-gxm:   line %d: %s\n", o->diagnostics[i].location ? o->diagnostics[i].location->lineNumber : 0,
                              o->diagnostics[i].message);
-            shark_clear_output();
+            if (shark_ok) shark_clear_output();
             failed++;
             return 0;
         }
@@ -277,7 +298,19 @@ static FragShader *frag_of(const KH1ShaderKey *k) {
     f->k = *k;
     f->state = -1;
     len = kh1_shader_frag_cg(k, text, sizeof text);
-    if (!len || !(f->prog = program_of(text, len, 1))) return 0;
+    if (len && !(f->prog = program_of(text, len, 1)) && (k->su == KH1_SHADER_TAPS || k->sv == KH1_SHADER_TAPS)) {
+        /* session 137v: a REGION_REPEAT shader SceShaccCg refuses (shadertest=1) is drawn with the plain
+         * wrap instead, the region's texels then read from the whole texture: close, against nothing */
+        KH1ShaderKey w = *k;
+        if (w.su == KH1_SHADER_TAPS) w.su = KH1_SHADER_NONE;
+        if (w.sv == KH1_SHADER_TAPS) w.sv = KH1_SHADER_NONE;
+        len = kh1_shader_frag_cg(&w, text, sizeof text);
+        if (len) {
+            kh1_vita_log("kh1-gxm: drawing that shader's draws without the region repeat\n");
+            f->prog = program_of(text, len, 1);
+        }
+    }
+    if (!len || !f->prog) return 0;
     if (sceGxmShaderPatcherRegisterProgram(patcher, f->prog, &f->id) < 0) return 0;
     for (i = 0; i < 5; i++) f->u[i] = sceGxmProgramFindParameterByName(f->prog, names[i]);
     f->tex = reg_of(f->prog, "tex");
@@ -420,6 +453,11 @@ typedef struct {
     Heap *heap;    /* CDRAM, or LPDDR when CDRAM had no room (session 136) */
     SceGxmColorSurface surf;
     SceGxmRenderTarget *gxrt;
+    /* session 137v: uploads into it not yet written (the union of their rectangles, BITBLTBUF's destination): GS
+     * memory is read as the frame left it, so each upload of a frame writes the same bytes, and they are written
+     * once, before the target's next use (pend_flush) */
+    u8 pend;
+    u32 pend_bb, px0, py0, px1, py1;
 } Target;
 static Target tgt[KH1_CMD_TARGETS];
 
@@ -583,35 +621,41 @@ static void tex_upload(const KH1TexCache *tc, s32 slot, u32 lo, u32 hi) {
 /* A texture neither cache keeps nor the recorder maps to a colour target (on the title: a full-screen CT24 layer at
  * 0x0E00, in the depth buffer's pages, which the game uploads into each frame): read from GS memory as the frame
  * left it, kept while its page stamp holds, never refilled in a frame that drew it (the GPU reads it later) */
-#define LOOSE 8
+#define LOOSE 32 /* session 137v: 8 ran out in Dive to the Heart on the English disc */
 typedef struct {
     u32 lo, hi, stamp, frame, bytes;
     void *mem;
 } Loose;
 static Loose loose[LOOSE];
 static u32 loose_frame, loose_reads;
+static const char *loose_why; /* why tex_loose gave none */
 
 static const TexMem *tex_loose(u32 lo, u32 hi) {
     static TexMem m;
     static u32 buf[1024 * 1024];
     u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), psm = lo >> 20 & 63, stamp, i, n;
     Loose *e = 0;
+    loose_why = "too big or no format";
     if (w > 1024 || h > 1024 || !(n = kh1_texfmt_stride(psm, w) * h)) return 0;
     stamp = kh1_gsmem_tex_stamp(lo, hi);
     for (i = 0; i < LOOSE; i++)
         if (loose[i].mem && loose[i].lo == lo && loose[i].hi == hi) { e = &loose[i]; break; }
+    loose_why = "drawn this frame with other bytes";
     if (e && e->stamp != stamp && e->frame == loose_frame) return 0; /* drawn this frame with other bytes */
     if (!e)
         for (i = 0; i < LOOSE; i++)
             if (loose[i].frame != loose_frame && (!e || loose[i].frame < e->frame)) e = &loose[i];
+    loose_why = "every loose entry drawn this frame";
     if (!e) return 0;
     if (!e->mem || e->lo != lo || e->hi != hi || e->stamp != stamp) {
         if (e->bytes < n) {
             heap_free(&tram, e->mem, e->bytes);
             e->mem = heap_alloc(&tram, n);
             e->bytes = e->mem ? n : 0;
+            loose_why = "no texture memory";
             if (!e->mem) return 0;
         }
+        loose_why = "GS memory read refused";
         if (kh1_gsmem_read_rect(psm, lo & 0x3FFF, lo >> 14 & 63, 0, 0, w, h, buf, w)) return 0;
         kh1_texfmt_convert(psm, buf, w, h, e->mem);
         e->lo = lo;
@@ -655,12 +699,36 @@ static const char *const why_s[W_N] = { "the frame's vertices overflow the ring"
                                         "no pipeline", "no texture", "vertices out of range",
                                         "no uniforms or primitive class" };
 static u32 why[W_N];
+/* the texture skips by their reason (tex_why's text after its last ": "), with the first one's whole text */
+static struct { char r[48], ex[160]; u32 n; } texskip[8];
 static void skip(u32 w, const char *detail) {
     skipped++;
+    if (w == W_TEX && detail) {
+        const char *r = detail, *p;
+        u32 i;
+        for (p = detail; (p = strstr(p, ": ")) != 0; p += 2) r = p + 2;
+        for (i = 0; i < 8 && texskip[i].n && strncmp(texskip[i].r, r, sizeof texskip[i].r - 1); i++) {}
+        if (i < 8) {
+            if (!texskip[i].n++) {
+                snprintf(texskip[i].r, sizeof texskip[i].r, "%s", r);
+                snprintf(texskip[i].ex, sizeof texskip[i].ex, "%s", detail);
+            }
+        }
+    }
     if (!why[w]++) kh1_vita_log("kh1-gxm: first skip, %s: %s\n", why_s[w], detail ? detail : "");
 }
 
 volatile u32 kh1_vita_us_gpu; /* microseconds in kh1_vita_gxm_frame (the watchdog's) */
+/* session 137v: of it, by part: 0 turning the commands into calls (gxmrec), 1 the vertex copy, 2 the scenes'
+ * begin / end, 3 the draws (programs, textures, sceGxmDraw), 4 the transfers (texture, palette, target uploads) */
+volatile u32 kh1_vita_us_part[5];
+volatile u32 kh1_vita_us_finish, kh1_vita_finishes; /* of it, waiting in sceGxmFinish, and how many */
+static void finish(void) {
+    SceUInt64 t0 = sceKernelGetProcessTimeWide();
+    sceGxmFinish(ctx);
+    kh1_vita_us_finish += (u32)(sceKernelGetProcessTimeWide() - t0);
+    kh1_vita_finishes++;
+}
 
 static void stencil(u32 mode) {
     switch (mode) {
@@ -695,6 +763,37 @@ static void target_upload(Target *t, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w,
     }
 }
 
+/* the pending uploads written (one wait for the GPU for them all); `only` one target's, or all */
+static void pend_flush(Target *only) {
+    u32 i;
+    int any = 0;
+    for (i = 0; i < KH1_CMD_TARGETS; i++) {
+        Target *t = &tgt[i];
+        KH1CmdXfer x;
+        if (!t->pend || (only && t != only)) continue;
+        if (!any) finish();
+        any = 1;
+        t->pend = 0;
+        if (!t->mem) continue;
+        memset(&x, 0, sizeof x);
+        x.bb_hi = t->pend_bb;
+        target_upload(t, &x, t->px0, t->py0, t->px1 - t->px0, t->py1 - t->py0);
+    }
+}
+static void pend_add(Target *t, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
+    if (t->pend && t->pend_bb != x->bb_hi) pend_flush(t);
+    if (!t->pend) {
+        t->pend = 1;
+        t->pend_bb = x->bb_hi;
+        t->px0 = dx, t->py0 = dy, t->px1 = dx + w, t->py1 = dy + h;
+        return;
+    }
+    if (dx < t->px0) t->px0 = dx;
+    if (dy < t->py0) t->py0 = dy;
+    if (dx + w > t->px1) t->px1 = dx + w;
+    if (dy + h > t->py1) t->py1 = dy + h;
+}
+
 void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     const KH1TexCache *tc = kh1_pipes_texcache();
     const KH1PalCache *pc = kh1_pipes_palcache();
@@ -712,7 +811,9 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     if (!ready) return;
     t0 = sceKernelGetProcessTimeWide();
     kh1_gxm_frame(&rec, r);
-    sceGxmFinish(ctx); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
+    kh1_vita_us_part[0] += (u32)(sceKernelGetProcessTimeWide() - t0);
+    finish(); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
+    pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
     if (r->vring.head > vbuf_bytes) {
         char d[64];
         snprintf(d, sizeof d, "%u bytes, room for %u", (u32)r->vring.head, (u32)vbuf_bytes);
@@ -731,14 +832,23 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 if (why[w] && n < sizeof b - 64) n += (u32)snprintf(b + n, sizeof b - n, " %u %s;", why[w], why_s[w]);
             b[n] = 0;
             kh1_vita_log("kh1-gxm: skipped so far:%s\n", b);
+            for (w = 0; w < 8 && texskip[w].n; w++)
+                kh1_vita_log("kh1-gxm:   no texture, %u: %s\n", texskip[w].n, texskip[w].ex);
             last = skipped;
         }
     }
-    memcpy(vbuf, vsrc, r->vring.head);
+    {
+        SceUInt64 t1 = sceKernelGetProcessTimeWide();
+        memcpy(vbuf, vsrc, r->vring.head);
+        kh1_vita_us_part[1] += (u32)(sceKernelGetProcessTimeWide() - t1);
+    }
     memset(&t, 0, sizeof t);
     for (i = 0; i < rec.n; i++) {
         const KH1GxmCall *c = &rec.call[i];
         const KH1Cmd *k = c->cmd < r->ncmd ? &r->cmd[c->cmd] : 0;
+        SceUInt64 t1 = sceKernelGetProcessTimeWide();
+        u32 part = c->op == KH1_GXM_BEGIN_SCENE || c->op == KH1_GXM_END_SCENE ? 2
+                   : c->op == KH1_GXM_DRAW || c->op == KH1_GXM_SET_PROGRAMS || c->op == KH1_GXM_SET_TEXTURE ? 3 : 4;
         switch (c->op) {
         case KH1_GXM_BEGIN_SCENE: {
             Depth *z;
@@ -752,7 +862,12 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 skip(W_TARGET, d);
                 break;
             }
-            z = depth_of(c->depth, c->w, c->h);
+            for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++) ;
+            if (j < rec.n) dstore = rec.call[j].dstore != KH1_STORE_DISCARD;
+            /* session 137v: a scene that neither loads nor stores its depth (its draws do not test it, or only
+             * against what they wrote) runs on the spare buffer, so the GS one's memory is not touched at all
+             * (Dive's floor, drawn in the scene after one such, flickered in Vita3K) */
+            z = depth_of(c->depth != KH1_DS_NONE && c->dload != KH1_LOAD_LOAD && !dstore ? KH1_DS_NONE : c->depth, c->w, c->h);
             if (!z) {
                 char d[256];
                 snprintf(d, sizeof d, "depth %u %u x %u; %u KiB of CDRAM free (largest %u), %u of LPDDR", c->depth, c->w,
@@ -761,8 +876,14 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 cur = 0;
                 break;
             }
-            for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++) ;
-            if (j < rec.n) dstore = rec.call[j].dstore != KH1_STORE_DISCARD;
+            {   /* the pending uploads into this target, and into those its draws sample */
+                int need = cur->pend;
+                for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++)
+                    if (rec.call[j].op == KH1_GXM_SET_TEXTURE && rec.call[j].src && rec.call[j].src <= KH1_CMD_TARGETS &&
+                        tgt[rec.call[j].src - 1].pend)
+                        need = 1;
+                if (need) pend_flush(0);
+            }
             sceGxmDepthStencilSurfaceSetForceLoadMode(&z->surf, c->depth != KH1_DS_NONE && c->dload == KH1_LOAD_LOAD
                                                       ? SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_ENABLED : SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_DISABLED);
             sceGxmDepthStencilSurfaceSetForceStoreMode(&z->surf, c->depth != KH1_DS_NONE && dstore
@@ -809,7 +930,8 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             Target *s = c->src && c->src <= KH1_CMD_TARGETS ? &tgt[c->src - 1] : 0;
             u32 e, *o = (u32 *)pal_rb;
             if (!s || !s->mem) break;
-            sceGxmFinish(ctx);
+            pend_flush(s);
+            finish();
             for (e = 0; e < 256; e++) {
                 u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g;
                 g = (p >> 4) < s->h && (p & 15) < s->w ? ((u32 *)s->mem)[(p >> 4) * s->stride + (p & 15)] : 0;
@@ -821,8 +943,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         case KH1_GXM_TARGET_UPLOAD: {
             Target *d = c->tgt && c->tgt <= KH1_CMD_TARGETS ? &tgt[c->tgt - 1] : 0;
             if (!d || !d->mem || !k) break;
-            sceGxmFinish(ctx);
-            target_upload(d, &k->x, c->dx, c->dy, c->w, c->h);
+            pend_add(d, &k->x, c->dx, c->dy, c->w, c->h);
             break;
         }
         case KH1_GXM_BLIT: { /* target to target (GS memory on either side keeps the CPU model's bytes) */
@@ -830,8 +951,9 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             Target *d = c->tgt && c->tgt <= KH1_CMD_TARGETS ? &tgt[c->tgt - 1] : 0;
             u32 y, w, sx, sy;
             if (!d || !d->mem || !k) break;
-            sceGxmFinish(ctx);
-            if (!s || !s->mem) { target_upload(d, &k->x, c->dx, c->dy, c->w, c->h); break; }
+            if (!s || !s->mem) { pend_add(d, &k->x, c->dx, c->dy, c->w, c->h); break; }
+            pend_flush(0);
+            finish();
             sx = k->x.sx;
             sy = k->x.sy;
             for (y = 0; y < c->h; y++) {
@@ -878,7 +1000,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 u32 fmt;
                 if (!m || !m->mem || m->lo != c->tex0_lo || m->w != w || m->h != h) {
                     snprintf(tex_why, sizeof tex_why, "tex0 %08x%08x %u x %u (slot %d): %s", c->tex0_hi, c->tex0_lo, w, h,
-                             c->slot, !m ? "in neither cache" : !m->mem ? "not uploaded" : "the slot holds another");
+                             c->slot, !m ? loose_why : !m->mem ? "not uploaded" : "the slot holds another");
                     break;
                 }
                 fmt = kh1_texfmt_of(m->psm);
@@ -947,8 +1069,11 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             break;
         }
         }
+        kh1_vita_us_part[part] += (u32)(sceKernelGetProcessTimeWide() - t1);
     }
     if (open) sceGxmEndScene(ctx, 0, 0);
+    if (display >= 0 && tgt[display].pend) pend_flush(&tgt[display]); /* the present reads it; the rest wait for
+                                                                      * the next frame's start */
     frames++;
     kh1_vita_us_gpu += (u32)(sceKernelGetProcessTimeWide() - t0);
 }
@@ -1057,9 +1182,108 @@ void kh1_vita_gxm_stats(u32 *f, u32 *d, u32 *s, u32 *sc) {
     *sc = scenes;
 }
 
+/* config.txt's shadertest=1 (session 137v): which part of the REGION_REPEAT shader that stops SceShaccCg
+ * ("fatal internal error") does it.  The failing key and its neighbours (each field put back one at a time),
+ * then the failing text with each body line left out in turn: a line whose removal compiles is one the
+ * failure needs.  Each result goes to the log as "kh1-gxm: shadertest ..." */
+int kh1_vita_shadertest;
+static int test_compile(const char *t, u32 len) {
+    u32 size = len;
+    SceGxmProgram *c = shark_compile_shader_extended(t, &size, SHARK_FRAGMENT_SHADER, SHARK_OPT_DEFAULT, SHARK_DISABLE,
+                                                     SHARK_DISABLE, SHARK_DISABLE);
+    int ok = c && size;
+    shark_clear_output();
+    return ok;
+}
+static void shadertest(void) {
+    static char base[KH1_SHADER_TEXT], t[KH1_SHADER_TEXT];
+    static const char *what[] = { "the failing key", "no fog", "no discard", "u plain", "v plain", "uv (no divide)",
+                                  "rgba8", "no tcc", "discard gequal", "discard-pass", "u only (no fog)",
+                                  "u only (no discard)", "no fog, no discard" };
+    KH1ShaderKey k0, k;
+    u32 i, len, n;
+    memset(&k0, 0, sizeof k0);
+    k0.tex = KH1_TEXFMT_P8;
+    k0.tcc = 1;
+    k0.fog = 1;
+    k0.pre_a = 2;
+    k0.pre_d = 3;
+    k0.discard = KH1_DISCARD_FAIL;
+    k0.atst = KH1_ATST_GREATER;
+    k0.su = k0.sv = KH1_SHADER_TAPS;
+    for (i = 0; i < sizeof what / sizeof *what; i++) {
+        k = k0;
+        switch (i) {
+        case 1: k.fog = 0; break;
+        case 2: k.discard = 0, k.atst = 0; break;
+        case 3: k.su = KH1_SHADER_NONE; break;
+        case 4: k.sv = KH1_SHADER_NONE; break;
+        case 5: k.fst = 1; break;
+        case 6: k.tex = KH1_TEXFMT_RGBA8; break;
+        case 7: k.tcc = 0; break;
+        case 8: k.atst = KH1_ATST_GEQUAL; break;
+        case 9: k.discard = KH1_DISCARD_PASS; break;
+        case 10: k.sv = KH1_SHADER_NONE, k.fog = 0; break;
+        case 11: k.sv = KH1_SHADER_NONE, k.discard = 0, k.atst = 0; break;
+        case 12: k.fog = 0, k.discard = 0, k.atst = 0; break;
+        }
+        len = kh1_shader_frag_cg(&k, t, sizeof t);
+        kh1_vita_log("kh1-gxm: shadertest key %u (%s): %s\n", i, what[i], !len ? "not generated" : test_compile(t, len) ? "ok" : "FAIL");
+    }
+    len = kh1_shader_frag_cg(&k0, base, sizeof base);
+    if (!len) return;
+    { /* rewrites of the failing text: the region's wrap by frac, the fog and the region apart in registers */
+        static const char *rw[][2][3] = {
+            { { "    r5.x = floor(r1.x * u_r.x);\n    r1.x = r5.x * u_r.y + r1.x;\n",
+                "    r5.y = floor(r1.y * u_r.z);\n    r1.y = r5.y * u_r.w + r1.y;\n", 0 },
+              { "    r1.x = frac(r1.x * u_r.x) * -u_r.y;\n", "    r1.y = frac(r1.y * u_r.z) * -u_r.w;\n", 0 } },
+            { { "    r5.x = floor(r1.x * u_r.x);\n    r1.x = r5.x * u_r.y + r1.x;\n",
+                "    r5.y = floor(r1.y * u_r.z);\n    r1.y = r5.y * u_r.w + r1.y;\n", 0 },
+              { "    r3.x = floor(r1.x * u_r.x);\n    r1.x = r3.x * u_r.y + r1.x;\n",
+                "    r3.y = floor(r1.y * u_r.z);\n    r1.y = r3.y * u_r.w + r1.y;\n", 0 } },
+            { { "    r1.x = r1.x + u_c.z;\n    r5.y", "    r1.y = r1.y + u_c.w;\n", 0 },
+              { "    r5.y", "", 0 } },
+            { { "    r2 = tex2D(tex, r1.xy);\n", 0, 0 }, { "    r2 = tex2D(tex, r1.xy + float2(0.0, 0.0));\n", 0, 0 } },
+        };
+        static const char *rwn[] = { "the wrap by frac", "the region in r3", "no FIX offsets", "tex2D on an expression" };
+        for (i = 0; i < sizeof rw / sizeof *rw; i++) {
+            u32 j, bad = 0;
+            memcpy(t, base, len + 1);
+            for (j = 0; j < 3 && rw[i][0][j]; j++) {
+                char *a = strstr(t, rw[i][0][j]);
+                u32 la = (u32)strlen(rw[i][0][j]), lb = (u32)strlen(rw[i][1][j]), lt = (u32)strlen(t);
+                if (!a || lt - la + lb + 1 > sizeof t) { bad = 1; break; }
+                memmove(a + lb, a + la, lt - (u32)(a - t) - la + 1);
+                memcpy(a, rw[i][1][j], lb);
+            }
+            kh1_vita_log("kh1-gxm: shadertest rewrite %u (%s): %s\n", i, rwn[i], bad ? "did not apply"
+                         : test_compile(t, (u32)strlen(t)) ? "ok" : "FAIL");
+        }
+    }
+    {
+        const char *body = strstr(base, "{\n"), *p;
+        u32 lines = 0;
+        if (!body) return;
+        body += 2;
+        for (p = body; *p; p++) lines += *p == '\n';
+        for (n = 0; n + 2 < lines; n++) { /* each body line but the closing brace */
+            const char *a = body, *b;
+            u32 j, m;
+            for (j = 0; j < n; j++) a = strchr(a, '\n') + 1;
+            b = strchr(a, '\n') + 1;
+            m = (u32)(a - base);
+            memcpy(t, base, m);
+            memcpy(t + m, b, len - (u32)(b - base) + 1);
+            kh1_vita_log("kh1-gxm: shadertest without line %u (%.*s): %s\n", n, (int)(b - a - 1), a,
+                         test_compile(t, (u32)strlen(t)) ? "ok" : "FAIL");
+        }
+    }
+}
+
 /* the compiler, the shaders the frame needs before any draw (the vertex variants, the present's pair), the
  * GPU memory.  0 when the GPU path can run */
 int kh1_vita_shacc_ext = 1; /* config.txt's shacc_ext= (main.c) */
+int kh1_vita_shacc_restart; /* config.txt's shacc_restart= (main.c) */
 int kh1_vita_gxm_init(void) {
     u32 i;
     ctx = vita2d_get_context();
@@ -1073,6 +1297,7 @@ int kh1_vita_gxm_init(void) {
     kh1_vita_log("kh1-gxm: shader compiler %s\n", shark_ok == 2 ? "loaded with its extensions (ur0:data/libshacccg.suprx)"
                  : shark_ok ? "loaded without its extensions (ur0:data/libshacccg.suprx; no frame reads)"
                  : "not loaded: only shaders already in " SHADER_DIR " can be used");
+    if (kh1_vita_shadertest && shark_ok) shadertest();
     for (i = 1; i < 7; i++)
         if (vert_load(i)) {
             kh1_vita_log("kh1-gxm: vertex shader %u (%s) unavailable: the software picture stays\n", i, kh1_vertkey_str(i));

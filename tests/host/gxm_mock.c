@@ -16,7 +16,7 @@
  * KH1_HOST_GXM=N turns it on: gxm.c takes every frame's commands (uploads always), the rasteriser draws the two
  * frames before each Nth and the display target is compared with the GS model's display buffer (RGB) at each
  * Nth; KH1_HOST_GXM_POINT=1 samples point (the model's sprites are point-sampled), KH1_HOST_GXM_PPM=DIR writes
- * both pictures.  Run with KH1_HOST_SHOT so the model draws its pixels.  Not part of the PS2 build. */
+ * both pictures, KH1_HOST_GXM_FROM=F checks every frame from F.  Run with KH1_HOST_SHOT so the model draws its pixels.  Not part of the PS2 build. */
 #include <psp2/gxm.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
@@ -111,6 +111,7 @@ static SceShaccCgCompileOutput no_output;
 int shark_init_simple(const char *path) { (void)path; return 0; }
 int shark_init(const char *path) { (void)path; return 0; }
 void shark_clear_output(void) {}
+void shark_end(void) {}
 const SceShaccCgCompileOutput *shark_get_internal_compile_output(void) { return &no_output; }
 SceGxmProgram *shark_compile_shader_extended(const char *src, uint32_t *size, shark_type type, shark_opt opt,
                                              int32_t fm, int32_t fp, int32_t fi) {
@@ -256,6 +257,7 @@ static struct {
     u32 *col, cstride, cw, ch; /* the scene's colour surface */
     SceGxmDepthStencilSurface *ds;
     u32 *z, zstride;          /* depth (24 bits) | stencil << 24, linear */
+    u32 *zsave;               /* a scene's depth memory when it is not stored */
     MockVP *vp;
     MockFP *fp;
     SceGxmTexture tex[4];
@@ -269,16 +271,71 @@ static struct {
     u32 smask, swmask, sref;
     f32 vub[64], fub[64];
     u32 draws, tris, pixels, lost;
+    u32 n_in, n_disc, n_zfail; /* KH1_HOST_GXM_CALLS: a draw's covered, discarded and depth-failed pixels */
 } g;
 
 SceGxmContext *vita2d_get_context(void) { static int c; return (SceGxmContext *)&c; }
 SceGxmShaderPatcher *vita2d_get_shader_patcher(void) { static int p; return (SceGxmShaderPatcher *)&p; }
 void *vita2d_pool_memalign(unsigned int size, unsigned int align) { static u8 pool[4096] __attribute__((aligned(64))); (void)align; return size <= sizeof pool ? pool : 0; }
-void sceGxmFinish(SceGxmContext *c) { (void)c; }
+/* session 137v: the GPU runs a scene after its end, as late as sceGxmFinish, on the memory as it is then (a
+ * texture, palette or vertex the CPU rewrote after the draw was issued is what the GPU reads): the scenes and
+ * their draws are queued, each draw with the context's state at its call, and run at sceGxmFinish (and after
+ * each frame, where gxm.c's next frame starts with one) */
+typedef struct {
+    int op;                                /* 0 begin, 1 draw, 2 end */
+    SceGxmColorSurface cs;                 /* begin */
+    SceGxmDepthStencilSurface ds;          /* as it is at the begin (its load / store modes) */
+    SceGxmPrimitiveType t;                 /* draw */
+    const void *ix;
+    unsigned n;
+    u8 st[sizeof g];                       /* the context at the draw */
+} Queued;
+static Queued *queue;
+static u32 nqueue, capqueue;
+static Queued *enqueue(int op) {
+    if (nqueue == capqueue) {
+        capqueue = capqueue ? capqueue * 2 : 256;
+        queue = realloc(queue, capqueue * sizeof *queue);
+    }
+    queue[nqueue].op = op;
+    return &queue[nqueue++];
+}
+static void do_begin(const SceGxmColorSurface *cs, const SceGxmDepthStencilSurface *ds);
+static void do_end(void);
+static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n);
+static void flush(void) {
+    u32 i;
+    for (i = 0; i < nqueue; i++) {
+        Queued *q = &queue[i];
+        if (q->op == 0) do_begin(&q->cs, &q->ds);
+        else if (q->op == 2) do_end();
+        else {
+            /* the draw's state, keeping the scene's surfaces and the counters */
+            u32 *col = g.col, cs = g.cstride, cw = g.cw, ch = g.ch, *z = g.z, zs = g.zstride, *zsave = g.zsave;
+            SceGxmDepthStencilSurface *dsf = g.ds;
+            u32 draws = g.draws, tris = g.tris, pixels = g.pixels, lost = g.lost, a = g.n_in, b = g.n_disc, c = g.n_zfail;
+            int raster = g.raster;
+            memcpy(&g, q->st, sizeof g);
+            g.col = col; g.cstride = cs; g.cw = cw; g.ch = ch; g.z = z; g.zstride = zs; g.zsave = zsave; g.ds = dsf;
+            g.draws = draws; g.tris = tris; g.pixels = pixels; g.lost = lost; g.n_in = a; g.n_disc = b; g.n_zfail = c;
+            g.raster = raster;
+            do_draw(q->t, q->ix, q->n);
+        }
+    }
+    nqueue = 0;
+}
+void sceGxmFinish(SceGxmContext *c) { (void)c; flush(); }
 
 int sceGxmBeginScene(SceGxmContext *c, unsigned int flags, const SceGxmRenderTarget *rt, const SceGxmValidRegion *vr,
                      SceGxmSyncObject *vs, SceGxmSyncObject *fs, const SceGxmColorSurface *cs, const SceGxmDepthStencilSurface *ds) {
+    Queued *q = enqueue(0);
     (void)c; (void)flags; (void)rt; (void)vr; (void)vs; (void)fs;
+    q->cs = *cs;
+    q->ds = *ds;
+    g.clip_mode = SCE_GXM_REGION_CLIP_NONE;
+    return 0;
+}
+static void do_begin(const SceGxmColorSurface *cs, const SceGxmDepthStencilSurface *ds) {
     g.col = (u32 *)(uintptr_t)cs->pbeEmitWords[0];
     g.cstride = cs->pbeEmitWords[1];
     g.cw = cs->pbeEmitWords[2];
@@ -286,23 +343,27 @@ int sceGxmBeginScene(SceGxmContext *c, unsigned int flags, const SceGxmRenderTar
     g.ds = (SceGxmDepthStencilSurface *)ds;
     g.z = (u32 *)ds->depthData;
     g.zstride = ds->backgroundControl;
+    if (!(ds->zlsControl & 4)) { /* not to be stored: the memory as it is, put back at the end */
+        g.zsave = realloc(g.zsave, (size_t)g.ch * g.zstride * 4);
+        memcpy(g.zsave, g.z, (size_t)g.ch * g.zstride * 4);
+    }
     if (!(ds->zlsControl & 2)) { /* not loaded: the background depth 1.0, stencil 0 */
         u32 y, x;
         for (y = 0; y < g.ch; y++)
             for (x = 0; x < g.cw; x++) g.z[y * g.zstride + x] = 0xFFFFFF;
     }
-    g.clip_mode = SCE_GXM_REGION_CLIP_NONE;
-    return 0;
 }
 int sceGxmEndScene(SceGxmContext *c, const SceGxmNotification *vn, const SceGxmNotification *fn) {
     (void)c; (void)vn; (void)fn;
-    if (g.ds && !(g.ds->zlsControl & 4)) { /* not stored: what is left is garbage */
-        u32 y, x;
-        for (y = 0; y < g.ch; y++)
-            for (x = 0; x < g.cw; x++) g.z[y * g.zstride + x] = 0x5A000000u ^ (x * 2654435761u ^ y * 40503u);
-    }
-    g.col = 0;
+    enqueue(2);
     return 0;
+}
+static void do_end(void) {
+    /* not stored: the scene's depth stays on chip and the surface's memory keeps what an earlier scene stored
+     * (session 137v: the mock used to scribble it, which a later scene's load of that earlier store, past a scene
+     * that only tests depth, does not see on the GPU) */
+    if (g.ds && !(g.ds->zlsControl & 4)) memcpy(g.z, g.zsave, (size_t)g.ch * g.zstride * 4);
+    g.col = 0;
 }
 void sceGxmSetViewport(SceGxmContext *c, float xo, float xs, float yo, float ys, float zo, float zs) {
     (void)c;
@@ -487,7 +548,8 @@ static void pixel(s32 x, s32 y, const Vary *v) {
     r.ctx = sp ? &g.tex[sp->index] : 0;
     kh1_shader_run(fp->text, &r);
     if (r.bad) g.lost++;
-    if (r.discarded) return;
+    g.n_in++;
+    if (r.discarded) { g.n_disc++; return; }
     if (!stest(g.sfunc, g.sref & g.smask, st & g.smask)) {
         *z = (*z & 0xFFFFFF) | (((st & ~g.swmask) | (sop(g.sfail, st) & g.swmask)) & 0xFF) << 24;
         return;
@@ -497,6 +559,7 @@ static void pixel(s32 x, s32 y, const Vary *v) {
         zv = (u32)(zf * 16777215.0f + 0.5f);
     }
     if (!ztest(g.zfunc, zv, *z & 0xFFFFFF)) {
+        g.n_zfail++;
         *z = (*z & 0xFFFFFF) | (((st & ~g.swmask) | (sop(g.zfail, st) & g.swmask)) & 0xFF) << 24;
         return;
     }
@@ -580,13 +643,21 @@ static void triangle(const Vary *a, const Vary *b, const Vary *c) {
 }
 
 int sceGxmDraw(SceGxmContext *c, SceGxmPrimitiveType t, SceGxmIndexFormat f, const void *ix, unsigned int n) {
+    Queued *q = enqueue(1);
+    (void)c; (void)f;
+    q->t = t;
+    q->ix = ix;
+    q->n = n;
+    memcpy(q->st, &g, sizeof g);
+    return 0;
+}
+static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
     const u16 *idx = (const u16 *)ix;
     unsigned i;
-    (void)c; (void)f;
     g.draws++;
-    if (!g.raster || !g.col || !g.vp || !g.fp) return 0;
-    if (!g.vp->p->kh1 || !g.fp->p->kh1) return 0; /* the present's own pair: not interpreted */
-    if (t != SCE_GXM_PRIMITIVE_TRIANGLES) { g.lost++; return 0; }
+    if (!g.raster || !g.col || !g.vp || !g.fp) return;
+    if (!g.vp->p->kh1 || !g.fp->p->kh1) return; /* the present's own pair: not interpreted */
+    if (t != SCE_GXM_PRIMITIVE_TRIANGLES) { g.lost++; return; }
     for (i = 0; i + 2 < n; i += 3) {
         Vary v[3];
         vertex(idx[i], &v[0]);
@@ -597,7 +668,10 @@ int sceGxmDraw(SceGxmContext *c, SceGxmPrimitiveType t, SceGxmIndexFormat f, con
                    v[0].z, v[1].x, v[1].y, v[2].x, v[2].y, v[0].col[0], v[0].col[1], v[0].col[2], v[0].col[3], g.cx0, g.cy0, g.cx1, g.cy1);
         triangle(&v[0], &v[1], &v[2]);
     }
-    return 0;
+    if (g.raster && getenv("KH1_HOST_GXM_CALLS")) {
+        printf("kh1-gxm-mock:     %u pixels covered, %u discarded, %u failed depth\n", g.n_in, g.n_disc, g.n_zfail);
+        g.n_in = g.n_disc = g.n_zfail = 0;
+    }
 }
 
 /* ---- the check ---- */
@@ -664,17 +738,22 @@ static int compare(const char *what, u32 rt, u32 bp, u32 rows) {
     return diff != 0;
 }
 
+static u32 from; /* KH1_HOST_GXM_FROM=F: rasterise and compare every frame from F */
 static void hook(const KH1CmdRec *r) {
     u32 n = frame % (u32)every;
+    if (from && frame >= from) n = (u32)every - 1; /* KH1_HOST_GXM_FROM: every frame from there */
     g.raster = n >= (u32)every - 2;
     g.draws = g.tris = g.pixels = 0;
     kh1_vita_gxm_frame(r);
+    flush(); /* the GPU done (gxm.c's next frame waits for it) */
     if (n == (u32)every - 1 && getenv("KH1_HOST_GXM_CALLS")) { /* the frame's calls and pipelines */
         static KH1GxmRec gr;
         u32 i;
         kh1_gxm_frame(&gr, r);
         for (i = 0; i < gr.n; i++) printf("kh1-gxm-mock:   %s\n", kh1_gxm_call_str(&gr.call[i]));
         for (i = 0; i < gr.npipe; i++) printf("kh1-gxm-mock:   pipe %u: %s\n", i, kh1_pipekey_str(&gr.pipe[i]));
+        for (i = 0; i < r->ntgt; i++)
+            printf("kh1-gxm-mock:   target %u: rt %u bp %04x bw %u\n", i, r->tgt[i] & 0xFF, (r->tgt[i] >> 8 & 0xFFF) * 32, r->tgt[i] >> 20);
     }
     if (n == (u32)every - 1) {
         checks++;
@@ -689,6 +768,7 @@ __attribute__((constructor)) static void start(void) {
     const char *e = getenv("KH1_HOST_GXM");
     if (!e || (every = atoi(e)) < 2) return;
     g.point = getenv("KH1_HOST_GXM_POINT") != 0;
+    from = getenv("KH1_HOST_GXM_FROM") ? (u32)atoi(getenv("KH1_HOST_GXM_FROM")) : 0;
     ppm = getenv("KH1_HOST_GXM_PPM");
     if (kh1_vita_gxm_init()) {
         printf("kh1-gxm-mock: gxm.c did not start\n");

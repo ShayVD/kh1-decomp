@@ -52,5 +52,9 @@ extern void (*kh1_dma_after_send)(u32 tadr);
  * send's "dma ch" line, the ~7 lines a frame the Vita wrote through an unbuffered log; 0 (the host's
  * default) prints them.  Levels 3-5's extra lines still print. */
 extern int kh1_dma_quiet;
+/* Session 137v: 1 runs each VIF1 stream's codes on VIF1 / VU1 (host/port/vu1.c, include/platform/vu1.h) and reads
+ * their XGKICK output as GIF packets, so renderer A / B's meshes reach the register file, the GS model and the GPU
+ * recorder; 0 (the default) only counts the program starts (kh1_gs_path1).  KH1_HOST_VU1=1, the Vita's vu1=1. */
+extern int kh1_dma_vu1;
 
 #endif

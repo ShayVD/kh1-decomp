@@ -148,7 +148,8 @@ static void parse(void) {
     k = key0();
     k.tex = KH1_TEXFMT_RGBA8;
     k.su = KH1_SHADER_TAPS;
-    CHECK("parse: a TAPS key is not generated", !frag(&k));
+    CHECK("parse: a TAPS key is generated (session 137v)", frag(&k) && find_str(text, "u_c.z"));
+    CHECK("parse: the TAPS key declares u_c (session 137v: Vita3K's compiler refused it undeclared)", find_str(text, "uniform float4 u_c"));
     for (i = 0; i < 7; i++) {
         u32 len = kh1_shader_vert_cg(i, text, sizeof text);
         memset(&run, 0, sizeof run);
@@ -611,6 +612,45 @@ static void sampler(void) {
         }
     printf("shadergen_test: sampler: %u samples\n", n);
     CHECK("sampler: the shader's REGION_CLAMP clamp and the GPU's sample are kh1_sampler_port's", !bad);
+    { /* session 137v: REGION_REPEAT point sampled, the shader's one wrapped tap against the GS's rule */
+        static const u32 rr[][2] = { { 7, 8 }, { 3, 0 }, { 1, 12 }, { 15, 0 }, { 0, 5 }, { 7, 0 } };
+        u32 rbad = 0, rn = 0;
+        for (ci = 0; ci < 6; ci++) {
+            KH1DrawRegs r;
+            KH1DrawState ds;
+            memset(&r, 0, sizeof r);
+            r.prim = 0x116;
+            r.tex0_lo = 1 << 14 | 4u << 26;
+            r.tex0_hi = 1 | 1 << 2 | 1 << 3;
+            /* WMS / WMT REGION_REPEAT, MINU (mask) / MAXU (fix), MINV / MAXV */
+            r.clamp_lo = 3 | 3 << 2 | rr[ci][0] << 4 | rr[ci][1] << 14 | rr[5 - ci][0] << 24;
+            r.clamp_hi = rr[5 - ci][0] >> 8 | rr[5 - ci][1] << 2;
+            r.zbuf_hi = 1;
+            kh1_drawstate_of(&r, &ds);
+            gpu_s = ds.sampler;
+            gpu_s.u.shader = gpu_s.v.shader = KH1_SHADER_NONE;
+            if (!frag(&ds.pipe[0].shader)) { rbad++; continue; }
+            memset(&run, 0, sizeof run);
+            uniforms(&ds);
+            run.tex = tex_gpu;
+            for (u = -40; u < 16 * 16 + 40; u += 3)
+                for (v = -24; v < 16 * 16 + 24; v += 37) {
+                    u32 want, got;
+                    /* a texel's middle: the GPU's float coordinate lands in the same texel as the GS's fixed point */
+                    s32 uc = (u & ~15) + 8, vc = (v & ~15) + 8;
+                    want = kh1_sampler_gs(&ds.sampler, grid, 0, uc, vc);
+                    unorm4(run.v[KH1_SV_COL], 0x80808080u);
+                    set4(run.v[KH1_SV_TC], uc / 256.0f, vc / 256.0f, 1.0f, 1.0f);
+                    exec(text);
+                    got = reg8(run.v[KH1_SV_R2]);
+                    rn++;
+                    if (got != want && !rbad++)
+                        printf("shadergen_test: region repeat case %u (%d, %d)/16: GS %08x, shader %08x\n", ci, uc, vc, want, got);
+                }
+        }
+        printf("shadergen_test: region repeat: %u samples\n", rn);
+        CHECK("sampler: REGION_REPEAT's wrapped tap is the GS's texel (point)", !rbad);
+    }
     { /* ST / Q: the shader divides */
         KH1ShaderKey k = key0();
         k.tex = KH1_TEXFMT_RGBA8;

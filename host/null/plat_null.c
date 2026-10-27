@@ -62,9 +62,10 @@ int PlatCdMmode(int media) { return 0; }
 /* without a disc image the host runner stops at the first read (host/null/main.c); with one the
  * read is done before PlatCdRead returns, so PlatCdSync and PlatCdGetError answer 0 */
 extern int kh1_host_stop_at_cdread;
+unsigned long kh1_host_frame(void);
 int PlatCdRead(unsigned int lsn, unsigned int sectors, void *buf, void *mode) {
     if (kh1_cd_image_is_open()) {
-        if (kh1_host_trace) printf("kh1-host: PlatCdRead lsn %u, %u sectors\n", lsn, sectors);
+        if (kh1_host_trace) printf("kh1-host: PlatCdRead lsn %u, %u sectors, frame %lu\n", lsn, sectors, kh1_host_frame());
         kh1_host_cd_reads++;
         kh1_host_cd_sectors += sectors;
         if (!kh1_cd_image_read(lsn, sectors, buf)) {
