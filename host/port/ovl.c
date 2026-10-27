@@ -65,9 +65,21 @@ static int same_name(const char *a, const char *b) {
     return *a == *b;
 }
 
+/* session 137v: every load the queue finishes (src/io/discfile.c func_00120678), with KH1_HOST_TRACE: its
+ * size, and whether KINGDOM.IDX holds its name (func_00120190, by the name's hash func_001200f8) */
+extern int kh1_host_trace;
+s32 func_001200f8(s32);
+void *func_00120190(s32);
+
 void PlatOvlLoaded(const char *name, void *buf, s32 size) {
     int i;
     char hex[65];
+    if (kh1_host_trace) {
+        const u32 *e = (const u32 *)func_00120190((s32)(unsigned long)name);
+        printf("kh1-host: loaded %s: %d bytes at %p (hash 0x%08x, %s)\n", name, (int)size, buf,
+               (unsigned)func_001200f8((s32)(unsigned long)name), e ? "in the index" : "NOT in the index");
+        if (e) printf("kh1-host:   index entry %08x %08x %08x %08x\n", e[0], e[1], e[2], e[3]);
+    }
     if (buf != (void *)D_00F20000) return;
     current = 0;
     for (i = 0; i < kh1_ovl_module_count; i++) {
