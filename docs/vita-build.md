@@ -120,6 +120,17 @@ Mix (SLPS-25198, the English patch included) saves load: the US / European Kingd
 (`BASLUS-20370`, `BESLES-...`) is another game build with its own directory names and save version
 (the head's 0x01317F14), which this one's load screen does not list.
 
+**Checked (2026-10-27)** with the user's card (kh1-test/memcards/KH1_FM_save.ps2: saves 04, 05, 06,
+level 100) on the English disc: tests/host/pads/load_en.txt picks LOAD, slot 1 lists the saves with
+the newest (06) under the cursor, and it loads into the field (party HUD; the host draws no 3D); the
+run reads but writes nothing. The world map (wm.x) and the gummi ship (gb.x), the summons (xs_*.x)
+and limits (xl_limit.x) are overlays with no native C yet, so a save there or a call into one still
+stops the port.
+
+**The packager's segment pad** (session 140): vita-elf-create puts ~3 KiB of import / export tables
+after the code segment; when the code ended 1,168 bytes short of the data's page it failed ("segment 1
+overlaps"). tools/vita/build.py now links a `.rodata` pad when less than a page is left.
+
 ## In Vita3K (2026-10-26)
 
 Vita3K v0.2.1 4232-92bda548 on an M3 Mac (macOS 14.6.1, MoltenVK), firmware 3.74, the Japan Final
