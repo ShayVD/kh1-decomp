@@ -383,6 +383,15 @@ def link_census(results, cc):
             f.write(ovlnative.build.script)
         link_census.script = src
         undefined -= set(re.findall(r"PROVIDE\((\w+) =", ovlnative.build.script))
+    if link_census.script:
+        # session 137v: without SANE_EXPR ld makes `X = sym + off` (outside SECTIONS) an absolute
+        # symbol, and a relocatable link (the Vita's) then loses every relocation to it: the Vita
+        # loads the data segment away from its link address (Vita3K does not), so those names
+        # pointed 0x140000 off there (dktitle.x's file names read as "")
+        src = link_census.script
+        text = open(src).read()
+        if not text.startswith("LD_FEATURE"):
+            open(src, "w").write('LD_FEATURE("SANE_EXPR")\n' + text)
     # where the missing names are defined on the PS2 side
     failing_defs, asm_defs = set(), set()
     for p, ok, _ in results:

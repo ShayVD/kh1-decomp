@@ -398,6 +398,22 @@ translated programs, while tests/host/gxm_mock.c (now running scenes late, at sc
 is then) draws it every frame; and ~310 ms of each 2 s in the frame's transfers (texture and palette uploads,
 which Vita3K's texture cache watches). Both are to be checked on a Vita.
 
+## On a real Vita: the white screen (session 137v, 2026-10-27)
+
+Vita3K reached the title; a real Vita stopped on the white copyright screen after 10 disc reads and
+crashed at frame ~960 (C2-12828-1, a data abort in dktitle_00f20a78 unpacking an unfilled buffer).
+Logged step by step (builds 3d-l to 3d-p; the game's printf now writes the log itself, host/vita/main.c,
+since pointing newlib's stdout at it never took): the title's code ran and queued its loads, but every
+load it queued had an empty file name, so KINGDOM.IDX found nothing and no read was made.
+
+The cause: the Vita loads the data segment away from its link address (seg 2 at 0x81300000, linked at
+0x811c0000; Vita3K loads it where linked). The functions.tsv / defs_host.c / native-overlay aliases
+(`PROVIDE(X = sym + off)` in aliases.ld) were absolute symbols, because ld makes an expression outside
+SECTIONS absolute, and the relocatable link then kept no relocation to them: 217 names (dktitle's
+strings among them) pointed 0x140000 off on hardware. tools/host/census.py now heads aliases.ld with
+`LD_FEATURE("SANE_EXPR")`, which keeps them section-relative; `readelf -s` shows no absolute symbol
+left in the image's range. **Anything tested only in Vita3K can hide this kind of bug**: run on hardware.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
