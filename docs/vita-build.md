@@ -385,6 +385,19 @@ on both axes, fog, discard where GREATER fails) stops SceShaccCg with "fatal int
 optimisation level (~4,900 skipped draws); `shadertest=1` bisects it, and meanwhile its draws use the
 plain wrap.
 
+**3d-f to 3d-i (Vita3K, English disc).** `shadertest=1` showed the "failing" shader compiles at start: the 18
+fragment shaders SceShaccCg refused later (all "uv discard-fail greater pre 320 as" plus the region one) were
+a heap the English disc's stale frees had corrupted (host/null/pipes.c's caches from malloc, PR #153); with
+that fix 0 invalid reads / writes and 0 refused shaders, and every texture of the first station is right.
+Restarting the compiler after a failure (`shacc_restart=1`, off) hangs Vita3K (a NULL read in the reloaded
+module). Uploads into a target are now written once before the target's next use (GS memory is read as the
+frame left it, so each upload of a frame wrote the same bytes and waited for the GPU), and a scene that
+neither loads nor stores its depth runs on the spare depth buffer. Still open in Vita3K: the stained-glass
+floor (the region shader's draws) is black on every other drawn frame, with the interpreter as with the
+translated programs, while tests/host/gxm_mock.c (now running scenes late, at sceGxmFinish, on memory as it
+is then) draws it every frame; and ~310 ms of each 2 s in the frame's transfers (texture and palette uploads,
+which Vita3K's texture cache watches). Both are to be checked on a Vita.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
