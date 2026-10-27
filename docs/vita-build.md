@@ -259,10 +259,31 @@ vertex shaders are missing.
 - **The host check**: `tools/vita/gxmcheck.sh [ISO] [FRAMES] [EVERY]` builds gxm.c with vitasdk's headers
   against a mock sceGxm (tests/host/gxm_mock.c: shaders run with kh1_shader_run, a software rasteriser
   with GXM's rules) inside the host runner, and compares the display and the 3D target with the GS
-  model every EVERY frames. Fake disc, 1500 frames: 15 / 15 checks with 0 differing pixels.
+  model every EVERY frames. Fake disc, 1500 frames: 15 checks; the 3D target matches on all, the display
+  differs in one row (y 1, up to 88 levels) on 3 of them, the same with gxm.c and shadergen.c as of
+  0432040 (so not from the changes below; not traced yet).
+- **Skips are logged**: each reason's first case in full (`kh1-gxm: first skip, ...`: the ring, the
+  target, the depth buffer, the scene, the pipeline, the texture, the range, the state) and the counts
+  every 600 frames (`skipped so far`).
+- **Memory**: surfaces (targets, depth) take CDRAM's 48 MiB first and LPDDR's 32 MiB when no CDRAM block
+  is large enough (the new game's 768 x 1135 depth found none: 3% of draws were drawn, 93% after).
+  Render target objects are kept for up to 32 sizes, the least recently used one dropped, never one
+  used this frame.
+- **Whole pictures only**: the GPU draws a frame's calls at the next vblank, so the display target can
+  be shown half drawn (the new game's text flashed). At each frame copy (the game's DISPFB switch,
+  display.c's `kh1_vita_frame_copied`) the display target is copied by a GPU scene into a target of its
+  own (`kh1_vita_gxm_latch`), and only that one is presented.
+- **Palettes at the draw's CSA**: a 4-bit draw reads the CLUT buffer at its own CSA whether or not its
+  TEX0 loads (CLD 0 reuses the buffer). The recorder bound only the last load's palette, so the new
+  game's menus showed valid but wrong kana; pipes.c now compares each indexed draw's entries
+  (kh1_gsmem_clut) with the bound slot's and binds theirs (`kh1_cmd_palette`, a CLUT command never
+  read back), as present.c's `pal_for` does for the software picture.
 
 In Vita3K (M3 Mac): the title and its menus hold ~60 fps (slowest frames ~15 ms; was ~20 fps with the
-software picture), the new game reaches its frame loop. **Not checked yet**: a real Vita; whether the
+software picture); the new game's settings menus (difficulty, camera, vibration, sound, the summary)
+show the right text at ~50-60 fps, and the new game runs on, black where its 3D would be (the VU1 path
+is not replaced). The remaining skips (~5% of draws in a 7,000-frame run) are mostly textured points with the "region t"
+sampler (no shader yet), a target sampled while drawn into, and one 0-wide target. **Not checked yet**: a real Vita; whether the
 frame-read shaders compile with the extensions; colour load behaviour between scenes, the region clip's
 granularity, a CT32 target sampled as a texture (its alpha reads back doubled: the shader key has no
 "from a target" bit), points and lines. Vita3K logs one `sceGxmTextureSetMinFilter` UNSUPPORTED and an
