@@ -5,6 +5,7 @@
  * pauses. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "lang.h"
 #include "platform/gs.h"
 #include "data/bss_004D.h"
 #include "data/bss_0049.h"
@@ -82,11 +83,11 @@ void func_001137f8(void) {
     func_001104e0();
     func_0010f580();
     func_00106b18(D_002BD100);
-    func_001f1ed8(col, 182, 54, func_001efc10(5), 18);
-    func_001f1ed8(col, 214, 54, func_001efc10(6), 18);
-    func_001f1ed8(col, 246, 54, func_001efc10(7), 18);
-    func_001f1ed8(col, 278, 54, func_001efc10(8), 18);
-    func_001f1ed8(col, 310, 54, func_001efc10(9), 18);
+    func_001f1ed8(col, 182, 54, func_001efc10(5), KH1_GLYPH);
+    func_001f1ed8(col, 214, 54, func_001efc10(6), KH1_GLYPH);
+    func_001f1ed8(col, 246, 54, func_001efc10(7), KH1_GLYPH);
+    func_001f1ed8(col, 278, 54, func_001efc10(8), KH1_GLYPH);
+    func_001f1ed8(col, 310, 54, func_001efc10(9), KH1_GLYPH);
     func_0010f5d0();
     PlatGsSyncPath(0, 0);
     PlatGsPutPmode(0xff03);

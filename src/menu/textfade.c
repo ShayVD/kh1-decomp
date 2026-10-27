@@ -8,6 +8,7 @@
  * another; func_0022d398 is the backdrop (D_006469B8[0]).  What screen it is
  * is not known; not proved by a boot. */
 #include "common.h"
+#include "lang.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_00425BC8.h"
 #include "text/textwin.h"
@@ -98,7 +99,7 @@ void func_0022d320(TextWin *arg0) {
             func_001f36b8(arg0);
         }
     }
-    func_001fade0(arg0, 0, 0, 0x12, 0x12, arg0->x24);
+    func_001fade0(arg0, 0, 0, 0x12, KH1_GLYPH, arg0->x24);
 }
 
 void func_0022d398(TextWin *arg0) {

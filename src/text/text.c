@@ -32,6 +32,7 @@
  * CLUT D_003F1660 and sets up the packet headers of D_003F1A70, D_003F1E70,
  * D_003F2270 and D_003F27D0; the text windows follow (textwin.c). */
 #include "common.h"
+#include "lang.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -114,7 +115,7 @@ void func_001ef950(void)
 
 void func_001efaa8(void) {
     D_003E8E28 = (Glyph_3e8e28 *)D_003E4658;
-    D_003E8E2C = 0x310;
+    D_003E8E2C = KH1_EN ? 0x230 : 0x310;
     func_001efb58(0x14);
     func_001efb78(0);
     func_001efb98(0);
@@ -122,7 +123,7 @@ void func_001efaa8(void) {
 }
 
 void func_001efaf0(void) {
-    func_001efb18(D_003E5ED8, D_003E8910);
+    func_001efb18(KH1_EN_AT(D_003E4658, 0x1180, D_003E5ED8), D_003E8910);
 }
 
 void func_001efb18(u8 *s, u16 *o) {
@@ -369,15 +370,15 @@ s32 func_001effc0(u8 *s) {
 }
 
 s32 func_001f00d0(s32 id) {
-    return func_001f0118(id, 18);
+    return func_001f0118(id, KH1_GLYPH);
 }
 
 s32 func_001f00e8(u8 *s) {
-    return func_001f0148(s, 18);
+    return func_001f0148(s, KH1_GLYPH);
 }
 
 s32 func_001f0100(u8 *p) {
-    return func_001f0340(p, 18);
+    return func_001f0340(p, KH1_GLYPH);
 }
 
 s32 func_001f0118(s32 id, s32 sz) {
@@ -396,7 +397,7 @@ s32 func_001f0148(u8 *s, s32 sz)
         if (*s < 21) {
             switch (*s) {
             case 1:
-                w += (sz << 8) / 18;
+                w += (sz << 8) / KH1_GLYPH;
                 s++;
                 break;
             case 12:
@@ -432,7 +433,7 @@ s32 func_001f0148(u8 *s, s32 sz)
                 s += 4;
                 break;
             case 13:
-                w += (s16)(s[1] | (s[2] << 8)) * sz * 16 / 18;
+                w += (s16)(s[1] | (s[2] << 8)) * sz * 16 / KH1_GLYPH;
                 s += 3;
                 break;
             case 8:
@@ -474,13 +475,13 @@ s32 func_001f0148(u8 *s, s32 sz)
                 s++;
             }
             g = &D_003E8E28[c];
-            w += ((g->w << 4) + func_001efb88()) * sz / 18;
+            w += ((g->w << 4) + func_001efb88()) * sz / KH1_GLYPH;
         }
     }
 }
 
 s32 func_001f0340(u8 *p, s32 scale) {
-    s32 d = 18;
+    s32 d = KH1_GLYPH;
     s32 x = 0;
     for (;;) {
         s32 c = *p;
@@ -489,7 +490,7 @@ s32 func_001f0340(u8 *p, s32 scale) {
         k = c | (p[1] << 8);
         p += 2;
         if (k == 0x4081) {
-            x += (scale << 8) / d;
+            x += (scale << (KH1_EN ? 6 : 8)) / d;
         } else {
             Glyph_3e8e28 *g = &D_003E8E28[func_001eff50(k)];
             x += ((g->w << 4) + func_001efb88()) * scale / d;
@@ -538,7 +539,7 @@ u8 func_001f05e8(s32 i) {
 }
 
 s32 func_001f0600(s32 i, s32 b) {
-    return ((D_003E8E28[i].w << 4) * b / 18) >> 4;
+    return ((D_003E8E28[i].w << 4) * b / KH1_GLYPH) >> 4;
 }
 
 Q *func_001f0638(Q *pk, s32 a1, s32 color, s32 x, s32 y, u8 *str) {
@@ -546,15 +547,15 @@ Q *func_001f0638(Q *pk, s32 a1, s32 color, s32 x, s32 y, u8 *str) {
 }
 
 Q *func_001f0670(Q *pk, s32 a1, s32 color, s32 x, s32 y, s32 id) {
-    return func_001f07d8(pk, a1, 0, color, x, y, id, 18);
+    return func_001f07d8(pk, a1, 0, color, x, y, id, KH1_GLYPH);
 }
 
 Q *func_001f06a8(Q *pk, s32 a1, s32 color, s32 x, s32 y, u8 *str) {
-    return func_001f0868(pk, a1, 0, color, x, y, str, 18);
+    return func_001f0868(pk, a1, 0, color, x, y, str, KH1_GLYPH);
 }
 
 Q *func_001f06e0(Q *pk, s32 a1, s32 color, s32 x, s32 y, u8 *str) {
-    return func_001f0ea8(pk, a1, 0, color, x, y, str, 18);
+    return func_001f0ea8(pk, a1, 0, color, x, y, str, KH1_GLYPH);
 }
 
 Q *func_001f0718(Q *pk, s32 a1, s32 color, s32 x, s32 y, s32 id, s32 sc) {

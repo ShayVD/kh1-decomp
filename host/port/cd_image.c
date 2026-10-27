@@ -22,6 +22,8 @@ void *memcpy(void *, const void *, size_t_);
 
 #define SECTOR 2048
 
+void kh1_lang_detect(void);
+
 static int img_ssize;  /* bytes per sector in the file */
 static int img_off;    /* where the 2048 data bytes start in one */
 
@@ -64,8 +66,10 @@ int kh1_cd_image_open(const char *path) {
         img_off = kinds[i].off;
         /* the primary volume descriptor at sector 16: type 1, "CD001" */
         if (read_sector(16, pvd) && pvd[0] == 1 && pvd[1] == 'C' && pvd[2] == 'D' && pvd[3] == '0'
-            && pvd[4] == '0' && pvd[5] == '1')
+            && pvd[4] == '0' && pvd[5] == '1') {
+            kh1_lang_detect(); /* lang.c: the English patch's disc */
             return 1;
+        }
     }
     img_close();
     img_file = 0;

@@ -16,6 +16,8 @@
  * alone: it follows the shop's D_0062FF00 / D_003DC494, and the code after
  * 0x001e7e78 works on the D_006314CC counters instead. */
 #include "common.h"
+#include "lang.h"
+#include "data/pieces/D_003DBA68.h"
 #include "save/save1.h"
 #include "data/types/vm_rec.h"
 #include "vm/vm_mgr.h"
@@ -32,6 +34,8 @@
 #include "data/pieces/D_003DD258.h"
 #include "data/pieces/D_003DD28C.h"
 #include "list/listmenu.h"
+extern u8 D_0048D7B0[]; /* the English patch's list scripts (lang.h) */
+extern u8 D_0048EB18[];
 
 /* A choice list (func_0010f558): fn gets the index picked. */
 typedef struct { s32 a; s32 n; void (*fn)(); s32 d; } ListCb;
@@ -130,10 +134,10 @@ s32 func_001e7e00(void);
 
 void func_001e4918(void) {
     s32 n[4];
-    func_001c2d20((s8 *)&D_003E0D20, n, (s8 **)D_006310C8);
-    func_001c2d20((s8 *)&D_003E0F40, n, (s8 **)D_00631148);
-    func_001c2d20((s8 *)&D_003E1150, n, (s8 **)D_006311C8);
-    func_001c2d20((s8 *)&D_003E12E0, n, (s8 **)D_00631248);
+    func_001c2d20((s8 *)KH1_EN_AT(D_003DBA68, 0x40, D_003E0D20), n, (s8 **)D_006310C8);
+    func_001c2d20((s8 *)KH1_EN_AT(D_0048D7B0, 0x0, D_003E0F40), n, (s8 **)D_00631148);
+    func_001c2d20((s8 *)KH1_EN_AT(D_003DBD68, 0x20, D_003E1150), n, (s8 **)D_006311C8);
+    func_001c2d20((s8 *)KH1_EN_AT(D_0048EB18, 0x10, D_003E12E0), n, (s8 **)D_00631248);
 }
 
 void func_001e4990(void) {
@@ -350,10 +354,10 @@ void func_001e5198(void) {
             if (D_006305CC < 4) {
                 func_001ea268(D_006307C8, D_003DD210);
                 func_001ea268(D_006307C8, D_003DD230);
-                func_001ea268(D_006307C8, D_003DD220);
+                func_001ea268(D_006307C8, KH1_EN_AT(D_003DD070, 0x120, D_003DD220));
                 func_001ea268(D_006307C8, D_003DD230);
             } else {
-                func_001ea268(D_006307C8, D_003DD220);
+                func_001ea268(D_006307C8, KH1_EN_AT(D_003DD070, 0x120, D_003DD220));
                 func_001ea268(D_006307C8, D_003DD230);
                 func_001ea268(D_006307C8, D_003DD230);
             }
@@ -394,7 +398,7 @@ void func_001e5198(void) {
             }
             func_001ea268(D_006307C8, D_003DD210);
             func_001ea268(D_006307C8, D_003DD230);
-            if (D_006305CC > 0) func_001ea268(D_006307C8, D_003DD220);
+            if (D_006305CC > 0) func_001ea268(D_006307C8, KH1_EN_AT(D_003DD070, 0x120, D_003DD220));
             func_001ea268(D_006307C8, D_003DD230);
             func_001ea268(D_006307C8, D_003DD1F0);
             func_001ea268(D_006307C8, D_003DD240);
@@ -774,10 +778,10 @@ void func_001e65d0(void) {
             if (D_006305CC < 4) {
                 func_001ea268(D_006307C8, D_003DD210);
                 func_001ea268(D_006307C8, D_003DD230);
-                func_001ea268(D_006307C8, D_003DD220);
+                func_001ea268(D_006307C8, KH1_EN_AT(D_003DD070, 0x120, D_003DD220));
                 func_001ea268(D_006307C8, D_003DD230);
             } else {
-                func_001ea268(D_006307C8, D_003DD220);
+                func_001ea268(D_006307C8, KH1_EN_AT(D_003DD070, 0x120, D_003DD220));
                 func_001ea268(D_006307C8, D_003DD230);
                 func_001ea268(D_006307C8, D_003DD230);
             }
@@ -815,7 +819,7 @@ void func_001e65d0(void) {
             }
             func_001ea268(D_006307C8, D_003DD210);
             func_001ea268(D_006307C8, D_003DD230);
-            if (D_006305CC > 0) func_001ea268(D_006307C8, D_003DD220);
+            if (D_006305CC > 0) func_001ea268(D_006307C8, KH1_EN_AT(D_003DD070, 0x120, D_003DD220));
             func_001ea268(D_006307C8, D_003DD240);
             func_0010e3f0(D_00630380);
             func_0010ef70(D_00630380 - 0x80, D_006307C8, func_001e65d0);
