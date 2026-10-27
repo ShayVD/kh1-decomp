@@ -216,6 +216,8 @@ int kh1_ovl_entry(int cmd, int arg) {
 /* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
  * means no vblank: this says whether DMA sends still move) */
 int kh1_null_threads_state(char *buf, int n);
+extern u8 D_004E4528[], D_002B75A0[];
+extern s32 D_00532B80, D_0063F540;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 static int watchdog(SceSize args, void *argp) {
@@ -236,6 +238,22 @@ static int watchdog(SceSize args, void *argp) {
             char tb[192];
             kh1_null_threads_state(tb, sizeof tb);
             vlog("kh1-vita: game threads: %s\n", tb[0] ? tb : "none made");
+        }
+        { /* session 137v: the disc loader's queue (src/io/discfile.c): each load task's file, its frames to wait
+           * and its request's result (-1 until read), the worker's two callback slots, and the gate
+           * func_00146878 holds the queue on (the object requests' busy flag, the sound bank transfers left) */
+            char lb[512];
+            int i, k = 0;
+            for (i = 0; i < 16 && k < (int)sizeof lb - 80; i++) {
+                const u8 *e = D_004E4528 + i * 0x4C;
+                const u8 *r = *(u8 *const *)(e + 72);
+                if (!(*(const u16 *)e & 1)) continue;
+                k += snprintf(lb + k, sizeof lb - k, " %.24s (wait %d, result %d)", (const char *)e + 16,
+                              *(const s32 *)(e + 64), r ? *(const s32 *)(r + 48) : -2);
+            }
+            vlog("kh1-vita: loads: object requests busy %d, sound transfers left %d, worker slots %s %s;%s\n",
+                 D_00532B80, D_0063F540, *(const u32 *)D_002B75A0 ? "used" : "free",
+                 *(const u32 *)(D_002B75A0 + 12) ? "used" : "free", k ? lb : " no load tasks");
         }
         if (gpu_on) { /* session 136: the GPU frame's CPU time (its waits for the GPU included), its counts */
             u32 f, d, sk, sc;
@@ -365,7 +383,13 @@ int main(int argc, char **argv) {
         snprintf(iso, sizeof iso, "%s/kh1.bin", kh1_vita_dir);
         if (!kh1_cd_image_open(iso)) no_disc(iso);
     }
-    vlog("kh1-vita: disc image %s\n", iso);
+    { /* session 137v: its size, against the copy on the PC (a short copy stops the loads where it ends) */
+        SceIoStat st;
+        if (sceIoGetstat(iso, &st) >= 0)
+            vlog("kh1-vita: disc image %s, %llu bytes\n", iso, (unsigned long long)st.st_size);
+        else
+            vlog("kh1-vita: disc image %s\n", iso);
+    }
     vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
      * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */
