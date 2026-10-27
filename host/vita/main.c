@@ -220,12 +220,14 @@ int kh1_ovl_entry(int cmd, int arg) {
 /* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
  * means no vblank: this says whether DMA sends still move) */
 int kh1_null_threads_state(char *buf, int n);
+extern u32 kh1_dma_walk_us; /* host/null/dmawalk.c */
 extern u8 D_004E4528[], D_002B75A0[];
 extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
+    u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
@@ -277,7 +279,18 @@ static int watchdog(SceSize args, void *argp) {
             /* session 137v: of the rest, the VU1 programs (the kicks they hand on included, then alone) */
             vlog("kh1-vita: vu1: %u ms in programs, %u ms of it passing their kicks on\n", (kh1_vu1_us - vu0) / 1000,
                  (kh1_vu1_kick_us - kick0) / 1000);
+            { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
+               * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
+                u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
+                u32 known = walk + (us_frame - frame0) + (us_draw - draw0) + (kh1_vita_us_wait - wait0);
+                vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them), %u the "
+                     "frame's commands, %u present, %u the vblank wait, %u the rest (the game's code)\n",
+                     all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
+                     (kh1_vita_us_wait - wait0) / 1000, all > known ? (all - known) / 1000 : 0);
+            }
         }
+        at0 = (u32)sceKernelGetProcessTimeWide();
+        walk0 = kh1_dma_walk_us;
         vu0 = kh1_vu1_us;
         kick0 = kh1_vu1_kick_us;
         rec0 = us_record;

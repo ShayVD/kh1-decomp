@@ -419,7 +419,7 @@ static void hud_send(u32 tadr) {
     kh1_gs_xshift(hud_env_shift);
 }
 
-int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
+static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
     u32 tag = tadr, asr[2], qwords = 0, ntags = 0, tte_hi = 0;
@@ -572,4 +572,17 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
         gs_print_targets();
     }
     if (kh1_dma_after_send) kh1_dma_after_send((u32)(unsigned long)q);
+}
+
+/* session 137v: the walks' time on a clock the platform gives (the Vita's watchdog: what a frame's
+ * CPU time goes to); the VU1 programs and the recorder's work run inside it */
+u32 kh1_dma_walk_us;
+int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
+    u32 t0;
+    int r;
+    if (!kh1_vu1_clock) return dma_walk(ch, chcr, tadr, where);
+    t0 = kh1_vu1_clock();
+    r = dma_walk(ch, chcr, tadr, where);
+    kh1_dma_walk_us += kh1_vu1_clock() - t0;
+    return r;
 }
