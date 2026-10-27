@@ -1753,7 +1753,7 @@ typedef struct Wk_742b0 {
 #define func_00171118 ((s32 (*)(s32, s32)) func_00171118)
 #define func_00171790 ((void (*)(Wk_742b0 *, Ob_742b0 *)) func_00171790)
 void func_001742b0(Wk_742b0 *w, Ob_742b0 *o) {
-    f32 v[3];
+    f32 v[4]; /* session 137: the vector scale writes w too (portability.md rule 15) */
     Prm *q = o->x160->xc;
     if (!func_00171118(o->x90, -1)) {
         o->x48 = 0;
@@ -1913,7 +1913,7 @@ typedef struct Wk_74ca8 {
 #define func_00171118 ((s32 (*)(s32, s32)) func_00171118)
 #define func_00171790 ((void (*)(Wk_74ca8 *, Ob_74ca8 *)) func_00171790)
 void func_00174ca8(Wk_74ca8 *w, Ob_74ca8 *o) {
-    f32 v[3];
+    f32 v[4]; /* session 137: the vector scale writes w too (portability.md rule 15) */
     Prm *q = o->x160->xc;
     if (!func_00171118(o->x90, -1)) {
         o->x48 = 0;
