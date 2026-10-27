@@ -48,12 +48,18 @@
 #include "dmawalk.h"
 #include "platform/cmdbuf.h"
 #include "platform/vu1.h"
+#include "platform/costack.h"
 
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
  * (host/port/memmap.c) is .bss */
-int _newlib_heap_size_user = 160 * 1024 * 1024;
-unsigned int sceUserMainThreadStackSize = 4 * 1024 * 1024;
+int _newlib_heap_size_user = 112 * 1024 * 1024;
+/* session 137v: 4 MiB for the main thread's own frames, the rest the coroutines' stacks (platform/costack.h:
+ * the kernel refuses a system call made on a stack outside the thread's; they were malloc'd, from the heap,
+ * which gave up the 48 MiB) */
+#define MAIN_OWN (4 * 1024 * 1024)
+static u32 costack_bytes;
+unsigned int sceUserMainThreadStackSize = 52 * 1024 * 1024;
 
 const char kh1_vita_dir[] = "ux0:data/kh1";
 
@@ -280,6 +286,15 @@ int main(int argc, char **argv) {
         __asm__ volatile("vmrs %0, fpscr" : "=r"(fpscr));
         __asm__ volatile("vmsr fpscr, %0" : : "r"(fpscr | (1u << 24)));
     }
+    { /* the main thread's stack below its own MAIN_OWN: the coroutines' stacks */
+        SceKernelThreadInfo ti;
+        volatile u8 here;
+        memset(&ti, 0, sizeof ti);
+        ti.size = sizeof ti;
+        if (sceKernelGetThreadInfo(sceKernelGetThreadId(), &ti) >= 0 && ti.stack &&
+            (u8 *)&here - (u8 *)ti.stack > MAIN_OWN)
+            kh1_costack_pool(ti.stack, costack_bytes = (u32)((u8 *)&here - (u8 *)ti.stack) - MAIN_OWN);
+    }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
     sceIoRemove(log); /* session 136: Vita3K's open kept the last run's tail past this run's lines (no truncate) */
@@ -301,6 +316,7 @@ int main(int argc, char **argv) {
         sceIoWrite(log_fd, "kh1-vita: log open\n", 19);
     }
     vlog("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
+    vlog("kh1-vita: %u KiB of the main thread's stack for the game's threads and tasks\n", costack_bytes >> 10);
     if (kh1_vita_display_init(D_002A6890)) {
         vlog("kh1-vita: no framebuffer\n");
         sceKernelExitProcess(1);

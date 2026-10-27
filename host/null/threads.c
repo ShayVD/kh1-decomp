@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <ucontext.h>
 #include "common.h"
+#include "platform/costack.h"
 #include "platform/thread.h"
 
 void kh1_host_vblank(void);
@@ -75,7 +76,7 @@ int PlatStartThread(int id, void *arg) {
     if (id <= 0 || id >= NULL_THREADS || thr[id].state != T_MADE)
         return -1;
     t = &thr[id];
-    if (t->stack == 0 && (t->stack = malloc(NULL_STACK)) == 0)
+    if (t->stack == 0 && (t->stack = kh1_costack_alloc(NULL_STACK)) == 0)
         abort();
     getcontext(&t->uc);
     t->uc.uc_stack.ss_sp = t->stack;
