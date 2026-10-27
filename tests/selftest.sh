@@ -265,6 +265,9 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/ring_test.c" "$ROOT/host/port/ring.c"
   "$W/ring_test" > "$W/ring.log" || { cat "$W/ring.log"; exit 1; }
   tail -n 1 "$W/ring.log"
+  # session 140: the memory card as a directory (host/port/mc_dir.c) and the card image reader
+  python3 -I "$ROOT/tests/host/ps2mc_test.py" > "$W/ps2mc.log" || { cat "$W/ps2mc.log"; exit 1; }
+  tail -n 1 "$W/ps2mc.log"
   # the draw list as GPU commands, the passes' load / store needs (renderer-spec 4.13 "Session 126")
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/cmdbuf_test" \
       "$ROOT/tests/host/cmdbuf_test.c" "$ROOT/host/null/pipes.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \

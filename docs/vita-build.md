@@ -48,7 +48,8 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    - `iso=ux0:...` another image path;
    - `title=N` the game state asked for at the title overlay's first call (default 2: a new game,
      Dive to the Heart; `-1` stays in the title state);
-   - `frames=N` exit after N frames (0, the default: never).
+   - `frames=N` exit after N frames (0, the default: never);
+   - `mc=ux0:...` memory card 1's folder (default `ux0:data/kh1/mc0`).
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
    written through sceIoWrite (a funopen FILE): newlib's own fopen'd / freopen'd log stayed empty in
@@ -96,10 +97,28 @@ What a run can show, at best:
   shown as one GXM textured quad through vita2d, "Speed" below). The port code from sessions 116 to 122 (palette and texture
   caches, texture formats, TFX, sampler, blend, alpha / destination-alpha tests, depth, fog, primitive
   assembly) is linked and feeds the model's present, but nothing draws with GXM yet.
-- **No sound** (host/null/sound.c's null server keeps the status the game polls), **no saves** (no
-  card in either slot), **no movies** (dkmovie.x is an overlay too).
+- **No sound** (host/null/sound.c's null server keeps the status the game polls), **no movies**
+  (dkmovie.x is an overlay too). **Saves** (session 140): memory card 1 is the folder
+  `ux0:data/kh1/mc0` when it exists ("Memory card" below); card 2 is always empty.
 - gumisave.c's func_001b9c60 keeps the overlay entry as a pointer and calls it later: on the Vita
   that jumps into data (the Gummi ship editor; not reachable before the world map anyway).
+
+## Memory card (session 140)
+
+host/port/mc_dir.c answers include/platform/mc.h from a folder: memory card 1 is
+`ux0:data/kh1/mc0` (config.txt `mc=`), the host runner's is `KH1_HOST_MC=DIR`. A save is what the PS2
+card holds, one directory per save: `BISLPS-25198-NN/` with `BISLPS-25198-NN` (the 0x16c00-byte
+image), `system.bin` (the 60-byte head the load screen lists), `icon.sys`, `mc_icon.bin`,
+`mc_copy.bin`, `mc_del.bin`. The game's own src/memcard/ steps read and write them, so saving in the
+port writes the same files (run on a copy of the saves you care about). No folder: no card, as before.
+
+**Your PS2 saves**: `python3 -I tools/host/ps2mc.py list Mcd001.ps2` lists a PCSX2 card file
+(`~/Library/Application Support/PCSX2/memcards/` on a Mac), `extract Mcd001.ps2 mc0` copies every
+`BISLPS-25198-*` save into `mc0/` with the card's times (the load screen opens on the newest). A
+PCSX2 folder card needs no tool: copy its `BISLPS-25198-*` directories. Only Kingdom Hearts Final
+Mix (SLPS-25198, the English patch included) saves load: the US / European Kingdom Hearts
+(`BASLUS-20370`, `BESLES-...`) is another game build with its own directory names and save version
+(the head's 0x01317F14), which this one's load screen does not list.
 
 ## In Vita3K (2026-10-26)
 

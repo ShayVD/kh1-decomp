@@ -201,36 +201,7 @@ int PlatSifSearchModuleByName(const char *name) { return -1; /* no IOP module is
 int PlatSifRebootIop(const char *image) { return 1; }
 int PlatSifSyncIop(void) { return 1; }
 
-/* platform/mc.h: no card in any slot. Every request is queued (0) and done at the next
- * PlatMcSync (1), whose result is libmc's "no card detected" (-10): src/memcard/mcstep.c's
- * steps poll sceMcSync until it answers, then read the result (and GetInfo's type) it wrote. */
-#define NULL_MC_NO_CARD (-10)
-int PlatMcInit(void) { return 0; }
-int PlatMcGetSlotMax(int port) { return 0; }
-int PlatMcGetInfo(int port, int slot, int *type, int *free, int *format) {
-    if (type) *type = 0;  /* no card */
-    if (free) *free = 0;
-    if (format) *format = 0;
-    return 0;
-}
-int PlatMcOpen(int port, int slot, const char *name, int mode) { return 0; }
-int PlatMcClose(int fd) { return 0; }
-int PlatMcRead(int fd, void *buf, int size) { return 0; }
-int PlatMcWrite(int fd, const void *buf, int size) { return 0; }
-int PlatMcMkdir(int port, int slot, const char *name) { return 0; }
-int PlatMcChdir(int port, int slot, const char *name, char *cur) { return 0; }
-/* the entry count is PlatMcSync's result: -10 here, so mcstep.c's func_00235228 stores
- * count -1 and error 3 and never reads the table (PlatMcRead's count the same way) */
-int PlatMcGetDir(int port, int slot, const char *name, unsigned int mode, int maxent, void *table) { return 0; }
-int PlatMcDelete(int port, int slot, const char *name) { return 0; }
-int PlatMcFormat(int port, int slot) { return 0; }
-int PlatMcUnformat(int port, int slot) { return 0; }
-int PlatMcRename(int port, int slot, const char *name, const char *newname) { return 0; }
-int PlatMcSync(int mode, int *cmd, int *result) {
-    if (cmd) *cmd = 0;
-    if (result) *result = NULL_MC_NO_CARD;
-    return 1;
-}
+/* platform/mc.h: host/port/mc_dir.c (a card is a directory; none set, no card in either slot) */
 
 /* platform/pad.h: host/null/pad.c (session 87) */
 
