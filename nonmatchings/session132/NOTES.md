@@ -68,3 +68,9 @@ draft (`u32 i` declared inside the do-while; the other 7 words and the 4-byte si
 The rest only moved the permuter's score, not `autodecomp.py try`'s word count: 00f21808 36 -> 39
 (nostrict), 00f21ca0 94 -> 91, 00f23aa8 and 00f24330 worse; nothing kept. 00f228c8 and 00f24b60
 imported but never ran (the queue ended first).
+
+Session 138: 00f228c8 and 00f24b60 permuted for 20 minutes each (two threads). Best outputs by
+`autodecomp.py try`: 00f228c8 746 -> 693 words, 00f24b60 598 -> 603 (worse); both are the title's
+large loops (2.4 / 3.5 KB) and the permuter's random edits do not reach their register allocation.
+Nothing kept. func_00f241c8 by hand: 7 more spellings of the position / size words (u64 / s64,
+order, placement), all still the same 2-word `dsra32` / `dsll32` swap or worse.

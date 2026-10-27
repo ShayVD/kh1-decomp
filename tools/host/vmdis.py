@@ -36,6 +36,8 @@ def main():
     ap.add_argument("--pad", default=os.environ.get("KH1_HOST_PAD"))
     ap.add_argument("--iso", default=os.environ.get("KH1_HOST_ISO"))
     ap.add_argument("--only", type=int, help="one VM's code (the others' state lines only)")
+    ap.add_argument("--exe", default=EXE, help="the host build to run (default out/host/kh1-host; "
+                    "out/host-asan/kh1-host runs with ASAN_OPTIONS=handle_segv=0:detect_leaks=0)")
     a = ap.parse_args()
     tmp = tempfile.mkdtemp(prefix="vmdis")
     g = ["handle SIGSEGV nostop noprint pass", "set pagination off",
@@ -55,12 +57,12 @@ def main():
               "end"]
     g.append("x/1024a &D_003D9FE0")
     open(os.path.join(tmp, "dump.gdb"), "w").write("\n".join(g) + "\n")
-    env = dict(os.environ, KH1_HOST_CD="go", KH1_HOST_FRAMES=str(a.frame + 1), KH1_HOST_QUIET="1")
+    env = dict(os.environ, ASAN_OPTIONS="handle_segv=0:detect_leaks=0", KH1_HOST_CD="go", KH1_HOST_FRAMES=str(a.frame + 1), KH1_HOST_QUIET="1")
     if a.pad:
         env["KH1_HOST_PAD"] = a.pad
     if a.iso:
         env["KH1_HOST_ISO"] = a.iso
-    out = subprocess.run(["gdb", "-batch", "-x", os.path.join(tmp, "dump.gdb"), EXE], env=env, cwd=ROOT,
+    out = subprocess.run(["gdb", "-batch", "-x", os.path.join(tmp, "dump.gdb"), a.exe], env=env, cwd=ROOT,
                          capture_output=True, text=True).stdout
     lib, state, lbls = [], {}, {}
     for l in out.splitlines():
