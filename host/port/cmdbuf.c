@@ -345,7 +345,7 @@ void kh1_cmd_upload(KH1CmdRec *r, u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32
     if (c->x.src || c->x.dst) r->split = 1;
 }
 
-void kh1_cmd_clut(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill) {
+static void clut_cmd(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill, int load) {
     KH1Cmd *c;
     u32 psm = tex0_lo >> 20 & 63, bits8 = psm == 0x13 || psm == 0x1B;
     kh1_batch_break(&r->b);
@@ -357,8 +357,17 @@ void kh1_cmd_clut(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill) {
     c->x.slot = (s16)slot;
     c->x.fill = fill != 0;
     /* the entries' rectangle at CBP: 16 x 16 for an 8-bit PSM, 8 x 2 for a 4-bit one (CSM 1) */
+    if (!load) return;
     c->x.src = tgt_at(r, tex0_hi >> 5 & 0x3FFF, 1, 0, 0, bits8 ? 16 : 8, bits8 ? 16 : 2);
     if (c->x.src) r->split = 1;
+}
+
+void kh1_cmd_clut(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill) {
+    clut_cmd(r, tex0_lo, tex0_hi, slot, fill, 1);
+}
+
+void kh1_cmd_palette(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int fill) {
+    clut_cmd(r, tex0_lo, tex0_hi, slot, fill, 0);
 }
 
 void kh1_cmd_texture(KH1CmdRec *r, u32 tex0_lo, u32 tex0_hi, s32 slot, int decoded, u32 texels) {

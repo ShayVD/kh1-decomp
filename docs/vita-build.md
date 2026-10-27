@@ -91,7 +91,7 @@ What a run can show, at best:
 - **No 3D.** The VIF1 / VU1 path (renderer A / B, PATH1) is not replaced: chains are walked but
   their models are not drawn. The picture is the GS model's 2D: clears, fades, uploads, sprites,
   copies (whatever the boot draws on PATH3).
-- **Not the GXM renderer.** The picture is software (the model's display buffer; since session 135
+- **Not the GXM renderer** (before session 136; now it is, "The GPU renderer" below). The picture was software (the model's display buffer; since session 135
   shown as one GXM textured quad through vita2d, "Speed" below). The port code from sessions 116 to 122 (palette and texture
   caches, texture formats, TFX, sampler, blend, alpha / destination-alpha tests, depth, fog, primitive
   assembly) is linked and feeds the model's present, but nothing draws with GXM yet.
@@ -222,14 +222,80 @@ gsfast_test now also covers quads, uploads in random pieces over drawn pages, an
 layers (~785,000 blended pixels a frame) plus the frame copy and clear: the CPU model's floor. The
 real fix for that is the GXM renderer, not more of this model. Not yet measured in Vita3K.
 
+## The GPU renderer (session 136, 2026-10-26)
+
+Since session 136 the picture is drawn by the SGX543 (host/vita/gxm.c), not by the GS model on the CPU.
+The recorder (host/null/pipes.c) takes each GIF kick and transfer, include/platform/gxmrec.h turns a
+frame of them into GXM calls (scenes on each render target, texture and palette uploads, programs,
+uniforms, draws), and gxm.c runs them with sceGxm on vita2d's context; the display target is then drawn
+as one quad into vita2d's scene. The GS model keeps GS memory (uploads, page bookkeeping) but draws no
+pixels. `gpu=0` in config.txt brings back the software picture.
+
+**Shaders are compiled on the device.** vitasdk has no shader compiler, so the Cg that host/port/shadergen.c
+writes is compiled at run time by Sony's SceShaccCg through vitaShaRK (libvitashark, already in vitasdk).
+It needs **`ur0:data/libshacccg.suprx`**, which is not in this repository and must never be committed
+(Sony's binary). Get it as the PSM runtime's module, decrypted: see
+[AnimMouse/SceShaccCg](https://github.com/AnimMouse/SceShaccCg) (thanks) or the ShaRKBR33D plugin. In
+Vita3K on a Mac the folder is `~/Library/Application Support/Vita3K/Vita3K/fs/ur0/data/`. Without it,
+only shaders already in the cache can be used, and the app falls back to the software picture when the
+vertex shaders are missing.
+
+- **The cache**: each compiled program is kept as `ux0:data/kh1/shaders/<FNV-64 of its source>.gxp`, so
+  a shader compiles once (the first sight of a new one is a frame hitch, ~0.4 s in Vita3K).
+- **vitaShaRK's size argument**: `shark_compile_shader_extended(src, &size, ...)` reads `*size` as the
+  source's length (0 gave "fatal internal error" in s136a). The host mock enforces it.
+- **Frame reads** (programmable blending: a FETCH blend or a per-bit FBMSK, renderer-spec 4.13 "Session
+  128"): SceShaccCg's own diagnostics give the form, `__nativecolor void main(...)` with
+  `__regformat unsigned char4 dst : FRAGCOLOR` and `out __regformat unsigned char4 ocolor : COLOR`
+  (bytes, not / 255). The `__nativecolor` keyword needs SceShaccCgExt's extensions: gxm.c tries
+  `shark_init` (the extensions) first and `shark_init_simple` after (`shacc_ext=0` skips the first).
+  When a frame read's shader still fails, it draws a stand-in (FBMSK written whole, and the
+  fixed-function blend when blend.h has one); only a true FETCH blend with none (e.g. ALPHA 0x4D,
+  Cd x As + Cd) is skipped.
+- **The log**: the watchdog's `gpu:` line (ms in gxm.c, frames, scenes, draws, skipped) and `cpu:` line
+  (ms recording kicks, building and submitting the frame's commands, presenting, and the slowest frame
+  of the 2 s with its vblank wait left out). The rest of the 2 s, less the vblank wait, is the game and
+  the chain walk.
+- **The host check**: `tools/vita/gxmcheck.sh [ISO] [FRAMES] [EVERY]` builds gxm.c with vitasdk's headers
+  against a mock sceGxm (tests/host/gxm_mock.c: shaders run with kh1_shader_run, a software rasteriser
+  with GXM's rules) inside the host runner, and compares the display and the 3D target with the GS
+  model every EVERY frames. Fake disc, 1500 frames: 15 checks; the 3D target matches on all, the display
+  differs in one row (y 1, up to 88 levels) on 3 of them, the same with gxm.c and shadergen.c as of
+  0432040 (so not from the changes below; not traced yet).
+- **Skips are logged**: each reason's first case in full (`kh1-gxm: first skip, ...`: the ring, the
+  target, the depth buffer, the scene, the pipeline, the texture, the range, the state) and the counts
+  every 600 frames (`skipped so far`).
+- **Memory**: surfaces (targets, depth) take CDRAM's 48 MiB first and LPDDR's 32 MiB when no CDRAM block
+  is large enough (the new game's 768 x 1135 depth found none: 3% of draws were drawn, 93% after).
+  Render target objects are kept for up to 32 sizes, the least recently used one dropped, never one
+  used this frame.
+- **Whole pictures only**: the GPU draws a frame's calls at the next vblank, so the display target can
+  be shown half drawn (the new game's text flashed). At each frame copy (the game's DISPFB switch,
+  display.c's `kh1_vita_frame_copied`) the display target is copied by a GPU scene into a target of its
+  own (`kh1_vita_gxm_latch`), and only that one is presented.
+- **Palettes at the draw's CSA**: a 4-bit draw reads the CLUT buffer at its own CSA whether or not its
+  TEX0 loads (CLD 0 reuses the buffer). The recorder bound only the last load's palette, so the new
+  game's menus showed valid but wrong kana; pipes.c now compares each indexed draw's entries
+  (kh1_gsmem_clut) with the bound slot's and binds theirs (`kh1_cmd_palette`, a CLUT command never
+  read back), as present.c's `pal_for` does for the software picture.
+
+In Vita3K (M3 Mac): the title and its menus hold ~60 fps (slowest frames ~15 ms; was ~20 fps with the
+software picture); the new game's settings menus (difficulty, camera, vibration, sound, the summary)
+show the right text at ~50-60 fps, and the new game runs on, black where its 3D would be (the VU1 path
+is not replaced). The remaining skips (~5% of draws in a 7,000-frame run) are mostly textured points with the "region t"
+sampler (no shader yet), a target sampled while drawn into, and one 0-wide target. **Not checked yet**: a real Vita; whether the
+frame-read shaders compile with the extensions; colour load behaviour between scenes, the region clip's
+granularity, a CT32 target sampled as a texture (its alpha reads back doubled: the shader key has no
+"from a target" bit), points and lines. Vita3K logs one `sceGxmTextureSetMinFilter` UNSUPPORTED and an
+`EXC_BAD_ACCESS` a frame that it handles itself (its own memory tracking, the game runs on).
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
    with pad scripts, and look for more overruns of the allarea.nam kind (a disc file's length
    copied into a name the host sizes from its PS2 neighbour).
-2. **A GXM present**: the framebuffer copy through GXM (one textured quad), then the GIF path's
-   sprites and triangles drawn by GXM with the state the port code already decides
-   (include/platform/{texfmt,texfunc,sampler,blend,atest,depth,fog,primasm}.h).
+2. **The GXM renderer** (done in session 136, above): next, the real-disc gxmcheck over the menus and
+   the new game, the frame reads on a Vita, and the "Not checked yet" list.
 3. **dktitle.x** (vita-port-plan 5.2): the inventory, the toolchain check, then its C, so the title
    screen and its menu run instead of the stub.
 4. Renderer A / B on the CPU (vita-port-plan section 2 step 3), then sound (docs/sound-spec.md).

@@ -2095,9 +2095,10 @@ of k x 255: it rounds back), the viewport's Z (scale 1, offset 0), and the shado
 
 **Session 128 (vita-port-plan 5.1bp): the frame read, the command list as GXM calls.** *The frame read*: the
 fetch 1 / 2 fragment shaders (a FETCH blend, a per-bit FBMSK) now generate (host/port/shadergen.c). They take the
-target's pixel as an input `dst` (`__nativecolor __regformat unsigned char4 dst : COLOR`: the Vita's programmable
-blending, the colour surface's 8-bit bytes at the fragment; the exact declaration is this generator's reading of
-psp2cgc and is checked by the first compile) and the pipeline blends nothing. Fetch 1 runs the GS's formula on Cs
+target's pixel as an input `dst` (the Vita's programmable blending, the colour surface's 8-bit bytes at the fragment; session 136: as
+SceShaccCg's diagnostics give it, `__nativecolor void main(...)`, `__regformat unsigned char4 dst : FRAGCOLOR`,
+and a `__regformat unsigned char4` COLOR output written as bytes; it needs SceShaccCgExt, docs/vita-build.md
+"The GPU renderer") and the pipeline blends nothing. Fetch 1 runs the GS's formula on Cs
 (after fog and the alpha test) and the target: Cd as stored, Ad read back from the 0x80 scale (`floor((a8 x 128 +
 127.5) / 255)`, exact for every byte) or 0x80 on a CT24 frame, C = As / Ad / FIX, `clamp(floor((A - B) x C x 2^-7)
 + D, 0, 255)`; A / B / C / D come from the key (KH1ShaderKey's new `fabcd`, `fpsm`, `fbm[4]`, set only for a frame

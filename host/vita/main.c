@@ -14,6 +14,9 @@
  *       trace=N               the host's KH1_HOST_TRACE levels into the log (default 1: disc reads;
  *                             2 adds the chain walk's line per DMA send, which costs speed)
  *       frames=N              exit after N frames (default 0: never)
+ *       gpu=N                 session 136: 1 (the default) draws with the GPU (host/vita/gxm.c) when its
+ *                             shaders can be had (ur0:data/libshacccg.suprx, or the cache in
+ *                             ux0:data/kh1/shaders/); 0 keeps the GS model's software picture
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -31,8 +34,10 @@
 #include "platform/ovl.h"
 #include "present.h"
 #include "gsmem.h"
+#include "gsregs.h"
 #include "vita.h"
 #include "dmawalk.h"
+#include "platform/cmdbuf.h"
 
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
@@ -55,6 +60,12 @@ static unsigned long frames, max_frames;
 static volatile u32 kh1_vita_us_wait; /* session 135: microseconds in the vblank wait (the watchdog's) */
 extern volatile u32 kh1_vita_us_present; /* display.c */
 static int title_state = 2;
+static int use_gpu = 1; /* session 136: config.txt's gpu= */
+static int gpu_on;      /* the GPU renderer runs (gxm.c) */
+/* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
+ * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
+ * out) of each 2 s */
+static volatile u32 us_record, us_frame, us_draw, us_worst;
 static SceUID log_fd = -1;
 
 /* the log goes straight to sceIoWrite (a FILE from funopen, unbuffered): newlib's own fopen'd log
@@ -66,8 +77,9 @@ static int log_write(void *cookie, const char *buf, int n) {
 }
 
 /* this file's own lines go straight to the log too, whatever stdio does */
-static void vlog(const char *fmt, ...) {
-    char buf[256];
+#define vlog kh1_vita_log
+void kh1_vita_log(const char *fmt, ...) {
+    char buf[4608]; /* session 136: room for a shader's text (gxm.c) */
     va_list ap;
     int n;
     va_start(ap, fmt);
@@ -82,11 +94,23 @@ unsigned long kh1_host_frame(void) { return frames; }
 extern int kh1_counts_on; /* host/null/counts.c */
 void kh1_counts_sample(void);
 void kh1_null_iop_frame(void);
+/* host/null/pipes.c: the command recorder (session 136: the GPU renderer's input) */
+void kh1_pipes_start(void);
+void kh1_pipes_frame(void);
+void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state);
+static void timed_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
+    SceUInt64 t0 = sceKernelGetProcessTimeWide();
+    kh1_pipes_prim(prim, v, n, state);
+    us_record += (u32)(sceKernelGetProcessTimeWide() - t0);
+}
+extern void (*kh1_pipes_frame_hook)(const KH1CmdRec *r);
+void kh1_vita_gxm_frame(const KH1CmdRec *r);
 extern void *kh1_vsync_cb; /* sceGsSyncVCallback's handler (host/port/sdk_host.c) */
 
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
     static int in_vblank;
+    static SceUInt64 woke; /* the end of the last vblank wait */
     if (in_vblank) return;
     in_vblank = 1;
     frames++;
@@ -94,11 +118,24 @@ void kh1_host_vblank(void) {
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
+    if (gpu_on) { /* session 136: the frame's GS draws on the GPU (gxm.c through the recorder's hook), shown */
+        SceUInt64 t0 = sceKernelGetProcessTimeWide(), t1;
+        kh1_pipes_frame();
+        /* only a whole picture is shown: the display target as the frame copy left it (the software
+         * present's rule); between copies the game may be part-way through the next one */
+        if (kh1_vita_frame_copied()) kh1_vita_gxm_latch();
+        t1 = sceKernelGetProcessTimeWide();
+        kh1_vita_draw();
+        us_frame += (u32)(t1 - t0);
+        us_draw += (u32)(sceKernelGetProcessTimeWide() - t1);
+    }
     kh1_vita_status(frames, kh1_host_cd_reads);
     {
         SceUInt64 t0 = sceKernelGetProcessTimeWide();
+        if (woke && (u32)(t0 - woke) > us_worst) us_worst = (u32)(t0 - woke);
         sceDisplayWaitVblankStart();
-        kh1_vita_us_wait += (u32)(sceKernelGetProcessTimeWide() - t0);
+        woke = sceKernelGetProcessTimeWide();
+        kh1_vita_us_wait += (u32)(woke - t0);
     }
     in_vblank = 0;
     if (max_frames && frames >= max_frames) {
@@ -132,9 +169,10 @@ int kh1_ovl_entry(int cmd, int arg) {
 /* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
  * means no vblank: this says whether DMA sends still move) */
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
+extern volatile u32 kh1_vita_us_gpu;
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
-    u32 wait0 = 0, present0 = 0;
+    u32 wait0 = 0, present0 = 0, gpu0 = 0, rec0 = 0, frame0 = 0, draw0 = 0;
     (void)args;
     (void)argp;
     for (;;) {
@@ -146,6 +184,21 @@ static int watchdog(SceSize args, void *argp) {
              (unsigned long long)(sceKernelGetProcessTimeWide() / 1000), frames, kh1_host_cd_reads,
              kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown, (kh1_vita_us_wait - wait0) / 1000,
              (kh1_vita_us_present - present0) / 1000, frames == last ? " (no vblank since the last)" : "");
+        if (gpu_on) { /* session 136: the GPU frame's CPU time (its waits for the GPU included), its counts */
+            u32 f, d, sk, sc;
+            kh1_vita_gxm_stats(&f, &d, &sk, &sc);
+            vlog("kh1-vita: gpu: %u ms submitting; %u frames, %u scenes, %u draws, %u skipped\n",
+                 (kh1_vita_us_gpu - gpu0) / 1000, f, sc, d, sk);
+            /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
+            vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
+                 "slowest frame %u.%u ms\n", (us_record - rec0) / 1000, (us_frame - frame0) / 1000,
+                 (us_draw - draw0) / 1000, us_worst / 1000, us_worst / 100 % 10);
+            us_worst = 0;
+        }
+        rec0 = us_record;
+        frame0 = us_frame;
+        draw0 = us_draw;
+        gpu0 = kh1_vita_us_gpu;
         wait0 = kh1_vita_us_wait;
         present0 = kh1_vita_us_present;
         last = frames;
@@ -168,6 +221,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "title") == 0) title_state = atoi(v);
         else if (strcmp(line, "trace") == 0) kh1_host_trace = atoi(v);
         else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
+        else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
+        else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
     }
     fclose(f);
 }
@@ -193,6 +248,7 @@ int main(int argc, char **argv) {
     }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
+    sceIoRemove(log); /* session 136: Vita3K's open kept the last run's tail past this run's lines (no truncate) */
     log_fd = sceIoOpen(log, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_TRUNC, 0777);
     if (log_fd >= 0) {
         FILE *f;
@@ -228,10 +284,22 @@ int main(int argc, char **argv) {
         kh1_host_trace = 2;
         kh1_dma_quiet = 1;
     }
-    kh1_gsmem_flat(1);  /* the clears, fades and letterbox filled into the model */
-    kh1_present_pal(1); /* the indexed decodes through the port's palette cache */
-    kh1_present_tex(1); /* the textured sprites through the port's texture cache */
-    kh1_vita_present_on();
+    /* session 136: the GPU renderer when its shaders can be had: the recorder (host/null/pipes.c) takes each
+     * kick and transfer, gxm.c draws each frame's commands, and the model keeps GS memory but draws no
+     * pixels for the picture (no flat sprites); else the software picture as before */
+    gpu_on = use_gpu && kh1_vita_gxm_init() == 0;
+    vlog("kh1-vita: picture: %s\n", gpu_on ? "the GPU (gxm.c)" : "the GS model's, by the CPU");
+    if (gpu_on) {
+        kh1_pipes_start();
+        kh1_gs_prim_hook = timed_prim;
+        kh1_pipes_frame_hook = kh1_vita_gxm_frame;
+        kh1_vita_present_gpu();
+    } else {
+        kh1_gsmem_flat(1);  /* the clears, fades and letterbox filled into the model */
+        kh1_present_pal(1); /* the indexed decodes through the port's palette cache */
+        kh1_present_tex(1); /* the textured sprites through the port's texture cache */
+        kh1_vita_present_on();
+    }
     {
         SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, 0, 0);
         if (t >= 0) sceKernelStartThread(t, 0, 0);
