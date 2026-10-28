@@ -336,6 +336,11 @@ int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u
     return 0;
 }
 
+void kh1_gsmem_read_block(u32 b, u32 *out) {
+    u32 i;
+    for (i = 0; i < 64; i++) out[i] = ld32((b & 0x3FFF) * 64 + i);
+}
+
 void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
     seq++;
     useq++;
@@ -562,26 +567,51 @@ static int trx_bulk(const u32 *w, u32 n) {
             marks++;
         }
         break;
-    case KH1_PSMT8:
+    /* session 141 (the Dive's T8 texture streams, a tenth of its frame): mark's work inline, marks moved
+     * once a piece (tex_scan's memo only asks whether it moved) */
+    case KH1_PSMT8: {
+        int moved = 0;
         k = n * 4 < left ? n * 4 : left;
         for (j = 0; j < k; j++) {
+            u32 pg;
             a = at[j];
             v = w[j >> 2] >> (j & 3) * 8 & 0xFF;
             o = vm[a];
-            vm[a] = (u8)v;
-            mark(a >> 13, o != v, ~0u);
+            pg = a >> 13;
+            if (o != v) {
+                vm[a] = (u8)v;
+                page_seq[pg] = seq;
+            } else if (!page_drawn[pg]) {
+                continue;
+            }
+            page_drawn[pg] = 0;
+            moved = 1;
         }
+        marks += moved;
         break;
-    case KH1_PSMT4:
+    }
+    case KH1_PSMT4: {
+        int moved = 0;
         k = n * 8 < left ? n * 8 : left;
         for (j = 0; j < k; j++) {
+            u32 pg, nv;
             a = at[j];
             v = w[j >> 3] >> (j & 7) * 4 & 15;
             o = vm[a >> 1];
-            vm[a >> 1] = (u8)((o & (0xF0 >> (a & 1) * 4)) | v << (a & 1) * 4);
-            mark(a >> 14, o != vm[a >> 1], ~0u);
+            nv = (o & (0xF0 >> (a & 1) * 4)) | v << (a & 1) * 4;
+            pg = a >> 14;
+            if (o != nv) {
+                vm[a >> 1] = (u8)nv;
+                page_seq[pg] = seq;
+            } else if (!page_drawn[pg]) {
+                continue;
+            }
+            page_drawn[pg] = 0;
+            moved = 1;
         }
+        marks += moved;
         break;
+    }
     default:
         return 0;
     }
@@ -717,9 +747,11 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
     st.clut_loads++;
     clut_seq++;
     if (bits8(psm)) {
+        static u32 c16[256]; /* session 141: the 16 x 16 at once (kh1_gsmem_read_rect's tables), not 256 swizzles */
+        kh1_gsmem_read_rect(cpsm, cbp, 1, 0, 0, 16, 16, c16, 16);
         for (e = 0; e < 256; e++) {
             p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1; /* entries 8-15 / 16-23 of each 32 swapped */
-            v = kh1_gsmem_read_pixel(cpsm, cbp, 1, p & 15, p >> 4);
+            v = c16[p];
             clut[e] = v;
             if (cpsm == KH1_PSMCT32) clut[e + 256] = v >> 16;
         }
