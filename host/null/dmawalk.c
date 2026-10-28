@@ -375,7 +375,19 @@ static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
     if (!n) return;
     v->blocks++;
     if (v->need || v->pad) v->mid++;
-    for (i = 0; i < n * 4; i++) vif_word(v, q[i], addr + i * 4);
+    for (i = 0; i < n * 4;) {
+        /* session 137v (the Dive's speed on a Vita): a code's data words other than DIRECT's in a run */
+        if (v->need && !v->pad && !v->in_direct) {
+            u32 k = n * 4 - i < v->need ? n * 4 - i : v->need;
+            if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q + i, k);
+            v->need -= k;
+            v->pos = (v->pos + k) & 3;
+            i += k;
+            continue;
+        }
+        vif_word(v, q[i], addr + i * 4);
+        i++;
+    }
 }
 
 static const char *target_note(u32 t) {

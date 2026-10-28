@@ -95,7 +95,9 @@ static void tex_lookup(u32 lo, u32 hi) {
      * present.c's pal_for): when its entries are not the bound slot's, bind theirs */
     if (pal_of(lo, hi)) {
         const KH1PalSlot *p = rec->pslot >= 0 ? &pal->slot[rec->pslot] : 0;
-        if (!p || p->n != pal_n || memcmp(p->col, pal_draw, pal_n * 4)) {
+        if (p && p->n == pal_n && !memcmp(p->col, pal_draw, pal_n * 4)) {
+            kh1_palcache_use(pal, rec->pslot); /* session 141: bound from an earlier frame's load (CLD 0) */
+        } else {
             int fill = 0;
             slot = kh1_palcache_get(pal, pal_draw, pal_n, &fill);
             kh1_cmd_palette(rec, lo, hi, slot, fill);
