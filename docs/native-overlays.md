@@ -354,3 +354,37 @@ runs on the fake disc.
 - argcheck.py also lists `task` rows: a void function handed to the task lists (func_0011f090's
   callback, or a wrapper's that passes its parameter on, like func_0011ef10), session 138's kind of bug.
   None today.
+
+## Session 140: the cloth, and the first walk into another room
+
+- **The disc**: the English ISO (en.iso, SHA-256 c8ee8c77..., staged from the Mac's
+  ~/Downloads/kh1-test/isoparts-en, read-only, one part per stage call). dive_en.txt to 77,500 still
+  takes 188 disc reads.
+- **tests/host/pads/dive_en.txt now runs to 91,000** (comments at 77,600 in the script): off the islet
+  into the sea, up the lagoon's slope and steps onto the -254 band, round the cliff's foot to its west
+  end, up the rocks and along the cliff-top path to the -706 deck, the ladder to the -974 deck, round
+  the ring walkway to the long -1055 ledge: walking up to VM 18 (entity 40000 at (-1201, -1093, 401))
+  gives **"Obtained Cloth."** at ~87,550 (items[193] = 1; no button). Then back down (a drop from the
+  -974 deck's edge onto the band) and south to the exit floor at (-836, 1506): **room 10 loads at
+  ~90,110** (D_002BC130 = 10, Sora at (4623, -9003, -1069), 204 disc reads by 91,000). Room 10's VMs:
+  VM 2 (entity 40002 at (3175, -8782, -600)) gives item 197 only once story byte 2818 >= 7; VM 3
+  (40000 at (3358, -8924, -801)) waits on label 3. The rope (the errand's last item) is not in either
+  room seen so far.
+- **tools/host/collmap.py** (new): `dump FRAME DIR` saves the room's collision with gdb; `at` (floors
+  under a point), `near`, `map` / `slice` (pictures: floors by height, the walls of one height band),
+  and **`path`**, a floor-to-floor search (shared vertices walk, a rise of at most 110 jumps, drops of
+  any height, rock faces left out). It found the cliff route after straight gotos failed; it knows
+  nothing of walls, ladders or exits, so each leg is checked with a run.
+  - What the collision showed: floors have normal y > 0.6 in the dump's winding; y grows downwards;
+    the sea's surface is a floor at -98 (Sora swims at y ~0); rock faces have attribute & 0x1b0 = 0x1b0
+    (Sora slides off; the jump peaks ~110 above the floor and does not grab them); **a ladder is a thin
+    wall with attribute 0x000d0120** (t4010 at (-683, 547), y -986..-703: walk into it from its open
+    side and Sora climbs); **room exits are floors with attribute bit 0x1000** (t1293 at (-836, 1506)
+    on the -254 band, the west bridge t1282 at (-3504..-2631, -652)); the room's entrances (where Sora
+    arrives from each room) are `D_002BCDA0` (count `D_002BCDA4`, 64 bytes: the room id, then the
+    position and facing; roomload.c func_00113138).
+- **host/null/pad.c**: `KH1_HOST_POS=N` prints the player's position every N frames (at pad reads,
+  which come every few frames); a goto now stands still while there is no player (the room change
+  set `D_002E26A0[0]` to 0 and the steering read through it: a crash in the pad script's code, not the
+  game's).
+- The Japanese dive.txt (plan item 3) was not run: the old isoparts were not staged.

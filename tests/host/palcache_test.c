@@ -109,16 +109,29 @@ int main(void) {
         if (s != i || f != 1) break;
     }
     CHECK("fill: every slot", i == KH1_PALCACHE_SLOTS && pc.misses == KH1_PALCACHE_SLOTS);
-    for (n = 0; n < 16; n++) pal[n] = 0xAB00 | n;
+    for (n = 0; n < 16; n++) pal[n] = 0xAB0000u | n; /* clear of the fill's i << 8 | n */
     CHECK("full frame: -1", kh1_palcache_get(&pc, pal, 16, &f) == -1 && f == 0 && pc.full == 1);
     kh1_palcache_frame(&pc);
     for (n = 0; n < 16; n++) pal[n] = n; /* palette 0, used again: now the most recent */
     CHECK("next frame: palette 0 hits", kh1_palcache_get(&pc, pal, 16, &f) == 0 && f == 0);
-    for (n = 0; n < 16; n++) pal[n] = 0xAB00 | n;
+    for (n = 0; n < 16; n++) pal[n] = 0xAB0000u | n; /* clear of the fill's i << 8 | n */
     CHECK("next frame: evicts the least recent (1)", kh1_palcache_get(&pc, pal, 16, &f) == 1 && f == 1);
     for (n = 0; n < 16; n++) pal[n] = 1u << 8 | n;
     CHECK("evicted palette is a miss", kh1_palcache_get(&pc, pal, 16, &f) == 2 && f == 1);
     CHECK("bad count", kh1_palcache_get(&pc, pal, 17, &f) == -1);
+
+    /* session 141: a slot bound again with no lookup (CLD 0, the same entries) is marked used: no later
+     * miss of the frame refills it */
+    kh1_palcache_frame(&pc);
+    kh1_palcache_use(&pc, 3);
+    for (n = 0; n < 16; n++) pal[n] = 0xCD0000u | n;
+    s = kh1_palcache_get(&pc, pal, 16, &f);
+    CHECK("used slot: not the one refilled", s >= 0 && s != 3 && f == 1);
+    for (i = 0; i < KH1_PALCACHE_SLOTS; i++) {
+        for (n = 0; n < 16; n++) pal[n] = 0xEE0000u | (u32)i << 4 | n;
+        if (kh1_palcache_get(&pc, pal, 16, &f) == 3) break;
+    }
+    CHECK("used slot: kept for the whole frame", i == KH1_PALCACHE_SLOTS);
 
     printf("palcache_test: %d checks, %s\n", checks, fails ? "FAIL" : "PASS");
     return fails != 0;

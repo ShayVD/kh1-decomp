@@ -433,6 +433,45 @@ translated programs, while tests/host/gxm_mock.c (now running scenes late, at sc
 is then) draws it every frame; and ~310 ms of each 2 s in the frame's transfers (texture and palette uploads,
 which Vita3K's texture cache watches). Both are to be checked on a Vita.
 
+**Session 140 (Vita3K, English disc, 2026-10-28; branch at 384164c, main with PR #150 merged).**
+config.txt `pad=ux0:data/kh1/dive_en.txt` (the host's own English route: its `goto` lines work here too,
+since the Vita plays scripts through host/null/pad.c), `frames=91000`. The run was stopped by hand at
+frame 75,283 (4,055 s, ~18.6 game frames a wall second), still advancing: Dive to the Heart played
+through and Destiny Islands reached on the Vita build, no stall or crash from the game (two earlier
+attempts were cut off by the Mac-side watcher, not by the game). 186 disc reads. Each 2 s window: ~1,100
+to 1,350 ms in the DMA walks (VU1 and recording), 280 to 460 ms in the frame's GXM commands, 70 to 90 ms
+the game's own code, ~330 ms the vblank wait; slowest frame 723 ms (waiting on the GPU). Shay saw the
+**low frame rate and flashing ground and scenery** on the island. The likely cause of the flashing:
+257,849 draws skipped for "no texture" by the end (of 4,574,777): 140,064 a palette texture with no
+palette, 107,522 a 512 x 256 texture whose slot holds another (slot 10), 5,025 a scene sampling its own
+target, 4,125 a target used as a texture before it was made, 1,113 a 2 x 8192 texture (too big or no
+format). A draw skipped one frame and drawn the next flickers. xl_limit.x loaded 7 times with no native C;
+opn.dat ended at once (no movie decoder). Vita3K repeats one `handle_access_violation` write-protect line
+(Address=0x61501400, 973 times) and `Unhandled EXC_BAD_ACCESS` (62,064 in its console), one page every
+time, the game unaffected. Logs kept on the Mac in ~/Downloads/kh1-test/vita3k-s140/.
+
+**Session 141: the flashing ground (host gxmcheck with dive_en.txt to 33,000 on the English disc).** Both
+big skips of the Vita3K run reproduce on the host's gxm_mock from the same frames (the palette one from
+~28,500, as in Vita3K's log), and both were the recorder's tables, not the GPU:
+- **"no palette (slot -1)"** (tex0 ...665423600, a 512 x 512 T4 at 0x3600 read from the "slot capture"
+  target's memory): the island loads a new 4-bit CLUT (CBP 0x3FDC, CLD 1) for each ground and scenery
+  draw, up to 105 distinct palettes in one frame (frame 30,712, with the command cap below lifted). The
+  palette cache had 64 slots and never refills one a draw of the frame reads, so every draw past the 64th
+  got slot -1 and gxm.c skipped it; which draws those were changed from frame to frame (the flashing).
+  include/platform/palcache.h has 256 slots now (256 KiB of LPDDR for gxm.c's palettes). Also: a draw
+  that rebinds the slot bound from an earlier frame's load (CLD 0, the same entries) did no lookup, so
+  the slot was not marked used and a later miss of the frame could refill it under a draw the GPU had
+  still to read (wrong colours for a frame); `kh1_palcache_use` marks it (tests/host/palcache_test.c).
+- **"the slot holds another" (slot 10, 512 x 256 T4 at 0x3300)** and draws missing with no skip line
+  at all: from ~30,700 a frame has up to 1,435 commands, and cmdbuf.h's `KH1_CMD_MAX` was 1,024: the host
+  run lost 174,639 commands by 33,000 (~400 a frame), draws and the TEXTURE uploads among them (the
+  texture cache counted a decode as uploaded whose command never reached gxm.c, so the GPU's slot kept
+  the old texture). Now 4,096 commands, gxmrec.h's 16,384 calls, ring.h's 512 KiB of uniforms (a slot
+  for each command and pass). The run's summary line (`commands: ... N lost`) is the check: 0 lost to
+  33,000, and 0 "no palette" skips (18,628 before).
+Left: 2,808 "target 6 as a texture: not made", 604 "2 x 8192 too big", 185 "the scene's own target"
+by 33,000. Not checked yet in Vita3K or on a Vita (VPK s141a).
+
 ## On a real Vita: the white screen (session 137v, 2026-10-27)
 
 Vita3K reached the title; a real Vita stopped on the white copyright screen after 10 disc reads and
@@ -510,6 +549,35 @@ cache's reads 4.9%, CLUT loads 2.3%, kh1_gsmem_addr 2.8%. Changes:
   model" counts drop by 1-2; draws, triangles and pixels drawn are unchanged. Left: pend_flush's
   sceGxmFinish in the mock (small on the Vita: 324 waits, ~90 ms in all, 3d-t), the texture cache's
   T8 reads, and the model's upload stores themselves.
+
+### The GS side on a second core (session 141)
+
+host/null/gsqueue.c runs the GS side on a worker thread: the GIF decode (dmawalk.c's gif_block / gif_qword),
+the register file (gsregs.c), the GS memory model (gsmem.c) and the command recorder (pipes.c, cmdbuf.c).
+The game thread, which still runs the game's code, the DMA walk, VIF1 and the VU1 programs, puts ops into one
+ordered ring (an op is a function, its argument words and a copy of its data qwords: a kick's packets, a
+GIF chain's blocks, PATH2's DIRECT qwords, the send's start, the HUD shift / stretch, MSCAL's path1 mark), and
+the worker runs them in order. On the Vita the worker is pinned to the second core, the game thread to the
+first, the watchdog to the third (config.txt `gsq=0` turns it off; it runs only with the GPU renderer).
+
+- **Sync points**: kh1_gsq_sync waits until every op put so far has run. It is called before anything on the
+  game thread reads or writes the model: PlatGsExecLoadImage / StoreImage (gsimage.c), the vblank's
+  kh1_pipes_frame (the GPU frame, gxm.c's reads of GS memory), kh1_null_hud_wide, the host's summary, and after
+  each send when its line or hook reads the model (`!kh1_dma_quiet`, trace 4 / 5, KH1_HOST_TEXDUMP, an
+  after-send hook with `kh1_dma_after_send_reads`; the Vita's GPU hook only counts the send, so it sets 0).
+- **The send's line and problem bits** come from a count the game thread keeps of each GIF stream (skim_qword /
+  skim_block: the packets and where the stream stands, without the writes), so the walk never waits for that;
+  when it syncs anyway it checks its count against the worker's (`kh1-host: gsq: ... differs` if not).
+- **Ops are never split or joined differently**: each chain block is its own op (gif_block's whole-IMAGE skip
+  depends on the blocks), each kick its own (a kick starts a fresh stream), only PATH2's qwords join (gif_qword
+  per qword either way). An op larger than half the ring runs on the game thread after a sync.
+- **Checks** (host, title-menu fake disc with the user's dktitle.x, 1500 frames): `KH1_HOST_GSQ=1
+  tools/vita/gxmcheck.sh` gives the same log as without it (host pointers aside; trace 5 syncs after each send,
+  so this checks the ops and copies); `KH1_HOST_GSQ_CHECK=10` (trace 2, quiet, the Vita's frame order) prints a
+  digest of the register file, all 4 MB of GS memory and the frame's commands every 10 frames, the same with
+  the worker running alongside the game (KH1_HOST_GSQ=1, and with a 64 KiB and a 4 KiB ring) as without.
+- **The watchdog** adds `gs worker: N ms busy; the game waited M ms for it (K waits)`. The `cpu: ... recording`
+  ms are the worker's now, and `vu1: ... passing their kicks on` is the copy into the ring.
 
 ## What next, in order
 

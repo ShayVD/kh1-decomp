@@ -45,7 +45,7 @@
  * give no call.  Plain C with no libc but memset / memcmp / sprintf / strlen (the Vita build compiles host/port/).
  * Not part of the PS2 build. */
 #ifndef KH1_PS2
-#define KH1_GXM_CALLS 4096
+#define KH1_GXM_CALLS 16384 /* session 141: with cmdbuf.h's 4,096 commands (a draw is 3 to 4 calls) */
 #define KH1_GXM_PIPES 128
 #define KH1_GXM_FRAGS 128
 

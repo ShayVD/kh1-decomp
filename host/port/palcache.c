@@ -63,3 +63,9 @@ int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill) {
     *fill = 1;
     return best;
 }
+
+void kh1_palcache_use(KH1PalCache *c, int slot) {
+    if (slot < 0 || slot >= KH1_PALCACHE_SLOTS || !c->slot[slot].n) return;
+    c->slot[slot].frame = c->frame;
+    c->slot[slot].use = ++c->use;
+}
