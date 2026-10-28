@@ -134,10 +134,39 @@ What the hand matches needed, most often first:
 - Address association: `(i*0x590 + 0x540) + base` needs the sum written in two steps;
   a base pointer local (`E *e = D; &e[i].sub`) keeps `base+off` from folding into %lo.
 
-Near misses and open questions are in the session's notes (docs/next-session.md); two
-recurring ones: an endless loop that calls a function without saving $ra (gb
-func_00f50db0, wm func_00f77ea8; gcc always saves it, maybe asm), and the angle-wrap
-helpers (gb func_00f25a68, wm func_00f35800 / func_00f4cb60, register allocation).
+Near misses and open questions are in the session's notes (docs/next-session.md). Session
+141 settled the two recurring ones: the "endless loop without $ra" (gb func_00f50db0, wm
+func_00f77ea8) was never a function, but case 9 of the main state machine's switch (below),
+and gb func_00f25a68 is wm func_00f35800 with gb's own literal (0.17453292f).
+
+### Session 141 additions
+
+- **The layout can split a function at its switch.** A `jr` through a jump table followed by
+  more code looks like a function end to the layout finder, so the case blocks after it
+  became fake functions (gb func_00f509f8's cases f50be8 / f50c58 / f50cc8 / f50db0, wm
+  func_00f77af0's f77ce0..f77ea8). Before hand-matching something odd (no prologue, never
+  called, `$ra` not saved), check whether a jump table (`lw` + `jr` with a D_ table) points
+  into it; merge it back into layout.tsv.
+- **CONTEXT_ONLY callees by hand.** `CONTEXT_ONLY void f(u8 *a0) {}` above the caller changes
+  branch-likely and slot choices (dktitle func_00f21068 needed func_00f209b0's). Try each
+  callee alone and all together (session 141's ctx.py did that mechanically).
+- **Two `li a0,K` arms that share one `jal`** (crossjumping) mean the source calls the
+  function in each arm of the if/else or switch: write the call in every case
+  (gb func_00f20290, wm func_00f47388).
+- **Callee prototypes decide store order and registers.** A callee returning a pointer
+  (gb func_00f509f8's `void *func_00f445a8(...)`), or a vtable slot returning s32, fixed the
+  order of stack-argument stores and the register holding the result.
+- **The rank.tsv "hard" functions** in gb / wm are mostly ordinary C with a few `kh1_u128`
+  arguments or copies (`por $aX,$zero,$zero` is a u128 zero argument). Only dkmovie's
+  MMI / sq movie routines (ovl/dkmovie/asm/mpeg_mmi.s, tools/asm_export.py --symbolic) were
+  hand-written.
+- **Porting between gb and wm.** twins.py needs the same instruction shape; when the
+  shape differs only in symbols and %hi/%lo data addresses, mapping the symbols by position
+  in the asm (lui base + offset included) and recompiling the twin's C ports it (tools/ovl/port.py SRC_OVL SRC_FUNC DST_OVL DST_FUNC in.c
+  out.c; tools/ovl/portall.py A B tries every matched function of A on B and keeps matches. It
+  gave wm func_00f50968, func_00f55ad8, func_00f781c0).
+- autodecomp's `--diff` now runs `objdump -z`: without it runs of zero words (nops) were
+  folded out and the side-by-side diff went out of step.
 
 ## decomp-permuter on an overlay function (session 135)
 
