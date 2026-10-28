@@ -450,6 +450,28 @@ opn.dat ended at once (no movie decoder). Vita3K repeats one `handle_access_viol
 (Address=0x61501400, 973 times) and `Unhandled EXC_BAD_ACCESS` (62,064 in its console), one page every
 time, the game unaffected. Logs kept on the Mac in ~/Downloads/kh1-test/vita3k-s140/.
 
+**Session 141: the flashing ground (host gxmcheck with dive_en.txt to 33,000 on the English disc).** Both
+big skips of the Vita3K run reproduce on the host's gxm_mock from the same frames (the palette one from
+~28,500, as in Vita3K's log), and both were the recorder's tables, not the GPU:
+- **"no palette (slot -1)"** (tex0 ...665423600, a 512 x 512 T4 at 0x3600 read from the "slot capture"
+  target's memory): the island loads a new 4-bit CLUT (CBP 0x3FDC, CLD 1) for each ground and scenery
+  draw, up to 105 distinct palettes in one frame (frame 30,712, with the command cap below lifted). The
+  palette cache had 64 slots and never refills one a draw of the frame reads, so every draw past the 64th
+  got slot -1 and gxm.c skipped it; which draws those were changed from frame to frame (the flashing).
+  include/platform/palcache.h has 256 slots now (256 KiB of LPDDR for gxm.c's palettes). Also: a draw
+  that rebinds the slot bound from an earlier frame's load (CLD 0, the same entries) did no lookup, so
+  the slot was not marked used and a later miss of the frame could refill it under a draw the GPU had
+  still to read (wrong colours for a frame); `kh1_palcache_use` marks it (tests/host/palcache_test.c).
+- **"the slot holds another" (slot 10, 512 x 256 T4 at 0x3300)** and draws missing with no skip line
+  at all: from ~30,700 a frame has up to 1,435 commands, and cmdbuf.h's `KH1_CMD_MAX` was 1,024: the host
+  run lost 174,639 commands by 33,000 (~400 a frame), draws and the TEXTURE uploads among them (the
+  texture cache counted a decode as uploaded whose command never reached gxm.c, so the GPU's slot kept
+  the old texture). Now 4,096 commands, gxmrec.h's 16,384 calls, ring.h's 512 KiB of uniforms (a slot
+  for each command and pass). The run's summary line (`commands: ... N lost`) is the check: 0 lost to
+  33,000, and 0 "no palette" skips (18,628 before).
+Left: 2,808 "target 6 as a texture: not made", 604 "2 x 8192 too big", 185 "the scene's own target"
+by 33,000. Not checked yet in Vita3K or on a Vita (VPK s141a).
+
 ## On a real Vita: the white screen (session 137v, 2026-10-27)
 
 Vita3K reached the title; a real Vita stopped on the white copyright screen after 10 disc reads and

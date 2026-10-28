@@ -45,8 +45,8 @@ int main(void) {
     CHECK("sizes: a GPU vertex is 32 bytes", kh1_ring_vertex_bytes(1) == 32);
     CHECK("sizes: the vertex ring holds every static send at once 34 times over",
           kh1_ring_vertex_bytes(3770) * 34 <= KH1_RING_VERTEX_BYTES && kh1_ring_vertex_bytes(864) <= KH1_RING_VERTEX_BYTES);
-    CHECK("sizes: the uniform ring holds 4,096 slots (the static packets: 42 batches, 40 passes)",
-          kh1_ring_uniform_bytes(4096, 0) == KH1_RING_UNIFORM_BYTES && kh1_ring_uniform_bytes(42, 40) * 40 <
+    CHECK("sizes: the uniform ring holds 8,192 slots (the static packets: 42 batches, 40 passes)",
+          kh1_ring_uniform_bytes(8192, 0) == KH1_RING_UNIFORM_BYTES && kh1_ring_uniform_bytes(42, 40) * 40 <
           KH1_RING_UNIFORM_BYTES);
     printf("ring_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
