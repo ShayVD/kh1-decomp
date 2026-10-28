@@ -179,6 +179,17 @@ def gcc_major(cc):
     return int(v.split(".")[0]) if v[:1].isdigit() else 0
 
 
+def code_gap(b, elf):
+    """Bytes between the end of the executable LOAD segment and the next LOAD segment's start."""
+    out = subprocess.run([b + "arm-vita-eabi-readelf", "-lW", elf], capture_output=True, text=True).stdout
+    loads = [l.split() for l in out.splitlines() if l.strip().startswith("LOAD")]
+    loads = sorted((int(x[2], 16), int(x[5], 16), "E" in x[6:-1]) for x in loads)
+    for i, (va, memsz, ex) in enumerate(loads[:-1]):
+        if ex:
+            return loads[i + 1][0] - (va + memsz)
+    return None
+
+
 def package(b, out, elf):
     velf = os.path.join(out, "kh1.velf")
     run([b + "vita-elf-create", elf, velf], "vita-elf-create")
@@ -251,6 +262,18 @@ def main():
         print("%s: the link fails (%d undefined: %s; %s/link.log)" % (name, len(syms), " ".join(syms[:30]), t["out"]))
         print("\n".join((lines or p.stderr.splitlines())[:10]))
         return 1
+    if name == "vita":
+        # vita-elf-create puts its import / export tables (~3 KiB) after the code segment, before the
+        # data segment's page: when the code ends just short of a page (session 140: 1,168 bytes
+        # left) it fails with "segment 1 overlaps".  Pad the code segment onto the next page then.
+        gap = code_gap(b, elf)
+        if gap is not None and gap < 0x1000:
+            pad = os.path.join(out, "segpad.o")
+            asm = os.path.join(out, "segpad.s")
+            open(asm, "w").write('.section .rodata.kh1_segpad,"a"\n.space %d\n' % (gap + 512))
+            run([b + "arm-vita-eabi-as", "-o", pad, asm], "the segment pad")
+            run([cc] + t["link"] + ["-o", elf] + objs + [pad] + extra + t["libs"], "the padded link")
+            print("vita: the code segment padded by %d bytes (%d were left before the data's page)" % (gap + 512, gap))
     print("%s: %s linked (%d objects)" % (name, os.path.relpath(elf, ROOT), len(objs)))
     if name == "linux-arm":
         print("linux-arm: run it as the host runner: KH1_HOST_ISO=... QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf "

@@ -1,0 +1,25 @@
+# Load a save from memory card 1 (session 140; host/port/mc_dir.c, docs/vita-build.md "Memory card"):
+#   KH1_HOST_MC=mc0 KH1_HOST_CD=go KH1_HOST_ISO=en.iso KH1_HOST_PAD=tests/host/pads/load_en.txt \
+#   KH1_HOST_FRAMES=5000 KH1_HOST_QUIET=1 KH1_HOST_TRACE=1 out/host/kh1-host
+# mc0: the user's own saves (tools/host/ps2mc.py extract CARD.ps2 mc0; never commit them), on a
+# copy since the game writes there.  en.iso: the English disc (c8ee8c77...).  Checked with the
+# user's saves 04-06: the load screen opens on the newest (06) and it loads into the field
+# (the party HUD from ~3,300; the null platform draws no 3D).
+#   1300        START at the title
+#   1600-1800   DOWN to LOAD, CIRCLE: the Load Menu's "Select MEMORY CARD slot."
+#   2100        CIRCLE: slot 1; the saves listed, the cursor on the newest
+#   2500-3100   CIRCLE: that save, then the confirm prompts
+1300 START
+1302 -
+1600 DOWN
+1602 -
+1800 CIRCLE
+1802 -
+2100 CIRCLE
+2102 -
+2500 CIRCLE
+2502 -
+2800 CIRCLE
+2802 -
+3100 CIRCLE
+3102 -

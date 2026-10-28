@@ -156,6 +156,10 @@ if python3 -I "$ROOT/tools/host/clutupload.py" --src "$W/clutupneg/src" > "$W/cl
    ! grep -q 'func_00239368: in REVIEWED but no CLUT upload found' "$W/clutup_neg.log"; then
   echo "selftest: clutupload missed an unlisted CLUT upload or a listed one taken away" >&2; cat "$W/clutup_neg.log" >&2; exit 1
 fi
+# session 140: the memory card as a directory (host/port/mc_dir.c) and the card image reader (its C
+# test builds with gcc -m32, or the plain gcc when that fails)
+python3 -I "$ROOT/tests/host/ps2mc_test.py" > "$W/ps2mc.log" || { cat "$W/ps2mc.log"; exit 1; }
+tail -n 1 "$W/ps2mc.log"
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then

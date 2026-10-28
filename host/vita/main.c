@@ -307,6 +307,11 @@ static int watchdog(SceSize args, void *argp) {
     return 0;
 }
 
+/* session 140: memory card 1 (host/port/mc_dir.c), ux0:data/kh1/mc0 unless config.txt's mc= names
+ * another directory; no card when it does not exist */
+static char mc_dir[128];
+extern const char *kh1_mc_root[2];
+
 static void config(char *iso, int n) {
     char path[128], line[256];
     FILE *f;
@@ -331,6 +336,7 @@ static void config(char *iso, int n) {
             kh1_vita_pad_script = pad;
         }
         else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
+        else if (strcmp(line, "mc") == 0) snprintf(mc_dir, sizeof mc_dir, "%s", v);
         else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
         else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
     }
@@ -392,9 +398,15 @@ int main(int argc, char **argv) {
         sceKernelExitProcess(1);
     }
     snprintf(iso, sizeof iso, "%s/kh1.iso", kh1_vita_dir);
+    snprintf(mc_dir, sizeof mc_dir, "%s/mc0", kh1_vita_dir);
     kh1_dma_vu1 = 1; /* the 3D (config.txt's vu1=) */
     kh1_vu1_clock = vita_us;
     config(iso, sizeof iso);
+    kh1_mc_root[0] = mc_dir;
+    {
+        SceIoStat st;
+        vlog("kh1-vita: memory card 1: %s (%s)\n", mc_dir, sceIoGetstat(mc_dir, &st) >= 0 ? "found" : "none");
+    }
     if (!kh1_cd_image_open(iso)) {
         vlog("kh1-vita: %s: not found or not readable\n", iso);
         snprintf(iso, sizeof iso, "%s/kh1.bin", kh1_vita_dir);

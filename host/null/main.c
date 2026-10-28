@@ -59,6 +59,10 @@
  *                       texels hashed / decoded a frame (host/port/texcache.c)
  *   KH1_HOST_QUIET=1    (session 135) the chain walk without its "dma ch" line per send, as the Vita
  *                       build runs it (host/null/dmawalk.h kh1_dma_quiet)
+ *   KH1_HOST_MC=DIR     (session 140) a memory card in port 1 (the game's port 0): DIR holds the
+ *                       save directories BISLPS-25198-NN/ (host/port/mc_dir.c; tools/host/ps2mc.py
+ *                       copies them from an emulator's card).  The game reads and writes them, so
+ *                       run on a copy.  Without it no card is in either slot, as before
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -346,6 +350,14 @@ int main(int argc, char **argv) {
         ovl_stub = ovl && strncmp(ovl, "stub", 4) == 0 && (ovl[4] == 0 || ovl[4] == ':');
         if (ovl_stub && ovl[4] == ':')
             ovl_state = strtol(ovl + 5, 0, 0);
+    }
+    {
+        extern const char *kh1_mc_root[2]; /* host/port/mc_dir.c */
+        const char *mc = getenv("KH1_HOST_MC");
+        if (mc && *mc) {
+            kh1_mc_root[0] = mc;
+            printf("kh1-host: memory card 1 is %s\n", mc);
+        }
     }
     if (iso) {
         if (!kh1_cd_image_open(iso)) {
