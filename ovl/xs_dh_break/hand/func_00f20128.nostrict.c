@@ -1,6 +1,4 @@
-/* xs_dh_break.x func_00f20128: draft (session 136), not byte-identical; the port runs it
- * (ovl/xs_dh_break/drafts.tsv). Sends D_00FA2000's chain (func_00f20080's) and a full-screen
- * textured sprite. No caller in the file (nothing jumps to it or stores its address). */
+/* xs_dh_break.x func_00f20128: matched by hand. */
 #include "ovl.h"
 #include "platform/dma.h"
 #include "platform/gs.h"
