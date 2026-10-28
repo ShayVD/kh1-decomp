@@ -38,6 +38,7 @@ Conventions:
 | `python3 -I tools/vu/amesh_survey.py DIR [--per-file] [--regs]` | every renderer A mesh of the map files you extracted (`<ww>00_<nn>.bin`): the grid's cells, the template, the sky meshes, decoded through a model of VIF1 and checked (batch sizes, strip flags, codes), with counts of the PRIMs, flags, unpack layouts and the GS registers the meshes set (§2.2.2). New in session 142 |
 | `python3 -I tools/vu/amesh_render.py ROOM.bin ROOM.img --eye=X,Y,Z --at=X,Y,Z -o OUT.png [--far 2,3] [--tint]` | draws a room's grid (or its sky) textured, from this spec's layouts alone, with a GS memory model for the .img (numpy + Pillow): the reference picture for the port (§2.2.2). New in session 142 |
 | `python3 -I tools/vu/find_vu1.py --overlay FILE.x --base 0xF20000 [--disasm N \| --summary N]` | the VU programs an overlay uploads (gb.x, wm.x: §2.5) |
+| `python3 -I tools/vu/rc_stream.py FILE... [--per-model]` | checks every renderer C batch in the Gummi model archives (`TARC` / `MOPB`, §2.5.1) |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
 | `python3 tools/kh1tool.py asm func_X` / `src/` | the EE side; every function cited here is matched C, so the source is the reference |
 
@@ -564,7 +565,8 @@ Open question 11. The EE overlays (docs/overlays.md) were scanned on the English
   (xs_*.x) draw through the main ELF (the draw list, `src/gfx/gspkt`, `gifpkt`, `gsclip`, ppp
   effects); dktitle.x and dkmovie.x only through the main ELF.
 
-**C0-C4 are one design: indexed, lit triangle strips** (unlike A and B, which stream vertices).
+**C0-C4 are one design: indexed, lit triangle strips** (unlike A and B, which stream vertices; *session 143:*
+on the disc every "strip" is a 3- or 4-vertex fan, §2.5.1).
 
 VU memory (read from the init blocks; meanings inferred from the maths):
 
@@ -578,7 +580,7 @@ VU memory (read from the init blocks; meanings inferred from the maths):
 | 992 + m | material m's colour multiplier (C1, C4) |
 | 1007-1014 | scratch |
 | 1018 / 1019 / 1020 | C0-C2: the clip box's min / max (x, y, w) and the w plane |
-| 1021 + m | material m: `x` = the vertex routine's address, `y` = the store routine's (micro addresses the EE writes: a textured and an untextured pair) |
+| 1021 + m | material m: `x` = the vertex routine's address, `y` = the store routine's (micro addresses the EE writes: a textured and an untextured pair; the files use m = 0 and 1, §2.5.1) |
 | 0x180 / 0x2B0 | output double buffer, 0x130 qwords each, one `XGKICK` per group |
 
 **Batch** (at TOPS, one per `MSCNT`): header `{x, y, z, w}` = x leading qwords (the ST and colour-multiplier
@@ -590,7 +592,8 @@ matrix and stores the RGB **in place** (C2 skips the lighting).
 
 **Command list**: a group qword `{runs (0 = end), material m (0 = keep the GS state), double-sided,
 -}`; a qword whose x is the UV-scroll slot (0 = none; read by C0 / C3 only); if m != 0, two qwords copied to the
-output as they are (inferred: an A+D GIF tag and the texture's register). Then per run a qword
+output as they are (*session 143:* a GIF tag `NLOOP 1, NREG 1, PACKED, REGS 6` and the `TEX0_1` value, so a
+new texture). Then per run a qword
 `{vertices a strip, strips, space, -}`, the strips' GIF tag, and the strips: one index qword per vertex,
 `{position, colour, ST, multiplier}` as offsets from TOPS. A strip whose first triangle faces away
 (`OPMULA`/`OPMSUB`, `FMAND 0x20`) is skipped whole unless the group is double-sided. Per vertex: XYZ =
@@ -606,10 +609,53 @@ for the untextured routine.
 | C3 | yes | per vertex | yes | no (C0 for objects known to be inside) |
 | C4 | yes | per material | no | no (C1's) |
 
-Not traced yet: the EE side that builds these batches in gb.x / wm.x (the ships from the block table of
-src/gummi/ship.c, the files `gumi/gumi_ini.bin`, `gumi/gumi_tex.bin`, `worldmap/world_ini.bin`), the GS
-state those two copied qwords hold, and which program each object uses. A port can draw this engine on the
-CPU side (index buffers + per-vertex lighting) instead of translating the VU code.
+#### 2.5.1 The batches on the disc (session 143, the English disc)
+
+The EE does not build batches: they are prebuilt in the models (`TARC` / `MOPB`, docs/structs.md "Gummi
+models"), as renderer A's are. `tools/vu/rc_stream.py` walks every one (393 models, 8,316 batches, 10,870
+runs) against what the VU code reads, with 0 errors. What the data shows, beyond the layout above:
+
+- **Upload.** `STCYCL 4,4` throughout. Header V4-8 (unsigned) at TOPS + 0; the leading qwords V4-32; the
+  positions and normals one masked V3-32 run (`STMASK 0x40404040`, `STROW` w = 1.0, so every position's w is
+  1.0); the command list V4-32 for group, UV, material and run qwords and V4-8 (unsigned) for the index
+  qwords. One `MSCNT` per batch, up to 48 positions (mostly 16 or 32).
+- **Index targets.** The position index always falls in the positions, the colour index in the normals
+  (their lit RGB is stored there). Every multiplier index points into the leading qwords; every ST index
+  points into qwords after the normals (V3 `{s, t, 0}` with w 1.0). C0-C2 store each position's outcode in the
+  w of qword position + y; in every batch that slot ends before the command list.
+- **Runs are fans, not strips.** Every run's GIF tag is `PRE` with `TRI_FAN + IIP` (+ `TME`, + `ABE`),
+  `NLOOP` = the run's vertex count, which is 3 or 4: each "strip" is one triangle or one quad. The tag's
+  registers are `ST, RGBAQ, XYZ2` (0x412) or `NOP, RGBAQ, XYZ2` (0x41F). The run's space z is always 6 x vertices + 1:
+  room for 2n output vertices of 3 qwords plus the tag (inferred: the clipper's worst case for an n-gon), and
+  the run's w is always vertices x strips.
+- **Materials.** The files use m = 0 and 1 only. Every m = 1 group carries `TEX0_1`: PSMT8 128 x 128 (4,946),
+  PSMT4 128 x 128 (1,355) or 128 x 64 (12), `TCC 1`, MODULATE, `CLD 1`. m = 0 groups reuse the texture already
+  set; the 436 runs with the untextured register list are all in m = 0 groups.
+- **Groups.** Every model has 3 mesh groups. Group 2 is the main mesh (331 models; textured, translucent and
+  untextured runs); group 0 (91 models) is all `ABE` (translucent); group 1 is nearly unused (8 models).
+  764 of 9,711 command groups are double-sided (z = 1). UV-scroll slots 1-4 appear in 751 groups.
+
+**Program per group.** `func_00F3F548` (gb.x; wm.x's copy is `func_00F66640`) takes a program index 0-5
+and points a DMA `CALL` at that program's upload (a `RET` tag with the microcode inside): 0 and 3 = C0,
+1 = C3, 2 = C2, 4 and 5 = C1. The chain it builds: the program, `UNPACK` 12 qwords to 0-11 (the matrices),
+8 qwords to 13-20, 16 qwords to 992-1007 (the material colours, cleared when the caller passes none),
+`FLUSHA`, a `CALL` to the part's batch chain, `MSCAL 0`. A model is drawn by `func_00F3E0D8` or
+`func_00F3E388` (wm.x `func_00F651D0`, `func_00F65480`): per group g, the caller's table entry g; per part,
+the part's chain and its bone's matrix. Every caller passes a literal table:
+
+| Table (groups 0, 1, 2) | Programs | Callers |
+| --- | --- | --- |
+| `{5, 1, 1}` | C1, C3, C3 | gb.x and wm.x, the default |
+| `{4, 0, 0}` | C1, C0, C0 | gb.x `0x00F40734`, `0x00F405AC` and wm.x `0x00F677EC`, `0x00F67664`, chosen by a flag (inferred: the model's box crosses the guard band, so it needs clipping) |
+| `{0, 0, 0}` / `{1, 1, 1}` | C0 / C3 for all groups | wm.x `0x00F29670`-`0x00F297EC` (world-map objects) |
+
+So group 0 (the translucent layer) runs C1, per-material colour, wherever the default tables are used, and
+the main mesh runs C3, or C0 when clipped. **No caller passes 2 or 3, and nothing refers to C4's upload**
+(gb.x `0x00F56460`, wm.x `0x00F846F0`): C2 (flat colour) and C4 are dead code on this disc, statically. A
+port needs C0, C1 and C3.
+
+A port can draw this engine on the CPU side (index buffers + per-vertex lighting, one draw per run as a
+triangle or quad fan) instead of translating the VU code; the files need no rewriting.
 
 ## 3. GS state
 
@@ -3731,5 +3777,6 @@ Every full-width rule goes through `func_00206130`, which session 101 covered.
     it is not covered here.
     *Session 142:* scanned (§2.5). Only gb.x and wm.x upload VU1 code: five byte-identical
     programs (renderer C, indexed lit strips), documented from the disassembly. The other overlays
-    draw through the main ELF. Still open: the EE side that builds renderer C's batches in gb.x, and
-    a capture to check the inferred matrix roles.
+    draw through the main ELF. *Session 143:* the batches are prebuilt in the Gummi model files and
+    check out on all 393 models (§2.5.1); C2 and C4 are never selected. Still open: a capture to check the
+    inferred matrix roles.

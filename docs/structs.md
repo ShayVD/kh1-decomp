@@ -332,3 +332,21 @@ the raw member and run `zstd -d`; `eeMemory.bin` is the 32 MB EE RAM, `vu1Memory
 +0x08 rel image header (16 bytes, uploaded by `func_0015fa20`), +0x10 rel
 pixels, +0x18 rel CLUT, +0x20 rel {s32 n0, rel table0, s32 n1, rel table1}
 (two lists used by `func_00174fc0` to place the left and right sprites).
+
+### Gummi models: `TARC` / `MOPB` (gb.x `0x00F3E0D8`, session 143, static + the English disc)
+
+Renderer C's models (renderer-spec §2.5). `gumi/gumi.aml` is a `TARC` of 96 `MOPB` models (the ship
+blocks); 27 more `TARC` files and 12 bare `MOPB` files (names not in our KINGDOM.IDX list; inferred:
+the Gummi stages' enemies and objects) hold 297 more, some in nested `TARC`s. `rc_stream.py` walks all
+393 models.
+
+| Where | Contents |
+| --- | --- |
+| `TARC` +0x00 | `"TARC"`, 1, 0, 0x18, then +0x10 count, then count `{u32 offset, u32 size}` pairs at +0x18 (offsets from the archive). Entries are `MOPB`, `TARC`, `TEZB`, `BISB` or untagged. |
+| `MOPB` +0x90 / +0x94 | bone count / offset (0x40-byte records, parent index at +0x30, -1 = root) |
+| `MOPB` +0x98 / +0x9C | mesh group count (always 3) / offset: 0x28-byte records `{u32 parts, u32 offset, 8 floats bbox}` |
+| part (0x28 bytes, at the group's offset) | `{u32 chain offset, s32 bone, 8 floats bbox}` |
+| chain | `CNT` tags whose VIF codes upload one batch each (`STCYCL 4,4`, then `UNPACK`s with FLG and `MSCNT`), the first with `FLUSHA`, `STMASK 0x40404040` and `STROW (0, 0, 0, 1.0)`, ending in a `RET` |
+
+All offsets are from the `MOPB`. Each group gets its own VU program from a 3-entry table supplied by
+the caller (renderer-spec §2.5), and each part draws with its bone's matrix.
