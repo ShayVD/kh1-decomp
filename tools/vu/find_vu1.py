@@ -406,13 +406,14 @@ def main() -> None:
 
     if args.overlay:
         for f in args.overlay:
-            progs = scan_overlay(Path(f), args.base, quiet=args.disasm is not None)
-            if args.disasm is not None:
-                p = progs[0][args.disasm]
+            n = args.disasm if args.disasm is not None else args.summary
+            progs = scan_overlay(Path(f), args.base, quiet=n is not None)
+            if n is not None:
+                p = progs[0][n]
                 get = progs[1]
                 code = [(c["vma"] // 8 + i, get(c["lma"] + 8 * i), get(c["lma"] + 8 * i + 4))
                         for c in p["chunks"] for i in range(c["size"] // 8)]
-                print(disasm(code))
+                print(disasm(code) if args.disasm is not None else summarize(code))
         return
 
     img = Image(Path(args.elf))

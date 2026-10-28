@@ -76,9 +76,19 @@ def vertex_qwords(m: Mem, p: int, z: int, g: int) -> int | None:
     return n
 
 
+def skinned_offsets(m: Mem, p: int, z: int) -> list[int]:
+    """The qword offset of each skinned vertex's first qword (its w = influence count)."""
+    out, n = [], 0
+    for _ in range(z):
+        out.append(n)
+        n += m.u32(p + n * 16 + 12) + 2
+    return out
+
+
 def walk_mesh(m: Mem, tag: int, g: int, verbose: bool, ind: str = "  ") -> tuple[dict, list[str]]:
     """Walk a mesh chain twice: by DMA tags and by the EE rule; cross-check."""
-    stats = {"packets": 0, "records": 0, "op0": 0, "op1": 0, "op2": 0, "verts": 0}
+    stats = {"packets": 0, "records": 0, "op0": 0, "op1": 0, "op2": 0, "verts": 0, "idx_slot": 0, "idx_palette": 0}
+    ninf, idx, pal = 0, [], []
     errs: list[str] = []
     op0_len = 5 if g & 2 else 8
     # 1. Packets by DMA tag.
@@ -109,7 +119,18 @@ def walk_mesh(m: Mem, tag: int, g: int, verbose: bool, ind: str = "  ") -> tuple
         if op == 0:
             stats["op0"] += 1
             line += f"op 0 matrix: bone {arg}, slot {z}" + (f", w {w}" if w else "")
-            if z > 2:
+            if g & 1 and w:
+                # skinned palette: w = 1 is the base (vi06), w >= 2 the entries after it, 8 qwords
+                # apart; z is not read for these (session 142: z counts on from the base's 2)
+                if w == 1:
+                    pal = [p]
+                elif not pal:
+                    errs.append(f"{p:#x}: palette entry (w {w}) before a palette base in its packet")
+                else:
+                    if p != pal[-1] + 0x80:
+                        errs.append(f"{p:#x}: palette entry not 8 qwords after the previous one")
+                    pal.append(p)
+            elif z > 2:
                 errs.append(f"{p:#x}: op 0 slot {z} > 2")
             nxt = p + op0_len * 16
         elif op in (1, 2):
@@ -125,6 +146,19 @@ def walk_mesh(m: Mem, tag: int, g: int, verbose: bool, ind: str = "  ") -> tuple
                 line += f"op 1 vertices: {z}, length {arg:#x}, parity {w}, GIF NLOOP {gif & 0x7FFF}"
                 if gif & 0x7FFF != z:
                     errs.append(f"{p:#x}: GIF NLOOP {gif & 0x7FFF} != vertex count {z}")
+                if g & 1 and nv is not None:
+                    # the influences take the op 2 indices in order: 0-2 = matrix slots, 0x100 + 8j =
+                    # palette entry j of the current base (P13 / P14 / P17: vi07 >= 0x100 loads
+                    # vi06 + (vi07 - 0x100) + 1..4)
+                    k = sum(m.u32(p + 32 + 16 * o + 12) for o in skinned_offsets(m, p + 32, z))
+                    if ninf + k > len(idx):
+                        errs.append(f"{p:#x}: {ninf + k} influences but {len(idx)} bone indices in the packet")
+                    for x in idx[ninf:ninf + k]:
+                        stats["idx_slot" if x < 3 else "idx_palette"] += 1
+                        if not (x < 3 or (x >= 0x100 and (x - 0x100) % 8 == 0 and (x - 0x100) // 8 < len(pal))):
+                            errs.append(f"{p:#x}: bone index {x:#x} with {len(pal)} palette entries")
+                            break
+                    ninf += k
                 if nv is None or 2 + nv != arg // 16:
                     errs.append(f"{p:#x}: {z} vertices (g={g:#x}) do not fill {arg:#x} bytes")
                 elif not g & 1:
@@ -136,10 +170,13 @@ def walk_mesh(m: Mem, tag: int, g: int, verbose: bool, ind: str = "  ") -> tuple
                     errs.append(f"{p:#x}: op 1 parity {w} > 1")
             else:
                 line += f"op 2 bone indices: {z} qwords, length {arg:#x}"
+                idx = [m.u32(p + 16 + 4 * j) for j in range(4 * z)]
                 if arg // 16 != 1 + z:
                     errs.append(f"{p:#x}: op 2 length {arg:#x} != 1 + {z} qwords")
         elif op == END_OP:
             line += f"end, next +{arg:#x}" if arg else "end of mesh"
+            if g & 1:
+                ninf, idx, pal = 0, [], []
             if p + 16 != bound(pi):
                 errs.append(f"{p:#x}: end record is not the last unpacked qword of packet {packets[pi][0]:#x}")
             if verbose:
@@ -191,7 +228,9 @@ def walk_mobj(m: Mem, h: int, ram: bool, verbose: bool) -> int:
             bad += len(errs)
             print(f"  part {i}: flags {fl:#x} id {pid} g {g:#x} chain {c:#x}: {st['packets']} packets, "
                   f"{st['records']} records (op0 {st['op0']}, op1 {st['op1']}, op2 {st['op2']}), "
-                  f"{st['verts']} vertices, {'OK' if not errs else f'{len(errs)} errors'}")
+                  f"{st['verts']} vertices"
+                  + (f", influences {st['idx_slot']} by slot + {st['idx_palette']} by palette" if g & 1 else "")
+                  + f", {'OK' if not errs else f'{len(errs)} errors'}")
             for e in errs[:8]:
                 print("    " + e)
     return bad
