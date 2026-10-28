@@ -35,6 +35,7 @@
 #include <psp2/io/stat.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/kernel/threadmgr.h>
+#include <psp2/power.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -393,6 +394,17 @@ int main(int argc, char **argv) {
     }
     vlog("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
     vlog("kh1-vita: %u KiB of the main thread's stack for the game's threads and tasks\n", costack_bytes >> 10);
+    /* session 137v (the real Vita's speed): an application starts at 333 MHz; the A9s at 444, the bus and
+     * the GPU at 222 as other ports set them (Vita3K takes the calls and runs as fast either way) */
+    {
+        int arm0 = scePowerGetArmClockFrequency();
+        scePowerSetArmClockFrequency(444);
+        scePowerSetBusClockFrequency(222);
+        scePowerSetGpuClockFrequency(222);
+        scePowerSetGpuXbarClockFrequency(166);
+        vlog("kh1-vita: clocks: ARM %d MHz (was %d), bus %d, GPU %d, GPU crossbar %d\n", scePowerGetArmClockFrequency(), arm0,
+             scePowerGetBusClockFrequency(), scePowerGetGpuClockFrequency(), scePowerGetGpuXbarClockFrequency());
+    }
     if (kh1_vita_display_init(D_002A6890)) {
         vlog("kh1-vita: no framebuffer\n");
         sceKernelExitProcess(1);
