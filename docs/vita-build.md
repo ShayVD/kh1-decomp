@@ -449,6 +449,32 @@ strings among them) pointed 0x140000 off on hardware. tools/host/census.py now h
 `LD_FEATURE("SANE_EXPR")`, which keeps them section-relative; `readelf -s` shows no absolute symbol
 left in the image's range. **Anything tested only in Vita3K can hide this kind of bug**: run on hardware.
 
+## On a real Vita: speed (session 137v, 2026-10-28)
+
+Build 3d-r on a Vita reached Dive to the Heart at ~2 fps, with the title's menus at 4-5 fps. The
+watchdog's "split" line (host/vita/main.c) divides each 2 s into DMA walks / the frame's commands /
+present / vblank wait / the rest (the game's code, gsimage.c's uploads included).
+
+- **Menus**: the rest took 1.2-1.6 s of every 2 s. dktitle uploads its backdrops through
+  PlatGsExecLoadImage every frame, ~840,000 pixels: two 512 x 192 CT24 (into the Z buffer's memory,
+  which the frame's Z writes), two 512 x 192 CT32, a 512 x 384 T4 and T8 / CLUT pieces. CT24 had no
+  bulk path, so every pixel went trx_pixel -> put_at -> wr32 -> mark (48% of the main thread, profiled
+  in Vita3K with -finstrument-functions; 36% of the host's instructions a menu frame). Two changes in
+  host/null/gsmem.c, each pixel's stored bits and marks as before (the gxmcheck run to the Dive gives
+  the same log, host pointers aside):
+  - `trx_bulk24`: CT24 / Z24 three bytes a pixel against the kept addresses, a pixel split across
+    two pieces too.
+  - `kh1_gsmem_image_same` / `kh1_gsmem_image_kept`: a LoadImage of the bytes the same rectangle's
+    last one brought, none of its pages written since (page_seq no newer than that upload's end) nor
+    drawn (page_drawn clear), would store nothing, so it is counted and skipped. The T4 / T8 / CT32
+    backdrops hit; the CT24 pair never does (the Z writes mark their pages drawn).
+  On the host a menu frame went from 91M to 46M instructions. Next there: tex_scan's one
+  kh1_gsmem_addr a block (10%), kh1_texfmt_convert (11%), the present's read_rect.
+- **Dive**: the DMA walks take 1.3-1.7 s of every 2 s (VU1 ~0.7 s, then recording), the commands
+  0.4-0.6 s. Done so far: target_upload in 32-row chunks through kh1_gsmem_read_rect, whose T8 / T4
+  rectangles now go block by block. Next: the walk itself (vif_word, unpack, the VU1 programs' fin /
+  fo, which the Vita's NEON helpers already shorten), then a second core for VIF1 / VU1 and the GS feed.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and

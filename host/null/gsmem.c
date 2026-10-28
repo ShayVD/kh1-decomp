@@ -53,6 +53,7 @@ static struct {
     u32 acc, nacc, bytes; /* the pixel being assembled, its bytes so far, bytes a pixel (0: 4 bits) */
     KH1GsUpload *log;
     const u32 *at; u32 ai; /* session 135: the pixels' addresses (trx_addrs), 0 for none; the next's */
+    int key;               /* session 137: their at_key entry, -1 for none */
 } trx;
 
 /* Session 135: an upload's addresses kept (the title uploads the same rectangles, ~800,000 pixels,
@@ -61,10 +62,16 @@ static struct {
 #define AT_POOL (1u << 20)
 #define AT_KEYS 64
 static u32 at_pool[AT_POOL], at_used, at_n;
-static struct { u32 psm, bp, bw, x, y, w, h, off; } at_key[AT_KEYS];
+/* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
+ * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
+static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi; } at_key[AT_KEYS];
+#define SAME_POOL (4u << 20)
+static u8 same_pool[SAME_POOL];
+static u32 same_used;
 static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h);
 
 void kh1_gsmem_reset(void) {
+    u32 i;
     memset(vm, 0, sizeof vm);
     memset(clut, 0, sizeof clut);
     memset(page_seq, 0, sizeof page_seq);
@@ -74,6 +81,8 @@ void kh1_gsmem_reset(void) {
     memset(page_drawn, 0, sizeof page_drawn);
     memset(page_tgt, 0, sizeof page_tgt);
     marks++;
+    for (i = 0; i < AT_KEYS; i++) at_key[i].dlen = 0; /* the pages' stamps start again at 0 */
+    same_used = 0;
     cbp0 = cbp1 = clut_seq = nlog = ntgt = useq = 0;
     /* session 118: seq goes on counting, so a texture cache's stamp from before a reset is never one
      * after it (the pages start again at 0, which only memory never written since a reset has) */
@@ -361,6 +370,7 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
     KH1GsUpload *l = nlog < LOG ? &log_[nlog] : 0;
     trx.active = 0;
     trx.log = 0;
+    trx.key = -1;
     dir &= 3;
     if (dir == 1) { st.unsupported++; return; }
     if (dir == 3) return;
@@ -409,20 +419,72 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
 }
 
 static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h) {
-    u32 i, x, y, *a;
+    u32 i, x, y, *a, lo = ~0u, hi = 0;
+    trx.key = -1;
     if (!fast_on || !known(psm) || !w || !h || w * h > AT_POOL) return 0;
     for (i = 0; i < at_n; i++)
         if (at_key[i].psm == psm && at_key[i].bp == bp && at_key[i].bw == bw && at_key[i].x == x0 && at_key[i].y == y0 &&
-            at_key[i].w == w && at_key[i].h == h)
+            at_key[i].w == w && at_key[i].h == h) {
+            trx.key = i;
             return at_pool + at_key[i].off;
-    if (at_n == AT_KEYS || at_used + w * h > AT_POOL) at_n = at_used = 0;
+        }
+    if (at_n == AT_KEYS || at_used + w * h > AT_POOL) at_n = at_used = same_used = 0;
     a = at_pool + at_used;
     for (y = 0; y < h; y++)
-        for (x = 0; x < w; x++) *a++ = kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y);
+        for (x = 0; x < w; x++) {
+            *a = kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y);
+            if (*a < lo) lo = *a;
+            if (*a > hi) hi = *a;
+            a++;
+        }
     at_key[at_n].psm = psm; at_key[at_n].bp = bp; at_key[at_n].bw = bw; at_key[at_n].x = x0; at_key[at_n].y = y0;
     at_key[at_n].w = w; at_key[at_n].h = h; at_key[at_n].off = at_used;
+    at_key[at_n].dlen = 0;
+    at_key[at_n].plo = page_of(psm, lo);
+    at_key[at_n].phi = page_of(psm, hi);
     at_used += w * h;
+    trx.key = at_n;
     return at_pool + at_key[at_n++].off;
+}
+
+/* Session 137 (the title's menus on the Vita, docs/vita-build.md "Speed"): the menus upload the same
+ * ~840,000 pixels every frame, the bytes the memory already holds.  A whole upload of the bytes the
+ * same rectangle's last one brought, none of its pages written since (no stamp after that upload's)
+ * nor drawn (no draw's bits for it to clear), stores nothing: put_at would find each pixel the same.
+ * 1 when that is so, the counts and the position then as the pixels would leave them; 0 to send the
+ * pixels through kh1_gsmem_image, then kh1_gsmem_image_kept */
+int kh1_gsmem_image_same(const void *src, u32 bytes) {
+    u32 p;
+    if (!trx.active || trx.key < 0 || trx.ai || trx.nacc || flat_raw) return 0;
+    if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
+    for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
+        if (page_seq[p] > at_key[trx.key].stamp || page_drawn[p]) return 0;
+    if (memcmp(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
+    st.pixels += trx.w * trx.h;
+    if (trx.log) trx.log->pixels += trx.w * trx.h;
+    trx.ai = trx.w * trx.h;
+    trx.active = 0;
+    trx.x = trx.x0;
+    trx.y = trx.y0 + trx.h;
+    return 1;
+}
+
+/* the upload's bytes kept for the next kh1_gsmem_image_same, once all its pixels came */
+void kh1_gsmem_image_kept(const void *src, u32 bytes) {
+    if (trx.active || trx.key < 0 || !trx.at || trx.ai != trx.w * trx.h || bytes > SAME_POOL) return;
+    if (at_key[trx.key].dlen != bytes) {
+        u32 i;
+        if (same_used + bytes > SAME_POOL) {
+            for (i = 0; i < at_n; i++) at_key[i].dlen = 0;
+            same_used = 0;
+        }
+        at_key[trx.key].doff = same_used;
+        at_key[trx.key].dlen = bytes;
+        same_used += bytes;
+    }
+    memcpy(same_pool + at_key[trx.key].doff, src, bytes);
+    at_key[trx.key].stamp = seq;
+    trx.key = -1;
 }
 
 static void trx_pixel(u32 v) {
@@ -496,11 +558,70 @@ static int trx_bulk(const u32 *w, u32 n) {
     return 1;
 }
 
+/* Session 137: a piece of a CT24 / Z24 upload with its addresses kept (the title menus' two 512 x 192
+ * backdrops a frame, into memory the frame's Z writes: docs/vita-build.md "Speed"), three bytes a pixel
+ * as kh1_gsmem_image assembles them, a pixel's bytes across two pieces too; put_at's stores and marks
+ * without a call a pixel */
+static void trx_bulk24(const u32 *w, u32 n) {
+    u32 total = trx.w * trx.h, ai0 = trx.ai, i = 0, a, o, v, pg;
+#define PUT24(px)                                                                    \
+    do {                                                                             \
+        a = trx.at[trx.ai++];                                                        \
+        o = ld32(a);                                                                 \
+        v = (o & 0xFF000000u) | (px);                                                \
+        pg = a >> 11;                                                                \
+        if (o != v) {                                                                \
+            st32(a, v);                                                              \
+            page_seq[pg] = seq;                                                      \
+        } else if (!(page_drawn[pg] & 0x00FFFFFF)) {                                 \
+            break;                                                                   \
+        }                                                                            \
+        page_drawn[pg] &= 0xFF000000u;                                               \
+        marks++;                                                                     \
+    } while (0)
+    /* a pixel begun in the last piece, then whole pixels three bytes at a time */
+    for (; i < n * 4 && trx.nacc && trx.ai < total; i++) {
+        trx.acc |= (w[i >> 2] >> (i & 3) * 8 & 0xFF) << trx.nacc * 8;
+        if (++trx.nacc == 3) {
+            PUT24(trx.acc);
+            trx.acc = trx.nacc = 0;
+        }
+    }
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    {
+        const u8 *b = (const u8 *)w;
+        for (; i + 3 <= n * 4 && trx.ai < total; i += 3) PUT24(b[i] | b[i + 1] << 8 | (u32)b[i + 2] << 16);
+    }
+#endif
+    for (; i < n * 4 && trx.ai < total; i++) {
+        trx.acc |= (w[i >> 2] >> (i & 3) * 8 & 0xFF) << trx.nacc * 8;
+        if (++trx.nacc == 3) {
+            PUT24(trx.acc);
+            trx.acc = trx.nacc = 0;
+        }
+    }
+#undef PUT24
+    st.pixels += trx.ai - ai0;
+    if (trx.log) trx.log->pixels += trx.ai - ai0;
+    if (trx.ai == total) {
+        trx.active = 0;
+        trx.x = trx.x0;
+        trx.y = trx.y0 + trx.h;
+    } else {
+        trx.x = trx.x0 + trx.ai % trx.w;
+        trx.y = trx.y0 + trx.ai / trx.w;
+    }
+}
+
 void kh1_gsmem_image(const u32 *w, u32 n) {
     u32 i, b;
     if (!trx.active) { st.extra++; return; }
     seq++; /* session 118: each piece of an upload a write of its own (a texture read between two is a miss) */
     if (trx.at && !trx.nacc && !flat_raw && trx_bulk(w, n)) return;
+    if (trx.at && trx.bytes == 3 && !flat_raw) {
+        trx_bulk24(w, n);
+        return;
+    }
     if (trx.bytes == 4 && !trx.nacc) { /* session 135: CT32's pixel a whole word */
         for (i = 0; i < n && trx.active; i++) trx_pixel(w[i]);
         return;

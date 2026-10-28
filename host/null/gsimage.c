@@ -86,6 +86,7 @@ int PlatGsExecLoadImage(void *lp, void *src) {
     const u8 *s = (const u8 *)src;
     if (kh1_host_trace < 2) return 0;
     kh1_gsmem_trxdir(0, 0, bb, q[8], q[9], q[12], q[13]);
+    if (kh1_gsmem_image_same(s, bytes)) return 0; /* session 137: the title menus' every-frame uploads */
     while (done < bytes) { /* in words, as the IMAGE qwords bring it (src need not be aligned) */
         u32 k = bytes - done < sizeof buf ? bytes - done : sizeof buf, i;
         for (i = 0; i < (k + 3) / 4; i++) buf[i] = 0;
@@ -97,6 +98,7 @@ int PlatGsExecLoadImage(void *lp, void *src) {
         kh1_gsmem_image(buf, (k + 3) / 4);
         done += k;
     }
+    kh1_gsmem_image_kept(s, bytes);
     return 0;
 }
 
