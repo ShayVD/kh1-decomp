@@ -32,6 +32,7 @@
 #include "platform/palcache.h"
 #include "platform/texcache.h"
 #include "platform/shadergen.h"
+#include "gsqueue.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -44,6 +45,8 @@ static u32 gxm_max_calls, gxm_max_scenes;
 #define batcher (rec->b)
 void *malloc(__SIZE_TYPE__);
 void *calloc(__SIZE_TYPE__, __SIZE_TYPE__);
+void free(void *);
+void *memcpy(void *, const void *, __SIZE_TYPE__);
 
 /* session 127: the recorder's caches (what a port's renderer would hold) */
 static KH1PalCache *pal;
@@ -120,6 +123,7 @@ static KH1CmdRec *recorder(void) {
         kh1_gxm_clear(gxm);
         tex = (KH1TexCache *)calloc(1, sizeof *tex);
         tex_ok = kh1_texcache_init(tex) == 0;
+        tex->raw = kh1_gsmem_tex_raw; /* session 142: a stamp miss on the same pages' words reads no texel */
         kh1_gsmem_xfer_hook = on_xfer;
         kh1_gsmem_clut_hook = on_clut;
     }
@@ -216,7 +220,8 @@ void (*kh1_pipes_frame_hook)(const KH1CmdRec *r);
 /* session 126: each distinct pass list (by targets, loads and stores) printed once, up to 32 */
 static u32 seq_sig[32], nseq, seq_frames[32];
 
-void kh1_pipes_frame(void) {
+/* the frame's commands ended (kh1_cmd_frame), its pass list logged and counted */
+static void frame_begin(void) {
     u32 i, h = 2166136261u;
     recorder();
     kh1_cmd_frame(rec);
@@ -239,11 +244,118 @@ void kh1_pipes_frame(void) {
     kh1_gxm_frame(gxm, rec);
     if (gxm->frame.calls > gxm_max_calls) gxm_max_calls = gxm->frame.calls;
     if (gxm->frame.scenes > gxm_max_scenes) gxm_max_scenes = gxm->frame.scenes;
-    if (kh1_pipes_frame_hook) kh1_pipes_frame_hook(rec);
+}
+
+static void frame_end(void) {
     kh1_cmd_reset_frame(rec);
     kh1_palcache_frame(pal);
     if (tex_ok) kh1_texcache_frame(tex);
     tex_look = 1;
+}
+
+/* Session 142 (docs/vita-build.md "The GPU frame on the third core"): the frame handed to the hook on another
+ * thread (gsqueue.h's kh1_gpuq) while this one records the next.  What the hook reads is copied as the frame
+ * left it: the commands, passes and targets (the rings' slots stay: the next frame writes the other one, and
+ * the one after waits for the hook), GS memory (gsmem.h's snapshot), and the texture and palette cache
+ * entries the frame uploads (kh1_pipes_frame_texels / _pal) */
+int kh1_pipes_snap;
+u32 kh1_pipes_frame_arg, kh1_pipes_job_arg;
+/* the thread's wait and put (gsqueue.h's kh1_gpuq_wait / _put, set with kh1_pipes_snap); 0: the hook runs here */
+void (*kh1_pipes_gpu_wait)(void);
+void (*kh1_pipes_gpu_put)(KH1GsqFn fn, const u32 *args, u32 nargs);
+static KH1CmdRec *snap;
+static u32 *snap_texbuf, snap_texcap;
+static u32 snap_texoff[KH1_TEXCACHE_SLOTS];
+static u8 snap_hastex[KH1_TEXCACHE_SLOTS], snap_haspal[KH1_PALCACHE_SLOTS];
+static u32 (*snap_pal)[256];
+
+static int snap_frame(void) {
+    u32 i, need = 0;
+    if (!snap && !(snap = (KH1CmdRec *)calloc(1, sizeof *snap))) return -1;
+    if (!snap_pal && !(snap_pal = (u32 (*)[256])malloc(KH1_PALCACHE_SLOTS * 1024))) return -1;
+    if (kh1_gsmem_snap_take() < 0) return -1;
+    snap->vring = rec->vring;
+    snap->uring = rec->uring;
+    snap->ncmd = rec->ncmd;
+    snap->npass = rec->npass;
+    snap->ntgt = rec->ntgt;
+    memcpy(snap->cmd, rec->cmd, rec->ncmd * sizeof rec->cmd[0]);
+    memcpy(snap->pass, rec->pass, rec->npass * sizeof rec->pass[0]);
+    memcpy(snap->tgt, rec->tgt, sizeof rec->tgt);
+    memset(snap_hastex, 0, sizeof snap_hastex);
+    memset(snap_haspal, 0, sizeof snap_haspal);
+    for (i = 0; i < rec->ncmd; i++) { /* the texels the frame's texture uploads read */
+        const KH1Cmd *c = &rec->cmd[i];
+        s32 sl = c->x.slot;
+        if (c->kind == KH1_CMD_TEXTURE && tex_ok && sl >= 0 && sl < KH1_TEXCACHE_SLOTS && tex->slot[sl].tex &&
+            !snap_hastex[sl]) {
+            snap_texoff[sl] = need;
+            snap_hastex[sl] = 1;
+            need += tex->slot[sl].n;
+        }
+    }
+    if (need > snap_texcap) {
+        free(snap_texbuf);
+        snap_texcap = need + (need >> 1);
+        if (!(snap_texbuf = (u32 *)malloc(snap_texcap * 4))) {
+            snap_texcap = 0;
+            return -1;
+        }
+    }
+    for (i = 0; i < KH1_TEXCACHE_SLOTS; i++)
+        if (snap_hastex[i]) memcpy(snap_texbuf + snap_texoff[i], tex->slot[i].tex, tex->slot[i].n * 4);
+    for (i = 0; i < rec->ncmd; i++) { /* the palettes the frame's palette fills read */
+        const KH1Cmd *c = &rec->cmd[i];
+        s32 sl = c->x.slot;
+        if (c->kind == KH1_CMD_CLUT && c->x.fill && sl >= 0 && sl < KH1_PALCACHE_SLOTS && !snap_haspal[sl]) {
+            memcpy(snap_pal[sl], pal->slot[sl].col, 1024);
+            snap_haspal[sl] = 1;
+        }
+    }
+    return 0;
+}
+
+static void w_hook(const u32 *a, const u32 *d, u32 n) {
+    (void)d;
+    (void)n;
+    kh1_pipes_job_arg = a[0];
+    kh1_pipes_frame_hook(snap);
+}
+
+/* the texels of texture cache entry `slot` the frame's upload reads (the copy's when the frame was copied) */
+const u32 *kh1_pipes_frame_texels(s32 slot) {
+    if (slot < 0 || slot >= KH1_TEXCACHE_SLOTS) return 0;
+    if (kh1_pipes_snap) return snap_hastex[slot] ? snap_texbuf + snap_texoff[slot] : 0;
+    return tex_ok ? tex->slot[slot].tex : 0;
+}
+
+/* palette slot `slot`'s 256 words as the frame's palette fill reads them */
+const u32 *kh1_pipes_frame_pal(s32 slot) {
+    if (slot < 0 || slot >= KH1_PALCACHE_SLOTS) return 0;
+    if (kh1_pipes_snap) return snap_haspal[slot] ? snap_pal[slot] : 0;
+    return pal->slot[slot].col;
+}
+
+void kh1_pipes_frame(void) {
+    frame_begin();
+    if (kh1_pipes_frame_hook && kh1_pipes_snap) {
+        u32 a = kh1_pipes_frame_arg;
+        if (kh1_pipes_gpu_wait) kh1_pipes_gpu_wait(); /* the last frame's hook is done with the copies */
+        if (snap_frame()) {
+            printf("kh1-host: pipes: the frame's copy failed (no memory): the GPU frame on this thread from now\n");
+            kh1_pipes_snap = 0;
+            kh1_pipes_job_arg = a;
+            kh1_pipes_frame_hook(rec);
+        } else if (kh1_pipes_gpu_put) {
+            kh1_pipes_gpu_put(w_hook, &a, 1);
+        } else {
+            w_hook(&a, 0, 0);
+        }
+    } else if (kh1_pipes_frame_hook) {
+        kh1_pipes_job_arg = kh1_pipes_frame_arg;
+        kh1_pipes_frame_hook(rec);
+    }
+    frame_end();
 }
 
 void kh1_pipes_draw(const KH1GsDraw *g) {

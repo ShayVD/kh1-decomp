@@ -29,7 +29,16 @@ typedef struct {
     u32 frame;   /* the frame that last drew it */
     u32 use;     /* the use count when last drawn: least recent first */
     u32 *tex;    /* n stored texels, row by row */
+    u32 *raw;    /* session 142: the raw words of the pages the texels lie in, when last seen (KH1TexRaw) */
+    u32 nraw;
 } KH1TexSlot;
+
+/* session 142: the raw words of every page TEX0 (lo, hi)'s texels lie in, at most max, into out: their
+ * count, 0 when not known.  The same words give the same texels, so on a stamp miss an entry of the same
+ * layout whose pages hold the same words is a hit without reading the texels (Dive to the Heart streams a
+ * few textures through one slot every frame, each a stamp miss) */
+typedef u32 (*KH1TexRaw)(u32 tex0_lo, u32 tex0_hi, u32 *out, u32 max);
+#define KH1_TEXCACHE_RAW (64u * 2048) /* words: 64 pages */
 
 typedef struct {
     KH1TexSlot slot[KH1_TEXCACHE_SLOTS];
@@ -43,6 +52,9 @@ typedef struct {
     u32 full;       /* not kept: too big, or every slot / the budget in use this frame */
     u32 hashed;     /* texels read to hash */
     u32 decoded;    /* texels kept */
+    KH1TexRaw raw;  /* session 142: set by the caller after kh1_texcache_init, or 0 */
+    u32 *rawbuf;    /* KH1_TEXCACHE_RAW words */
+    u32 raw_hits;   /* of hash_hits: the pages' words held, no texel read */
 } KH1TexCache;
 
 /* reads the texture TEX0 (lo, hi) names: its 1 << TW by 1 << TH stored texels, row by row, into out */

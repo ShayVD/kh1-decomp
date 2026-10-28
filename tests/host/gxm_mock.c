@@ -739,6 +739,9 @@ static int compare(const char *what, u32 rt, u32 bp, u32 rows) {
 }
 
 static u32 from; /* KH1_HOST_GXM_FROM=F: rasterise and compare every frame from F */
+/* session 142: KH1_HOST_GXM_HASH=1, a hash of the GPU's display and 3D targets at each Nth frame in place of the
+ * comparison (which reads the GS model: with the frame on its own thread the model is a frame ahead) */
+static int hash_only;
 static void hook(const KH1CmdRec *r) {
     u32 n = frame % (u32)every;
     if (from && frame >= from) n = (u32)every - 1; /* KH1_HOST_GXM_FROM: every frame from there */
@@ -755,7 +758,18 @@ static void hook(const KH1CmdRec *r) {
         for (i = 0; i < r->ntgt; i++)
             printf("kh1-gxm-mock:   target %u: rt %u bp %04x bw %u\n", i, r->tgt[i] & 0xFF, (r->tgt[i] >> 8 & 0xFFF) * 32, r->tgt[i] >> 20);
     }
-    if (n == (u32)every - 1) {
+    if (n == (u32)every - 1 && hash_only) { /* session 142: the GPU's pictures alone (the model may run ahead) */
+        static const u32 rts[2] = { KH1_RT_DISPLAY, KH1_RT_MAIN };
+        u32 k, w, h, stride, y, x, hh;
+        for (k = 0; k < 2; k++) {
+            const u32 *gpu = (const u32 *)kh1_vita_gxm_target(rts[k], &w, &h, &stride);
+            hh = 2166136261u;
+            for (y = 0; gpu && y < h; y++)
+                for (x = 0; x < w; x++) hh = (hh ^ gpu[y * stride + x]) * 16777619u;
+            printf("kh1-gxm-mock: frame %u: %s target %08x (%u x %u), %u draws, %u triangles, %u pixels drawn\n", frame,
+                   k ? "3d" : "display", gpu ? hh : 0, gpu ? w : 0, gpu ? h : 0, g.draws, g.tris, g.pixels);
+        }
+    } else if (n == (u32)every - 1) {
         checks++;
         if (compare("display", KH1_RT_DISPLAY, 0, 448) + compare("3d", KH1_RT_MAIN, 0x1A00, 384)) bad_frames++;
     }
@@ -768,6 +782,7 @@ __attribute__((constructor)) static void start(void) {
     const char *e = getenv("KH1_HOST_GXM");
     if (!e || (every = atoi(e)) < 2) return;
     g.point = getenv("KH1_HOST_GXM_POINT") != 0;
+    hash_only = getenv("KH1_HOST_GXM_HASH") != 0;
     from = getenv("KH1_HOST_GXM_FROM") ? (u32)atoi(getenv("KH1_HOST_GXM_FROM")) : 0;
     ppm = getenv("KH1_HOST_GXM_PPM");
     if (kh1_vita_gxm_init()) {

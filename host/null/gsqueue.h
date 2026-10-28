@@ -36,4 +36,16 @@ void kh1_gsq_sync(void);
  * game thread waited for it (syncs and a full ring), the syncs that had to wait; kh1_vu1_clock's */
 extern volatile u32 kh1_gsq_us_busy, kh1_gsq_us_wait, kh1_gsq_waits;
 
+/* Session 142 (docs/vita-build.md "The GPU frame on the third core"): one more thread, for the frame's GPU
+ * work.  kh1_gpuq_put runs fn(args, 0, 0) on it once the job before has ended (one job at a time: the caller
+ * waits for the last one first), kh1_gpuq_wait returns once the last job has ended.  Off (kh1_gpuq_on 0) fn
+ * runs at once on the caller's thread.  The Vita's runs on the third core (the GS worker on the second) */
+#define KH1_GPUQ_ARGS 4
+extern int kh1_gpuq_on;
+int kh1_gpuq_start(void);
+void kh1_gpuq_put(KH1GsqFn fn, const u32 *args, u32 nargs);
+void kh1_gpuq_wait(void);
+/* microseconds the thread ran jobs, microseconds its callers waited for it, the waits that had to wait */
+extern volatile u32 kh1_gpuq_us_busy, kh1_gpuq_us_wait, kh1_gpuq_waits;
+
 #endif
