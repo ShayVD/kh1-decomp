@@ -754,6 +754,43 @@ class Prog:
             if up.to:
                 commit.extend(self.store4(dst, "u", up.dest))
             commit.append("    }")
+        elif up.op == "fmac" and up.k not in (K_MAX, K_MINI):
+            # session 141: the MAC-flag and cross-product (OPMULA / OPMSUB) forms on four lanes too (vu1.c's
+            # vu_ope: NEON on the Vita), the scalar form kept for the lanes where NEON's flush to zero could
+            # differ from it (vu_ope answers 0; always 0 off ARM)
+            o.append("    {")
+            o.append("    u32 m = 0, u[4];" if mac else "    u32 u[4];")
+            mp = "&m" if mac else "0"
+            if up.tsrc[0] == "op":
+                o.append(f"    u32 sa[4] = {{ vf[{up.fs}][1], vf[{up.fs}][2], vf[{up.fs}][0], 0 }};")
+                o.append(f"    u32 sb[4] = {{ vf[{up.ft}][2], vf[{up.ft}][0], vf[{up.ft}][1], 0 }};")
+                o.append(f"    if (!vu_ope(u, {KN[up.k]}, sa, sb, acc, {up.dest:#x}, {mp})) {{")
+            elif up.tsrc[0] == "vf":
+                o.append(f"    if (!vu_ope(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], acc, {up.dest:#x}, {mp})) {{")
+            else:
+                b = {"bc": f"vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": self.qname(info["q_in"]),
+                     "i": "i_reg"}[up.tsrc[0]]
+                o.append(f"    if (!vu_opbe(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {up.dest:#x}, {mp})) {{")
+            for f in fields(up.dest):
+                a = f"fin(vf[{up.fs}][{f}])" if up.tsrc[0] != "op" else f"fin(vf[{up.fs}][{(1, 2, 0)[f]}])"
+                if up.tsrc[0] == "bc": b = f"fin(vf[{up.ft}][{up.tsrc[1]}])"
+                elif up.tsrc[0] == "vf": b = f"fin(vf[{up.ft}][{f}])"
+                elif up.tsrc[0] == "op": b = f"fin(vf[{up.ft}][{(2, 0, 1)[f]}])"
+                elif up.tsrc[0] == "q": b = f"fin({self.qname(info['q_in'])})"
+                else: b = "fin(i_reg)"
+                if up.k in (K_MADD, K_MSUB):
+                    e = f"fin(acc[{f}]) {'+' if up.k == K_MADD else '-'} {a} * {b}"
+                else:
+                    e = f"{a} {OPC[up.k]} {b}"
+                o.append(f"    f32 r{f} = {e};")
+                o.append(f"    u[{f}] = " + (f"fout(r{f}, {f}, &m);" if mac else f"fo(r{f});"))
+            o.append("    }")
+            if mac:
+                o.append(f"    {self.macname(info['fw'])} = m;")
+            if up.to:
+                for f in fields(up.dest):
+                    commit.append(f"    {dst}[{f}] = u[{f}];")
+            commit.append("    }")
         elif up.op == "fmac":
             o.append("    {")
             if mac:

@@ -492,6 +492,48 @@ present / vblank wait / the rest (the game's code, gsimage.c's uploads included)
   rectangles now go block by block. Next: the walk itself (vif_word, unpack, the VU1 programs' fin /
   fo, which the Vita's NEON helpers already shorten), then a second core for VIF1 / VU1 and the GS feed.
 
+## The VU1 feed's speed (session 141, 2026-10-28)
+
+On a Vita (3d-t, 444 MHz) the Dive ran at ~3.4 fps with ~80% of a frame in VU1 and the chain walk
+that feeds it, on one core. This pass makes that work cheaper without changing what it produces (the
+second core and the VRAM copy are separate threads):
+
+- **VIF1 data in blocks.** host/null/dmawalk.c handed VIF1 its data a word at a time (`vif_word` then
+  `kh1_vif1_data`: two calls, the checks and a store per word). `vif_block` now passes each run of a
+  code's data in a DMA block in one `kh1_vif1_data_n` call, and DIRECT's qwords to the PATH2 reader
+  straight from the block.
+- **UNPACK decoded, then written.** host/port/vu1.c's UNPACK read element by element (`elem()`) and
+  looked up each field's mask; it now decodes all the data vectors in one pass per format, and an
+  unmasked UNPACK with no filling write (the meshes' usual kind) writes each vector whole (mode 0 a
+  16-byte copy). ~5x on the host for a mesh-like stream (tests/host/vu1feed_test.c with an argument
+  times it: 13.8 against 2.8 ns a word).
+- **XGKICK without the copy.** `kick()` hands the packets over where they lie in VU1 memory, copying
+  only when they wrap past its end.
+- **The GIF reader.** `gif_qword`'s register index went through `% nreg` every qword, a library call
+  on the A9 (it has no divide instruction); it now wraps a counter. A quiet walk (the Vita's) no longer
+  keeps the list of distinct state values nor writes the send's text.
+- **Draw states by hash.** host/null/gsregs.c's `gs_kick` searched every draw state of the send
+  with memcmp after each state write (every VU1 packet's PRE PRIM is one); the states now sit in an
+  open-addressed table keyed by a hash of the same bytes, the same index coming out.
+- **More of the programs on NEON.** The FMACs out/gen/vu1_tr.c still ran field by field (those whose
+  MAC flag a later FMAND / FMEQ / FMOR reads, and OPMULA / OPMSUB) go through `vu_ope` / `vu_opbe`:
+  four lanes, exact against the scalar form. Where NEON's flush to zero could differ (a result of 0
+  with the MAC flag, which the scalar form may flag U; a MADD / MSUB product of 0 from two non-zero
+  factors) they answer 0 and the scalar form runs.
+
+Checked: tests/host/vu1feed_test.c (the block reader against the old word reader, kept verbatim in
+the test, 40 random streams with every format, masks, modes, filling and skipping writes, MPG, data
+split at random points) and tests/host/vu1neon_test.c (vu_ope against the scalar form, 2M random
+operand sets weighted to zeros, denormals and the extremes; it runs under qemu-arm when
+arm-linux-gnueabihf-gcc is there, in tests/selftest.sh). Outside the repository, as scratch: the walk
+with VIF1 / VU1 over random VIF1 chains (UNPACK, PACKED / REGLIST / A+D packets kicked by a small
+program, some wrapping VU1 memory, DIRECT, chains cut at random, TTE on and off) gives the same
+primitives, state values and counts before and after (x86: 8.7G instructions to 2.1G on that mix, the
+draw-state search most of it); and the translated programs from every entry on 3,480 random states,
+old and new translation under qemu-arm with NEON, give the same memory, registers, flags and kicks.
+**Not yet checked on the disc**: a host run with `KH1_HOST_VU1TR=2` and the gxmcheck log against the
+last one, and the frame rate on a Vita (the split line's DMA-walk share).
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and

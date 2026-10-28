@@ -165,6 +165,18 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
   "$W/dmawalk_test" > "$W/dmawalk.log" || { grep -v '^kh1-host:   ' "$W/dmawalk.log"; exit 1; }
   tail -n 1 "$W/dmawalk.log"
+  # session 141: VIF1's data path in blocks (host/port/vu1.c) against the word-at-a-time reader it replaced
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/vu1feed_test" "$ROOT/tests/host/vu1feed_test.c" -lm
+  "$W/vu1feed_test" > "$W/vu1feed.log" || { cat "$W/vu1feed.log"; exit 1; }
+  tail -n 1 "$W/vu1feed.log"
+  # session 141: the VU1 programs' four-lane FMACs with the MAC flag / OPMSUB against their scalar form, on
+  # ARM with NEON under qemu-arm when the cross gcc and qemu are there (elsewhere the scalar form runs)
+  if command -v arm-linux-gnueabihf-gcc > /dev/null && command -v qemu-arm > /dev/null; then
+    arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -fno-strict-aliasing -ffp-contract=off -mcpu=cortex-a9 -mfpu=neon \
+        -mfloat-abi=hard -static -DKH1_HOST -I"$ROOT/include" -o "$W/vu1neon_test" "$ROOT/tests/host/vu1neon_test.c" -lm
+    qemu-arm "$W/vu1neon_test" 300000 > "$W/vu1neon.log" || { cat "$W/vu1neon.log"; exit 1; }
+    tail -n 1 "$W/vu1neon.log"
+  fi
   # the GS register file it feeds (host/null/gsregs.c, session 79)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsregs_test" \
       "$ROOT/tests/host/gsregs_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"

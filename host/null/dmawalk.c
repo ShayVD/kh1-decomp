@@ -67,6 +67,9 @@ typedef struct {
 #define GS_VALUES 512
 static struct { u32 reg, lo, hi; } gs_val[GS_VALUES];
 static u32 gs_nval;
+/* session 141: kept only when something prints them (a quiet walk's search of the list on every A+D write
+ * was a cost the Vita paid for nothing) */
+static int gs_keep = 1;
 
 static void gif_set(GifStream *g, u32 reg) {
     if (reg < 128) g->set[reg >> 5] |= 1u << (reg & 31);
@@ -76,7 +79,7 @@ static void gif_set(GifStream *g, u32 reg) {
 static void gif_value(GifStream *g, u32 reg, const u32 *v) {
     u32 i;
     gif_set(g, reg);
-    if (reg >= 128 || (reg >= 1 && reg <= 5) || reg == 0xA || reg == 0xC || reg == 0xD || reg == 0xF) return;
+    if (!gs_keep || reg >= 128 || (reg >= 1 && reg <= 5) || reg == 0xA || reg == 0xC || reg == 0xD || reg == 0xF) return;
     for (i = 0; i < gs_nval; i++)
         if (gs_val[i].reg == reg && gs_val[i].lo == v[0] && gs_val[i].hi == v[1]) return;
     if (gs_nval == GS_VALUES) return;
@@ -100,7 +103,8 @@ static void gif_qword(GifStream *g, const u32 *q) {
     u32 nloop, h;
     if (g->left) {
         if (g->flg == 0) {
-            u32 d = g->regs[g->k++ % g->nreg];
+            u32 d = g->regs[g->k];
+            if (++g->k == g->nreg) g->k = 0; /* session 141: no division a qword (the A9 has no divider) */
             if (d == 0xE) gif_value(g, q[2] & 0x7F, q);
             else if (d == 0) { u32 prim[2] = { q[0] & 0x7FF, 0 }; gif_value(g, 0, prim); }
             else gif_value(g, d, q);
@@ -108,7 +112,8 @@ static void gif_qword(GifStream *g, const u32 *q) {
             g->left--;
         } else if (g->flg == 1) {
             for (h = 0; h < 2 && g->left; h++, g->left--) {
-                u32 d = g->regs[g->k++ % g->nreg];
+                u32 d = g->regs[g->k];
+                if (++g->k == g->nreg) g->k = 0;
                 if (d != 0xE) gif_value(g, d, q + 2 * h);
                 if (d < 0xE) kh1_gs_write(d, q[2 * h], q[2 * h + 1]);
             }
@@ -258,12 +263,43 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     if (!v->bad++) { v->bad_word = w; v->bad_addr = addr; }
 }
 
+/* session 141 (the Vita's speed): a code's data words in this block at once, VIF1's to host/port/vu1.c in
+ * one call and DIRECT's to the PATH2 reader a qword at a time from the block itself (vif_word took them
+ * one by one: a call, the checks and a copy each) */
+static void vif_data(VifStream *v, const u32 *q, u32 n) {
+    v->pos = (v->pos + n) & 3;
+    v->need -= n;
+    if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q, n);
+    if (!v->in_direct) return;
+    while (n) {
+        if (v->nq || n < 4) {
+            v->q[v->nq++] = *q++;
+            n--;
+            if (v->nq == 4) { gif_qword(&v->gif, v->q); v->nq = 0; }
+        } else {
+            gif_qword(&v->gif, q);
+            q += 4;
+            n -= 4;
+        }
+    }
+    if (!v->need) v->in_direct = 0;
+}
+
 static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
-    u32 i;
+    u32 i, nw = n * 4;
     if (!n) return;
     v->blocks++;
     if (v->need || v->pad) v->mid++;
-    for (i = 0; i < n * 4; i++) vif_word(v, q[i], addr + i * 4);
+    for (i = 0; i < nw;) {
+        if (v->need && !v->pad) {
+            u32 k = nw - i < v->need ? nw - i : v->need;
+            vif_data(v, q + i, k);
+            i += k;
+        } else {
+            vif_word(v, q[i], addr + i * 4);
+            i++;
+        }
+    }
 }
 
 static const char *target_note(u32 t) {
@@ -446,6 +482,7 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     char extra[160], regs[400];
     extra[0] = 0;
     gs_nval = 0;
+    gs_keep = !kh1_dma_quiet || kh1_host_trace >= 4;
     hud_send(tadr);
     kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
     kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
@@ -516,22 +553,22 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
         }
         if (ch == 2) {
             if (g.left) bad |= KH1_DMA_GIF_SHORT;
-            sprintf(extra, "; gif %u packets (%u eop, %u image), %u of %u blocks inside one%s", g.packets,
+            if (!kh1_dma_quiet) sprintf(extra, "; gif %u packets (%u eop, %u image), %u of %u blocks inside one%s", g.packets,
                     g.eop, g.image, g.mid, g.blocks, g.left ? ": ENDS INSIDE A PACKET" : "");
-            gif_regs(&g, regs);
+            if (!kh1_dma_quiet) gif_regs(&g, regs);
         } else {
             if (v.need || v.pad) bad |= KH1_DMA_VIF_SHORT;
             if (v.bad) bad |= KH1_DMA_VIF_BAD;
             if (v.gif.left) bad |= KH1_DMA_PATH2_SHORT;
-            sprintf(extra, "; vif%d %u codes (%u unpack, %u direct), %u of %u blocks inside one%s%s", ch, v.codes,
+            if (!kh1_dma_quiet) sprintf(extra, "; vif%d %u codes (%u unpack, %u direct), %u of %u blocks inside one%s%s", ch, v.codes,
                     v.unpacks, v.direct, v.mid, v.blocks, (v.need || v.pad) ? ": ENDS INSIDE A CODE" : "",
                     v.bad ? ": NOT A VIF CODE" : "");
-            if (v.direct)
+            if (v.direct && !kh1_dma_quiet)
                 sprintf(extra + strlen(extra), "; path2 %u packets%s", v.gif.packets,
                         v.gif.left ? ": ENDS INSIDE A PACKET" : "");
-            gif_regs(&v.gif, regs);
+            if (!kh1_dma_quiet) gif_regs(&v.gif, regs);
         }
-        if (tte && tte_hi)
+        if (tte && tte_hi && !kh1_dma_quiet)
             sprintf(extra + strlen(extra), "; %u tags with upper words (TTE)", tte_hi);
     }
     if (!kh1_dma_quiet)
@@ -570,6 +607,7 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
     char regs[400];
     int i;
     gs_nval = 0;
+    gs_keep = !kh1_dma_quiet || kh1_host_trace >= 4;
     hud_send((u32)(unsigned long)q);
     kh1_gs_clear_draws();
     kh1_gsmem_clear_log();
