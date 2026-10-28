@@ -70,7 +70,7 @@ def disasm(blob: bytes, addr: int) -> list[str]:
         fh.write(blob)
         path = fh.name
     try:
-        r = subprocess.run([f"{K.BINUTILS}objdump", "-D", "-b", "binary", "-m", "mips:5900", "-EL",
+        r = subprocess.run([f"{K.BINUTILS}objdump", "-D", "-z", "-b", "binary", "-m", "mips:5900", "-EL",
                             f"--adjust-vma=0x{addr:x}", path], capture_output=True, text=True)
     finally:
         os.unlink(path)
