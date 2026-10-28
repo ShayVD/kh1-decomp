@@ -455,7 +455,7 @@ typedef struct {
     SceGxmRenderTarget *gxrt;
     /* session 137v: uploads into it not yet written: GS memory is read as the frame left it, so each upload of a
      * frame writes the same bytes, and they are written once, before the target's next use (pend_flush).
-     * Session 141: kept as the GS words they wrote (pend_blk), placed by the target's own FBP / FBW */
+     * Session 141: kept as the GS words they wrote (pend_block), placed by the target's own FBP / FBW */
     u8 pend;
     u32 fbp, fbw;
 } Target;
@@ -754,21 +754,22 @@ static void stencil(u32 mode) {
  * holds it (the target's CT32 layout from FBP / FBW), and only those: whole blocks from a table, the
  * rectangle's edge blocks pixel by pixel.  GS memory is still read as the frame left it, when written. */
 static u64 pend_mask[0x4000];
-static u8 pend_tgt[0x4000], pend_24[0x4000]; /* 1 + the target; CT24 */
+static u32 pend_own[0x4000];  /* the targets (bit i: tgt[i]) it is pending for */
+static u8 pend_24[0x4000];    /* CT24 wrote it */
 static u16 pend_list[0x4000];
 static u32 pend_n;
 static u8 inv_x[2048], inv_y[2048]; /* a CT32 page's word (kh1_gsmem_addr at bp 0) -> its pixel */
 
-static void pend_flush(Target *only);
-static void pend_word(u32 t, u32 w, int ct24) {
-    u32 b = w >> 6 & 0x3FFF;
-    if (pend_tgt[b] != t) {
-        if (pend_tgt[b]) pend_flush(&tgt[pend_tgt[b] - 1]); /* another target's pages (two targets overlap) */
+/* a block's words m written for target t (its index); a block two overlapping targets wait for is written to
+ * both (the words lie in both one's pages) */
+static void pend_block(u32 t, u32 b, u64 m, int ct24) {
+    b &= 0x3FFF;
+    if (!pend_own[b]) {
         pend_mask[b] = 0;
-        pend_tgt[b] = (u8)t;
         pend_list[pend_n++] = (u16)b;
     }
-    pend_mask[b] |= 1ull << (w & 63);
+    pend_own[b] |= 1u << t;
+    pend_mask[b] |= m;
     pend_24[b] = (u8)ct24;
 }
 
@@ -804,28 +805,27 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
 
 /* the pending uploads written (one wait for the GPU for them all); `only` one target's, or all */
 static void pend_flush(Target *only) {
-    u32 i, k = 0, ti = only ? (u32)(only - tgt) + 1 : 0;
+    u32 i, k = 0, sel = only ? 1u << (u32)(only - tgt) : ~0u;
     int any = 0;
     for (i = 0; i < pend_n; i++) {
-        u32 b = pend_list[i];
-        if (ti && pend_tgt[b] != ti) {
-            pend_list[k++] = (u16)b;
-            continue;
+        u32 b = pend_list[i], own = pend_own[b] & sel, j;
+        if (own) {
+            if (!any) finish();
+            any = 1;
+            for (j = 0; j < KH1_CMD_TARGETS; j++)
+                if (own >> j & 1) pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
+            pend_own[b] &= ~own;
         }
-        if (!any) finish();
-        any = 1;
-        pend_write(&tgt[pend_tgt[b] - 1], b, pend_mask[b], pend_24[b]);
-        pend_tgt[b] = 0;
-        pend_mask[b] = 0;
+        if (pend_own[b]) pend_list[k++] = (u16)b;
     }
     pend_n = k;
     for (i = 0; i < KH1_CMD_TARGETS; i++)
-        if (!only || &tgt[i] == only) tgt[i].pend = 0;
+        if (sel >> i & 1) tgt[i].pend = 0;
 }
 
 /* an upload's (BITBLTBUF's destination) w x h at (dx, dy), or a copy's from GS memory: the words it wrote */
 static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
-    u32 psm = x->bb_hi >> 24 & 63, bp = x->bb_hi & 0x3FFF, bw = x->bb_hi >> 16 & 63, ti = (u32)(t - tgt) + 1;
+    u32 psm = x->bb_hi >> 24 & 63, bp = x->bb_hi & 0x3FFF, bw = x->bb_hi >> 16 & 63, ti = (u32)(t - tgt);
     u32 bwid, bhgt, sh, bx, by, xx, yy;
     int ct24 = psm == KH1_PSMCT24;
     if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u || !w || !h) return;
@@ -837,15 +837,16 @@ static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u3
     sh = psm == KH1_PSMT4 ? 3 : psm == KH1_PSMT8 ? 2 : bwid == 16 ? 1 : 0; /* kh1_gsmem_addr's units to words */
     for (by = dy / bhgt; by <= (dy + h - 1) / bhgt; by++)
         for (bx = dx / bwid; bx <= (dx + w - 1) / bwid; bx++) {
-            u32 x0 = bx * bwid, y0 = by * bhgt;
+            u32 x0 = bx * bwid, y0 = by * bhgt, b = kh1_gsmem_addr(psm, bp, bw, x0, y0) >> sh >> 6;
+            u64 m = 0;
             if (x0 >= dx && y0 >= dy && x0 + bwid <= dx + w && y0 + bhgt <= dy + h) { /* a whole block */
-                u32 b = kh1_gsmem_addr(psm, bp, bw, x0, y0) >> sh >> 6 & 0x3FFF, c;
-                for (c = 0; c < 64; c++) pend_word(ti, b * 64 + c, ct24);
+                pend_block(ti, b, ~0ull, ct24);
                 continue;
             }
             for (yy = y0 < dy ? dy : y0; yy < y0 + bhgt && yy < dy + h; yy++)
                 for (xx = x0 < dx ? dx : x0; xx < x0 + bwid && xx < dx + w; xx++)
-                    pend_word(ti, kh1_gsmem_addr(psm, bp, bw, xx, yy) >> sh, ct24);
+                    m |= 1ull << (kh1_gsmem_addr(psm, bp, bw, xx, yy) >> sh & 63);
+            pend_block(ti, b, m, ct24);
         }
 }
 
