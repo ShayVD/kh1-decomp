@@ -161,6 +161,26 @@ extern void (*kh1_pipes_frame_hook)(const KH1CmdRec *r);
 void kh1_vita_gxm_frame(const KH1CmdRec *r);
 extern void *kh1_vsync_cb; /* sceGsSyncVCallback's handler (host/port/sdk_host.c) */
 
+/* the frame's commands from the recorder (gxm.c through its hook), the display target latched when the frame
+ * copy made it whole, shown */
+static void gpu_frame(int copied) {
+    SceUInt64 t0 = sceKernelGetProcessTimeWide(), t1;
+    kh1_pipes_frame();
+    /* only a whole picture is shown: the display target as the frame copy left it (the software
+     * present's rule); between copies the game may be part-way through the next one */
+    if (copied) kh1_vita_gxm_latch();
+    t1 = sceKernelGetProcessTimeWide();
+    kh1_vita_draw();
+    us_frame += (u32)(t1 - t0);
+    us_draw += (u32)(sceKernelGetProcessTimeWide() - t1);
+}
+
+/* session 141: with the GS side on its worker the frame's commands are its last op of the frame, so the game
+ * goes on with the next frame while the worker builds, submits and shows this one; the vblank waits only for
+ * the frame before (one frame in flight).  Every GPU call is then the worker's (gxm.c, vita2d) */
+static void w_gpu_frame(const u32 *a, const u32 *d, u32 n) { gpu_frame((int)a[0]); }
+static u32 frame_end; /* the queue's position after the last frame's op */
+
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
     static int in_vblank;
@@ -172,21 +192,14 @@ void kh1_host_vblank(void) {
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
-    if (gpu_on) { /* session 136: the frame's GS draws on the GPU (gxm.c through the recorder's hook), shown */
-        SceUInt64 t0, t1;
-        /* session 141: the GS side's worker done with the frame's sends; the model is ours (the wait is the
-         * watchdog's "game waited", not the frame's commands) */
-        kh1_gsq_sync();
-        t0 = sceKernelGetProcessTimeWide();
-        kh1_pipes_frame();
-        /* only a whole picture is shown: the display target as the frame copy left it (the software
-         * present's rule); between copies the game may be part-way through the next one */
-        if (kh1_vita_frame_copied()) kh1_vita_gxm_latch();
-        t1 = sceKernelGetProcessTimeWide();
-        kh1_vita_draw();
-        us_frame += (u32)(t1 - t0);
-        us_draw += (u32)(sceKernelGetProcessTimeWide() - t1);
-    }
+    if (gpu_on && kh1_gsq_on) { /* session 141: on the worker after the frame's sends */
+        u32 copied = (u32)kh1_vita_frame_copied();
+        kh1_gsq_wait(frame_end);
+        kh1_gsq_put(w_gpu_frame, &copied, 1, 0, 0);
+        frame_end = kh1_gsq_pos();
+        kh1_gsq_flush();
+    } else if (gpu_on) /* session 136: the frame's GS draws on the GPU */
+        gpu_frame(kh1_vita_frame_copied());
     kh1_vita_status(frames, kh1_host_cd_reads);
     {
         SceUInt64 t0 = sceKernelGetProcessTimeWide();
@@ -299,9 +312,9 @@ static int watchdog(SceSize args, void *argp) {
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
                 /* session 141: and the waits for the GS side's worker (at the vblank, LoadImage / StoreImage) */
                 u32 gw = kh1_gsq_us_wait - gwait0;
-                u32 known = walk + (us_frame - frame0) + (us_draw - draw0) + (kh1_vita_us_wait - wait0) + gw;
+                u32 known = walk + (kh1_gsq_on ? 0 : (us_frame - frame0) + (us_draw - draw0)) + (kh1_vita_us_wait - wait0) + gw;
                 vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them), %u the "
-                     "frame's commands, %u present, %u the vblank wait, %u waiting for the GS worker, %u the rest "
+                     "frame's commands, %u present (with the GS worker: the worker's), %u the vblank wait, %u waiting for the GS worker, %u the rest "
                      "(the game's code)\n", all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
                      (kh1_vita_us_wait - wait0) / 1000, gw / 1000, all > known ? (all - known) / 1000 : 0);
             }
