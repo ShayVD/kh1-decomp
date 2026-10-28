@@ -200,17 +200,20 @@ static u32 fnv(u32 h, const void *p, u32 n) {
     while (n--) h = (h ^ *b++) * 16777619u;
     return h;
 }
-static void gsq_frame(void) {
+static void gsq_frame(unsigned long frame) {
     const KH1CmdRec *r = kh1_pipes_recorder();
     u32 ncmd = r->ncmd, npass = r->npass, h;
     kh1_pipes_frame();
-    if (frames % gsq_check) return;
+    if (frame % gsq_check) return;
     h = fnv(2166136261u, kh1_gs_state(), sizeof(KH1GsState));
     h = fnv(h, kh1_gsmem_stats(), sizeof(KH1GsMemStats));
     kh1_gsmem_read_rect(KH1_PSMCT32, 0, 16, 0, 0, 1024, 1024, gsq_mem, 1024); /* all 4 MB */
-    printf("kh1-host: gsq digest frame %lu: state %08x, memory %08x, %u commands in %u passes\n", frames, h,
+    printf("kh1-host: gsq digest frame %lu: state %08x, memory %08x, %u commands in %u passes\n", frame, h,
            fnv(2166136261u, gsq_mem, sizeof gsq_mem), ncmd, npass);
 }
+/* with the worker: the frame's op after its sends, one frame in flight (host/vita/main.c's order) */
+static void w_gsq_frame(const u32 *a, const u32 *d, u32 n) { gsq_frame(a[0]); }
+static u32 gsq_frame_end;
 
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */
 extern void *kh1_vsync_cb;
@@ -223,9 +226,17 @@ void kh1_host_vblank(void) {
     kh1_counts_sample();
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
     if (kh1_dma_vu1 && frames % 300 == 0) vu1_line();
-    kh1_gsq_sync(); /* session 141: the GS side's worker done with the frame's sends (gsqueue.h) */
-    if (kh1_host_trace >= 5) kh1_pipes_frame(); /* session 124: the frame's batches */
-    else if (gsq_check) gsq_frame();
+    if (kh1_host_trace >= 5) {
+        kh1_gsq_sync(); /* session 141: the GS side's worker done with the frame's sends (gsqueue.h) */
+        kh1_pipes_frame(); /* session 124: the frame's batches */
+    } else if (gsq_check && kh1_gsq_on) {
+        u32 f = (u32)frames;
+        kh1_gsq_wait(gsq_frame_end);
+        kh1_gsq_put(w_gsq_frame, &f, 1, 0, 0);
+        gsq_frame_end = kh1_gsq_pos();
+        kh1_gsq_flush();
+    } else if (gsq_check)
+        gsq_frame(frames);
     prof_frame();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);

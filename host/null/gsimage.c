@@ -80,15 +80,11 @@ static u32 psm_size(u32 psm) {
     }
 }
 
-int PlatGsExecLoadImage(void *lp, void *src) {
-    const u32 *q = (const u32 *)lp;
-    u32 bb = q[5], w = q[12] & 0xFFF, h = q[13] & 0xFFF, n = psm_size(bb >> 24 & 63);
-    u32 bytes = n ? w * h * n : (w * h + 1) / 2, done = 0, buf[64];
-    const u8 *s = (const u8 *)src;
-    if (kh1_host_trace < 2) return 0;
-    kh1_gsq_sync(); /* session 141: the GS side's worker done (gsqueue.h); the model is this thread's */
-    kh1_gsmem_trxdir(0, 0, bb, q[8], q[9], q[12], q[13]);
-    if (kh1_gsmem_image_same(s, bytes)) return 0; /* session 137: the title menus' every-frame uploads */
+/* the upload itself: BITBLTBUF's upper word bb, TRXPOS and TRXREG, then the bytes */
+static void load_image(u32 bb, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi, const u8 *s, u32 bytes) {
+    u32 done = 0, buf[64];
+    kh1_gsmem_trxdir(0, 0, bb, pos_lo, pos_hi, reg_lo, reg_hi);
+    if (kh1_gsmem_image_same(s, bytes)) return; /* session 137: the title menus' every-frame uploads */
     while (done < bytes) { /* in words, as the IMAGE qwords bring it (src need not be aligned) */
         u32 k = bytes - done < sizeof buf ? bytes - done : sizeof buf, i;
         for (i = 0; i < (k + 3) / 4; i++) buf[i] = 0;
@@ -101,6 +97,25 @@ int PlatGsExecLoadImage(void *lp, void *src) {
         done += k;
     }
     kh1_gsmem_image_kept(s, bytes);
+}
+
+static void w_load(const u32 *a, const u32 *d, u32 nqw) {
+    (void)nqw;
+    load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)d, a[5]);
+}
+
+int PlatGsExecLoadImage(void *lp, void *src) {
+    const u32 *q = (const u32 *)lp;
+    u32 bb = q[5], w = q[12] & 0xFFF, h = q[13] & 0xFFF, n = psm_size(bb >> 24 & 63), a[6];
+    if (kh1_host_trace < 2) return 0;
+    /* session 141: the bytes copied for the GS side's worker (gsqueue.h), in order with the sends */
+    a[0] = bb;
+    a[1] = q[8];
+    a[2] = q[9];
+    a[3] = q[12];
+    a[4] = q[13];
+    a[5] = n ? w * h * n : (w * h + 1) / 2;
+    kh1_gsq_put_bytes(w_load, a, 6, src, a[5]);
     return 0;
 }
 

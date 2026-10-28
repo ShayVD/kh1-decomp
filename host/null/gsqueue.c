@@ -50,8 +50,9 @@ static int thread_start(void) {
     int i;
     for (i = 0; i < 2; i++)
         if ((sem[i] = sceKernelCreateSema(i ? "kh1_gsq_done" : "kh1_gsq_work", 0, 0, 0x7FFFFFFF, 0)) < 0) return -1;
-    /* the second core (the game thread stays on the first, host/vita/main.c) */
-    t = sceKernelCreateThread("kh1_gs", worker_entry, 0x10000100, 0x10000, 0, SCE_KERNEL_CPU_MASK_USER_1, 0);
+    /* the second core (the game thread stays on the first, host/vita/main.c); 2 MiB of stack: the frame's
+     * commands run here too, and gxm.c compiles a new shader with SceShaccCg in them */
+    t = sceKernelCreateThread("kh1_gs", worker_entry, 0x10000100, 0x200000, 0, SCE_KERNEL_CPU_MASK_USER_1, 0);
     if (t < 0) return -1;
     return sceKernelStartThread(t, 0, 0) < 0 ? -1 : 0;
 }
@@ -154,6 +155,12 @@ void kh1_gsq_sync(void) {
     if (kh1_gsq_on) wait_tail(wpos);
 }
 
+u32 kh1_gsq_pos(void) { return wpos; }
+
+void kh1_gsq_wait(u32 pos) {
+    if (kh1_gsq_on) wait_tail(pos);
+}
+
 /* room for n contiguous words at wpos (a wrap marker and the wait for the worker as needed) */
 static void room(u32 n) {
     u32 size = mask + 1, end = size - (wpos & mask);
@@ -166,14 +173,15 @@ static void room(u32 n) {
     if (wpos + n - LOAD(tail) > size) wait_tail(wpos + n - size);
 }
 
-void kh1_gsq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw) {
-    u32 pa = (nargs + 3) & ~3u, n = 4 + pa + nqw * 4, i, *op;
+/* bytes of data (the op's qwords padded with zeros), joining the last op when join is set */
+static void put(KH1GsqFn fn, const u32 *args, u32 nargs, const void *data, u32 bytes, int join) {
+    u32 nqw = (bytes + 15) / 16, pa = (nargs + 3) & ~3u, n = 4 + pa + nqw * 4, i, *op;
     if (!kh1_gsq_on) {
-        fn(args, data, nqw);
+        fn(args, (const u32 *)data, nqw);
         return;
     }
     /* the last op again with more data: its data grows in place when it is the ring's last words */
-    if (last_op != ~0u && nqw) {
+    if (join && last_op != ~0u && nqw) {
         op = ring + (last_op & mask);
         if (op[0] == (u32)(unsigned long)fn && op[2] == nargs && (last_op & mask) + 4 + pa + (op[1] + nqw) * 4 <= mask + 1 &&
             wpos + nqw * 4 - LOAD(tail) <= mask + 1) {
@@ -189,7 +197,7 @@ void kh1_gsq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 n
     }
     if (n > (mask + 1) / 2) { /* larger than the ring can take: run it here, the worker idle */
         kh1_gsq_sync();
-        fn(args, data, nqw);
+        fn(args, (const u32 *)data, nqw);
         return;
     }
     room(n);
@@ -199,10 +207,21 @@ void kh1_gsq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 n
     op[2] = nargs;
     op[3] = 0;
     for (i = 0; i < nargs; i++) op[4 + i] = args[i];
-    if (nqw) memcpy(op + 4 + pa, data, nqw * 16);
-    last_op = wpos;
+    if (nqw) {
+        op[4 + pa + nqw * 4 - 1] = op[4 + pa + nqw * 4 - 2] = op[4 + pa + nqw * 4 - 3] = op[4 + pa + nqw * 4 - 4] = 0;
+        memcpy(op + 4 + pa, data, bytes);
+    }
+    last_op = join ? wpos : ~0u;
     wpos += n;
     if (wpos - LOAD(head) >= PUBLISH) publish();
+}
+
+void kh1_gsq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw) {
+    put(fn, args, nargs, data, nqw * 16, 1);
+}
+
+void kh1_gsq_put_bytes(KH1GsqFn fn, const u32 *args, u32 nargs, const void *data, u32 bytes) {
+    put(fn, args, nargs, data, bytes, 0);
 }
 
 int kh1_gsq_start(u32 bytes) {

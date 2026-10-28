@@ -501,6 +501,13 @@ first, the watchdog to the third (config.txt `gsq=0` turns it off; it runs only 
   so this checks the ops and copies); `KH1_HOST_GSQ_CHECK=10` (trace 2, quiet, the Vita's frame order) prints a
   digest of the register file, all 4 MB of GS memory and the frame's commands every 10 frames, the same with
   the worker running alongside the game (KH1_HOST_GSQ=1, and with a 64 KiB and a 4 KiB ring) as without.
+- **The frame and the uploads on the worker too** (after Vita3K showed the game waiting ~270 ms per 2 s at
+  the vblank's sync): the vblank puts the frame's GPU work (kh1_pipes_frame, gxm.c's commands, the latch, the
+  present) as the worker's last op of the frame and goes on with the next frame, waiting only for the frame
+  before (`kh1_gsq_wait`, one frame in flight). Every GPU call (gxm.c, vita2d) is then the worker's; its
+  stack is 2 MiB for SceShaccCg. PlatGsExecLoadImage copies its bytes into the ring (`kh1_gsq_put_bytes`) instead
+  of syncing; StoreImage still syncs. The host's KH1_HOST_GSQ_CHECK runs the same order; the digests are the
+  same as single-threaded (title fake disc, 1500 frames, 4 MiB and 64 KiB rings).
 - **The watchdog** adds `gs worker: N ms busy; the game waited M ms for it (K waits)`. The `cpu: ... recording`
   ms are the worker's now, and `vu1: ... passing their kicks on` is the copy into the ring.
 

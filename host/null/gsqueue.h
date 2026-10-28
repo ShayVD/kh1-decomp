@@ -19,6 +19,13 @@ int kh1_gsq_start(u32 bytes);
  * caller may change it at once.  An op put right after one of the same fn and args, still unpublished,
  * joins it (fn then sees both ops' data as one).  Runs fn at once when the queue is off. */
 void kh1_gsq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw);
+/* the same with data of any length (copied, then padded with zeros to whole qwords; never joined): fn
+ * reads the length from its arguments */
+void kh1_gsq_put_bytes(KH1GsqFn fn, const u32 *args, u32 nargs, const void *data, u32 bytes);
+/* the queue's position after the ops put so far, and a wait until the worker has run every op before a
+ * position (kh1_gsq_wait(kh1_gsq_pos()) is kh1_gsq_sync): the Vita's vblank keeps one frame in flight */
+u32 kh1_gsq_pos(void);
+void kh1_gsq_wait(u32 pos);
 /* the ops put so far handed to the worker (put publishes on its own every few KiB) */
 void kh1_gsq_flush(void);
 /* returns once every op put so far has run: the GS model is then the game thread's to read or change
