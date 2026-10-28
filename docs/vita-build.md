@@ -514,6 +514,42 @@ present / vblank wait / the rest (the game's code, gsimage.c's uploads included)
   rectangles now go block by block. Next: the walk itself (vif_word, unpack, the VU1 programs' fin /
   fo, which the Vita's NEON helpers already shorten), then a second core for VIF1 / VU1 and the GS feed.
 
+## GS memory upkeep in GPU mode (session 141, 2026-10-28)
+
+With the GPU drawing (gxm.c), the GS memory model still takes every upload, because the texture and
+palette caches, the "loose" textures and the target uploads read their texels from it. A callgrind
+profile of the Dive (frames 5000-5060, dive.txt, 4.95G instructions) had about a quarter of the frame
+there: kh1_gsmem_image 9.3% inclusive (T8 streams, mark per pixel), pend_flush 12% (target_upload's
+read_rect, and the mock's sceGxmFinish; on the Vita the 324 GPU waits were ~90 ms in all), the texture
+cache's reads 4.9%, CLUT loads 2.3%, kh1_gsmem_addr 2.8%. Changes:
+
+- **gsmem.c, same output** (gsfast_test compares each with the fast paths off):
+  - `addr_rect`: a new upload rectangle's addresses from each block's start plus a per-PSM table of
+    the places inside a block (kh1_gsmem_addr is block number x block size + place, each from its own
+    coordinates), not the swizzle for every pixel. AT_KEYS 64 -> 256.
+  - `scan_pages`: tex_scan takes a texture of whole pages page by page (a page's 32 blocks are 32
+    consecutive block numbers, so they lie in two pages at most); it falls back to the block scan when
+    two drawn pages name different targets, since the block order picks the first.
+  - T8 / T4 upload pieces mark pages inline, `marks` moved once a piece.
+  - An 8-bit CLUT load reads its 16 x 16 through kh1_gsmem_read_rect.
+- **gxm.c, a fix**: a pending target upload was a rectangle read in the upload's own layout and
+  written at BITBLTBUF's (DSAX, DSAY) of the target. Right only for an upload at the target's own FBP
+  in CT32 / CT24. The Dive streams T8 textures and CT32 CLUTs at 0x3700-0x3980 into the pages of
+  targets at lower FBPs (256 x 192 and 256 x 256, ~40 uploads a frame), so each landed at the target's
+  top left, read as CT32. Now each upload's written words are kept per block (a 64-bit mask, the
+  target, CT24 or not) and, at the flush, written to the pixel that holds that word in the target's
+  CT32 layout (FBP / FBW from the recorder's target key), whole blocks without a swizzle per pixel.
+  `kh1_gsmem_read_block` gives a block's 64 words.
+  The first version marked each word with a call and flushed one target whenever a block moved to
+  the other (the two Dive targets overlap): +4%. Now a whole block is one mask write, an edge block's
+  pixels one mask, and a block both targets wait for is written to both.
+- **Measured** (real-disc gxmcheck, dive.txt, callgrind frames 5000-5060): 5.51G -> 5.34G with the
+  gsmem.c changes (the log identical apart from host pointers), 5.15G with the target uploads too
+  (-6.5% in all; kh1_vita_gxm_frame 608M -> 412M). Three display lines' "pixels differ from the GS
+  model" counts drop by 1-2; draws, triangles and pixels drawn are unchanged. Left: pend_flush's
+  sceGxmFinish in the mock (small on the Vita: 324 waits, ~90 ms in all, 3d-t), the texture cache's
+  T8 reads, and the model's upload stores themselves.
+
 ### The GS side on a second core (session 141)
 
 host/null/gsqueue.c runs the GS side on a worker thread: the GIF decode (dmawalk.c's gif_block / gif_qword),
@@ -549,6 +585,40 @@ first, the watchdog to the third (config.txt `gsq=0` turns it off; it runs only 
   same as single-threaded (title fake disc, 1500 frames, 4 MiB and 64 KiB rings).
 - **The watchdog** adds `gs worker: N ms busy; the game waited M ms for it (K waits)`. The `cpu: ... recording`
   ms are the worker's now, and `vu1: ... passing their kicks on` is the copy into the ring.
+
+## The VU1 feed's speed (session 141, 2026-10-28)
+
+On a Vita (3d-t, 444 MHz) the Dive ran at ~3.4 fps with ~80% of a frame in VU1 and the chain walk
+that feeds it, on one core. This pass makes that work cheaper without changing what it produces (the
+second core and the VRAM copy are separate threads):
+
+- **Already in main (session 137v's VIF1 feed):** VIF1 data in blocks (`kh1_vif1_data_n`), UNPACK
+  fast paths and XGKICK without the copy. This branch first did the same independently; on the merge
+  with main main's versions were kept, and tests/host/vu1feed_test.c now checks main's block reader.
+- **The GIF reader.** `gif_qword`'s register index went through `% nreg` every qword, a library call
+  on the A9 (it has no divide instruction); it now wraps a counter. A quiet walk (the Vita's) no longer
+  keeps the list of distinct state values nor writes the send's text.
+- **Draw states by hash.** host/null/gsregs.c's `gs_kick` searched every draw state of the send
+  with memcmp after each state write (every VU1 packet's PRE PRIM is one); the states now sit in an
+  open-addressed table keyed by a hash of the same bytes, the same index coming out.
+- **More of the programs on NEON.** The FMACs out/gen/vu1_tr.c still ran field by field (those whose
+  MAC flag a later FMAND / FMEQ / FMOR reads, and OPMULA / OPMSUB) go through `vu_ope` / `vu_opbe`:
+  four lanes, exact against the scalar form. Where NEON's flush to zero could differ (a result of 0
+  with the MAC flag, which the scalar form may flag U; a MADD / MSUB product of 0 from two non-zero
+  factors) they answer 0 and the scalar form runs.
+
+Checked: tests/host/vu1feed_test.c (the block reader against the old word reader, kept verbatim in
+the test, 40 random streams with every format, masks, modes, filling and skipping writes, MPG, data
+split at random points) and tests/host/vu1neon_test.c (vu_ope against the scalar form, 2M random
+operand sets weighted to zeros, denormals and the extremes; it runs under qemu-arm when
+arm-linux-gnueabihf-gcc is there, in tests/selftest.sh). Outside the repository, as scratch: the walk
+with VIF1 / VU1 over random VIF1 chains (UNPACK, PACKED / REGLIST / A+D packets kicked by a small
+program, some wrapping VU1 memory, DIRECT, chains cut at random, TTE on and off) gives the same
+primitives, state values and counts before and after (x86: 8.7G instructions to 2.1G on that mix, the
+draw-state search most of it); and the translated programs from every entry on 3,480 random states,
+old and new translation under qemu-arm with NEON, give the same memory, registers, flags and kicks.
+**Not yet checked on the disc**: a host run with `KH1_HOST_VU1TR=2` and the gxmcheck log against the
+last one, and the frame rate on a Vita (the split line's DMA-walk share).
 
 ## What next, in order
 

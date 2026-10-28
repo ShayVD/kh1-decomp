@@ -71,6 +71,9 @@ typedef struct {
 #define GS_VALUES 512
 static struct { u32 reg, lo, hi; } gs_val[GS_VALUES];
 static u32 gs_nval;
+/* session 141: kept only when something prints them (a quiet walk's search of the list on every A+D write
+ * was a cost the Vita paid for nothing) */
+static int gs_keep = 1;
 
 static void gif_set(GifStream *g, u32 reg) {
     if (reg < 128) g->set[reg >> 5] |= 1u << (reg & 31);
@@ -80,7 +83,7 @@ static void gif_set(GifStream *g, u32 reg) {
 static void gif_value(GifStream *g, u32 reg, const u32 *v) {
     u32 i;
     gif_set(g, reg);
-    if (reg >= 128 || (reg >= 1 && reg <= 5) || reg == 0xA || reg == 0xC || reg == 0xD || reg == 0xF) return;
+    if (!gs_keep || reg >= 128 || (reg >= 1 && reg <= 5) || reg == 0xA || reg == 0xC || reg == 0xD || reg == 0xF) return;
     for (i = 0; i < gs_nval; i++)
         if (gs_val[i].reg == reg && gs_val[i].lo == v[0] && gs_val[i].hi == v[1]) return;
     if (gs_nval == GS_VALUES) return;
@@ -104,7 +107,8 @@ static void gif_qword(GifStream *g, const u32 *q) {
     u32 nloop, h;
     if (g->left) {
         if (g->flg == 0) {
-            u32 d = g->regs[g->k++ % g->nreg];
+            u32 d = g->regs[g->k];
+            if (++g->k == g->nreg) g->k = 0; /* session 141: no division a qword (the A9 has no divider) */
             if (d == 0xE) gif_value(g, q[2] & 0x7F, q);
             else if (d == 0) { u32 prim[2] = { q[0] & 0x7FF, 0 }; gif_value(g, 0, prim); }
             else gif_value(g, d, q);
@@ -112,7 +116,8 @@ static void gif_qword(GifStream *g, const u32 *q) {
             g->left--;
         } else if (g->flg == 1) {
             for (h = 0; h < 2 && g->left; h++, g->left--) {
-                u32 d = g->regs[g->k++ % g->nreg];
+                u32 d = g->regs[g->k];
+                if (++g->k == g->nreg) g->k = 0;
                 if (d != 0xE) gif_value(g, d, q + 2 * h);
                 if (d < 0xE) kh1_gs_write(d, q[2 * h], q[2 * h + 1]);
             }
@@ -216,6 +221,7 @@ static void w_kick(const u32 *a, const u32 *d, u32 n) {
 }
 static void w_send(const u32 *a, const u32 *d, u32 n) { /* a send starts: its own values, draws, uploads */
     gs_nval = 0;
+    gs_keep = !kh1_dma_quiet || kh1_host_trace >= 4;
     kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
     kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
     memset(&ws[0], 0, sizeof ws[0]);
@@ -639,22 +645,22 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
         gs_send_done(ch == 2 ? &g : &v.gif);
         if (ch == 2) {
             if (g.left) bad |= KH1_DMA_GIF_SHORT;
-            sprintf(extra, "; gif %u packets (%u eop, %u image), %u of %u blocks inside one%s", g.packets,
+            if (!kh1_dma_quiet) sprintf(extra, "; gif %u packets (%u eop, %u image), %u of %u blocks inside one%s", g.packets,
                     g.eop, g.image, g.mid, g.blocks, g.left ? ": ENDS INSIDE A PACKET" : "");
-            gif_regs(&g, regs);
+            if (!kh1_dma_quiet) gif_regs(&g, regs);
         } else {
             if (v.need || v.pad) bad |= KH1_DMA_VIF_SHORT;
             if (v.bad) bad |= KH1_DMA_VIF_BAD;
             if (v.gif.left) bad |= KH1_DMA_PATH2_SHORT;
-            sprintf(extra, "; vif%d %u codes (%u unpack, %u direct), %u of %u blocks inside one%s%s", ch, v.codes,
+            if (!kh1_dma_quiet) sprintf(extra, "; vif%d %u codes (%u unpack, %u direct), %u of %u blocks inside one%s%s", ch, v.codes,
                     v.unpacks, v.direct, v.mid, v.blocks, (v.need || v.pad) ? ": ENDS INSIDE A CODE" : "",
                     v.bad ? ": NOT A VIF CODE" : "");
-            if (v.direct)
+            if (v.direct && !kh1_dma_quiet)
                 sprintf(extra + strlen(extra), "; path2 %u packets%s", v.gif.packets,
                         v.gif.left ? ": ENDS INSIDE A PACKET" : "");
-            gif_regs(&v.gif, regs);
+            if (!kh1_dma_quiet) gif_regs(&v.gif, regs);
         }
-        if (tte && tte_hi)
+        if (tte && tte_hi && !kh1_dma_quiet)
             sprintf(extra + strlen(extra), "; %u tags with upper words (TTE)", tte_hi);
     }
     if (!kh1_dma_quiet)
