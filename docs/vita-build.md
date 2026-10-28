@@ -687,6 +687,45 @@ per 2 s, recording ~0.29 s, the frame's commands ~0.29 s, the game waiting ~0.4 
   50th frame (123 of them, to frame 6150) and the GS digests are the same with `KH1_HOST_GPUQ=1` as without,
   and without the worker too.
 
+## The game thread's walk (session 143)
+
+3d-za on a Vita (the Dive, ~8.4 fps): of each 2 s the game thread spent ~1.36 s in the DMA walks, of them only
+~0.32 s in the VU1 programs (`vu1:` line); the GS worker was busy ~1.16 s and the GPU thread ~0.29 s. Two findings
+and four changes, the output the same:
+
+- **Broken VIF1 chains, printed from the walk.** The log had ~900 sends with a problem in the Dive (~8 a second):
+  `N words no VIF code` after a ref list whose first ref (qwc 2) has nonzero upper words, and a `refe qwc 49154`
+  chain (786 KB) whose data is ASCII. dma_walk printed each one's whole tag list (~20 lines) through the unbuffered
+  log, one sceIoWrite a line, inside the walk's time. The same disc and dive_en.txt give none on the x86 host and
+  none on the ARM Linux build under qemu to frame 5060, so the game built or pointed at a wrong chain only on the
+  Vita: the one-byte enums ("The flashing floor" below); with that fix a Vita log of the Dive has none. A quiet walk (the Vita's) now prints the first
+  `KH1_DMA_BAD_SHOWN` (16) bad sends in full and counts the rest (`kh1_dma_bad_sends`); the host prints all as
+  before. The watchdog adds `log: N writes, M ms in them; K bad DMA sends (T so far, ...)`, every log write timed.
+- **An ARM profile.** The x86 callgrind profile is no guide here (fin / fo are scalar there, NEON on the Vita), so
+  `make vita-armcheck` now builds with `-mfpu=neon` as vitasdk's gcc does by default, and the walk was measured
+  under a qemu-arm 8.2 built with `--enable-plugins` and a small plugin counting each thread's executed
+  instructions per translation block (frames 5000-5060 as the difference of a run to 5000 and one to 5060, en.iso,
+  dive_en.txt, `KH1_HOST_GSQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`). The game thread: 1,110M instructions (the spin of
+  its waits aside): the translated programs ~555M (P0 255M, P12 140M), clipw 115M, unpack 106M, vif_word 94M,
+  kh1_gsmem_image 84M (the large LoadImages, LOAD_HERE), the ring's put and copies ~90M, kh1_vif1_data 43M.
+- **clipw on integers** (host/port/vu1.c `fkey`): fin()'s values are finite and never denormal, so a sign and
+  magnitude integer orders as the float does; no VFP compare (each a flag transfer on the A9). 115M -> 75M.
+- **UNPACK per format** (`unpack_run`): when every element read is in the data (always but a V3's last w), one
+  loop per V1-V4 x 32 / 16 / 8 bits with no test of the format or the data's end per element. 106M -> 46M.
+- **DIRECT's data in runs** (dmawalk.c `vif_block`, `direct_qwords`): PATH2's words went through vif_word and
+  kh1_vif1_data one at a time and into the ring one qword a put; now a run's whole qwords are counted and put
+  together (1,024 at most an op; w_qwords decodes them one at a time as before) and kh1_vif1_data_n takes
+  DIRECT's words at once. vif_word 94M -> 6M, kh1_vif1_data 43M -> 8M, put 47M -> 4M.
+
+The game thread: 1,110M -> 772M (-30%) on that profile. Checked: the gxmcheck log at trace 5 to frame 6500 on
+the English disc (dive_en.txt, `KH1_HOST_GXM=100`) the same as main's, host pointers aside, and its 4,758 shots
+byte-identical; the worker-order digests (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50`, 130 of them) and the VU1
+counts the same; the ARM build's digests and VU1 counts the same under qemu. tests/host/vu1feed_test.c also
+compares clipw with the float form it replaced over 2M operand sets weighted to zeros, denormals, Inf / NaN and
+equal magnitudes (a deliberate break of each change is caught). Left on the game thread: the programs themselves
+(their FMACs' operands go through memory: `u32 u[4]` then a field copied out, a NEON store and a core load the
+A9 pays for), the large LoadImages, and the ring copy of the kicks.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
