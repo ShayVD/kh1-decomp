@@ -27,6 +27,7 @@
 #include "dmawalk.h"
 #include "gsregs.h"
 #include "gsmem.h"
+#include "platform/vu1.h"
 
 int printf(const char *, ...);
 int sprintf(char *, const char *, ...);
@@ -39,6 +40,7 @@ int fclose(void *);
 const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded textures (main.c) */
 void (*kh1_dma_after_send)(u32 tadr); /* session 94: KH1_HOST_SHOT's present (host/null/present.c) */
 int kh1_dma_quiet; /* session 135: no send line (the Vita, dmawalk.h) */
+int kh1_dma_vu1; /* session 137v: VIF1's codes run on host/port/vu1.c, its XGKICKs drawn (dmawalk.h) */
 void (*kh1_dma_draw_state)(const KH1GsDraw *d); /* session 123: each send's draw states (KH1_HOST_TRACE=5) */
 
 typedef struct {
@@ -51,7 +53,7 @@ typedef struct {
 
 typedef struct {
     u32 need;    /* data words of the current code still to come */
-    u32 pad;     /* words to skip before them (DIRECT / MPG data is aligned) */
+    u32 pad;     /* words to skip before them (none since session 137v: DIRECT / MPG data is not padded) */
     u32 pos;     /* word position in the stream, mod 4 */
     u32 cl, wl;  /* STCYCL */
     u32 vif0;    /* VIF0 has no OFFSET, BASE, MSKPATH3 or DIRECT */
@@ -166,6 +168,14 @@ static void gif_regs(const GifStream *g, char *out) {
         if ((g->set[r >> 5] & ~known[r >> 5]) >> (r & 31) & 1) sprintf(out + strlen(out), " reg%02x", r);
 }
 
+/* session 137v: an XGKICK's GIF packets (host/port/vu1.c), read as PATH1 like the GIF channel's */
+static u32 path1_packets;
+static void path1_kick(const u32 *q, u32 nqw) {
+    GifStream g = { 0 };
+    gif_block(&g, q, nqw);
+    path1_packets += g.packets;
+}
+
 /* the words an UNPACK reads: num vectors written, CL of each WL read when WL > CL */
 static u32 vif_unpack_words(VifStream *v, u32 cmd, u32 num) {
     u32 vn = cmd >> 2 & 3, vl = cmd & 3, bits, n = num;
@@ -184,6 +194,7 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     if (v->pad) { v->pad--; return; }
     if (v->need) {
         v->need--;
+        if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data(w);
         if (v->in_direct) {
             v->q[v->nq++] = w;
             if (v->nq == 4) { gif_qword(&v->gif, v->q); v->nq = 0; }
@@ -192,10 +203,15 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
         return;
     }
     v->codes++;
+    if (kh1_dma_vu1 && !v->vif0) {
+        if (!kh1_vu1_kick) kh1_vu1_kick = path1_kick;
+        if (cmd == 0x14 || cmd == 0x15 || cmd == 0x17) kh1_gs_path1();
+        kh1_vif1_code(w);
+    }
     if (v->vif0 && (cmd == 0x02 || cmd == 0x03 || cmd == 0x06 || cmd == 0x50 || cmd == 0x51)) cmd = 0x7F;
     switch (cmd) {
     case 0x14: case 0x15: case 0x17: /* MSCAL / MSCALF / MSCNT: on VIF1 a VU1 program that may XGKICK */
-        if (!v->vif0) kh1_gs_path1();
+        if (!v->vif0 && !kh1_dma_vu1) kh1_gs_path1();
         return;
     case 0x00: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
     case 0x10: case 0x11: case 0x13:
@@ -206,13 +222,14 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
         return;
     case 0x20: v->need = 1; return;              /* STMASK */
     case 0x30: case 0x31: v->need = 4; return;   /* STROW / STCOL */
-    case 0x4A:                                   /* MPG: num x 64 bits, 64-bit aligned */
-        v->pad = v->pos & 1;
+    case 0x4A:                                   /* MPG: num x 64 bits */
         v->need = (num ? num : 256) * 2;
         return;
-    case 0x50: case 0x51:                        /* DIRECT / DIRECTHL: imm qwords, aligned */
+    case 0x50: case 0x51:                        /* DIRECT / DIRECTHL: imm qwords */
+        /* session 137v: the data follows the code with no padding: the rooms' meshes put DIRECT in any
+         * word of a qword (the "aligned" rule is the programmer's, the VIF reads the next words; the game
+         * pads with NOPs where it aligns, so the old reading only differed on these) */
         v->direct++;
-        v->pad = (4 - v->pos) & 3;
         v->need = (imm ? imm : 0x10000) * 4;
         v->in_direct = 1;
         v->nq = 0;
@@ -402,7 +419,7 @@ static void hud_send(u32 tadr) {
     kh1_gs_xshift(hud_env_shift);
 }
 
-int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
+static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
     u32 tag = tadr, asr[2], qwords = 0, ntags = 0, tte_hi = 0;
@@ -555,4 +572,17 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
         gs_print_targets();
     }
     if (kh1_dma_after_send) kh1_dma_after_send((u32)(unsigned long)q);
+}
+
+/* session 137v: the walks' time on a clock the platform gives (the Vita's watchdog: what a frame's
+ * CPU time goes to); the VU1 programs and the recorder's work run inside it */
+u32 kh1_dma_walk_us;
+int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
+    u32 t0;
+    int r;
+    if (!kh1_vu1_clock) return dma_walk(ch, chcr, tadr, where);
+    t0 = kh1_vu1_clock();
+    r = dma_walk(ch, chcr, tadr, where);
+    kh1_dma_walk_us += kh1_vu1_clock() - t0;
+    return r;
 }

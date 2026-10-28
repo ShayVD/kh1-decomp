@@ -43,6 +43,7 @@ static KH1GxmRec *gxm; /* session 128: each frame's commands as GXM calls (gxmre
 static u32 gxm_max_calls, gxm_max_scenes;
 #define batcher (rec->b)
 void *malloc(__SIZE_TYPE__);
+void *calloc(__SIZE_TYPE__, __SIZE_TYPE__);
 
 /* session 127: the recorder's caches (what a port's renderer would hold) */
 static KH1PalCache *pal;
@@ -106,14 +107,16 @@ static void tex_lookup(u32 lo, u32 hi) {
  * session 127: with its caches, and gsmem.c's transfer hooks set */
 static KH1CmdRec *recorder(void) {
     if (!rec) {
-        rec = (KH1CmdRec *)malloc(sizeof *rec);
+        /* calloc: kh1_texcache_init frees what a used cache holds, so a block that is not zeroed
+         * (the Vita's heap after lang.c freed the disc's ELF) had it free that memory's old words */
+        rec = (KH1CmdRec *)calloc(1, sizeof *rec);
         kh1_cmd_init(rec, malloc(KH1_RING_FRAMES * KH1_RING_VERTEX_BYTES), KH1_RING_VERTEX_BYTES,
                      malloc(KH1_RING_FRAMES * KH1_RING_UNIFORM_BYTES), KH1_RING_UNIFORM_BYTES);
-        pal = (KH1PalCache *)malloc(sizeof *pal);
+        pal = (KH1PalCache *)calloc(1, sizeof *pal);
         kh1_palcache_init(pal);
-        gxm = (KH1GxmRec *)malloc(sizeof *gxm);
+        gxm = (KH1GxmRec *)calloc(1, sizeof *gxm);
         kh1_gxm_clear(gxm);
-        tex = (KH1TexCache *)malloc(sizeof *tex);
+        tex = (KH1TexCache *)calloc(1, sizeof *tex);
         tex_ok = kh1_texcache_init(tex) == 0;
         kh1_gsmem_xfer_hook = on_xfer;
         kh1_gsmem_clut_hook = on_clut;

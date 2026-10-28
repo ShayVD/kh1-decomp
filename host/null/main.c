@@ -72,6 +72,9 @@
 #include <string.h>
 #include <unistd.h>
 #include "platform/ovl.h"
+#include "platform/vu1.h"
+extern u32 kh1_vu1_snap_kicks;
+extern unsigned long kh1_vu1_dump_frame;
 
 void func_00100558(int argc, char **argv);
 int kh1_cd_image_open(const char *path);
@@ -91,6 +94,7 @@ int kh1_host_stop_at_cdread = 1;
 int kh1_host_trace;
 extern const char *kh1_host_texdump; /* host/null/dmawalk.c */
 extern int kh1_dma_quiet;                 /* host/null/dmawalk.c (session 135) */
+extern int kh1_dma_vu1;                   /* host/null/dmawalk.c (session 137v): VIF1 / VU1 run */
 unsigned int kh1_host_cd_reads, kh1_host_cd_sectors;
 static unsigned long frames, max_frames = 600;
 static int ovl_stub;
@@ -132,6 +136,20 @@ static void summary(void) {
     fflush(stdout);
 }
 
+/* session 137v: KH1_HOST_VU1's counts of the last 300 frames (host/port/vu1.c) */
+static void vu1_line(void) {
+    KH1Vu1Stats v;
+    u32 hi, lo, pc;
+    kh1_vu1_stats(&v);
+    kh1_vu1_first_unknown(&hi, &lo, &pc);
+    printf("kh1-host: vu1 frame %lu: %u runs, %u pairs (%u cycles), %u kicks (%u qwords), %u unpacks (%u filled), "
+           "%u programs loaded, %u runaway, %u unknown", frames, v.runs, v.insns, v.cycles, v.kicks, v.kick_qw,
+           v.unpacks, v.fill, v.mpg, v.runaway, v.unknown);
+    if (v.tr_runs || v.tr_checked) printf(", %u translated, %u checked (%u differ)", v.tr_runs, v.tr_checked, v.tr_differ);
+    if (hi || lo) printf(" (first %08x %08x at %03x)", hi, lo, pc);
+    printf("\n");
+}
+
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */
 extern void *kh1_vsync_cb;
 void kh1_null_iop_frame(void);
@@ -142,6 +160,7 @@ void kh1_host_vblank(void) {
     frames++;
     kh1_counts_sample();
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
+    if (kh1_dma_vu1 && frames % 300 == 0) vu1_line();
     if (kh1_host_trace >= 5) kh1_pipes_frame(); /* session 124: the frame's batches */
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
@@ -257,6 +276,21 @@ int main(int argc, char **argv) {
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
         kh1_dma_quiet = getenv("KH1_HOST_QUIET") != 0; /* session 135: no send lines, as on the Vita */
+        kh1_dma_vu1 = getenv("KH1_HOST_VU1") && atoi(getenv("KH1_HOST_VU1")); /* session 137v: the 3D */
+        kh1_vu1_verbose = kh1_dma_vu1 ? atoi(getenv("KH1_HOST_VU1")) - 1 : 0;
+        if (getenv("KH1_HOST_VU1TR")) kh1_vu1_tr = atoi(getenv("KH1_HOST_VU1TR")); /* 0 / 1 / 2: checked */
+        if (getenv("KH1_HOST_VU1DUMP")) { /* DIR:N, host/port/vu1.c's dump_run */
+            static char dir[200];
+            char *c;
+            snprintf(dir, sizeof dir, "%s", getenv("KH1_HOST_VU1DUMP"));
+            c = strrchr(dir, ':');
+            kh1_vu1_dump_every = c ? strtoul(c + 1, 0, 0) : 1000;
+            if (c) *c = 0;
+            kh1_vu1_dump_dir = dir;
+        }
+        if (getenv("KH1_HOST_VU1_SNAP")) kh1_vu1_snap_run = strtoul(getenv("KH1_HOST_VU1_SNAP"), 0, 0);
+        if (getenv("KH1_HOST_VU1_FRAME")) kh1_vu1_dump_frame = strtoul(getenv("KH1_HOST_VU1_FRAME"), 0, 0);
+        if (getenv("KH1_HOST_VU1_SNAPK")) kh1_vu1_snap_kicks = strtoul(getenv("KH1_HOST_VU1_SNAPK"), 0, 0);
         if (kh1_host_trace >= 5) kh1_dma_draw_state = kh1_pipes_draw; /* session 123: the GPU pipelines */
         if (kh1_host_trace >= 5) kh1_gs_prim_hook = kh1_pipes_prim; /* session 124: the batches */
         if (kh1_host_trace >= 5) kh1_pipes_start(); /* session 127: the recorder sees the first transfers */

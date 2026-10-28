@@ -30,9 +30,10 @@
  * GS's formula (kh1_blend_gs) on Cs and the target (Ad read back from the 0x80 scale, 0x80 on a CT24 frame)
  * with A / B / C / D from the key; then both merge FBMSK's bits: per colour byte, a mask of the low k bits
  * (kept from the target) or the high 8 - k bits, and an alpha byte 0 or 0xFF.  Not generated
- * (kh1_shader_frag_cg returns 0): another mask shape (no float form; integer ops would do it), a CT16 / CT16S
- * frame with a frame read (the 5551 target's bits) and the sampler's own taps (KH1_SHADER_TAPS,
- * REGION_REPEAT with a fix or a narrow mask).  Of the main ELF's 27 static fragment shaders (drawpipes.py)
+ * (kh1_shader_frag_cg returns 0): another mask shape (no float form; integer ops would do it) and a CT16 /
+ * CT16S frame with a frame read (the 5551 target's bits).  Session 137v: the sampler's own taps (KH1_SHADER_TAPS,
+ * REGION_REPEAT with a fix or a narrow mask) are generated as one wrapped coordinate (exact when point sampled,
+ * the textured points' case; bilinear blends across the region's seam).  Of the main ELF's 27 static fragment shaders (drawpipes.py)
  * one has a frame read: the shadow casters' FBMSK 0x00000001 (fetch 2, R's lowest bit kept: func_001284a0's
  * environment), now generated; no TAPS.  The frame read's declarations (session 136, from SceShaccCg's own
  * diagnostics): `__nativecolor void main(...)`, `__regformat unsigned char4 dst : FRAGCOLOR` and a
@@ -40,7 +41,8 @@
  *
  * The uniforms the code reads are kh1_shader_uniforms' 16 floats (one 64-byte uniform slot, ring.h):
  *   u_a = (AREF, FIX, TA0, TA1)   u_b = (AEM, FOGCOL R, G, B)   u_r = REGION_CLAMP's texel-centre bounds
- *   (U MIN + 0.5, U MAX + 0.5, V ..., normalised)   u_c = (ALPHA's ABCD, the frame PSM, 0, 0)
+ *   (U MIN + 0.5, U MAX + 0.5, V ..., normalised), or REGION_REPEAT's (n / P, -P / n) per axis
+ *   u_c = (ALPHA's ABCD, the frame PSM, REGION_REPEAT's FIX / n on U, on V)
  * and the vertex shader's u_xf (2 / w, 2 / h, -1, -1), cmdbuf.h's per-pass slot.  Not part of the PS2
  * build. */
 #ifndef KH1_PS2

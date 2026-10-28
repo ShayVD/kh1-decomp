@@ -17,6 +17,15 @@
  *       gpu=N                 session 136: 1 (the default) draws with the GPU (host/vita/gxm.c) when its
  *                             shaders can be had (ur0:data/libshacccg.suprx, or the cache in
  *                             ux0:data/kh1/shaders/); 0 keeps the GS model's software picture
+ *       pad=PATH              session 137v: a host pad script (tests/host/pads/, host/null/pad.c) played instead of
+ *                             the Vita's controls, e.g. ux0:data/kh1/dive.txt
+ *       vu1=N                 1 (the default) runs VIF1 and the VU1 microprograms (host/port/vu1.c), so the 3D
+ *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
+ *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
+ *                             interpreter only; 2 both, compared (slow; differences go to the log)
+ *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
+ *                             ("kh1-gxm: shadertest" lines; gxm.c)
+ *       shacc_restart=1       session 137v: restart the shader compiler when a shader fails (off: hangs Vita3K)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -38,12 +47,19 @@
 #include "vita.h"
 #include "dmawalk.h"
 #include "platform/cmdbuf.h"
+#include "platform/vu1.h"
+#include "platform/costack.h"
 
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
  * (host/port/memmap.c) is .bss */
 int _newlib_heap_size_user = 160 * 1024 * 1024;
-unsigned int sceUserMainThreadStackSize = 4 * 1024 * 1024;
+/* session 137v: 4 MiB for the main thread's own frames, the rest the coroutines' stacks (platform/costack.h:
+ * the kernel refuses a system call made on a stack outside the thread's).  Dive to the Heart makes two
+ * (0x40000 each); a 52 MiB stack stopped the app at its start on hardware (C1-2681-7, no log) */
+#define MAIN_OWN (4 * 1024 * 1024)
+unsigned int sceUserMainThreadStackSize = 8 * 1024 * 1024;
+static u32 costack_bytes;
 
 const char kh1_vita_dir[] = "ux0:data/kh1";
 
@@ -60,6 +76,7 @@ static unsigned long frames, max_frames;
 static volatile u32 kh1_vita_us_wait; /* session 135: microseconds in the vblank wait (the watchdog's) */
 extern volatile u32 kh1_vita_us_present; /* display.c */
 static int title_state = 2;
+extern const char *kh1_vita_pad_script; /* host/null/pad.c */
 static int use_gpu = 1; /* session 136: config.txt's gpu= */
 static int gpu_on;      /* the GPU renderer runs (gxm.c) */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
@@ -89,7 +106,37 @@ void kh1_vita_log(const char *fmt, ...) {
     if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
 }
 
+/* session 137v: the game's and host/null's printf straight into the log. Pointing newlib's stdout at the
+ * log reached neither its global nor its per-thread stream on the Vita (no "kh1-host:" line ever
+ * showed), so these take the place of libc's own (gcc turns a bare printf("...\n") into puts) */
+int vprintf(const char *fmt, va_list ap) {
+    char buf[1024];
+    int n = vsnprintf(buf, sizeof buf, fmt, ap);
+    if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
+    if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
+    return n;
+}
+
+int printf(const char *fmt, ...) {
+    va_list ap;
+    int n;
+    va_start(ap, fmt);
+    n = vprintf(fmt, ap);
+    va_end(ap);
+    return n;
+}
+
+int puts(const char *s) {
+    int n = (int)strlen(s);
+    if (log_fd >= 0) {
+        sceIoWrite(log_fd, s, n);
+        sceIoWrite(log_fd, "\n", 1);
+    }
+    return n + 1;
+}
+
 unsigned long kh1_host_frame(void) { return frames; }
+static u32 vita_us(void) { return (u32)sceKernelGetProcessTimeWide(); }
 
 extern int kh1_counts_on; /* host/null/counts.c */
 void kh1_counts_sample(void);
@@ -153,8 +200,12 @@ void kh1_host_vblank(void) {
 static unsigned long ovl_calls;
 int kh1_ovl_entry(int cmd, int arg) {
     int ret;
-    if (PlatOvlCall(cmd, arg, &ret)) /* session 132: a native overlay (dktitle.x, host/port/ovl.c) */
+    if (PlatOvlCall(cmd, arg, &ret)) { /* session 132: a native overlay (dktitle.x, host/port/ovl.c) */
+        static unsigned shown;
+        if (shown++ < 16) /* session 137v: whether the title's entry runs on the Vita */
+            vlog("kh1-vita: frame %lu: %s entry (%d, %d) returned %d\n", frames, PlatOvlCurrent(), cmd, arg, ret);
         return ret;
+    }
     ovl_calls++;
     vlog("kh1-vita: frame %lu: overlay entry D_00F20000(%d, %d) answered 0 (no overlay is decompiled)\n", frames,
            cmd, arg);
@@ -168,11 +219,16 @@ int kh1_ovl_entry(int cmd, int arg) {
 
 /* a second thread: every 2 s of wall time, where the game is (a black screen with no status strip
  * means no vblank: this says whether DMA sends still move) */
+int kh1_null_threads_state(char *buf, int n);
+extern u32 kh1_dma_walk_us; /* host/null/dmawalk.c */
+extern u8 D_004E4528[], D_002B75A0[];
+extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
-extern volatile u32 kh1_vita_us_gpu;
+extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
-    u32 wait0 = 0, present0 = 0, gpu0 = 0, rec0 = 0, frame0 = 0, draw0 = 0;
+    u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
+    u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
     for (;;) {
@@ -184,21 +240,66 @@ static int watchdog(SceSize args, void *argp) {
              (unsigned long long)(sceKernelGetProcessTimeWide() / 1000), frames, kh1_host_cd_reads,
              kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown, (kh1_vita_us_wait - wait0) / 1000,
              (kh1_vita_us_present - present0) / 1000, frames == last ? " (no vblank since the last)" : "");
+        { /* session 137v: the game's threads (host/null/threads.c): which one a stalled load waits on */
+            char tb[192];
+            kh1_null_threads_state(tb, sizeof tb);
+            vlog("kh1-vita: game threads: %s\n", tb[0] ? tb : "none made");
+        }
+        { /* session 137v: the disc loader's queue (src/io/discfile.c): each load task's file, its frames to wait
+           * and its request's result (-1 until read), the worker's two callback slots, and the gate
+           * func_00146878 holds the queue on (the object requests' busy flag, the sound bank transfers left) */
+            char lb[512];
+            int i, k = 0;
+            for (i = 0; i < 16 && k < (int)sizeof lb - 80; i++) {
+                const u8 *e = D_004E4528 + i * 0x4C;
+                const u8 *r = *(u8 *const *)(e + 72);
+                if (!(*(const u16 *)e & 1)) continue;
+                k += snprintf(lb + k, sizeof lb - k, " %.24s (wait %d, result %d)", (const char *)e + 16,
+                              *(const s32 *)(e + 64), r ? *(const s32 *)(r + 48) : -2);
+            }
+            vlog("kh1-vita: loads: %d queued so far, object requests busy %d, sound transfers left %d, "
+                 "worker slots %s %s;%s\n", D_004E4520, D_00532B80, D_0063F540, *(const u32 *)D_002B75A0 ? "used" : "free",
+                 *(const u32 *)(D_002B75A0 + 12) ? "used" : "free", k ? lb : " no load tasks");
+        }
         if (gpu_on) { /* session 136: the GPU frame's CPU time (its waits for the GPU included), its counts */
             u32 f, d, sk, sc;
             kh1_vita_gxm_stats(&f, &d, &sk, &sc);
-            vlog("kh1-vita: gpu: %u ms submitting; %u frames, %u scenes, %u draws, %u skipped\n",
-                 (kh1_vita_us_gpu - gpu0) / 1000, f, sc, d, sk);
+            vlog("kh1-vita: gpu: %u ms submitting (%u ms of it in %u waits for the GPU); %u frames, %u scenes, %u draws, "
+                 "%u skipped\n", (kh1_vita_us_gpu - gpu0) / 1000, (kh1_vita_us_finish - fin0) / 1000,
+                 kh1_vita_finishes - nfin0, f, sc, d, sk);
+            vlog("kh1-vita: gpu parts: %u ms the calls from the commands, %u the vertex copy, %u scenes, %u draws, "
+                 "%u transfers\n", (kh1_vita_us_part[0] - part0[0]) / 1000, (kh1_vita_us_part[1] - part0[1]) / 1000,
+                 (kh1_vita_us_part[2] - part0[2]) / 1000, (kh1_vita_us_part[3] - part0[3]) / 1000,
+                 (kh1_vita_us_part[4] - part0[4]) / 1000);
             /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
             vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
                  "slowest frame %u.%u ms\n", (us_record - rec0) / 1000, (us_frame - frame0) / 1000,
                  (us_draw - draw0) / 1000, us_worst / 1000, us_worst / 100 % 10);
             us_worst = 0;
+            /* session 137v: of the rest, the VU1 programs (the kicks they hand on included, then alone) */
+            vlog("kh1-vita: vu1: %u ms in programs, %u ms of it passing their kicks on\n", (kh1_vu1_us - vu0) / 1000,
+                 (kh1_vu1_kick_us - kick0) / 1000);
+            { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
+               * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
+                u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
+                u32 known = walk + (us_frame - frame0) + (us_draw - draw0) + (kh1_vita_us_wait - wait0);
+                vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them), %u the "
+                     "frame's commands, %u present, %u the vblank wait, %u the rest (the game's code)\n",
+                     all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
+                     (kh1_vita_us_wait - wait0) / 1000, all > known ? (all - known) / 1000 : 0);
+            }
         }
+        at0 = (u32)sceKernelGetProcessTimeWide();
+        walk0 = kh1_dma_walk_us;
+        vu0 = kh1_vu1_us;
+        kick0 = kh1_vu1_kick_us;
         rec0 = us_record;
         frame0 = us_frame;
         draw0 = us_draw;
         gpu0 = kh1_vita_us_gpu;
+        fin0 = kh1_vita_us_finish;
+        memcpy(part0, (const u32 *)kh1_vita_us_part, sizeof part0);
+        nfin0 = kh1_vita_finishes;
         wait0 = kh1_vita_us_wait;
         present0 = kh1_vita_us_present;
         last = frames;
@@ -222,7 +323,16 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "trace") == 0) kh1_host_trace = atoi(v);
         else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
+        else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
+        else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
+        else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
+            static char pad[160];
+            snprintf(pad, sizeof pad, "%s", v);
+            kh1_vita_pad_script = pad;
+        }
         else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
+        else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
+        else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
     }
     fclose(f);
 }
@@ -246,6 +356,15 @@ int main(int argc, char **argv) {
         __asm__ volatile("vmrs %0, fpscr" : "=r"(fpscr));
         __asm__ volatile("vmsr fpscr, %0" : : "r"(fpscr | (1u << 24)));
     }
+    { /* the main thread's stack below its own MAIN_OWN: the coroutines' stacks */
+        SceKernelThreadInfo ti;
+        volatile u8 here;
+        memset(&ti, 0, sizeof ti);
+        ti.size = sizeof ti;
+        if (sceKernelGetThreadInfo(sceKernelGetThreadId(), &ti) >= 0 && ti.stack &&
+            (u8 *)&here - (u8 *)ti.stack > MAIN_OWN)
+            kh1_costack_pool(ti.stack, costack_bytes = (u32)((u8 *)&here - (u8 *)ti.stack) - MAIN_OWN);
+    }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
     sceIoRemove(log); /* session 136: Vita3K's open kept the last run's tail past this run's lines (no truncate) */
@@ -267,17 +386,28 @@ int main(int argc, char **argv) {
         sceIoWrite(log_fd, "kh1-vita: log open\n", 19);
     }
     vlog("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
+    vlog("kh1-vita: %u KiB of the main thread's stack for the game's threads and tasks\n", costack_bytes >> 10);
     if (kh1_vita_display_init(D_002A6890)) {
         vlog("kh1-vita: no framebuffer\n");
         sceKernelExitProcess(1);
     }
     snprintf(iso, sizeof iso, "%s/kh1.iso", kh1_vita_dir);
+    kh1_dma_vu1 = 1; /* the 3D (config.txt's vu1=) */
+    kh1_vu1_clock = vita_us;
     config(iso, sizeof iso);
     if (!kh1_cd_image_open(iso)) {
+        vlog("kh1-vita: %s: not found or not readable\n", iso);
         snprintf(iso, sizeof iso, "%s/kh1.bin", kh1_vita_dir);
         if (!kh1_cd_image_open(iso)) no_disc(iso);
     }
-    vlog("kh1-vita: disc image %s\n", iso);
+    { /* session 137v: its size, against the copy on the PC (a short copy stops the loads where it ends) */
+        SceIoStat st;
+        if (sceIoGetstat(iso, &st) >= 0)
+            vlog("kh1-vita: disc image %s, %llu bytes\n", iso, (unsigned long long)st.st_size);
+        else
+            vlog("kh1-vita: disc image %s\n", iso);
+    }
+    vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
      * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */
     if (kh1_host_trace < 2) {
