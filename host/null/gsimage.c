@@ -25,6 +25,7 @@
  * tests/host/gsimage_test.c checks both on made-up pixels. */
 #include "common.h"
 #include "gsmem.h"
+#include "gsqueue.h"
 
 extern int kh1_host_trace;
 
@@ -85,6 +86,7 @@ int PlatGsExecLoadImage(void *lp, void *src) {
     u32 bytes = n ? w * h * n : (w * h + 1) / 2, done = 0, buf[64];
     const u8 *s = (const u8 *)src;
     if (kh1_host_trace < 2) return 0;
+    kh1_gsq_sync(); /* session 141: the GS side's worker done (gsqueue.h); the model is this thread's */
     kh1_gsmem_trxdir(0, 0, bb, q[8], q[9], q[12], q[13]);
     if (kh1_gsmem_image_same(s, bytes)) return 0; /* session 137: the title menus' every-frame uploads */
     while (done < bytes) { /* in words, as the IMAGE qwords bring it (src need not be aligned) */
@@ -108,6 +110,7 @@ int PlatGsExecStoreImage(void *sp, void *dst) {
     u32 sx = q[12] & 2047, sy = q[12] >> 16 & 2047, w = q[16] & 0xFFF, h = q[17] & 0xFFF;
     u32 n = psm_size(psm), x, y, i;
     u8 *d = (u8 *)dst;
+    kh1_gsq_sync(); /* session 141: every send before it drawn into the model */
     if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u) return 0; /* a PSM the model does not have */
     for (y = 0; y < h; y++)
         for (x = 0; x < w; x++) {

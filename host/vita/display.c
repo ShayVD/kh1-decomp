@@ -142,6 +142,7 @@ int kh1_vita_frame_copied(void) {
 void kh1_vita_present_gpu(void) {
     gpu = 1;
     kh1_dma_after_send = count_send;
+    kh1_dma_after_send_reads = 0; /* session 141: tadr only, so the sends need not wait for the GS worker */
 }
 
 /* session 136: each vblank after the GPU's frame (main.c) */

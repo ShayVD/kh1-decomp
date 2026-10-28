@@ -475,6 +475,35 @@ present / vblank wait / the rest (the game's code, gsimage.c's uploads included)
   rectangles now go block by block. Next: the walk itself (vif_word, unpack, the VU1 programs' fin /
   fo, which the Vita's NEON helpers already shorten), then a second core for VIF1 / VU1 and the GS feed.
 
+### The GS side on a second core (session 141)
+
+host/null/gsqueue.c runs the GS side on a worker thread: the GIF decode (dmawalk.c's gif_block / gif_qword),
+the register file (gsregs.c), the GS memory model (gsmem.c) and the command recorder (pipes.c, cmdbuf.c).
+The game thread, which still runs the game's code, the DMA walk, VIF1 and the VU1 programs, puts ops into one
+ordered ring (an op is a function, its argument words and a copy of its data qwords: a kick's packets, a
+GIF chain's blocks, PATH2's DIRECT qwords, the send's start, the HUD shift / stretch, MSCAL's path1 mark), and
+the worker runs them in order. On the Vita the worker is pinned to the second core, the game thread to the
+first, the watchdog to the third (config.txt `gsq=0` turns it off; it runs only with the GPU renderer).
+
+- **Sync points**: kh1_gsq_sync waits until every op put so far has run. It is called before anything on the
+  game thread reads or writes the model: PlatGsExecLoadImage / StoreImage (gsimage.c), the vblank's
+  kh1_pipes_frame (the GPU frame, gxm.c's reads of GS memory), kh1_null_hud_wide, the host's summary, and after
+  each send when its line or hook reads the model (`!kh1_dma_quiet`, trace 4 / 5, KH1_HOST_TEXDUMP, an
+  after-send hook with `kh1_dma_after_send_reads`; the Vita's GPU hook only counts the send, so it sets 0).
+- **The send's line and problem bits** come from a count the game thread keeps of each GIF stream (skim_qword /
+  skim_block: the packets and where the stream stands, without the writes), so the walk never waits for that;
+  when it syncs anyway it checks its count against the worker's (`kh1-host: gsq: ... differs` if not).
+- **Ops are never split or joined differently**: each chain block is its own op (gif_block's whole-IMAGE skip
+  depends on the blocks), each kick its own (a kick starts a fresh stream), only PATH2's qwords join (gif_qword
+  per qword either way). An op larger than half the ring runs on the game thread after a sync.
+- **Checks** (host, title-menu fake disc with the user's dktitle.x, 1500 frames): `KH1_HOST_GSQ=1
+  tools/vita/gxmcheck.sh` gives the same log as without it (host pointers aside; trace 5 syncs after each send,
+  so this checks the ops and copies); `KH1_HOST_GSQ_CHECK=10` (trace 2, quiet, the Vita's frame order) prints a
+  digest of the register file, all 4 MB of GS memory and the frame's commands every 10 frames, the same with
+  the worker running alongside the game (KH1_HOST_GSQ=1, and with a 64 KiB and a 4 KiB ring) as without.
+- **The watchdog** adds `gs worker: N ms busy; the game waited M ms for it (K waits)`. The `cpu: ... recording`
+  ms are the worker's now, and `vu1: ... passing their kicks on` is the copy into the ring.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
