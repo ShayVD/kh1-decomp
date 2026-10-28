@@ -1,0 +1,63 @@
+/* 21 words / score 18: only the t[3] = 1.0f store (sp+428) is scheduled first in ours, last-but-three in the original; tried every t-block position/order, f32 arrays, volatile store, all modes. */
+typedef struct {
+    u8 pad0[6];
+    u16 w;
+    u16 d;
+    u16 h;
+} GbDim;
+void func_001ba060(GbDim *, s32);
+void func_001bebd0(void *, OvlVec *, void *);
+void func_00f23098(s32, s32, f32);
+void func_00f33380(s32);
+void func_00f36020(s32, s32, void *, s32, s32, void *, GbDim *);
+void sceVu0MulMatrix(OvlMtx, OvlMtx, OvlMtx);
+void sceVu0TransMatrix(OvlMtx, OvlMtx, OvlVec);
+void sceVu0UnitMatrix(OvlMtx);
+extern u8 *D_00F56DC0;
+extern u8 D_00F56DC8[];
+extern GbDim D_00F816D0;
+
+void func_00f395a8(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, OvlMtx m5, s32 a6, f32 f) {
+    OvlMtx out[4];
+    OvlVec v[6];
+    OvlMtx m;
+    OvlVec t;
+    func_00f33380(a6);
+    func_00f23098(a0, a4, f);
+    func_001ba060(&D_00F816D0, a3 - 71);
+    v[4][3] = 1.0f;
+    v[0][2] = -4624.0f;
+    v[1][0] = 0.0f;
+    v[1][1] = 0.0f;
+    v[1][2] = 1.0f;
+    v[1][3] = 1.0f;
+    v[2][0] = 0.0f;
+    v[2][1] = 1.0f;
+    v[2][2] = 0.0f;
+    v[2][3] = 1.0f;
+    v[3][0] = 0.0f;
+    v[3][1] = 0.0f;
+    v[3][2] = 0.0f;
+    v[3][3] = 1.0f;
+    v[0][0] = 0.0f;
+    v[0][1] = 0.0f;
+    v[0][3] = 1.0f;
+    v[5][0] = 0.0f;
+    v[5][1] = 0.0f;
+    v[5][2] = 0.0f;
+    v[5][3] = 1.0f;
+    v[4][0] = 0.0f;
+    v[4][1] = 0.0f;
+    v[4][2] = 0.0f;
+    t[0] = -(D_00F816D0.w * 200.0f) * 0.5f;
+    t[1] = D_00F816D0.d * 200.0f * 0.5f;
+    t[2] = -(D_00F816D0.h * 200.0f) * 0.5f;
+    t[3] = 1.0f;
+    sceVu0UnitMatrix(m);
+    sceVu0TransMatrix(m, m, t);
+    sceVu0MulMatrix(m, m5, m);
+    func_001bebd0(out, v, D_00F56DC0 + 0x1010);
+    sceVu0MulMatrix(out[3], out[3], m);
+    func_00f36020(0, 0x2BC1, D_00F56DC8, 0x800 - a1, 0x800 - a2, out, &D_00F816D0);
+    func_00f23098(0, 0, 0.0f);
+}
