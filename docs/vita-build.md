@@ -475,6 +475,33 @@ present / vblank wait / the rest (the game's code, gsimage.c's uploads included)
   rectangles now go block by block. Next: the walk itself (vif_word, unpack, the VU1 programs' fin /
   fo, which the Vita's NEON helpers already shorten), then a second core for VIF1 / VU1 and the GS feed.
 
+## GS memory upkeep in GPU mode (session 141, 2026-10-28)
+
+With the GPU drawing (gxm.c), the GS memory model still takes every upload, because the texture and
+palette caches, the "loose" textures and the target uploads read their texels from it. A callgrind
+profile of the Dive (frames 5000-5060, dive.txt, 4.95G instructions) had about a quarter of the frame
+there: kh1_gsmem_image 9.3% inclusive (T8 streams, mark per pixel), pend_flush 12% (target_upload's
+read_rect, and the mock's sceGxmFinish; on the Vita the 324 GPU waits were ~90 ms in all), the texture
+cache's reads 4.9%, CLUT loads 2.3%, kh1_gsmem_addr 2.8%. Changes:
+
+- **gsmem.c, same output** (gsfast_test compares each with the fast paths off):
+  - `addr_rect`: a new upload rectangle's addresses from each block's start plus a per-PSM table of
+    the places inside a block (kh1_gsmem_addr is block number x block size + place, each from its own
+    coordinates), not the swizzle for every pixel. AT_KEYS 64 -> 256.
+  - `scan_pages`: tex_scan takes a texture of whole pages page by page (a page's 32 blocks are 32
+    consecutive block numbers, so they lie in two pages at most); it falls back to the block scan when
+    two drawn pages name different targets, since the block order picks the first.
+  - T8 / T4 upload pieces mark pages inline, `marks` moved once a piece.
+  - An 8-bit CLUT load reads its 16 x 16 through kh1_gsmem_read_rect.
+- **gxm.c, a fix**: a pending target upload was a rectangle read in the upload's own layout and
+  written at BITBLTBUF's (DSAX, DSAY) of the target. Right only for an upload at the target's own FBP
+  in CT32 / CT24. The Dive streams T8 textures and CT32 CLUTs at 0x3700-0x3980 into the pages of
+  targets at lower FBPs (256 x 192 and 256 x 256, ~40 uploads a frame), so each landed at the target's
+  top left, read as CT32. Now each upload's written words are kept per block (a 64-bit mask, the
+  target, CT24 or not) and, at the flush, written to the pixel that holds that word in the target's
+  CT32 layout (FBP / FBW from the recorder's target key), whole blocks without a swizzle per pixel.
+  `kh1_gsmem_read_block` gives a block's 64 words.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
