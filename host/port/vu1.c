@@ -874,6 +874,60 @@ static __inline__ void vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u3
 static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, int fa, int fb, int fc) {
     vu_k(t, k, vin(vld1q_u32(a), fa), vin(vdupq_n_u32(b), fb), c, fc);
 }
+/* session 141: four lanes for the forms vu1_tr.c ran field by field (an FMAC whose MAC flag a later FMAND /
+ * FMEQ / FMOR reads, OPMULA / OPMSUB), exact: the operands always through fin(), the MAC bits (into *macf
+ * when macf is not 0) fout()'s for the fields in dest.  Answers 0, touching neither t nor *macf, where
+ * NEON's flush to zero could differ from the scalar form in a field of dest: a result of 0 with the MAC
+ * flag (a denormal the scalar form flags U), or a MADD / MSUB product of 0 from two non-zero factors (a
+ * denormal the scalar add keeps); the caller then runs the scalar form */
+static const u32 vu_lanes[16][4] = {
+    { 0, 0, 0, 0 }, { 0, 0, 0, ~0u }, { 0, 0, ~0u, 0 }, { 0, 0, ~0u, ~0u },
+    { 0, ~0u, 0, 0 }, { 0, ~0u, 0, ~0u }, { 0, ~0u, ~0u, 0 }, { 0, ~0u, ~0u, ~0u },
+    { ~0u, 0, 0, 0 }, { ~0u, 0, 0, ~0u }, { ~0u, 0, ~0u, 0 }, { ~0u, 0, ~0u, ~0u },
+    { ~0u, ~0u, 0, 0 }, { ~0u, ~0u, 0, ~0u }, { ~0u, ~0u, ~0u, 0 }, { ~0u, ~0u, ~0u, ~0u },
+};
+static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u32 *c, u32 dest, u32 *macf) {
+    uint32x4_t act = vld1q_u32(vu_lanes[dest & 15]), z = vdupq_n_u32(0), abs7 = vdupq_n_u32(0x7FFFFFFFu);
+    uint32x4_t ru, bad = z;
+    uint32x2_t any;
+    float32x4_t p = vmulq_f32(a, b), r;
+    u32 raw[4], f, m = 0;
+    switch (k) {
+    case K_ADD: r = vaddq_f32(a, b); break;
+    case K_SUB: r = vsubq_f32(a, b); break;
+    case K_MUL: r = p; break;
+    case K_MADD: case K_MSUB: {
+        uint32x4_t pz = vceqq_u32(vandq_u32(vreinterpretq_u32_f32(p), abs7), z);
+        uint32x4_t an = vtstq_u32(vreinterpretq_u32_f32(a), abs7), bn = vtstq_u32(vreinterpretq_u32_f32(b), abs7);
+        bad = vandq_u32(pz, vandq_u32(an, bn));
+        r = k == K_MADD ? vaddq_f32(vfin(vld1q_u32(c)), p) : vsubq_f32(vfin(vld1q_u32(c)), p);
+        break;
+    }
+    default: return 0; /* MAX / MINI: never here */
+    }
+    ru = vreinterpretq_u32_f32(r);
+    if (macf) bad = vorrq_u32(bad, vceqq_u32(vandq_u32(ru, abs7), z));
+    bad = vandq_u32(bad, act);
+    any = vorr_u32(vget_low_u32(bad), vget_high_u32(bad));
+    if (vget_lane_u32(vpmax_u32(any, any), 0)) return 0;
+    vst1q_u32(t, vfo(r));
+    if (!macf) return 1;
+    vst1q_u32(raw, ru);
+    for (f = 0; f < 4; f++) {
+        u32 bit = 3 - f;
+        if (!(dest >> bit & 1)) continue;
+        if ((raw[f] & 0x7F800000u) == 0x7F800000u) m |= 0x1000u << bit;
+        if (t[f] >> 31) m |= 0x10u << bit;
+    }
+    *macf |= m;
+    return 1;
+}
+static __inline__ int vu_ope(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) {
+    return vu_ek(t, k, vfin(vld1q_u32(a)), vfin(vld1q_u32(b)), c, dest, macf);
+}
+static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, u32 b, const u32 *c, u32 dest, u32 *macf) {
+    return vu_ek(t, k, vfin(vld1q_u32(a)), vfin(vdupq_n_u32(b)), c, dest, macf);
+}
 static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
     static const f32 inv[4] = { 1.0f, 1.0f / 16.0f, 1.0f / 4096.0f, 1.0f / 32768.0f };
     vst1q_u32(t, vreinterpretq_u32_f32(vmulq_n_f32(vcvtq_f32_s32(vreinterpretq_s32_u32(vld1q_u32(a))), inv[sc])));
@@ -909,6 +963,9 @@ static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, 
     bb[0] = bb[1] = bb[2] = bb[3] = b;
     vu_op(t, k, a, bb, c, fa, fb, fc);
 }
+/* session 141: the scalar form runs (see the NEON vu_ope) */
+static __inline__ int vu_ope(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) { return 0; }
+static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, u32 b, const u32 *c, u32 dest, u32 *macf) { return 0; }
 static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
     static const f32 d[4] = { 1.0f, 16.0f, 4096.0f, 32768.0f };
     int f;

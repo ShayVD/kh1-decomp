@@ -28,6 +28,12 @@ static KH1GsState gs = { { 0, 0 }, { 1, 0 } };
 static u32 gs_q = 0x3F800000; /* the PACKED Q (ST's third word), 1.0 at each GIF tag */
 static KH1GsDraw draws[DRAWS];
 static u32 ndraws, cur = ~0u; /* cur: the draw state of the last kick, ~0 once the state changes */
+/* session 141 (the Vita's speed): the draw states by a hash of their key (the fields before kicks), where
+ * every kick after a state write searched the list with memcmp; open addressing, index + 1 (0 empty) */
+#define DRAW_SLOTS 512
+#define DRAW_KEY ((unsigned long)&((KH1GsDraw *)0)->kicks) /* prim, ctx, fogcol, texa */
+static u32 draw_hash[DRAWS];
+static u16 draw_slot[DRAW_SLOTS];
 static KH1GsVert vq[3]; /* the queued vertices (session 83: sprites; session 122: every field, the hook) */
 /* session 135: a strip's first four vertices since its PRIM, for the present's quads (gs_quad) */
 static KH1GsVert sv[4];
@@ -77,6 +83,14 @@ static u32 gs_xs(u32 xy) {
 void kh1_gs_clear_draws(void) {
     ndraws = 0;
     cur = ~0u;
+    memset(draw_slot, 0, sizeof draw_slot);
+}
+
+static u32 draw_key_hash(const KH1GsDraw *d) {
+    const u32 *w = (const u32 *)d;
+    u32 h = 2166136261u, i;
+    for (i = 0; i < DRAW_KEY / 4; i++) h = (h ^ w[i]) * 16777619u;
+    return h;
 }
 
 const KH1GsState *kh1_gs_state(void) { return &gs; }
@@ -177,8 +191,17 @@ static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
         }
         if (!(p >> 6 & 1)) memset(&d.ctx.alpha, 0, sizeof d.ctx.alpha);
         if (p >> 5 & 1) d.fogcol = gs.fogcol;
-        for (i = 0; i < ndraws; i++)
-            if (!memcmp(&draws[i], &d, (char *)&d.kicks - (char *)&d)) break;
+        {
+            u32 h = draw_key_hash(&d), sl = h & (DRAW_SLOTS - 1);
+            for (i = ndraws; draw_slot[sl]; sl = (sl + 1) & (DRAW_SLOTS - 1)) {
+                u32 j = draw_slot[sl] - 1u;
+                if (draw_hash[j] == h && !memcmp(&draws[j], &d, DRAW_KEY)) { i = j; break; }
+            }
+            if (i == ndraws && ndraws < DRAWS) {
+                draw_hash[ndraws] = h;
+                draw_slot[sl] = (u16)(ndraws + 1);
+            }
+        }
         /* session 93: the scissor rule (a full 4:3 SCISSOR or one of the 16 columns is the view's) */
         if (!kh1_canvas_scissor(d.ctx.scissor.lo, d.ctx.scissor.hi, gs_vx0, gs_vw, &d.vx0, &d.vx1) ||
             (gs_vx0 == 0 && gs_vw == 8192))
