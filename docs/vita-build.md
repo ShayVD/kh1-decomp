@@ -398,6 +398,23 @@ translated programs, while tests/host/gxm_mock.c (now running scenes late, at sc
 is then) draws it every frame; and ~310 ms of each 2 s in the frame's transfers (texture and palette uploads,
 which Vita3K's texture cache watches). Both are to be checked on a Vita.
 
+**Session 140 (Vita3K, English disc, 2026-10-28; branch at 384164c, main with PR #150 merged).**
+config.txt `pad=ux0:data/kh1/dive_en.txt` (the host's own English route: its `goto` lines work here too,
+since the Vita plays scripts through host/null/pad.c), `frames=91000`. The run was stopped by hand at
+frame 75,283 (4,055 s, ~18.6 game frames a wall second), still advancing: Dive to the Heart played
+through and Destiny Islands reached on the Vita build, no stall or crash from the game (two earlier
+attempts were cut off by the Mac-side watcher, not by the game). 186 disc reads. Each 2 s window: ~1,100
+to 1,350 ms in the DMA walks (VU1 and recording), 280 to 460 ms in the frame's GXM commands, 70 to 90 ms
+the game's own code, ~330 ms the vblank wait; slowest frame 723 ms (waiting on the GPU). Shay saw the
+**low frame rate and flashing ground and scenery** on the island. The likely cause of the flashing:
+257,849 draws skipped for "no texture" by the end (of 4,574,777): 140,064 a palette texture with no
+palette, 107,522 a 512 x 256 texture whose slot holds another (slot 10), 5,025 a scene sampling its own
+target, 4,125 a target used as a texture before it was made, 1,113 a 2 x 8192 texture (too big or no
+format). A draw skipped one frame and drawn the next flickers. xl_limit.x loaded 7 times with no native C;
+opn.dat ended at once (no movie decoder). Vita3K repeats one `handle_access_violation` write-protect line
+(Address=0x61501400, 973 times) and `Unhandled EXC_BAD_ACCESS` (62,064 in its console), one page every
+time, the game unaffected. Logs kept on the Mac in ~/Downloads/kh1-test/vita3k-s140/.
+
 ## On a real Vita: the white screen (session 137v, 2026-10-27)
 
 Vita3K reached the title; a real Vita stopped on the white copyright screen after 10 disc reads and

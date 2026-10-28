@@ -66,8 +66,10 @@ Ask for the Mac at the start; if the user says it is away, do the static items.
   - Matching: **xl_limit 69 -> 74 / 76** (func_00f202d8, 00f20400, 00f206e8, 00f20ae0, 00f21e60; a
     worker); near misses func_00f20e10 (2 words) and func_00f225b0 (needs `-fno-rerun-loop-opt
     -fmove-all-movables`, no such kh1.toml mode): nonmatchings/session140/NOTES.md.
-  - The Vita3K run waited on PR #150 (still open at the end of the session). The Japanese dive.txt was
-    not rerun (old isoparts not staged).
+  - After PR #150 merged: **Vita3K with dive_en.txt** (the English route, `goto` lines and all) played
+    Dive to the Heart through to Destiny Islands on the Vita build, stopped by hand at frame 75,283,
+    no game stall or crash; the ground and scenery flash and the 3D runs at ~18.6 frames a second
+    (docs/vita-build.md "Session 140"). The Japanese dive.txt was not rerun.
   - kh1.elf byte-identical (6,981 / 6,988); xl_limit.x byte-identical; `make test` PASS.
 
 ## Where we stopped before (end of session 139, 2026-10-27)
@@ -986,10 +988,13 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 
 Shay's goal: **Dive to the Heart fully working on the Vita.** Host work serves that first.
 
-1. **With the Mac, once the Vita display thread's PR (#150) is merged**: a Vita3K run with pad input
-   through Dive to the Heart on the English disc (Vita3K's ux0:data/kh1/kh1.iso is the English ISO since
-   2026-10-27, the Japanese one kept as kh1-ja.iso). Check with the coordinator that no other thread is
-   using Vita3K first. The Vita build needs a pad script or real input (goto lines are host/null only).
+1. **The Vita's flashing ground and frame rate** (session 140's Vita3K run, docs/vita-build.md
+   "Session 140"): Destiny Islands' ground and scenery flash in Vita3K and the 3D runs at ~18.6 game
+   frames a second. Start with the "no texture" skips (257,849 by frame 75,283): palette textures with no
+   palette (140,064) and the 512 x 256 texture whose slot 10 holds another (107,522); reproduce them on the
+   host's gxm_mock with dive_en.txt before guessing. Then the DMA walks (~1.2 s of each 2 s). The Vita
+   plays the host pad scripts, `goto` lines included, so `pad=ux0:data/kh1/dive_en.txt` gets there
+   unattended (~70 min to 75,000 frames); keep the Mac awake and run Vita3K detached.
 2. **Destiny Islands on the host** (dive_en.txt to 91,000, room 10, then on): find what room 10 is
    (its exits: `collmap.py dump` there and look for bit-0x1000 floors; its entrances `D_002BCDA0`) and
    the rope (the errand's last item: read each room's pickups with vmdis.py, `lib 258 func_001d3858`
