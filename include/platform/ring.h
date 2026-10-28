@@ -26,7 +26,7 @@
 #ifndef KH1_PS2
 #define KH1_RING_FRAMES 2
 #define KH1_RING_VERTEX_BYTES (4u << 20)   /* a frame's vertices */
-#define KH1_RING_UNIFORM_BYTES (256u << 10) /* a frame's uniforms */
+#define KH1_RING_UNIFORM_BYTES (512u << 10) /* a frame's uniforms (session 141: a slot for each of 4,096 commands and 256 passes) */
 #define KH1_RING_UNIFORM_SLOT 64u           /* a batch's or a pass's uniform block */
 
 typedef struct {

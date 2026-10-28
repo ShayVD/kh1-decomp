@@ -992,7 +992,9 @@ Shay's goal: **Dive to the Heart fully working on the Vita.** Host work serves t
    "Session 140"): Destiny Islands' ground and scenery flash in Vita3K and the 3D runs at ~18.6 game
    frames a second. Start with the "no texture" skips (257,849 by frame 75,283): palette textures with no
    palette (140,064) and the 512 x 256 texture whose slot 10 holds another (107,522); reproduce them on the
-   host's gxm_mock with dive_en.txt before guessing. Then the DMA walks (~1.2 s of each 2 s). The Vita
+   host's gxm_mock with dive_en.txt before guessing. **Done on the host** (docs/vita-build.md
+   "Session 141": the palette cache's 64 slots and the 1,024-command cap; both 0 now to 33,000);
+   still to see in Vita3K / on a Vita. Then the DMA walks (~1.2 s of each 2 s). The Vita
    plays the host pad scripts, `goto` lines included, so `pad=ux0:data/kh1/dive_en.txt` gets there
    unattended (~70 min to 75,000 frames); keep the Mac awake and run Vita3K detached.
 2. **Destiny Islands on the host** (dive_en.txt to 91,000, room 10, then on): find what room 10 is

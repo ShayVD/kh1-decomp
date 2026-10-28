@@ -70,7 +70,7 @@
  * A pass's commands are its range (cmd0, ncmd: the transfers between its draws included, ndraw draws).
  * Not part of the PS2 build. */
 #ifndef KH1_PS2
-#define KH1_CMD_MAX 1024     /* commands a frame */
+#define KH1_CMD_MAX 4096     /* commands a frame (session 141: 1,024 dropped a third of a Destiny Islands frame) */
 #define KH1_CMD_PASSES 256   /* passes a frame */
 #define KH1_CMD_TARGETS 32   /* distinct colour targets (rt, fbp) tracked across frames */
 
