@@ -658,42 +658,47 @@ static int lower(u32 lo, u32 hi, u32 pc, u32 *target) {
 static u32 kbuf[DATA_QW][4];
 
 static void kick(u32 a) {
-    u32 n = 0;
+    u32 n = 0, a0;
+    const u32 *q;
     a &= DATA_QW - 1;
+    a0 = a;
+    /* the packets' length: tags and data up to the EOP tag, at most the whole of VU memory */
     while (n < DATA_QW) {
-        u32 *tq = mem[a], nloop, flg, nreg, len, eop;
-        memcpy(kbuf[n++], tq, 16);
-        a = (a + 1) & (DATA_QW - 1);
-        nloop = tq[0] & 0x7FFF;
-        eop = tq[0] >> 15 & 1;
-        flg = tq[1] >> 26 & 3;
-        nreg = tq[1] >> 28 & 15;
+        const u32 *tq = mem[a];
+        u32 nloop = tq[0] & 0x7FFF, eop = tq[0] >> 15 & 1, flg = tq[1] >> 26 & 3, nreg = tq[1] >> 28 & 15, len;
         if (!nreg) nreg = 16;
         len = flg == 0 ? nloop * nreg : flg == 1 ? (nloop * nreg + 1) / 2 : nloop;
-        while (len-- && n < DATA_QW) {
-            memcpy(kbuf[n++], mem[a], 16);
-            a = (a + 1) & (DATA_QW - 1);
-        }
+        n++;
+        if (len > DATA_QW - n) len = DATA_QW - n;
+        n += len;
+        a = (a + 1 + len) & (DATA_QW - 1);
         if (eop) break;
+    }
+    /* session 137v (the Dive's speed on a Vita): handed over in place unless it wraps VU memory's end */
+    if (a0 + n <= DATA_QW) q = mem[a0];
+    else {
+        memcpy(kbuf[0], mem[a0], (DATA_QW - a0) * 16);
+        memcpy(kbuf[DATA_QW - a0], mem[0], (n - (DATA_QW - a0)) * 16);
+        q = kbuf[0];
     }
     st.kicks++;
     st.kick_qw += n;
     if (kh1_vu1_verbose >= 3 && kh1_vu1_dump_frame && kh1_host_frame() != kh1_vu1_dump_frame) {
-        if (kh1_vu1_kick) kh1_vu1_kick(&kbuf[0][0], n);
+        if (kh1_vu1_kick) kh1_vu1_kick(q, n);
         return;
     }
     if (kh1_vu1_verbose >= 3)
-        printf("kh1-vu1: kick (frame %lu) %u qwords: tag %08x %08x %08x %08x, %08x %08x %08x %08x\n", kh1_host_frame(), n, kbuf[0][0], kbuf[0][1],
-               kbuf[0][2], kbuf[0][3], kbuf[1][0], kbuf[1][1], kbuf[1][2], kbuf[1][3]);
+        printf("kh1-vu1: kick (frame %lu) %u qwords: tag %08x %08x %08x %08x, %08x %08x %08x %08x\n", kh1_host_frame(), n, q[0], q[1],
+               q[2], q[3], q[4], q[5], q[6], q[7]);
     if (kh1_vu1_verbose >= 4) {
         u32 k;
-        for (k = 0; k < n; k++) printf("kh1-vu1:   %08x %08x %08x %08x\n", kbuf[k][0], kbuf[k][1], kbuf[k][2], kbuf[k][3]);
+        for (k = 0; k < n; k++) printf("kh1-vu1:   %08x %08x %08x %08x\n", q[k * 4], q[k * 4 + 1], q[k * 4 + 2], q[k * 4 + 3]);
     }
     if (kh1_vu1_kick && kh1_vu1_clock) {
         u32 t0 = kh1_vu1_clock();
-        kh1_vu1_kick(&kbuf[0][0], n);
+        kh1_vu1_kick(q, n);
         kh1_vu1_kick_us += kh1_vu1_clock() - t0;
-    } else if (kh1_vu1_kick) kh1_vu1_kick(&kbuf[0][0], n);
+    } else if (kh1_vu1_kick) kh1_vu1_kick(q, n);
 }
 
 /* ------------------------------------------------------------------ the run */
@@ -1102,12 +1107,43 @@ static u32 elem(u32 e, u32 bits, int usn, u32 nwords) {
     return v;
 }
 
+/* Session 137v (the Dive's speed on a Vita): the unmasked V1 / V2 / V3 / V4 of 32, 16 and 8 bits with no
+ * filling cycle (WL <= CL), unpack's loop without a call an element; 0 for the rest, which unpack does */
+static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
+    u32 nel = vn + 1, i, k, cycle = 0, v[4], e;
+    if (vl == 3 || wl > cl) return 0;
+    for (i = 0; i < num; i++) {
+        u32 *d = mem[addr & (DATA_QW - 1)];
+        for (k = 0; k < (vn == 2 ? 4u : nel); k++) { /* V3: w is the next element in the stream */
+            e = i * nel + k;
+            if (vl == 0) v[k] = e < got ? dbuf[e] : 0;
+            else if (vl == 1) {
+                u32 h = (e >> 1) < got ? dbuf[e >> 1] >> (e & 1) * 16 & 0xFFFF : 0;
+                v[k] = !usn && h & 0x8000 ? h | 0xFFFF0000u : h;
+            } else {
+                u32 b = (e >> 2) < got ? dbuf[e >> 2] >> (e & 3) * 8 & 0xFF : 0;
+                v[k] = !usn && b & 0x80 ? b | 0xFFFFFF00u : b;
+            }
+        }
+        if (vn == 0) v[1] = v[2] = v[3] = v[0];
+        else if (vn == 1) { v[2] = v[0]; v[3] = v[1]; } /* V2: z and w repeat x and y (PCSX2's unpack) */
+        if (mode == 1) for (k = 0; k < 4; k++) d[k] = v[k] + row[k];
+        else if (mode == 2) for (k = 0; k < 4; k++) d[k] = row[k] += v[k];
+        else for (k = 0; k < 4; k++) d[k] = v[k];
+        addr++;
+        cycle++;
+        if (cycle == wl) { addr += cl - wl; cycle = 0; }
+    }
+    return 1;
+}
+
 static void unpack(void) {
     u32 cmd = cur, vn = cmd >> 2 & 3, vl = cmd & 3, m = cmd & 0x10;
     u32 num = cur_num ? cur_num : 256, usn = cur_imm >> 14 & 1;
     u32 addr = (cur_imm & 0x3FF) + (cur_imm & 0x8000 ? tops : 0);
     u32 ebits = vl == 3 ? 16 : 32 >> vl, nel = vl == 3 ? 1 : vn + 1, cycle = 0, di = 0, i, f;
     st.unpacks++;
+    if (!m && unpack_fast(vn, vl, num, usn, addr)) return;
     for (i = 0; i < num; i++) {
         u32 v[4], r = cycle < 3 ? cycle : 3;
         int fill = wl > cl && cycle >= cl;
@@ -1182,6 +1218,20 @@ void kh1_vif1_code(u32 w) {
         return;
     }
     cur = 0;
+}
+
+/* session 137v: n of the current code's data words at once (the walk's run of them), as n calls of
+ * kh1_vif1_data */
+void kh1_vif1_data_n(const u32 *w, u32 n) {
+    if ((cur & 0x60) == 0x60 && n <= need) {
+        u32 k = got < sizeof dbuf / 4 ? sizeof dbuf / 4 - got : 0;
+        memcpy(dbuf + got, w, (n < k ? n : k) * 4);
+        got += n;
+        need -= n;
+        if (!need) unpack();
+        return;
+    }
+    while (n--) kh1_vif1_data(*w++);
 }
 
 void kh1_vif1_data(u32 w) {

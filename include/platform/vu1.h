@@ -21,6 +21,7 @@
 void kh1_vif1_reset(void);
 void kh1_vif1_code(u32 w);
 void kh1_vif1_data(u32 w);
+void kh1_vif1_data_n(const u32 *w, u32 n); /* n data words at once */
 
 /* XGKICK: nqw qwords of whole GIF packets (the last one with EOP) copied out of VU1 memory */
 extern void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
