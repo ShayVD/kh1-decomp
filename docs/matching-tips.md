@@ -748,6 +748,14 @@ from dead code. Read the allocation first, then find the source change.
   outranks unpinned stores whatever their LUID. Reg weight of a store is -1 per register dying in it
   (value and base address can both die: -2). gdb: `break schedule_insn`, `p h_i_d[uid]`.
 
+
+## Session 144 (nonmatchings/session144-match/NOTES.md)
+
+- A source climber without decomp-permuter: tools/matching/climb_s144.py (in-process scoring, ~5-30 compiles a
+  second). Moves that ignore dependences find low counts on wrong code (001fd858's natural draft "reached" 9 by
+  moving a store across a label); only trust moves past statements with no shared names or calls.
+- 001fd858's annul is not a stale-block or prediction effect: forcing find_basic_block to fail or `likely = 1`
+  in gdb leaves `bnez`. Only v0 live at the fallthrough jump chain's target gives `bnezl`.
 ## Session 56 (platform wrappers)
 
 - `D = f()` compiles differently when f's return type is not D's exact type node: with any conversion

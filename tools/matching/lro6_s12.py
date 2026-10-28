@@ -2,7 +2,7 @@
 # lchk_s10.py (session 10, w13): like mchk_s10.py but scores by LCS words, in process (~0.04 s per variant); set WDIR.
 import os, sys, subprocess, tempfile
 from pathlib import Path
-ROOT = Path('/home/claude/kh1-decomp'); sys.path.insert(0, str(ROOT/'tools'))
+ROOT = Path(__file__).resolve().parents[2]; sys.path.insert(0, str(ROOT/'tools'))
 import kh1tool as K, autodecomp as A
 from elf32 import Elf
 A._init(); cfg = A._cfg; orig = K.require_orig(cfg); reg = K.load_registry()
