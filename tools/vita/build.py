@@ -48,13 +48,23 @@ CFLAGS = [
 # gcc 14 and later refuse these by default (vitasdk's gcc is 15; the Linux cross gcc may be older)
 CFLAGS_GCC14 = ["-Wno-error=return-mismatch", "-Wno-error=declaration-missing-parameter-type"]
 
+# vitasdk's gcc (arm-vita-eabi, a bare-metal EABI) makes an enum as small as its values, one byte for most;
+# the EE's gcc and every host's make it an int.  The game's structs have enum fields (EN, a one-value enum the
+# matching code uses for its alias set: grideff.c's EntLb), so on the Vita their layout was not the EE's: the
+# grid effect's DMA tags came out wrong and the Dive's floor vanished every other frame (docs/vita-build.md
+# "The flashing floor").  The game's files take int enums (-fno-short-enums); host/vita's own files keep
+# the SDK's one-byte enums, which its structs (SceGxm's, vita2d's) are laid out for.
+census_platform_flags = census.platform_flags
+def vita_platform_flags(d, f):
+    return census_platform_flags(d, f) + (["-fshort-enums"] if d == "vita" else [])
+
 # the two targets: the Vita, and 32-bit ARM Linux for qemu-arm (the host's null runner as it is,
 # with host/vita's context switch and host/armlinux's overlay answer)
 TARGETS = {
     "vita": dict(
-        out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA"],
+        out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA", "-fno-short-enums"],
         dirs=[("null", ("main.c",)), ("port", ()), ("vita", ())],
-        link=["-Wl,-q", "-Wl,--no-warn-rwx-segments"],
+        link=["-Wl,-q", "-Wl,--no-warn-rwx-segments", "-Wl,--no-enum-size-warning"],
         libs=["-lvita2d", "-lvitashark", "-lSceShaccCgExt", "-lSceShaccCg_stub", "-ltaihen_stub", "-lSceKernelDmacMgr_stub", "-lSceDisplay_stub", "-lSceGxm_stub", "-lSceSysmodule_stub", "-lSceCommonDialog_stub",
               "-lSceAppMgr_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lScePower_stub", "-lm"]),
     "linux-arm": dict(
@@ -235,6 +245,8 @@ def main():
     census.NM = b + t["prefix"] + "nm"
     census.TYPE_PREFIX = "%"
     census.PLATFORM_DIRS = t["dirs"]
+    if name == "vita":
+        census.platform_flags = vita_platform_flags
     census.assemble_data = lambda: assemble_data(b + t["prefix"] + "as", out)
     os.makedirs(out, exist_ok=True)
 
