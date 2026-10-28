@@ -60,7 +60,7 @@ static struct {
  * every frame: kh1_gsmem_addr's swizzle per pixel was a fifth of the frame), each pixel's in the
  * transfer's order; the store starts again when full */
 #define AT_POOL (1u << 20)
-#define AT_KEYS 64
+#define AT_KEYS 256 /* session 141: 64 ran out on the late menu page, every upload then a miss */
 static u32 at_pool[AT_POOL], at_used, at_n;
 /* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
  * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
@@ -418,6 +418,41 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
     if (kh1_gsmem_xfer_hook) kh1_gsmem_xfer_hook(dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
 }
 
+/* Session 141 (the Vita's GPU mode: the Dive streams its characters' textures through ever new
+ * rectangles, so most uploads missed the kept addresses and paid the swizzle for every pixel): a
+ * rectangle's addresses block by block.  kh1_gsmem_addr is a block's own number (from the block's
+ * coordinates alone) times the block's size plus the pixel's place in the block (from its coordinates
+ * inside the block alone), so each block's start is computed once and the places come from a table
+ * made once per PSM.  0 (the caller computes every pixel) for a rectangle past 2048, where x and y wrap */
+static u32 blk_w(u32 psm) { return psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8; }
+static u32 blk_h(u32 psm) { return psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8; }
+static int addr_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out) {
+    static u16 place[64][512];
+    static u8 made[64];
+    static u32 base[2048 / 8 + 2];
+    u32 bwid = blk_w(psm), bhgt = blk_h(psm), x, y, bx0, nb, i;
+    if (x0 + w > 2048 || y0 + h > 2048) return 0;
+    if (!made[psm]) {
+        u32 a0 = kh1_gsmem_addr(psm, 0, 1, 0, 0);
+        for (y = 0; y < bhgt; y++)
+            for (x = 0; x < bwid; x++) place[psm][y * bwid + x] = (u16)(kh1_gsmem_addr(psm, 0, 1, x, y) - a0);
+        made[psm] = 1;
+    }
+    bx0 = x0 / bwid;
+    nb = (x0 + w - 1) / bwid - bx0 + 1;
+    for (y = 0; y < h; y++) {
+        u32 yy = y0 + y;
+        const u16 *pl = place[psm] + (yy % bhgt) * bwid;
+        if (y == 0 || yy % bhgt == 0) /* a new row of blocks: their starts */
+            for (i = 0; i < nb; i++) base[i] = kh1_gsmem_addr(psm, bp, bw, (bx0 + i) * bwid, yy - yy % bhgt);
+        for (x = 0; x < w; x++) {
+            u32 xx = x0 + x;
+            *out++ = base[xx / bwid - bx0] + pl[xx % bwid];
+        }
+    }
+    return 1;
+}
+
 static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h) {
     u32 i, x, y, *a, lo = ~0u, hi = 0;
     trx.key = -1;
@@ -430,13 +465,19 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
         }
     if (at_n == AT_KEYS || at_used + w * h > AT_POOL) at_n = at_used = same_used = 0;
     a = at_pool + at_used;
-    for (y = 0; y < h; y++)
-        for (x = 0; x < w; x++) {
-            *a = kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y);
-            if (*a < lo) lo = *a;
-            if (*a > hi) hi = *a;
-            a++;
+    if (addr_rect(psm, bp, bw, x0, y0, w, h, a)) {
+        for (i = 0; i < w * h; i++) {
+            if (a[i] < lo) lo = a[i];
+            if (a[i] > hi) hi = a[i];
         }
+    } else
+        for (y = 0; y < h; y++)
+            for (x = 0; x < w; x++) {
+                *a = kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y);
+                if (*a < lo) lo = *a;
+                if (*a > hi) hi = *a;
+                a++;
+            }
     at_key[at_n].psm = psm; at_key[at_n].bp = bp; at_key[at_n].bw = bw; at_key[at_n].x = x0; at_key[at_n].y = y0;
     at_key[at_n].w = w; at_key[at_n].h = h; at_key[at_n].off = at_used;
     at_key[at_n].dlen = 0;
@@ -771,6 +812,36 @@ static u32 psm_bits(u32 psm) {
     return ~0u;
 }
 
+/* Session 141 (tex_scan was a tenth of a menu frame on the host, one kh1_gsmem_addr a block): a texture
+ * that covers whole pages of its layout (a page 64 x 32 pixels at 32 bits, 64 x 64 at 16, 128 x 64 at
+ * T8, 128 x 128 at T4) by those pages.  A page's 32 blocks are 32 consecutive block numbers from the
+ * one kh1_gsmem_addr gives its first, before the Z formats' XOR (which leaves the page alone) and the
+ * wrap at 0x4000, so they lie in that number's page and the next (when bp is not page-aligned).  The
+ * newest stamp is the same whatever the order; the first drawn page's target, which the block order
+ * decides, too, as long as every drawn page the texture reads names one target: 0 (the caller scans
+ * the blocks) when two differ, or for a texture smaller than a page */
+static int scan_pages(u32 psm, u32 bp, u32 bw, u32 w, u32 h, u32 bits, u32 *s, u32 *t) {
+    u32 pw = bits16(psm) || (psm != KH1_PSMT8 && psm != KH1_PSMT4) ? 64 : 128;
+    u32 ph = bits16(psm) || psm == KH1_PSMT8 ? 64 : psm == KH1_PSMT4 ? 128 : 32;
+    u32 row = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? bw >> 1 : bw, x, y, k, b, p, seq_max = 0, tg = 0;
+    if (w < pw || h < ph) return 0;
+    for (y = 0; y < h / ph; y++)
+        for (x = 0; x < w / pw; x++) {
+            b = bp + y * row * 32 + x * 32;
+            for (k = 0; k < 2; k++) {
+                p = ((b + k * 31) & 0x3FFF) >> 5;
+                if (page_seq[p] > seq_max) seq_max = page_seq[p];
+                if (page_drawn[p] & bits) {
+                    if (tg && tg != page_tgt[p]) return 0;
+                    tg = page_tgt[p];
+                }
+            }
+        }
+    *s = seq_max;
+    *t = tg;
+    return 1;
+}
+
 /* the pages a texture's w x h texels lie in: the newest write's sequence number, and with *t the
  * first page whose drawn bits it reads (1 + its target, 0 for none) */
 static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
@@ -790,6 +861,10 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
     bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
     bits = psm_bits(psm);
     if (tw > 10 || th > 10) return 0;
+    if (fast_on && scan_pages(psm, tbp, tbw, 1u << tw, 1u << th, bits, &s, t)) {
+        m_lo = lo; m_hi = hi; m_marks = marks; m_s = s; m_t = *t; m_ok = 1;
+        return s;
+    }
     /* one address a block: a block never spans two pages */
     for (y = 0; y < 1u << th; y += bhgt)
         for (x = 0; x < 1u << tw; x += bwid) {
