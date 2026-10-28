@@ -1112,6 +1112,11 @@ static u32 elem(u32 e, u32 bits, int usn, u32 nwords) {
 static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
     u32 nel = vn + 1, i, k, cycle = 0, v[4], e;
     if (vl == 3 || wl > cl) return 0;
+    /* V4-32 / V3-32 with all their words here, MODE 0, CL == WL: the words themselves */
+    if (vl == 0 && vn >= 2 && mode == 0 && cl == wl && num * nel + (vn == 2) <= got) {
+        for (i = 0; i < num; i++) memcpy(mem[(addr + i) & (DATA_QW - 1)], dbuf + i * nel, 16);
+        return 1;
+    }
     for (i = 0; i < num; i++) {
         u32 *d = mem[addr & (DATA_QW - 1)];
         for (k = 0; k < (vn == 2 ? 4u : nel); k++) { /* V3: w is the next element in the stream */
