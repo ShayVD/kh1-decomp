@@ -1,4 +1,6 @@
-/* func_00f7da90: score 24, 23 words differ. needs CONTEXT_ONLY f7bde0 stub (bnezl); left: lui/zero global stores scheduled differently before f78838 calls; store-order permutations + permuter tried */
+/* wm.x func_00f7da90: matched by hand. */
+#include "ovl.h"
+
 typedef struct {
     s32 x0;
     s32 x4;
@@ -76,13 +78,9 @@ void func_00f7da90(void) {
     }
     func_00f78838(D_00FBA730, D_0108F6B4, 256, NULL);
     func_0024bc08(D_0108F6B4, D_00FB5C48);
-    t = D_0108F6B4;
-    D_0108FA78 = 0;
-    D_0108FA68 = 0;
+    D_0108FA78 = D_0108FA7C = D_0108FA68 = D_0108FA6C = D_0108F6D4 = 0;
     D_0108F6E8 = 0;
-    D_0108FA7C = 0;
-    D_0108FA6C = 0;
-    D_0108F6D4 = 0;
+    t = D_0108F6B4;
     D_0108F6B8.x0 = t;
     D_0108F6B8.x4 = v = func_00f78838(D_00FBA748, t, 256, NULL);
     D_0108F6B8.x8 = v = func_00f78838(D_00FBA760, v, 256, NULL);
