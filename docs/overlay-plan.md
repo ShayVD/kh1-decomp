@@ -52,3 +52,4 @@ Rules: a function counts only when `make ovl` is byte-identical and `make ovl-re
 | Batch | Date | Matched after | Notes |
 |---|---|---|---|
 | start | 2026-10-28 | 1532 / 2122 | |
+| batch 1 | 2026-10-28 | 1590 / 2114 | autodecomp rerun (0 new), dktitle func_00f21068, dkmovie 6 MMI routines as asm, gb/wm main state machine (layout fixed: its switch cases were split off), xs_simba complete (4 by hand), xs_dumbo +4, xs_genie +1, workers: gb +12, wm +8, 12 wm twins via portall.py. Near misses: nonmatchings/session141/. |
