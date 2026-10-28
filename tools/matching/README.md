@@ -15,3 +15,4 @@ Ad-hoc scripts the session 5 workers used. Several still have hard-coded scratch
 - cons2_sweep.py: sweeps the prototype-deletion and field-type tricks over many drafts.
 - c14_oneoff.py: deletes each callee prototype in turn.
 - cons2_autofix.py: merges code into an existing file, resolving typedef and extern conflicts.
+- climb_s144.py: random dependency-checked statement moves, declaration swaps and operand swaps of one function, scored in process by lro6_s12 (session 144; ~5 compiles a second).

@@ -11,7 +11,7 @@ d,pos,n,sz=r['func_'+addr]
 def dis(f,a,n):
     o=subprocess.run(['mips-linux-gnu-objdump','-d','-z','-m','mips:5900','-EL','-M','gpr-names=32','--start-address=0x'+a,'--stop-address=0x%x'%(int(a,16)+n),f],capture_output=True,text=True).stdout
     return [l.split('\t',2)[2].replace('\t',' ').strip() if l.count('\t')>=2 else '' for l in o.split('\n') if re.match(r'\s+[0-9a-f]+:\t',l)], [l.split('\t')[1].strip() for l in o.split('\n') if re.match(r'\s+[0-9a-f]+:\t',l)]
-ours,ow=dis(W+'/td/c.elf',addr,n); th,tw=dis('/home/claude/kh1-decomp/SLPS_251.98',addr,sz)
+ours,ow=dis(W+'/td/c.elf',addr,n); th,tw=dis(str(L.ROOT / 'SLPS_251.98'),addr,sz)
 open(W+'/ours.txt','w').write('\n'.join(ours)+'\n'); open(W+'/orig.txt','w').write('\n'.join(th)+'\n')
 a=ow;b=tw
 P=[[0]*(len(b)+1) for _ in range(len(a)+1)]
