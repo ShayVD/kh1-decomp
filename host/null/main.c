@@ -67,6 +67,9 @@
  *                       model, the recorder) on a worker thread fed by an ordered queue, as the Vita
  *                       runs it (host/null/gsqueue.h); the log is the same as without it.  A power of
  *                       two above 1 is the ring's size in bytes (4 MiB otherwise; small ones test the wrap)
+ *   KH1_HOST_GPUQ=1     (session 142) the frame's GPU work (the recorder's hook: tools/vita/gxmcheck.sh's GXM
+ *                       stand-in) on a thread of its own from a copy of the frame (host/null/pipes.c), as the
+ *                       Vita's third core runs it; 2: the copy without the thread (the same reads, in order)
  *   KH1_HOST_GSQ_CHECK=N  (session 141) the Vita's frame order: the recorder takes each kick and a
  *                       frame's commands end at each vblank, and every N frames a "gsq digest" line
  *                       hashes the register file, all of GS memory and the frame's commands, to
@@ -242,6 +245,8 @@ void kh1_host_vblank(void) {
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     in_vblank = 0;
     if (frames >= max_frames) {
+        kh1_gsq_sync();
+        kh1_gpuq_wait(); /* session 142: the last frame's GPU work done */
         printf("kh1-host: %lu frames: stop\n", frames);
         summary();
         exit(0);
@@ -375,6 +380,20 @@ int main(int argc, char **argv) {
             if (gsq_check) {
                 kh1_gs_prim_hook = kh1_pipes_prim;
                 kh1_pipes_start();
+            }
+        }
+        if (getenv("KH1_HOST_GPUQ") && atoi(getenv("KH1_HOST_GPUQ"))) { /* session 142: the frame's copy, its thread */
+            extern int kh1_pipes_snap;
+            extern void (*kh1_pipes_gpu_wait)(void);
+            extern void (*kh1_pipes_gpu_put)(KH1GsqFn fn, const u32 *args, u32 nargs);
+            kh1_pipes_snap = 1;
+            if (atoi(getenv("KH1_HOST_GPUQ")) == 1) {
+                if (kh1_gpuq_start()) {
+                    printf("kh1-host: KH1_HOST_GPUQ: no thread\n");
+                } else {
+                    kh1_pipes_gpu_wait = kh1_gpuq_wait;
+                    kh1_pipes_gpu_put = kh1_gpuq_put;
+                }
             }
         }
         if (getenv("KH1_HOST_GSQ") && atoi(getenv("KH1_HOST_GSQ")) && /* a power of two > 1: the ring's bytes */

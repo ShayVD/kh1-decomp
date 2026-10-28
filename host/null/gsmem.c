@@ -28,12 +28,16 @@
 
 void *memset(void *, int, __SIZE_TYPE__);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
+void *malloc(__SIZE_TYPE__);
 
 #define VM_BYTES (4u << 20)
 #define LOG 256
 #define TARGETS 32
 
 static u8 vm[VM_BYTES];
+/* session 142: the pages any store reached since the last kh1_gsmem_snap_take (stored bits changed or not,
+ * the drawn sprites' pixels too), so the snapshot copies only those */
+static u8 dirty_pg[512];
 static u16 clut[512];
 static u32 cbp0, cbp1;
 static u32 seq, page_seq[512], clut_seq;
@@ -74,6 +78,7 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
 void kh1_gsmem_reset(void) {
     u32 i;
     memset(vm, 0, sizeof vm);
+    memset(dirty_pg, 1, sizeof dirty_pg);
     memset(clut, 0, sizeof clut);
     memset(page_seq, 0, sizeof page_seq);
     memset(&st, 0, sizeof st);
@@ -161,6 +166,7 @@ static u32 ld32(u32 w) {
 #endif
 }
 static void st32(u32 w, u32 v) {
+    dirty_pg[w >> 11 & 511] = 1;
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     __builtin_memcpy(vm + w * 4, &v, 4);
 #else
@@ -217,18 +223,21 @@ static void put_at(u32 psm, u32 a, u32 v) {
     case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: {
         u32 o = vm[a * 2] | vm[a * 2 + 1] << 8;
         vm[a * 2] = v; vm[a * 2 + 1] = v >> 8;
+        dirty_pg[a >> 12 & 511] = 1;
         if (!flat_raw) mark(a >> 12, o != (v & 0xFFFF), ~0u);
         return;
     }
     case KH1_PSMT8: {
         u32 o = vm[a];
         vm[a] = v;
+        dirty_pg[a >> 13 & 511] = 1;
         mark(a >> 13, o != (v & 0xFF), ~0u);
         return;
     }
     case KH1_PSMT4: {
         u32 o = vm[a >> 1];
         vm[a >> 1] = (o & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
+        dirty_pg[a >> 14 & 511] = 1;
         mark(a >> 14, o != vm[a >> 1], ~0u);
         return;
     }
@@ -582,6 +591,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (o != v) {
                 vm[a] = (u8)v;
                 page_seq[pg] = seq;
+                dirty_pg[pg & 511] = 1;
             } else if (!page_drawn[pg]) {
                 continue;
             }
@@ -604,6 +614,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (o != nv) {
                 vm[a >> 1] = (u8)nv;
                 page_seq[pg] = seq;
+                dirty_pg[pg & 511] = 1;
             } else if (!page_drawn[pg]) {
                 continue;
             }
@@ -940,6 +951,80 @@ u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
             n += 2048;
         }
     return n;
+}
+
+/* ---- session 142: GS memory as a frame left it, for the frame's GPU work on its own thread ----
+ * kh1_gsmem_snap_take copies the pages stored to since the last one (and every page's stamp); the
+ * kh1_gsmem_snap_* readers give what the live readers gave at that moment, from the copy only, and share
+ * no state with the model, so another thread may call them while the model goes on (never during a take) */
+static u8 *snap_vm;
+static u32 snap_seq[512];
+u32 kh1_gsmem_snap_pages; /* pages copied so far (the Vita watchdog's) */
+
+int kh1_gsmem_snap_take(void) {
+    u32 p, n = 0;
+    if (!snap_vm) {
+        if (!(snap_vm = (u8 *)malloc(VM_BYTES))) return -1;
+        memset(dirty_pg, 1, sizeof dirty_pg);
+    }
+    for (p = 0; p < 512; p++)
+        if (dirty_pg[p]) {
+            memcpy(snap_vm + p * 8192, vm + p * 8192, 8192);
+            dirty_pg[p] = 0;
+            n++;
+        }
+    memcpy(snap_seq, page_seq, sizeof snap_seq);
+    kh1_gsmem_snap_pages += n;
+    return (int)n;
+}
+
+void kh1_gsmem_snap_read_block(u32 b, u32 *out) {
+    memcpy(out, snap_vm + (b & 0x3FFF) * 256, 256);
+}
+
+static u32 snap_at(u32 psm, u32 a) {
+    const u8 *m = snap_vm;
+    u32 w;
+    switch (psm) {
+    case KH1_PSMCT32: case KH1_PSMZ32: case KH1_PSMCT24: case KH1_PSMZ24:
+    case KH1_PSMT8H: case KH1_PSMT4HL: case KH1_PSMT4HH:
+        w = m[a * 4] | m[a * 4 + 1] << 8 | m[a * 4 + 2] << 16 | (u32)m[a * 4 + 3] << 24;
+        switch (psm) {
+        case KH1_PSMCT24: case KH1_PSMZ24: return w & 0xFFFFFF;
+        case KH1_PSMT8H: return w >> 24;
+        case KH1_PSMT4HL: return w >> 24 & 15;
+        case KH1_PSMT4HH: return w >> 28;
+        }
+        return w;
+    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: return m[a * 2] | m[a * 2 + 1] << 8;
+    case KH1_PSMT8: return m[a];
+    case KH1_PSMT4: return m[a >> 1] >> (a & 1) * 4 & 15;
+    }
+    return 0;
+}
+
+/* kh1_gsmem_read_rect's answer (each pixel as read_at), from the copy */
+int kh1_gsmem_snap_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride) {
+    u32 x, y;
+    if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u || x0 + w > 2048 || y0 + h > 2048) return -1;
+    for (y = 0; y < h; y++, out += stride)
+        for (x = 0; x < w; x++) out[x] = snap_at(psm, kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y));
+    return 0;
+}
+
+/* kh1_gsmem_tex_stamp's answer (the newest stamp of the pages the texels lie in), from the copy */
+u32 kh1_gsmem_snap_tex_stamp(u32 lo, u32 hi) {
+    u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
+    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, page, s = 0;
+    if (!known(psm) || tw > 10 || th > 10) return 0;
+    bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
+    bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
+    for (y = 0; y < 1u << th; y += bhgt)
+        for (x = 0; x < 1u << tw; x += bwid) {
+            page = page_of(psm, kh1_gsmem_addr(psm, tbp, tbw, x, y));
+            if (snap_seq[page] > s) s = snap_seq[page];
+        }
+    return s;
 }
 
 u32 kh1_gsmem_tex_target(u32 lo, u32 hi) {

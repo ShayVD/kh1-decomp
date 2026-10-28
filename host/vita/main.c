@@ -29,6 +29,9 @@
  *       gsq=N                 session 141: 1 (the default) runs the GS side (the GIF decode, the GS model, the
  *                             command recorder) on a worker thread on the second core (host/null/gsqueue.h), with
  *                             the GPU renderer only; 0 keeps it on the game's thread
+ *       gpuq=N                session 142: 1 (the default, with gsq=1) runs the frame's GPU work (gxm.c's commands,
+ *                             the latch, the present) on a thread of its own on the third core, from a copy of the
+ *                             frame (host/null/pipes.c), while the worker records the next; 0 keeps it on the worker
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -86,6 +89,7 @@ extern const char *kh1_vita_pad_script; /* host/null/pad.c */
 static int use_gpu = 1; /* session 136: config.txt's gpu= */
 static int gpu_on;      /* the GPU renderer runs (gxm.c) */
 static int use_gsq = 1; /* session 141: config.txt's gsq= */
+static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
  * out) of each 2 s */
@@ -161,18 +165,28 @@ extern void (*kh1_pipes_frame_hook)(const KH1CmdRec *r);
 void kh1_vita_gxm_frame(const KH1CmdRec *r);
 extern void *kh1_vsync_cb; /* sceGsSyncVCallback's handler (host/port/sdk_host.c) */
 
-/* the frame's commands from the recorder (gxm.c through its hook), the display target latched when the frame
- * copy made it whole, shown */
-static void gpu_frame(int copied) {
+/* the recorder's hook: the frame's commands (gxm.c), the display target latched when the frame copy made it
+ * whole, shown.  Session 142: with gpuq on, on the third core from the frame's copy (host/null/pipes.c), the
+ * frame copy's flag passed along with it (kh1_pipes_job_arg) */
+extern u32 kh1_pipes_frame_arg, kh1_pipes_job_arg;
+extern int kh1_pipes_snap;
+extern void (*kh1_pipes_gpu_wait)(void);
+extern void (*kh1_pipes_gpu_put)(KH1GsqFn fn, const u32 *args, u32 nargs);
+static void vita_frame(const KH1CmdRec *r) {
     SceUInt64 t0 = sceKernelGetProcessTimeWide(), t1;
-    kh1_pipes_frame();
+    kh1_vita_gxm_frame(r);
     /* only a whole picture is shown: the display target as the frame copy left it (the software
      * present's rule); between copies the game may be part-way through the next one */
-    if (copied) kh1_vita_gxm_latch();
+    if (kh1_pipes_job_arg) kh1_vita_gxm_latch();
     t1 = sceKernelGetProcessTimeWide();
     kh1_vita_draw();
     us_frame += (u32)(t1 - t0);
     us_draw += (u32)(sceKernelGetProcessTimeWide() - t1);
+}
+
+static void gpu_frame(int copied) {
+    kh1_pipes_frame_arg = (u32)copied;
+    kh1_pipes_frame();
 }
 
 /* session 141: with the GS side on its worker the frame's commands are its last op of the frame, so the game
@@ -252,7 +266,7 @@ extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
-    u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0;
+    u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0;
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
@@ -307,6 +321,10 @@ static int watchdog(SceSize args, void *argp) {
             if (kh1_gsq_on) /* session 141: the GS side's worker (the recording above is its time now) */
                 vlog("kh1-vita: gs worker: %u ms busy; the game waited %u ms for it (%u waits)\n",
                      (kh1_gsq_us_busy - gbusy0) / 1000, (kh1_gsq_us_wait - gwait0) / 1000, kh1_gsq_waits - gwaits0);
+            if (kh1_gpuq_on) /* session 142: the frame's GPU work on the third core (the commands and present above) */
+                vlog("kh1-vita: gpu thread: %u ms busy; the GS worker waited %u ms for it (%u waits); %u GS memory pages "
+                     "copied\n", (kh1_gpuq_us_busy - qbusy0) / 1000, (kh1_gpuq_us_wait - qwait0) / 1000,
+                     kh1_gpuq_waits - qwaits0, kh1_gsmem_snap_pages - qpages0);
             { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
                * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
@@ -321,6 +339,10 @@ static int watchdog(SceSize args, void *argp) {
         }
         at0 = (u32)sceKernelGetProcessTimeWide();
         gbusy0 = kh1_gsq_us_busy;
+        qbusy0 = kh1_gpuq_us_busy;
+        qwait0 = kh1_gpuq_us_wait;
+        qwaits0 = kh1_gpuq_waits;
+        qpages0 = kh1_gsmem_snap_pages;
         gwait0 = kh1_gsq_us_wait;
         gwaits0 = kh1_gsq_waits;
         walk0 = kh1_dma_walk_us;
@@ -373,6 +395,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
         else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
         else if (strcmp(line, "gsq") == 0) use_gsq = atoi(v);
+        else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
     }
     fclose(f);
 }
@@ -479,13 +502,22 @@ int main(int argc, char **argv) {
     if (gpu_on) {
         kh1_pipes_start();
         kh1_gs_prim_hook = timed_prim;
-        kh1_pipes_frame_hook = kh1_vita_gxm_frame;
+        kh1_pipes_frame_hook = vita_frame;
         kh1_vita_present_gpu();
         /* session 141: the GS side on the second core, the game (and the VIF1 / VU1 programs) on the first */
         if (use_gsq) {
             int r = kh1_gsq_start(8u << 20);
             if (r == 0) sceKernelChangeThreadCpuAffinityMask(sceKernelGetThreadId(), SCE_KERNEL_CPU_MASK_USER_0);
             vlog("kh1-vita: GS side: %s\n", r == 0 ? "a worker thread on the second core" : "the game's thread (no worker)");
+            /* session 142: the frame's GPU work on the third core, from a copy of the frame */
+            if (r == 0 && use_gpuq) {
+                kh1_pipes_snap = kh1_gpuq_start() == 0;
+                if (kh1_pipes_snap) {
+                    kh1_pipes_gpu_wait = kh1_gpuq_wait;
+                    kh1_pipes_gpu_put = kh1_gpuq_put;
+                }
+                vlog("kh1-vita: the frame's GPU work: %s\n", kh1_pipes_snap ? "a thread on the third core" : "the GS worker (no thread)");
+            }
         }
     } else {
         kh1_gsmem_flat(1);  /* the clears, fades and letterbox filled into the model */

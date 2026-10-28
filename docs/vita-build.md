@@ -656,6 +656,35 @@ recording's vertex work. The next step is a third core: the frame's GPU work (gx
 present) behind the worker, which needs the GS memory it reads (pending target uploads, loose textures) and
 the caches' new entries handed over as of the frame's end.
 
+### The GPU frame on the third core (session 142)
+
+3d-z (the changes above) on a Vita: the Dive at ~7.8 fps (14-18 frames per 2 s, from 12), the worker ~1.2 s busy
+per 2 s, recording ~0.29 s, the frame's commands ~0.29 s, the game waiting ~0.4 s for it. The frame's GPU work
+(gxm.c's commands, the latch, the present) now runs on a thread of its own on the third core (gsqueue.h's
+`kh1_gpuq`, with the watchdog, which sleeps), while the worker records the next frame:
+
+- **What it reads is a copy of the frame** (host/null/pipes.c `snap_frame`, at the worker's frame op once the
+  last job has ended): the commands, passes and targets; the rings' slots stay, since the next frame writes the
+  other and the one after waits for this job; the texels of the frame's texture uploads and the palettes of its
+  palette fills (`kh1_pipes_frame_texels` / `_pal`: gxm.c read them from the caches at the frame's end, and the
+  worker may now drop or refill those entries); and GS memory (host/null/gsmem.c `kh1_gsmem_snap_take`: the
+  pages any store reached since the last copy, `dirty_pg`, and every page's stamp; gxm.c's pending target
+  uploads, loose textures and their stamps read the copy through `kh1_gsmem_snap_read_block` / `_read_rect` /
+  `_tex_stamp`, which share nothing with the live model). gxm.c read GS memory only as the frame left it (its
+  first pend_flush too: the last frame's leftovers as this frame left them), so the copy gives the same bytes.
+- **Order**: the worker waits for the last job before it copies, so one frame is on the GPU thread while the
+  worker records the next and the game runs the one after (the vblank still waits for the worker's frame op).
+- config.txt `gpuq=0` keeps the frame on the worker. The watchdog adds `gpu thread: N ms busy; the GS worker
+  waited M ms for it (K waits); P GS memory pages copied`; `cpu: ... the frame's commands` and `present` are the
+  GPU thread's now, and kh1_cmd_frame (the passes' loads and stores) stays on the worker.
+- **Host**: `KH1_HOST_GPUQ=1` runs the recorder's hook (gxmcheck's stand-in) the same way on a POSIX thread, `=2`
+  from the copy on the same thread. `KH1_HOST_GXM_HASH=1` makes the stand-in print a hash of the GPU's display
+  and 3D targets at each Nth frame instead of comparing with the model (which is a frame ahead with the thread).
+- **Checked** (en.iso, dive_en.txt, to frame 6500): gxmcheck at trace 5 with `KH1_HOST_GPUQ=2` gives the same
+  log (host pointers aside) and the same 4,758 shots as without; with the worker in the Vita's order
+  (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1`) the GPU targets' hashes at every
+  50th frame and the GS digests are the same with `KH1_HOST_GPUQ=1` as without, and without the worker too.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and

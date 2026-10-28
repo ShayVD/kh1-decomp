@@ -58,8 +58,23 @@ _Static_assert(KH1_GXM_INDEX_16BIT == SCE_GXM_INDEX_SOURCE_INDEX_16BIT, "INDEX_1
 _Static_assert(sizeof(KH1GxmVtxAttr) == sizeof(SceGxmVertexAttribute), "SceGxmVertexAttribute");
 _Static_assert(sizeof(KH1GxmVtxStream) == sizeof(SceGxmVertexStream), "SceGxmVertexStream");
 
-const KH1PalCache *kh1_pipes_palcache(void); /* host/null/pipes.c's caches */
-const KH1TexCache *kh1_pipes_texcache(void);
+/* host/null/pipes.c: the texels / palette a frame's upload reads (session 142: from the frame's copy when the
+ * frame runs on its own thread, kh1_pipes_snap) */
+const u32 *kh1_pipes_frame_texels(s32 slot);
+const u32 *kh1_pipes_frame_pal(s32 slot);
+extern int kh1_pipes_snap;
+/* session 142: GS memory as the frame left it: the live model's, or with kh1_pipes_snap its copy (gsmem.h) */
+static void gs_read_block(u32 b, u32 *out) {
+    if (kh1_pipes_snap) kh1_gsmem_snap_read_block(b, out);
+    else kh1_gsmem_read_block(b, out);
+}
+static int gs_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride) {
+    return kh1_pipes_snap ? kh1_gsmem_snap_read_rect(psm, bp, bw, x0, y0, w, h, out, stride)
+                          : kh1_gsmem_read_rect(psm, bp, bw, x0, y0, w, h, out, stride);
+}
+static u32 gs_tex_stamp(u32 lo, u32 hi) {
+    return kh1_pipes_snap ? kh1_gsmem_snap_tex_stamp(lo, hi) : kh1_gsmem_tex_stamp(lo, hi);
+}
 void kh1_vita_log(const char *fmt, ...);     /* main.c */
 
 #define SHADER_DIR "ux0:data/kh1/shaders"
@@ -597,10 +612,11 @@ static TexMem tex[KH1_TEXCACHE_SLOTS];
 static void *pal[KH1_PALCACHE_SLOTS]; /* 256 ABGR words each */
 static void *pal_rb;                   /* the CLUT pass's read-back palette (one a frame is the game's use) */
 
-static void tex_upload(const KH1TexCache *tc, s32 slot, u32 lo, u32 hi) {
+static void tex_upload(s32 slot, u32 lo, u32 hi) {
     TexMem *m;
     u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), psm = lo >> 20 & 63, n;
-    if (!tc || slot < 0 || slot >= KH1_TEXCACHE_SLOTS || !tc->slot[slot].tex) return;
+    const u32 *texels = kh1_pipes_frame_texels(slot);
+    if (!texels) return;
     m = &tex[slot];
     n = kh1_texfmt_stride(psm, w) * h;
     if (!n) return;
@@ -610,7 +626,7 @@ static void tex_upload(const KH1TexCache *tc, s32 slot, u32 lo, u32 hi) {
         m->bytes = m->mem ? n : 0;
         if (!m->mem) return;
     }
-    kh1_texfmt_convert(psm, tc->slot[slot].tex, w, h, m->mem);
+    kh1_texfmt_convert(psm, texels, w, h, m->mem);
     m->lo = lo;
     m->hi = hi;
     m->w = w;
@@ -637,7 +653,7 @@ static const TexMem *tex_loose(u32 lo, u32 hi) {
     Loose *e = 0;
     loose_why = "too big or no format";
     if (w > 1024 || h > 1024 || !(n = kh1_texfmt_stride(psm, w) * h)) return 0;
-    stamp = kh1_gsmem_tex_stamp(lo, hi);
+    stamp = gs_tex_stamp(lo, hi);
     for (i = 0; i < LOOSE; i++)
         if (loose[i].mem && loose[i].lo == lo && loose[i].hi == hi) { e = &loose[i]; break; }
     loose_why = "drawn this frame with other bytes";
@@ -656,7 +672,7 @@ static const TexMem *tex_loose(u32 lo, u32 hi) {
             if (!e->mem) return 0;
         }
         loose_why = "GS memory read refused";
-        if (kh1_gsmem_read_rect(psm, lo & 0x3FFF, lo >> 14 & 63, 0, 0, w, h, buf, w)) return 0;
+        if (gs_read_rect(psm, lo & 0x3FFF, lo >> 14 & 63, 0, 0, w, h, buf, w)) return 0;
         kh1_texfmt_convert(psm, buf, w, h, e->mem);
         e->lo = lo;
         e->hi = hi;
@@ -795,7 +811,7 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
     x0 = pg % t->fbw * 64;
     y0 = pg / t->fbw * 32;
     if (x0 >= t->w || y0 >= t->h) return;
-    kh1_gsmem_read_block(b, words);
+    gs_read_block(b, words);
     for (c = 0; c < 64; c++) {
         u32 a = (rel & 31) * 64 + c, x = x0 + inv_x[a], y = y0 + inv_y[a], v = words[c];
         if (!(m >> c & 1) || x >= t->w || y >= t->h) continue;
@@ -851,8 +867,6 @@ static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u3
 }
 
 void kh1_vita_gxm_frame(const KH1CmdRec *r) {
-    const KH1TexCache *tc = kh1_pipes_texcache();
-    const KH1PalCache *pc = kh1_pipes_palcache();
     const u8 *ub = r->uring.base + r->uring.cur * r->uring.slot;
     const u8 *vsrc = r->vring.base + r->vring.cur * r->vring.slot;
     const f32 *u = 0, *xf = 0;
@@ -977,10 +991,11 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             cur = 0;
             break;
         case KH1_GXM_TEX_UPLOAD:
-            tex_upload(tc, c->slot, c->tex0_lo, c->tex0_hi);
+            tex_upload(c->slot, c->tex0_lo, c->tex0_hi);
             break;
         case KH1_GXM_PAL_FILL:
-            if (pc && c->slot >= 0 && c->slot < KH1_PALCACHE_SLOTS) memcpy(pal[c->slot], pc->slot[c->slot].col, 1024);
+            if (c->slot >= 0 && c->slot < KH1_PALCACHE_SLOTS && kh1_pipes_frame_pal(c->slot))
+                memcpy(pal[c->slot], kh1_pipes_frame_pal(c->slot), 1024);
             break;
         case KH1_GXM_PAL_READBACK: { /* the CLUT pass's 16 x 16 pixels as a palette: entries 8-15 / 16-23 of each 32 swapped */
             Target *s = c->src && c->src <= KH1_CMD_TARGETS ? &tgt[c->src - 1] : 0;
