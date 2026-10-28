@@ -176,14 +176,24 @@ static u32 absf(u32 u) {
     return y.u & 0x7FFFFFFF;
 }
 
-/* the clip flag after CLIPw.xyz of fs against |w| */
+/* session 143: fin(u) as an integer that orders as the float does: fin's values are finite and never
+ * denormal, so sign and magnitude are enough (both zeros 0); no VFP, whose compares the A9 pays a flag
+ * transfer each for */
+static __inline__ s32 fkey(u32 u) {
+    u32 e = u & 0x7F800000, m = u & 0x7FFFFFFF;
+    if (e == 0x7F800000) m = 0x7F7FFFFF;
+    else if (!e) m = 0;
+    return u >> 31 ? -(s32)m : (s32)m;
+}
+
+/* the clip flag after CLIPw.xyz of fs against |w| (the float compares of fin()'s values, on fkey) */
 static u32 clipw(const u32 *s, u32 wb) {
-    f32 w = fin(wb), v;
+    s32 w = fkey(wb), v;
     u32 b = 0;
     if (w < 0) w = -w;
-    v = fin(s[0]); if (v > w) b |= 1; if (v < -w) b |= 2;
-    v = fin(s[1]); if (v > w) b |= 4; if (v < -w) b |= 8;
-    v = fin(s[2]); if (v > w) b |= 16; if (v < -w) b |= 32;
+    v = fkey(s[0]); if (v > w) b |= 1; if (v < -w) b |= 2;
+    v = fkey(s[1]); if (v > w) b |= 4; if (v < -w) b |= 8;
+    v = fkey(s[2]); if (v > w) b |= 16; if (v < -w) b |= 32;
     return ((clip_last << 6) | b) & 0xFFFFFF;
 }
 
@@ -1164,6 +1174,40 @@ static u32 elem(u32 e, u32 bits, int usn, u32 nwords) {
     return v;
 }
 
+/* session 143: element e of the data words, 32, 16 or 8 bits (vl 0, 1, 2), sign-extended unless usn */
+static __inline__ u32 unpack_el(u32 vl, u32 usn, u32 e) {
+    u32 h;
+    if (vl == 0) return dbuf[e];
+    if (vl == 1) {
+        h = dbuf[e >> 1] >> (e & 1) * 16 & 0xFFFF;
+        return !usn && h & 0x8000 ? h | 0xFFFF0000u : h;
+    }
+    h = dbuf[e >> 2] >> (e & 3) * 8 & 0xFF;
+    return !usn && h & 0x80 ? h | 0xFFFFFF00u : h;
+}
+
+/* session 143: unpack_fast's loop when every element it reads is here, one copy per format (vn, vl constants
+ * at each call) so that no test of the format or of the data's end runs an element */
+static __inline__ __attribute__((always_inline)) void unpack_run(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
+    u32 nel = vn + 1, i, cycle = 0, e = 0, v[4], *d;
+    for (i = 0; i < num; i++, e += nel) {
+        v[0] = unpack_el(vl, usn, e);
+        if (vn >= 1) v[1] = unpack_el(vl, usn, e + 1);
+        if (vn >= 2) {
+            v[2] = unpack_el(vl, usn, e + 2);
+            v[3] = unpack_el(vl, usn, e + 3); /* V3: w is the next element in the stream */
+        }
+        if (vn == 0) v[1] = v[2] = v[3] = v[0];
+        else if (vn == 1) { v[2] = v[0]; v[3] = v[1]; }
+        d = mem[addr & (DATA_QW - 1)];
+        if (mode == 1) { d[0] = v[0] + row[0]; d[1] = v[1] + row[1]; d[2] = v[2] + row[2]; d[3] = v[3] + row[3]; }
+        else if (mode == 2) { d[0] = row[0] += v[0]; d[1] = row[1] += v[1]; d[2] = row[2] += v[2]; d[3] = row[3] += v[3]; }
+        else { d[0] = v[0]; d[1] = v[1]; d[2] = v[2]; d[3] = v[3]; }
+        addr++;
+        if (++cycle == wl) { addr += cl - wl; cycle = 0; }
+    }
+}
+
 /* Session 137v (the Dive's speed on a Vita): the unmasked V1 / V2 / V3 / V4 of 32, 16 and 8 bits with no
  * filling cycle (WL <= CL), unpack's loop without a call an element; 0 for the rest, which unpack does */
 static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
@@ -1173,6 +1217,23 @@ static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
     if (vl == 0 && vn >= 2 && mode == 0 && cl == wl && num * nel + (vn == 2) <= got) {
         for (i = 0; i < num; i++) memcpy(mem[(addr + i) & (DATA_QW - 1)], dbuf + i * nel, 16);
         return 1;
+    }
+    /* session 143: the last element read, (num - 1) * nel + (V3 ? 3 : nel - 1), is inside the got words */
+    if ((num - 1) * nel + (vn == 2 ? 4 : nel) <= got << vl) {
+        switch (vl << 2 | vn) {
+        case 0x0: unpack_run(0, 0, num, usn, addr); return 1;
+        case 0x1: unpack_run(1, 0, num, usn, addr); return 1;
+        case 0x2: unpack_run(2, 0, num, usn, addr); return 1;
+        case 0x3: unpack_run(3, 0, num, usn, addr); return 1;
+        case 0x4: unpack_run(0, 1, num, usn, addr); return 1;
+        case 0x5: unpack_run(1, 1, num, usn, addr); return 1;
+        case 0x6: unpack_run(2, 1, num, usn, addr); return 1;
+        case 0x7: unpack_run(3, 1, num, usn, addr); return 1;
+        case 0x8: unpack_run(0, 2, num, usn, addr); return 1;
+        case 0x9: unpack_run(1, 2, num, usn, addr); return 1;
+        case 0xA: unpack_run(2, 2, num, usn, addr); return 1;
+        case 0xB: unpack_run(3, 2, num, usn, addr); return 1;
+        }
     }
     for (i = 0; i < num; i++) {
         u32 *d = mem[addr & (DATA_QW - 1)];
@@ -1285,6 +1346,10 @@ void kh1_vif1_code(u32 w) {
 /* session 137v: n of the current code's data words at once (the walk's run of them), as n calls of
  * kh1_vif1_data */
 void kh1_vif1_data_n(const u32 *w, u32 n) {
+    if ((cur == 0x50 || cur == 0x51) && n <= need) { /* session 143: DIRECT's words are the walk's (PATH2) */
+        need -= n;
+        return;
+    }
     if ((cur & 0x60) == 0x60 && n <= need) {
         u32 k = got < sizeof dbuf / 4 ? sizeof dbuf / 4 - got : 0;
         memcpy(dbuf + got, w, (n < k ? n : k) * 4);

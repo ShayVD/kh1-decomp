@@ -98,9 +98,20 @@ static SceUID log_fd = -1;
 
 /* the log goes straight to sceIoWrite (a FILE from funopen, unbuffered): newlib's own fopen'd log
  * stayed empty in Vita3K through two runs */
+/* session 143: every write to the log is one sceIoWrite, timed (the watchdog's "log:" line) */
+static volatile u32 us_log, log_writes;
+static void log_out(const void *buf, int n) {
+    u32 t0;
+    if (log_fd < 0 || n <= 0) return;
+    t0 = (u32)sceKernelGetProcessTimeWide();
+    sceIoWrite(log_fd, buf, n);
+    us_log += (u32)sceKernelGetProcessTimeWide() - t0;
+    log_writes++;
+}
+
 static int log_write(void *cookie, const char *buf, int n) {
     (void)cookie;
-    if (log_fd >= 0) sceIoWrite(log_fd, buf, n);
+    log_out(buf, n);
     return n;
 }
 
@@ -114,7 +125,7 @@ void kh1_vita_log(const char *fmt, ...) {
     n = vsnprintf(buf, sizeof buf, fmt, ap);
     va_end(ap);
     if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
-    if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
+    log_out(buf, n);
 }
 
 /* session 137v: the game's and host/null's printf straight into the log. Pointing newlib's stdout at the
@@ -124,7 +135,7 @@ int vprintf(const char *fmt, va_list ap) {
     char buf[1024];
     int n = vsnprintf(buf, sizeof buf, fmt, ap);
     if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
-    if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
+    log_out(buf, n);
     return n;
 }
 
@@ -139,10 +150,8 @@ int printf(const char *fmt, ...) {
 
 int puts(const char *s) {
     int n = (int)strlen(s);
-    if (log_fd >= 0) {
-        sceIoWrite(log_fd, s, n);
-        sceIoWrite(log_fd, "\n", 1);
-    }
+    log_out(s, n);
+    log_out("\n", 1);
     return n + 1;
 }
 
@@ -266,7 +275,7 @@ extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
-    u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0;
+    u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0, log0 = 0, logn0 = 0, bad0 = 0;
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
@@ -337,6 +346,13 @@ static int watchdog(SceSize args, void *argp) {
                      (kh1_vita_us_wait - wait0) / 1000, gw / 1000, all > known ? (all - known) / 1000 : 0);
             }
         }
+        /* session 143: the log's own cost (each line an sceIoWrite on the thread that prints it) and the sends
+         * with a problem, whose tag lists only the first few print (dmawalk.h) */
+        vlog("kh1-vita: log: %u writes, %u ms in them; %u bad DMA sends (%u so far, the first %d printed)\n",
+             log_writes - logn0, (us_log - log0) / 1000, kh1_dma_bad_sends - bad0, kh1_dma_bad_sends, KH1_DMA_BAD_SHOWN);
+        log0 = us_log;
+        logn0 = log_writes;
+        bad0 = kh1_dma_bad_sends;
         at0 = (u32)sceKernelGetProcessTimeWide();
         gbusy0 = kh1_gsq_us_busy;
         qbusy0 = kh1_gpuq_us_busy;
