@@ -63,6 +63,14 @@
  *                       save directories BISLPS-25198-NN/ (host/port/mc_dir.c; tools/host/ps2mc.py
  *                       copies them from an emulator's card).  The game reads and writes them, so
  *                       run on a copy.  Without it no card is in either slot, as before
+ *   KH1_HOST_GSQ=1      (session 141) the GS side (the GIF decode, the register file, the GS memory
+ *                       model, the recorder) on a worker thread fed by an ordered queue, as the Vita
+ *                       runs it (host/null/gsqueue.h); the log is the same as without it.  A power of
+ *                       two above 1 is the ring's size in bytes (4 MiB otherwise; small ones test the wrap)
+ *   KH1_HOST_GSQ_CHECK=N  (session 141) the Vita's frame order: the recorder takes each kick and a
+ *                       frame's commands end at each vblank, and every N frames a "gsq digest" line
+ *                       hashes the register file, all of GS memory and the frame's commands, to
+ *                       compare a KH1_HOST_GSQ=1 run (the worker alongside the game) with one without
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -77,6 +85,10 @@
 #include <unistd.h>
 #include "platform/ovl.h"
 #include "platform/vu1.h"
+#include "platform/cmdbuf.h"
+#include "gsregs.h"
+#include "gsmem.h"
+#include "gsqueue.h"
 extern u32 kh1_vu1_snap_kicks;
 extern unsigned long kh1_vu1_dump_frame;
 
@@ -120,8 +132,9 @@ void kh1_pipes_draw();
 void kh1_pipes_prim();
 void kh1_pipes_start(void);
 void kh1_pipes_frame(void);
-extern void (*kh1_gs_prim_hook)(); /* host/null/gsregs.c */
+const KH1CmdRec *kh1_pipes_recorder(void);
 static void summary(void) {
+    kh1_gsq_sync(); /* session 141: the GS side's worker done */
     fprintf(stderr, "kh1-host: %lu frames, %u disc reads (%u sectors)\n", frames, kh1_host_cd_reads,
             kh1_host_cd_sectors);
     if (kh1_host_trace >= 5 || kh1_gs_pending_sends || kh1_gs_list_waits)
@@ -178,6 +191,27 @@ static void prof_frame(void) {
 #endif
 }
 
+/* session 141: KH1_HOST_GSQ_CHECK=N, the Vita's frame order (host/vita/main.c): the frame's commands end at
+ * each vblank once the GS side's worker is done, and every N frames a digest of what the GS side holds */
+static unsigned long gsq_check;
+static u32 gsq_mem[1024 * 1024];
+static u32 fnv(u32 h, const void *p, u32 n) {
+    const u8 *b = (const u8 *)p;
+    while (n--) h = (h ^ *b++) * 16777619u;
+    return h;
+}
+static void gsq_frame(void) {
+    const KH1CmdRec *r = kh1_pipes_recorder();
+    u32 ncmd = r->ncmd, npass = r->npass, h;
+    kh1_pipes_frame();
+    if (frames % gsq_check) return;
+    h = fnv(2166136261u, kh1_gs_state(), sizeof(KH1GsState));
+    h = fnv(h, kh1_gsmem_stats(), sizeof(KH1GsMemStats));
+    kh1_gsmem_read_rect(KH1_PSMCT32, 0, 16, 0, 0, 1024, 1024, gsq_mem, 1024); /* all 4 MB */
+    printf("kh1-host: gsq digest frame %lu: state %08x, memory %08x, %u commands in %u passes\n", frames, h,
+           fnv(2166136261u, gsq_mem, sizeof gsq_mem), ncmd, npass);
+}
+
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */
 extern void *kh1_vsync_cb;
 void kh1_null_iop_frame(void);
@@ -189,7 +223,9 @@ void kh1_host_vblank(void) {
     kh1_counts_sample();
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
     if (kh1_dma_vu1 && frames % 300 == 0) vu1_line();
+    kh1_gsq_sync(); /* session 141: the GS side's worker done with the frame's sends (gsqueue.h) */
     if (kh1_host_trace >= 5) kh1_pipes_frame(); /* session 124: the frame's batches */
+    else if (gsq_check) gsq_frame();
     prof_frame();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
@@ -323,6 +359,16 @@ int main(int argc, char **argv) {
         if (kh1_host_trace >= 5) kh1_dma_draw_state = kh1_pipes_draw; /* session 123: the GPU pipelines */
         if (kh1_host_trace >= 5) kh1_gs_prim_hook = kh1_pipes_prim; /* session 124: the batches */
         if (kh1_host_trace >= 5) kh1_pipes_start(); /* session 127: the recorder sees the first transfers */
+        if (getenv("KH1_HOST_GSQ_CHECK") && kh1_host_trace >= 2 && kh1_host_trace < 5) {
+            gsq_check = strtoul(getenv("KH1_HOST_GSQ_CHECK"), 0, 0);
+            if (gsq_check) {
+                kh1_gs_prim_hook = kh1_pipes_prim;
+                kh1_pipes_start();
+            }
+        }
+        if (getenv("KH1_HOST_GSQ") && atoi(getenv("KH1_HOST_GSQ")) && /* a power of two > 1: the ring's bytes */
+            kh1_gsq_start(atoi(getenv("KH1_HOST_GSQ")) > 1 ? (u32)atoi(getenv("KH1_HOST_GSQ")) : 4u << 20))
+            printf("kh1-host: KH1_HOST_GSQ: no worker thread\n");
     }
     {
         const char *counts = getenv("KH1_HOST_COUNTS"); /* session 96: countcheck's DATA rows' marks */

@@ -162,7 +162,7 @@ python3 -I "$ROOT/tests/host/ps2mc_test.py" > "$W/ps2mc.log" || { cat "$W/ps2mc.
 tail -n 1 "$W/ps2mc.log"
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
-     "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
+     "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
   "$W/dmawalk_test" > "$W/dmawalk.log" || { grep -v '^kh1-host:   ' "$W/dmawalk.log"; exit 1; }
   tail -n 1 "$W/dmawalk.log"
   # session 141: VIF1's data path in blocks (host/port/vu1.c) against the word-at-a-time reader it replaced
@@ -179,12 +179,12 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   fi
   # the GS register file it feeds (host/null/gsregs.c, session 79)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsregs_test" \
-      "$ROOT/tests/host/gsregs_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
+      "$ROOT/tests/host/gsregs_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsregs_test" > "$W/gsregs.log" || { grep -v '^kh1-host:' "$W/gsregs.log"; exit 1; }
   tail -n 1 "$W/gsregs.log"
   # the GS memory it feeds (host/null/gsmem.c, session 80)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsmem_test" \
-      "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
+      "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsmem_test" > "$W/gsmem.log" || { grep -v '^kh1-host:' "$W/gsmem.log"; exit 1; }
   tail -n 1 "$W/gsmem.log"
   # its fast paths against the model with them off (host/null/gsmem.c, session 135)
@@ -301,21 +301,21 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   tail -n 1 "$W/shadergen.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
-      "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" \
+      "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" \
       "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" \
       "$ROOT/host/port/palcache.c" "$ROOT/host/port/texcache.c"
   "$W/present_test" "$W" > "$W/present.log" || { grep -v '^kh1-host:' "$W/present.log"; exit 1; }
   tail -n 1 "$W/present.log"
   # the image loads and stores (host/null/gsimage.c, session 101): 5.1an's shapes under a wide view
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsimage_test" \
-      "$ROOT/tests/host/gsimage_test.c" "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" \
+      "$ROOT/tests/host/gsimage_test.c" "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" \
       "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsimage_test" > "$W/gsimage.log" || { cat "$W/gsimage.log"; exit 1; }
   tail -n 1 "$W/gsimage.log"
   # the lens flare's visibility count on that store (kelnscls.nostrict.c func_00192958, session 103)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -fno-strict-aliasing -DKH1_HOST -I"$ROOT/include" -I"$ROOT/src" \
       -o "$W/flare_test" "$ROOT/tests/host/flare_test.c" "$ROOT/src/ppp/kelnscls.nostrict.c" \
-      "$ROOT/host/port/libvu0.c" "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" \
+      "$ROOT/host/port/libvu0.c" "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" \
       "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" -lm
   "$W/flare_test" > "$W/flare.log" || { cat "$W/flare.log"; exit 1; }
   tail -n 1 "$W/flare.log"
@@ -324,7 +324,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   gcc -m32 -malign-double -std=gnu89 -O1 -w -fno-strict-aliasing -ffunction-sections -fdata-sections -DKH1_HOST \
       -I"$ROOT/include" -I"$ROOT/src" -Wl,--gc-sections -o "$W/storeread_test" "$ROOT/tests/host/storeread_test.c" \
       "$ROOT/src/menu/menubg.c" "$ROOT/src/screen/capture.c" "$ROOT/src/gfx/sceneeff.c" "$ROOT/src/screen/screen.c" \
-      "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
+      "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
       "$ROOT/host/port/canvas.c" -lm
   "$W/storeread_test" > "$W/storeread.log" || { cat "$W/storeread.log"; exit 1; }
   tail -n 1 "$W/storeread.log"

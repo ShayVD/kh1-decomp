@@ -450,6 +450,28 @@ opn.dat ended at once (no movie decoder). Vita3K repeats one `handle_access_viol
 (Address=0x61501400, 973 times) and `Unhandled EXC_BAD_ACCESS` (62,064 in its console), one page every
 time, the game unaffected. Logs kept on the Mac in ~/Downloads/kh1-test/vita3k-s140/.
 
+**Session 141: the flashing ground (host gxmcheck with dive_en.txt to 33,000 on the English disc).** Both
+big skips of the Vita3K run reproduce on the host's gxm_mock from the same frames (the palette one from
+~28,500, as in Vita3K's log), and both were the recorder's tables, not the GPU:
+- **"no palette (slot -1)"** (tex0 ...665423600, a 512 x 512 T4 at 0x3600 read from the "slot capture"
+  target's memory): the island loads a new 4-bit CLUT (CBP 0x3FDC, CLD 1) for each ground and scenery
+  draw, up to 105 distinct palettes in one frame (frame 30,712, with the command cap below lifted). The
+  palette cache had 64 slots and never refills one a draw of the frame reads, so every draw past the 64th
+  got slot -1 and gxm.c skipped it; which draws those were changed from frame to frame (the flashing).
+  include/platform/palcache.h has 256 slots now (256 KiB of LPDDR for gxm.c's palettes). Also: a draw
+  that rebinds the slot bound from an earlier frame's load (CLD 0, the same entries) did no lookup, so
+  the slot was not marked used and a later miss of the frame could refill it under a draw the GPU had
+  still to read (wrong colours for a frame); `kh1_palcache_use` marks it (tests/host/palcache_test.c).
+- **"the slot holds another" (slot 10, 512 x 256 T4 at 0x3300)** and draws missing with no skip line
+  at all: from ~30,700 a frame has up to 1,435 commands, and cmdbuf.h's `KH1_CMD_MAX` was 1,024: the host
+  run lost 174,639 commands by 33,000 (~400 a frame), draws and the TEXTURE uploads among them (the
+  texture cache counted a decode as uploaded whose command never reached gxm.c, so the GPU's slot kept
+  the old texture). Now 4,096 commands, gxmrec.h's 16,384 calls, ring.h's 512 KiB of uniforms (a slot
+  for each command and pass). The run's summary line (`commands: ... N lost`) is the check: 0 lost to
+  33,000, and 0 "no palette" skips (18,628 before).
+Left: 2,808 "target 6 as a texture: not made", 604 "2 x 8192 too big", 185 "the scene's own target"
+by 33,000. Not checked yet in Vita3K or on a Vita (VPK s141a).
+
 ## On a real Vita: the white screen (session 137v, 2026-10-27)
 
 Vita3K reached the title; a real Vita stopped on the white copyright screen after 10 disc reads and
@@ -492,23 +514,80 @@ present / vblank wait / the rest (the game's code, gsimage.c's uploads included)
   rectangles now go block by block. Next: the walk itself (vif_word, unpack, the VU1 programs' fin /
   fo, which the Vita's NEON helpers already shorten), then a second core for VIF1 / VU1 and the GS feed.
 
+## GS memory upkeep in GPU mode (session 141, 2026-10-28)
+
+With the GPU drawing (gxm.c), the GS memory model still takes every upload, because the texture and
+palette caches, the "loose" textures and the target uploads read their texels from it. A callgrind
+profile of the Dive (frames 5000-5060, dive.txt, 4.95G instructions) had about a quarter of the frame
+there: kh1_gsmem_image 9.3% inclusive (T8 streams, mark per pixel), pend_flush 12% (target_upload's
+read_rect, and the mock's sceGxmFinish; on the Vita the 324 GPU waits were ~90 ms in all), the texture
+cache's reads 4.9%, CLUT loads 2.3%, kh1_gsmem_addr 2.8%. Changes:
+
+- **gsmem.c, same output** (gsfast_test compares each with the fast paths off):
+  - `addr_rect`: a new upload rectangle's addresses from each block's start plus a per-PSM table of
+    the places inside a block (kh1_gsmem_addr is block number x block size + place, each from its own
+    coordinates), not the swizzle for every pixel. AT_KEYS 64 -> 256.
+  - `scan_pages`: tex_scan takes a texture of whole pages page by page (a page's 32 blocks are 32
+    consecutive block numbers, so they lie in two pages at most); it falls back to the block scan when
+    two drawn pages name different targets, since the block order picks the first.
+  - T8 / T4 upload pieces mark pages inline, `marks` moved once a piece.
+  - An 8-bit CLUT load reads its 16 x 16 through kh1_gsmem_read_rect.
+- **gxm.c, a fix**: a pending target upload was a rectangle read in the upload's own layout and
+  written at BITBLTBUF's (DSAX, DSAY) of the target. Right only for an upload at the target's own FBP
+  in CT32 / CT24. The Dive streams T8 textures and CT32 CLUTs at 0x3700-0x3980 into the pages of
+  targets at lower FBPs (256 x 192 and 256 x 256, ~40 uploads a frame), so each landed at the target's
+  top left, read as CT32. Now each upload's written words are kept per block (a 64-bit mask, the
+  target, CT24 or not) and, at the flush, written to the pixel that holds that word in the target's
+  CT32 layout (FBP / FBW from the recorder's target key), whole blocks without a swizzle per pixel.
+  `kh1_gsmem_read_block` gives a block's 64 words.
+  The first version marked each word with a call and flushed one target whenever a block moved to
+  the other (the two Dive targets overlap): +4%. Now a whole block is one mask write, an edge block's
+  pixels one mask, and a block both targets wait for is written to both.
+- **Measured** (real-disc gxmcheck, dive.txt, callgrind frames 5000-5060): 5.51G -> 5.34G with the
+  gsmem.c changes (the log identical apart from host pointers), 5.15G with the target uploads too
+  (-6.5% in all; kh1_vita_gxm_frame 608M -> 412M). Three display lines' "pixels differ from the GS
+  model" counts drop by 1-2; draws, triangles and pixels drawn are unchanged. Left: pend_flush's
+  sceGxmFinish in the mock (small on the Vita: 324 waits, ~90 ms in all, 3d-t), the texture cache's
+  T8 reads, and the model's upload stores themselves.
+
+### The GS side on a second core (session 141)
+
+host/null/gsqueue.c runs the GS side on a worker thread: the GIF decode (dmawalk.c's gif_block / gif_qword),
+the register file (gsregs.c), the GS memory model (gsmem.c) and the command recorder (pipes.c, cmdbuf.c).
+The game thread, which still runs the game's code, the DMA walk, VIF1 and the VU1 programs, puts ops into one
+ordered ring (an op is a function, its argument words and a copy of its data qwords: a kick's packets, a
+GIF chain's blocks, PATH2's DIRECT qwords, the send's start, the HUD shift / stretch, MSCAL's path1 mark), and
+the worker runs them in order. On the Vita the worker is pinned to the second core, the game thread to the
+first, the watchdog to the third (config.txt `gsq=0` turns it off; it runs only with the GPU renderer).
+
+- **Sync points**: kh1_gsq_sync waits until every op put so far has run. It is called before anything on the
+  game thread reads or writes the model: PlatGsExecLoadImage / StoreImage (gsimage.c), the vblank's
+  kh1_pipes_frame (the GPU frame, gxm.c's reads of GS memory), kh1_null_hud_wide, the host's summary, and after
+  each send when its line or hook reads the model (`!kh1_dma_quiet`, trace 4 / 5, KH1_HOST_TEXDUMP, an
+  after-send hook with `kh1_dma_after_send_reads`; the Vita's GPU hook only counts the send, so it sets 0).
+- **The send's line and problem bits** come from a count the game thread keeps of each GIF stream (skim_qword /
+  skim_block: the packets and where the stream stands, without the writes), so the walk never waits for that;
+  when it syncs anyway it checks its count against the worker's (`kh1-host: gsq: ... differs` if not).
+- **Ops are never split or joined differently**: each chain block is its own op (gif_block's whole-IMAGE skip
+  depends on the blocks), each kick its own (a kick starts a fresh stream), only PATH2's qwords join (gif_qword
+  per qword either way). An op larger than half the ring runs on the game thread after a sync.
+- **Checks** (host, title-menu fake disc with the user's dktitle.x, 1500 frames): `KH1_HOST_GSQ=1
+  tools/vita/gxmcheck.sh` gives the same log as without it (host pointers aside; trace 5 syncs after each send,
+  so this checks the ops and copies); `KH1_HOST_GSQ_CHECK=10` (trace 2, quiet, the Vita's frame order) prints a
+  digest of the register file, all 4 MB of GS memory and the frame's commands every 10 frames, the same with
+  the worker running alongside the game (KH1_HOST_GSQ=1, and with a 64 KiB and a 4 KiB ring) as without.
+- **The watchdog** adds `gs worker: N ms busy; the game waited M ms for it (K waits)`. The `cpu: ... recording`
+  ms are the worker's now, and `vu1: ... passing their kicks on` is the copy into the ring.
+
 ## The VU1 feed's speed (session 141, 2026-10-28)
 
 On a Vita (3d-t, 444 MHz) the Dive ran at ~3.4 fps with ~80% of a frame in VU1 and the chain walk
 that feeds it, on one core. This pass makes that work cheaper without changing what it produces (the
 second core and the VRAM copy are separate threads):
 
-- **VIF1 data in blocks.** host/null/dmawalk.c handed VIF1 its data a word at a time (`vif_word` then
-  `kh1_vif1_data`: two calls, the checks and a store per word). `vif_block` now passes each run of a
-  code's data in a DMA block in one `kh1_vif1_data_n` call, and DIRECT's qwords to the PATH2 reader
-  straight from the block.
-- **UNPACK decoded, then written.** host/port/vu1.c's UNPACK read element by element (`elem()`) and
-  looked up each field's mask; it now decodes all the data vectors in one pass per format, and an
-  unmasked UNPACK with no filling write (the meshes' usual kind) writes each vector whole (mode 0 a
-  16-byte copy). ~5x on the host for a mesh-like stream (tests/host/vu1feed_test.c with an argument
-  times it: 13.8 against 2.8 ns a word).
-- **XGKICK without the copy.** `kick()` hands the packets over where they lie in VU1 memory, copying
-  only when they wrap past its end.
+- **Already in main (session 137v's VIF1 feed):** VIF1 data in blocks (`kh1_vif1_data_n`), UNPACK
+  fast paths and XGKICK without the copy. This branch first did the same independently; on the merge
+  with main main's versions were kept, and tests/host/vu1feed_test.c now checks main's block reader.
 - **The GIF reader.** `gif_qword`'s register index went through `% nreg` every qword, a library call
   on the A9 (it has no divide instruction); it now wraps a counter. A quiet walk (the Vita's) no longer
   keeps the list of distinct state values nor writes the send's text.

@@ -26,10 +26,14 @@
  *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
  *                             ("kh1-gxm: shadertest" lines; gxm.c)
  *       shacc_restart=1       session 137v: restart the shader compiler when a shader fails (off: hangs Vita3K)
+ *       gsq=N                 session 141: 1 (the default) runs the GS side (the GIF decode, the GS model, the
+ *                             command recorder) on a worker thread on the second core (host/null/gsqueue.h), with
+ *                             the GPU renderer only; 0 keeps it on the game's thread
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
 #include <psp2/ctrl.h>
+#include <psp2/kernel/cpu.h>
 #include <psp2/display.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
@@ -45,6 +49,7 @@
 #include "present.h"
 #include "gsmem.h"
 #include "gsregs.h"
+#include "gsqueue.h"
 #include "vita.h"
 #include "dmawalk.h"
 #include "platform/cmdbuf.h"
@@ -80,6 +85,7 @@ static int title_state = 2;
 extern const char *kh1_vita_pad_script; /* host/null/pad.c */
 static int use_gpu = 1; /* session 136: config.txt's gpu= */
 static int gpu_on;      /* the GPU renderer runs (gxm.c) */
+static int use_gsq = 1; /* session 141: config.txt's gsq= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
  * out) of each 2 s */
@@ -167,7 +173,11 @@ void kh1_host_vblank(void) {
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     if (gpu_on) { /* session 136: the frame's GS draws on the GPU (gxm.c through the recorder's hook), shown */
-        SceUInt64 t0 = sceKernelGetProcessTimeWide(), t1;
+        SceUInt64 t0, t1;
+        /* session 141: the GS side's worker done with the frame's sends; the model is ours (the wait is the
+         * watchdog's "game waited", not the frame's commands) */
+        kh1_gsq_sync();
+        t0 = sceKernelGetProcessTimeWide();
         kh1_pipes_frame();
         /* only a whole picture is shown: the display target as the frame copy left it (the software
          * present's rule); between copies the game may be part-way through the next one */
@@ -229,6 +239,7 @@ extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
+    u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0;
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
@@ -280,17 +291,25 @@ static int watchdog(SceSize args, void *argp) {
             /* session 137v: of the rest, the VU1 programs (the kicks they hand on included, then alone) */
             vlog("kh1-vita: vu1: %u ms in programs, %u ms of it passing their kicks on\n", (kh1_vu1_us - vu0) / 1000,
                  (kh1_vu1_kick_us - kick0) / 1000);
+            if (kh1_gsq_on) /* session 141: the GS side's worker (the recording above is its time now) */
+                vlog("kh1-vita: gs worker: %u ms busy; the game waited %u ms for it (%u waits)\n",
+                     (kh1_gsq_us_busy - gbusy0) / 1000, (kh1_gsq_us_wait - gwait0) / 1000, kh1_gsq_waits - gwaits0);
             { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
                * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
-                u32 known = walk + (us_frame - frame0) + (us_draw - draw0) + (kh1_vita_us_wait - wait0);
+                /* session 141: and the waits for the GS side's worker (at the vblank, LoadImage / StoreImage) */
+                u32 gw = kh1_gsq_us_wait - gwait0;
+                u32 known = walk + (us_frame - frame0) + (us_draw - draw0) + (kh1_vita_us_wait - wait0) + gw;
                 vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them), %u the "
-                     "frame's commands, %u present, %u the vblank wait, %u the rest (the game's code)\n",
-                     all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
-                     (kh1_vita_us_wait - wait0) / 1000, all > known ? (all - known) / 1000 : 0);
+                     "frame's commands, %u present, %u the vblank wait, %u waiting for the GS worker, %u the rest "
+                     "(the game's code)\n", all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
+                     (kh1_vita_us_wait - wait0) / 1000, gw / 1000, all > known ? (all - known) / 1000 : 0);
             }
         }
         at0 = (u32)sceKernelGetProcessTimeWide();
+        gbusy0 = kh1_gsq_us_busy;
+        gwait0 = kh1_gsq_us_wait;
+        gwaits0 = kh1_gsq_waits;
         walk0 = kh1_dma_walk_us;
         vu0 = kh1_vu1_us;
         kick0 = kh1_vu1_kick_us;
@@ -340,6 +359,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "mc") == 0) snprintf(mc_dir, sizeof mc_dir, "%s", v);
         else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
         else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
+        else if (strcmp(line, "gsq") == 0) use_gsq = atoi(v);
     }
     fclose(f);
 }
@@ -448,6 +468,12 @@ int main(int argc, char **argv) {
         kh1_gs_prim_hook = timed_prim;
         kh1_pipes_frame_hook = kh1_vita_gxm_frame;
         kh1_vita_present_gpu();
+        /* session 141: the GS side on the second core, the game (and the VIF1 / VU1 programs) on the first */
+        if (use_gsq) {
+            int r = kh1_gsq_start(8u << 20);
+            if (r == 0) sceKernelChangeThreadCpuAffinityMask(sceKernelGetThreadId(), SCE_KERNEL_CPU_MASK_USER_0);
+            vlog("kh1-vita: GS side: %s\n", r == 0 ? "a worker thread on the second core" : "the game's thread (no worker)");
+        }
     } else {
         kh1_gsmem_flat(1);  /* the clears, fades and letterbox filled into the model */
         kh1_present_pal(1); /* the indexed decodes through the port's palette cache */
@@ -455,7 +481,8 @@ int main(int argc, char **argv) {
         kh1_vita_present_on();
     }
     {
-        SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, 0, 0);
+        /* session 141: on the third core, out of the game's and the GS worker's way */
+        SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
         if (t >= 0) sceKernelStartThread(t, 0, 0);
     }
     vlog("kh1-vita: func_00100558 (the game's main)\n");

@@ -12,7 +12,7 @@
  * new key, and the room's cross-fade (the one palette that changes between frames without a load) is
  * a miss the frame it changes.  Not part of the PS2 build. */
 #ifndef KH1_PS2
-#define KH1_PALCACHE_SLOTS 64
+#define KH1_PALCACHE_SLOTS 256 /* session 141: 64 ran out on Destiny Islands (the ground's 4-bit palettes skipped) */
 
 typedef struct {
     u32 hash;     /* FNV-1a of the n entries; 0 with n 0: empty */
@@ -34,6 +34,9 @@ void kh1_palcache_frame(KH1PalCache *c);
 /* the slot holding these n (16 or 256) entries; *fill is 1 when the slot was filled now (upload it).
  * -1 when n is neither, or every slot is in use this frame (draw uncached) */
 int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill);
+/* session 141: a draw of this frame binds slot again without a lookup (its entries are the bound slot's):
+ * marked used, so no later miss of the frame refills it while the GPU still has to read it */
+void kh1_palcache_use(KH1PalCache *c, int slot);
 #endif
 
 #endif

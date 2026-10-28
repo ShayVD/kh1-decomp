@@ -657,49 +657,48 @@ static int lower(u32 lo, u32 hi, u32 pc, u32 *target) {
 
 static u32 kbuf[DATA_QW][4];
 
-/* session 141: the packets are handed over where they lie in data memory (copied out only when they wrap
- * past its end), the GIFtags read to find their length */
 static void kick(u32 a) {
-    u32 n = 0, a0 = a & (DATA_QW - 1), (*q)[4];
-    a = a0;
+    u32 n = 0, a0;
+    const u32 *q;
+    a &= DATA_QW - 1;
+    a0 = a;
+    /* the packets' length: tags and data up to the EOP tag, at most the whole of VU memory */
     while (n < DATA_QW) {
-        u32 *tq = mem[a], nloop, flg, nreg, len, eop;
-        n++;
-        nloop = tq[0] & 0x7FFF;
-        eop = tq[0] >> 15 & 1;
-        flg = tq[1] >> 26 & 3;
-        nreg = tq[1] >> 28 & 15;
+        const u32 *tq = mem[a];
+        u32 nloop = tq[0] & 0x7FFF, eop = tq[0] >> 15 & 1, flg = tq[1] >> 26 & 3, nreg = tq[1] >> 28 & 15, len;
         if (!nreg) nreg = 16;
         len = flg == 0 ? nloop * nreg : flg == 1 ? (nloop * nreg + 1) / 2 : nloop;
+        n++;
         if (len > DATA_QW - n) len = DATA_QW - n;
         n += len;
         a = (a + 1 + len) & (DATA_QW - 1);
         if (eop) break;
     }
-    if (a0 + n <= DATA_QW) q = &mem[a0];
+    /* session 137v (the Dive's speed on a Vita): handed over in place unless it wraps VU memory's end */
+    if (a0 + n <= DATA_QW) q = mem[a0];
     else {
-        memcpy(kbuf, mem[a0], (DATA_QW - a0) * 16);
-        memcpy(kbuf[DATA_QW - a0], mem, (n - (DATA_QW - a0)) * 16);
-        q = kbuf;
+        memcpy(kbuf[0], mem[a0], (DATA_QW - a0) * 16);
+        memcpy(kbuf[DATA_QW - a0], mem[0], (n - (DATA_QW - a0)) * 16);
+        q = kbuf[0];
     }
     st.kicks++;
     st.kick_qw += n;
     if (kh1_vu1_verbose >= 3 && kh1_vu1_dump_frame && kh1_host_frame() != kh1_vu1_dump_frame) {
-        if (kh1_vu1_kick) kh1_vu1_kick(&q[0][0], n);
+        if (kh1_vu1_kick) kh1_vu1_kick(q, n);
         return;
     }
     if (kh1_vu1_verbose >= 3)
-        printf("kh1-vu1: kick (frame %lu) %u qwords: tag %08x %08x %08x %08x, %08x %08x %08x %08x\n", kh1_host_frame(), n, q[0][0], q[0][1],
-               q[0][2], q[0][3], q[1][0], q[1][1], q[1][2], q[1][3]);
+        printf("kh1-vu1: kick (frame %lu) %u qwords: tag %08x %08x %08x %08x, %08x %08x %08x %08x\n", kh1_host_frame(), n, q[0], q[1],
+               q[2], q[3], q[4], q[5], q[6], q[7]);
     if (kh1_vu1_verbose >= 4) {
         u32 k;
-        for (k = 0; k < n; k++) printf("kh1-vu1:   %08x %08x %08x %08x\n", q[k][0], q[k][1], q[k][2], q[k][3]);
+        for (k = 0; k < n; k++) printf("kh1-vu1:   %08x %08x %08x %08x\n", q[k * 4], q[k * 4 + 1], q[k * 4 + 2], q[k * 4 + 3]);
     }
     if (kh1_vu1_kick && kh1_vu1_clock) {
         u32 t0 = kh1_vu1_clock();
-        kh1_vu1_kick(&q[0][0], n);
+        kh1_vu1_kick(q, n);
         kh1_vu1_kick_us += kh1_vu1_clock() - t0;
-    } else if (kh1_vu1_kick) kh1_vu1_kick(&q[0][0], n);
+    } else if (kh1_vu1_kick) kh1_vu1_kick(q, n);
 }
 
 /* ------------------------------------------------------------------ the run */
@@ -1154,96 +1153,85 @@ static u32 unpack_data_words(u32 cmd, u32 num) {
     return (n * bits + 31) / 32;
 }
 
-/* session 141 (the Vita's speed): an UNPACK's data vectors decoded in one pass by format, then written
- * in a second, where the reader took element by element (elem(), a call and its shifts a field) and the
- * writer looked up each field's mask; tests/host/vu1feed_test.c checks it against that reader over random
- * streams.  The element rules are the same: sign-extended unless USN, V2's z / w repeat x / y, V3's w the
- * next element in the stream, a word past the data read as 0; the elements are little-endian in a word */
-static u32 vbuf[256][4];
+/* element e (of size bits) of the data words */
+static u32 elem(u32 e, u32 bits, int usn, u32 nwords) {
+    u32 bit = e * bits, w = bit >> 5, v;
+    if (w >= nwords) return 0;
+    v = dbuf[w] >> (bit & 31);
+    if (bits == 32) return v;
+    v &= (1u << bits) - 1;
+    if (!usn && v >> (bits - 1) & 1) v |= ~((1u << bits) - 1);
+    return v;
+}
 
-static void decode(u32 vn, u32 vl, u32 usn, u32 nvec) {
-    u32 i, nw = got < sizeof dbuf / 4 ? got : sizeof dbuf / 4, end = nw + 4;
-    const u32 *d = dbuf;
-    if (end > sizeof dbuf / 4) end = sizeof dbuf / 4;
-    for (i = nw; i < end; i++) dbuf[i] = 0; /* V3's w past the last word */
-    if (vl == 3) { /* V4-5: RGBA 5551 */
-        for (i = 0; i < nvec; i++) {
-            u32 x = d[i >> 1] >> (i & 1) * 16;
-            vbuf[i][0] = (x & 31) << 3;
-            vbuf[i][1] = (x >> 5 & 31) << 3;
-            vbuf[i][2] = (x >> 10 & 31) << 3;
-            vbuf[i][3] = (x >> 15 & 1) << 7;
-        }
-        return;
+/* Session 137v (the Dive's speed on a Vita): the unmasked V1 / V2 / V3 / V4 of 32, 16 and 8 bits with no
+ * filling cycle (WL <= CL), unpack's loop without a call an element; 0 for the rest, which unpack does */
+static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
+    u32 nel = vn + 1, i, k, cycle = 0, v[4], e;
+    if (vl == 3 || wl > cl) return 0;
+    /* V4-32 / V3-32 with all their words here, MODE 0, CL == WL: the words themselves */
+    if (vl == 0 && vn >= 2 && mode == 0 && cl == wl && num * nel + (vn == 2) <= got) {
+        for (i = 0; i < num; i++) memcpy(mem[(addr + i) & (DATA_QW - 1)], dbuf + i * nel, 16);
+        return 1;
     }
-#define EL(e) (vl == 0 ? d[e] : vl == 1 ? (usn ? d[(e) >> 1] >> ((e) & 1) * 16 & 0xFFFF : (u32)(s32)(s16)(d[(e) >> 1] >> ((e) & 1) * 16)) \
-                                        : (usn ? d[(e) >> 2] >> ((e) & 3) * 8 & 0xFF : (u32)(s32)(s8)(d[(e) >> 2] >> ((e) & 3) * 8)))
-    switch (vn) {
-    case 0:
-        for (i = 0; i < nvec; i++) vbuf[i][0] = vbuf[i][1] = vbuf[i][2] = vbuf[i][3] = EL(i);
-        break;
-    case 1: /* V2: z and w repeat x and y (PCSX2's unpack) */
-        for (i = 0; i < nvec; i++) {
-            vbuf[i][0] = vbuf[i][2] = EL(2 * i);
-            vbuf[i][1] = vbuf[i][3] = EL(2 * i + 1);
+    for (i = 0; i < num; i++) {
+        u32 *d = mem[addr & (DATA_QW - 1)];
+        for (k = 0; k < (vn == 2 ? 4u : nel); k++) { /* V3: w is the next element in the stream */
+            e = i * nel + k;
+            if (vl == 0) v[k] = e < got ? dbuf[e] : 0;
+            else if (vl == 1) {
+                u32 h = (e >> 1) < got ? dbuf[e >> 1] >> (e & 1) * 16 & 0xFFFF : 0;
+                v[k] = !usn && h & 0x8000 ? h | 0xFFFF0000u : h;
+            } else {
+                u32 b = (e >> 2) < got ? dbuf[e >> 2] >> (e & 3) * 8 & 0xFF : 0;
+                v[k] = !usn && b & 0x80 ? b | 0xFFFFFF00u : b;
+            }
         }
-        break;
-    case 2: /* V3: w is the next element in the stream */
-        for (i = 0; i < nvec; i++) {
-            vbuf[i][0] = EL(3 * i);
-            vbuf[i][1] = EL(3 * i + 1);
-            vbuf[i][2] = EL(3 * i + 2);
-            vbuf[i][3] = EL(3 * i + 3);
-        }
-        break;
-    default:
-        if (vl == 0) {
-            memcpy(vbuf, d, nvec * 16);
-            break;
-        }
-        for (i = 0; i < nvec; i++) {
-            vbuf[i][0] = EL(4 * i);
-            vbuf[i][1] = EL(4 * i + 1);
-            vbuf[i][2] = EL(4 * i + 2);
-            vbuf[i][3] = EL(4 * i + 3);
-        }
-        break;
+        if (vn == 0) v[1] = v[2] = v[3] = v[0];
+        else if (vn == 1) { v[2] = v[0]; v[3] = v[1]; } /* V2: z and w repeat x and y (PCSX2's unpack) */
+        if (mode == 1) for (k = 0; k < 4; k++) d[k] = v[k] + row[k];
+        else if (mode == 2) for (k = 0; k < 4; k++) d[k] = row[k] += v[k];
+        else for (k = 0; k < 4; k++) d[k] = v[k];
+        addr++;
+        cycle++;
+        if (cycle == wl) { addr += cl - wl; cycle = 0; }
     }
-#undef EL
+    return 1;
 }
 
 static void unpack(void) {
     u32 cmd = cur, vn = cmd >> 2 & 3, vl = cmd & 3, m = cmd & 0x10;
-    u32 num = cur_num ? cur_num : 256, usn = vl == 3 || cur_imm >> 14 & 1;
+    u32 num = cur_num ? cur_num : 256, usn = cur_imm >> 14 & 1;
     u32 addr = (cur_imm & 0x3FF) + (cur_imm & 0x8000 ? tops : 0);
-    u32 cycle = 0, di = 0, i, f, nvec = num;
+    u32 ebits = vl == 3 ? 16 : 32 >> vl, nel = vl == 3 ? 1 : vn + 1, cycle = 0, di = 0, i, f;
     st.unpacks++;
-    if (wl > cl && wl) { /* the filling writes read no data */
-        u32 r = num % wl;
-        nvec = num / wl * cl + (r < cl ? r : cl);
-    }
-    decode(vn, vl, usn, nvec);
-    if (!m && wl <= cl) { /* no mask, no filling write: every field the data's (with the row in modes 1 and 2) */
-        u32 skip = cl - wl;
-        for (i = 0; i < num; i++) {
-            u32 *d = mem[addr & (DATA_QW - 1)], *v = vbuf[i];
-            if (mode == 1) {
-                d[0] = v[0] + row[0]; d[1] = v[1] + row[1]; d[2] = v[2] + row[2]; d[3] = v[3] + row[3];
-            } else if (mode == 2) {
-                d[0] = row[0] += v[0]; d[1] = row[1] += v[1]; d[2] = row[2] += v[2]; d[3] = row[3] += v[3];
-            } else memcpy(d, v, 16);
-            addr++;
-            if (++cycle == wl) { addr += skip; cycle = 0; }
-        }
-        return;
-    }
+    if (!m && unpack_fast(vn, vl, num, usn, addr)) return;
     for (i = 0; i < num; i++) {
-        u32 r = cycle < 3 ? cycle : 3, *v, zero[4] = { 0, 0, 0, 0 };
+        u32 v[4], r = cycle < 3 ? cycle : 3;
         int fill = wl > cl && cycle >= cl;
-        if (!fill) v = vbuf[di++];
-        else {
+        if (!fill) {
+            u32 e0 = di * nel;
+            if (vl == 3) { /* V4-5: RGBA 5551 */
+                u32 h = elem(e0, 16, 1, got);
+                v[0] = (h & 31) << 3;
+                v[1] = (h >> 5 & 31) << 3;
+                v[2] = (h >> 10 & 31) << 3;
+                v[3] = (h >> 15 & 1) << 7;
+            } else if (vn == 0) {
+                v[0] = v[1] = v[2] = v[3] = elem(e0, ebits, usn, got);
+            } else if (vn == 1) { /* V2: z and w repeat x and y (PCSX2's unpack) */
+                v[0] = v[2] = elem(e0, ebits, usn, got);
+                v[1] = v[3] = elem(e0 + 1, ebits, usn, got);
+            } else {
+                v[0] = elem(e0, ebits, usn, got);
+                v[1] = elem(e0 + 1, ebits, usn, got);
+                v[2] = elem(e0 + 2, ebits, usn, got);
+                v[3] = elem(e0 + 3, ebits, usn, got); /* V3: w is the next element in the stream */
+            }
+            di++;
+        } else {
             st.fill++;
-            v = zero;
+            v[0] = v[1] = v[2] = v[3] = 0;
         }
         for (f = 0; f < 4; f++) {
             u32 mb = m ? mask >> (r * 8 + f * 2) & 3 : 0, *d = &mem[addr & (DATA_QW - 1)][f];
@@ -1294,42 +1282,42 @@ void kh1_vif1_code(u32 w) {
     cur = 0;
 }
 
-/* session 141: n data words at once (the walk hands over a block's run of them); the words past the
- * current code's data are not taken.  Returns the words taken */
-u32 kh1_vif1_data_n(const u32 *w, u32 n) {
-    u32 k = n < need ? n : need, i;
-    if (!k) return 0;
-    switch (cur) {
-    case 0x20: mask = w[k - 1]; break;
-    case 0x30: for (i = 0; i < k; i++) row[got++ & 3] = w[i]; break;
-    case 0x31: for (i = 0; i < k; i++) col[got++ & 3] = w[i]; break;
-    case 0x4A:
-        for (i = 0; i < k; i++) {
-            u32 g = got++, a = (cur_imm + g / 2) & (MICRO_N - 1);
-            if (micro[a][g & 1] != w[i]) {
-                micro[a][g & 1] = w[i];
-                mpg_changed = 1;
-                micro_gen++;
-            }
-        }
-        break;
-    case 0x50: case 0x51: break;
-    default:
-        if ((cur & 0x60) == 0x60) {
-            u32 room = got < sizeof dbuf / 4 ? sizeof dbuf / 4 - got : 0;
-            memcpy(dbuf + got, w, (k < room ? k : room) * 4);
-            got += k;
-        }
-        break;
+/* session 137v: n of the current code's data words at once (the walk's run of them), as n calls of
+ * kh1_vif1_data */
+void kh1_vif1_data_n(const u32 *w, u32 n) {
+    if ((cur & 0x60) == 0x60 && n <= need) {
+        u32 k = got < sizeof dbuf / 4 ? sizeof dbuf / 4 - got : 0;
+        memcpy(dbuf + got, w, (n < k ? n : k) * 4);
+        got += n;
+        need -= n;
+        if (!need) unpack();
+        return;
     }
-    need -= k;
-    if (!need) {
-        if (cur == 0x4A && mpg_changed) { st.mpg++; mpg_changed = 0; }
-        else if ((cur & 0x60) == 0x60) unpack();
-    }
-    return k;
+    while (n--) kh1_vif1_data(*w++);
 }
 
 void kh1_vif1_data(u32 w) {
-    kh1_vif1_data_n(&w, 1);
+    if (!need) return;
+    need--;
+    switch (cur) {
+    case 0x20: mask = w; return;
+    case 0x30: row[got++ & 3] = w; return;
+    case 0x31: col[got++ & 3] = w; return;
+    case 0x4A: {
+        u32 k = got++, a = (cur_imm + k / 2) & (MICRO_N - 1);
+        if (micro[a][k & 1] != w) {
+            micro[a][k & 1] = w;
+            mpg_changed = 1;
+            micro_gen++;
+        }
+        if (!need && mpg_changed) { st.mpg++; mpg_changed = 0; }
+        return;
+    }
+    case 0x50: case 0x51: return;
+    }
+    if ((cur & 0x60) == 0x60) {
+        if (got < sizeof dbuf / 4) dbuf[got] = w;
+        got++;
+        if (!need) unpack();
+    }
 }

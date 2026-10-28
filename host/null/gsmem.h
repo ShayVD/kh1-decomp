@@ -66,6 +66,9 @@ int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u
 /* session 135: 1 (the default) lets the sprites and kh1_gsmem_read_rect take a rectangle's addresses
  * from two tables where the layout allows; 0 computes every pixel's address (the tests compare) */
 void kh1_gsmem_fast(int on);
+/* session 141: block b's (0-0x3FFF) 64 words in address order (kh1_gsmem_addr's CT32 units less b x 64): the
+ * Vita's target uploads (host/vita/gxm.c) take the words an upload wrote, whatever its PSM */
+void kh1_gsmem_read_block(u32 b, u32 *out);
 void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v);
 
 /* decodes the texture TEX0 names (TBP0, TBW, PSM, TW, TH; CPSM and CSA for the indexed PSMs, from

@@ -453,11 +453,11 @@ typedef struct {
     Heap *heap;    /* CDRAM, or LPDDR when CDRAM had no room (session 136) */
     SceGxmColorSurface surf;
     SceGxmRenderTarget *gxrt;
-    /* session 137v: uploads into it not yet written (the union of their rectangles, BITBLTBUF's destination): GS
-     * memory is read as the frame left it, so each upload of a frame writes the same bytes, and they are written
-     * once, before the target's next use (pend_flush) */
+    /* session 137v: uploads into it not yet written: GS memory is read as the frame left it, so each upload of a
+     * frame writes the same bytes, and they are written once, before the target's next use (pend_flush).
+     * Session 141: kept as the GS words they wrote (pend_block), placed by the target's own FBP / FBW */
     u8 pend;
-    u32 pend_bb, px0, py0, px1, py1;
+    u32 fbp, fbw;
 } Target;
 static Target tgt[KH1_CMD_TARGETS];
 
@@ -744,71 +744,110 @@ static void stencil(u32 mode) {
     }
 }
 
-/* GS memory (BITBLTBUF's destination) into a target's pixels at (dx, dy), the alpha on the 0x80 scale.
- * Session 137v (the real Vita's speed): read in chunks of rows, so kh1_gsmem_read_rect's address tables
- * cover many rows at once (one row a call recomputed them for every row: a third of a Dive frame), and
- * the alpha through a table */
-#define UPLOAD_ROWS 32
-static void target_upload(Target *t, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
-    static u32 rows[2048 * UPLOAD_ROWS];
-    static u8 a8[256];
-    static int a8_made;
-    u32 psm = x->bb_hi >> 24 & 63, y, i, n, bp = x->bb_hi & 0x3FFF, bw = x->bb_hi >> 16 & 63;
-    if (!a8_made) {
-        for (i = 0; i < 256; i++) a8[i] = (u8)kh1_blend_store_alpha(i);
-        a8_made = 1;
+/* Session 141: the words of GS memory uploads (and copies from GS memory) wrote into a target's pages, not yet
+ * in its pixels: a block (0-0x3FFF) each, its 64 words' mask, its target, and whether CT24 wrote it (the alpha
+ * then 0x80).  Before, a pending upload was a rectangle at BITBLTBUF's (DSAX, DSAY) read from GS memory in the
+ * upload's own layout and written at the same (x, y) of the target: right only for an upload at the target's
+ * own FBP in CT32 / CT24.  Dive to the Heart streams T8 textures and CT32 CLUTs at 0x3700-0x3980 into the
+ * pages of targets at lower FBPs, ~40 a frame, each one's rectangle then written at the target's top left
+ * (and read as CT32 from the upload's bp).  Now each word the upload wrote goes to the target pixel that
+ * holds it (the target's CT32 layout from FBP / FBW), and only those: whole blocks from a table, the
+ * rectangle's edge blocks pixel by pixel.  GS memory is still read as the frame left it, when written. */
+static u64 pend_mask[0x4000];
+static u32 pend_own[0x4000];  /* the targets (bit i: tgt[i]) it is pending for */
+static u8 pend_24[0x4000];    /* CT24 wrote it */
+static u16 pend_list[0x4000];
+static u32 pend_n;
+static u8 inv_x[2048], inv_y[2048]; /* a CT32 page's word (kh1_gsmem_addr at bp 0) -> its pixel */
+
+/* a block's words m written for target t (its index); a block two overlapping targets wait for is written to
+ * both (the words lie in both one's pages) */
+static void pend_block(u32 t, u32 b, u64 m, int ct24) {
+    b &= 0x3FFF;
+    if (!pend_own[b]) {
+        pend_mask[b] = 0;
+        pend_list[pend_n++] = (u16)b;
     }
-    if (psm != KH1_PSMCT32 && psm != KH1_PSMCT24) psm = KH1_PSMCT32;
-    if (dx >= t->w || dy >= t->h) return;
-    if (dx + w > t->w) w = t->w - dx;
-    if (dy + h > t->h) h = t->h - dy;
-    if (w > 2048) w = 2048;
-    for (y = 0; y < h; y += n) {
-        n = h - y < UPLOAD_ROWS ? h - y : UPLOAD_ROWS;
-        if (kh1_gsmem_read_rect(psm, bp, bw, dx, dy + y, w, n, rows, w)) {
-            u32 r;
-            for (r = 0; r < n; r++)
-                for (i = 0; i < w; i++) rows[r * w + i] = kh1_gsmem_read_pixel(psm, bp, bw, dx + i, dy + y + r);
-        }
-        for (i = 0; i < n; i++) {
-            u32 *d = (u32 *)t->mem + (dy + y + i) * t->stride + dx, *src = rows + i * w, k;
-            if (psm == KH1_PSMCT24)
-                for (k = 0; k < w; k++) d[k] = (src[k] & 0xFFFFFF) | 0x80000000u;
-            else
-                for (k = 0; k < w; k++) d[k] = (src[k] & 0xFFFFFF) | (u32)a8[src[k] >> 24] << 24;
-        }
+    pend_own[b] |= 1u << t;
+    pend_mask[b] |= m;
+    pend_24[b] = (u8)ct24;
+}
+
+/* GS memory's words in the pending blocks into the targets' pixels, the alpha on the 0x80 scale */
+static void pend_write(Target *t, u32 b, u64 m, int ct24) {
+    static u8 a8[256];
+    static int made;
+    u32 words[64], rel, pg, x0, y0, c;
+    if (!made) {
+        u32 x, y;
+        for (c = 0; c < 256; c++) a8[c] = (u8)kh1_blend_store_alpha(c);
+        for (y = 0; y < 32; y++)
+            for (x = 0; x < 64; x++) {
+                u32 a = kh1_gsmem_addr(KH1_PSMCT32, 0, 1, x, y);
+                inv_x[a] = (u8)x;
+                inv_y[a] = (u8)y;
+            }
+        made = 1;
+    }
+    if (!t->mem || !t->fbw) return;
+    rel = (b - t->fbp * 32) & 0x3FFF;
+    pg = rel >> 5;
+    x0 = pg % t->fbw * 64;
+    y0 = pg / t->fbw * 32;
+    if (x0 >= t->w || y0 >= t->h) return;
+    kh1_gsmem_read_block(b, words);
+    for (c = 0; c < 64; c++) {
+        u32 a = (rel & 31) * 64 + c, x = x0 + inv_x[a], y = y0 + inv_y[a], v = words[c];
+        if (!(m >> c & 1) || x >= t->w || y >= t->h) continue;
+        ((u32 *)t->mem)[y * t->stride + x] = ct24 ? (v & 0xFFFFFF) | 0x80000000u : (v & 0xFFFFFF) | (u32)a8[v >> 24] << 24;
     }
 }
 
 /* the pending uploads written (one wait for the GPU for them all); `only` one target's, or all */
 static void pend_flush(Target *only) {
-    u32 i;
+    u32 i, k = 0, sel = only ? 1u << (u32)(only - tgt) : ~0u;
     int any = 0;
-    for (i = 0; i < KH1_CMD_TARGETS; i++) {
-        Target *t = &tgt[i];
-        KH1CmdXfer x;
-        if (!t->pend || (only && t != only)) continue;
-        if (!any) finish();
-        any = 1;
-        t->pend = 0;
-        if (!t->mem) continue;
-        memset(&x, 0, sizeof x);
-        x.bb_hi = t->pend_bb;
-        target_upload(t, &x, t->px0, t->py0, t->px1 - t->px0, t->py1 - t->py0);
+    for (i = 0; i < pend_n; i++) {
+        u32 b = pend_list[i], own = pend_own[b] & sel, j;
+        if (own) {
+            if (!any) finish();
+            any = 1;
+            for (j = 0; j < KH1_CMD_TARGETS; j++)
+                if (own >> j & 1) pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
+            pend_own[b] &= ~own;
+        }
+        if (pend_own[b]) pend_list[k++] = (u16)b;
     }
+    pend_n = k;
+    for (i = 0; i < KH1_CMD_TARGETS; i++)
+        if (sel >> i & 1) tgt[i].pend = 0;
 }
-static void pend_add(Target *t, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
-    if (t->pend && t->pend_bb != x->bb_hi) pend_flush(t);
-    if (!t->pend) {
-        t->pend = 1;
-        t->pend_bb = x->bb_hi;
-        t->px0 = dx, t->py0 = dy, t->px1 = dx + w, t->py1 = dy + h;
-        return;
-    }
-    if (dx < t->px0) t->px0 = dx;
-    if (dy < t->py0) t->py0 = dy;
-    if (dx + w > t->px1) t->px1 = dx + w;
-    if (dy + h > t->py1) t->py1 = dy + h;
+
+/* an upload's (BITBLTBUF's destination) w x h at (dx, dy), or a copy's from GS memory: the words it wrote */
+static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
+    u32 psm = x->bb_hi >> 24 & 63, bp = x->bb_hi & 0x3FFF, bw = x->bb_hi >> 16 & 63, ti = (u32)(t - tgt);
+    u32 bwid, bhgt, sh, bx, by, xx, yy;
+    int ct24 = psm == KH1_PSMCT24;
+    if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u || !w || !h) return;
+    t->fbp = key >> 8 & 0xFFF;
+    t->fbw = key >> 20 & 63;
+    t->pend = 1;
+    bwid = psm == KH1_PSMT4 ? 32 : psm == KH1_PSMT8 || (psm & 0xF) == 2 || (psm & 0xF) == 0xA ? 16 : 8;
+    bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
+    sh = psm == KH1_PSMT4 ? 3 : psm == KH1_PSMT8 ? 2 : bwid == 16 ? 1 : 0; /* kh1_gsmem_addr's units to words */
+    for (by = dy / bhgt; by <= (dy + h - 1) / bhgt; by++)
+        for (bx = dx / bwid; bx <= (dx + w - 1) / bwid; bx++) {
+            u32 x0 = bx * bwid, y0 = by * bhgt, b = kh1_gsmem_addr(psm, bp, bw, x0, y0) >> sh >> 6;
+            u64 m = 0;
+            if (x0 >= dx && y0 >= dy && x0 + bwid <= dx + w && y0 + bhgt <= dy + h) { /* a whole block */
+                pend_block(ti, b, ~0ull, ct24);
+                continue;
+            }
+            for (yy = y0 < dy ? dy : y0; yy < y0 + bhgt && yy < dy + h; yy++)
+                for (xx = x0 < dx ? dx : x0; xx < x0 + bwid && xx < dx + w; xx++)
+                    m |= 1ull << (kh1_gsmem_addr(psm, bp, bw, xx, yy) >> sh & 63);
+            pend_block(ti, b, m, ct24);
+        }
 }
 
 void kh1_vita_gxm_frame(const KH1CmdRec *r) {
@@ -960,7 +999,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         case KH1_GXM_TARGET_UPLOAD: {
             Target *d = c->tgt && c->tgt <= KH1_CMD_TARGETS ? &tgt[c->tgt - 1] : 0;
             if (!d || !d->mem || !k) break;
-            pend_add(d, &k->x, c->dx, c->dy, c->w, c->h);
+            pend_add(d, r->tgt[c->tgt - 1], &k->x, c->dx, c->dy, c->w, c->h);
             break;
         }
         case KH1_GXM_BLIT: { /* target to target (GS memory on either side keeps the CPU model's bytes) */
@@ -968,7 +1007,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             Target *d = c->tgt && c->tgt <= KH1_CMD_TARGETS ? &tgt[c->tgt - 1] : 0;
             u32 y, w, sx, sy;
             if (!d || !d->mem || !k) break;
-            if (!s || !s->mem) { pend_add(d, &k->x, c->dx, c->dy, c->w, c->h); break; }
+            if (!s || !s->mem) { pend_add(d, r->tgt[c->tgt - 1], &k->x, c->dx, c->dy, c->w, c->h); break; }
             pend_flush(0);
             finish();
             sx = k->x.sx;

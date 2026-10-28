@@ -10,9 +10,8 @@
  * platform's walk (host/null/dmawalk.c) points at the same GIF reader PATH2 and PATH3 use, so the GPU
  * recorder (host/null/pipes.c) sees the meshes like any other draw.
  *
- * The walk calls kh1_vif1_code for each VIF code of a channel 1 stream and kh1_vif1_data_n for each run
- * of its data words in a DMA block (without the alignment padding; kh1_vif1_data takes one).  Not part of
- * the PS2 build. */
+ * The walk calls kh1_vif1_code for each VIF code of a channel 1 stream and kh1_vif1_data for each of
+ * its data words (without the alignment padding).  Not part of the PS2 build. */
 #ifndef KH1_PLATFORM_VU1_H
 #define KH1_PLATFORM_VU1_H
 
@@ -22,8 +21,7 @@
 void kh1_vif1_reset(void);
 void kh1_vif1_code(u32 w);
 void kh1_vif1_data(u32 w);
-/* n data words of the current code at once; returns the words taken (no more than the code still needs) */
-u32 kh1_vif1_data_n(const u32 *w, u32 n);
+void kh1_vif1_data_n(const u32 *w, u32 n); /* n data words at once */
 
 /* XGKICK: nqw qwords of whole GIF packets (the last one with EOP) copied out of VU1 memory */
 extern void (*kh1_vu1_kick)(const u32 *q, u32 nqw);

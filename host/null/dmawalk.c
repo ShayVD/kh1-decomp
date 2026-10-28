@@ -27,6 +27,7 @@
 #include "dmawalk.h"
 #include "gsregs.h"
 #include "gsmem.h"
+#include "gsqueue.h"
 #include "platform/vu1.h"
 
 int printf(const char *, ...);
@@ -36,9 +37,12 @@ void *fopen(const char *, const char *);
 __SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, void *);
 int fprintf(void *, const char *, ...);
 int fclose(void *);
+void *memset(void *, int, __SIZE_TYPE__);
+void *memcpy(void *, const void *, __SIZE_TYPE__);
 
 const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded textures (main.c) */
 void (*kh1_dma_after_send)(u32 tadr); /* session 94: KH1_HOST_SHOT's present (host/null/present.c) */
+int kh1_dma_after_send_reads = 1; /* session 141: it reads the GS model (dmawalk.h) */
 int kh1_dma_quiet; /* session 135: no send line (the Vita, dmawalk.h) */
 int kh1_dma_vu1; /* session 137v: VIF1's codes run on host/port/vu1.c, its XGKICKs drawn (dmawalk.h) */
 void (*kh1_dma_draw_state)(const KH1GsDraw *d); /* session 123: each send's draw states (KH1_HOST_TRACE=5) */
@@ -164,6 +168,110 @@ static void gif_block(GifStream *g, const u32 *q, u32 n) {
     }
 }
 
+/* Session 141 (host/null/gsqueue.h): with the GS side on its worker, the game thread only counts each GIF
+ * stream (the packets, where the stream stands: what the send's line and its problem bits read), as
+ * gif_block / gif_qword count it, and queues the data for the worker's own streams, which decode it */
+static void skim_qword(GifStream *g, const u32 *q) {
+    u32 nloop;
+    if (g->left) {
+        if (g->flg == 1) g->left = g->left >= 2 ? g->left - 2 : 0;
+        else g->left--;
+        return;
+    }
+    nloop = q[0] & 0x7FFF;
+    g->flg = q[1] >> 26 & 3;
+    g->nreg = q[1] >> 28 & 15;
+    if (!g->nreg) g->nreg = 16;
+    g->packets++;
+    if (q[0] & 0x8000) g->eop++;
+    if (g->flg == 0) g->left = nloop * g->nreg;
+    else if (g->flg == 1) g->left = (nloop * g->nreg + 1) & ~1u;
+    else { g->left = g->nloop = nloop; g->image++; }
+}
+
+static void skim_block(GifStream *g, const u32 *q, u32 n) {
+    u32 i;
+    if (!n) return;
+    g->blocks++;
+    if (g->left) g->mid++;
+    for (i = 0; i < n; i++, q += 4) {
+        if (g->left && g->flg >= 2) {
+            u32 k = n - i < g->left ? n - i : g->left;
+            g->left -= k;
+            i += k - 1;
+            q += (k - 1) * 4;
+            continue;
+        }
+        skim_qword(g, q);
+    }
+}
+
+/* the worker's streams: 0 a walk's GIF channel or PATH2 (DIRECT) data, or a direct packet; 1 an XGKICK's */
+static GifStream ws[2];
+static u32 path1_packets, block_seq;
+static void w_block(const u32 *a, const u32 *d, u32 n) { gif_block(&ws[0], d, n); } /* a[0]: never joined */
+static void w_qwords(const u32 *a, const u32 *d, u32 n) { /* PATH2 qwords: joined, one stream either way */
+    u32 i;
+    for (i = 0; i < n; i++) gif_qword(&ws[0], d + i * 4);
+}
+static void w_kick(const u32 *a, const u32 *d, u32 n) {
+    memset(&ws[1], 0, sizeof ws[1]);
+    gif_block(&ws[1], d, n);
+    path1_packets += ws[1].packets;
+}
+static void w_send(const u32 *a, const u32 *d, u32 n) { /* a send starts: its own values, draws, uploads */
+    gs_nval = 0;
+    gs_keep = !kh1_dma_quiet || kh1_host_trace >= 4;
+    kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
+    kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
+    memset(&ws[0], 0, sizeof ws[0]);
+}
+static void w_xshift(const u32 *a, const u32 *d, u32 n) { kh1_gs_xshift((s32)a[0]); }
+static void w_xstretch(const u32 *a, const u32 *d, u32 n) { kh1_gs_xstretch((s32)a[0], (s32)a[1], a[2]); }
+static void w_path1(const u32 *a, const u32 *d, u32 n) { kh1_gs_path1(); }
+
+static void gs_xshift(s32 x) {
+    u32 a = (u32)x;
+    kh1_gsq_put(w_xshift, &a, 1, 0, 0);
+}
+
+static void gs_xstretch(s32 x0, s32 w, u32 what) {
+    u32 a[3];
+    a[0] = (u32)x0;
+    a[1] = (u32)w;
+    a[2] = what;
+    kh1_gsq_put(w_xstretch, a, 3, 0, 0);
+}
+
+/* a block of stream 0 (g the walk's own count) */
+static void gs_block(GifStream *g, const u32 *q, u32 n) {
+    u32 a;
+    if (!kh1_gsq_on) {
+        gif_block(g, q, n);
+        return;
+    }
+    skim_block(g, q, n);
+    if (!n) return;
+    a = block_seq++;
+    kh1_gsq_put(w_block, &a, 1, q, n);
+}
+
+/* after a send's data: when the line or a hook reads the model the walk waits for the worker and takes its
+ * stream 0's registers as g's; else the ops are handed on and the walk goes on */
+static void gs_send_done(GifStream *g) {
+    if (!kh1_gsq_on) return;
+    if (kh1_dma_quiet && kh1_host_trace < 4 && !kh1_host_texdump && (!kh1_dma_after_send || !kh1_dma_after_send_reads)) {
+        kh1_gsq_flush();
+        return;
+    }
+    kh1_gsq_sync();
+    if (g->packets != ws[0].packets || g->left != ws[0].left || g->image != ws[0].image || g->mid != ws[0].mid ||
+        g->eop != ws[0].eop)
+        printf("kh1-host: gsq: the walk's count of the GIF stream differs from the worker's (%u / %u packets)\n",
+               g->packets, ws[0].packets);
+    memcpy(g->set, ws[0].set, sizeof g->set);
+}
+
 /* the state registers a stream wrote (not the vertex ones), as names */
 static void gif_regs(const GifStream *g, char *out) {
     static const struct { u8 reg; const char *name; } names[] = {
@@ -189,12 +297,10 @@ static void gif_regs(const GifStream *g, char *out) {
         if ((g->set[r >> 5] & ~known[r >> 5]) >> (r & 31) & 1) sprintf(out + strlen(out), " reg%02x", r);
 }
 
-/* session 137v: an XGKICK's GIF packets (host/port/vu1.c), read as PATH1 like the GIF channel's */
-static u32 path1_packets;
+/* session 137v: an XGKICK's GIF packets (host/port/vu1.c), read as PATH1 like the GIF channel's; session
+ * 141: copied for the worker (q is only valid during the call) */
 static void path1_kick(const u32 *q, u32 nqw) {
-    GifStream g = { 0 };
-    gif_block(&g, q, nqw);
-    path1_packets += g.packets;
+    kh1_gsq_put(w_kick, 0, 0, q, nqw);
 }
 
 /* the words an UNPACK reads: num vectors written, CL of each WL read when WL > CL */
@@ -218,7 +324,14 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
         if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data(w);
         if (v->in_direct) {
             v->q[v->nq++] = w;
-            if (v->nq == 4) { gif_qword(&v->gif, v->q); v->nq = 0; }
+            if (v->nq == 4) {
+                if (kh1_gsq_on) { /* session 141: counted here, decoded by the worker */
+                    skim_qword(&v->gif, v->q);
+                    kh1_gsq_put(w_qwords, 0, 0, v->q, 1);
+                } else
+                    gif_qword(&v->gif, v->q);
+                v->nq = 0;
+            }
             if (!v->need) v->in_direct = 0;
         }
         return;
@@ -226,13 +339,13 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     v->codes++;
     if (kh1_dma_vu1 && !v->vif0) {
         if (!kh1_vu1_kick) kh1_vu1_kick = path1_kick;
-        if (cmd == 0x14 || cmd == 0x15 || cmd == 0x17) kh1_gs_path1();
+        if (cmd == 0x14 || cmd == 0x15 || cmd == 0x17) kh1_gsq_put(w_path1, 0, 0, 0, 0);
         kh1_vif1_code(w);
     }
     if (v->vif0 && (cmd == 0x02 || cmd == 0x03 || cmd == 0x06 || cmd == 0x50 || cmd == 0x51)) cmd = 0x7F;
     switch (cmd) {
     case 0x14: case 0x15: case 0x17: /* MSCAL / MSCALF / MSCNT: on VIF1 a VU1 program that may XGKICK */
-        if (!v->vif0 && !kh1_dma_vu1) kh1_gs_path1();
+        if (!v->vif0 && !kh1_dma_vu1) kh1_gsq_put(w_path1, 0, 0, 0, 0);
         return;
     case 0x00: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
     case 0x10: case 0x11: case 0x13:
@@ -263,42 +376,23 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     if (!v->bad++) { v->bad_word = w; v->bad_addr = addr; }
 }
 
-/* session 141 (the Vita's speed): a code's data words in this block at once, VIF1's to host/port/vu1.c in
- * one call and DIRECT's to the PATH2 reader a qword at a time from the block itself (vif_word took them
- * one by one: a call, the checks and a copy each) */
-static void vif_data(VifStream *v, const u32 *q, u32 n) {
-    v->pos = (v->pos + n) & 3;
-    v->need -= n;
-    if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q, n);
-    if (!v->in_direct) return;
-    while (n) {
-        if (v->nq || n < 4) {
-            v->q[v->nq++] = *q++;
-            n--;
-            if (v->nq == 4) { gif_qword(&v->gif, v->q); v->nq = 0; }
-        } else {
-            gif_qword(&v->gif, q);
-            q += 4;
-            n -= 4;
-        }
-    }
-    if (!v->need) v->in_direct = 0;
-}
-
 static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
-    u32 i, nw = n * 4;
+    u32 i;
     if (!n) return;
     v->blocks++;
     if (v->need || v->pad) v->mid++;
-    for (i = 0; i < nw;) {
-        if (v->need && !v->pad) {
-            u32 k = nw - i < v->need ? nw - i : v->need;
-            vif_data(v, q + i, k);
+    for (i = 0; i < n * 4;) {
+        /* session 137v (the Dive's speed on a Vita): a code's data words other than DIRECT's in a run */
+        if (v->need && !v->pad && !v->in_direct) {
+            u32 k = n * 4 - i < v->need ? n * 4 - i : v->need;
+            if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q + i, k);
+            v->need -= k;
+            v->pos = (v->pos + k) & 3;
             i += k;
-        } else {
-            vif_word(v, q[i], addr + i * 4);
-            i++;
+            continue;
         }
+        vif_word(v, q[i], addr + i * 4);
+        i++;
     }
 }
 
@@ -427,7 +521,7 @@ void kh1_dma_hud_anchors(const KH1HudAnchor *tab, int n, u32 via, u32 via_n, s32
     hud_via_n = via_n;
     hud_margin = margin;
     hud_env_shift = 0;
-    kh1_gs_xshift(0);
+    gs_xshift(0);
 }
 
 /* the static full-screen packets' stretch under a wide view (kh1_dma_fullscreen, session 93) */
@@ -440,7 +534,7 @@ void kh1_dma_fullscreen(const KH1FullScreen *tab, int n, s32 x0, s32 w) {
     fs_n = n;
     fs_x0 = x0;
     fs_w = w;
-    kh1_gs_xstretch(0, 0, 0);
+    gs_xstretch(0, 0, 0);
 }
 
 /* a send starts at tadr: a listed full-screen packet is stretched (session 93); a staging send keeps
@@ -455,11 +549,11 @@ static void hud_send(u32 tadr) {
                 what = fs_tab[i].what;
                 break;
             }
-        kh1_gs_xstretch(fs_x0, fs_w, what);
+        gs_xstretch(fs_x0, fs_w, what);
     }
     if (!hud_n) return;
     if (tadr - hud_via < hud_via_n) {
-        kh1_gs_xshift(hud_env_shift);
+        gs_xshift(hud_env_shift);
         return;
     }
     hud_env_shift = 0;
@@ -468,7 +562,7 @@ static void hud_send(u32 tadr) {
             hud_env_shift = hud_tab[i].side * hud_margin;
             break;
         }
-    kh1_gs_xshift(hud_env_shift);
+    gs_xshift(hud_env_shift);
 }
 
 static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
@@ -481,11 +575,8 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     VifStream v = { 0 };
     char extra[160], regs[400];
     extra[0] = 0;
-    gs_nval = 0;
-    gs_keep = !kh1_dma_quiet || kh1_host_trace >= 4;
     hud_send(tadr);
-    kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
-    kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
+    kh1_gsq_put(w_send, 0, 0, 0, 0); /* session 141: on the GS side's worker when it runs (gsqueue.h) */
     while (!done && !bad && ntags < 4096) {
         u32 w0, qwc, id, addr, next = tag + 16;
         if (!where(tag, 16)) { bad = KH1_DMA_TAG_OUTSIDE; break; }
@@ -540,7 +631,7 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
             u32 data = (id == 0 || id == 3 || id == 4) ? t[1] : tags[i][0] + 16;
             if (tte && (t[2] || t[3])) tte_hi++;
             if (ch == 2) {
-                gif_block(&g, (u32 *)(unsigned long)data, qwc);
+                gs_block(&g, (u32 *)(unsigned long)data, qwc);
             } else {
                 if (tte) {
                     v.pos = 2;
@@ -551,6 +642,7 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
                 vif_block(&v, (u32 *)(unsigned long)data, qwc, data);
             }
         }
+        gs_send_done(ch == 2 ? &g : &v.gif);
         if (ch == 2) {
             if (g.left) bad |= KH1_DMA_GIF_SHORT;
             if (!kh1_dma_quiet) sprintf(extra, "; gif %u packets (%u eop, %u image), %u of %u blocks inside one%s", g.packets,
@@ -606,12 +698,10 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
     GifStream g = { 0 };
     char regs[400];
     int i;
-    gs_nval = 0;
-    gs_keep = !kh1_dma_quiet || kh1_host_trace >= 4;
     hud_send((u32)(unsigned long)q);
-    kh1_gs_clear_draws();
-    kh1_gsmem_clear_log();
-    gif_block(&g, q, qwc);
+    kh1_gsq_put(w_send, 0, 0, 0, 0);
+    gs_block(&g, q, qwc);
+    gs_send_done(&g);
     gif_regs(&g, regs);
     if (!kh1_dma_quiet)
         printf("kh1-host: dma ch 2 chcr 00000000 tadr %08x: direct (normal mode), %u qwords; gif %u packets%s%s%s\n",
