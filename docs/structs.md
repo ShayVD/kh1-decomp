@@ -99,12 +99,38 @@ etc. with their models embedded. Summon data files: `xs_<name>.dat`
 | i | Used by | Meaning |
 | --- | --- | --- |
 | 0 | `func_00105288(p, 1)` | collision mesh: 17-word header of rel offsets/sizes (20-byte faces, 16-byte entries, 12/8-byte tables); the inner pointer lists are relocated too |
-| 1 | `func_00106ed0(p, size)` | map texture/GS packet set: +0 count n, +4 rel offset of a 16-byte tag table (both address words relocated); 128-byte records at `p + 128*i` whose unused qword `.w` words carry per-texture values (scroll floats copied to `D_00472190`, a shift used as `1 << t`; record 0 `+0x7C` = animated-texture frame count + 20, frames at the file end uploaded to block `0x3600` by `func_00106e18`) and are reset to 1.0. It patches the renderer A chains `D_0046E140`/`D_00472180`/`D_004761C0`/`D_0047A200` (renderer-spec §4.3, `func_00107d30` cases 0/1) (inferred: per-map texture state) |
-| 2, 3 | `func_00108cf8(p, slot 0/1, 4)` | **renderer A mesh headers** (below), drawn with program table index 4 = **P4** (double-sided), objects `D_00494D80[0/1]`, key 10010 (`func_001008e8`; slot 1 only when `D_002BC0A8.b5`) |
+| 1 | `func_00106ed0(p, size)` | **the grid** (renderer-spec §4.14; layout below, checked on every map of the disc in session 142). The address words of the tag table are relocated by the section's address |
+| 2, 3 | `func_00108cf8(p, slot 0/1, 4)` | **renderer A mesh headers** (below), drawn with program table index 4 = **P4** (double-sided), objects `D_00494D80[0/1]`, key 10010 (`func_001008e8`; slot 1 only when `D_002BC0A8.b5`). *Session 142, from the disc:* these are **the sky**: section 2 a dome 14,000 to 40,000 units across (sky gradient, clouds), section 3 a second layer inside it (a cloud band, a skyline, the night's shapes). Every map has both. They carry their own textures (below) |
 | 4 | `D_002A3F48`, `func_00105c70` | table of 16-byte vectors (inferred: positions) |
 | 5, 7 | `func_001763f0` | ppp effect programs |
 | 6, 8 | `D_0029B414`, `D_0029B41C` | not traced |
 | 9 | `func_00105d88` | second collision mesh, same header as section 0 |
+
+**Section 1, the grid** (`func_00106ed0`, session 142 from the C and the 130 map files of the disc):
+
+| Off (from the section) | Type | Meaning |
+| --- | --- | --- |
+| +0x00 | s32 | cell count n (`D_00494BB0`; 117 to 1,015 on the disc, the C allows 1,024) |
+| +0x04 | s32 | offset of the tag table (relocated) |
+| +0x10 + 128 i | f32[8][4] | cell i's box: 8 corners, tested by `func_00107ab8` (renderer-spec §5.4). The corners' unused `.w` words carry the cell's values, read at load and then overwritten with 1.0: corner 0 `.w` non-zero = "not read yet" (every cell on the disc); corners 1-3 `.w` = the cell's centre x, y, z, copied to `D_00472190[i]` for the front-to-back sort (`func_00107548`); corner 4 `.w` = the cell's fade group t (0-31; the group bit `1 << t` in `D_00494BA8[i]`); cell 0's corner 6 `.w` = the animated texture's frame count + 20, or 1.0 for none (26 maps have 1-4 frames, stored at the file's end and uploaded to block `0x3600` by `func_00106e18`) |
+| table + 0 | DMA tag | entry 0: `REF 2` to the chains' clipped-output template, `STCYCL 1,1; UNPACK V4-32 1 -> @0 +TOPS` of a GIF tag (NLOOP 5) `TRIFAN|IIP|TME|FGE|CTXT2` (121 maps) or `TRIFAN|IIP|FGE|CTXT2` (9), `MSCNT` |
+| table + 16 (i + 1) | 2 DMA tags | cell i: `{w0, w4}` = mesh A (`REF`, 0 = none), `{w8, w12}` = mesh B (`REF`, 0 = none). On the disc 60,380 cells have A only, 13,338 B only, 12,032 both |
+
+The REFs point at renderer A batch streams (renderer-spec §2.2 "Map meshes on the disc").
+
+**The map image** `<ww>00_<nn>.img` (`func_00101048`, session 142; all 130 checked): a header of ten
+words `{o0, n0, o8, -, o10, -, o18, -, o20, n20}`, offsets from the file:
+
+| Part | Meaning |
+| --- | --- |
+| `o0`, `n0` bytes | 160-byte texture-animation records, copied to `D_0029B420` (renderer-spec §4.13); 18 maps have some |
+| `o8` | the room's setup (`func_00100b18`): `+0x00` u8[16] the kind of each texture page (19 = PSMT8, 20 = PSMT4, other = none), `+0x14` u16 n0 / `+0x16` u16 n1 (CLUT counts), `+0x21..0x25` five bytes and `+0x34..0x3C` three floats into `D_002BC0F0.view30` and `D_0029B270` (the fog: e.g. `16, 64, 255, 0, 0` and `-0.00013, 200000, 300000` in di00_01), `+0x40` f32[16][2] the **UV-scroll rates** of P3's 16 slots, stored x 1/16384 into `D_002A4060` (slot k is the batch flag k + 1; 76 maps scroll something) |
+| `o10` | CLUTs, one per 256 bytes: the first n0 are 8 x 2 CT32 (16 colours) loaded to block `0x3E00 + i`, the rest up to n1, 4 at a time, 16 x 16 CT32 (256 colours) to `0x3E00 + i` |
+| `o18` | 16 pages of 64 KB: kind 19 = a 256 x 256 PSMT8 picture (TBW 256) to block `0x2600 + 256 i`, kind 20 = a 512 x 256 PSMT4 (TBW 512) to the same block; then at `+0x100000` a 256 x 1024 **PSMT8H** picture at block 0 (TBW 256), the upper bytes of the frame buffer's words |
+| `o20`, `n20` bytes | 0x810-byte CLUT-animation records (`D_0029BE20` / `D_002A3E20`, renderer-spec §4.13); 13 maps |
+
+So the grid's TEX0 values point at blocks `0x0000-0x0FFF` (PSMT8H), `0x2600-0x35FF` (the pages) and CBP
+`0x3E00-0x3FFF`; `tools/vu/amesh_render.py` loads an .img this way and draws the room (renderer-spec §2.2).
 
 ### Renderer A mesh header (`func_001089f8`, `func_00108b60`, `func_00114a38`)
 
@@ -120,6 +146,11 @@ REF, +0x10 REF to the matrix block, +0x20 REF 42 qw (camera block, `MSCAL`),
 VIF words; which one points at the clip GIF template and which at the strip
 batches is not fixed by the code (inferred: +0x80 plays the role of
 `D_00486300`, the qw48 template upload, and +0x90 is the mesh stream).
+*Session 142:* confirmed on all 260 far meshes of the disc: +0x80 is `REF 2`, `STCYCL 1,1; UNPACK V4-32 1
+-> @0 +TOPS; MSCNT` of a GIF tag (NLOOP 5) `TRIFAN|IIP|TME|ABE|CTXT2` (246) or `TRIFAN|IIP|TME|CTXT2` (14);
++0x90 is the batch stream, which also uploads its own textures inline (`FLUSH; DIRECT`: BITBLTBUF /
+TRXPOS / TRXREG / TRXDIR then an IMAGE packet, the picture to block `0x3400` and its CLUT to `0x3A00`,
+then `TEXFLUSH`, `TEX0_2`, `CLAMP_2`): 337 textures, PSMT8 (275) or PSMT4 (62), 16 x 16 up to 256 x 256.
 
 Prop models in an area set (`func_00132718`, section 2 of `.ard`) start with
 an offset table: +0x00 s32 n, +0x18 rel offset of the mesh header drawn with
@@ -284,6 +315,15 @@ the raw member and run `zstd -d`; `eeMemory.bin` is the 32 MB EE RAM, `vu1Memory
   390 packets, 7,530 records, 24,854 vertices) with zero errors; `--mobj 80` does the same for
   `xa_ex_4030.mdls` (7 parts) and the ELF's three embedded models also pass. Only ops 0, 1 and 0x8000
   occur; every main part has `g = 0`, every alternate (shadow) part `g = 2`, no part is skinned.
+  *Session 142 (the disc):* `rb_stream.py --scan` over all 500 `.mdls` and 233 `.ard` files walks
+  1,489 `MOBJ` / `MENV` chunks (7,974 parts) with zero errors: `g = 0` 6,737 parts, `g = 2` 665, and
+  **572 skinned parts (`g = 1`)**, all in the boss-series models `xa_<ww>_7xxx.mdls` (41 files, e.g.
+  `xa_al_7000`, `xa_ex_7010`) plus `xa_lm_3000`. Their packets open with an op 2 bone-index list,
+  then op 0 records: `w = 0` loads matrix slot `z` (0-2), `w = 1` is the palette base, `w = 2` the
+  palette entries after it (8 qwords apart; their `z` just counts on and is not read). A vertex has
+  1 to 6 influences (256,490 / 54,684 / 16,579 / 2,528 / 414 / 28 vertices); each influence takes the
+  next index of the op 2 list: 0-2 = a slot, `0x100 + 8 j` = palette entry j of the current base
+  (renderer-spec §2.3).
   The savestate (session 16 M12-float build, End of the World) also shows the draw instances: see
   renderer-spec §2.3.1.
 
@@ -292,3 +332,21 @@ the raw member and run `zstd -d`; `eeMemory.bin` is the 32 MB EE RAM, `vu1Memory
 +0x08 rel image header (16 bytes, uploaded by `func_0015fa20`), +0x10 rel
 pixels, +0x18 rel CLUT, +0x20 rel {s32 n0, rel table0, s32 n1, rel table1}
 (two lists used by `func_00174fc0` to place the left and right sprites).
+
+### Gummi models: `TARC` / `MOPB` (gb.x `0x00F3E0D8`, session 143, static + the English disc)
+
+Renderer C's models (renderer-spec §2.5). `gumi/gumi.aml` is a `TARC` of 96 `MOPB` models (the ship
+blocks); 27 more `TARC` files and 12 bare `MOPB` files (names not in our KINGDOM.IDX list; inferred:
+the Gummi stages' enemies and objects) hold 297 more, some in nested `TARC`s. `rc_stream.py` walks all
+393 models.
+
+| Where | Contents |
+| --- | --- |
+| `TARC` +0x00 | `"TARC"`, 1, 0, 0x18, then +0x10 count, then count `{u32 offset, u32 size}` pairs at +0x18 (offsets from the archive). Entries are `MOPB`, `TARC`, `TEZB`, `BISB` or untagged. |
+| `MOPB` +0x90 / +0x94 | bone count / offset (0x40-byte records, parent index at +0x30, -1 = root) |
+| `MOPB` +0x98 / +0x9C | mesh group count (always 3) / offset: 0x28-byte records `{u32 parts, u32 offset, 8 floats bbox}` |
+| part (0x28 bytes, at the group's offset) | `{u32 chain offset, s32 bone, 8 floats bbox}` |
+| chain | `CNT` tags whose VIF codes upload one batch each (`STCYCL 4,4`, then `UNPACK`s with FLG and `MSCNT`), the first with `FLUSHA`, `STMASK 0x40404040` and `STROW (0, 0, 0, 1.0)`, ending in a `RET` |
+
+All offsets are from the `MOPB`. Each group gets its own VU program from a 3-entry table supplied by
+the caller (renderer-spec §2.5), and each part draws with its bone's matrix.

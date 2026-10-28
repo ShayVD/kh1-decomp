@@ -977,11 +977,13 @@ Ask for the Mac at the start; if the user says it is away, do the static items.
 
 ## What is left (7 functions)
 
-Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.md). Counts are LCS words.
+Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.md); shift/drafts.tsv lists the
+current best of each. Counts are LCS words. Session 144 (nonmatchings/session144-match/NOTES.md) climbed all but the
+two largest with tools/matching/climb_s144.py and traced 001fd858's reorg fill in gdb: one word gained (00200e28).
 
 1. **1-4 words**: 001fd858 (1, reorg liveness), 00265608 (4, closed). (001f2630 and 001f1fc8 matched in session 128;
    the permuter recipe that keeps context-only callee copies is in nonmatchings/session128/NOTES.md.)
-2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
+2. **15-24 words**: 001c62a0 (14), 00200e28 (23, session 144).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
 ## Session 141 plan (at most 3 workers, docs/workflow.md "Resource limit")

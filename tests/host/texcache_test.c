@@ -19,7 +19,11 @@
  * (host/port/texcache.c, the `both` key as port code) runs beside the three on the same cases and
  * must give `both`'s counts; then render targets: the windows' 256 x 256 pass at 0x3A00 drawn and read
  * back as a texture (the GPU target's, never kept), an upload into the slot after it, and the message
- * font in the Z24 buffer's top byte (no target: a hash hit when the Z draws move its stamp). */
+ * font in the Z24 buffer's top byte (no target: a hash hit when the Z draws move its stamp).
+ *
+ * Session 142: a second port cache with kh1_gsmem_tex_raw (a stamp miss on pages holding the words an
+ * entry of the layout came from is a hit without reading the texels) beside it must give the same
+ * answers and counts on every case. */
 #include "common.h"
 #include "../../host/null/gsmem.h"
 #include "platform/texcache.h"
@@ -35,6 +39,7 @@ static int fails, checks;
 enum { KEY_STAMP, KEY_BYTES, KEY_BOTH, KEYS };
 static const char *key_name[KEYS] = { "stamp", "bytes", "both" };
 static KH1TexCache port;
+static KH1TexCache port_raw; /* session 142: the port's cache with kh1_gsmem_tex_raw: the same answers */
 
 typedef struct {
     u32 used, lo, hi, stamp, hash, age;
@@ -102,7 +107,7 @@ static void port_read(u32 lo, u32 hi, u32 *out, void *ctx) {
 
 /* every key's draw, each checked against the fresh read; the port's too (0 for a render target's
  * texture: nothing to check, counted in port_target) */
-static int stale, port_stale, port_target;
+static int stale, port_stale, port_target, raw_stale;
 static void draw(u32 lo, u32 hi) {
     int k, decoded;
     u32 n = tex_w(lo) * tex_h(lo, hi), i;
@@ -117,12 +122,18 @@ static void draw(u32 lo, u32 hi) {
     if (!t) { port_target++; return; }
     for (i = 0; i < n; i++)
         if (t[i] != fresh[i]) { port_stale++; break; }
+    t = kh1_texcache_get(&port_raw, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), port_read, 0,
+                         &decoded);
+    for (i = 0; t && i < n; i++)
+        if (t[i] != fresh[i]) { raw_stale++; break; }
 }
 
 static void reset(void) {
     memset(cache, 0, sizeof cache);
-    stale = port_stale = port_target = 0;
+    stale = port_stale = port_target = raw_stale = 0;
     kh1_texcache_init(&port);
+    kh1_texcache_init(&port_raw);
+    port_raw.raw = kh1_gsmem_tex_raw;
     kh1_gsmem_reset();
 }
 
@@ -130,7 +141,9 @@ static void reset(void) {
 static int port_as_both(void) {
     return port_stale == 0 && port_target == 0 && port.decodes == cache[KEY_BOTH].decodes &&
            port.hashed == cache[KEY_BOTH].hashed && port.draws == cache[KEY_BOTH].draws &&
-           port.stamp_hits + port.hash_hits + port.decodes == port.draws;
+           port.stamp_hits + port.hash_hits + port.decodes == port.draws && raw_stale == 0 &&
+           port_raw.stamp_hits == port.stamp_hits && port_raw.hash_hits == port.hash_hits &&
+           port_raw.decodes == port.decodes && port_raw.draws == port.draws;
 }
 
 /* an upload of w x h pixels in psm at block bp (BW bw), texel (x, y) = f(x, y, seed) */
@@ -192,6 +205,7 @@ int main(void) {
     CHECK("slot: both: the bytes' decodes, a hash every draw", cache[KEY_BOTH].decodes == 2 &&
           cache[KEY_BOTH].hashed == cache[KEY_BYTES].hashed);
     CHECK("slot: the port cache is `both`", port_as_both() && port.hash_hits == 4);
+    CHECK("slot: the slot's pages' words give each hash hit", port_raw.raw_hits == 4);
 
     /* (1b) the same slot drawn twice per upload (the timer's three fonts: one upload, CSA 0 / 2 / 6) */
     reset();
@@ -234,6 +248,7 @@ int main(void) {
     CHECK("scroll: both: the bytes' decodes, hashing only after a write", cache[KEY_BOTH].decodes == 8 &&
           cache[KEY_BOTH].hashed == 28 * 16 * 8);
     CHECK("scroll: the port cache is `both`", port_as_both() && port.stamp_hits == 4 && port.hash_hits == 20);
+    CHECK("scroll: the pages' words give 7 of the 20 hash hits", port_raw.raw_hits == 7);
 
     /* (3) session 118, render targets: the windows' shadow / crossfade pass at 0x3A00 (renderer-spec
      * 4.9: 256 x 256 CT32, FBP 0x1D0, FBW 4), first a picture uploaded there and drawn as a texture
@@ -272,7 +287,8 @@ int main(void) {
         CHECK("target: the picture back is a hash hit", port.decodes == 2 && port.hash_hits == 1 && port_stale == 0);
     }
     report("render target at 0x3A00");
-    CHECK("target: no stale texture", port_stale == 0);
+    CHECK("target: no stale texture", port_stale == 0 && raw_stale == 0 && port_raw.decodes == port.decodes &&
+                                      port_raw.hash_hits == port.hash_hits);
 
     /* (4) the message font (PSMT4HL 0x1000, TBW 4, 256 x 256) in a Z24 buffer's top byte (ZBP 0x70,
      * block 0x0E00, as gsmem_test's targets): the Z draws do not touch its bits, so it is never a
@@ -292,6 +308,7 @@ int main(void) {
         }
         CHECK("font: never a target", port.targets == 0 && port_target == 0 && kh1_gsmem_tex_target(font, font_hi) == 0);
         CHECK("font: one decode, then hash hits", port.decodes == 1 && port.hash_hits == 2 && port_stale == 0);
+        CHECK("font: the same with the pages' words", port_raw.decodes == 1 && port_raw.hash_hits == 2 && raw_stale == 0);
     }
     report("font under Z24");
 

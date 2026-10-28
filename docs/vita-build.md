@@ -428,7 +428,8 @@ Restarting the compiler after a failure (`shacc_restart=1`, off) hangs Vita3K (a
 module). Uploads into a target are now written once before the target's next use (GS memory is read as the
 frame left it, so each upload of a frame wrote the same bytes and waited for the GPU), and a scene that
 neither loads nor stores its depth runs on the spare depth buffer. Still open in Vita3K: the stained-glass
-floor (the region shader's draws) is black on every other drawn frame, with the interpreter as with the
+floor (the region shader's draws) is black on every other drawn frame (the cause: one-byte enums, "The
+flashing floor" below), with the interpreter as with the
 translated programs, while tests/host/gxm_mock.c (now running scenes late, at sceGxmFinish, on memory as it
 is then) draws it every frame; and ~310 ms of each 2 s in the frame's transfers (texture and palette uploads,
 which Vita3K's texture cache watches). Both are to be checked on a Vita.
@@ -624,6 +625,91 @@ draw-state search most of it); and the translated programs from every entry on 3
 old and new translation under qemu-arm with NEON, give the same memory, registers, flags and kicks.
 **Not yet checked on the disc**: a host run with `KH1_HOST_VU1TR=2` and the gxmcheck log against the
 last one, and the frame rate on a Vita (the split line's DMA-walk share).
+
+## The GS worker's own work (session 142, 2026-10-28)
+
+On a Vita (3d-x) the Dive's GS worker was busy ~1.65 s of every 2 s at ~12 frames per 2 s: ~0.7 s recording
+(us_record), ~0.47 s the frame's commands (of them ~0.2 s gxm.c's submit, half of that GPU waits), the rest the
+GIF decode, the register file and the GS memory model's upload stores; the game waited ~1 s for it. A host
+profile of the worker thread alone (callgrind `--separate-threads=yes` on the gxmcheck binary in the Vita's
+order: `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=1000 KH1_HOST_GXM=1000000 KH1_HOST_VU1=1
+KH1_HOST_VU1TR=1 KH1_HOST_PROF=5000:60`, en.iso, dive_en.txt; the worker's file is `cg.PID-02`, and as the
+binary's symbols do not load, addresses map back with `nm -n`) gave 1,978M instructions over frames 5000-5060:
+gs_kick 730M (kh1_pipes_prim 595M, of it the texture cache 244M), the frame 583M (gxm.c 412M, the mock's
+sceGxmFinish 239M of it, which the Vita does not pay; kh1_cmd_frame 137M), kh1_gsmem_image 332M. Two changes,
+the output the same:
+
+- **Clears** (host/port/cmdbuf.c `cover_cmd`): each rectangle of a pass's leading draws marked its cells by
+  testing every cell of the target's 8 x 8 grid; now only the cells from its own corner on. 133M -> 6M.
+- **Texture re-checks** (host/port/texcache.c, `KH1TexRaw`; host/null/gsmem.c `kh1_gsmem_tex_raw`): the Dive
+  streams a few T8 textures through one slot every frame, so each lookup was a stamp miss that read all the
+  texels back through kh1_gsmem_read_rect, hashed and compared them (a hash hit). An entry now also keeps the
+  raw words of the pages its texels lie in; on a stamp miss an entry of the same layout whose pages hold the
+  same words is the hit (the texels are read from those words only), and only otherwise the old read. The
+  slot found is the one the hash would find (one entry per layout and texels). tests/host/texcache_test.c
+  runs a second port cache with it beside the first: the same texels and counts on every case. 244M -> ~12M.
+
+Worker 1,978M -> 1,619M (-18%). Checked on the English disc to frame 6500 (dive_en.txt): the gxmcheck log at
+trace 5 (host pointers and paths aside) and its 4,758 shots byte-identical; the GSQ_CHECK digests every 50
+frames the same with and without the worker, and the same as before. Left on the worker: the upload stores
+(kh1_gsmem_image, ~20%: T8 at ~12 instructions a byte, CT32 pieces of ~8 words), the GIF decode and the
+recording's vertex work. The next step is a third core: the frame's GPU work (gxm.c, the latch and the
+present) behind the worker, which needs the GS memory it reads (pending target uploads, loose textures) and
+the caches' new entries handed over as of the frame's end.
+
+### The GPU frame on the third core (session 142)
+
+3d-z (the changes above) on a Vita: the Dive at ~7.8 fps (14-18 frames per 2 s, from 12), the worker ~1.2 s busy
+per 2 s, recording ~0.29 s, the frame's commands ~0.29 s, the game waiting ~0.4 s for it. The frame's GPU work
+(gxm.c's commands, the latch, the present) now runs on a thread of its own on the third core (gsqueue.h's
+`kh1_gpuq`, with the watchdog, which sleeps), while the worker records the next frame:
+
+- **What it reads is a copy of the frame** (host/null/pipes.c `snap_frame`, at the worker's frame op once the
+  last job has ended): the commands, passes and targets; the rings' slots stay, since the next frame writes the
+  other and the one after waits for this job; the texels of the frame's texture uploads and the palettes of its
+  palette fills (`kh1_pipes_frame_texels` / `_pal`: gxm.c read them from the caches at the frame's end, and the
+  worker may now drop or refill those entries); and GS memory (host/null/gsmem.c `kh1_gsmem_snap_take`: the
+  pages any store reached since the last copy, `dirty_pg`, and every page's stamp; gxm.c's pending target
+  uploads, loose textures and their stamps read the copy through `kh1_gsmem_snap_read_block` / `_read_rect` /
+  `_tex_stamp`, which share nothing with the live model). gxm.c read GS memory only as the frame left it (its
+  first pend_flush too: the last frame's leftovers as this frame left them), so the copy gives the same bytes.
+- **Order**: the worker waits for the last job before it copies, so one frame is on the GPU thread while the
+  worker records the next and the game runs the one after (the vblank still waits for the worker's frame op).
+- config.txt `gpuq=0` keeps the frame on the worker. The watchdog adds `gpu thread: N ms busy; the GS worker
+  waited M ms for it (K waits); P GS memory pages copied`; `cpu: ... the frame's commands` and `present` are the
+  GPU thread's now, and kh1_cmd_frame (the passes' loads and stores) stays on the worker.
+- **Host**: `KH1_HOST_GPUQ=1` runs the recorder's hook (gxmcheck's stand-in) the same way on a POSIX thread, `=2`
+  from the copy on the same thread. `KH1_HOST_GXM_HASH=1` makes the stand-in print a hash of the GPU's display
+  and 3D targets at each Nth frame instead of comparing with the model (which is a frame ahead with the thread).
+- **Checked** (en.iso, dive_en.txt, to frame 6500): gxmcheck at trace 5 with `KH1_HOST_GPUQ=2` gives the same
+  log (host pointers aside) and the same 4,758 shots as without; with the worker in the Vita's order
+  (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1`) the GPU targets' hashes at every
+  50th frame (123 of them, to frame 6150) and the GS digests are the same with `KH1_HOST_GPUQ=1` as without,
+  and without the worker too.
+
+## The flashing floor: one-byte enums (2026-10-28)
+
+The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
+Vita and in Vita3K, never on the host, the x86 gxm_mock run or the ARM Linux build under qemu-arm. The
+lost draws were not the GPU's: on the bad frames the game's VIF1 stream itself was different (208 VU1
+runs, 303 kicks and 29 program loads against 305 runs, ~586 kicks and 13 loads; 47 draws against 54), and
+a real-Vita log (3d-za) had the walk's "N words no VIF code" lines with the chain dumped: the grid effect's
+two DMA lists (D_004761A0 / D_0047A1E0, src/gfx/grideff.c, swapped by D_00351BD0) with a third tag of
+`refe qwc 49154` in one and a `ref` to non-VIF bytes in the other. That tag is the header func_00106ed0
+writes through `EntE` / `EntLb`, structs whose second field is `EN`, a one-value enum the matching code uses
+for its alias set.
+
+The cause: vitasdk's gcc (arm-vita-eabi, a bare-metal EABI) makes an enum as small as its values,
+`-fshort-enums` by default, so `EN` was one byte and the structs' later fields moved; the EE's gcc and
+every host compiler make it an int. Not the memory layout (the x86 runner with the Vita's misalignment and
+the ARM build linked above 0x80000000 both draw the floor), not the GS worker's timing (an x86 worker
+slowed by 30 µs an op), not the VU1 programs.
+
+tools/vita/build.py now compiles the game's files (src/, host/null, host/port, the native overlays) with
+`-fno-short-enums`, and host/vita's own files with `-fshort-enums`: SceGxm's and vita2d's structs are laid
+out for one-byte enums, and no struct the two sides share has an enum field (include/platform's enums are
+unnamed constants). The link takes `--no-enum-size-warning` for the mix; `readelf -A` on an object shows
+`Tag_ABI_enum_size: int` for the game's and `small` for host/vita's.
 
 ## What next, in order
 

@@ -35,6 +35,10 @@ Conventions:
 | `python3 -I tools/host/clutcheck.py [-v]` | the CLUT each window, text, menu and HUD sprite reads, from the C's per-draw packets: loaded in its own picture (header and packet) or listed in `CLUT_EXPECTED` with who loads it; no ELF needed (§4.9 "Session 113"). New in session 113; session 114: the HUD's TEX0 pairs, stored TEX0s (`DESCRIPTORS`, self-loading CLD 1) and `--table` (§4.9 "Session 114") |
 | `python3 -I tools/host/giftags.py src/text/*.c` | the GIF tags (with PRE) the C writes as constants, by function: the shape of packets built per draw, which no static walk sees (§4.9). New in session 79 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
+| `python3 -I tools/vu/amesh_survey.py DIR [--per-file] [--regs]` | every renderer A mesh of the map files you extracted (`<ww>00_<nn>.bin`): the grid's cells, the template, the sky meshes, decoded through a model of VIF1 and checked (batch sizes, strip flags, codes), with counts of the PRIMs, flags, unpack layouts and the GS registers the meshes set (§2.2.2). New in session 142 |
+| `python3 -I tools/vu/amesh_render.py ROOM.bin ROOM.img --eye=X,Y,Z --at=X,Y,Z -o OUT.png [--far 2,3] [--tint]` | draws a room's grid (or its sky) textured, from this spec's layouts alone, with a GS memory model for the .img (numpy + Pillow): the reference picture for the port (§2.2.2). New in session 142 |
+| `python3 -I tools/vu/find_vu1.py --overlay FILE.x --base 0xF20000 [--disasm N \| --summary N]` | the VU programs an overlay uploads (gb.x, wm.x: §2.5) |
+| `python3 -I tools/vu/rc_stream.py FILE... [--per-model]` | checks every renderer C batch in the Gummi model archives (`TARC` / `MOPB`, §2.5.1) |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
 | `python3 tools/kh1tool.py asm func_X` / `src/` | the EE side; every function cited here is matched C, so the source is the reference |
 
@@ -60,11 +64,16 @@ The renderer uses all three GS paths:
     `text_00150000_h36.c`, `text_00150000_h59.c`, `text_00140000_s6_07.c`).
     This is the character/object renderer (inferred from the skeleton code in
     `func_00162xxx` that feeds it).
+  - *Session 142:* **Renderer C** (`C0`-`C4`, §2.5): indexed, lit strips
+    uploaded by the Gummi overlays gb.x and wm.x, not by the main ELF.
 - **PATH3 (GIF DMA, channel 2)** for 2D: UI, fonts, fades, the end-of-frame
   copy and texture uploads. Static packets go through `func_00106b18`; dynamic
   ones go straight to `PlatDmaSend(PlatDmaGetChan(2), tag)` (include/platform/dma.h;
   libdma's sceDmaSend / sceDmaGetChan, named from their code in session 56).
-- **PATH2 (VIF1 DIRECT)** was not seen in any static chain.
+- **PATH2 (VIF1 DIRECT)** was not seen in any static chain. *Session 142:* it
+  is in the data: every renderer A map mesh sets its texture with a `DIRECT`
+  A+D packet between batches, and the sky meshes upload their pictures that
+  way (§2.2.2).
 
 VU0 runs one micro-mode program (`P21`) for skeleton matrices. The rest of the
 game's VU0 work is macro mode (inline `vXXX` in C, `src/hand/vu0.c`).
@@ -181,13 +190,22 @@ build frame N+1 while DMA reads frame N.
 - then n x 3 qwords, interleaved per vertex:
   - `[0]` position xyz (float), w = **strip flag** (integer via `MTIR`):
     0 = do not draw a triangle at this vertex (strip restart), +-1 = draw,
-    with the sign giving the winding for backface culling;
+    with the sign giving the winding for backface culling. *Session 142,
+    from the disc:* the word is `+-1.0f` with a low bit set, `0x3F800020` /
+    `0xBF800020` or `0x3F800002` / `0xBF800002`: `MTIR` takes the low 16
+    bits (non-zero = draw) and `FMAND` ANDs them with the MAC flags of
+    `cross.z * flag` (`MULW.z`), so **`0x20` (Z sign) culls back faces and
+    `0x02` (Z zero) culls only degenerate triangles: a per-vertex
+    double-sided switch** (§2.2.2);
   - `[1]` colour RGBA (integers, `ITOF0`, multiplied by qw6 and converted
     back with `FTOI0`; 0x80 = 1.0 in GS convention);
   - `[2]` ST as 1.12 fixed point (`ITOF12`); Q comes from 1/w. In P3 the w
     of this qword selects the texture-coordinate mode (2.2.1).
 - The VIF UNPACK formats that produce this layout are set by the model data,
-  not by the ELF (open question 1).
+  not by the ELF. *Session 142:* read from every map on the disc (§2.2.2):
+  `UNPACK V4-32 1 -> @0` (the tag), `STCYCL 3,1`, then `V4-32 -> @1` (xyz +
+  flag), `V4-8 usn -> @2` (RGBA) and `V2-16 -> @3` (ST) for mesh A and the
+  sky, `V4-16 -> @3` for mesh B (so P3 gets a `w`: its flag).
 
 **Per vertex** (P0, the base program):
 
@@ -234,6 +252,62 @@ From diffs of the disassembly:
 Fog in P2/P3/P7 is linear in 1/w: `F = A + B/w`, clamped. The GS blends
 toward `FOGCOL` by `(255 - F)`.
 
+#### 2.2.2 Map meshes on the disc (session 142, the English disc's 130 map files)
+
+The first check of this section against real files: the user's English ISO (SHA-256 c8ee8c77...;
+the map `.bin` / `.img` files are the retail ones, the patch does not touch them) staged from the Mac,
+all 3,326 KINGDOM.IDX entries extracted, 1,966 of them named by hashing the names the ELF and the
+files themselves spell (`<ww>00_<nn>.bin` for every world prefix and room: **all 130 map files the
+code's name rule predicts exist**, with their 130 `.img` and 233 `.ard`). `tools/vu/amesh_survey.py`
+walks every renderer A mesh through a VIF1 model and **finds no error**: every batch's vertex count
+equals its UNPACK counts, every flag is one of the values below, and no other VIF code occurs.
+
+| | Grid mesh A (P0 / P2 / P6) | Grid mesh B (P3) | Sky, sections 2 / 3 (P4) |
+| --- | --- | --- | --- |
+| REFs / batches / vertices | 72,412 / 207,296 / 4,617,144 | 25,370 / 34,948 / 563,253 | 260 / 1,008 / 39,257 |
+| VIF codes | `UNPACK V4-32 1 -> @0` (the tag), `STCYCL 3,1`, `V4-32 -> @1`, `V4-8 usn -> @2`, `V2-16 -> @3`, `MSCNT`; before a batch that changes texture `FLUSH; DIRECT 3` | the same with **`V4-16 -> @3`** | as A, plus `DIRECT` texture uploads (below) |
+| Batch GIF tag (PRE) | `TRISTRIP\|IIP\|TME\|FGE\|CTXT2` (172,031), the same `\|AA1` (27,606), `TRISTRIP\|IIP\|FGE\|CTXT2` untextured (7,659); NREG 3, REGS `0x412`, EOP | `TRISTRIP\|IIP\|TME\|FGE\|ABE\|CTXT2` always | `TRISTRIP\|IIP\|TME\|ABE\|CTXT2` (860), without ABE (148) |
+| Tag `w` (the clipped fans' PRIM) | the same flags with `TRIFAN` (`0x311EC000`, `0x315EC000`, `0x3116C000`) | 0: the fans keep chain 3's static template (`0x313EC000`, §4.14) | `0x312EC000` / `0x310EC000` |
+| Strip flags | 0: 2,264,644; `0x20` (cull back faces): 2,105,070; `0x02` (double-sided): 247,430 | 0: 342,724; `0x20`: 163,870; `0x02`: 56,659 | 0 or `0x20` |
+| RGBA | alpha 0x80 on 99.99 %; 12 % of vertices have a colour channel above 0x80 (brightened: the 0x80 = 1.0 scale) | alpha anywhere from 0 to 0x80 (a quarter at 0): **the translucency is in the vertices** | mostly 0x80 |
+| ST | 1.12 fixed point (V2-16: z, w repeat s, t and are not read) | 1.12; **`w` = P3's flag**: 0 (306,484 vertices), 1-16 = UV-scroll slot (255,779), **0x11 = sphere map (990, all in one room, nm00_07)** | as A |
+
+**Per-mesh GS state (open question 2, answered).** The meshes set exactly two registers, by A+D in the
+`DIRECT` packets between batches: **`TEX0_2` and `CLAMP_2`** (cells: 189,344 packets; no ALPHA, TEST,
+TEX1, MIPTBP or FOG). All TEX0s: CPSM CT32, CSM 0, CSA 0, **CLD 1** (the CLUT reloads with each),
+**TCC 1, TFX MODULATE**; PSM PSMT4 / PSMT8 / PSMT8H (and CT32 on 7,488 A packets), TW x TH 512 x 256
+(TBW 512) or 256 x 256 (TBW 256), TBP0 in the .img's pages (`0x2600-0x35FF`) or the PSMT8H picture
+(`0x0000-0x0FFF`), CBP `0x3E00-0x3FFF` (docs/structs.md "The map image"). CLAMP is
+**REGION_CLAMP or REGION_REPEAT on both axes**: every map texture is an atlas window of a page (the
+repeat masks tile inside it). Everything else (ALPHA, TEST, ZBUF, FBA) comes from the key's state
+packets (§4.11, §4.14). The sky's packets upload their own pictures (to block `0x3400`, CLUT `0x3A00`,
+then `TEXFLUSH`; 337 of them, 16 x 16 to 256 x 256).
+
+**What the layers are (open question 8, answered from the files).** `tools/vu/amesh_render.py` draws a
+room from these layouts alone (the .img loaded into a GS memory model the way `func_00101048` loads it,
+each strip with the TEX0 / CLAMP its mesh set last). Traverse Town's first district (tw00_01) and
+Destiny Islands (di00_01) come out as the game shows them, which checks the batch layout, the ST scale,
+the strip flags, the CLUT and page swizzles and the region clamps together. In the pictures:
+
+- **Mesh A** is the opaque room (ground, walls, roofs, trees).
+- **Mesh B** is everything translucent laid over it: on Destiny Islands the **sea surface, the
+  waterfall and the cloud layer** are B batches with UV-scroll flags, and the **surf line** round
+  the beach is a B batch without one (alpha from the vertices); in Traverse Town the B cells are the
+  cut-out shop signs ("Items", "Jewelry"), a banner, soft shadow blobs on the paving and the blended
+  strips where the paving meets the walls. Mesh B is big: up to 872 of 933
+  cells in a room carry one (dc00_03), and it never writes Z (key 50000, §4.14).
+- **Sections 2 / 3** are the sky (docs/structs.md "Map .bin"): a dome some 14,000 to 40,000 units
+  across with the gradient and clouds, and a second layer inside it (a cloud band on Destiny Islands,
+  the night's shapes over Traverse Town).
+
+So a port can draw a room as: the sky (P4, double-sided, no fog, blended where ABE), the opaque grid
+(A: alpha-tested, fogged, back faces culled per vertex as the flags say), then the translucent grid
+(B: blended by vertex alpha x texel alpha, fogged, UV scroll or sphere map, no Z write). The AA1 bit
+(edge antialiasing on 13 % of A batches) can be ignored.
+
+Not modelled by the picture tool and not checked here: the fog values, the colour scale qw6, the
+clipper, the animated textures and CLUTs (§4.13), the scroll rates (the .img's setup, docs/structs.md).
+
 ### 2.3 Renderer B (P10-P20)
 
 **Selection** (`func_0015fc00`, `src/hand/nostrict/text_00150000_s6_08.c`):
@@ -269,7 +343,8 @@ and the material colour: they store 0x80 x 4 into VU qw1 and write
 `S = (x - 2048) / 512 + 0.5`, `T = (y - 2048) / 384 + 0.5`, `Q = 1` from the
 projected position (qw7 constants, `LOI 0.5`), i.e. **screen-mapped texture
 coordinates**: the part shows whatever texture is bound, stretched over the
-512x384 screen. Step 2 sends only ZBUF/FRAME for these entries (no texture
+512x384 screen. *Session 142:* used by three models' object scripts only
+(§2.3.1, after the callers' table). Step 2 sends only ZBUF/FRAME for these entries (no texture
 upload, no TEST/ALPHA), so the bound texture is the previous draw's or one a
 step-3 callback set (not determined statically). Inferred use: a see-through
 or refraction-like part effect.
@@ -323,12 +398,20 @@ or `>= 0x100` for a palette entry at `vi06 + (w - 0x100) + 1..4`):
 - `g & 2`: 1 qword: position + slot. GIF tag `TRISTRIP`, `REGS = XYZ2`, the
   untextured strips of the shadow pass (§3.3). The alternate part tables use
   it.
-- `g & 1` (skinned, P13/P14/P17; layout read from P13, no such part in the
-  savestate or the files at hand): 1 qword whose `w` = influence count `k`,
-  then `k` weighted positions (`xyz * weight`, w = weight) whose bones come
-  from the op 2 list, then STQ. The program does `ACC = sum(M_bone_i * p_i)`
-  (`MULAX`... for the first, `MADDAX`... for the rest), then `MADDI` with
-  I = 0 to finish: the "vertices stored per bone" layout.
+- `g & 1` (skinned, P13/P14/P17; layout read from P13): 1 qword whose `w` =
+  influence count `k`, then `k` weighted positions (`xyz * weight`, w =
+  weight) whose bones come from the op 2 list, then STQ. The program does
+  `ACC = sum(M_bone_i * p_i)` (`MULAX`... for the first, `MADDAX`... for the
+  rest), then `MADDI` with I = 0 to finish: the "vertices stored per bone"
+  layout. *Session 142, on the disc:* 572 parts in the boss models (docs/structs.md),
+  1-6 influences a vertex, all walked without error. Each influence reads the
+  next op 2 index (`ILWR.x/y/z/w` through the list, `vi08`): **0, 1, 2 = matrix
+  slot (vf05-08, vf12-15, vf19-22); `0x100 + 8 j` = palette entry j**, loaded
+  from `vi06 + 8 j + 1..4` into the slot-2 registers. `vi06` is set by the op 0
+  record with `w = 1` (the base, itself entry 0) and the entries are the op 0
+  records with `w = 2` that follow it, 8 qwords apart (z only counts on; not
+  read). A packet can set a new base half-way (the earlier indices then refer to
+  the old one). Of 435,830 influences, 413,469 use a slot and 22,361 the palette.
 
 Colour = VU qw1 (unlit) or the lit colour.
 
@@ -360,6 +443,10 @@ first).
 
 `func_001606d0` (via `func_001621e0` or `func_00161de8`) has six callers in
 the main ELF. Overlays and the runtime code at `0x00F20000` were not searched.
+*Session 142:* of the overlays (§2.5's `jal` scan) only wm.x reaches it, through
+`func_001621e0` (3 calls; the world-map models), and its `Prm.x2c` is not traced. gb.x calls only
+`func_0015ed80`/`func_0015ee78`, and the summons call none of these. The object scripts that set
+`Prm.x2c` are below.
 
 | Caller | `Prm.x0` | `Prm.x2c` | Objects |
 | --- | --- | --- | --- |
@@ -370,12 +457,38 @@ the main ELF. Overlays and the runtime code at `0x00F20000` were not searched.
 
 `o->x394` is a per-actor part mask: `func_00135a10(o, n)` sets bit `n - 1`,
 `func_00135a38` clears it. Their only callers are script commands: entries
-77/78 of the command table at `0x002E2810` (8-byte `{fn, argc}` records,
+136/137 (`0x88`/`0x89`; session 142 corrects "77/78", read from the table:
+`{0x00129E08, 2}`, `{0x00129E28, 2}`) of the command table at `0x002E2810` (8-byte `{fn, argc}` records,
 reached through the descriptor `D_002E2F20` that `func_0012b738` puts into
 the 64 script nodes `D_004F8310`), via `func_00129e08`/`func_00129e28`, and
 opcodes 402/403 of the script VM table at `0x003D9FE0` (`func_001d6780`,
 `func_001d67c8`, which pop the part number from the VM stack and use the VM's
 actor). So P19/P20 appear only when an event or field script asks for them.
+
+*Session 142, from the disc's scripts:* the field VM's instructions are 4 bytes
+(`func_001c1ce8`: opcode = byte 3, argument = s24 bytes 0-2), so a library call
+402 / 403 is the word `0x18000192` / `0x18000193`. **No `.ard` (where the field
+VMs' code lives: 25,641 library calls in all, 404 and 405 among them) and no
+`.evm` holds either**; the only hits on the disc are inside the movies. The other
+path is the object scripts: section 6 of a `.mdls` (`func_00132260`: `o->x138`),
+run by the stack VM `func_0013cfe8`, whose native call is the 16-bit op `index << 8
+| table << 6 | 0xB` (table 0 = `0x002E2810`). A linear walk of the 138 script
+sections (29,553 native calls) finds commands 136/137 in three models only:
+
+| Model | Part number pushed | Parts it selects (`Prm.x2c` bit = part id) | Rooms that load it |
+| --- | --- | --- | --- |
+| `xa_tz_3020.mdls` | 4 (bit 3) | the ten parts with id 3 of 21 | tz12, he03, he07 (and menu.ard) |
+| `xa_tz_3040.mdls` (same model, other scripts) | 4 (bit 3) | the same | he03, he07 |
+| `xa_ex_2430.mdls` | 1 (bit 0) | all five parts (id 0) | pc05, pc15 |
+
+`func_00135a10(o, n)` sets bit `n - 1` and `func_001606d0` sets the entry's `fl & 8`
+when `Prm.x2c & (1 << part id)` (src/model/mdldraw.nostrict.c), so these parts switch to
+P19/P20 (the screen-mapped texture) while the script holds the bit. A Deep Jungle boss
+that also fights in the Coliseum, with part of its body drawn see-through, fits the
+chameleon Stealth Sneak (inferred from the rooms; not seen in a run), and the Hollow
+Bastion model a cloaked enemy. A port can implement P19/P20 as "sample the current
+frame at the vertex's screen position" (a refraction / invisibility effect) for these
+few models; which texture is bound when they draw is still unchecked.
 The other masks follow the same pattern: `x38c` = parts hidden in the normal
 draw (`Prm.x28`), `x390` = parts hidden in the shadow (`func_00127960`).
 
@@ -437,6 +550,112 @@ in that frame.
     (no shear), but positions are scaled by the parents.
   Port: a CPU Euler (XYZ, radians) to matrix function plus this composition;
   no VU0 needed.
+
+### 2.5 Renderer C: the Gummi engine in gb.x and wm.x (session 142, static)
+
+Open question 11. The EE overlays (docs/overlays.md) were scanned on the English disc's copies
+(`find_vu1.py --overlay ... --base 0xF20000`, and their `jal` targets into the main ELF):
+
+- **gb.x (Gummi flight and garage) and wm.x (the world map) upload VU1 programs of their own: five
+  each, byte-identical between the two overlays** (gb.x `0x00F515E0`..., wm.x `0x00F7F870`...), every
+  one at VU micro address 0, so each upload replaces whatever was there. Sizes: C0 752, C1 739, C2 707,
+  C3 278, C4 273 instructions (named C0-C4 here; `--disasm N` with `--overlay` prints them).
+- The other overlays upload none. wm.x also calls renderer B (src/model/mdldraw, 20 calls: the
+  models on the world map), both call the text windows, the HUD and the capture code; the summons
+  (xs_*.x) draw through the main ELF (the draw list, `src/gfx/gspkt`, `gifpkt`, `gsclip`, ppp
+  effects); dktitle.x and dkmovie.x only through the main ELF.
+
+**C0-C4 are one design: indexed, lit triangle strips** (unlike A and B, which stream vertices; *session 143:*
+on the disc every "strip" is a 3- or 4-vertex fan, §2.5.1).
+
+VU memory (read from the init blocks; meanings inferred from the maths):
+
+| VU qw | Use |
+| --- | --- |
+| 0-3 | colour matrix (vf09-12): lit colour = M * max(n', 0); qw3.w = the alpha every vertex starts with |
+| 4-7 x 17-20 | combined into vf05-08: the normals' matrix (rows qw17-20 applied first, then qw4-7; inferred: object rotation then 3 light directions + ambient) |
+| 8-11 x 13-16 | combined into vf01-04: the positions' matrix (qw13-16 first, then qw8-11: local -> clip) |
+| 12 | vf30: the flat colour (C2) |
+| 991 + k | UV-scroll offset of slot k (C0, C3; added to ST) |
+| 992 + m | material m's colour multiplier (C1, C4) |
+| 1007-1014 | scratch |
+| 1018 / 1019 / 1020 | C0-C2: the clip box's min / max (x, y, w) and the w plane |
+| 1021 + m | material m: `x` = the vertex routine's address, `y` = the store routine's (micro addresses the EE writes: a textured and an untextured pair; the files use m = 0 and 1, §2.5.1) |
+| 0x180 / 0x2B0 | output double buffer, 0x130 qwords each, one `XGKICK` per group |
+
+**Batch** (at TOPS, one per `MSCNT`): header `{x, y, z, w}` = x leading qwords (the ST and colour-multiplier
+entries the indices point at), y positions, z normals, and the command list at TOPS + w. The program first
+transforms all y positions by vf01-04 and divides by w **in place** (C0-C2 also store an outcode per
+position: x, y and w against qw1018 / 1019, in the w of the matching normal entry, and skip the batch when
+all positions are outside one plane), then all z normals by vf05-08, clamps at 0, multiplies by the colour
+matrix and stores the RGB **in place** (C2 skips the lighting).
+
+**Command list**: a group qword `{runs (0 = end), material m (0 = keep the GS state), double-sided,
+-}`; a qword whose x is the UV-scroll slot (0 = none; read by C0 / C3 only); if m != 0, two qwords copied to the
+output as they are (*session 143:* a GIF tag `NLOOP 1, NREG 1, PACKED, REGS 6` and the `TEX0_1` value, so a
+new texture). Then per run a qword
+`{vertices a strip, strips, space, -}`, the strips' GIF tag, and the strips: one index qword per vertex,
+`{position, colour, ST, multiplier}` as offsets from TOPS. A strip whose first triangle faces away
+(`OPMULA`/`OPMSUB`, `FMAND 0x20`) is skipped whole unless the group is double-sided. Per vertex: XYZ =
+the projected position (`FTOI4`), RGBA = lit colour x the multiplier entry (C0, C3) or x the
+material's colour (C1, C4), or the flat colour (C2), clamped to 255; STQ = (ST + scroll) x Q, or (0, 0, Q)
+for the untextured routine.
+
+| | Lighting | Colour multiplier | UV scroll | Clipping |
+| --- | --- | --- | --- | --- |
+| C0 | yes | per vertex | yes | yes: guard band x / y and the w plane, polygon clip (`bal 0x0290`) |
+| C1 | yes | per material | no | yes |
+| C2 | no (flat qw12) | - | no | yes |
+| C3 | yes | per vertex | yes | no (C0 for objects known to be inside) |
+| C4 | yes | per material | no | no (C1's) |
+
+#### 2.5.1 The batches on the disc (session 143, the English disc)
+
+The EE does not build batches: they are prebuilt in the models (`TARC` / `MOPB`, docs/structs.md "Gummi
+models"), as renderer A's are. `tools/vu/rc_stream.py` walks every one (393 models, 8,316 batches, 10,870
+runs) against what the VU code reads, with 0 errors. What the data shows, beyond the layout above:
+
+- **Upload.** `STCYCL 4,4` throughout. Header V4-8 (unsigned) at TOPS + 0; the leading qwords V4-32; the
+  positions and normals one masked V3-32 run (`STMASK 0x40404040`, `STROW` w = 1.0, so every position's w is
+  1.0); the command list V4-32 for group, UV, material and run qwords and V4-8 (unsigned) for the index
+  qwords. One `MSCNT` per batch, up to 48 positions (mostly 16 or 32).
+- **Index targets.** The position index always falls in the positions, the colour index in the normals
+  (their lit RGB is stored there). Every multiplier index points into the leading qwords; every ST index
+  points into qwords after the normals (V3 `{s, t, 0}` with w 1.0). C0-C2 store each position's outcode in the
+  w of qword position + y; in every batch that slot ends before the command list.
+- **Runs are fans, not strips.** Every run's GIF tag is `PRE` with `TRI_FAN + IIP` (+ `TME`, + `ABE`),
+  `NLOOP` = the run's vertex count, which is 3 or 4: each "strip" is one triangle or one quad. The tag's
+  registers are `ST, RGBAQ, XYZ2` (0x412) or `NOP, RGBAQ, XYZ2` (0x41F). The run's space z is always 6 x vertices + 1:
+  room for 2n output vertices of 3 qwords plus the tag (inferred: the clipper's worst case for an n-gon), and
+  the run's w is always vertices x strips.
+- **Materials.** The files use m = 0 and 1 only. Every m = 1 group carries `TEX0_1`: PSMT8 128 x 128 (4,946),
+  PSMT4 128 x 128 (1,355) or 128 x 64 (12), `TCC 1`, MODULATE, `CLD 1`. m = 0 groups reuse the texture already
+  set; the 436 runs with the untextured register list are all in m = 0 groups.
+- **Groups.** Every model has 3 mesh groups. Group 2 is the main mesh (331 models; textured, translucent and
+  untextured runs); group 0 (91 models) is all `ABE` (translucent); group 1 is nearly unused (8 models).
+  764 of 9,711 command groups are double-sided (z = 1). UV-scroll slots 1-4 appear in 751 groups.
+
+**Program per group.** `func_00F3F548` (gb.x; wm.x's copy is `func_00F66640`) takes a program index 0-5
+and points a DMA `CALL` at that program's upload (a `RET` tag with the microcode inside): 0 and 3 = C0,
+1 = C3, 2 = C2, 4 and 5 = C1. The chain it builds: the program, `UNPACK` 12 qwords to 0-11 (the matrices),
+8 qwords to 13-20, 16 qwords to 992-1007 (the material colours, cleared when the caller passes none),
+`FLUSHA`, a `CALL` to the part's batch chain, `MSCAL 0`. A model is drawn by `func_00F3E0D8` or
+`func_00F3E388` (wm.x `func_00F651D0`, `func_00F65480`): per group g, the caller's table entry g; per part,
+the part's chain and its bone's matrix. Every caller passes a literal table:
+
+| Table (groups 0, 1, 2) | Programs | Callers |
+| --- | --- | --- |
+| `{5, 1, 1}` | C1, C3, C3 | gb.x and wm.x, the default |
+| `{4, 0, 0}` | C1, C0, C0 | gb.x `0x00F40734`, `0x00F405AC` and wm.x `0x00F677EC`, `0x00F67664`, chosen by a flag (inferred: the model's box crosses the guard band, so it needs clipping) |
+| `{0, 0, 0}` / `{1, 1, 1}` | C0 / C3 for all groups | wm.x `0x00F29670`-`0x00F297EC` (world-map objects) |
+
+So group 0 (the translucent layer) runs C1, per-material colour, wherever the default tables are used, and
+the main mesh runs C3, or C0 when clipped. **No caller passes 2 or 3, and nothing refers to C4's upload**
+(gb.x `0x00F56460`, wm.x `0x00F846F0`): C2 (flat colour) and C4 are dead code on this disc, statically. A
+port needs C0, C1 and C3.
+
+A port can draw this engine on the CPU side (index buffers + per-vertex lighting, one draw per run as a
+triangle or quad fan) instead of translating the VU code; the files need no rewriting.
 
 ## 3. GS state
 
@@ -3424,7 +3643,8 @@ Every full-width rule goes through `func_00206130`, which session 101 covered.
 - `func_0010b390`'s `f6` meaning (the tail sprites `D_002B7210` ... `D_002B7350`), from a boot that shows an
   object window with its speaker off screen.
 - Overlays and the runtime code at `0x00F20000` were not searched (the Gummi ship and the world map are
-  there). The main ELF's own other views have no frustum (session 91).
+  there). The main ELF's own other views have no frustum (session 91). *Session 142:* the overlays'
+  VU1 code is now known (§2.5); their culls were not read.
 - `func_00110618` is still a non-match; its C for the port is host/port/view.c (session 91, bit-identical
   maths; tests/selftest.sh runs viewcheck.py when the ELF is in the repo root, session 92).
 - ~~Session 92: the static full-screen packets' stretch (the list above) is the renderer's; the host's null
@@ -3459,9 +3679,19 @@ Every full-width rule goes through `func_00206130`, which session 101 covered.
    mesh, and no other opcode exists. `tools/vu/rb_stream.py` walks every
    mesh in a RAM dump, a `.mdls` or the ELF with zero misparses. Still open
    for B: a skinned (`g & 1`) part to check the P13 layout on real data.
+   *Session 142:* answered on the English disc. Renderer A's batch is `STCYCL 3,1`, then V4-32 tag,
+   V4-32 xyz + strip flag, V4-8 RGBA and V2-16 ST (V4-16 on mesh B, whose w is P3's flag); every mesh in
+   the 130 map files walks with 0 errors (§2.2.2, `amesh_survey.py`), and the derived names all match
+   KINGDOM.IDX. Skinned parts exist (§2.3: op 0 `w = 1` palette base, `w = 2` entries; index 0-2 a
+   matrix slot, `0x100 + 8j` palette entry j; 1-6 influences), and `rb_stream.py` walks all 1,489
+   chunks of the 500 `.mdls` and 233 `.ard` files with 0 errors.
 2. ~~Per-mesh GS state~~ Partly answered by §3.3: CLAMP/CLAMP for most
    meshes, REGION_CLAMP atlas windows for context-2 draws. Still open: where
    in the model file those values live.
+   *Session 142:* answered for renderer A (§2.2.2): each mesh's only GS state is `TEX0_2` and
+   `CLAMP_2`, A+D in a DIRECT packet inside the mesh's chain (CT32 CLUT, `CLD 1`, `TCC 1`, MODULATE,
+   REGION_CLAMP or REGION_REPEAT). The textures come from the map's `.img` (structs.md, "The map
+   image").
 3. ~~DTHE and COLCLAMP~~ Answered (§3.3): dither off, colour clamp on.
 4. P19/P20 (`fl & 8`) and P10 (`v` bit 2): which game objects use them
    (shadows? effects? §3.3's 256x256 off-screen pass is the likely
@@ -3493,6 +3723,10 @@ Every full-width rule goes through `func_00206130`, which session 101 covered.
    `g = 0` drop bit 2 and run as P18. So a normal fight does not trigger
    the script-driven `Prm.x2c` path; a cutscene or a boss is the next
    place to look.
+   *Session 142:* the commands are 136/137 (`func_00129e08`/`func_00129e28`), not 77/78, and they are
+   called from the object scripts in `.mdls` section 6, not the field VM (§2.3.1). Users on the
+   disc: `xa_tz_3020`, `xa_tz_3040` (part 3) and `xa_ex_2430` (part 0, all parts); inferred to be a
+   cloaked enemy. Still open: confirming on screen which effect they give.
 5. ~~P21's rotation order and angle units, and how `func_00162c5c` composes
    the parent matrix.~~ *Session 17:* answered (§2.4): radians, `R = Rz *
    Ry * Rx` (X applied first), `func_00162c5c(out, A, B)` = `A * B`, world =
@@ -3523,6 +3757,10 @@ Every full-width rule goes through `func_00206130`, which session 101 covered.
    template), case 3 each visible cell's second mesh (P3 env map / UV scroll, key 50000, no Z writes,
    blended, fogged), and the fade groups reuse case 3's head. What the second meshes are on screen
    (inferred: water / glass / glint layers) waits for a boot or a real-disc host run.
+   *Session 142:* answered by rendering the disc's meshes with their textures (`amesh_render.py`,
+   §2.2.2). Mesh B is the translucent layer: the sea, waterfalls, clouds, surf, shop signs and the
+   baked shadow blobs. Sections 2/3 of the `.bin` are the sky domes (P4, own textures at block
+   `0x3400`).
 9. ~~VSync and frame pacing: the constants in `func_0010fea0`, the 30/60 fps
    switch (`D_002BBDEC`), and where the main loop waits for the vertical
    blank.~~ *Session 86 (§4.15):* read from the C. The frame end `func_001104e0` waits for one field
@@ -3537,3 +3775,8 @@ Every full-width rule goes through `func_00206130`, which session 101 covered.
     store of 2: the overlay check).
 11. The runtime-loaded code at `0x00F20000` (docs/elf-notes.md) may draw;
     it is not covered here.
+    *Session 142:* scanned (§2.5). Only gb.x and wm.x upload VU1 code: five byte-identical
+    programs (renderer C, indexed lit strips), documented from the disassembly. The other overlays
+    draw through the main ELF. *Session 143:* the batches are prebuilt in the Gummi model files and
+    check out on all 393 models (§2.5.1); C2 and C4 are never selected. Still open: a capture to check the
+    inferred matrix roles.

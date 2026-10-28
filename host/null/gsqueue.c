@@ -45,6 +45,27 @@ static int worker_entry(SceSize n, void *p) {
     worker();
     return 0;
 }
+static SceUID gq_sem[2];
+static void gq_sem_wait(int i) { sceKernelWaitSema(gq_sem[i], 1, 0); }
+static void gq_sem_post(int i) { sceKernelSignalSema(gq_sem[i], 1); }
+static void gq_worker(void);
+static int gq_entry(SceSize n, void *p) {
+    (void)n;
+    (void)p;
+    gq_worker();
+    return 0;
+}
+/* session 142: the GPU frame's thread on the third core (with the watchdog, which sleeps); 2 MiB of stack for
+ * SceShaccCg, as the GS worker's */
+static int gq_thread_start(void) {
+    SceUID t;
+    int i;
+    for (i = 0; i < 2; i++)
+        if ((gq_sem[i] = sceKernelCreateSema(i ? "kh1_gpu_done" : "kh1_gpu_work", 0, 0, 0x7FFFFFFF, 0)) < 0) return -1;
+    t = sceKernelCreateThread("kh1_gpu", gq_entry, 0x10000100, 0x200000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
+    if (t < 0) return -1;
+    return sceKernelStartThread(t, 0, 0) < 0 ? -1 : 0;
+}
 static int thread_start(void) {
     SceUID t;
     int i;
@@ -64,6 +85,22 @@ static void sem_wait_(int i) {
     while (sem_wait(&sem[i])) ; /* EINTR */
 }
 static void sem_post_(int i) { sem_post(&sem[i]); }
+static sem_t gq_sem[2];
+static void gq_sem_wait(int i) {
+    while (sem_wait(&gq_sem[i])) ; /* EINTR */
+}
+static void gq_sem_post(int i) { sem_post(&gq_sem[i]); }
+static void gq_worker(void);
+static void *gq_entry(void *p) {
+    (void)p;
+    gq_worker();
+    return 0;
+}
+static int gq_thread_start(void) {
+    pthread_t t;
+    if (sem_init(&gq_sem[0], 0, 0) || sem_init(&gq_sem[1], 0, 0)) return -1;
+    return pthread_create(&t, 0, gq_entry, 0) ? -1 : 0;
+}
 #define sem_wait sem_wait_
 #define sem_post sem_post_
 static void *worker_entry(void *p) {
@@ -232,5 +269,74 @@ int kh1_gsq_start(u32 bytes) {
     mask = bytes / 4 - 1;
     if (thread_start()) return -1;
     kh1_gsq_on = 1;
+    return 0;
+}
+
+/* ---- session 142: the GPU frame's thread (gsqueue.h's kh1_gpuq_*) ---- */
+int kh1_gpuq_on;
+volatile u32 kh1_gpuq_us_busy, kh1_gpuq_us_wait, kh1_gpuq_waits;
+static KH1GsqFn gq_fn;
+static u32 gq_args[KH1_GPUQ_ARGS];
+static volatile u32 gq_posted, gq_done;
+static volatile int gq_worker_sleeps, gq_waiter_sleeps;
+
+static void gq_worker(void) {
+    u32 seen = 0;
+    for (;;) {
+        u32 spin, t0;
+        for (spin = 0; spin < SPINS && LOAD(gq_posted) == seen; spin++) ;
+        if (LOAD(gq_posted) == seen) {
+            STORE(gq_worker_sleeps, 1);
+            if (LOAD(gq_posted) == seen) gq_sem_wait(0);
+            STORE(gq_worker_sleeps, 0);
+            continue;
+        }
+        t0 = clock_us();
+        gq_fn(gq_args, 0, 0);
+        kh1_gpuq_us_busy += clock_us() - t0;
+        seen++;
+        STORE(gq_done, seen);
+        if (LOAD(gq_waiter_sleeps)) {
+            STORE(gq_waiter_sleeps, 0);
+            gq_sem_post(1);
+        }
+    }
+}
+
+void kh1_gpuq_wait(void) {
+    u32 spin, t0;
+    if (!kh1_gpuq_on || LOAD(gq_done) == LOAD(gq_posted)) return;
+    t0 = clock_us();
+    kh1_gpuq_waits++;
+    for (;;) {
+        for (spin = 0; spin < SPINS && LOAD(gq_done) != LOAD(gq_posted); spin++) ;
+        if (LOAD(gq_done) == LOAD(gq_posted)) break;
+        STORE(gq_waiter_sleeps, 1);
+        if (LOAD(gq_done) != LOAD(gq_posted)) gq_sem_wait(1);
+        STORE(gq_waiter_sleeps, 0);
+    }
+    kh1_gpuq_us_wait += clock_us() - t0;
+}
+
+void kh1_gpuq_put(KH1GsqFn fn, const u32 *args, u32 nargs) {
+    u32 i;
+    if (!kh1_gpuq_on) {
+        fn(args, 0, 0);
+        return;
+    }
+    kh1_gpuq_wait();
+    gq_fn = fn;
+    for (i = 0; i < nargs && i < KH1_GPUQ_ARGS; i++) gq_args[i] = args[i];
+    STORE(gq_posted, gq_posted + 1);
+    if (LOAD(gq_worker_sleeps)) {
+        STORE(gq_worker_sleeps, 0);
+        gq_sem_post(0);
+    }
+}
+
+int kh1_gpuq_start(void) {
+    if (kh1_gpuq_on) return 0;
+    if (gq_thread_start()) return -1;
+    kh1_gpuq_on = 1;
     return 0;
 }
