@@ -615,7 +615,7 @@ static void trx_bulk24(const u32 *w, u32 n) {
 
 void kh1_gsmem_image(const u32 *w, u32 n) {
     u32 i, b;
-    if (!trx.active) { st.extra++; return; }
+    if (!trx.active) { st.extra += (n + 3) / 4; return; } /* qwords (a HWREG write: one) */
     seq++; /* session 118: each piece of an upload a write of its own (a texture read between two is a miss) */
     if (trx.at && !trx.nacc && !flat_raw && trx_bulk(w, n)) return;
     if (trx.at && trx.bytes == 3 && !flat_raw) {
