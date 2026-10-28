@@ -120,6 +120,7 @@ static KH1CmdRec *recorder(void) {
         kh1_gxm_clear(gxm);
         tex = (KH1TexCache *)calloc(1, sizeof *tex);
         tex_ok = kh1_texcache_init(tex) == 0;
+        tex->raw = kh1_gsmem_tex_raw; /* session 142: a stamp miss on the same pages' words reads no texel */
         kh1_gsmem_xfer_hook = on_xfer;
         kh1_gsmem_clut_hook = on_clut;
     }

@@ -625,6 +625,37 @@ old and new translation under qemu-arm with NEON, give the same memory, register
 **Not yet checked on the disc**: a host run with `KH1_HOST_VU1TR=2` and the gxmcheck log against the
 last one, and the frame rate on a Vita (the split line's DMA-walk share).
 
+## The GS worker's own work (session 142, 2026-10-28)
+
+On a Vita (3d-x) the Dive's GS worker was busy ~1.65 s of every 2 s at ~12 frames per 2 s: ~0.7 s recording
+(us_record), ~0.47 s the frame's commands (of them ~0.2 s gxm.c's submit, half of that GPU waits), the rest the
+GIF decode, the register file and the GS memory model's upload stores; the game waited ~1 s for it. A host
+profile of the worker thread alone (callgrind `--separate-threads=yes` on the gxmcheck binary in the Vita's
+order: `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=1000 KH1_HOST_GXM=1000000 KH1_HOST_VU1=1
+KH1_HOST_VU1TR=1 KH1_HOST_PROF=5000:60`, en.iso, dive_en.txt; the worker's file is `cg.PID-02`, and as the
+binary's symbols do not load, addresses map back with `nm -n`) gave 1,978M instructions over frames 5000-5060:
+gs_kick 730M (kh1_pipes_prim 595M, of it the texture cache 244M), the frame 583M (gxm.c 412M, the mock's
+sceGxmFinish 239M of it, which the Vita does not pay; kh1_cmd_frame 137M), kh1_gsmem_image 332M. Two changes,
+the output the same:
+
+- **Clears** (host/port/cmdbuf.c `cover_cmd`): each rectangle of a pass's leading draws marked its cells by
+  testing every cell of the target's 8 x 8 grid; now only the cells from its own corner on. 133M -> 6M.
+- **Texture re-checks** (host/port/texcache.c, `KH1TexRaw`; host/null/gsmem.c `kh1_gsmem_tex_raw`): the Dive
+  streams a few T8 textures through one slot every frame, so each lookup was a stamp miss that read all the
+  texels back through kh1_gsmem_read_rect, hashed and compared them (a hash hit). An entry now also keeps the
+  raw words of the pages its texels lie in; on a stamp miss an entry of the same layout whose pages hold the
+  same words is the hit (the texels are read from those words only), and only otherwise the old read. The
+  slot found is the one the hash would find (one entry per layout and texels). tests/host/texcache_test.c
+  runs a second port cache with it beside the first: the same texels and counts on every case. 244M -> ~12M.
+
+Worker 1,978M -> 1,619M (-18%). Checked on the English disc to frame 6500 (dive_en.txt): the gxmcheck log at
+trace 5 (host pointers and paths aside) and its 4,758 shots byte-identical; the GSQ_CHECK digests every 50
+frames the same with and without the worker, and the same as before. Left on the worker: the upload stores
+(kh1_gsmem_image, ~20%: T8 at ~12 instructions a byte, CT32 pieces of ~8 words), the GIF decode and the
+recording's vertex work. The next step is a third core: the frame's GPU work (gxm.c, the latch and the
+present) behind the worker, which needs the GS memory it reads (pending target uploads, loose textures) and
+the caches' new entries handed over as of the frame's end.
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and

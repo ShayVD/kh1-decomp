@@ -202,12 +202,18 @@ static int cover_cmd(const KH1CmdRec *r, const KH1CmdPass *p, const KH1Cmd *c) {
         if (py1 > c->k.sy1) py1 = c->k.sy1;
         if (px1 > (s32)p->w) px1 = (s32)p->w;
         if (py1 > (s32)p->h) py1 = (s32)p->h;
-        for (cy = 0; cy * CELL < (s32)p->h && cy < CELLS_W; cy++)
-            for (cx = 0; cx * CELL < (s32)p->w && cx < CELLS_W; cx++) {
+        /* session 142: only the cells the rectangle can cover (a cell's start at or after px0 / py0, its end
+         * rising with it), not the whole grid for every rectangle (Dive to the Heart: 133M of the GS worker's
+         * 1,978M host instructions over 60 frames, now 6M) */
+        for (cy = py0 > 0 ? (py0 + CELL - 1) / CELL : 0; cy * CELL < (s32)p->h && cy < CELLS_W; cy++) {
+            s32 ey = cy * CELL + CELL < (s32)p->h ? cy * CELL + CELL : (s32)p->h;
+            if (py1 < ey) break;
+            for (cx = px0 > 0 ? (px0 + CELL - 1) / CELL : 0; cx * CELL < (s32)p->w && cx < CELLS_W; cx++) {
                 s32 ex = cx * CELL + CELL < (s32)p->w ? cx * CELL + CELL : (s32)p->w;
-                s32 ey = cy * CELL + CELL < (s32)p->h ? cy * CELL + CELL : (s32)p->h;
-                if (px0 <= cx * CELL && px1 >= ex && py0 <= cy * CELL && py1 >= ey) cell[cy][cx] = 1;
+                if (px1 < ex) break;
+                cell[cy][cx] = 1;
             }
+        }
     }
     return 1;
 }

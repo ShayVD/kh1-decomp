@@ -102,6 +102,8 @@ extern void (*kh1_gsmem_clut_hook)(u32 tex0_lo, u32 tex0_hi);
 /* a texture cache's key check: the newest write sequence number of any 8 KB page the texture's
  * w x h texels lie in (0: never written since the reset), and the CLUT buffer's load count */
 u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);
+/* session 142: the raw words of the pages the texture's texels lie in (texcache.h's KH1TexRaw) */
+u32 kh1_gsmem_tex_raw(u32 tex0_lo, u32 tex0_hi, u32 *out, u32 max);
 u32 kh1_gsmem_clut_stamp(void);
 /* session 102: nonzero when a draw changed the bits psm reads at pixel (x, y) and no upload, copy or
  * pixel write has written its page since: the model does not hold that pixel (a render's output) */

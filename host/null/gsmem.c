@@ -27,6 +27,7 @@
 #include "gsmem.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
+void *memcpy(void *, const void *, __SIZE_TYPE__);
 
 #define VM_BYTES (4u << 20)
 #define LOG 256
@@ -912,6 +913,33 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
 u32 kh1_gsmem_tex_stamp(u32 lo, u32 hi) {
     u32 t;
     return tex_scan(lo, hi, &t);
+}
+
+/* session 142: the raw words of every page TEX0 (lo, hi)'s texels lie in, in page order, at most max words
+ * (include/platform/texcache.h's KH1TexRaw): the texels are read from these words only, so the same words
+ * give the same texels.  0 for a format the model does not keep or more pages than max holds */
+u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
+    u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
+    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, p, n = 0;
+    u32 seen[512 / 32];
+    if (!known(psm) || tw > 10 || th > 10) return 0;
+    bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
+    bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
+    memset(seen, 0, sizeof seen);
+    for (y = 0; y < 1u << th; y += bhgt)
+        for (x = 0; x < 1u << tw; x += bwid) {
+            p = page_of(psm, kh1_gsmem_addr(psm, tbp, tbw, x, y));
+            if (seen[p >> 5] >> (p & 31) & 1) continue;
+            seen[p >> 5] |= 1u << (p & 31);
+            if (++n * 2048 > max) return 0;
+        }
+    n = 0;
+    for (p = 0; p < 512; p++)
+        if (seen[p >> 5] >> (p & 31) & 1) {
+            memcpy(out + n, vm + p * 8192, 8192);
+            n += 2048;
+        }
+    return n;
 }
 
 u32 kh1_gsmem_tex_target(u32 lo, u32 hi) {
