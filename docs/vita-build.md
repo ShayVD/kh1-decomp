@@ -428,7 +428,8 @@ Restarting the compiler after a failure (`shacc_restart=1`, off) hangs Vita3K (a
 module). Uploads into a target are now written once before the target's next use (GS memory is read as the
 frame left it, so each upload of a frame wrote the same bytes and waited for the GPU), and a scene that
 neither loads nor stores its depth runs on the spare depth buffer. Still open in Vita3K: the stained-glass
-floor (the region shader's draws) is black on every other drawn frame, with the interpreter as with the
+floor (the region shader's draws) is black on every other drawn frame (the cause: one-byte enums, "The
+flashing floor" below), with the interpreter as with the
 translated programs, while tests/host/gxm_mock.c (now running scenes late, at sceGxmFinish, on memory as it
 is then) draws it every frame; and ~310 ms of each 2 s in the frame's transfers (texture and palette uploads,
 which Vita3K's texture cache watches). Both are to be checked on a Vita.
@@ -696,8 +697,8 @@ and four changes, the output the same:
   `N words no VIF code` after a ref list whose first ref (qwc 2) has nonzero upper words, and a `refe qwc 49154`
   chain (786 KB) whose data is ASCII. dma_walk printed each one's whole tag list (~20 lines) through the unbuffered
   log, one sceIoWrite a line, inside the walk's time. The same disc and dive_en.txt give none on the x86 host and
-  none on the ARM Linux build under qemu to frame 5060, so the game builds or points at a wrong chain only on the
-  Vita (the flashing floor's thread follows that). A quiet walk (the Vita's) now prints the first
+  none on the ARM Linux build under qemu to frame 5060, so the game built or pointed at a wrong chain only on the
+  Vita: the one-byte enums ("The flashing floor" below); with that fix a Vita log of the Dive has none. A quiet walk (the Vita's) now prints the first
   `KH1_DMA_BAD_SHOWN` (16) bad sends in full and counts the rest (`kh1_dma_bad_sends`); the host prints all as
   before. The watchdog adds `log: N writes, M ms in them; K bad DMA sends (T so far, ...)`, every log write timed.
 - **An ARM profile.** The x86 callgrind profile is no guide here (fin / fo are scalar there, NEON on the Vita), so
@@ -724,6 +725,30 @@ compares clipw with the float form it replaced over 2M operand sets weighted to 
 equal magnitudes (a deliberate break of each change is caught). Left on the game thread: the programs themselves
 (their FMACs' operands go through memory: `u32 u[4]` then a field copied out, a NEON store and a core load the
 A9 pays for), the large LoadImages, and the ring copy of the kicks.
+
+## The flashing floor: one-byte enums (2026-10-28)
+
+The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
+Vita and in Vita3K, never on the host, the x86 gxm_mock run or the ARM Linux build under qemu-arm. The
+lost draws were not the GPU's: on the bad frames the game's VIF1 stream itself was different (208 VU1
+runs, 303 kicks and 29 program loads against 305 runs, ~586 kicks and 13 loads; 47 draws against 54), and
+a real-Vita log (3d-za) had the walk's "N words no VIF code" lines with the chain dumped: the grid effect's
+two DMA lists (D_004761A0 / D_0047A1E0, src/gfx/grideff.c, swapped by D_00351BD0) with a third tag of
+`refe qwc 49154` in one and a `ref` to non-VIF bytes in the other. That tag is the header func_00106ed0
+writes through `EntE` / `EntLb`, structs whose second field is `EN`, a one-value enum the matching code uses
+for its alias set.
+
+The cause: vitasdk's gcc (arm-vita-eabi, a bare-metal EABI) makes an enum as small as its values,
+`-fshort-enums` by default, so `EN` was one byte and the structs' later fields moved; the EE's gcc and
+every host compiler make it an int. Not the memory layout (the x86 runner with the Vita's misalignment and
+the ARM build linked above 0x80000000 both draw the floor), not the GS worker's timing (an x86 worker
+slowed by 30 µs an op), not the VU1 programs.
+
+tools/vita/build.py now compiles the game's files (src/, host/null, host/port, the native overlays) with
+`-fno-short-enums`, and host/vita's own files with `-fshort-enums`: SceGxm's and vita2d's structs are laid
+out for one-byte enums, and no struct the two sides share has an enum field (include/platform's enums are
+unnamed constants). The link takes `--no-enum-size-warning` for the mix; `readelf -A` on an object shows
+`Tag_ABI_enum_size: int` for the game's and `small` for host/vita's.
 
 ## What next, in order
 
