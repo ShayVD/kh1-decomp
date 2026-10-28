@@ -1,4 +1,4 @@
-/* dktitle.x func_00f21068: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+/* dktitle.x func_00f21068: matched (session 141): session 132's draft plus a CONTEXT_ONLY func_00f209b0 above it (bc1fl -> bc1f). */
 #include "ovl.h"
 
 typedef struct { f32 v; s32 st; s32 t; } Fade;
@@ -6,7 +6,7 @@ extern Fade D_00F2C738, D_00F2C748, D_00F2C758, D_00F2C768;
 extern u8 D_009A0000[];
 extern u8 *D_00F26E1C;
 void func_00f20a98(u8 *);
-void func_00f209b0(u8 *);
+CONTEXT_ONLY void func_00f209b0(u8 *a0) {}
 void func_00f203a8(u64, s32, s32, s32, s32, s32, s32);
 void func_00f20540(s32, s32, s32, s32, s32);
 static inline void fadeB(Fade *f) {
