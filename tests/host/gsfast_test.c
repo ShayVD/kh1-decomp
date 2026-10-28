@@ -133,7 +133,7 @@ static int run(u32 seed, int fast, int cached, int flat, u32 *hash, KH1GsMemStat
 static const u32 upsms[] = { KH1_PSMCT32, KH1_PSMCT24, KH1_PSMCT16, KH1_PSMCT16S, KH1_PSMT8, KH1_PSMT4,
                              KH1_PSMT8H, KH1_PSMT4HL, KH1_PSMT4HH, KH1_PSMZ32, KH1_PSMZ16 };
 static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
-    static u32 words[4096];
+    static u32 words[1 << 17];
     u32 i, j, r, stamps = 0, st0 = 0, st1;
     rs = seed;
     kh1_gsmem_reset();
@@ -144,6 +144,9 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
     for (r = 0; r < 3; r++) {
         u32 psm = upsms[R() % 11], bp = R() % 0x4000, bw = 1 + R() % 8, x = R() % 64, y = R() % 64;
         u32 w = 1 + R() % 80, h = 1 + R() % 40, pass, data = R();
+        if (r == 2 && seed % 3 == 0) { /* session 141: a large one, past the first blocks' row and column */
+            x = R() % 1500; y = R() % 1500; w = 1 + R() % 540; h = 1 + R() % 200; bw = 1 + R() % 32;
+        }
         u32 lo = bp | bw << 14 | psm << 20 | 7u << 26 | 7u << 30;
         for (pass = 0; pass < 3; pass++) {
             u32 left = (w * h * (psm == KH1_PSMT4 || psm == KH1_PSMT4HL || psm == KH1_PSMT4HH ? 4 : psm == KH1_PSMCT32 || psm == KH1_PSMZ32 ? 32 :
@@ -169,7 +172,7 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
 }
 
 int main(void) {
-    u32 it, h0, h1, drawn = 0, x, y;
+    u32 it, h0, h1, drawn = 0, x, y, hits = 0;
     KH1GsMemStats s0, s1;
     static u32 rect[256 * 256];
     for (it = 0; it < 600; it++) {
@@ -223,7 +226,36 @@ int main(void) {
         CHECK("a draw makes it a target", kh1_gsmem_tex_target(lo, 1) != 0);
         CHECK("and moves the stamp", kh1_gsmem_tex_stamp(lo, 1) != st1);
     }
+    /* session 141: tex_scan by pages (a texture of whole pages) against its block scan, over pages that
+     * uploads wrote and draws into a few targets marked, aligned bp or not, across the 0x4000 wrap */
+    for (it = 0; it < 400; it++) {
+        u32 i, psm = tpsms[it % 11], lo, hi, tw, th, s0v, s1v, t0v, t1v;
+        rs = it * 15485863u + 3;
+        kh1_gsmem_reset();
+        kh1_gsmem_fast(1);
+        for (i = 0; i < 1 + R() % 6; i++)
+            kh1_gsmem_draw((R() % 512) | (1 + R() % 16) << 16 | (R() % 2 ? 0 : 2u) << 24, 0, (R() % 512) | 1u << 24, 0,
+                           (R() % 1024) << 16, (R() % 1024) << 16, R() % 2 ? 0x10000 : 0);
+        for (i = 0; i < R() % 300; i++) kh1_gsmem_write_pixel(tpsms[R() % 11], R() % 0x4000, 1 + R() % 16, R() % 512, R() % 512, R());
+        tw = 5 + R() % 6;
+        th = 5 + R() % 6;
+        lo = (it % 4 == 0 ? 0x3F00 + R() % 0x100 : it % 2 ? (R() % 512) * 32 : R() % 0x4000) | (1 + R() % 16) << 14 |
+             psm << 20 | tw << 26 | th << 30;
+        hi = th >> 2;
+        kh1_gsmem_fast(0);
+        s0v = kh1_gsmem_tex_stamp(lo, hi);
+        t0v = kh1_gsmem_tex_target(lo, hi);
+        kh1_gsmem_fast(1);
+        s1v = kh1_gsmem_tex_stamp(lo, hi);
+        t1v = kh1_gsmem_tex_target(lo, hi);
+        hits += t1v != 0;
+        if (s0v != s1v || t0v != t1v) {
+            printf("gsfast_test: tex_scan %u psm %02x tex0 %08x: stamp %u / %u, target %u / %u\n", it, psm, lo, s0v, s1v, t0v, t1v);
+            fails++;
+        }
+    }
+    CHECK("some textures read a target", hits > 40);
     CHECK("read_rect refuses a PSM the model has not", kh1_gsmem_read_rect(0x3B, 0, 1, 0, 0, 4, 4, rect, 256) == -1);
-    printf("gsfast_test: %s (600 sprites both ways, %u drawn; 150 upload runs; 200 rectangles)\n", fails ? "FAIL" : "PASS", drawn);
+    printf("gsfast_test: %s (600 sprites both ways, %u drawn; 150 upload runs; 200 rectangles; 400 texture scans, %u on a target)\n", fails ? "FAIL" : "PASS", drawn, hits);
     return fails != 0;
 }
