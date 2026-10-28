@@ -287,6 +287,41 @@ int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u
         }
         return 0;
     }
+    if (fast_on && (psm == KH1_PSMT8 || psm == KH1_PSMT4)) {
+        /* session 137v (the real Vita's speed: the recorder decodes a few indexed textures a frame, a sixth
+         * of a Dive frame pixel by pixel): T8 / T4 as kh1_gsmem_addr has them, the in-block part (it
+         * depends on x's and y's low bits together, so no split) from a table, the block once per block */
+        static u16 in8[16][16], in4[16][32];
+        static int made;
+        int t4 = psm == KH1_PSMT4;
+        u32 bxs = t4 ? 5 : 4, bmask = (1u << bxs) - 1;
+        if (!made) {
+            u32 i, j;
+            for (j = 0; j < 16; j++)
+                for (i = 0; i < 32; i++) {
+                    if (i < 16) in8[j][i] = (u16)(col8w(i, j) * 4 + (i >> 3 & 1) * 2 + (j >> 1 & 1));
+                    in4[j][i] = (u16)(col8w(i, j) * 8 + (i >> 3 & 3) * 2 + (j >> 1 & 1));
+                }
+            made = 1;
+        }
+        for (y = 0; y < h; y++, out += stride) {
+            u32 yy = y0 + y, cbx = ~0u, base = 0;
+            const u16 *row = t4 ? in4[yy & 15] : in8[yy & 15];
+            for (x = 0; x < w; x++) {
+                u32 xx = x0 + x, a;
+                if (xx >> bxs != cbx) {
+                    u32 b;
+                    cbx = xx >> bxs;
+                    if (t4) b = bp + (yy >> 7) * (bw >> 1) * 32 + (xx >> 7) * 32 + blk16(xx >> 5 & 3, yy >> 4 & 7);
+                    else b = bp + (yy >> 6) * (bw >> 1) * 32 + (xx >> 7) * 32 + blk32(xx >> 4 & 7, yy >> 4 & 3);
+                    base = (b & 0x3FFF) * (t4 ? 512 : 256);
+                }
+                a = base + row[xx & bmask];
+                out[x] = t4 ? vm[a >> 1] >> (a & 1) * 4 & 15 : vm[a];
+            }
+        }
+        return 0;
+    }
     for (y = 0; y < h; y++, out += stride)
         for (x = 0; x < w; x++) out[x] = kh1_gsmem_read_pixel(psm, bp, bw, x0 + x, y0 + y);
     return 0;

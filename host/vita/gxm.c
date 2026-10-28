@@ -744,22 +744,39 @@ static void stencil(u32 mode) {
     }
 }
 
-/* GS memory (BITBLTBUF's destination) into a target's pixels at (dx, dy), the alpha on the 0x80 scale */
+/* GS memory (BITBLTBUF's destination) into a target's pixels at (dx, dy), the alpha on the 0x80 scale.
+ * Session 137v (the real Vita's speed): read in chunks of rows, so kh1_gsmem_read_rect's address tables
+ * cover many rows at once (one row a call recomputed them for every row: a third of a Dive frame), and
+ * the alpha through a table */
+#define UPLOAD_ROWS 32
 static void target_upload(Target *t, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
-    static u32 row[2048];
-    u32 psm = x->bb_hi >> 24 & 63, y, i;
+    static u32 rows[2048 * UPLOAD_ROWS];
+    static u8 a8[256];
+    static int a8_made;
+    u32 psm = x->bb_hi >> 24 & 63, y, i, n, bp = x->bb_hi & 0x3FFF, bw = x->bb_hi >> 16 & 63;
+    if (!a8_made) {
+        for (i = 0; i < 256; i++) a8[i] = (u8)kh1_blend_store_alpha(i);
+        a8_made = 1;
+    }
     if (psm != KH1_PSMCT32 && psm != KH1_PSMCT24) psm = KH1_PSMCT32;
     if (dx >= t->w || dy >= t->h) return;
     if (dx + w > t->w) w = t->w - dx;
     if (dy + h > t->h) h = t->h - dy;
     if (w > 2048) w = 2048;
-    for (y = 0; y < h; y++) {
-        u32 *d = (u32 *)t->mem + (dy + y) * t->stride + dx;
-        if (kh1_gsmem_read_rect(psm, x->bb_hi & 0x3FFF, x->bb_hi >> 16 & 63, dx, dy + y, w, 1, row, w)) {
-            for (i = 0; i < w; i++) row[i] = kh1_gsmem_read_pixel(psm, x->bb_hi & 0x3FFF, x->bb_hi >> 16 & 63, dx + i, dy + y);
+    for (y = 0; y < h; y += n) {
+        n = h - y < UPLOAD_ROWS ? h - y : UPLOAD_ROWS;
+        if (kh1_gsmem_read_rect(psm, bp, bw, dx, dy + y, w, n, rows, w)) {
+            u32 r;
+            for (r = 0; r < n; r++)
+                for (i = 0; i < w; i++) rows[r * w + i] = kh1_gsmem_read_pixel(psm, bp, bw, dx + i, dy + y + r);
         }
-        for (i = 0; i < w; i++)
-            d[i] = (row[i] & 0xFFFFFF) | (psm == KH1_PSMCT24 ? 0x80u : kh1_blend_store_alpha(row[i] >> 24)) << 24;
+        for (i = 0; i < n; i++) {
+            u32 *d = (u32 *)t->mem + (dy + y + i) * t->stride + dx, *src = rows + i * w, k;
+            if (psm == KH1_PSMCT24)
+                for (k = 0; k < w; k++) d[k] = (src[k] & 0xFFFFFF) | 0x80000000u;
+            else
+                for (k = 0; k < w; k++) d[k] = (src[k] & 0xFFFFFF) | (u32)a8[src[k] >> 24] << 24;
+        }
     }
 }
 
