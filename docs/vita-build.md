@@ -583,6 +583,11 @@ first, the watchdog to the third (config.txt `gsq=0` turns it off; it runs only 
   stack is 2 MiB for SceShaccCg. PlatGsExecLoadImage copies its bytes into the ring (`kh1_gsq_put_bytes`) instead
   of syncing; StoreImage still syncs. The host's KH1_HOST_GSQ_CHECK runs the same order; the digests are the
   same as single-threaded (title fake disc, 1500 frames, 4 MiB and 64 KiB rings).
+- **Large uploads back on the game thread** (3d-w on the Vita): with every upload in the ring, the title
+  menus' backdrops (two CT24 512 x 192 and two CT32 512 x 192 a frame, 288-384 KiB each) put their copy,
+  compare and pixels on the worker on top of the frame's GPU work; the worker was busy the whole 2 s and the
+  game waited ~1.6 s of it, the menus at ~12 fps against ~25-30 in 3d-v. An upload of 64 KiB or more
+  (`LOAD_HERE`, gsimage.c) now syncs and runs on the game thread as before; smaller ones still go in the ring.
 - **The watchdog** adds `gs worker: N ms busy; the game waited M ms for it (K waits)`. The `cpu: ... recording`
   ms are the worker's now, and `vu1: ... passing their kicks on` is the copy into the ring.
 

@@ -99,6 +99,9 @@ static void load_image(u32 bb, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi, c
     kh1_gsmem_image_kept(s, bytes);
 }
 
+/* bytes from which PlatGsExecLoadImage runs the upload on the game thread, not the worker */
+#define LOAD_HERE (64u << 10)
+
 static void w_load(const u32 *a, const u32 *d, u32 nqw) {
     (void)nqw;
     load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)d, a[5]);
@@ -115,6 +118,14 @@ int PlatGsExecLoadImage(void *lp, void *src) {
     a[3] = q[12];
     a[4] = q[13];
     a[5] = n ? w * h * n : (w * h + 1) / 2;
+    /* a large upload (the title menus' backdrops, 288-384 KiB each, every frame) runs here after a sync, as
+     * before the worker took the uploads: copied into the ring, its compare and pixels were the worker's on
+     * top of the frame's GPU work, and on the Vita the worker became the busier side (3d-w's menus) */
+    if (a[5] >= LOAD_HERE) {
+        kh1_gsq_sync();
+        load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)src, a[5]);
+        return 0;
+    }
     kh1_gsq_put_bytes(w_load, a, 6, src, a[5]);
     return 0;
 }
