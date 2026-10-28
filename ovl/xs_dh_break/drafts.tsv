@@ -1,5 +1,5 @@
 # xs_dh_break.x functions not matched yet: the draft a port compiles in their place (tools/host/ovlnative.py).
 func	path	words
-func_00f20128	nonmatchings/session136/xs_dh_break/func_00f20128.c	80
+func_00f20128	nonmatchings/session136/xs_dh_break/func_00f20128.c	9
 func_00f20288	nonmatchings/session136/xs_dh_break/func_00f20288.c	213
 func_00f20820	nonmatchings/session136/xs_dh_break/func_00f20820.c	142
