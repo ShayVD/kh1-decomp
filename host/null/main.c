@@ -154,6 +154,30 @@ static void vu1_line(void) {
     printf("\n");
 }
 
+/* session 137v: KH1_HOST_PROF=F:N, under `valgrind --tool=callgrind --instr-atstart=no`, measures
+ * frames F to F+N only (the Vita's speed work: where a 3D frame's CPU time goes) */
+#if defined(__has_include)
+#if __has_include(<valgrind/callgrind.h>)
+#include <valgrind/callgrind.h>
+#endif
+#endif
+static void prof_frame(void) {
+#ifdef CALLGRIND_START_INSTRUMENTATION
+    static long from = -2, n;
+    if (from == -2) {
+        const char *p = getenv("KH1_HOST_PROF");
+        from = p ? atol(p) : -1;
+        n = p && strchr(p, ':') ? atol(strchr(p, ':') + 1) : 60;
+    }
+    if (from < 0) return;
+    if ((long)frames == from) CALLGRIND_START_INSTRUMENTATION;
+    if ((long)frames == from + n) {
+        CALLGRIND_STOP_INSTRUMENTATION;
+        CALLGRIND_DUMP_STATS;
+    }
+#endif
+}
+
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */
 extern void *kh1_vsync_cb;
 void kh1_null_iop_frame(void);
@@ -166,6 +190,7 @@ void kh1_host_vblank(void) {
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
     if (kh1_dma_vu1 && frames % 300 == 0) vu1_line();
     if (kh1_host_trace >= 5) kh1_pipes_frame(); /* session 124: the frame's batches */
+    prof_frame();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     in_vblank = 0;

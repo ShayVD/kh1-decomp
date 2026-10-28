@@ -42,6 +42,12 @@ void kh1_gsmem_trxdir(u32 dir, u32 bitbltbuf_lo, u32 bitbltbuf_hi, u32 trxpos_lo
                       u32 trxreg_lo, u32 trxreg_hi);
 /* n words of IMAGE data (a GIF FLG 2 / 3 qword, or a HWREG write's two) for the current upload */
 void kh1_gsmem_image(const u32 *w, u32 n);
+/* session 137: an upload's whole data at once (src, bytes as the IMAGE words bring them): 1 when it is
+ * the data the same rectangle's last upload brought and the memory there was not written or drawn
+ * since, the upload then done (nothing stored); else 0, and after the words through kh1_gsmem_image,
+ * kh1_gsmem_image_kept keeps them for the next */
+int kh1_gsmem_image_same(const void *src, u32 bytes);
+void kh1_gsmem_image_kept(const void *src, u32 bytes);
 /* a TEX0 (or the TEX0 a TEX2 write leaves) written: loads the CLUT buffer as its CLD says */
 void kh1_gsmem_tex0(u32 lo, u32 hi);
 

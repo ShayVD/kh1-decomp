@@ -46,6 +46,7 @@ void (*kh1_dma_draw_state)(const KH1GsDraw *d); /* session 123: each send's draw
 typedef struct {
     u32 left;    /* qwords (REGLIST: 64-bit words) of the current packet still to come */
     u32 flg, nreg, k;
+    u32 nloop;   /* an IMAGE packet's qwords in all */
     u32 regs[16];
     u32 packets, eop, image, blocks, mid;
     u32 set[4];  /* the GS registers written (by address, bit per register: PACKED, REGLIST, A+D) */
@@ -132,7 +133,7 @@ static void gif_qword(GifStream *g, const u32 *q) {
     kh1_gs_giftag(g->flg == 0 && q[1] >> 14 & 1, q[1] >> 15 & 0x7FF);
     if (g->flg == 0) g->left = nloop * g->nreg;
     else if (g->flg == 1) g->left = (nloop * g->nreg + 1) & ~1u;
-    else { g->left = nloop; g->image++; }
+    else { g->left = g->nloop = nloop; g->image++; }
 }
 
 static void gif_block(GifStream *g, const u32 *q, u32 n) {
@@ -140,7 +141,22 @@ static void gif_block(GifStream *g, const u32 *q, u32 n) {
     if (!n) return;
     g->blocks++;
     if (g->left) g->mid++;
-    for (i = 0; i < n; i++, q += 4) gif_qword(g, q);
+    for (i = 0; i < n; i++, q += 4) {
+        /* session 137v (the Dive's speed on a Vita): an IMAGE packet's qwords in this block at once, and
+         * skipped whole when it is the same rectangle's same bytes again (host/null/gsmem.c) */
+        if (g->left && g->flg >= 2) {
+            u32 k = n - i < g->left ? n - i : g->left, whole = g->left == g->nloop && k == g->left;
+            if (!whole || !kh1_gsmem_image_same(q, k * 16)) {
+                kh1_gsmem_image(q, k * 4);
+                if (whole) kh1_gsmem_image_kept(q, k * 16);
+            }
+            g->left -= k;
+            i += k - 1;
+            q += (k - 1) * 4;
+            continue;
+        }
+        gif_qword(g, q);
+    }
 }
 
 /* the state registers a stream wrote (not the vertex ones), as names */
@@ -247,7 +263,19 @@ static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
     if (!n) return;
     v->blocks++;
     if (v->need || v->pad) v->mid++;
-    for (i = 0; i < n * 4; i++) vif_word(v, q[i], addr + i * 4);
+    for (i = 0; i < n * 4;) {
+        /* session 137v (the Dive's speed on a Vita): a code's data words other than DIRECT's in a run */
+        if (v->need && !v->pad && !v->in_direct) {
+            u32 k = n * 4 - i < v->need ? n * 4 - i : v->need;
+            if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q + i, k);
+            v->need -= k;
+            v->pos = (v->pos + k) & 3;
+            i += k;
+            continue;
+        }
+        vif_word(v, q[i], addr + i * 4);
+        i++;
+    }
 }
 
 static const char *target_note(u32 t) {

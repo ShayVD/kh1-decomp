@@ -16,3 +16,4 @@ static void none(const char *what) {
 
 void kh1_vif1_code(u32 w) { none("kh1_vif1_code"); }
 void kh1_vif1_data(u32 w) { none("kh1_vif1_data"); }
+void kh1_vif1_data_n(const u32 *w, u32 n) { none("kh1_vif1_data_n"); }
