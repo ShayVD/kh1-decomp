@@ -683,7 +683,8 @@ per 2 s, recording ~0.29 s, the frame's commands ~0.29 s, the game waiting ~0.4 
 - **Checked** (en.iso, dive_en.txt, to frame 6500): gxmcheck at trace 5 with `KH1_HOST_GPUQ=2` gives the same
   log (host pointers aside) and the same 4,758 shots as without; with the worker in the Vita's order
   (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1`) the GPU targets' hashes at every
-  50th frame and the GS digests are the same with `KH1_HOST_GPUQ=1` as without, and without the worker too.
+  50th frame (123 of them, to frame 6150) and the GS digests are the same with `KH1_HOST_GPUQ=1` as without,
+  and without the worker too.
 
 ## What next, in order
 
