@@ -173,8 +173,11 @@ void kh1_host_vblank(void) {
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     if (gpu_on) { /* session 136: the frame's GS draws on the GPU (gxm.c through the recorder's hook), shown */
-        SceUInt64 t0 = sceKernelGetProcessTimeWide(), t1;
-        kh1_gsq_sync(); /* session 141: the GS side's worker done with the frame's sends; the model is ours */
+        SceUInt64 t0, t1;
+        /* session 141: the GS side's worker done with the frame's sends; the model is ours (the wait is the
+         * watchdog's "game waited", not the frame's commands) */
+        kh1_gsq_sync();
+        t0 = sceKernelGetProcessTimeWide();
         kh1_pipes_frame();
         /* only a whole picture is shown: the display target as the frame copy left it (the software
          * present's rule); between copies the game may be part-way through the next one */
@@ -294,11 +297,13 @@ static int watchdog(SceSize args, void *argp) {
             { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
                * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
-                u32 known = walk + (us_frame - frame0) + (us_draw - draw0) + (kh1_vita_us_wait - wait0);
+                /* session 141: and the waits for the GS side's worker (at the vblank, LoadImage / StoreImage) */
+                u32 gw = kh1_gsq_us_wait - gwait0;
+                u32 known = walk + (us_frame - frame0) + (us_draw - draw0) + (kh1_vita_us_wait - wait0) + gw;
                 vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them), %u the "
-                     "frame's commands, %u present, %u the vblank wait, %u the rest (the game's code)\n",
-                     all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
-                     (kh1_vita_us_wait - wait0) / 1000, all > known ? (all - known) / 1000 : 0);
+                     "frame's commands, %u present, %u the vblank wait, %u waiting for the GS worker, %u the rest "
+                     "(the game's code)\n", all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
+                     (kh1_vita_us_wait - wait0) / 1000, gw / 1000, all > known ? (all - known) / 1000 : 0);
             }
         }
         at0 = (u32)sceKernelGetProcessTimeWide();
