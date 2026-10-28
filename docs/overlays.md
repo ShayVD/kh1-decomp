@@ -174,7 +174,7 @@ Kept up to date by the session that changes them (`make ovl-progress`).
 | dktitle | 71 | 60 | session 132: native C in the port (docs/native-overlays.md), notes in nonmatchings/session132/NOTES.md; session 136: func_00f25c40 |
 | gb | 533 | 367 | session 131b; most of its code is wm's (twins.py) |
 | wm | 1109 | 747 | session 131b |
-| xl_limit | 76 | 68 | session 131b |
+| xl_limit | 76 | 74 | session 131b; session 139: func_00f20ff0; session 140: 5 more (nonmatchings/session140/NOTES.md) |
 | xs_bambi | 13 | 13 | complete |
 | xs_dh_break | 9 | 5 | session 131b; session 136: native in the port with drafts for the other 4 (docs/native-overlays.md) |
 | xs_dumbo | 54 | 48 | session 131b |

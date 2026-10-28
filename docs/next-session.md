@@ -1,6 +1,6 @@
 # Next session prompt
 
-Paste this to start the next session (session 140).
+Paste this to start the next session (session 141).
 
 ---
 
@@ -25,10 +25,17 @@ stage those and `cat part_a? > en.iso`). Its `SLPS_251.98` is the patch's (SHA-2
 - Code that changes text layout (fonts, glyph widths, the patched functions in
   docs/english-patch.md) has two sides: keep `KH1_EN` / `KH1_GLYPH` and test with both discs.
 - The Japanese discs (KH1_BIG.iso 9ad74868…, the retail ISO) still work and stay Japanese; the old
-  isoparts are kept. Vita3K's ux0:data/kh1/kh1.iso was still the Japanese one on 2026-10-27.
+  isoparts are kept. Vita3K's ux0:data/kh1/kh1.iso is the English ISO since 2026-10-27 (the Japanese one kept as kh1-ja.iso).
 - wm.x (the world map) is replaced by the patch: when it is made native, pin the English file too.
 
 ## The Mac
+
+**Standing approval (Shay, 2026-10-27, session 140's thread: "go for it, now and in any other sessions")**:
+any session may copy the disc parts read-only from the Mac without asking each time. The way that
+works: a connect card (`connect_device`, purpose read), then `device_request_folder_access` on
+`~/Downloads/kh1-test/isoparts-en` itself (never all of ~/Downloads: refused), then one
+`device_stage_files` call per part (9 parts, ~1 minute each), `cat part_a? > en.iso`, check the SHA-256
+(c8ee8c77...). The staged copies land in /mnt/user-data/uploads/isoparts-en/.
 
 **Session 139 (2026-10-27)**: a grant for the whole ~/Downloads was refused by the tool's safety
 check; asking for `~/Downloads/kh1-test/isoparts-en` itself went through (connect card first, then
@@ -41,7 +48,31 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 139, 2026-10-27)
+## Where we stopped (end of session 140, 2026-10-27)
+
+- **Session 140** (the Mac for staging only; en.iso SHA-256 c8ee8c77... checked): **the cloth, and the
+  first walk into another room** (docs/native-overlays.md "Session 140").
+  - tests/host/pads/dive_en.txt runs to **91,000**: off the islet, up the lagoon to the -254 band,
+    round the cliff and up its rocks to the -706 deck, the ladder, round the ring walkway to the long
+    ledge: **"Obtained Cloth."** at ~87,550 (item 193, by walking up to it). Then down and south to the
+    exit floor at (-836, 1506): **room 10 loads at ~90,110** (204 disc reads by 91,000). The rope is not
+    in the first room or room 10's two pickups (room 10's VM 2 gives item 197 only later in the story).
+  - **tools/host/collmap.py**: the room's collision with gdb (`dump`), floors under a point, pictures
+    by height or by height band, and a floor-to-floor path search (walk / jump <= 110 / drop; rock
+    faces out). Ladders are thin walls with attribute 0x000d0120, exits are floors with bit 0x1000,
+    the entrances table is `D_002BCDA0`.
+  - host/null/pad.c: `KH1_HOST_POS=N` (the player's position every N frames); a goto stands still
+    while there is no player (the room change crashed the pad code's steering, not the game).
+  - Matching: **xl_limit 69 -> 74 / 76** (func_00f202d8, 00f20400, 00f206e8, 00f20ae0, 00f21e60; a
+    worker); near misses func_00f20e10 (2 words) and func_00f225b0 (needs `-fno-rerun-loop-opt
+    -fmove-all-movables`, no such kh1.toml mode): nonmatchings/session140/NOTES.md.
+  - After PR #150 merged: **Vita3K with dive_en.txt** (the English route, `goto` lines and all) played
+    Dive to the Heart through to Destiny Islands on the Vita build, stopped by hand at frame 75,283,
+    no game stall or crash; the ground and scenery flash and the 3D runs at ~18.6 frames a second
+    (docs/vita-build.md "Session 140"). The Japanese dive.txt was not rerun.
+  - kh1.elf byte-identical (6,981 / 6,988); xl_limit.x byte-identical; `make test` PASS.
+
+## Where we stopped before (end of session 139, 2026-10-27)
 
 - **Session 139** (the Mac for staging only; the English disc, en.iso SHA-256 c8ee8c77..., with PR #149's
   English mode merged into the branch): **Dive to the Heart on the English disc, and Destiny Islands'
@@ -953,7 +984,33 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (14), 00200e28 (24).
 3. **Large**: 00110618 (90, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 140 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 141 plan (at most 3 workers, docs/workflow.md "Resource limit")
+
+Shay's goal: **Dive to the Heart fully working on the Vita.** Host work serves that first.
+
+1. **The Vita's flashing ground and frame rate** (session 140's Vita3K run, docs/vita-build.md
+   "Session 140"): Destiny Islands' ground and scenery flash in Vita3K and the 3D runs at ~18.6 game
+   frames a second. Start with the "no texture" skips (257,849 by frame 75,283): palette textures with no
+   palette (140,064) and the 512 x 256 texture whose slot 10 holds another (107,522); reproduce them on the
+   host's gxm_mock with dive_en.txt before guessing. Then the DMA walks (~1.2 s of each 2 s). The Vita
+   plays the host pad scripts, `goto` lines included, so `pad=ux0:data/kh1/dive_en.txt` gets there
+   unattended (~70 min to 75,000 frames); keep the Mac awake and run Vita3K detached.
+2. **Destiny Islands on the host** (dive_en.txt to 91,000, room 10, then on): find what room 10 is
+   (its exits: `collmap.py dump` there and look for bit-0x1000 floors; its entrances `D_002BCDA0`) and
+   the rope (the errand's last item: read each room's pickups with vmdis.py, `lib 258 func_001d3858`
+   adds an item). Rooms not tried: the west bridge (t1282, (-3504..-2631, -652), entrance (-2710,
+   -652, -688)) and the shack's two doors (entrances (1066, 0, 1261) and (1555, -322, 1882)). Then back
+   to Kairi (VM 4 in the first room) with the four items.
+3. **Matching**: xl_limit's two left (func_00f20e10 is 2 words off: try decomp-permuter longer on the
+   nested form; func_00f225b0 may need a new kh1.toml flag mode `-fno-rerun-loop-opt
+   -fmove-all-movables`: test it on a few already-matched functions first, as the project rules ask),
+   then dktitle's 11.
+4. End with `make progress-update SESSION=141`, refresh docs/progress.md's tables, commit, open a PR,
+   and refresh this prompt.
+5. **Once the PR is merged, message the coordinator to start the next session** (session 142) with
+   this prompt.
+
+## Session 140 plan (done; kept for reference) (at most 3 workers, docs/workflow.md "Resource limit")
 
 Shay's goal: **Dive to the Heart fully working on the Vita.** Host work serves that first.
 
