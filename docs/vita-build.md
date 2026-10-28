@@ -49,7 +49,9 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    - `title=N` the game state asked for at the title overlay's first call (default 2: a new game,
      Dive to the Heart; `-1` stays in the title state);
    - `frames=N` exit after N frames (0, the default: never);
-   - `mc=ux0:...` memory card 1's folder (default `ux0:data/kh1/mc0`).
+   - `mc=ux0:...` memory card 1's folder (default `ux0:data/kh1/mc0`);
+   - `vu1=0` skips the VIF1 / VU1 path (session 137v, "The 3D path" below; 1, the default, runs it).
+   - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
    written through sceIoWrite (a funopen FILE): newlib's own fopen'd / freopen'd log stayed empty in
@@ -90,7 +92,7 @@ What a run can show, at best:
   call asks for game state 2 (new game). So the boot loads its files and goes straight to Dive to the
   Heart's room loads, which the host has never run past on a real disc: expect it to stop there or
   soon after (the log's last lines say where).
-- **No 3D.** The VIF1 / VU1 path (renderer A / B, PATH1) is not replaced: chains are walked but
+- **3D since session 137v** ("The 3D path" below), slowly. Before it: **No 3D.** The VIF1 / VU1 path (renderer A / B, PATH1) is not replaced: chains are walked but
   their models are not drawn. The picture is the GS model's 2D: clears, fades, uploads, sprites,
   copies (whatever the boot draws on PATH3).
 - **Not the GXM renderer** (before session 136; now it is, "The GPU renderer" below). The picture was software (the model's display buffer; since session 135
@@ -324,6 +326,128 @@ frame-read shaders compile with the extensions; colour load behaviour between sc
 granularity, a CT32 target sampled as a texture (its alpha reads back doubled: the shader key has no
 "from a target" bit), points and lines. Vita3K logs one `sceGxmTextureSetMinFilter` UNSUPPORTED and an
 `EXC_BAD_ACCESS` a frame that it handles itself (its own memory tracking, the game runs on).
+
+## The 3D path (session 137v, 2026-10-27)
+
+The game's 3D (the rooms' meshes, the characters, the lens grid) reaches the GS only through VU1: the
+channel 1 chains carry VIF codes that fill VU1's data memory and start its microprograms, which
+transform, light, cull and clip and XGKICK GIF packets (PATH1). host/port/vu1.c now runs that machine:
+
+- **VIF1** keeps its registers across sends (CYCLE, MODE, MASK, ROW, COL, BASE / OFST / TOPS / TOP /
+  ITOP / DBF) and runs UNPACK in every format (masks, offset and difference modes, skipping and filling
+  writes, FLG / USN; V2 sets z = x and w = y, V3's w is the next element), MPG, MSCAL / MSCALF / MSCNT
+  (TOP = TOPS, ITOP = ITOPS, DBF toggled, TOPS = BASE or BASE + OFST). The programs are the user's own
+  bytes (uploaded by the chains), never this repository's.
+- **VU1** is an interpreter with the timing the hand-scheduled programs rely on: a pair a cycle, a
+  stall when a VF field written less than 4 cycles before is read, MAC and clip flags seen 4 cycles
+  after issue (a FIFO), Q 7 cycles after DIV / SQRT (13 for RSQRT), P 18, a branch on a VI that an
+  integer instruction in the pair before it wrote sees the old value, the lower instruction reads the
+  registers before the upper one writes, VU floats (no inf / NaN / denormals). vf00 is (0, 0, 0, 1)
+  from the start (without it every Q was 0 and every vertex landed at 0, 0).
+- **XGKICK** copies the whole packets (to EOP) out of data memory; host/null/dmawalk.c hands them to
+  the same GIF reader PATH2 / PATH3 use, so the register file, the GS model and the GPU recorder see the
+  meshes as any other draw. `KH1_HOST_VU1=1` turns it on in the host runner (N > 1: verbose levels,
+  `KH1_HOST_VU1_FRAME=F` dumps frame F's kicks, `KH1_HOST_VU1_SNAP=R` writes run R's start state to
+  vu1_snap.bin), the Vita's `vu1=` (default 1).
+
+Findings, each found on the real disc in Dive to the Heart's first station (frame 6399 of
+tests/host/pads/dive.txt; the game draws on odd frames only, 30 fps):
+
+- **The walk padded DIRECT and MPG data to a qword.** Room meshes put DIRECT anywhere (e.g. the code at
+  0x95e9808, its data at 0x95e980c): padding desynced the stream ("not a VIF code", runaway programs).
+  VIF data follows its code with no padding; the walk no longer pads.
+- **The VI backup is for integer instructions only.** PCSX2's rule (a branch reads a VI as it was
+  before the pair just before it) applied to FCAND / FCOR / FMAND as well culled nearly every
+  triangle: P0 (the stations' floors) tests backfaces with `fmand vi13, vi13` then `ibne vi13` in the
+  next pair, and clips with chains of `fcor vi01` / `ibne vi01`; every Dive program has the pattern
+  (P0, P1, P2, P3, P4, P6, P7, P11 ... P20). With the flag instructions' VI seen at once the floor,
+  Sora, the sword and the effects come out where the GS shows them.
+- **Visible vertices have w > 0**: P0's CLIP is against |w|, and a vertex with w < 0 sets -z, so a
+  floor strip behind the camera is (correctly) all ADC.
+- **Sora's textures stream into the slot capture's pages** (TBP 0x3600, CLUT 0x3700, PSMT8 128 x 128,
+  uploaded before each part), the GS memory the shadow's capture pass renders to. The recorder sampled
+  the target's pixels (a garbled rainbow) and read the palette back from it; host/port/cmdbuf.c now
+  marks GS pages an upload writes after the target's last draw and takes those textures and CLUTs from
+  GS memory (the caches).
+- **The GPU mock scribbled an unstored depth buffer.** A scene that only tests depth (the walls, ZTST
+  ALWAYS) neither loads nor stores it; on the GPU the memory keeps the earlier store, which the next
+  scene loads. tests/host/gxm_mock.c now leaves it (it made the platform fail its depth test).
+- Program use per drawn frame (frame 6399): 730K instruction pairs (794K VU cycles, 2.6 ms of the PS2's
+  VU1): P0 268K (the floor), P18 222K (Sora), P4 86K (the walls, clipped into fans), P11 84K, P10 42K,
+  P1 21K, P2 8K. No skinning programs (P13 / P14 / P17) run in Dive.
+
+**Speed: too slow for the Vita as it is.** The interpreter costs ~435 host instructions a pair (callgrind
+over P0 / P4 / P18 snapshots; 30 ns a pair on the x86 host), ~0.3 s of CPU a drawn frame on the
+Vita's A9 by that count. The plan: (1) VIF1 / VU1 and the GS feed on a second core (the game thread then
+only queues the chains), (2) the programs translated to C at build time from the user's own ELF (keyed
+by a hash of micro memory at MSCAL, the interpreter as the fallback and the reference that the
+translation is checked against, bit for bit, on snapshots). Until then the Vita build shows the 3D at a
+few frames a second.
+
+**Vita3K, 2026-10-27** (branch at c53bb99, Japanese disc, `vu1=1`, `pad=ux0:data/kh1/dive.txt`,
+`frames=8000`): the first Dive station draws, Sora on the stained-glass platform with both
+pedestals and the dialogue. The title and menus run at about 56 fps; the 3D from frame 5000 at
+about 11.5 fps, slowest frame 176 ms (189 ms recording, 169 ms the frame's commands). Found there:
+the REGION_REPEAT fragment shader read `u_c` without declaring it, so Vita3K's compiler refused it
+and its draws were skipped ("no pipeline"); fixed, with a shadergen_test check. Still open: up to
+77k "no texture" skips (the first, target 1 sampled by its own scene), one "no render target"
+skip (target 5, rt 7, 0 x 448), and Vita3K's write-protect / EXC_BAD_ACCESS messages, which do
+not stop the game. Building the VPK needs `out/gen/data.tsv` from the PS2 build, so a Mac without
+ee-gcc builds it in a Linux container.
+
+**The programs as C (session 137v).** tools/vu/vu1_translate.py reads the 22 VU1 programs out of the
+user's own ELF (tools/vu/find_vu1.py) at build time and writes out/gen/vu1_tr.c (never committed),
+which host/port/vu1.c includes under `KH1_VU1_TR` (tools/host/census.py regenerates it when stale).
+The interpreter's timing is resolved statically: each node of the generated code is a pc plus an
+abstract pipeline state (pending VF writes, the flag FIFO, Q / P and their latencies, the VI backup,
+the branch delay and the E bit), with pending writes nothing reads before they land dropped, dead
+values forgotten, the MAC flag computed only by the FMACs whose flag a later FMAND / FMEQ / FMOR reads,
+and JR targets taken from BAL links and `IADDIU r, vi00, addr` constants. 20 of the 22 programs
+translate (P9 and P21 jump outside themselves and stay on the interpreter). At MSCAL micro memory is
+matched against each program's words (cached until the next MPG), so a program the chains change is
+never run as C. `vu1tr=` (`KH1_HOST_VU1TR` on the host): 0 the interpreter, 1 the C (default), 2 both,
+each run compared register for register and memory for memory (`tr_check`): 0 differences over ~800K
+runs to frame 8000 on the host. The four lanes of an FMAC are one NEON operation on ARM (`vu_op`; the
+scalar code elsewhere), 0 differences over 757 dumped runs under qemu-arm (`KH1_HOST_VU1DUMP=DIR:N`).
+On x86 a pair costs ~5 ns translated against ~35 interpreted; i386 builds take `fpmath=sse` for
+vu1.c so both paths round as IEEE single.
+
+**Vita3K, English disc, 3d-e (NEON):** 23 to 24 fps from frame 6400 (the interpreter's was 11.5): of
+each 2 s, ~515 ms in VU1 programs (~245 of it handing kicks to the recorder), ~600 ms in the frame's
+GXM commands, ~140 ms recording, ~500 ms waiting for vblank. Texture skips fell from ~134K to ~1K
+(the loose texture slots raised from 8 to 32). One fragment shader (P8, modulate, ST/Q, REGION_REPEAT
+on both axes, fog, discard where GREATER fails) stops SceShaccCg with "fatal internal error" at every
+optimisation level (~4,900 skipped draws); `shadertest=1` bisects it, and meanwhile its draws use the
+plain wrap.
+
+**3d-f to 3d-i (Vita3K, English disc).** `shadertest=1` showed the "failing" shader compiles at start: the 18
+fragment shaders SceShaccCg refused later (all "uv discard-fail greater pre 320 as" plus the region one) were
+a heap the English disc's stale frees had corrupted (host/null/pipes.c's caches from malloc, PR #153); with
+that fix 0 invalid reads / writes and 0 refused shaders, and every texture of the first station is right.
+Restarting the compiler after a failure (`shacc_restart=1`, off) hangs Vita3K (a NULL read in the reloaded
+module). Uploads into a target are now written once before the target's next use (GS memory is read as the
+frame left it, so each upload of a frame wrote the same bytes and waited for the GPU), and a scene that
+neither loads nor stores its depth runs on the spare depth buffer. Still open in Vita3K: the stained-glass
+floor (the region shader's draws) is black on every other drawn frame, with the interpreter as with the
+translated programs, while tests/host/gxm_mock.c (now running scenes late, at sceGxmFinish, on memory as it
+is then) draws it every frame; and ~310 ms of each 2 s in the frame's transfers (texture and palette uploads,
+which Vita3K's texture cache watches). Both are to be checked on a Vita.
+
+## On a real Vita: the white screen (session 137v, 2026-10-27)
+
+Vita3K reached the title; a real Vita stopped on the white copyright screen after 10 disc reads and
+crashed at frame ~960 (C2-12828-1, a data abort in dktitle_00f20a78 unpacking an unfilled buffer).
+Logged step by step (builds 3d-l to 3d-p; the game's printf now writes the log itself, host/vita/main.c,
+since pointing newlib's stdout at it never took): the title's code ran and queued its loads, but every
+load it queued had an empty file name, so KINGDOM.IDX found nothing and no read was made.
+
+The cause: the Vita loads the data segment away from its link address (seg 2 at 0x81300000, linked at
+0x811c0000; Vita3K loads it where linked). The functions.tsv / defs_host.c / native-overlay aliases
+(`PROVIDE(X = sym + off)` in aliases.ld) were absolute symbols, because ld makes an expression outside
+SECTIONS absolute, and the relocatable link then kept no relocation to them: 217 names (dktitle's
+strings among them) pointed 0x140000 off on hardware. tools/host/census.py now heads aliases.ld with
+`LD_FEATURE("SANE_EXPR")`, which keeps them section-relative; `readelf -s` shows no absolute symbol
+left in the image's range. **Anything tested only in Vita3K can hide this kind of bug**: run on hardware.
 
 ## What next, in order
 

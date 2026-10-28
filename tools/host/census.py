@@ -306,6 +306,24 @@ def host_defs(undefined, cc):
     return obj
 
 
+def platform_flags(d, f):
+    """host/port/vu1.c: the user's VU1 programs as C (session 137v, tools/vu/vu1_translate.py), made from
+    the ELF into out/gen/vu1_tr.c (never committed); without the ELF the interpreter runs them all."""
+    if (d, f) != ("port", "vu1.c"):
+        return []
+    elf = os.path.join(ROOT, "SLPS_251.98")
+    gen = os.path.join(ROOT, "out", "gen", "vu1_tr.c")
+    tool = os.path.join(ROOT, "tools", "vu", "vu1_translate.py")
+    if not os.path.exists(elf):
+        return []
+    if not os.path.exists(gen) or os.path.getmtime(gen) < max(os.path.getmtime(elf), os.path.getmtime(tool)):
+        p = subprocess.run([sys.executable, "-I", tool, elf, gen], cwd=ROOT, capture_output=True, text=True)
+        if p.returncode:
+            print("vu1_translate failed, the interpreter runs every program:\n" + p.stderr)
+            return []
+    return ["-DKH1_VU1_TR", "-I" + os.path.join(ROOT, "out", "gen")]
+
+
 def link_census(results, cc):
     ok_objs = [os.path.join(OUT, p + ".o") for p, ok, _ in results if ok]
     data_objs = assemble_data()
@@ -317,7 +335,7 @@ def link_census(results, cc):
             if (f.endswith(".c") or f.endswith(".S")) and f not in skip:
                 obj = os.path.join(OUT, d, f + ".o")
                 os.makedirs(os.path.dirname(obj), exist_ok=True)
-                p = subprocess.run([cc] + CFLAGS + ["-c", "-o", obj, os.path.join("host", d, f)], cwd=ROOT,
+                p = subprocess.run([cc] + CFLAGS + platform_flags(d, f) + ["-c", "-o", obj, os.path.join("host", d, f)], cwd=ROOT,
                                    capture_output=True, text=True)
                 if p.returncode:
                     print("null platform: host/%s/%s does not compile:\n%s" % (d, f, p.stderr))
@@ -365,6 +383,15 @@ def link_census(results, cc):
             f.write(ovlnative.build.script)
         link_census.script = src
         undefined -= set(re.findall(r"PROVIDE\((\w+) =", ovlnative.build.script))
+    if link_census.script:
+        # session 137v: without SANE_EXPR ld makes `X = sym + off` (outside SECTIONS) an absolute
+        # symbol, and a relocatable link (the Vita's) then loses every relocation to it: the Vita
+        # loads the data segment away from its link address (Vita3K does not), so those names
+        # pointed 0x140000 off there (dktitle.x's file names read as "")
+        src = link_census.script
+        text = open(src).read()
+        if not text.startswith("LD_FEATURE"):
+            open(src, "w").write('LD_FEATURE("SANE_EXPR")\n' + text)
     # where the missing names are defined on the PS2 side
     failing_defs, asm_defs = set(), set()
     for p, ok, _ in results:

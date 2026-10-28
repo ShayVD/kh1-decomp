@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <ucontext.h>
 #include "common.h"
+#include "platform/costack.h"
 #include "util/task.h"
 #include "data/pieces/D_0037A170.h"
 
@@ -17,7 +18,7 @@
 
 static void *task_stack(void **slot) {
     if (*slot == 0)
-        *slot = malloc(TASK_STACK);
+        *slot = kh1_costack_alloc(TASK_STACK);
     if (*slot == 0)
         abort();
     return *slot;

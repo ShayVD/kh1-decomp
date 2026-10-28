@@ -167,6 +167,7 @@ typedef struct {
     u8 tdrawn[KH1_CMD_TARGETS];
     u8 ddrawn[3];               /* depth buffers written in an earlier frame (KH1_DS_*) */
     u32 tpages[KH1_CMD_TARGETS]; /* session 127: the pages each target spans (FBW x its rows' page rows) */
+    u32 cpu_pages[16];           /* session 137v: GS pages (8 KiB, 512) an upload wrote after the last draw to their target */
     s32 cur;                    /* session 127: the open draw command, -1 none */
     s16 tslot, pslot;           /* the texture entry / palette slot the next draw binds */
     u8 split;                   /* a transfer touched a target: the next draw starts a pass */
