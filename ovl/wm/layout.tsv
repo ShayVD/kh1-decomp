@@ -1,5 +1,5 @@
 # wm.x at 0x00f20000: tools/ovl/build.py layout (inventory.py's finder); hand edits allowed, keep it sorted.
-# Session 141: func_00f77af0 takes in its two switch cases after the jr (were func_00f77ce0 / func_00f77d50, branched back into it).
+# Session 141: func_00f77af0 (gb func_00f509f8's twin) is the main state machine: its 10-way switch (jump table D_00FBA230) keeps its cases after the jr, up to 0x00f77ed0 (they were func_00f77ce0, func_00f77d50, func_00f77dc0 and func_00f77ea8).
 addr	end	size	name
 00f20000	00f20018	24	func_00f20000
 00f20018	00f20020	8	func_00f20018
@@ -1042,9 +1042,7 @@ addr	end	size	name
 00f757b8	00f75d80	1480	func_00f757b8
 00f75d80	00f77648	6344	func_00f75d80
 00f77648	00f77af0	1192	func_00f77648
-00f77af0	00f77dc0	720	func_00f77af0
-00f77dc0	00f77ea8	232	func_00f77dc0
-00f77ea8	00f77ed0	40	func_00f77ea8
+00f77af0	00f77ed0	992	func_00f77af0
 00f77ed0	00f77f38	104	func_00f77ed0
 00f77f38	00f78000	200	func_00f77f38
 00f78000	00f780a8	168	func_00f78000
