@@ -350,7 +350,9 @@ void PlatGsListWait(void) {
  * past each 4:3 edge in the GIF path (include/platform/hudanchor.h, host/null/dmawalk.c); session 93:
  * the static full-screen packets stretch to the view (include/platform/fullscreen.h) and the scissor
  * rule reads the view (host/null/gsregs.c, include/platform/canvas.h) */
+void kh1_gsq_sync(void);
 void kh1_null_hud_wide(s32 m) { /* the margin in canvas sixteenths, kh1_view_side16 (session 95) */
+    kh1_gsq_sync(); /* session 141: kh1_gs_view writes the register file (host/null/gsqueue.h) */
     kh1_dma_hud_anchors(kh1_hud_anchors, kh1_hud_nanchors, (u32)(unsigned long)kh1_hud_staging,
                         kh1_hud_staging_size, m);
     kh1_dma_fullscreen(kh1_fullscreen, kh1_nfullscreen, -m, 8192 + 2 * m);
