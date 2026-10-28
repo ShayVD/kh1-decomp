@@ -24,6 +24,41 @@ Also: tools/autodecomp.py disasm() now passes `-z` to objdump (committed with f5
 | func_00f36ee0 | 81 words, score 18 | frame right; v0=w, v1=col, a1=w copies |
 | func_00f268c8 | n/a | original does not CSE x*16 / y*16 |
 
+## Round 2 (after rebase onto claude/project-thread-rl45wv; gb 395, wm 785)
+
+Matched gb (wm twin in brackets, each via portall.py + make ovl OVL=wm byte-identical):
+f397a0 [f60898], f20718 [f47810], f28090 [f4f188], f27b38 [f4ec30], f27640 [f4e738],
+f2b800 [f528f8], f51440 [f78538], f22d00 [f49df8, hand-fixed: entry 16 is func_00f60af0],
+f23098 [f4a190], f288d0 [f4f9c8], f3bfc8 [f630c0], f3bda8 [f62ea0].
+
+New near misses:
+
+| func | left | blocker |
+|---|---|---|
+| func_00f38158 | 14 words, score 2 | only the t[3]=1.0f store position (lead has taken this one) |
+| func_00f425a8 | 30 words, score 39 | a/c regs s5/s7 swapped + store schedule |
+| func_00f28aa8 | 62 words, score 51 | (y*26+1952)<<4 must not fold |
+| func_00f37448 | 77 words, score 55 | w copied through t1 (same blocker as f36ee0/f405c0) |
+| func_00f37618 | 71 words, score 91 | original keeps every memory access in source order |
+| func_00f399f8 | 104 words, score 110 | three x88 nibble fields recomputed from int n |
+
+Round 2 tips:
+- Double constants in .rodata (`lui at; ld a1,%lo(D)(at)`) are source literals. gcc 2.96 reads
+  decimals its own way, so check them: `0.01` gives 3f847ae147ae147a and `0.1f` gives the
+  truncated 0x3DCCCCCC promoted. /tmp/claude-0/s141/wgb/dl.py HEX lit... checks double spellings.
+- An arg-setup order of `mov.s $f12` before the a0/a1 moves means the float param comes first in the
+  prototype: func_00f3bda8(f32 t, f32 *out, void *c).
+- A loop whose test sits at the top (no rotation) and that keeps an invariant inside:
+  `while (1) { if (i >= 257) break; ... }` (f3bfc8).
+- A movz that reuses the loop's `i < n` result needs n in a local (`n = c->n;`) (f3bda8).
+- Wait loop `if (X) D=1; else { do f(); while(!X); D=1; }` with two different stores comes from
+  `for (;;) { if (X) { D = 1; break; } f(); }` (f51440).
+- Store order inside a switch case: the scheduler moves the last store first, so keep source order natural
+  (f23098, f2b800, f28090's col[0..2]).
+- Frame too small by 16/32 bytes: add unused OvlVec locals (f3bda8) or OvlVec padding in an arg struct (f37448).
+- Function-pointer tables: one extern per slot (separate %hi each), not an array (f22d00).
+- `s32 a = t->a;` held in a local across two calls gives the extra s-register (f20718).
+
 ## Tips
 
 - Entity table: `static inline GbEnt *ent_of(s32 k){ GbEnt *e = D_00F56DC0->hdr.ents; return &e[k]; }`.
