@@ -50,3 +50,25 @@ func_00f50968 (coordinator), func_00f528f8 / f799e0 and the 200+ insn functions 
 - A double constant loaded with `lui at / ld a1,%lo(at)` is a literal (`len * 0.01 * 0.1f`), not an extern; while the
   code does not match yet, hand.py refuses to place literal rodata, so diff with `extern double` first.
 - tools/autodecomp.py disasm: objdump needs `-z` (applied here too), or diffs past nop runs are shifted.
+
+## Round 2
+
+Matched: func_00f528f8 (16-aligned Col struct, stores r,g,b), func_00f56ce0 (v[2] before v[0]), func_00f574e8 (twin
+of f56ce0 with other tables), func_00f5c4e0, func_00f78ff8 (the two global copies swapped), func_00f7cd68 (exit calls
+inside the loop's break block keep a constant load below the call).
+
+Near misses saved here (first line gives score and what was tried): func_00f530f8 (6), func_00f7ecd8 (17),
+func_00f7da90 (24), func_00f632e8 (35), func_00f79868 (37), func_00f78978 (45), func_00f7c880 (64), func_00f78d50 (71),
+func_00f799e0 (115), func_00f74440 (246, structure right).
+
+Skipped: func_00f69aa8 (gb twin func_00f429b0 unmatched), func_00f69df0 (lead matched it).
+
+More tips:
+- A CONTEXT_ONLY empty stub of a callee (`CONTEXT_ONLY void f(void) {}`) can turn bnez into bnezl after its calls.
+- `t = w*h; t /= 128; size = t;` keeps the divide-adjust in place (blocks CSE); `(x - w/2 + 1792) << 4` keeps gcc from
+  distributing the constant, where `* 16` does not.
+- `if (st == 0) continue; switch (st) {...}` gives a linear compare chain where a plain switch gives a binary tree.
+- `k = x + 1; if (x == 0xFF) k = 0;` gives movz; the ternary gives branches.
+- f78d50 / f74440: the original leaves the delay slots of soft-double libcalls (__cmpdf2, __subdf3, __truncdfsf2) empty
+  while __extendsfdf2 slots are filled; no flag mode reproduces this yet.
+- `python3 tools/ovl/twins.py` writes ports into other overlays too (it wrote two gb files here); check git status after running it.
