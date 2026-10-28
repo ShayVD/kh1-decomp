@@ -501,6 +501,15 @@ cache's reads 4.9%, CLUT loads 2.3%, kh1_gsmem_addr 2.8%. Changes:
   target, CT24 or not) and, at the flush, written to the pixel that holds that word in the target's
   CT32 layout (FBP / FBW from the recorder's target key), whole blocks without a swizzle per pixel.
   `kh1_gsmem_read_block` gives a block's 64 words.
+  The first version marked each word with a call and flushed one target whenever a block moved to
+  the other (the two Dive targets overlap): +4%. Now a whole block is one mask write, an edge block's
+  pixels one mask, and a block both targets wait for is written to both.
+- **Measured** (real-disc gxmcheck, dive.txt, callgrind frames 5000-5060): 5.51G -> 5.34G with the
+  gsmem.c changes (the log identical apart from host pointers), 5.15G with the target uploads too
+  (-6.5% in all; kh1_vita_gxm_frame 608M -> 412M). Three display lines' "pixels differ from the GS
+  model" counts drop by 1-2; draws, triangles and pixels drawn are unchanged. Left: pend_flush's
+  sceGxmFinish in the mock (small on the Vita: 324 waits, ~90 ms in all, 3d-t), the texture cache's
+  T8 reads, and the model's upload stores themselves.
 
 ## What next, in order
 
