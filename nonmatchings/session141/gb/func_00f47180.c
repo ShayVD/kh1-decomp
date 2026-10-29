@@ -1,4 +1,6 @@
+/* Round 41 wwm2: score 268 -> 202, port.py of the wm twin func_00f6e278 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* score 268 (2808 vs 2824 bytes). Port of wm func_00f6e278 (same shape; portmap2 plus D_00F70444/D_00F70448 by hand). See the wm file for notes. */
+/* score 268 (2808 vs 2824 bytes). Menu setup (like f73eb0): 6 info windows, an icon row from func_00f43388, then 4 + 3 windows (the last gets x40 = func_00f46ee0), then a loop until D_00F829C8: copy item bytes x2..x4 into the 3 counters (zero when x5 == 0 and x6 < 71), refresh D_003E8E08, and draw the D_00F82ACC icon (jump table 0x40..0x46 at 0x00FBA100, default first) with D_00F82A88.x0/x8 swapped around func_00f422e8. The draft scored 401. Putting default first plus `t = e->x6 >= 71;` gave 410, then two hill2 passes over the declaration, prologue, icon-field and colour-store order gave 268. Left: the original reaches D_00F70548/CD0/CD4 through a raw `lui 0xfb; move; addiu` (no symbol; treating them as an array made it worse, 498), the prologue register choice (i in s1), and the 16 bytes it lacks. */
 typedef struct { u8 x0; u8 x1; u8 pad2; u8 x3; u8 pad4; u8 x5; u8 pad6[2]; s16 x8; s16 xa; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; u8 pad34[4]; u8 x38; u8 x39; u8 x3a; u8 x3b; } Ic;
 typedef struct { u8 pad[16]; s32 x10; u8 pad2[44]; void *x40; } Win;
 typedef struct { u8 pad[2]; u8 x2; u8 x3; u8 x4; u8 x5; u8 x6; u8 pad7[9]; } It;
@@ -92,39 +94,39 @@ void func_00f47180(void)
     D_00F82A28 = 0;
     D_00F829FC = 4;
     D_00F82A44 = 0;
-    mode = D_00F702F0;
     D_00F82A14 = 400;
     D_00F82A00 = 0;
     i = 0;
+    mode = D_00F702F0;
     D_00F82A40 = 190;
     D_00F82A38 = 0;
     D_00F82A3C = 430;
 
+    save = D_00F702D8;
     D_00F82AC8 = 0;
     D_00F82A94 = 0;
-    save = D_00F702D8;
     func_00f445a8(3, 6, 0, 1, 0, 15, 0, 0, D_00F70410, D_00F70414, 0, D_00F70418, (D_00F7042C + 1) * D_00F70430, 10, 10, 10, 100, 256, mode);
     x = D_00F70408 + D_00F70430 + D_00F70430;
     for (; i < D_00F7042C / 2; i++) {
         ic = func_00f43388();
-        ic->xc = 2;
-        ic->x5 = 15;
         ic->x0 = 3;
-        ic->x1 = 3;
-        ic->x2c = 0.0f;
-        ic->x20 = x;
-        ic->x10 = 0;
-        ic->x18 = x;
-        ic->x14 = D_00F70404 + 2;
-        ic->x1c = D_00F70404 + 2;
-        ic->xa = D_00F70430 - 1;
-        ic->x30 = 0.0f;
+        ic->xc = 2;
         ic->x3 = 0;
+        ic->x10 = 0;
+        ic->x1 = 3;
+        ic->x5 = 15;
+        ic->x1c = D_00F70404 + 2;
+        ic->x2c = 0.0f;
+        ic->x14 = D_00F70404 + 2;
+        ic->xa = D_00F70430 - 1;
+        ic->x20 = x;
         ic->x8 = D_00F7040C - 4;
-        ic->x3a = D_00F70444;
         ic->x38 = D_00F7043C;
+        ic->x3a = D_00F70444;
         ic->x39 = D_00F70440;
+        ic->x18 = x;
         ic->x3b = D_00F70448;
+        ic->x30 = 0.0f;
         func_00f444b8(ic, 256.0f, mode);
         x += D_00F70430 * 2;
     }
@@ -135,8 +137,8 @@ void func_00f47180(void)
     D_00F82A30 = 128.0f;
     D_00F82A2C = 128.0f;
     D_00F71170.x1e = n;
-    D_00F71170.xc = D_00F704C0;
     D_00F82ACC = 0;
+    D_00F71170.xc = D_00F704C0;
     D_00F829C8 = 0;
     D_00F71170.xe = D_00F704C4;
     func_001f31a8(&D_00F71170, 1);
@@ -174,10 +176,10 @@ void func_00f47180(void)
             fmt = 0;
             break;
         case 0x40:
+            ch = 64;
+            cw = 64;
             a = 0x20000;
             b = 0x21000;
-            cw = 64;
-            ch = 64;
             fmt = 8;
             break;
         case 0x41:
@@ -208,10 +210,10 @@ void func_00f47180(void)
         if (cw) {
             col[2] = 0x80;
             col[1] = 0x80;
-            col[0] = 0x80;
-            col[3] = 0x80;
             t = D_00F82A88.x0;
+            col[0] = 0x80;
             D_00F82A88.x0 = D_00F82A88.x8;
+            col[3] = 0x80;
             func_00f422e8(D_00F707EC + a, D_00F707EC + b, D_00F70510 - (cw >> 1), D_00F70514 - (ch >> 1), cw, ch, fmt, col, 0, 68, 0, 0x5001D);
             D_00F82A88.x8 = D_00F82A88.x0;
             D_00F82A88.x0 = t;
@@ -221,10 +223,10 @@ void func_00f47180(void)
     func_00f444d8(3, 0, D_00F702F0);
     D_00F82A28 = 0;
     func_0024e468(D_00F702F0 + 1);
-    D_00F829FC = 0;
-    D_00F702D8 = save;
-    D_00F82A44 = 1;
     D_00F82A94 = 1;
+    D_00F702D8 = save;
+    D_00F829FC = 0;
+    D_00F82A44 = 1;
     func_00f43cf0(3);
     if (D_00F829F8 > 0) D_00F829F8 = -1;
 }
