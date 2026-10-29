@@ -899,6 +899,31 @@ instructions per 60 frames.
   checks the results and the cache state stay the same.
 - Checked on the English disc (dive_en.txt to frame 6500, the worker-order run above): all 130 GS digests and
   260 GPU target hashes are the same as main's.
+
+### The New Game pages (session 147d)
+
+**On a Vita (s147d)**: the title menu at 60 fps (126-129 frames per 2.1 s, ~0.9 s of vblank wait per 2 s, the
+worker ~0.34 s busy). After a choice, the New Game pages (still dktitle.x, nothing loaded until the opening at
+~frame 2,500) at 32-53 fps: the worker busy ~1.0-1.3 s per 2 s, ~0.7-0.9 s of it in w_block, and the game waiting
+~0.8-1.1 s for it; the game thread's `large uploads:` ~0.65-0.93 s per 2 s, all unchanged. The send dump: ~220
+sends a frame, ~140 of them glyph sprites with a CLUT load each (dive_en.txt's frames 2,002-2,400 on the host,
+which the 147c profile at 2,050 had already measured: it was this screen).
+
+- **gsmem.c**: each kept CLUT also keeps kh1_gsmem_clut's converted answer (by how it was asked and TEXA), named
+  by an id that is never reused (kh1_gsmem_clut_id); the glyphs' alternating palettes each convert once.
+- **pipes.c / palcache.c**: the palette slot each id was got in, with the slot's gen (new at each fill, never
+  reused): while the gen holds the slot holds those entries, so the lookup is `kh1_palcache_hit`, the state update
+  the get's hit makes, without the hash, the 256 slots' scan or a compare; the per-draw check against the bound
+  slot likewise.
+- **cmdbuf.c cover_cmd**: a rectangle's covered cells by rows (the columns found once), not cell by cell.
+- texcache.c's raw and texel compares and pipes.c's palette compare through kh1_bytes_same (NEON on the Vita).
+- Host worker on those pages: 232M -> 158M instructions per 60 frames.
+- **gsimage.c**: a large upload's compare (after the sync, the worker idle) is shared: its first half on the
+  worker, the rest on the game thread, then a sync for the answer; the same bytes compared either way.
+- Tests: gsfast_test checks that every id kh1_gsmem_clut_id gives back comes with the same entries (6,000 loads);
+  palcache_test runs a third cache as pipes.c uses it (known slot and gen, kh1_palcache_hit) and checks its answers
+  and slot states against the plain gets over 200,000 gets.
+
 ## The recording on the third core (session 146)
 
 A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;

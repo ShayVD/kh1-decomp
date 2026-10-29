@@ -564,13 +564,17 @@ static u32 psm_bits(u32 psm);
  * page as the pixels' stores would clear them (mark: the upload's bits, the stamp kept).
  * 1 when that is so, the counts and the position then as the pixels would leave them; 0 to send the
  * pixels through kh1_gsmem_image, then kh1_gsmem_image_kept */
+int (*kh1_gsmem_same_fn)(const void *a, const void *b, u32 n);
+
 int kh1_gsmem_image_same(const void *src, u32 bytes) {
     u32 p, bits;
     if (!trx.active || trx.key < 0 || trx.ai || trx.nacc || flat_raw) return 0;
     if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
         if (wr_pg[p] > at_key[trx.key].stamp) return 0;
-    if (!kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
+    if (kh1_gsmem_same_fn ? !kh1_gsmem_same_fn(same_pool + at_key[trx.key].doff, src, bytes)
+                          : !kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes))
+        return 0;
     bits = psm_bits(trx.psm);
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
         if (at_key[trx.key].pg[p >> 5] >> (p & 31) & 1 && page_drawn[p] & bits) {

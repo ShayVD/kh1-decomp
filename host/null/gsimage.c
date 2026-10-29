@@ -27,6 +27,7 @@
 #include "gsmem.h"
 #include "gsqueue.h"
 #include "platform/vu1.h"
+#include "bytesame.h"
 
 extern int kh1_host_trace;
 
@@ -114,6 +115,31 @@ static void w_load(const u32 *a, const u32 *d, u32 nqw) {
  * (the sync before each not in it), how many, how many of them unchanged, their bytes */
 u32 kh1_gs_load_us, kh1_gs_loads, kh1_gs_loads_same, kh1_gs_load_bytes;
 
+/* Session 147d: the large uploads' compare (the title's backdrops, ~5 x 288 KiB a frame, ~0.4-0.5 s per 2 s of the
+ * game thread on a Vita at ~180 MB/s) shared with the worker, idle after the sync before it: its first half there, the
+ * rest here, then a sync for its answer.  Exact either way: the halves together are the whole compare */
+static const u8 *split_a, *split_b;
+static u32 split_n;
+static volatile int split_same;
+static void w_same(const u32 *a, const u32 *d, u32 nqw) {
+    (void)a;
+    (void)d;
+    (void)nqw;
+    split_same = kh1_bytes_same(split_a, split_b, split_n);
+}
+static int same_split(const void *a, const void *b, u32 n) {
+    u32 h = n / 2 & ~255u;
+    int here;
+    split_a = (const u8 *)a;
+    split_b = (const u8 *)b;
+    split_n = h;
+    kh1_gsq_put(w_same, 0, 0, 0, 0);
+    kh1_gsq_flush();
+    here = kh1_bytes_same((const u8 *)a + h, (const u8 *)b + h, n - h);
+    kh1_gsq_sync();
+    return here && split_same;
+}
+
 int PlatGsExecLoadImage(void *lp, void *src) {
     const u32 *q = (const u32 *)lp;
     u32 bb = q[5], w = q[12] & 0xFFF, h = q[13] & 0xFFF, n = psm_size(bb >> 24 & 63), a[6];
@@ -132,7 +158,9 @@ int PlatGsExecLoadImage(void *lp, void *src) {
         u32 t0;
         kh1_gsq_sync();
         t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
+        if (kh1_gsq_on) kh1_gsmem_same_fn = same_split;
         kh1_gs_loads_same += load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)src, a[5]);
+        kh1_gsmem_same_fn = 0;
         if (kh1_vu1_clock) kh1_gs_load_us += kh1_vu1_clock() - t0;
         kh1_gs_loads++;
         kh1_gs_load_bytes += a[5];
