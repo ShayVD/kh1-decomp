@@ -1,3 +1,4 @@
+/* Round 40 wwm2: score 10 -> 8 (6 -> 4 words). The pad scan (r40/padscan2.py) showed the original pads the label just before the loop's jump to its test, so the loop note follows the ok: inits directly. Ordering them done = 0; sm = s->m; cnt = 0 gives 8 (a for (cnt = 0; ...) loop with done, sm before it also gives 8). Left: the original computes s+32 inside the loop (beqz delay slot) and nothing sits between the inits and the loop note; with sm only in the loop the s2/s3 swap comes back (30). */
 /* score 10 (6 words; was 15/30). Round 34 wwm2: the -dg dump showed obj (pseudo 86: 15 refs, live 300) and the s->m address (pseudo 122: 6 refs, live 75) nearly tied, with s->m winning s2. `f32 (*sm)[4] = s->m` set right after the `ok:` label makes it live longer, so obj takes s2 as in the original. Left: the original computes s+32 inside the loop (in the beqz delay slot), ours before it; setting sm again in the loop is CSE'd away and sm = 0 at ok: undoes the fix. Earlier header: 15 words left (round 12): s2/s3 swap between obj and the &s->m address. Tried 12 declaration orders, an sm pointer, ternary/else/goto-out forms, 10 min permuter (no gain). Sibling func_00f2e510 matched with the same skeleton, compare against ovl/wm/hand/func_00f2e510.c. */
 typedef struct { u8 b0; u8 pad[13]; u16 h14; u16 pad2; s16 h18; u8 pad3[12]; f32 m[4][4]; u8 pad4[32]; s32 idx; } A2dc50;
 typedef struct { s32 a; s32 b; u8 pad[24]; } B2dc50;
@@ -58,8 +59,8 @@ void func_00f2dc50(s32 arg) {
         obj = NULL;
     }
 ok:
-    sm = s->m;
     done = 0;
+    sm = s->m;
     cnt = 0;
     while (func_00f680c0(s->h14)) {
         obj = NULL;
