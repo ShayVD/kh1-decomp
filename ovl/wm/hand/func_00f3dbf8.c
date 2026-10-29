@@ -1,4 +1,8 @@
-/* 50 words left; tried variants b-c */
+/* wm.x func_00f3dbf8: matched by hand. */
+#include "ovl.h"
+
+/* wm.x func_00f3dbf8: matched by hand. */
+#include "ovl.h"
 typedef struct { u16 h0; u16 h2; u16 h4; u16 flags; u8 pad8[0x18]; u16 id; u16 pad22; u16 cnt; } R3dbf8;
 typedef struct { u8 b0; u8 pad1; u16 h2; u8 pad4[12]; u8 b10; } Q3dbf8;
 typedef struct { u8 pad[0xC8]; f32 dist; } T3dbf8;
@@ -29,30 +33,30 @@ s32 func_00f3dbf8(s32 arg0, u8 *arg1, s32 arg2) {
         return 0;
     }
     q = func_00f62c78(r->id, (*pg)->x540);
-    if (q != NULL && q->h2 < 2) {
-        if (r->cnt == 0) {
-            return 1;
-        }
-        r->flags |= 8;
-        n = func_00f348e0(arg2);
-        if (n >= r->cnt) {
-            r->cnt = 0;
-            r->flags |= 1;
-            d = func_00f64c38(q->b0, D_00F87020)->dist;
-            if (d < 1400.0f) {
-                k = 78;
-            } else if (d < 4000.0f) {
-                k = 77;
-            } else {
-                k = 76;
-            }
-            func_00f68770(k, 1, arg1, 0, D_00F87048);
-            func_00f3de48(arg1 + 48, q);
-            func_00f2c108(q->b10, q->h2);
-            return 3;
-        }
-        r->cnt -= n;
-        return 2;
+    if (q == NULL || q->h2 >= 2) {
+        return 0;
     }
-    return 0;
+    if (r->cnt == 0) {
+        return 1;
+    }
+    r->flags |= 8;
+    n = func_00f348e0(arg2);
+    if (n >= r->cnt) {
+        r->cnt = 0;
+        r->flags |= 1;
+        d = func_00f64c38(q->b0, D_00F87020)->dist;
+        if (d < 1400.0f) {
+            k = 78;
+        } else if (d < 4000.0f) {
+            k = 77;
+        } else {
+            k = 76;
+        }
+        func_00f68770(k, 1, arg1, 0, D_00F87048);
+        func_00f3de48(arg1 + 48, q);
+        func_00f2c108(q->b10, q->h2);
+        return 3;
+    }
+    r->cnt -= n;
+    return 2;
 }
