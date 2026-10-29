@@ -475,3 +475,41 @@ Lessons:
 - **Reused coordinate variables (f24fe0):** assigning new values to the same cx/cy variables, instead of writing the expressions inline, took the score from 218 to 39.
 - **Field pointers (f32df0):** when the original keeps a separate register per struct field across calls, explicit field-pointer locals reproduce it. This took the score from 292 to 121.
 - **Global array (f23018):** declaring the run of globals D_00FBAA78..8C as one `s32 [6]` array helped (149 -> 99).
+
+## Round 27 (wm)
+
+func_00f44898 matched (its own commit). The other functions are near misses, and each header says what is left and what was tried.
+
+| Function | Score | Size (draft vs original) | Source |
+| --- | --- | --- | --- |
+| f44898 | MATCH | 1344 | new |
+| f33270 | 24 | 1056, same size | Round 26 draft, hill2 (was 30) |
+| f37770 | 24 | 1176, same size | hill2 found nothing better |
+| f422c0 | 26 | 1368, same size | new, then hill2 (32 -> 26) |
+| f46070 | 51 | 1332 vs 1336 | new |
+| f2ac98 | 62 | 1360, same size | new |
+| f28ed8 | 75 | 1340 vs 1344 (end nop) | new |
+| f56780 | 165 | 1372 vs 1376 | ported from the gb near miss f2f688 (153) |
+| f55fe0 | 180 | 1368, same size | ported from the gb near miss f2eee8 (168) |
+| f26810 | 196 | 1344, same size | new |
+
+wm f55fe0/f56780 are the gb f2eee8/f2f688 pair. The other six have no gb twin.
+
+Lessons:
+- **Base-pointer locals for argument tables (f44898):** the last 15 words were the schedule of `func_00f21260(..., D_01080810[*st], D_01080800[*st], ...)`. Loading `q = D_01080810;` into a local first and passing `q[*st]` gave the match.
+- **Real loops are aligned:** gcc pads the label of a `while (1) { ... if (!more()) break; ...; }` loop to 8 bytes and does not pad a goto label. f44898 went from 32 to 20 by switching from the goto form. The `do { } while (1)` form rotates the tail call to the loop top, which is wrong.
+- **Float literals:** gcc 2.96 truncates when it converts a decimal literal to float. If the m2c literal comes out one ulp low, add digits. These were checked with a compile-only probe (cs.py):
+
+  | Literal | Gives |
+  | --- | --- |
+  | 0.29999999f | 0x3e999999 |
+  | 0.39999998f | 0x3ecccccc |
+  | 0.36999998f | 0x3ebd70a3 |
+  | 0.47f | 0x3ef0a3d7 |
+  | 3.1415926f | 0x40490fda |
+  | 1.59999996f | 0x3fcccccc |
+  | 0.59999997f | 0x3f199999 |
+  | -0.54999997f | 0xbf0ccccc |
+- **Local aggregate initializers (f46070):** hand.py cannot place the rodata of a local `s32 t[8] = {...}` until the code matches, so a draft shows score 999. To score while drafting, copy a struct from the extern rodata symbol instead (`typedef struct { s32 v[8]; } A8; extern A8 D_00FB74C0; A8 t = D_00FB74C0;`), which gives the same ldl/sdl copy. Switch back to initializers once it matches.
+- **Spill choice (f46070):** gcc spills the variable with fewer uses. Folding the two `done = 1` stores into one, `if (done != 0 || (a() && b())) { if (done == 0) mode = b(); done = 1; }`, kept `done` on the stack as in the original (98 -> 59).
+- **Colour joins (f28ed8):** when both branches of an if end in `or s0,v1,v0` at a shared label, write each branch as two halves u/v and one `col = u | v;` after the if.

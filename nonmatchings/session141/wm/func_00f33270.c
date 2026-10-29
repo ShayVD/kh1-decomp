@@ -1,4 +1,4 @@
-/* score 30 (1056 bytes, same size). Map-marker sprite pass: 16 D_00FBB5D0 markers, kind >= 12 draws a GIF sprite from D_00F9B330[k] (k = 17/6/5 from flag bits), else func_00f32df0. Needs (s64) casts on the packed uv/xy words, the 0x101000070 header constant, and v read through D_00F9B338 (the original addresses it from that symbol). Left: fx/fy float register choice and the u field base (orig keeps D_00F9B330 base, ours folds +4). Tried w/h, u/v, x/y load orders, fw temp, Spr pointer (worse). Round 26 wwm2. */
+/* score 24 (1056 bytes, same size). Map-marker sprite pass: 16 D_00FBB5D0 markers, kind >= 12 draws a GIF sprite from D_00F9B330[k] (k = 17/6/5 from flag bits), else func_00f32df0. Needs (s64) casts on the packed uv/xy words, the 0x101000070 header constant, and v read through D_00F9B338. Round 27 hill2: loading u = D_00F9B330[k].u before w/h, decl `f32 fy, fx;` and the scalar decl order took it 30 -> 24. Left: fx/fy float register choice and the u field base (orig keeps D_00F9B330 base, ours folds +4). Round 26/27 wwm2. */
 typedef struct { s32 f; s32 x4; u32 kind; s32 xc; f32 x; f32 y; f32 z; f32 w; } Mk;
 typedef struct { s32 x0; s32 u; s32 v; s32 w; s32 h; } Spr;
 extern s32 D_00F850F4;
@@ -20,14 +20,14 @@ u64 *func_00f32df0(u64 *, s32, s32, u32);
 
 void func_00f33270(void)
 {
+    f32 fy, fx;
     u64 col;
     s32 i;
     s32 k;
-    u64 *p;
-    Mk *m;
-    f32 fx, fy;
     s32 x, y, u, v, w, h;
+    u64 *p;
     u64 tex;
+    Mk *m;
 
     if (D_00F850F4 == 0) {
         return;
@@ -64,10 +64,10 @@ void func_00f33270(void)
                 } else if (m->f) {
                     k = 5;
                 }
+                u = D_00F9B330[k].u;
                 w = D_00F9B330[k].w;
                 h = D_00F9B330[k].h;
                 v = D_00F9B338[k].v;
-                u = D_00F9B330[k].u;
                 x = (s32)(fx * 16.0f) - w * 8;
                 y = (s32)(fy * 16.0f) - h * 8;
                 tex = D_00F87070[k];
