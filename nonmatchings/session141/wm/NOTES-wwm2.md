@@ -694,3 +694,35 @@ Still open:
 
 Leads:
 - docs/overlays.md (Batch 4 patterns) says that `ld; dsrl32; andi 0xffff; andi 0xf` reads are u16 bitfields (`lo:8, kind:4, hi:4`) in a struct with a u64 member. That is exactly f4c610's leftover (Round 32), so it should be the next thing to try there.
+
+## Round 35 (wwm2)
+
+Three matches, each its own commit: wm f4c610, gb f25518 (the gb twin of f4c610) and wm f422c0.
+
+**f4c610:**
+1. The u16 bitfield layout gives the original's bitfield read: `u64 pad[0x58 / 8]; u32 x58; u16 lo : 4, lv : 4, hi : 8;`. The read is `ld; dsrl32 4; andi 0xffff; andi 0xf` with no dsll32/dsra32.
+2. A hill2 copy that minimizes hand.py's score instead of the word count (/tmp/claude-0/s141/r35/h2s.py) took it from score 77 to 13. hill3 then took it to 7.
+3. The last fix: `o->a.v[0] = 0; o->a.v[1] = 0;` come before `w = D_00F9B540;`. A store through o may alias the global, so the original stores first and loads the pointer afterwards.
+
+I built on my own version rather than wgb's (42 words, score 71), because mine scored better (13).
+
+**gb f25518:** the same source with D_00F56DC0 matches straight away.
+
+**f422c0:**
+1. Both b and off are local-alloc pseudos. off had the higher priority (0.158 vs 0.083), so it took s1.
+2. Moving `b = (u8 *)D_00F86500;` to just before off is computed (after `D_00F9B1C4 = 0`) shortens b's live range, so b takes s1. That gave 6 words.
+3. hill3, using my wm copy that ranks by score (/tmp/claude-0/s141/r35/hill3.py), took it to 3 words.
+4. `o2 = off + 0x540; e = (Sub *)(o2 + b);` keeps the original's add order and matched. Seven different ways of writing the expression inline all compile the same.
+
+Still at 2 words:
+- **f78458:** hill3 for 240 s, plus these single tweaks: forwarding D_0108F568 into D_0108F56C, a local copy of arg, a local for 8, a duplicate D_0108F568 store, and D_0108F568 stored first. None helped.
+- **f43430:** hill3 for 240 s, an `n > 0` guard around `p = buf`, count-down loops and index forms. The `buf[i]` form gets the delay slot right (`p` is then created after the test), but the first load uses sp, not s1.
+
+**f33270 (score 24):** fy and fx are global pseudos with 6 refs each (live 19 and 14), so fx is allocated first and takes f0.
+- Computing fx first fixes the load order but puts fy in f2.
+- Swapping the order of use and the declaration order, plus hill3 from the fx-first version, comes back to 24.
+
+Lessons:
+- **Aliasing sets the order of stores and loads:** stores through a pointer argument cannot move past a load of a global pointer. When the original stores before loading a global, write the stores first.
+- **A temp keeps an add order:** a sum written inline gets reassociated, while a separate temp (`o2 = off + 0x540`) keeps the original's order.
+- **Search by score:** when the word count and the score disagree, the score (aligned) is the better guide.
