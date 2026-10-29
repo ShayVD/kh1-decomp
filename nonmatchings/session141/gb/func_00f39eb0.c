@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 1270 -> 1062, port.py of the wm twin func_00f60fa8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* NEAR MISS 1069 words, score 1270 (4312 vs 4552 bytes). Palette/colour-picker screen: dial ring (16 rotated 120-unit spokes), 8 rotating textured petals from D_00F82640 (angle wrap + f64 step D_00F719E0), 8x8 swatch grid from colors[] with cursor D_00F826F0/F4 and func_00f39e50 locks, cursor frame, 3 tabs from D_00F826C0, 4 func_00f39bf8 labels. The call sequence matches the original call for call. Tried: exact truncated float constants, one shared counter for the loops (orig keeps it at 160(sp)), modes (nostrict 1247 on the previous draft, norlo 1252). Left: the original keeps the grid-row invariants ((row*18+140..142)*16<<16, row*288+2544) in stack slots and has 16 more frame bytes plus f25 = PI held in a register; ours recomputes them, so it is 240 bytes short. */
 typedef struct { u64 d[6]; } Blk48;
 typedef struct { s32 x0; s32 u; s32 v; s32 w; s32 h; } Ent;
@@ -17,7 +18,7 @@ extern Blk48 D_00F719B0;
 extern double D_00F719E0;
 extern D61880 D_00F61880;
 extern Col D_00F82640[];
-extern Col D_00F826C0[];
+extern Col D_0108EE80[];
 extern s32 D_00F826F0;
 extern s32 D_00F826F4;
 void sceVu0UnitMatrix(OvlMtx);
@@ -35,29 +36,29 @@ u64 *func_00f39bf8(u64 *, s32, s32, s32, u64, s32);
 #define RGBA(r, g, b, a) ((u64)(r) | ((u64)0x3F80 << 48) | ((u64)(b) << 16) | ((u64)(g) << 8) | ((u64)(a) << 24))
 
 void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
-    s32 q[4];
     OvlMtx m;
-    OvlVec v;
-    Blk48 tbl;
-    s32 a;
-    s32 i, k, row, col, cell, sel;
-    u64 *p;
-    f32 ang;
-    f32 fw, fh;
-    u64 uv0, uv1, uv2, uv3;
-    u64 c;
-    u64 c2;
-    Col *e;
-    u8 *cp;
     Ent *t;
+    u64 uv0, uv1, uv2, uv3;
+    u8 *cp;
+    Col *e;
+    s32 i, k, row, col, cell, sel;
+    u64 c2;
+    f32 fw, fh;
+    u64 *p;
+    s32 q[4];
+    u64 c;
+    f32 ang;
+    OvlVec v;
     s32 x, y;
+    s32 a;
+    Blk48 tbl;
 
     a = D_00F61840;
     tbl = D_00F719B0;
     if (a == 0) return;
     p = func_00f3fa80(func_00f3f9d0(*pp));
-    p[0] = 0;
     p[1] = 24;
+    p[0] = 0;
     p += 2;
     p[0] = 0x30000;
     p[1] = 71;
@@ -76,8 +77,8 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
     p[0] = 69;
     p[1] = 0;
     p += 2;
-    p[0] = ((u64)(a / 2) << 24) | ((u64)0x3F80 << 48);
     p[1] = 1;
+    p[0] = ((u64)(a / 2) << 24) | ((u64)0x3F80 << 48);
     p += 2;
     p[0] = XYZ(4432, 3488);
     p[1] = 5;
@@ -115,16 +116,16 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
     p += 2;
     func_00f3fa98(p);
 
-    ang = (D_00F61838 + 67.5f) * 0.01745329f;
     fw = D_00F61880.x1B0 - 2;
+    ang = (D_00F61838 + 67.5f) * 0.01745329f;
     fh = D_00F61880.x1B4 - 2;
     uv0 = (u64)(D_00F61880.x1A8 * 16 + 16) | ((u64)((D_00F61880.x1AC + 1) * 16) << 16);
     uv1 = (u64)((D_00F61880.x1A8 + D_00F61880.x1B0) * 16) | ((u64)((D_00F61880.x1AC + 1) * 16) << 16);
-    uv2 = (u64)(D_00F61880.x1A8 * 16 + 16) | ((u64)((D_00F61880.x1AC + D_00F61880.x1B4) * 16) << 16);
-    uv3 = (u64)((D_00F61880.x1A8 + D_00F61880.x1B0) * 16) | ((u64)((D_00F61880.x1AC + D_00F61880.x1B4) * 16) << 16);
     v[3] = 1.0f;
-    v[2] = 1.0f;
+    uv3 = (u64)((D_00F61880.x1A8 + D_00F61880.x1B0) * 16) | ((u64)((D_00F61880.x1AC + D_00F61880.x1B4) * 16) << 16);
+    uv2 = (u64)(D_00F61880.x1A8 * 16 + 16) | ((u64)((D_00F61880.x1AC + D_00F61880.x1B4) * 16) << 16);
     e = D_00F82640;
+    v[2] = 1.0f;
     i = 7;
     do {
         c = RGBA(e->r, e->g, e->b, e->a * a / 128);
@@ -138,23 +139,23 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
         sceVu0UnitMatrix(m);
         while (ang > 3.1415926f) ang -= 6.283185f;
         while (ang < -3.1415926f) ang += 6.283185f;
-        i--;
         e++;
+        i--;
         sceVu0RotMatrixZ(m, m, ang);
         p[0] = uv0;
         p[1] = 3;
         p += 2;
         p[0] = c;
-        p[1] = 1;
-        p += 2;
         v[0] = 0.0f;
+        p[1] = 1;
         v[1] = 0.0f;
+        p += 2;
         sceVu0ApplyMatrix(v, m, v);
         p[1] = 5;
         p[0] = XYZ((s32)(v[0] * 16.0f) + 4432, (s32)(v[1] * 16.0f) + 3488);
-        p += 2;
         v[0] = fw;
         v[1] = 0.0f;
+        p += 2;
         p[0] = uv1;
         p[1] = 3;
         p += 2;
@@ -178,8 +179,8 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
         p[0] = XYZ((s32)(v[0] * 16.0f) + 4432, (s32)(v[1] * 16.0f) + 3488);
         p += 2;
         v[0] = fw;
-        v[1] = fh;
         p[0] = uv3;
+        v[1] = fh;
         p[1] = 3;
         p += 2;
         p[0] = c;
@@ -208,8 +209,8 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
         for (i = 0; i < 8; i++) {
             q[0] = cp[0];
             q[1] = cp[1];
-            q[2] = cp[2];
             q[3] = a;
+            q[2] = cp[2];
             p = func_00f3fa80(p);
             p[0] = 70;
             p[1] = 0;
@@ -236,8 +237,8 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
                 cp += 4;
                 cell++;
             } else {
-                cp += 4;
                 cell++;
+                cp += 4;
                 p = func_00f3fa80(p);
                 p[0] = 342;
                 p[1] = 0;
@@ -246,12 +247,12 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
                 p[1] = 1;
                 p += 2;
                 sel = func_00f39e50(row * 8 + i) ? 5 : 3;
-                t = (Ent *)((u8 *)&D_00F61880 + sel * 20);
                 p[0] = *(u64 *)(D_00F56DC0 + 8704 + sel * 8);
                 p[1] = 6;
+                t = (Ent *)((u8 *)&D_00F61880 + sel * 20);
                 p += 2;
-                p[0] = (u64)(t->u * 16 + 16) | ((u64)(t->v * 16 + 16) << 16);
                 p[1] = 3;
+                p[0] = (u64)(t->u * 16 + 16) | ((u64)(t->v * 16 + 16) << 16);
                 p += 2;
                 p[0] = XYZ((x + 203) * 16, (row * 18 + 140) * 16);
                 p[1] = 5;
@@ -269,13 +270,13 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
     }
     cell = D_00F826F4 * 8 - D_00F826F0 + 7;
     if (func_00f39e50(cell) == 0) {
+        x = D_00F826F0 * 18;
+        y = D_00F826F4 * 18;
         cp = colors + cell * 4;
         q[2] = cp[2];
-        q[0] = cp[0];
         q[1] = cp[1];
-        y = D_00F826F4 * 18;
-        x = D_00F826F0 * 18;
         q[3] = a;
+        q[0] = cp[0];
         p = func_00f3fa80(p);
         p[0] = 70;
         p[1] = 0;
@@ -292,8 +293,9 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
         func_00f3fa98(p);
     }
     p = func_00f3fa80(p);
-    p[0] = *(u64 *)(D_00F56DC0 + 8736);
+    y = D_00F826F4 * 18 + 139;
     p[1] = 6;
+    p[0] = *(u64 *)(D_00F56DC0 + 8736);
     p += 2;
     p[0] = 342;
     p[1] = 0;
@@ -301,10 +303,9 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
     p[0] = ((u64)a << 24) | 0x3F80000000808080;
     p[1] = 1;
     p += 2;
-    y = D_00F826F4 * 18 + 139;
+    p[1] = 3;
     x = D_00F826F0 * 18 + 202;
     p[0] = (u64)(D_00F61880.x54 * 16 + 16) | ((u64)(D_00F61880.x58 * 16 + 16) << 16);
-    p[1] = 3;
     p += 2;
     p[0] = XYZ(x * 16, y * 16);
     p[1] = 5;
@@ -320,26 +321,26 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
         s32 u = D_00F61880.x7C + i * 80;
         p = func_00f3fa80(p);
         p[0] = 342;
+        e = &D_0108EE80[i];
         p[1] = 0;
         p += 2;
-        e = &D_00F826C0[i];
         p[0] = *(u64 *)(D_00F56DC0 + 8752);
         p[1] = 6;
         p += 2;
         p[0] = RGBA(e->r, e->g, e->b, e->a * a / 128);
         p[1] = 1;
         p += 2;
-        p[0] = (u64)(u * 16) | ((u64)(D_00F61880.x80 * 16) << 16);
         p[1] = 3;
+        p[0] = (u64)(u * 16) | ((u64)(D_00F61880.x80 * 16) << 16);
         p += 2;
         p[0] = 0x112300EE0;
         p[1] = 5;
         p += 2;
-        p[0] = (u64)((u + 80) * 16 + 16) | ((u64)((D_00F61880.x80 + 37) * 16) << 16);
         p[1] = 3;
+        p[0] = (u64)((u + 80) * 16 + 16) | ((u64)((D_00F61880.x80 + 37) * 16) << 16);
         p += 2;
-        p[0] = 0x1147013E0;
         p[1] = 5;
+        p[0] = 0x1147013E0;
         p += 2;
         func_00f3fa98(p);
     }
