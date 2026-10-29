@@ -513,3 +513,33 @@ Lessons:
 - **Local aggregate initializers (f46070):** hand.py cannot place the rodata of a local `s32 t[8] = {...}` until the code matches, so a draft shows score 999. To score while drafting, copy a struct from the extern rodata symbol instead (`typedef struct { s32 v[8]; } A8; extern A8 D_00FB74C0; A8 t = D_00FB74C0;`), which gives the same ldl/sdl copy. Switch back to initializers once it matches.
 - **Spill choice (f46070):** gcc spills the variable with fewer uses. Folding the two `done = 1` stores into one, `if (done != 0 || (a() && b())) { if (done == 0) mode = b(); done = 1; }`, kept `done` on the stack as in the original (98 -> 59).
 - **Colour joins (f28ed8):** when both branches of an if end in `or s0,v1,v0` at a shared label, write each branch as two halves u/v and one `col = u | v;` after the if.
+
+## Round 28 (wwm2)
+
+The last five undrafted wm functions now have structurally complete drafts. Time-boxed; none match.
+
+| Function | Score | Size (ours vs orig) | Note |
+| --- | --- | --- | --- |
+| f549d0 | 519 | 1964 vs 1984 | port of the gb f2d8d8 draft (gb also 519) |
+| f3e988 | 776 | 2224 vs 2264 | minimap blips; colour table drafted as a struct copy |
+| f26e80 | 722 | 2872 vs 2944 | item carousel; call sequence lines up |
+| f25918 | 530 | 3808 vs 3832 | main-menu state machine, 5-entry jump table |
+| f31430 | 384 | 3848 vs 3816 | world-map player/camera update; frame 16 bytes smaller than orig |
+
+gb twins: only f549d0 has one (gb f2d8d8, already drafted). The other four have no gb function of matching size or call set.
+
+f422c0 hill2: two more runs (init stores 61-73/81-90/92-95, then 81-89/92-95/116-123, 360 s each, about 1500 tries each) found nothing below 26.
+
+Lessons:
+- **Soft-float fabs:** write `a = d; if (d < 0) a = 0.0 - d;`. It gives the original's `__cmpdf2` / `__subdf3(0, d)` pair. A ternary or a macro made gcc duplicate the code that follows.
+- **Lerps with a variable n:** `v = (0 - 640) * i / n + 640;` with n in a local (not a constant) gives the original's mult/div sequence.
+- **Integer temps before float calls (f25918):** computing the integer lerps into locals before the `func_00f21ef0((f32)...)` call, instead of inline in the later call arguments, took it 644 -> 530.
+- **More float literals** (checked with cs.py):
+
+  | Literal | Gives |
+  | --- | --- |
+  | 0.069813165f | 0x3d8efa34 |
+  | 0.049999998f | 0x3d4ccccc |
+  | 0.5235987f | 0x3f060a90 |
+  | 1.9098597f | 0x3ff47648 |
+  | 57599.996f | 0x4760ffff |
