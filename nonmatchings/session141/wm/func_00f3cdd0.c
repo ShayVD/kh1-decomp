@@ -1,5 +1,5 @@
-/* score 49 (1324 vs 1328, the 4 is end padding). Box vs sphere test: 8 corners through func_00f3caf0, then point in box space via transposed matrix with m[3] cleared, four box tests (plain, x/y/z widened by r). Unused f32 u[4] gives the frame (122 -> 76); v[0],v[1],v[2],v[3] order. Left: corner checks 2-8 use bnezl where orig has bnez + li v0,1 in the delay slot, and arg setup order. Tried ret variable, inline helper. Round 26 wwm2. */
-s32 func_00f3caf0(f32 *, f32 *, f32, f32);
+/* score 49 (1324 vs 1328, the 4 is end padding). Box vs sphere test: 8 corners through func_00f3caf0, then point in box space via transposed matrix with m[3] cleared, four box tests (plain, x/y/z widened by r). Unused f32 u[4] gives the frame (122 -> 76); v[0],v[1],v[2],v[3] order. Left: corner checks 2-8 use bnezl where orig has bnez + li v0,1 in the delay slot, and arg setup order. Tried ret variable, inline helper. Round 26 wwm2. Round 17 (wwm1): a CONTEXT_ONLY func_00f3caf0 above it (s32 (f32 *, f32 *, f32, f32), as matched) fixes the bnezl / bnez + li v0,1 slots (24 -> 17). Left: in each corner call the target sets f12 = r before a1 = v. */
+CONTEXT_ONLY s32 func_00f3caf0(f32 * a0, f32 * a1, f32 a2, f32 a3) { return 0; }
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 void sceVu0TransposeMatrix(f32 (*)[4], f32 (*)[4]);

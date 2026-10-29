@@ -1,4 +1,4 @@
-/* 99 words (648 vs 640), score 40 (was 48): round 11 swapped the prototypes to func_00f3caf0(p, r, m[3], f256) and func_00f3cb90(p, r, pos, size, m) as in the matched sibling func_00f3d4d8. Still 2 instructions off; the rest is an offset shift plus one alignment nop. Left: reorg fills (d == NULL uses beqz+li v0,255 in the target, beqzl here) and the target loads o->f256 into f13 in the h8 branch delay slot. Tried: hill2 over the f4/d/h2 test forms (2x7 min), a rad temp, a goto for the d test, and four placements of s = o->s. */
+/* 99 words (648 vs 640), score 40 (was 48): round 11 swapped the prototypes to func_00f3caf0(p, r, m[3], f256) and func_00f3cb90(p, r, pos, size, m) as in the matched sibling func_00f3d4d8. Still 2 instructions off; the rest is an offset shift plus one alignment nop. Left: reorg fills (d == NULL uses beqz+li v0,255 in the target, beqzl here) and the target loads o->f256 into f13 in the h8 branch delay slot. Tried: hill2 over the f4/d/h2 test forms (2x7 min), a rad temp, a goto for the d test, and four placements of s = o->s. Round 17 (wwm1): a CONTEXT_ONLY func_00f3b480 above it fixes the reorg fills (99 -> 8, same size now). Left: `lw s0,260(s1)` before the bnez and the lwc1 f13 in its slot (ours: the lw in the slot). ctx2.py singles and pairs. */
 typedef struct { u8 b0; u8 pad1; u16 h2; u8 pad4[4]; u16 h8; } D3d978;
 typedef struct { u8 pad[176]; f32 pos[3]; f32 size[3]; f32 f200; } S3d978;
 typedef struct {
@@ -15,6 +15,7 @@ typedef struct { f32 *p; f32 r; void *h; f32 (*m)[4]; s32 hit; } A3d978;
 extern s32 D_00F87270;
 O3d978 *func_00f3b460(s32);
 s32 func_00f3b480(void);
+CONTEXT_ONLY s32 func_00f3b480() { return 0; }
 s32 func_00f218d8(void);
 s32 func_00f3af58(f32 *, f32);
 s32 func_00f3caf0(f32 *, f32, f32 *, f32);

@@ -218,6 +218,90 @@ and gb func_00f25a68 is wm func_00f35800 with gb's own literal (0.17453292f).
   - `if (a == at) v = a * 0.5f; else {...; v = a * 0.5f;}` merges into one multiply
     (wm func_00f6a530).
 
+## Branch-likely vs plain branch (session 141, wwm1 round 17)
+
+A conditional branch whose delay slot holds the first insn of its *taken* path (reorg's
+fill_slots_from_thread steals it and retargets the branch past it) comes out as a plain
+branch (`bltz`, `beq`, `bc1f`) when that insn is harmless on the not-taken path, and as a
+branch-likely (`bltzl`, `beql`, `bc1fl`) otherwise. "Harmless" means: the insn cannot
+trap, and the register it sets is not in the live set reorg computes for the fallthrough.
+
+How reorg computes that live set (resource.c `mark_target_live_regs`, traced in gdb on
+cc1, which has symbols, the way tools/matching/gdb_s13/rg.py does it):
+
+1. It takes the registers live at the start of the extended basic block (back to the
+   previous BARRIER) and steps forward to the fallthrough. A register that dies at the branch
+   itself (REG_DEAD on the branch) only becomes "pending dead" until the next CODE_LABEL, so
+   it still counts as live just after the branch. The branch's own operand (the `k` of
+   `if (k >= 0)`) and anything set in the same block stay live this way.
+2. Then `find_dead_or_set_registers` scans forward from the fallthrough. It drops registers
+   that are set before they are read. **A call kills the call-clobbered registers (v0, v1,
+   a0-a3, t0-t9) only when it cannot throw.** gcc 2.96 marks a call `REG_EH_REGION 0`
+   (nothrow) only when the callee was already defined earlier in the same file. A call to
+   an external function stops that kill, so a v0 / v1 / aN / tN set by the stolen insn stays
+   live and the slot has to be annulled.
+
+What this means for a source shape:
+
+- **The original has a plain branch, ours the -likely one, and the slot insn sets a
+  call-clobbered register:** look at the first call on the fallthrough path. Its callee was
+  defined above the function in the original file. Give it a `CONTEXT_ONLY` definition above
+  ours, not just a prototype (include/common.h: `CONTEXT_ONLY void f(OvlMtx a0, s32 a1) {}`).
+  The body is irrelevant; an empty one, a non-empty one and an old-style `void f() {}` all
+  work. A definition *after* the function, `__attribute__((const))`, `pure` and `noreturn`
+  do not; 2.96 ignores `nothrow`. gb func_00f350d0 went from 1 word to a match this way
+  (`bltzl v1` -> `bltz v1`, the stolen insn `lw v1,%lo(D_00F56DC0)`, the first fallthrough
+  call func_00f33d18).
+- The same definition also fixed gb func_00f35a80: three `beqzl` became the original's
+  `beqz`, with func_00f357b0 and func_00f358b8 defined above.
+- **It works in the other direction too.** In gb func_00f34aa8 the original has a `beql` (case
+  44 of a switch, with `move a0,sp` stolen from the case body), and ours had a plain `beq`
+  filled from the default path. A CONTEXT_ONLY func_00f33d18, the case body's first call,
+  matched it (65 words -> 0; the slot change shifted every later address). So whenever a
+  near miss differs in branch-likely use or in a slot near a call, try CONTEXT_ONLY
+  definitions of the calls next to the branch, both one at a time and together.
+- **The original has the -likely one, ours plain:** the original's fallthrough had a reader of
+  that register before its first call, or its first callee was not defined above (the
+  session 13 tip in docs/matching-tips.md is the same rule from the other side).
+- A callee-saved destination (s0-s8: an `i++` stolen from the loop latch) stays live across
+  any call, so that slot is always annulled unless the fallthrough sets it first.
+- The slot insn must not trap: a load from `%lo(sym)(reg)` or the stack can go in a plain
+  slot, a load through a pointer register cannot (`may_trap_p`), so that one is always
+  `-likely`. A volatile access is not moved into any slot.
+- Branch prediction (REG_BR_PROB from predict.c, e.g. 9001 for a branch whose fallthrough
+  leaves the loop) only decides which thread reorg tries first. It does not decide
+  annulled vs plain: in gb func_00f350d0 both versions had the same probabilities.
+
+Minimal check (/tmp/claude-0/s141/wwm1/bl/t1.py):
+
+```c
+extern int n; extern short *a; void g(int); void h(int);
+void f(void) { int i, k; for (i = 0; i < n; i++) { k = a[i] - 1;
+    if (k < 4) { if (k >= 0) { g(i); h(i); return; } } } }
+```
+
+With `g` only declared, the first test is `beql ... ; lw $2,%lo(n)`. With `void g(int x) {}`
+above `f`, it is `beq ... ; lw $2,%lo(n)`.
+
+To try this mechanically: /tmp/claude-0/s141/wwm1/ctx2.py OVL FUNC draft.c [k] gives every
+declared callee (func_*, sce*, any prototype) a CONTEXT_ONLY definition, one at a time, then
+all together, then up to k at a time. It is greedy: after an improvement it tries the
+remaining callees again on top of it. It keeps the best version. The older ctx.py did only
+func_* names.
+
+Round 17 results (every near miss in gb, wm and the small overlays, 258 drafts):
+
+- Matched: gb func_00f350d0, func_00f35a80, func_00f34aa8; wm func_00f5cb78, func_00f31118,
+  func_00f3ff98, func_00f3be50 (135 words -> 1 with func_00f3b118 defined, -> 0 with
+  func_00f3b370 too), and func_00f5bba0 (68 -> 3 with func_00f5ae10, then gb func_00f34aa8's
+  `v[0..3]` store order).
+- Closer: wm func_00f3d978 (99 -> 8), func_00f3cdd0 (24 -> 17), func_00f43430 (7 -> 6).
+- No change: wm func_00f32770, the other gb drafts, dktitle, dkmovie, xs_* and xl_limit.
+  Only the big drafts moved, by a few words.
+- Most hits are a sibling defined just above in the original file: an overlay helper at a
+  lower address, called first on the path after the branch. If a near miss still differs
+  only in branch-likely use, look at the callees at lower addresses than the function.
+
 ## decomp-permuter on an overlay function (session 135)
 
 tools/permuter.py works in overlay mode as it is (KH1_OVL points kh1tool at the overlay's layout,

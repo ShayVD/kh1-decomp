@@ -559,3 +559,25 @@ The top of the gb ranking: no matches, so nothing to port to wm twins.
   gain. The target store order is now in the header.
 - f20518 and f36ee0 (11 to 12 aligned): giv / register-copy problems.
   I looked at them and did not change them.
+
+## Round 17 (branch-likely study)
+
+The findings are in docs/overlays.md, under "Branch-likely vs plain branch". In short:
+reorg puts a stolen target insn in a plain slot only when its register is dead on the
+fallthrough. A call kills the call-clobbered registers in that scan only when it is
+nothrow (REG_EH_REGION 0), and gcc 2.96 marks a call nothrow only when the callee was
+already defined earlier in the file. So a CONTEXT_ONLY definition of the first callee on
+the path after the branch flips `b*l` to `b*` (and, in gb func_00f34aa8, `b*` to `b*l`).
+I found this with gdb on cc1 (/tmp/claude-0/s141/wwm1/bl/rg2.py: the fill_slots_from_thread /
+mark_target_live_regs / find_dead_or_set_registers trace) and minimal tests (bl/t1.py,
+t2.py). const, pure, noreturn and nothrow attributes do not give it; a definition below
+the function does not either.
+
+Eight matches came from running /tmp/claude-0/s141/wwm1/ctx2.py (greedy CONTEXT_ONLY
+search) over all 258 drafts: gb f350d0, f35a80, f34aa8; wm f5cb78, f31118, f3ff98,
+f3be50 (two stubs, found one after the other) and f5bba0 (one stub plus gb f34aa8's vector
+store order). Closer: wm f3d978 (99 -> 8), f3cdd0 (24 -> 17), f43430 (7 -> 6). In every
+hit the stub callee sits at a lower address than the function.
+
+- hand.py keep adds its own "matched by hand" header in front of one that does not start
+  with that text. /tmp/claude-0/s141/wwm1/fixhdr.py merges the two.
