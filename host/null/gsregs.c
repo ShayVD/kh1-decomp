@@ -28,6 +28,11 @@ static KH1GsState gs = { { 0, 0 }, { 1, 0 } };
 static u32 gs_q = 0x3F800000; /* the PACKED Q (ST's third word), 1.0 at each GIF tag */
 static KH1GsDraw draws[DRAWS];
 static u32 ndraws, cur = ~0u; /* cur: the draw state of the last kick, ~0 once the state changes */
+/* session 147: a state register written with the value it held (the Dive's VU1 kicks: a GIF tag's PRE PRIM per
+ * strip of ~4 vertices) keeps cur; the next kick only redoes what the lookup did beyond the key, the render
+ * target check (relook).  A view change since cur was found (view_moved) still makes it look again, as any write
+ * did before */
+static int relook, view_moved;
 /* session 141 (the Vita's speed): the draw states by a hash of their key (the fields before kicks), where
  * every kick after a state write searched the list with memcmp; open addressing, index + 1 (0 empty) */
 #define DRAW_SLOTS 512
@@ -67,6 +72,7 @@ void kh1_gs_xstretch(s32 x0, s32 w, u32 what) {
 }
 
 void kh1_gs_view(s32 x0, s32 w) {
+    if (x0 != gs_vx0 || w != gs_vw) view_moved = 1;
     gs_vx0 = x0;
     gs_vw = w;
 }
@@ -210,9 +216,14 @@ static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
         d.x1 = d.y1 = -0x7FFFFFFF;
         if (i == ndraws && ndraws < DRAWS) draws[ndraws++] = d;
         cur = i < ndraws ? i : DRAWS;
+        view_moved = 0;
+        relook = 1;
+    }
+    if (relook) {
+        relook = 0;
         /* a texture in drawn pages (a render target) is not the uploads' (host/null/gsmem.c) */
         if (cur < DRAWS && p >> 4 & 1 && !draws[cur].target)
-            draws[cur].target = kh1_gsmem_tex_target(d.ctx.tex0.lo, d.ctx.tex0.hi);
+            draws[cur].target = kh1_gsmem_tex_target(draws[cur].ctx.tex0.lo, draws[cur].ctx.tex0.hi);
     }
     k = cur < DRAWS ? &draws[cur] : 0;
     if (k) k->kicks++;
@@ -264,6 +275,10 @@ static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
 }
 
 static void set(KH1GsReg *r, u32 lo, u32 hi) {
+    if (r->lo == lo && r->hi == hi && cur != ~0u && !view_moved) {
+        relook = 1;
+        return;
+    }
     r->lo = lo;
     r->hi = hi;
     cur = ~0u;
@@ -355,6 +370,18 @@ void kh1_gs_packed(u32 desc, const u32 *q) {
     case 0xF: return;
     }
     gs.unknown++; /* 0xB: reserved */
+}
+
+void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {
+    for (; n; n--, q += 12) {
+        gs_q = q[2];
+        gs.st.lo = q[0];
+        gs.st.hi = q[1];
+        gs.rgbaq.lo = (q[4] & 0xFF) | (q[5] & 0xFF) << 8 | (q[6] & 0xFF) << 16 | (q[7] & 0xFF) << 24;
+        gs.rgbaq.hi = gs_q;
+        /* XYZF2, or XYZF3 with ADC (no drawing): kh1_gs_write's 0x04 / 0x0C */
+        gs_kick(!(q[11] >> 15 & 1), gs_xs((q[8] & 0xFFFF) | (q[9] & 0xFFFF) << 16), q[10] >> 4 & 0xFFFFFF, q[11] >> 4 & 0xFF);
+    }
 }
 
 void kh1_gs_path1(void) {

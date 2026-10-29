@@ -165,6 +165,20 @@ static void gif_block(GifStream *g, const u32 *q, u32 n) {
             q += (k - 1) * 4;
             continue;
         }
+        /* session 147: a PACKED [ST, RGBAQ, XYZF2] packet's whole vertices in this block at once (the VU1
+         * programs' kicks: the GS worker's largest share on a Vita); a quiet walk keeps no values to list */
+        if (g->left >= 3 && g->flg == 0 && !g->k && g->nreg == 3 && g->regs[0] == 2 && g->regs[1] == 1 &&
+            g->regs[2] == 4 && !gs_keep && n - i >= 3) {
+            u32 v = (n - i < g->left ? n - i : g->left) / 3;
+            gif_set(g, 2);
+            gif_set(g, 1);
+            gif_set(g, 4);
+            kh1_gs_packed_stq_xyzf(q, v);
+            g->left -= v * 3;
+            i += v * 3 - 1;
+            q += (v * 3 - 1) * 4;
+            continue;
+        }
         gif_qword(g, q);
     }
 }
