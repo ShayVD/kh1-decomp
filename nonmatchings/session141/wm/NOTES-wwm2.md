@@ -265,3 +265,23 @@ No matches. The worktree was rebased onto 4384627, and the build is byte-identic
   CSE and the k/ps/y register rotation are still open.
 - Not reached: f646c0, f640e8, f79ca8. None of the Round 14 functions has a gb twin draft (checked f47ce0, f4b978,
   f3d5c8, f3cff0 and f52bb0).
+
+## Round 15
+
+Rebased onto origin/claude/project-thread-rl45wv; build byte-identical (889 -> 891 functions).
+
+Matched:
+- func_00f640e8: a 47+47-entry table init. `s32 *p = D_00377648; void **q = D_00377748;` then all `*++p = N;`
+  statements, then all `*++q = D_xxx;` statements (written sequentially; gcc interleaves them itself; interleaving
+  in the source scores 500). The draft was generated from m2c by a script.
+- func_00f79ca8: seven func_00f799e0 texture calls with an `s8 c[4]` colour. The fourth colour condition has to be
+  written inverted (`if (!(a||b) || FA70 == 67 || !BB0 || EC8) {48} else {128}`) so the 48 block comes first.
+
+Near misses saved:
+- func_00f646c0 (428): GS texture upload builder; the original keeps p in a3 and rebuilds the GIFtag in the inner
+  loop. Returns `in` (NULL on failure).
+- func_00f69278 (101): GS LoadImage packet in u32[4] qwords with a lo mask (extra high-half pick, 360 bytes).
+
+High-half (>= 0xf4fb14) unmatched functions under 1300 bytes with no hand or near-miss file, after this round:
+f67530 (392), f58140 (448), f4fba0 (456), f5d6b0 (560), f584d0 (632), f696a0 (752), f7b9e0 (816), f58748 (856),
+f53758 (920), f5f940 (944), f58bd0 (968), f5d8e0 (1048), f5fcf0 (1280), f74a28 (1288), f51008 (1296).
