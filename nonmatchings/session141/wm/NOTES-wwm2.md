@@ -613,3 +613,33 @@ Callee return types (src/ and ovl/*/hand/ definitions vs draft prototypes, scrat
 Lessons:
 - **Make sibling blocks agree:** f20d08's two tail blocks did the same three stores in different orders. Writing them in one order let gcc cross-jump them, which took the score from 51 to 21.
 - **Fold an add into its one use:** in f67c60, `cur += 6` at the loop top followed by `cur % 6` matched better as `(cur + 6) % 6`.
+
+## Round 32 (wwm2, RANKING.md rows 70-100)
+
+No matches. I worked 21 drafts; for each I ran ctx2 (singles and pairs), then wgb's interleave.py (copied to /tmp/claude-0/s141/r32/il.py, taking draft paths as arguments), then hill2 (240 s each) on the 16 that have independent blocks.
+
+Skipped for long attempt notes (header of 460 characters or more): f344f0, f663a8, f693e0, f3a640, f79700, f63d18, f32df0, f66bd0, f46cb8, f28a68.
+
+| Function | Before | Now | What did it |
+| --- | --- | --- | --- |
+| f387a8 | 102 words, score 123 | 7, score 12 | hill2 over the two 19-store k-> blocks (240 s, then 600 s more) |
+| f42f20 | 205, score 118 | 166, score 104 | ctx2 (CONTEXT_ONLY func_00f42ce0), then hill2 |
+| f4c238 | 70, score 126 | 67, score 120 | hill2 |
+| f3e138 | 114, score 125 | 113, score 119 | hill2 |
+| f799e0 | 72, score 93 | 68, score 89 | hill2 |
+| f78d50 | 126, score 71 | 124, score 67 | hill2 |
+
+No change from any of the three tools:
+- f7bde0, f28258, f5e540, f2ba68, f6dfd8, f5e710, f27ff0, f62440, f4b338, f60af0, f58f98, f584d0.
+- f23628 and f23018 gained only a point or two from hill2, so I did not save them.
+- interleave.py found mixed int/float callees in only three drafts (f5e710, f42f20, f23018), and none of their reorderings helps.
+
+f4c610:
+- hill2 cut it from 69 to 57 words, but the score got worse (77 to 79), so I did not save it.
+- The real problem is the `lv` bitfield. The original does `ld; dsrl32 4; andi 0xffff; andi 0xf; cvt.s.w` with no truncation, while ours adds dsll32/dsra32.
+- These rewrites do not fix it: s32/u16/u32/u8 casts, `% 16`, a temp local, an s64 field and a u32 field.
+
+Lessons:
+- **Big store blocks hide register-allocation gains:** f387a8's header said the s0/s1 and float constant registers were wrong. They were fixed by store order alone, because the order of first use decides which constant gets which register.
+- **Don't copy the original's store order:** writing the blocks in the order the original stores them was much worse (104 words), because the scheduler moves stores anyway. hill2 on the source order is the way in.
+- **Watch the score, not just the word count:** hill2 lowers the word count, but on f4c610 that came with a worse score.

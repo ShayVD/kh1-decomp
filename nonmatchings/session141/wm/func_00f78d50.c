@@ -1,4 +1,4 @@
-/* func_00f78d50: score 71, 126 words differ. original leaves soft-double libcall delay slots empty; global stores scheduled differently; all flag modes tried */
+/* 124 words, score 67 (was 126/71). Round 32 wwm2: hill2 reordered the global clears; ctx2 gives nothing. Earlier header: func_00f78d50: score 71, 126 words differ. original leaves soft-double libcall delay slots empty; global stores scheduled differently; all flag modes tried */
 typedef struct {
     s32 x0;
     s32 x4;
@@ -49,25 +49,25 @@ void func_00f78d50(s32 arg) {
     f32 v;
 
     D_00FB5BB0 = 1;
-    D_00FB5EC4 = 0;
-    D_0108F914 = 0;
-    D_00FB6164 = 0;
-    D_0108FA80 = 0;
-    D_0108FA84 = 0;
     D_00FB5EC8 = 0;
+    D_00FB6164 = 0;
+    D_0108FA84 = 0;
     D_0108F910 = 0;
+    D_00FB5EC4 = 0;
+    D_0108FA80 = 0;
+    D_0108F914 = 0;
     func_001fd720();
     func_00f206d8(0, 0, 0);
     D_00FB610C = -1;
     D_0108F730[1] = 1;
-    D_00FB5EC0 = 0;
-    D_0108F6B8.x8 = 0;
-    D_0108F6B8.x0 = 0;
     D_0108F6B8.x4 = 0;
+    D_00FB5EC0 = 0;
+    D_0108F6B8.x0 = 0;
     D_0108F730[0] = 1;
+    D_0108F6B8.x8 = 0;
     for (i = 0; i < 27; i++) {
-        D_0108F7C0[i] = D_00FB5BBC;
         D_0108F830[i] = D_00FB5BC0;
+        D_0108F7C0[i] = D_00FB5BBC;
         D_0108F8A0[i] = D_00FB5BC4;
     }
     for (i = 0; i < 6; i++) {

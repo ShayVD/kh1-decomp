@@ -1,4 +1,4 @@
-/* 70 words, score 126. Direct port of the gb twin near miss (nonmatchings/session141/gb/func_00f25140.c); wm gives exactly the same diff, so both should fall together. The wm target shows the cursor clamp reusing the ox/oz registers (t6/t7) and no zero variable in the loop; rewriting it that way (ox = px + tx, no y update) made it worse (166+ words) because the y nibble rewrite in the loop disappears. */
+/* 67 words, score 120 (was 70/126). Round 32 wwm2: hill2 moved the `D_00F9B540->h = h` store down two lines; ctx2 gives nothing. Earlier header: 70 words, score 126. Direct port of the gb twin near miss (nonmatchings/session141/gb/func_00f25140.c); wm gives exactly the same diff, so both should fall together. The wm target shows the cursor clamp reusing the ox/oz registers (t6/t7) and no zero variable in the loop; rewriting it that way (ox = px + tx, no y update) made it worse (166+ words) because the y nibble rewrite in the loop disappears. */
 typedef struct {
     u16 x : 4;
     u16 y : 4;
@@ -123,9 +123,9 @@ s32 func_00f4c238(s32 w, s32 d, s32 h)
     D_00F9B540->py = y;
     D_00F9B540->pz = z;
   }
-  D_00F9B540->h = h;
   D_00F9B540->w = w;
   D_00F9B540->d = d;
+  D_00F9B540->h = h;
   func_00f4b878(D_00F9B544);
   func_00f4b338(D_00F9B544, 0);
   return 1;
