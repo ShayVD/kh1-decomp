@@ -1,4 +1,6 @@
-/* gb.x func_00f41dc8: near miss (session 141), 3 words: `lui t0,0xff` / `sll v0,t9,4` order at the vertex loop head and `addu a2,v0,t8` operand order for o = p[n].w. Key fix from 15 words: `do {} while (0);` before the flag block's first ad(). Its wm twin func_00f68ec0 ports to the same 3 words. Permuter runs (strict and nostrict) found nothing better. */
+/* gb.x func_00f41dc8: matched by hand. */
+#include "ovl.h"
+
 typedef struct { u64 lo, hi; } GQ;
 typedef union { kh1_u128 q; u32 w[4]; GQ d; f32 f[4]; } GPkt;
 extern GPkt *D_00F82A88[];
@@ -24,6 +26,7 @@ void func_00f41dc8(s32 *x, s32 *y, s32 unused, s32 *q, s32 w, s32 h, f32 *s, f32
     s32 tbp, cbs;
     u32 *o;
     u32 cr, cg, cb, ca;
+    u32 ff;
     tbp = D_00F82A9C;
     cbs = tbp + cbp;
     lg(&tw, w);
@@ -51,12 +54,14 @@ void func_00f41dc8(s32 *x, s32 *y, s32 unused, s32 *q, s32 w, s32 h, f32 *s, f32
     }
     p[n].d.hi = 0x412412412412;
     n++;
-    o = p[n].w;
+    i = 0;
+    ff = 0xFFFFFF;
+    o = (u32 *)(n * 16 + (s32)p);
     cr = c->r;
     cg = c->g;
     cb = c->b;
     ca = c->a;
-    for (i = 0; i < 4; i++) {
+    for (; i < 4; i++) {
         f32 z = q[i];
         ((f32 *)o)[0] = s[i] / z;
         ((f32 *)o)[1] = t[i] / z;
@@ -70,7 +75,7 @@ void func_00f41dc8(s32 *x, s32 *y, s32 unused, s32 *q, s32 w, s32 h, f32 *s, f32
         o += 4;
         o[0] = x[i];
         o[1] = y[i];
-        o[2] = 0xFFFFFF;
+        o[2] = ff;
         o[3] = 0;
         o += 4;
         n += 3;
