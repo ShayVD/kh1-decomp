@@ -1,4 +1,4 @@
-/* 30 words left (228 vs 216 bytes) */
+/* Round 29 (wgb): 30 words, score 20 (224 vs 216 bytes; was 228 bytes, score 21). Passing the literal 10 to func_00f2b360 and ending with `ret = -2; if (m.sel < n) ret = vals[m.sel]; return ret;` saved one instruction. Tried m.x30 = n = 10 chains, m.x30 as the argument, init store orders. */
 typedef struct {
     s32 type;
     s32 x4;
@@ -33,15 +33,16 @@ s32 func_00f23550(s32 arg0) {
     m.x2c = 0x50000;
     m.x30 = 10;
     m.sel = 0;
-    n = func_00f2b360(m.list, vals, arg0, m.x30);
+    n = func_00f2b360(m.list, vals, arg0, 10);
     m.list[n] = 0;
     r = func_00f7ecd8(&m);
     func_001bb4b0();
     if (r != 0) {
         return -1;
     }
+    ret = -2;
     if (m.sel < n) {
-        return vals[m.sel];
+        ret = vals[m.sel];
     }
-    return -2;
+    return ret;
 }

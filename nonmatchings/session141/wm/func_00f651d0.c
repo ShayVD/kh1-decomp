@@ -1,4 +1,4 @@
-/* wm.x func_00f651d0: twin of gb func_00f3e0d8 (same 688 bytes, same 14 words left: root and pt swapped between s6/s7). Ported from nonmatchings/session141/gb/func_00f3e0d8.c; one fix matches both. The older wwm2 draft scored 155. */
+/* wm.x func_00f651d0: twin of gb func_00f3e0d8 (688 bytes). Round 29 (wgb): 13 words, score 24 (was 14/26) with the part loop written `pt++, j++` instead of `j++, pt++`; still root and pt swapped between s6/s7. Ported from nonmatchings/session141/gb/func_00f3e0d8.c; one fix matches both. The older wwm2 draft scored 155. */
 typedef struct { f32 rot[4]; f32 pos[4]; u8 pad20[16]; s32 parent; u8 pad34[12]; } MdlBone;
 typedef struct { s32 count; s32 off; u8 pad8[32]; } MdlPart;
 typedef struct { s32 off; s32 bone; u8 pad8[32]; } MdlEnt;
@@ -36,7 +36,7 @@ MdlWork *func_00f651d0(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, s32
             PlatVu0MulMatrix(w[i].m, w[p].m, w[i].m);
         }
     }
-    for (j = 0; j < hh->nparts; j++, pt++) {
+    for (j = 0; j < hh->nparts; pt++, j++) {
         s32 t = 0;
         MdlEnt *e;
         if (arg3) {
