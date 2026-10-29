@@ -1,4 +1,6 @@
+/* Round 41 wwm2: score 185 -> 175, port.py of the wm twin func_00f52ab0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f2b9b8 near miss: 123 words differ, score 185 (ours 1564 bytes, original 1568). Per-frame scene draw, guarded once per frame by D_00F56EC8. It sets up the view-screen matrix and the D_00F56E80 camera from a local GbXf (pos/rot are read before they are written, as in the original), runs func_001bebd0 into D_00F80590 and scales it, then calls func_00f23230 (when flag is set), the backdrop packets with func_00f2b800, the optional func_00f377b0 / func_00f2cf58 pass (World x7A), func_00f2c000 / func_00f293b0 and func_00f2c9f8. Logic is complete. Findings: an unused OvlMtx m2 is needed for the frame layout; pointer locals px/cam/pos/rot set in the original's order give the prologue and s-register map; cam[i] after the scale loop (i == 15) gives the cam + 60 address. Left: (1) the 3-pair packet before func_00f2b800 uses separate p+16 / p+32 / p+48 bases in the original, where ours copies p into t1 (same idiom as f2c9f8; a static inline pk() helper gives the bases but scores 181 / 237 words); (2) the setup block's float scheduling (a 300 s hill climb did not help). wm twin: func_00f52ab0 (same score). */
+/* wm.x func_00f2b9b8 near miss: 123 words differ, score 185 (ours 1564 bytes, original 1568). Port of gb func_00f2b9b8 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. */
 typedef struct { OvlVec v[4]; OvlVec pos; OvlVec rot; } GbXf;
 typedef struct {
     void *x0;
@@ -61,8 +63,8 @@ void func_00f2b9b8(Ctx *c, void *box, s32 flag) {
     }
     D_00F56EC8 = 1;
     sceVu0ViewScreenMatrix(vs, 512.0f, 1.0f, 1.0f, 2064.0f, 2080.0f, 1.0f, 16777000.0f, 1.0f, 65536.0f);
-    g = D_00F56DC0 + 160;
     px = &xf;
+    g = D_00F56DC0 + 160;
     sceVu0CopyMatrix(D_00F56E00, vs);
     cam = (f32 *)D_00F80590;
     sceVu0UnitMatrix(D_00F56E80);
@@ -71,15 +73,15 @@ void func_00f2b9b8(Ctx *c, void *box, s32 flag) {
     rot = xf.rot;
     sceVu0RotMatrix(D_00F56E80, D_00F56E80, rot);
     D_00F56E80[3][2] -= px->v[0][2];
-    rot[0] = *(s32 *)(D_00F56DC0 + 4308) * 3.1415926f * 0.00048828125f;
-    rot[1] = *(s32 *)(D_00F56DC0 + 4312) * 3.1415926f * 0.00048828125f;
-    rot[2] = 0.0f;
-    rot[3] = 0.0f;
     pos[0] = -(((GbDims *)g)->x6 * 200.0f) * 0.5f;
+    rot[1] = *(s32 *)(D_00F56DC0 + 4312) * 3.1415926f * 0.00048828125f;
+    rot[3] = 0.0f;
+    rot[2] = 0.0f;
     pos[1] = ((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) * 200.0f;
+    xf.v[0][0] = 0.0f;
+    rot[0] = *(s32 *)(D_00F56DC0 + 4308) * 3.1415926f * 0.00048828125f;
     pos[2] = -(((GbDims *)g)->xA * 200.0f) * 0.5f;
     pos[3] = 0.0f;
-    xf.v[0][0] = 0.0f;
     xf.v[0][1] = 0.0f;
     px->v[0][2] = *(f32 *)(D_00F56DC0 + 136);
     xf.v[0][3] = 0.0f;
@@ -106,36 +108,36 @@ void func_00f2b9b8(Ctx *c, void *box, s32 flag) {
     if (flag) {
         func_00f23230(10081, c, D_00F80590, D_00F6137C, (u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF, 0);
     }
-    v[0] = (((GbDims *)g)->x6 >> 1) * 200.0f;
-    v[1] = ((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) * 200.0f - 50.0f;
     v[2] = 0.0f;
+    v[1] = ((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) * 200.0f - 50.0f;
+    v[0] = (((GbDims *)g)->x6 >> 1) * 200.0f;
     sceVu0UnitMatrix(m);
     sceVu0TransMatrix(m, m, v);
     sceVu0RotMatrixX(m, m, 3.1415926f);
     sceVu0MulMatrix(m, D_00F80650, m);
     c->x0 = func_00f3f9d0(c->x0);
     p = func_00f3fa80(c->x0);
+    p[3] = 71;
+    p[2] = 0x5000D;
+    p[5] = 24;
     p[0] = 0x8000000048;
     p[1] = 66;
-    p[2] = 0x5000D;
-    p[3] = 71;
     p[4] = 0x720000006F00;
-    p[5] = 24;
     c->x0 = p + 6;
     func_00f3fa98(p + 6);
     c->x0 = func_00f2b800(m, c->x0);
     p = func_00f3fa80(c->x0);
-    p[0] = 68;
     p[1] = 66;
+    p[0] = 68;
     c->x0 = p + 2;
     func_00f3fa98(p + 2);
     func_00f3fe80(10361, func_00f3f9e8(c->x0));
     if (*(s16 *)(D_00F56DC0 + 122) != 0) {
         c->x0 = func_00f3f9d0(c->x0);
-        v[0] = 0.0f;
         v[3] = 1.0f;
         v[2] = 0.0f;
         v[1] = -(((GbDims *)g)->x8 * 200.0f);
+        v[0] = 0.0f;
         sceVu0UnitMatrix(m);
         sceVu0TransMatrix(m, m, v);
         sceVu0MulMatrix(m, D_00F80650, m);
