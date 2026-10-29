@@ -290,3 +290,28 @@ f3a640 (127).
   write `x + -100.0f` (f5d6b0).
 - f39220: a twin of f39708; `arg0->pos[k] = d[k] = ...` keeps the scratch
   vector in memory.
+
+## Round 8
+
+Matched (2): f2a4c0, f206f0 (both GIF packet builders).
+Near misses: f3e138 (114), f584d0 (67). Not started: f3d4d8 (large homing
+loop with func_00f3caf0/f3cb90) and the rest of the list.
+
+### Round 8 tips
+
+- **Indexed inline put for packets** (f2a4c0, f206f0): when the target
+  precomputes every entry address from the packet base (`addiu t4,v0,32`,
+  `addiu t5,v0,48`, ... then `sd x,0(tN)`/`sd y,8(tN)`), write
+  `static inline void put(u64 *p, u64 a, u64 b) { p[0] = a; p[1] = b; }`
+  and call `put(p + 0, ..)`, `put(p + 2, ..)`, ... then `*pp = p + 2n;
+  func_00f66b90(p + 2n);`. Chained `p = put(p, ..)` or `p += 2` give
+  incremental addresses instead. f2a4c0 went 125 -> 0 words with it.
+- **One pointer variable per packet**: when a function builds two packets,
+  give the second its own local (`q`). Reusing `p` made gcc copy the
+  f66b78 result into a0 (+2 instructions in f206f0).
+- **Bare sqrt.s**: `#include "platform/math.h"` and use `PlatSqrtf(x)`;
+  `sqrtf`/`__builtin_sqrtf` compile to a call.
+- **Sprite element-address copies** (t1 = base+idx*20, copies in a0/v1, and
+  a separate t0 = idx*20+base) come out naturally from writing
+  `D[idx].field` inside each coordinate expression (f584d0), not from
+  loading the fields into locals first.
