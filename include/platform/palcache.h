@@ -26,6 +26,7 @@ typedef struct {
     KH1PalSlot slot[KH1_PALCACHE_SLOTS];
     u32 frame, use;
     u32 hits, misses, full; /* full: a load with every slot used this frame (returned -1) */
+    u32 recent[4];          /* session 147c: the slots the last gets returned or filled, the newest first */
 } KH1PalCache;
 
 void kh1_palcache_init(KH1PalCache *c);

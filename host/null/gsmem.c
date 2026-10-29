@@ -43,6 +43,11 @@ static u8 dirty_pg[512];
 static u32 wr_pg[512];
 #define STORED(pg) (dirty_pg[(pg) & 511] = 1, wr_pg[(pg) & 511] = seq)
 static u16 clut[512];
+/* session 147c: the kept entries (clut_kept) the last load wrote into the CLUT buffer and how (CPSM, 8-bit, CSA): a
+ * load that finds the same entries kept and loads them the same way would store what the buffer already holds */
+static const u32 *clut_done;
+static u32 clut_done_how;
+static u32 clut_ver = 1; /* session 147c: moved by every load that stores into the buffer, and by a reset */
 static u32 cbp0, cbp1;
 static u32 seq, page_seq[512], clut_seq;
 static KH1GsMemStats st;
@@ -96,6 +101,8 @@ void kh1_gsmem_reset(void) {
     for (i = 0; i < AT_KEYS; i++) at_key[i].dlen = 0; /* the pages' stamps start again at 0 */
     same_used = 0;
     cbp0 = cbp1 = clut_seq = nlog = ntgt = useq = 0;
+    clut_done = 0; /* session 147c: the buffer is cleared */
+    clut_ver++;
     /* session 118: seq goes on counting, so a texture cache's stamp from before a reset is never one
      * after it (the pages start again at 0, which only memory never written since a reset has) */
     seq++;
@@ -816,9 +823,61 @@ void (*kh1_gsmem_clut_loaded)(u32 lo, u32 hi);
 const u32 *(*kh1_gsmem_palette)(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi);
 const u32 *(*kh1_gsmem_texels)(u32 lo, u32 hi);
 
+/* Session 147c (the title's menu on the Vita): its text is ~60 sprites a frame, each with a TEX2 that loads a
+ * 16 x 16 CLUT, and each load read its entries through kh1_gsmem_read_rect's tables built anew for each CBP (~80%
+ * of the GS worker's menu frame on the host profile, ~11 ms a frame on a Vita).  The entries a load reads are kept
+ * by (CPSM, CBP, 8-bit or 4-bit) with the raw words of the blocks they lie in (the rectangle's four corners' blocks:
+ * a 16 x 16 CT32 / CT16 CLUT is 2 x 2 / 1 x 2 blocks, a 4-bit one's 8 x 2 one block); a load whose blocks hold the
+ * same words takes the kept entries.  Exact: the entries are a function of those words alone. */
+#define CLUT_KEPT 64
+static struct { u32 key, nb, b[4], raw[4][64], v[256]; } clut_k[CLUT_KEPT];
+static int clut_k_at = -1;
+static void clut_blocks(u32 cpsm, u32 cbp, int b8, u32 *b, u32 *nb) {
+    u32 w = b8 ? 16 : 8, h = b8 ? 16 : 2, i, j, a, blk, shift = cpsm == KH1_PSMCT32 ? 2 : 1;
+    *nb = 0;
+    for (i = 0; i < 4; i++) {
+        a = kh1_gsmem_addr(cpsm, cbp, 1, i & 1 ? w - 1 : 0, i & 2 ? h - 1 : 0);
+        blk = (a << shift) >> 8 & 0x3FFF;
+        for (j = 0; j < *nb && b[j] != blk; j++) ;
+        if (j == *nb) b[(*nb)++] = blk;
+    }
+}
+static u32 clut_hash(u32 key) { return (key * 0x9E3779B1u) >> 26; } /* 64 slots */
+/* the kept entries (16x16 for b8, else 8x2, in read order) when the blocks hold the words they held; else 0, and
+ * clut_keep then keeps what the caller reads */
+static const u32 *clut_kept(u32 cpsm, u32 cbp, int b8) {
+    u32 key = cbp | cpsm << 14 | (u32)b8 << 20, i = clut_hash(key), b[4], nb, j;
+    clut_k_at = -1;
+    if (!fast_on) return 0;
+    clut_blocks(cpsm, cbp, b8, b, &nb);
+    clut_k_at = (int)i;
+    if (clut_k[i].key != key || clut_k[i].nb != nb) {
+        clut_k[i].key = key;
+        clut_k[i].nb = nb;
+        for (j = 0; j < nb; j++) {
+            clut_k[i].b[j] = b[j];
+            kh1_gsmem_read_block(b[j], clut_k[i].raw[j]);
+        }
+        return 0;
+    }
+    for (j = 0; j < nb; j++)
+        if (clut_k[i].b[j] != b[j] || !kh1_bytes_same(vm + (b[j] & 0x3FFF) * 256, clut_k[i].raw[j], 256)) break;
+    if (j == nb) return clut_k[i].v;
+    for (j = 0; j < nb; j++) {
+        clut_k[i].b[j] = b[j];
+        kh1_gsmem_read_block(b[j], clut_k[i].raw[j]);
+    }
+    return 0;
+}
+static const u32 *clut_keep(const u32 *v, u32 n) {
+    if (clut_k_at < 0) return v;
+    memcpy(clut_k[clut_k_at].v, v, n * 4);
+    return clut_k[clut_k_at].v;
+}
+
 void kh1_gsmem_tex0(u32 lo, u32 hi) {
     u32 psm = lo >> 20 & 63, cbp = hi >> 5 & 0x3FFF, cpsm = cpsm_of(hi), csm = hi >> 23 & 1;
-    u32 csa = hi >> 24 & 31, cld = hi >> 29 & 7, e, p, v;
+    u32 csa = hi >> 24 & 31, cld = hi >> 29 & 7, e, p, v, how;
     if (!indexed(psm)) return;
     switch (cld) {
     case 0: case 6: case 7: return;
@@ -833,18 +892,35 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
     }
     st.clut_loads++;
     clut_seq++;
+    how = cpsm | (u32)bits8(psm) << 8 | csa << 16;
     if (bits8(psm)) {
         static u32 c16[256]; /* session 141: the 16 x 16 at once (kh1_gsmem_read_rect's tables), not 256 swizzles */
-        kh1_gsmem_read_rect(cpsm, cbp, 1, 0, 0, 16, 16, c16, 16);
+        const u32 *c = clut_kept(cpsm, cbp, 1);
+        if (c && c == clut_done && how == clut_done_how) goto loaded;
+        if (!c) {
+            kh1_gsmem_read_rect(cpsm, cbp, 1, 0, 0, 16, 16, c16, 16);
+            c = clut_keep(c16, 256);
+        }
+        clut_done = clut_k_at < 0 ? 0 : c;
+        clut_ver++;
         for (e = 0; e < 256; e++) {
             p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1; /* entries 8-15 / 16-23 of each 32 swapped */
-            v = c16[p];
+            v = c[p];
             clut[e] = v;
             if (cpsm == KH1_PSMCT32) clut[e + 256] = v >> 16;
         }
     } else {
+        const u32 *c = clut_kept(cpsm, cbp, 0);
+        u32 c8[16];
+        if (c && c == clut_done && how == clut_done_how) goto loaded;
+        if (!c) {
+            for (e = 0; e < 16; e++) c8[e] = kh1_gsmem_read_pixel(cpsm, cbp, 1, e & 7, e >> 3);
+            c = clut_keep(c8, 16);
+        }
+        clut_done = clut_k_at < 0 ? 0 : c;
+        clut_ver++;
         for (e = 0; e < 16; e++) {
-            v = kh1_gsmem_read_pixel(cpsm, cbp, 1, e & 7, e >> 3);
+            v = c[e];
             if (cpsm == KH1_PSMCT32) {
                 clut[(csa & 15) * 16 + e] = v;
                 clut[(csa & 15) * 16 + e + 256] = v >> 16;
@@ -853,6 +929,8 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
             }
         }
     }
+    clut_done_how = how;
+loaded:
     if (kh1_gsmem_clut_loaded) kh1_gsmem_clut_loaded(lo, hi);
     if (kh1_gsmem_clut_hook) kh1_gsmem_clut_hook(lo, hi);
 }
@@ -888,13 +966,28 @@ static u32 texel_rgba(u32 psm, u32 tbp, u32 tbw, u32 cpsm, u32 csa, u32 x, u32 y
  * for a 4-bit one.  Returns the count, or 0 for a PSM that is not indexed or a CLUT the model does not
  * have. */
 int kh1_gsmem_clut(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
-    u32 psm = lo >> 20 & 63, cpsm = cpsm_of(hi), csa = hi >> 24 & 31, n, e, i;
+    /* session 147c: the last answer kept, with the CLUT buffer's version (clut_ver: a load that stored) and how it
+     * was asked (CT32 ignores TEXA): the title menu's glyphs ask for the same palette ~60 times a frame */
+    static u32 memo[256], memo_how = ~0u, memo_ver, memo_ta, memo_tb;
+    u32 psm = lo >> 20 & 63, cpsm = cpsm_of(hi), csa = hi >> 24 & 31, n, e, i, how;
     if (!indexed(psm) || hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa)) return 0;
     n = bits8(psm) ? 256 : 16;
+    how = cpsm | n << 8 | csa << 20;
+    if (cpsm != KH1_PSMCT32) texa_lo &= 0x80FF, texa_hi &= 0xFF; /* rgba16's TA0, AEM and TA1 */
+    else texa_lo = texa_hi = 0;
+    if (how == memo_how && memo_ver == clut_ver && memo_ta == texa_lo && memo_tb == texa_hi) {
+        memcpy(out, memo, n * 4);
+        return (int)n;
+    }
     for (i = 0; i < n; i++) {
         e = n == 256 ? i : (cpsm == KH1_PSMCT32 ? csa & 15 : csa) * 16 + i;
         out[i] = cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
     }
+    memcpy(memo, out, n * 4);
+    memo_how = how;
+    memo_ver = clut_ver;
+    memo_ta = texa_lo;
+    memo_tb = texa_hi;
     return (int)n;
 }
 

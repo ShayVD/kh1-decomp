@@ -874,6 +874,29 @@ frame, most of the ~20 ms.
   (frames ~1400-2000): 27-47 fps (from ~25-28), the GS worker busy ~0.9-1.3 s per 2 s and the game waiting
   ~0.6-1.2 s for it: the worker is the limit there.
 
+### The menu's palette loads (session 147c)
+
+**On a Vita (s147b/c)**: with the menu up, the GS worker is busy ~1.2-1.3 s per 2 s and the game waits ~1.1 s
+of it (~190 waits); the `gs worker ops:` line (gsqueue.c's per-op times, the watchdog's) puts ~940 ms of that in
+w_block, the GIF decode. The one-frame send dump shows why: the menu's text is ~60 glyph sprites a frame, each
+with a TEX2 of CLD=1, so each glyph reloads its 16-entry CLUT and runs the hooks behind it (pipes.c on_clut:
+kh1_gsmem_clut, kh1_palcache_get, a recording op; pal_loaded; and pal_of per draw). The menu's own host profile
+(callgrind on the gxmcheck binary, `KH1_HOST_PROF`, dive_en.txt frames 2050+, thread 3 the worker): 673M
+instructions per 60 frames.
+
+- **gsmem.c's CLUT cache**: kh1_gsmem_tex0 keeps the last 64 loads' source blocks (by CBP, CPSM and 4/8-bit),
+  each with a copy of its GS memory words and its converted entries. A load whose blocks still hold the same
+  words (kh1_bytes_same in place) takes the kept entries instead of re-reading the rectangle, and a load
+  identical to the one already in the CLUT buffer (same entries, same CPSM / CSA) skips the copy. The reset
+  drops them; a CLUT version moves with every real change for kh1_gsmem_clut's memo.
+- **palcache.c's recent slots**: kh1_palcache_get tries the 4 most recently used slots before its scan; a
+  hit updates the slot as the scan's would.
+- Host worker on the menu: 673M -> ~233M instructions per 60 frames. What is left: kh1_gsmem_clut (~56M, its
+  memo misses since the glyphs alternate palettes), memcmp (~25M), palcache (~21M).
+- Tests: gsfast_test's CLUT section (6,000 loads over 4 CBPs, CT32 / CT16 / CT16S, 4- and 8-bit, random pixel
+  writes between, repeated and alternated loads, two TEXAs) checks every fast load's kh1_gsmem_clut answers
+  against a slow load's; palcache_test runs 200,000 random gets with and without the recent slots and
+  checks the results and the cache state stay the same.
 ## The recording on the third core (session 146)
 
 A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;
