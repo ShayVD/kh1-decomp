@@ -1,4 +1,6 @@
-/* 29 words (164 vs 160). Sets 0x20 flag if on, else toggles it. Tried set/clear/xor spellings and bitfields. */
+/* wm.x func_00f4b7d8: matched by hand. */
+#include "ovl.h"
+
 typedef struct { u8 p[6]; u16 fl; u8 q[4]; } Typ;
 typedef struct { u8 p[4]; u16 n; u8 q[8]; u16 t; } Cell;
 typedef struct { u8 hdr[8]; Cell c[1]; } Grid;
@@ -12,11 +14,15 @@ void func_00f4b7d8(s32 on, s32 pos, Grid *g) {
     Typ *ty = w->typ;
     s32 i = (((u16)pos >> 4) & 0xF) * (d->w * d->h) + (((u16)pos >> 8) & 0xF) * d->w + (pos & 0xF);
 
+    s32 j;
+
     if (g->c[i].n != 0) {
+        j = i;
+        i = g->c[j].t;
         if (on) {
-            ty[g->c[i].t].fl |= 0x20;
+            ty[i].fl |= 0x20;
         } else {
-            ty[g->c[i].t].fl ^= 0x20;
+            ty[i].fl ^= 0x20;
         }
     }
 }
