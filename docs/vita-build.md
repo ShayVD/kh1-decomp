@@ -916,6 +916,15 @@ KH1_HOST_GSQ_CHECK=50 KH1_HOST_GPUQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, dive_en.
 130 digests and VU1 counts as main's, on x86 and on the ARM build under qemu. **Not yet measured on a Vita**
 (3d-zh): the `vu1:` line's time.
 
+On a Vita (3d-zh): the Dive at ~17 fps, stretches at 24-27; the GPU thread's draw bursts gone (#173); the `vu1:`
+line ~1.2 s per 2 s, no better than 3d-zf's, so these forms did not measurably help on the A9. The log also had a
+bad DMA send about every frame from frame 11 (the logos on): `tag at 84620c40 outside`. The ELF's bss ends at
+0x8461e97c, so that is the next pages: the main thread's stack, whose lower part is the coroutines' pool
+(host/port/costack.c). plat_null.c's `null_dma_where` only owned the stack above the walking coroutine's own
+frame, so a chain on a lower coroutine's stack was refused and the rest of its send dropped (nothing visibly
+wrong on screen). It now owns the whole pool too (`kh1_costack_owns`). Not seen on the x86 host or the ARM Linux
+build, whose stacks are malloc'd. **Not yet checked on a Vita** (3d-zi): the `log:` line's bad DMA sends.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

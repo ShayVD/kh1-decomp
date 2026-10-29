@@ -11,5 +11,7 @@
  * a stack is malloc'd.  Never freed: each thread / task slot keeps its stack.  Not part of the PS2 build. */
 void kh1_costack_pool(void *base, u32 size);
 void *kh1_costack_alloc(u32 size);
+/* nonzero when a..a+n lies in the pool (session 147: the DMA walk's memory check, host/null/plat_null.c) */
+int kh1_costack_owns(unsigned long a, u32 n);
 
 #endif
