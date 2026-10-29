@@ -1,4 +1,6 @@
+/* Round 41 wwm2: score 216 -> 180, port.py of the wm twin func_00f6cfa0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f45ea8 near miss: 307 words differ, score 216 (ours 2176 bytes, original 2160). Port of wm func_00f6cfa0 (nonmatchings/session141/wm) via tools/ovl/port.py, at the same score; see that file for the findings and what is left. */
+/* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00F71148/D_00F71150 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00F702F0) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct Win {
     s8 b0, b1, b2, b3, b4, b5, b6, b7;
@@ -84,29 +86,29 @@ s32 func_00f45ea8(void)
         D_00F71160.v[0] = 2;
     }
     pl = lst;
-    lst[0] = 1;
     sel = 0;
+    lst[0] = 1;
     if (D_00F70734 >= 0) sel = D_00F70734;
-    codes[0] = 1;
+    lst[5] = 13;
     lst[1] = 3;
+    pw = w;
+    codes[0] = 1;
     codes[1] = 2;
     codes[2] = 5;
-    lst[3] = 11;
-    codes[3] = 6;
-    lst[4] = 213;
-    codes[4] = 8;
-    lst[5] = 13;
-    codes[5] = 9;
     lst[2] = 9;
     D_00F82998.v[0] = D_00F71160.v[0];
+    lst[3] = 11;
     D_00F82998.v[1] = D_00F71160.v[1];
+    y = D_00F703E8;
+    lst[4] = 213;
+    codes[3] = 6;
     D_00F82998.v[2] = D_00F71160.v[2];
+    codes[5] = 9;
     D_00F82998.v[3] = D_00F71160.v[3];
     D_00F82998.v[4] = D_00F71160.v[4];
     D_00F82998.v[5] = D_00F71160.v[5];
+    codes[4] = 8;
     D_00F702D0 = codes[sel];
-    y = D_00F703E8;
-    pw = w;
     for (i = 0; i < 6; i++) {
         *pw = func_00f43388();
         (*pw)->b0 = 1;
@@ -125,13 +127,13 @@ s32 func_00f45ea8(void)
         } else {
             (*pw)->b4 = 0;
         }
+        y += D_00F703EC;
         pl++;
         pw++;
-        y += D_00F703EC;
     }
     if (D_00F829DC == 0) {
-        D_00F829DC = 1;
         D_00F829E0 = 0;
+        D_00F829DC = 1;
         func_0024e468(2);
         D_00F829E0 = 16;
     }
@@ -150,9 +152,9 @@ s32 func_00f45ea8(void)
             func_0011d768(2);
             func_00106880(30);
             func_0024e468(60);
+            D_00F829C4 = 0;
             D_00F7073A = 3;
             D_00F70734 = -1;
-            D_00F829C4 = 0;
             func_00f26430(0);
             for (;;) func_0024e468(1);
         }
@@ -194,8 +196,8 @@ top:
         if (sel != old) func_0011d768(1);
         func_0024e468(1);
     }
-    D_00F70734 = sel;
     r = codes[sel];
+    D_00F70734 = sel;
     switch (r) {
     case 1:
     case 2:
@@ -216,8 +218,8 @@ top:
             func_0011d768(4);
             func_0020be10(16);
             if (D_00F71148[0] != 0) {
-                pl = D_00F71150;
                 pc = D_00F71148;
+                pl = D_00F71150;
                 do {
                     if (*pc & p->aA) {
                         if (w3 == 0) {
@@ -239,8 +241,8 @@ top:
                             func_0024e468(1);
                         }
                     }
-                    pc++;
                     pl++;
+                    pc++;
                 } while (*pc);
             }
             func_0020bda8(16);
@@ -258,8 +260,8 @@ top:
         func_0024e468(2);
     } else {
         func_00f444d8(1, 0, D_00F702F0);
-        D_00F82A28 = 0;
         pw = &w[5];
+        D_00F82A28 = 0;
         for (k = 5; k >= 0; k--) {
             func_00f444b8(*pw--, 0.0f, D_00F702F0);
             func_0024e468(2);
