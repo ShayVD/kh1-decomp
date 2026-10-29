@@ -1,4 +1,5 @@
-/* gb.x func_00f35a80 near miss: 3 words differ, score 6. Everything matches except three branches (0xf35da0, 0xf35e24, 0xf35e80), where the original uses a plain beqz with a delay slot taken from the target and ours uses beqzl. Already tried without effect: while/for/if-else loop forms, goto/break exits, b as u32, the nofill and nosi modes (other modes are worse), and callee return types. The 2-degree constant is 3.141592503f / 90.0f. */
+/* gb.x func_00f35a80: matched by hand (session 141, wwm1 round 17): a CONTEXT_ONLY func_00f357b0 and func_00f358b8 above it. A call to a function defined earlier in the file is nothrow, which changes reorg's branch-likely choice (docs/overlays.md, "Branch-likely vs plain branch"). */
+#include "ovl.h"
 typedef struct { u8 pad0[6]; u16 w; u16 d; u16 h; } GbDims;
 typedef struct {
     u8 pad0[0xA0];
@@ -55,12 +56,12 @@ void func_00f33968();
 void func_001bfac8(void);
 Pad *func_001ba488(s32);
 s32 func_00f25418(Pad *);
-void func_00f357b0(void);
+CONTEXT_ONLY void func_00f357b0(void) {}
 void func_00f25a18(void);
 void func_00f219b0(s32);
 s32 func_00f20060(void);
 void func_00f20170(s32, s32);
-s32 func_00f358b8(s32);
+CONTEXT_ONLY s32 func_00f358b8(s32 a0) { return 0; }
 void func_001bebd0(OvlMtx, GbCam *, void *);
 void func_00f28e10(s32, f32, s32);
 void func_00f25a68(void);
