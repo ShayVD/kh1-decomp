@@ -1,4 +1,6 @@
-/* 12 words left: alpha/v1 s4/s5 swap; sprite family, tried many statement orders with fam.py/ord.py */
+/* wm.x func_00f23fe8: matched by hand. */
+#include "ovl.h"
+
 typedef struct { s16 a; s16 b; s32 u; s32 v; s32 w; s32 h; } T_00f23fe8;
 extern T_00f23fe8 *D_00FBAA60;
 extern u64 *D_00FBAA64;
@@ -8,14 +10,17 @@ void func_00f66b90(u64 *);
 u64 *func_00f23fe8(s32 x, s32 y, s32 w, s32 h, s32 idx, s32 alpha, s32 pk) {
     s32 x0, y0, x1, y1, u0, v0, u1, v1;
     u64 *p;
-    y0 = y + 1856;
-    y1 = y0 + h;
-    x0 = x + 1792;
-    x1 = x0 + w;
+    s32 tw, th;
     u0 = D_00FBAA60[idx].u;
-    u1 = u0 + D_00FBAA60[idx].w;
+    tw = D_00FBAA60[idx].w;
+    y0 = y + 1856;
+    th = D_00FBAA60[idx].h;
+    y1 = y0 + h;
+    u1 = u0 + tw;
+    x0 = x + 1792;
     v0 = D_00FBAA60[idx].v;
-    v1 = v0 + D_00FBAA60[idx].h;
+    v1 = v0 + th;
+    x1 = x0 + w;
     p = func_00f66b78(pk);
     p[0] = 0;
     p[1] = 20;
