@@ -667,3 +667,26 @@ hit the stub callee sits at a lower address than the function.
 - Saved (hand.py score): xs_dh_break f20288 95 -> 57 (w3.py, wwm2's r35 hill3 reorderer made per overlay), dktitle
   f21808 59 -> 45, f21ca0 207 -> 187, f23aa8 144 -> 138, f228c8 408 -> 398, f24b60 410 -> 358 (sclimb OBJ=score
   and w3), dkmovie f270c8 96 -> 76, f25288 115 -> 107, f25658 72 -> 70.
+
+## Round 22 (inl.py on gb/wm, w3 on the small overlays, ifswap)
+
+- inl.py now inlines only temps declared as locals in the function (no global stores). Its new form finds f20820 again.
+  Over all gb and wm drafts it found no candidate that lowers the score, so there was nothing to review or save.
+- xs_genie f218f8: CONTEXT_ONLY definitions of each callee (empty and with a body), prototype changes (u8 / s8 / s16
+  returns, no prototype, void -> s32) and the extern order all stay at 2 words. The %hi insertion does not move.
+- w3.py seeds 3 and 5: dkmovie f270c8 76 -> 52, f25288 107 -> 103; the others did not move (f25180, f20140, f25658,
+  f23750, f26d90, f25978, f245c0, f23ae8; xl_limit f225b0; xs_dumbo f222f8; xs_dh_break f20288).
+- /tmp/claude-0/s141/wwm1/ifswap.py: for each `if (C) {A} else {B}` it tries `if (!C) {B} else {A}`, with the
+  condition negated directly where it is a simple comparison. This decides beqz vs bnezl and the order of the arms. Run
+  over every draft: wm f78978 39 -> 19 (then `D_00FB5EC0 == 1 ? 3 : 2` -> 13), dkmovie f270c8 52 -> 38 (then w3 ->
+  30), dktitle f228c8 398 -> 378, wm/gb f6edd8/f47ce0 186 -> 167, wm f6d810 234 -> 228, gb f46718 236 -> 230,
+  dkmovie f26d90 206 -> 200, wm f63d18 102 -> 100, f23628 83 -> 81. All saved; each one compiles and has its score
+  in its header. (gb f377b0 935 -> 929 and wm f60cf0 136 -> 133 were dropped at the rebase: the upstream versions
+  score 901 and 42, and ifswap does not improve those.)
+- f270c8 (score 30) left: the call to func_00219380 keeps an empty delay slot in the original (`sw; jal; nop`)
+  where ours puts the f3DF28 store in it. Tried: a temp for the result, a volatile store, the store after the if,
+  and the order with f3DF58. The tail: f3DD5C[0] / [2] are built in a2 / t0 the other way round.
+- f78978 (score 13): the original keeps the loads of the dead `D_00FB5ED0 && D_00FB5EC4 == 0 && D_0108FA74 == 66`
+  test (li a0,66 with no compare). My guess is that the x = 1 store became dead only after reload, so jump2 deleted
+  the branch and left its operands. A volatile read of D_0108FA74 gives the right size (564 vs 568, 22 words) but the
+  same score.

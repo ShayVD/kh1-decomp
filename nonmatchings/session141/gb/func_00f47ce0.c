@@ -1,4 +1,4 @@
-/* gb.x func_00f47ce0 near miss: 298 words differ, score 186 (ours 1280 bytes, original 1232). Port of wm func_00f6edd8's near miss (port.py), not worked further. See the wm file for notes. */
+/* gb.x func_00f47ce0 near miss: 298 words differ, score 186 (ours 1280 bytes, original 1232). Port of wm func_00f6edd8's near miss (port.py), not worked further. See the wm file for notes. Round 22 (wwm1): the if/else at line(s) 85,123 with the arms swapped and the test negated (ifswap.py): score 186 -> 167. */
 typedef struct { u8 pad[176]; s32 x; s32 y; u8 pad2[6]; s16 hbe; s16 pad3; s16 hc2; } Obj;
 typedef struct { u8 a0; u8 pad1; u8 a2; u8 pad3[5]; u8 a8; u8 pad9[43]; u8 s34[44]; } Ent;
 extern s32 D_002C5AD8;
@@ -82,14 +82,14 @@ void func_00f47ce0(Obj *o)
             hl = 0;
             s3 = sel == i;
             if (D_00F82AD0) {
-                if (s3) {
-                    c[0] = 0;
-                    c[1] = 1;
-                    hl = 1;
-                } else {
+                if (!(s3)) {
                     c[0] = 6;
                     c[1] = 6;
                     if (cur == i) goto seven;
+                } else {
+                    c[0] = 0;
+                    c[1] = 1;
+                    hl = 1;
                 }
             } else if (cur != i) {
                 c[0] = 0;
@@ -120,7 +120,9 @@ void func_00f47ce0(Obj *o)
     func_001f8f30();
     if (func_001f4400(o)) {
         if (D_00F82AD0) D_00F702D8 = D_00F702DC = sel + cnt + 1;
-        if (D_00F82AF4 == 0) {
+        if (D_00F82AF4 != 0) {
+            func_001f3840(o);
+        } else {
             if (D_00F82AD0) {
                 D_00F829D4 = selx;
                 D_00F829D8 = sely;
@@ -147,8 +149,6 @@ void func_00f47ce0(Obj *o)
                     func_001f3840(o);
                 }
             }
-        } else {
-            func_001f3840(o);
         }
     }
 }

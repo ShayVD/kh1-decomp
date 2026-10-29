@@ -1,4 +1,4 @@
-/* score 102. Menu list builder, same family as f639c0 (GS header, per-row sprite with highlight colour, names via func_001f0758/func_001f0798). Structure is right. Main issue: gcc strength-reduces the whole (y + 1920) << 4 << 16 qword as a giv (lui 0x7800 base); the original recomputes addiu/sll/dsll from y every iteration while still hoisting the 1, 5 and 0x8000<<17 constants. Tried s64 temps, an explicit y biv, and constant forms. Next: a goto loop or a permuter run. */
+/* score 102. Menu list builder, same family as f639c0 (GS header, per-row sprite with highlight colour, names via func_001f0758/func_001f0798). Structure is right. Main issue: gcc strength-reduces the whole (y + 1920) << 4 << 16 qword as a giv (lui 0x7800 base); the original recomputes addiu/sll/dsll from y every iteration while still hoisting the 1, 5 and 0x8000<<17 constants. Tried s64 temps, an explicit y biv, and constant forms. Next: a goto loop or a permuter run. Round 22 (wwm1): the if/else at line(s) 44 with the arms swapped and the test negated (ifswap.py): score 102 -> 100. */
 typedef struct { char buf[15]; } Str15;
 typedef struct { u8 pad[80]; char name[3872]; } Item;
 extern u64 **D_00FA66D8;
@@ -41,10 +41,10 @@ void func_00f63d18(s32 mode, Item *it, s32 cur)
         p[0] = 70;
         p[1] = 0;
         p += 2;
-        if (i == cur) {
-            p[0] = 0x3F800000802020FFLL;
-        } else {
+        if (i != cur) {
             p[0] = 0x3F80000080202020LL;
+        } else {
+            p[0] = 0x3F800000802020FFLL;
         }
         p[1] = 1;
         p += 2;

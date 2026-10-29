@@ -1,4 +1,4 @@
-/* 128 words left (596 vs 568): globals D_00F850BC/C0/C4/D_00F8C23C must stay as %hi in s-regs with %lo uses (target) instead of full addresses; frame 80 vs 64. func_00f66240-style m2c extra args not the issue here. Tried call/ternary shapes and all modes. */
+/* 128 words left (596 vs 568): globals D_00F850BC/C0/C4/D_00F8C23C must stay as %hi in s-regs with %lo uses (target) instead of full addresses; frame 80 vs 64. func_00f66240-style m2c extra args not the issue here. Tried call/ternary shapes and all modes. Round 22 (wwm1): the if/else at line(s) 87 with the arms swapped and the test negated (ifswap.py): score 83 -> 81. */
 typedef struct { s16 a; s16 b; } P23628;
 typedef struct { s32 x; u8 pad[0x54]; } E23628;
 void func_001ba708(s32);
@@ -84,12 +84,12 @@ void func_00f23628(void) {
             D_00F850C0 = 1;
         }
     }
-    if (p != NULL) {
-        a = p->a;
-        b = p->b;
-    } else {
+    if (p == NULL) {
         a = 3;
         b = -1;
+    } else {
+        a = p->a;
+        b = p->b;
     }
     D_00F87350 = 0;
     func_00f20160(a > 0 ? a : 3, b);

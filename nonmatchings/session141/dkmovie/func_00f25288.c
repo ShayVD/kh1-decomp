@@ -1,4 +1,4 @@
-/* dkmovie.x func_00f25288: near miss (session 141, wwm1), 844 vs 864 bytes (201 words shown, mostly shift): structure complete; left: the 0x10002010 wait loop has its address hoisted in the original (ours recomputes it, so the EE short-loop padding differs), &D_00F28460 is taken after the f3DF55 test in the original, register order of the header loads. Round 21 (wwm1): score 115 -> 107 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). */
+/* dkmovie.x func_00f25288: near miss (session 141, wwm1), 844 vs 864 bytes (201 words shown, mostly shift): structure complete; left: the 0x10002010 wait loop has its address hoisted in the original (ours recomputes it, so the EE short-loop padding differs), &D_00F28460 is taken after the f3DF55 test in the original, register order of the header loads. Round 21 (wwm1): score 115 -> 107 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). Round 22 (wwm1): 107 -> 103 with w3.py seed 3. */
 typedef struct {
     u8 pad[0x3DD00];
     s32 buf[3];
@@ -30,26 +30,26 @@ void func_00f22df8(s32);
 void func_00f25288(void) {
     Blk b;
     s32 w, h, fl, fl2, size, cur, prev, started, i, base, cmd, p;
-    fl = D_00F28460->f3DF54;
-    fl2 = 0;
     w = D_00F28460->f3DD18;
     started = 0;
+    cur = 1;
+    fl = D_00F28460->f3DF54;
+    prev = 0;
     h = D_00F28460->f3DD1C;
     size = w * h * 3 * 128;
-    prev = 0;
-    cur = 1;
+    fl2 = 0;
     if (fl) {
         fl2 = D_00F28460->f3DF55;
     }
     b.f1C = 4480;
+    i = 0;
     base = D_00F28460->f3DEF0;
     b.f10 = w * 16;
     b.f24 = fl;
     b.f28 = D_00F28460->f3DF61;
-    i = 0;
-    b.f18 = D_00F28460->f3DD20;
-    b.f20 = 0;
     b.f0 = D_00F28460->f3DD10;
+    b.f20 = 0;
+    b.f18 = D_00F28460->f3DD20;
     b.f8 = 0;
     sceGsSyncPath(0, 0);
     func_00f269c0(D_00F28460->f3DD0C, size);
@@ -73,8 +73,8 @@ void func_00f25288(void) {
                 sceGsSyncPath(0, 0);
             }
             prev ^= 1;
-            cur ^= 1;
             started = 1;
+            cur ^= 1;
             while (*(volatile s32 *)0x10002010 < 0) {
             }
             while ((*(volatile u32 *)0x1000B000 >> 8) & 1) {
