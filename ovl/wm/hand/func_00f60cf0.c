@@ -1,6 +1,5 @@
-/* Round 41 wwm2: score 95 -> 42, port.py of the gb twin func_00f39bf8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* Round 41 wwm2: score 136 -> 95. Three packed GS words are reordered: the XYZ word (x << 4) | 0x100000000 | (y1 << 4) << 16, and the two UV words with the v (<< 16) half first. Found by three greedy passes of r41/orsweep.py, which tries every order of the | terms in each packed word line. */
-/* 53 words / score 52: the prologue and the non-flip branch match. Index D_00FA6000[idx] directly per field (no pointer). Writing q[1] before q[0] in the last flip store stops cross-jumping. Left: the flip branch is scheduled differently, starting with v<<4 where we load sp0 first. */
+/* wm.x func_00f60cf0: matched by hand. */
+#include "ovl.h"
 
 typedef struct { s32 pad0; s32 u; s32 v; s32 w; s32 h; } GbSprite;
 typedef struct { u8 pad0[0x2200]; u64 tex0[1]; } GbTexState;
@@ -45,7 +44,7 @@ u64 *func_00f60cf0(u64 *p, s32 x, s32 y, s32 idx, u64 rgba, s32 flip) {
         q[0] = (x1 << 4) | ((u64)(y << 4) << 16) | 0x100000000;
         q[1] = 5;
         q += 2;
-        q[0] = ((u64)((v1 << 4) + 16) << 16) | ((u1 << 4) + 16);
+        q[0] = (u1 << 4) | ((u64)((v1 << 4) + 16) << 16);
         q[1] = 3;
         q += 2;
         q[1] = 5;
