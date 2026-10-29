@@ -796,3 +796,34 @@ No gain:
 - **f74a28, f639c0, f3ba08, f36bc0:** looked at, no new idea.
 - **f22e60-style pointer local:** tried the idea on f28ed8 and f46070. Neither reads a global after the packet-pointer store, so the pattern does not apply to them.
 
+
+## Round 39 (wwm2)
+
+**Match: wm f5d498 and its gb twin f363a0.**
+- `func_001bfac8(); while (1) { ...; func_001bfac8(); }` with a plain-if clamp `if (sel >= f()) sel = f() - 1;` matched both.
+- Clues in the original: sd ra comes last in the prologue, and a join label is 8-byte aligned with a nop pad. Only loop and after-barrier labels get .p2align 3, so I first tried a `do { } while (0)` around the tail. That fixed the body (score 2), and the peeled call fixed the prologue.
+- r39/peel.py moves a call at the top of a `while (1)` / `for (;;)` loop to before the loop and repeats it at the end of the loop body. Swept over all wm drafts and the one gb candidate:
+  - gb f363a0 matched.
+  - No gain on f51d18, f625f0, f67c60, f7d0a8. f6b7c8 and f6f2a8 were skipped because they contain `continue`.
+
+**Better (committed):**
+- **f78d50:** score 67 -> 59, from the alias sweep. The loop stores are now in the order 7C0, 830, 8A0.
+- **f465a8:** score 16 -> 10. Case 4 reads the field as `.x10`, and the third branch reads it as `((s32 *)&D)[4]`, which defeats CSE. Left: the original addresses both loads off one lui (-19744(a0)); ours builds the full address.
+
+**Alias sweep (r39/as2.py):** for each store through a pointer that is followed by a global read, it tried moving the read above the store, or a pointer local. wm drafts with score 80 or less: only f78d50 gained. gb: nothing.
+
+**f32770 (still 2):**
+- The sched1 dump shows fy loaded through an alias-set-0 MEM, so it depends on the id store, and the x store depends on it. The original's order (x store, then the fy load into f1) needs x and y to overlap.
+- Tried with no gain: fx/fy as an f32[2] array or as a struct, which takes the fy load out of the alias chain. 408 store/copy orders of those forms gave scores of 6 to 12 (r39/e327g.py).
+
+**f43430 (still 2):** 30 buf-loop forms gave no gain, among them count-down loops, do-while, `n = i` copies and tests on the call result. The original's blez v0 has `move s0,v0` in its delay slot; ours puts `move s1,sp` there.
+
+**f3a0f0 (still 12):** 160 FP temp shapes gave no gain (named a/b, t1..t4, constant-first multiply). In the -dl dump, m31 is tied to the div result in ours. In the original, the div result is tied to m33 and the mul result to the 256 constant, so ties to operand 1 fail there. I have no source form for that.
+
+**f67c60 (still 24):**
+- The original's back edge goes to the f639c0 jal before the loop, and `addiu s3,6` sits in that jal's delay slot. So the loop starts with `cur += 6`, which reorg puts in the slot.
+- `cur += 6` at the loop top plus `sel = cur % 6` gives 26, because sched1 sinks the add past both calls. With f639c0 at the loop top, sel spills (70).
+
+**f2dc50, f387a8:** reread, nothing new to try.
+
+portall wm gb: ported 0 (the gb twin was found by peel.py).

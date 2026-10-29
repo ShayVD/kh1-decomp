@@ -460,6 +460,10 @@ The wm twins also needed the wm table addresses (D_00FA5C40 / D_00FA5C90), not t
 - **Load a global pointer into a local before a read it may alias (wm func_00f22e60, norlo mode):**
   - The draft did `*D_00F85160 = p; if (D_00FBB338 == 0) a -= 12;`. A store through `*D_00F85160` may alias D_00FBB338, so the load of D_00FBB338 has to wait for the store.
   - The original loads the pointer, then D_00FBB338, then stores. `u64 **q = D_00F85160; if (D_00FBB338 == 0) a -= 12; *q = p;` matched, including the movz operand registers.
+- **A wait call made once before the loop and again at the end of each pass (wm func_00f5d498, gb func_00f363a0, round 39):**
+  - Two signs point to it: the prologue saves ra last, right before the loop's first jal, and a label inside the loop is 8-byte aligned with a nop pad even though no branch jumps back to it.
+  - `func_001bfac8(); while (1) { ...; func_001bfac8(); }` matched both menu loops. `while (1) { func_001bfac8(); ... }` did not.
+  - A likely reason, not checked in the dumps: the first jal sits in the prologue block, so sched2 keeps sd ra next to it, and the call at the loop end is later folded into the one before the loop.
 
 ## Results
 
