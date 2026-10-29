@@ -310,6 +310,11 @@ Nothing here was compared against a console recording.
   time and 5-16 buffers in 400 short in some 2 s windows; the New Game load into Dive (game, GS worker
   and sound all busy for about 10 s) 17-61 short. Hence the split of the ticks and the mix onto two
   threads above.
+- Fourth Vita run (build d, the two threads): no short buffers on the title's music (about 1.1 s ticking
+  and 1.2 s mixing per 2 s, on two cores) or in Dive. The New Game load into Dive still fell short for
+  about 10 s (14-51 buffers in 400 per 2 s). There the driver does about twice its usual work: 45% of
+  its instructions in that load are func_0d8dc, a linear search of its table of loaded banks, run for
+  each bank chunk it takes in. A native func_0d8dc, or a longer ring while loading, would cover it.
 - Cost on the host: about 2.5 million IOP instructions a second of sound over the Dive run (3.7 G in
   25 minutes), plus the mix. **Not measured on a Vita yet** after these changes; the watchdog's sound
   line (vita-build.md "Sound") prints the mixer's milliseconds per 2 s.
