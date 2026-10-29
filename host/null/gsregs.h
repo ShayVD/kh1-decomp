@@ -53,6 +53,9 @@ void kh1_gs_reset(void);
 void kh1_gs_write(u32 reg, u32 lo, u32 hi);
 /* one PACKED qword for register descriptor desc (0-0xF; 0xE is A+D) */
 void kh1_gs_packed(u32 desc, const u32 *q);
+/* session 147: n vertices of a PACKED [ST, RGBAQ, XYZF2] packet (the VU1 programs' kicks), 3 qwords each: the
+ * same as kh1_gs_packed(2), (1), (4) on each in turn */
+void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n);
 /* a GIF tag starts: the PACKED Q goes back to 1.0, and with PRE, PRIM is written from the tag */
 void kh1_gs_giftag(int pre, u32 prim);
 const KH1GsState *kh1_gs_state(void);

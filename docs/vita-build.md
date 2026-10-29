@@ -1064,6 +1064,46 @@ the Dive: `ref` data at 0x846a3c30, in the main thread's stack above the corouti
 The Vita now hands the whole stack to `kh1_costack_stack` and the walk owns all of it. **Not yet checked on a
 Vita** (3d-zl).
 
+### Round 2: moves and the MAC flag on NEON (session 147)
+
+3d-zk's `vu1 programs:` line later in the Dive: P13 ~740 ms per 2 s at 53 ns a pair, P0 at 64 ns, P18 at ~48.
+P13's loop (a 4-FMAC transform, an FMAC with the MAC flag, LQ / SQ, a JR table) still crossed between NEON and
+the core every pass. Two changes, the output the same:
+
+- **LQ / LQI / LQD, SQ / SQI / SQD and MOVE as one NEON merge** (vu1_translate.py emits `vu_put(dst, src,
+  dest)`, a plain store for xyzw): before, a field-by-field copy through core registers, so an SQ of a VF an FMAC
+  had just written read NEON's stores from the core.
+- **The MAC flag summed on NEON** (vu1.c `vu_ek`): the O and S bits of the fields in dest, weighted, with a lane
+  the scalar form must take as 0x10000, added across the lanes and moved to the core once; before, the result
+  went to memory and four core loads built the bits.
+
+Checked: vu1neon_test (the same 1,421,531 of 2M cases on four lanes as before, the MAC bits equal; dropping the
+O term is caught); the worker-order run with VU1 to frame 6500 the same 130 digests and VU1 counts as main's
+on x86 and ARM. **Not yet measured on a Vita** (3d-zm).
+
+## The GS worker's VU1 kicks (session 147)
+
+3d-zm on a Vita: P0 still 66-70 ns a pair, so round 2 of the VU1 programs' NEON forms gained nothing measurable.
+The title thread's `gs worker ops:` line (3d-zn, the Dive, per 2 s; addresses mapped with out/vita/kh1.elf): the
+worker busy ~1.45 s, of it w_kick (the VU1 programs' XGKICKs) ~750-835 ms in ~6,000-7,000 ops, w_load ~250-300,
+w_block ~200-240, w_qwords ~120-150, w_gpu_frame ~50. Counted on the host (dive_en.txt to frame 5100): nearly
+every kick packet is PACKED with PRE, NREG 3 and REGS ST, RGBAQ, XYZF2, about 4.4 vertices each (a strip a
+packet). Two changes, the output the same:
+
+- **A state write of the value it holds keeps the draw state** (gsregs.c `set`): each packet's PRE PRIM made the
+  next vertex look its draw state up again (key, hash, memcmp, the scissor rule). Now it only redoes the render
+  target check the lookup made (`relook`); a view change since (`kh1_gs_view`, `view_moved`) still looks again.
+- **[ST, RGBAQ, XYZF2] vertices in one loop** (`kh1_gs_packed_stq_xyzf`, from gif_block when the walk keeps no
+  values): the same register writes and kick as kh1_gs_packed's 2, 1 and 4, without gif_qword / gif_value /
+  kh1_gs_packed / kh1_gs_write per qword.
+
+The worker's thread under the qemu instruction counter (frames 5000-5060): 948M -> 743M; gif_qword, gif_value,
+kh1_gs_packed, kh1_gs_write and gif_block (~145M) replaced by ~18M. Checked: the worker-order run with the GPU
+thread and VU1 (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1
+KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, the gxmcheck binary) to frame 6500 gives the
+same 172 GS digests and GPU target hashes as main's, and the ARM build the same digests under qemu.
+**Not yet measured on a Vita** (3d-zo): the `gs worker ops:` line's w_kick.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

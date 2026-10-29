@@ -900,9 +900,12 @@ class Prog:
         if n == "iaddi":
             v = id_ - 32 if id_ & 16 else id_
             return self.set_vi(it & 15, f"vi[{is_ & 15}] + ({v})", i)
-        if n in ("move", "mr32"):
+        if n == "move":  # session 147: a whole VF moved on NEON (vu1.c vu_put), not field by field via the core
+            if it: o.append(f"    vu_put(vf[{it}], vf[{is_}], {d:#x});")
+            return o
+        if n == "mr32":
             if not it: return o
-            src = [0, 1, 2, 3] if n == "move" else [1, 2, 3, 0]
+            src = [1, 2, 3, 0]
             o.append("    {")
             for f in fields(d): o.append(f"    u32 l{f} = vf[{is_}][{src[f]}];")
             for f in fields(d): o.append(f"    vf[{it}][{f}] = l{f};")
@@ -912,17 +915,13 @@ class Prog:
             r = is_ & 15
             if n == "lqd": o.extend(self.set_vi(r, f"vi[{r}] - 1", i))
             if it:
-                o.append(f"    {{ u32 *a = {A(f'vi[{r}]')};")
-                for f in fields(d): o.append(f"    vf[{it}][{f}] = a[{f}];")
-                o.append("    }")
+                o.append(f"    vu_put(vf[{it}], {A(f'vi[{r}]')}, {d:#x});")
             if n == "lqi": o.extend(self.set_vi(r, f"vi[{r}] + 1", i))
             return o
         if n in ("sqi", "sqd"):
             r = it & 15
             if n == "sqd": o.extend(self.set_vi(r, f"vi[{r}] - 1", i))
-            o.append(f"    {{ u32 *a = {A(f'vi[{r}]')};")
-            for f in fields(d): o.append(f"    a[{f}] = vf[{is_}][{f}];")
-            o.append("    }")
+            o.append(f"    vu_put({A(f'vi[{r}]')}, vf[{is_}], {d:#x});")
             if n == "sqi": o.extend(self.set_vi(r, f"vi[{r}] + 1", i))
             return o
         if n in ("div", "sqrt", "rsqrt"):
@@ -960,14 +959,10 @@ class Prog:
             return [f"    {self.pname(info['pw'])} = pop({lw.x:#x}, vf[{is_}], {lw.fsf});"]
         if n == "lq":
             if not it: return o
-            o.append(f"    {{ u32 *a = {A(f'vi[{is_ & 15}] + ({s11(lw.raw)})')};")
-            for f in fields(d): o.append(f"    vf[{it}][{f}] = a[{f}];")
-            o.append("    }")
+            o.append(f"    vu_put(vf[{it}], {A(f'vi[{is_ & 15}] + ({s11(lw.raw)})')}, {d:#x});")
             return o
         if n == "sq":
-            o.append(f"    {{ u32 *a = {A(f'vi[{it & 15}] + ({s11(lw.raw)})')};")
-            for f in fields(d): o.append(f"    a[{f}] = vf[{is_}][{f}];")
-            o.append("    }")
+            o.append(f"    vu_put({A(f'vi[{it & 15}] + ({s11(lw.raw)})')}, vf[{is_}], {d:#x});")
             return o
         if n == "ilw":
             return self.set_vi(it & 15, f"{A(f'vi[{is_ & 15}] + ({s11(lw.raw)})')}[{(fields(d) or [0])[0]}]", i)
