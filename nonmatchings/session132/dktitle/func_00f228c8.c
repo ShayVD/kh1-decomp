@@ -1,4 +1,5 @@
-/* dktitle.x func_00f228c8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 408 -> 398 with sclimb.py. */
+/* dktitle.x func_00f228c8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+#include "ovl.h"
 
 typedef struct { s32 x0; s32 x4; u64 x8; } Pad;
 typedef struct { void (*f0)(s32, s32); s32 (*f1)(void); } Cb;
@@ -12,8 +13,8 @@ void func_00109268(void);
 void func_00109558(s32);
 void func_00110448(s32);
 void func_00111600(s32, s32, s32, s32 *, s32 *, s32 *);
-s32 func_001117e0(void); CONTEXT_ONLY s32 func_001117e0() { return 0; }
-void func_00111830(void); CONTEXT_ONLY void func_00111830() {}
+s32 func_001117e0(void);
+void func_00111830(void);
 void func_0011c5e8(void);
 void func_0011c7a8(s32, s32, s32, s32, s32, s32);
 void func_0011d140(s32, s32);
@@ -30,31 +31,31 @@ void func_0020b998(void);
 void func_0020bb90(s32, s32);
 void func_0020bc48(s32, s32, s32);
 void func_0020bdf0(void);
-void func_0020d748(void); CONTEXT_ONLY void func_0020d748() {}
+void func_0020d748(void);
 void func_0022bcb8(s32);
 void func_0022d080(s32);
-void func_00233158(void); CONTEXT_ONLY void func_00233158() {}
+void func_00233158(void);
 s32 func_00233168(void);
 void func_00f20020(void);
 void func_00f20118(void *);
 void func_00f20198(void);
 void func_00f20860(void);
-void func_00f208a8(void); CONTEXT_ONLY void func_00f208a8() {}
+void func_00f208a8(void);
 void func_00f20da0(void *);
 void func_00f20f30(void);
-void func_00f20f98(void); CONTEXT_ONLY void func_00f20f98() {}
-void func_00f21000(void); CONTEXT_ONLY void func_00f21000() {}
-void func_00f21068(void); CONTEXT_ONLY void func_00f21068() {}
-void func_00f213a8(void); CONTEXT_ONLY void func_00f213a8() {}
-void func_00f21808(void); CONTEXT_ONLY void func_00f21808() {}
+void func_00f20f98(void);
+void func_00f21000(void);
+void func_00f21068(void);
+void func_00f213a8(void);
+void func_00f21808(void);
 void func_00f21928(void);
 void func_00f21ca0(void);
-void func_00f22238(void); CONTEXT_ONLY void func_00f22238() {}
+void func_00f22238(void);
 void func_00f227b0(void);
 void func_00f227e0(void);
 void func_00f227f8(void);
 void func_00f22880(void);
-void func_00f228a0(void); CONTEXT_ONLY void func_00f228a0() {}
+void func_00f228a0(void);
 extern s32 D_002A3F44, D_002A6B80, D_002B6478, D_002B6480, D_002B6774, D_002BBD40, D_002BBE0C;
 extern s32 D_002BC07C, D_002BC128, D_002BC130, D_002BC134, D_002BC73C, D_002BCDA8;
 extern Pad D_002C5AD0;
@@ -74,13 +75,13 @@ extern Fade D_00F2C808, D_00F2C818, D_00F2C828, D_00F2C838, D_00F2C848, D_00F2C8
 
 s32 func_00f228c8(void) {
     s32 a, b, msg;
-    Ent *e;
     u64 trig;
+    Ent *e;
 
     if (D_002B6774 != 0) return 0;
     if (D_00F26E14 == 0) {
-        D_002BBE0C = 0;
         D_00F26E14 = 1;
+        D_002BBE0C = 0;
     }
     D_00F2C6F8 = 0;
     func_00f20020();
@@ -249,8 +250,8 @@ s32 func_00f228c8(void) {
         func_00f208a8();
         func_00f20da0(&D_00F2C788);
         func_00f20f98();
-        D_00F2C708++;
         D_00F2C6FC = 300;
+        D_00F2C708++;
         break;
     case 11:
         func_00233168();
@@ -283,8 +284,8 @@ s32 func_00f228c8(void) {
     case 16:
         func_00233168();
         if (--D_00F2C6FC == 0) {
-            D_00F2C708++;
             D_00F2C6FC = 10;
+            D_00F2C708++;
         }
         func_00f21000();
         break;
@@ -335,17 +336,17 @@ s32 func_00f228c8(void) {
         func_00f20da0(&D_00F2C870);
         func_00f20da0(&D_00F2C880);
         func_00f21068();
-        D_00F2C708++;
         D_00F2C6FC = 240;
+        D_00F2C708++;
         break;
     case 26:
         if (--D_00F2C6FC == 0) {
-            D_00F2C708++;
             D_00F2C6FC = 2505;
+            D_00F2C708++;
         } else if (D_002C5AD0.x4) {
             func_00f21808();
-            D_00F2C708++;
             D_00F2C6FC = 2505;
+            D_00F2C708++;
         }
         func_00f21068();
         func_00f213a8();
@@ -438,10 +439,10 @@ s32 func_00f228c8(void) {
                 D_002A3F44 = 1;
                 func_00f227f8();
                 func_00110448(0);
-                D_002BCDA8 = 0;
-                D_002BC128 = 0;
                 D_002BC134 = 2;
+                D_002BC128 = 0;
                 D_002BC130 = 0;
+                D_002BCDA8 = 0;
                 func_00111600(0, 0, 2, &D_002BCDA8, &D_002BC128, &D_002BC130);
             } else {
                 D_00F2C708 = 27;
@@ -459,9 +460,9 @@ s32 func_00f228c8(void) {
         D_002BBD40 = 1;
         func_00f227b0();
         if (D_00F27220.f1() == 0) {
-            D_002BBD40 = 0;
             D_00F2C708 = 27;
             D_00F2C6FC = 2505;
+            D_002BBD40 = 0;
         }
         break;
     }

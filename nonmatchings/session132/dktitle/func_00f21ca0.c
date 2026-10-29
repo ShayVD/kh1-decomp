@@ -1,4 +1,5 @@
-/* dktitle.x func_00f21ca0: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 207 -> 187 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). */
+/* dktitle.x func_00f21ca0: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+#include "ovl.h"
 
 typedef struct { f32 v; s32 st; s32 t; } Fade;
 extern s32 D_002B6478, D_00F2C700;
@@ -11,67 +12,67 @@ void func_00f21ca0(void) {
             D_00F2C7B8.v += 1.5625f;
             D_00F2C7E8.v += -1.5625f;
             D_00F2C870.v += -1.5625f;
-            D_00F2C7D8.v = 0;
             D_00F2C7A8.v += 6.375f;
+            D_00F2C7D8.v = 0;
             D_00F2C860.v = 0;
             break;
         case 1:
             D_00F2C7B8.v += -1.5625f;
             D_00F2C7E8.v += 1.5625f;
-            D_00F2C860.v = 0;
             D_00F2C870.v += -1.5625f;
             D_00F2C7A8.v = 0;
             D_00F2C7D8.v += 6.375f;
+            D_00F2C860.v = 0;
             break;
         case 2:
-            D_00F2C7D8.v = 0;
-            D_00F2C7E8.v += -1.5625f;
             D_00F2C7B8.v += -1.5625f;
+            D_00F2C7E8.v += -1.5625f;
             D_00F2C870.v += 1.5625f;
             D_00F2C7A8.v = 0;
+            D_00F2C7D8.v = 0;
             D_00F2C860.v += 6.375f;
             break;
         }
     } else {
         switch (D_00F2C700) {
         case 0:
-            D_00F2C7D8.v = 0;
             D_00F2C7B8.v += 1.5625f;
-            D_00F2C860.v = 0;
             D_00F2C7E8.v += -1.5625f;
             D_00F2C870.v += -1.5625f;
             D_00F2C818.v += -1.5625f;
-            D_00F2C808.v = 0;
             D_00F2C7A8.v += 6.375f;
+            D_00F2C7D8.v = 0;
+            D_00F2C860.v = 0;
+            D_00F2C808.v = 0;
             break;
         case 1:
             D_00F2C7B8.v += -1.5625f;
             D_00F2C7E8.v += 1.5625f;
             D_00F2C870.v += -1.5625f;
+            D_00F2C818.v += -1.5625f;
             D_00F2C7A8.v = 0;
+            D_00F2C7D8.v += 6.375f;
             D_00F2C860.v = 0;
             D_00F2C808.v = 0;
-            D_00F2C818.v += -1.5625f;
-            D_00F2C7D8.v += 6.375f;
             break;
         case 2:
-            D_00F2C7D8.v = 0;
-            D_00F2C7A8.v = 0;
-            D_00F2C7E8.v += -1.5625f;
             D_00F2C7B8.v += -1.5625f;
-            D_00F2C808.v = 0;
+            D_00F2C7E8.v += -1.5625f;
             D_00F2C870.v += 1.5625f;
             D_00F2C818.v += -1.5625f;
+            D_00F2C7A8.v = 0;
+            D_00F2C7D8.v = 0;
             D_00F2C860.v += 6.375f;
+            D_00F2C808.v = 0;
             break;
         case 3:
             D_00F2C7B8.v += -1.5625f;
-            D_00F2C7D8.v = 0;
-            D_00F2C7A8.v = 0;
             D_00F2C7E8.v += -1.5625f;
             D_00F2C870.v += -1.5625f;
-            D_00F2C860.v = 0;
             D_00F2C818.v += 1.5625f;
+            D_00F2C7A8.v = 0;
+            D_00F2C7D8.v = 0;
+            D_00F2C860.v = 0;
             D_00F2C808.v += 6.375f;
             break;
         }
