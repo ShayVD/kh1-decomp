@@ -1,13 +1,6 @@
-/* func_00f74440: score 246, 249 words differ. structure right; original leaves delay slots of double libcalls (cmpdf2/subdf3/truncdfsf2) empty and has no f21/f22 spill; all flag modes tried (same issue as f78d50) */
-typedef struct {
-    u8 pad0[16];
-    f32 min[4];
-    f32 max[4];
-    u8 pad30[48];
-} Box;
-
-extern s32 D_00FB4A58;
+/* score 4 (nofill mode: save as func_00f74440.nofill.c): only the a0/a1 arg-move order before __cmpdf2 in the two inner "if (d<0) d=0-d" blocks (0xf74620, 0xf746c8) is swapped. Tried: inline DABS, ptr inline, z var, ternary, copy temps, reversed compare, separate d2; permuter cannot parse OvlMtx. */
 extern s32 D_00FB4A54;
+extern s32 D_00FB4A58;
 extern s32 D_00FB4A70;
 extern s32 D_0108F1BC;
 extern s32 D_0108F1C0;
@@ -20,83 +13,76 @@ extern f32 D_0108F1E8;
 extern s32 D_0108F1F8;
 extern s32 D_0108F1FC;
 extern s32 D_0108F200;
-Box *func_001bc4e0(void);
-void func_00f60898(s32, s32, s32, s32, s32, void *, s32, f32);
-void func_00f606a0(s32, s32, s32, s32, s32, void *, s32, f32);
+f32 *func_001bc4e0(void);
+void sceVu0UnitMatrix(OvlMtx);
+void sceVu0TransMatrix(OvlMtx, OvlMtx, OvlVec);
+void sceVu0MulMatrix(OvlMtx, OvlMtx, OvlMtx);
+void sceVu0RotMatrix(OvlMtx, OvlMtx, OvlVec);
+void func_00f60898(s32, s32, s32, s32, s32, OvlMtx, s32, f32);
+void func_00f606a0(s32, s32, s32, s32, s32, OvlMtx, s32, f32);
 
-#define MAX(a, b) ((a) < (b) ? (b) : (a))
-#define DABS(x) ((x) < 0.0 ? 0.0 - (x) : (x))
+static inline double DABS(double x) {
+    double z = 0.0;
+    if (x < z) x = z - x;
+    return x;
+}
 
 void func_00f74440(void) {
-    f32 m0[4][4] __attribute__((aligned(16)));
-    f32 m1[4][4] __attribute__((aligned(16)));
-    f32 rot[4] __attribute__((aligned(16)));
-    f32 t[4] __attribute__((aligned(16)));
-    s32 n;
-    Box *b;
+    OvlMtx m0;
+    OvlMtx m1;
+    OvlVec rv;
+    OvlVec tv;
+    s32 idx;
+    f32 *e;
     f32 m;
-    f32 s;
+    f32 sc;
     double d;
 
-    n = D_00FB4A58;
-    rot[1] = 0.436332256f;
-    rot[3] = 1.0f;
-    rot[0] = 0.436332256f;
-    rot[2] = 0.0f;
-    PlatVu0UnitMatrix(m0);
-    PlatVu0UnitMatrix(m1);
-    if (D_00FB4A54) {
-        n = 0;
-    }
-    b = func_001bc4e0() + n;
+    rv[0] = 0.43633226f;
+    rv[3] = 1.0f;
+    rv[1] = 0.43633226f;
+    rv[2] = 0.0f;
+    idx = D_00FB4A58;
+    sceVu0UnitMatrix(m0);
+    sceVu0UnitMatrix(m1);
+    if (D_00FB4A54) idx = 0;
+    e = func_001bc4e0() + idx * 24;
     if (D_0108F1BC == 4) {
-        t[0] = 0.0f;
-        t[1] = 0.0f;
-        t[2] = 0.0f;
+        tv[0] = 0.0f;
+        tv[1] = 0.0f;
+        tv[2] = 0.0f;
     } else {
-        t[0] = -((b->max[0] - b->min[0]) * 0.5f + b->min[0]);
-        t[1] = (b->max[1] - b->min[1]) * 0.5f + b->min[1];
-        t[2] = -((b->max[2] - b->min[2]) * 0.5f + b->min[2]);
+        tv[0] = -((e[8] - e[4]) * 0.5f + e[4]);
+        tv[1] = (e[9] - e[5]) * 0.5f + e[5];
+        tv[2] = -((e[10] - e[6]) * 0.5f + e[6]);
     }
-    t[3] = 1.0f;
-    PlatVu0TransMatrix(m1, m1, t);
-    d = b->max[0] - b->min[0];
-    m = DABS(d);
-    d = b->max[1] - b->min[1];
-    m = MAX(m, DABS(d));
-    d = b->max[2] - b->min[2];
-    m = MAX(m, DABS(d));
-    if (m == 0.0f) {
-        m = 1.0f;
-    }
-    s = (f32)D_0108F1D8 / m;
-    if (D_0108F1BC == 4) {
-        s = 0.46f;
-    }
-    m0[2][2] = s;
-    m0[0][0] = s;
-    m0[1][1] = s;
-    PlatVu0MulMatrix(m0, m0, m1);
-    PlatVu0RotMatrix(m0, m0, rot);
+    tv[3] = 1.0f;
+    sceVu0TransMatrix(m1, m1, tv);
+    m = DABS(e[8] - e[4]);
+    if (m < DABS(d = e[9] - e[5])) { if (d < 0.0) d = 0.0 - d; m = d; }
+    if (m < DABS(d = e[10] - e[6])) { if (d < 0.0) d = 0.0 - d; m = d; }
+    if (m == 0.0f) m = 1.0f;
+    sc = (f32)D_0108F1D8 / m;
+    if (D_0108F1BC == 4) sc = 0.46f;
+    m0[0][0] = sc;
+    m0[1][1] = sc;
+    m0[2][2] = sc;
+    do {} while (0);
+    sceVu0MulMatrix(m0, m0, m1);
+    sceVu0RotMatrix(m0, m0, rv);
     if (D_0108F1E4 != D_0108F1E8) {
         if (D_0108F1E8 < D_0108F1E4) {
             D_0108F1E4 = D_0108F1E4 - 128.0f / (f32)D_00FB4A70;
-            if (D_0108F1E4 < D_0108F1E8) {
-                D_0108F1E4 = D_0108F1E8;
-            }
+            if (D_0108F1E4 < D_0108F1E8) D_0108F1E4 = D_0108F1E8;
         } else {
             D_0108F1E4 = D_0108F1E4 + 128.0f / (f32)D_00FB4A70;
-            if (D_0108F1E8 < D_0108F1E4) {
-                D_0108F1E4 = D_0108F1E8;
-            }
+            if (D_0108F1E8 < D_0108F1E4) D_0108F1E4 = D_0108F1E8;
         }
     }
     if (D_0108F1BC != 4) {
-        func_00f60898(D_0108F1BC, D_0108F1C4, D_0108F1C8, n, 0, m0,
-                      (f32)D_0108F1E0 * D_0108F1E4 * (1.0f / 128.0f), 0.5f);
+        func_00f60898(D_0108F1BC, D_0108F1C4, D_0108F1C8, idx, 0, m0, (s32)((f32)D_0108F1E0 * D_0108F1E4 * 0.0078125f), 0.5f);
     } else {
-        func_00f606a0(4, D_0108F1FC, D_0108F200, D_0108F1F8, 0, m0,
-                      (f32)D_0108F1E0 * D_0108F1E4 * (1.0f / 128.0f), 1.0f);
+        func_00f606a0(4, D_0108F1FC, D_0108F200, D_0108F1F8, 0, m0, (s32)((f32)D_0108F1E0 * D_0108F1E4 * 0.0078125f), 1.0f);
         D_0108F1C0 = 1;
     }
 }

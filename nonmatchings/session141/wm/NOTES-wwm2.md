@@ -245,3 +245,23 @@ Near miss saved: func_00f77648 (score 168, first draft; see the header).
 f74440 not reached.
 f71748: a 30-minute -j1 permuter run from the score-62 draft. Its best output only swaps two statements in the first
 panel block, which hand.py scores at 66 (worse), so the saved draft is kept.
+
+## Round 14
+
+No matches. The worktree was rebased onto 4384627, and the build is byte-identical.
+- f792c8 gb twin: none exists. gb's asm.json has no 0x9009/0x9029 constant, and gb has no function of size 1080, so
+  there is nothing to port by hand.
+- func_00f74440: score 4 (saved; the draft is meant for nofill mode, as func_00f74440.nofill.c). What got it there:
+  - nofill mode: the original leaves the soft-float libcall delay slots empty, but the ext call keeps sub.s in its
+    slot.
+  - An inline `DABS(double)` with a local `double z = 0.0`, called as `m = DABS(e[8] - e[4])` and
+    `if (m < DABS(d = e[9] - e[5])) { if (d < 0.0) d = 0.0 - d; m = d; }`.
+  - `do {} while (0);` after the three scale stores keeps them ahead of the MulMatrix arg moves.
+  Left: in the two inner abs blocks, the a0/a1 moves before __cmpdf2 are swapped. The permuter cannot parse OvlMtx
+  (an aligned typedef), so it was not run.
+- func_00f6edd8: score 186 (saved, see the header). n spills where the original spills p. A 15-minute permuter run
+  found nothing useful.
+- func_00f72a70: score 139 (saved, see the header). The 224 frame needs a bigger local array. The 256 constant
+  CSE and the k/ps/y register rotation are still open.
+- Not reached: f646c0, f640e8, f79ca8. None of the Round 14 functions has a gb twin draft (checked f47ce0, f4b978,
+  f3d5c8, f3cff0 and f52bb0).
