@@ -1,4 +1,7 @@
-/* 19 words / score 26; floats fixed by v[0],v[1],v[2] order with 'f32 t, fz, fx, fy' decl order. Left: the D_00F56DA8 lookup - orig hoists q*4 and q*4+8 before the d==0 test and reads x as base[q*4+8] (lb 0) and z as (base+q*4)[10]; tried (q+2)*4, s8[][4], struct table, (base+8)[q*4], q*=4, precomputed px/pz pointers (worse) */
+/* gb.x func_00f30d80: matched by hand. */
+#include "ovl.h"
+
+/* gb.x func_00f30d80: matched by hand (session 141). The x index is its own local, `k = q * 4 + 8`, so gcse shares it between the d == 0 / d == 1 branches unfolded. */
 typedef struct {
     u8 pad0[0x48];
     u8 loc[0x16];
@@ -27,6 +30,7 @@ void func_00f30d80(s32 d) {
     s32 task;
     s32 i;
     s32 q;
+    s32 k;
     s32 x = 0;
     s32 z = 0;
     s32 y;
@@ -34,13 +38,14 @@ void func_00f30d80(s32 d) {
     task = func_001c00e8(-1, func_00f2e218, 0);
     D_00F56DC0->f60 = D_00F56DC0->f5e;
     q = D_00F56DC0->ang / 1024;
+    k = q * 4 + 8;
     if (d == 0) {
+        x = D_00F56DA8[k];
         z = D_00F56DA8[q * 4 + 10];
-        x = D_00F56DA8[q * 4 + 8];
     }
     if (d == 1) {
+        x = -D_00F56DA8[k];
         z = -D_00F56DA8[q * 4 + 10];
-        x = -D_00F56DA8[q * 4 + 8];
     }
     y = (d == 2) ? -1 : 0;
     if (d == 3)
