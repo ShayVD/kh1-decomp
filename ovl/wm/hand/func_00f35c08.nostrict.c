@@ -1,5 +1,7 @@
-/* 9 words left (520 vs 520): flags global reload; this uses volatile which fixes reload but shifts order. Non-volatile draft is 31 words. */
-typedef struct { f32 x; u8 type; u8 pad5; volatile u16 flags; u8 kind; u8 id; u8 pad[0x2A]; f32 f34; } Ev35c08;
+/* wm.x func_00f35c08: matched by hand. */
+#include "ovl.h"
+
+typedef struct { f32 x; u8 type; u8 pad5; u16 flags; u8 kind; u8 id; u8 pad[0x2A]; f32 f34; } Ev35c08;
 typedef struct { u8 pad[0x540]; s32 f540; u8 pad2[0xC]; f32 f550; s32 f554; } P35c08;
 int abs(int);
 s32 func_00f62b90(s32);
