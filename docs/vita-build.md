@@ -897,6 +897,8 @@ instructions per 60 frames.
   writes between, repeated and alternated loads, two TEXAs) checks every fast load's kh1_gsmem_clut answers
   against a slow load's; palcache_test runs 200,000 random gets with and without the recent slots and
   checks the results and the cache state stay the same.
+- Checked on the English disc (dive_en.txt to frame 6500, the worker-order run above): all 130 GS digests and
+  260 GPU target hashes are the same as main's.
 ## The recording on the third core (session 146)
 
 A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;
