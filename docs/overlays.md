@@ -302,6 +302,23 @@ Round 17 results (every near miss in gb, wm and the small overlays, 258 drafts):
   lower address, called first on the path after the branch. If a near miss still differs
   only in branch-likely use, look at the callees at lower addresses than the function.
 
+Round 18:
+
+- It works in both directions. The main ELF's func_001fd858 has a `bnez` where the
+  original has `bnezl`, because its draft defines CONTEXT_ONLY func_001fe408 above the
+  function. That makes the fe408 call nothrow, so the call kills v0 in reorg's scan. Moving
+  the definition below the function (only a prototype above) gives the `bnezl`: 1 -> 0
+  difflib words on the flagged draft and 25 -> 24 on the natural one (lro6_s12.check; not
+  committed). If a draft has a `b*` where the original has `b*l`, look for definitions
+  above the function that should not be there.
+- Combined with statement moves: /tmp/claude-0/s141/wwm1/sclimb.py OVL draft.c SECS SEED
+  toggles a CONTEXT_ONLY definition per callee and moves statements with climb_s144's
+  dependency check. It matched wm func_00f2cfd8 (a stub plus two moves) and func_00f2c330 (one
+  store moved). Do not use free line swaps (hill2.py block mode) for this: they reorder
+  dependent statements and give low counts for wrong code.
+- A k=2 ctx2.py run over every near miss found no further direct match; the gains were in big
+  drafts (gb f50550 / wm f77648 253 -> 228, wm f42f20 205 -> 170).
+
 ## decomp-permuter on an overlay function (session 135)
 
 tools/permuter.py works in overlay mode as it is (KH1_OVL points kh1tool at the overlay's layout,

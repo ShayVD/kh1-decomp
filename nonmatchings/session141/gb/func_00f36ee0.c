@@ -1,4 +1,4 @@
-/* 81 words / score 18 (408 vs 416 bytes): frame fixed by an extra OvlVec pad in GbArgs; rest is register copies v0=w, v1=col, a1=w that inline col_of/buf_of/draw_quad helpers did not reproduce. Round 16 (wwm1): looked at, not changed (12 aligned). */
+/* 81 words / score 18 (408 vs 416 bytes): frame fixed by an extra OvlVec pad in GbArgs; rest is register copies v0=w, v1=col, a1=w that inline col_of/buf_of/draw_quad helpers did not reproduce. Round 16 (wwm1): looked at, not changed (12 aligned). Round 18 (wwm1): 78 raw words after sclimb.py reordered the c0/c1 color stores (no CONTEXT_ONLY gain). */
 typedef struct { u16 a, b, c, flags, d, e; } GbEnt;
 typedef struct {
     u8 pad0[4];
@@ -59,10 +59,10 @@ void func_00f36ee0(s32 x, GbWork *w, s32 id, s32 id2, u8 *c0, u8 *c1) {
         a.col->c0[2] = c0[2];
         a.col->c0[3] = c0[3];
     } else {
-        a.col->c0[0] = 255.0f;
         a.col->c0[1] = 255.0f;
-        a.col->c0[2] = 255.0f;
+        a.col->c0[0] = 255.0f;
         a.col->c0[3] = 128.0f;
+        a.col->c0[2] = 255.0f;
     }
     if (c1 != NULL) {
         a.col->c1[0] = c1[0];
@@ -70,10 +70,10 @@ void func_00f36ee0(s32 x, GbWork *w, s32 id, s32 id2, u8 *c0, u8 *c1) {
         a.col->c1[2] = c1[2];
         a.col->c1[3] = c1[3];
     } else {
-        a.col->c1[0] = 128.0f;
         a.col->c1[1] = 128.0f;
-        a.col->c1[2] = 128.0f;
         a.col->c1[3] = 128.0f;
+        a.col->c1[0] = 128.0f;
+        a.col->c1[2] = 128.0f;
     }
     m.mode = 5;
     m.b = 1;

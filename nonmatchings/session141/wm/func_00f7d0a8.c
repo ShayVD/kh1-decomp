@@ -1,4 +1,4 @@
-/* score 335 (2372 vs 2360 bytes, 507 words). Camera fly-to between map points: accelerate (t += 0.02) until half the start distance is covered, cruise, then decelerate (t -= 0.02, floor 0.01) while the distance shrinks, then snap. Bare sqrt.s needs PlatSqrtf from platform/math.h; sqrtf and __builtin_sqrtf compile to a call. Scalar vx/vy/vz locals (451 -> 335) stop gcc hoisting &v[2] into s8. Loop exits are written as !(half <= d) and !(d <= half). Left: the frame is 16 bytes smaller (the original also spills the 128.0f/D_00FB5BB4 constant to sp+16), the original keeps %hi(0x0109) in s8, and the FA88/FA8C/FA90 base registers are numbered differently. Tried split range tests for D_0108F6E8 (21..26), struct and array forms of the position. */
+/* score 335 (2372 vs 2360 bytes, 507 words). Camera fly-to between map points: accelerate (t += 0.02) until half the start distance is covered, cruise, then decelerate (t -= 0.02, floor 0.01) while the distance shrinks, then snap. Bare sqrt.s needs PlatSqrtf from platform/math.h; sqrtf and __builtin_sqrtf compile to a call. Scalar vx/vy/vz locals (451 -> 335) stop gcc hoisting &v[2] into s8. Loop exits are written as !(half <= d) and !(d <= half). Left: the frame is 16 bytes smaller (the original also spills the 128.0f/D_00FB5BB4 constant to sp+16), the original keeps %hi(0x0109) in s8, and the FA88/FA8C/FA90 base registers are numbered differently. Tried split range tests for D_0108F6E8 (21..26), struct and array forms of the position. Round 18 (wwm1): 499 words with a CONTEXT_ONLY definition of func_0024e468 (ctx2.py). */
 #include "platform/math.h"
 typedef struct { u8 pad[20]; u8 f14[128]; s32 x94; } St;
 typedef struct { u8 pad[7]; u8 x7; u32 x8; } Pad;
@@ -29,7 +29,7 @@ extern f32 D_0108FA88;
 extern f32 D_0108FA8C;
 extern f32 D_0108FA90;
 void func_0011d768(s32);
-void func_0024e468(s32);
+CONTEXT_ONLY void func_0024e468(s32 a0) {}
 s32 func_00f79868(f32 *, f32 *, f32 *, s32, s32);
 s32 func_00f7c220(s32, s32);
 void func_00f7cb60(void);

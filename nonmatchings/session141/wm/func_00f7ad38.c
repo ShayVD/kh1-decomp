@@ -1,4 +1,4 @@
-/* score 524 (3200 vs 3176 bytes). Sibling of f7a350: the same 3-pack texture upload, then each kind 3/4 entry is filtered by id (66..70 skipped; >= 100 are map markers for sel/D_00FB6498.x94, with dim set when they differ; 2..64 need f[id] & 1 and not & 2; 72..97 need f[id-70] & 2; D_00FB649C.f is the flag array, addressed from D_00FB649C+16 as the original does). It is then lifted by func_00f787b0, projected per vertex (skipped when z is invalid), coloured by the D_0108F7C0/830/8A0 fades and the pack-k switch, and ids 21..26 are drawn 4 times rotated by D_0108F918 (the original reuses the id-21 index variable as the inner loop counter; kept). Colour bytes need (s32) truncation (u8 from float gives the 0x4f000000 sequence). u32 id gives the sltiu compares. Left: 24 bytes: the texture-upload argument order, the s4/s5 and t5/t6 register numbering, the double col[3] store, and the blend=72 merge in the k switch. hill2 found nothing (the word count is dominated by misalignment). */
+/* score 524 (3200 vs 3176 bytes). Sibling of f7a350: the same 3-pack texture upload, then each kind 3/4 entry is filtered by id (66..70 skipped; >= 100 are map markers for sel/D_00FB6498.x94, with dim set when they differ; 2..64 need f[id] & 1 and not & 2; 72..97 need f[id-70] & 2; D_00FB649C.f is the flag array, addressed from D_00FB649C+16 as the original does). It is then lifted by func_00f787b0, projected per vertex (skipped when z is invalid), coloured by the D_0108F7C0/830/8A0 fades and the pack-k switch, and ids 21..26 are drawn 4 times rotated by D_0108F918 (the original reuses the id-21 index variable as the inner loop counter; kept). Colour bytes need (s32) truncation (u8 from float gives the 0x4f000000 sequence). u32 id gives the sltiu compares. Left: 24 bytes: the texture-upload argument order, the s4/s5 and t5/t6 register numbering, the double col[3] store, and the blend=72 merge in the k switch. hill2 found nothing (the word count is dominated by misalignment). Round 18 (wwm1): 732 words with CONTEXT_ONLY definitions of cosf and sinf (ctx2.py). */
 typedef struct { s32 n; s32 grp; s32 tex; } Hdr;
 typedef struct { s32 n; s32 off; } Grp;
 typedef struct { s32 w; s32 h; s32 fmt; s32 off; } Tex;
@@ -26,7 +26,9 @@ extern f32 D_0108F8A0[];
 extern f32 D_0108F918[];
 extern kh1_u128 *D_0108FA60;
 f32 cosf(f32);
+CONTEXT_ONLY f32 cosf() { return 0; }
 f32 sinf(f32);
+CONTEXT_ONLY f32 sinf() { return 0; }
 f32 func_00f787b0(s32);
 void func_00f792c8(s32 *, s32 *, s32 *, s32 *, s32, s32, s32 *, s32 *, s32, s32, u8 *, u64, s32, u64, s32);
 kh1_u128 *func_00f79700(kh1_u128 *, u8 *, s32, s32, s32, s32, s32, s32, s32, s32);

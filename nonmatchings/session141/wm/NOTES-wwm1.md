@@ -581,3 +581,37 @@ hit the stub callee sits at a lower address than the function.
 
 - hand.py keep adds its own "matched by hand" header in front of one that does not start
   with that text. /tmp/claude-0/s141/wwm1/fixhdr.py merges the two.
+
+## Round 18 (ctx2 everywhere, ctx2 + climbing, main ELF read-only)
+
+- ctxbatch.py with k=2 over every draft in nonmatchings/session141/{gb,wm,dkmovie,dktitle,
+  xs_dh_break,xs_dumbo,xs_genie,xs_tink} and session140/xl_limit: no direct match. Closer:
+  gb f50550 and its wm twin f77648 (253 -> 228, now the right size), wm f42f20 (205 -> 170),
+  f29dc0 (24 -> 23), f7d0a8 (507 -> 499), f7ad38 (756 -> 732, with cosf/sinf defined),
+  xs_dumbo f20570 (27 -> 26). The two xs_dh_break drafts do not compile any more
+  (`D_00F317F0` undeclared), so they were not tested.
+- The reverse direction (moving a CONTEXT_ONLY definition that is already above the function
+  below it, /tmp/claude-0/s141/wwm1/omrm.py) changed none of the five wm drafts that have one.
+- hill2.py with free line swaps is useless here: it reached "2 words" on gb f363a0 by moving
+  statements across the loop and the returns. /tmp/claude-0/s141/wwm1/sclimb.py instead toggles
+  CONTEXT_ONLY definitions per callee and moves statements only with climb_s144's dependency
+  check (same block, no calls, no shared names), plus declaration swaps. 300 s per function
+  on the top 30 of both rankings and the small-overlay drafts under 60 words (not the
+  permuter-reserved dkmovie f207a0 / f212c0 and dktitle f26710 / f241c8).
+- Matched: wm f2cfd8 (6 -> 0: CONTEXT_ONLY func_00f2ccb8, `idx` declared last, the a9 store
+  after f12) and wm f2c330 (8 -> 0: `g->x8 = t / 10;` right after `g->xc = u;`). portall wm -> gb
+  ported nothing.
+- Closer (saved): gb f37448 (77 -> 65), f4a650 (35 -> 27, three stubs plus moves), f25518
+  (62 -> 44), f36ee0 (81 -> 78).
+- Main ELF, read-only (/tmp/claude-0/s141/wwm1/mctx.py and mrm.py, scored with lro6_s12.check):
+  adding definitions changed none of 001c62a0, 00200e28, 00110618, sceGsDefDispEnv, 0010d470,
+  001636d0. But 001fd858 is this same mechanism the other way round: its draft defines
+  CONTEXT_ONLY func_001fe408 above the function, which makes the fe408 call nothrow, which
+  kills v0 in reorg's scan, which gives `bnez` where the original has `bnezl`. Moving that
+  definition below the function gives 0 difflib words on the 1w flagged draft
+  (/tmp/claude-0/s141/wwm1/mrm_001fd858_flagged_0.c) and 25 -> 24 on the natural draft
+  (mrm_001fd858_natural_24.c). Not committed; it needs `make` and a decision about the
+  flagged dead float test.
+- Careful: an earlier mctx.py removed src/hand (it holds the tracked src/hand/vu0.c) when it
+  cleaned up. It was restored with git checkout; the scripts now remove only the directory
+  they made.

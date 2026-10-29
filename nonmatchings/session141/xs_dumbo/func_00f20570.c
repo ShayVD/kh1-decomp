@@ -1,9 +1,9 @@
-/* score 49 (508 vs 512). xs_dumbo state task (cases 0-3, 100, 101, then the effect update). Logic complete. Left: %hi(D_00F2320C) and %hi(D_00F23214) take s2/s1 the other way round from the original, and case 1's branch has one instruction less. Round 29 wwm2: extern/decl order, a struct of the four globals (106), default: cases, case order, temps for the effect pointer, inverted case 0 and every flag mode do not fix it. */
-#include "ovl.h"
+/* score 49 (508 vs 512). xs_dumbo state task (cases 0-3, 100, 101, then the effect update). Logic complete. Left: %hi(D_00F2320C) and %hi(D_00F23214) take s2/s1 the other way round from the original, and case 1's branch has one instruction less. Round 29 wwm2: extern/decl order, a struct of the four globals (106), default: cases, case order, temps for the effect pointer, inverted case 0 and every flag mode do not fix it. Round 18 (wwm1): 26 words with a CONTEXT_ONLY definition of func_00f20408 (ctx2.py). */
 s32 func_0013aa60(void);
 void func_00f20150(s32);
 void func_00f203c8(void);
 void func_00f20408(void);
+CONTEXT_ONLY void func_00f20408() {}
 void func_00f20478(void);
 void func_0014aab0(void *);
 s32 func_00147be0(void *);

@@ -16,6 +16,8 @@ Round 17: f5cb78, f31118, f3ff98, f3be50 and f5bba0 matched with CONTEXT_ONLY ca
 
 Round 17: f5c1c8 matched as the port of gb func_00f350d0.
 
+Round 18: f2cfd8 and f2c330 matched with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). f77648, f42f20, f29dc0, f7d0a8 and f7ad38 moved a little with ctx2.py; their counts here are not rechecked (NOTES-wwm1.md, round 18).
+
 | Aligned | Raw | Function | Mode | Hill/permuter | File |
 |---|---|---|---|---|---|
 | 2 | 2 | func_00f21260 |  | yes | func_00f21260.c |
@@ -30,14 +32,12 @@ Round 17: f5c1c8 matched as the port of gb func_00f350d0.
 | 4 | 5 | func_00f639c0 |  | yes | func_00f639c0.c |
 | 5 | 4 | func_00f69aa8 |  | yes | func_00f69aa8.c |
 | 5 | 6 | func_00f32770 |  | yes | func_00f32770.c |
-| 6 | 6 | func_00f2cfd8 |  | yes | func_00f2cfd8.c |
 | 6 | 6 | func_00f3a0f0 |  |  | func_00f3a0f0.c |
 | 6 | 6 | func_00f3ba08 |  |  | func_00f3ba08.c |
 | 6 | 6 | func_00f43430 |  | yes | func_00f43430.c |
 | 6 | 9 | func_00f465a8 |  |  | func_00f465a8.c |
 | 7 | 8 | func_00f72f40 |  | yes | func_00f72f40.c |
 | 7 | 79 | func_00f7ecd8 |  | yes | func_00f7ecd8.c |
-| 8 | 8 | func_00f2c330 |  | yes | func_00f2c330.c |
 | 8 | 8 | func_00f3d978 |  | yes | func_00f3d978.c |
 | 8 | 11 | func_00f78458 |  |  | func_00f78458.c |
 | 8 | 34 | func_00f3fd60 |  |  | func_00f3fd60.c |

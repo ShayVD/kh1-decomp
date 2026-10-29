@@ -1,5 +1,4 @@
-/* 62 words / score 75; u16 bitfields in u64 container give the ld/dsrl32/andi pattern; remaining diff is float-store scheduling only; hill-climb of store order gave no real gain */
-#include "ovl.h"
+/* 62 words / score 75; u16 bitfields in u64 container give the ld/dsrl32/andi pattern; remaining diff is float-store scheduling only; hill-climb of store order gave no real gain Round 18 (wwm1): 44 raw words after sclimb.py reordered the o[] stores. */
 
 typedef struct {
     u8 pad0[0x58];
@@ -23,28 +22,28 @@ extern GbWorld *D_00F56DC0;
 
 void func_00f25518(f32 *o) {
     GbWorld *w = D_00F56DC0;
-    o[0] = 0.0f;
-    o[1] = 0.0f;
     o[2] = w->fov;
+    o[0] = 0.0f;
     o[3] = 0.0f;
     o[4] = 0.0f;
     o[5] = 0.0f;
+    o[1] = 0.0f;
     o[6] = 1.0f;
-    o[7] = 1.0f;
     o[8] = 0.0f;
+    o[7] = 1.0f;
     o[9] = 1.0f;
-    o[10] = 0.0f;
     o[11] = 1.0f;
     o[12] = 0.0f;
-    o[13] = 0.0f;
-    o[14] = 0.0f;
-    o[15] = 0.0f;
     o[16] = -(w->w * 200.0f) * 0.5f;
+    o[13] = 0.0f;
     o[18] = -(w->h * 200.0f) * 0.5f;
+    o[15] = 0.0f;
+    o[10] = 0.0f;
     o[17] = w->b1 * 200.0f + 100.0f;
-    o[19] = 1.0f;
-    o[20] = w->rx * 3.1415927f * (1.0f / 2048);
-    o[21] = w->ry * 3.1415927f * (1.0f / 2048);
-    o[22] = 0.0f;
     o[23] = 1.0f;
+    o[20] = w->rx * 3.1415927f * (1.0f / 2048);
+    o[22] = 0.0f;
+    o[14] = 0.0f;
+    o[19] = 1.0f;
+    o[21] = w->ry * 3.1415927f * (1.0f / 2048);
 }
