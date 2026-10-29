@@ -390,3 +390,18 @@ Rebased onto origin/claude/project-thread-rl45wv.
   navigation loop is a for loop with the confirm check in its condition (comma expression).
 - func_00f6ae68: first draft, score 245 (saved). The jump table was read from wm.elf at 0x00FBA0A0 (rdw.py in the
   same scratch dir).
+
+## Round 23
+
+Rebased onto origin/claude/project-thread-rl45wv. Three large high-half drafts are saved as near misses; the
+headers have the details.
+- func_00f73570: score 327 (2372 vs 2368 bytes). Ported to gb f4c478 at the same shape and score 327.
+- func_00f7d0a8: score 335 (camera fly-to). A bare `sqrt.s` needs `PlatSqrtf` (include "platform/math.h");
+  both `sqrtf` and `__builtin_sqrtf` give a call plus a NaN check. ee-gcc prints the EE `sqrt.s fd, ft` form as
+  `c1 0x10504` when ft != 0. Scalar locals rather than `f32 v[3]` stop &v[2] from being hoisted into a register.
+- func_00f7a350: score 99 (map icons and the GIF-tagged map name). Case order inside the switch sets the block
+  order. Declaration order sets the spill slot order, which counts for a lot here (spill slots sp+176..228
+  follow the order of the locals). Chained stores (`a[0] = a[1] = v;`) schedule like the original. Its
+  neighbour func_00f792c8 is .nostrict, but this function compiles worse in nostrict mode.
+- No gb twins for f7d0a8 or f7a350. The gb functions of similar size (f2cf58, f32a38, f377b0) call different
+  routines.
