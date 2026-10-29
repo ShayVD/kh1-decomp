@@ -1,4 +1,4 @@
-/* near miss: 14 words, score 26. hh = h after the unit matrix (as in func_00f3e388) fixed the loop guards; left: root and pt get s6/s7 the wrong way round. */
+/* near miss: 13 words, score 24 (round 30 wgb: part loop `pt++, j++`, ported from wm func_00f651d0; was 14/26). hh = h after the unit matrix (as in func_00f3e388) fixed the loop guards; left: root and pt get s6/s7 the wrong way round. */
 typedef struct { f32 rot[4]; f32 pos[4]; u8 pad20[16]; s32 parent; u8 pad34[12]; } MdlBone;
 typedef struct { s32 count; s32 off; u8 pad8[32]; } MdlPart;
 typedef struct { s32 off; s32 bone; u8 pad8[32]; } MdlEnt;
@@ -36,7 +36,7 @@ MdlWork *func_00f3e0d8(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, s32
             PlatVu0MulMatrix(w[i].m, w[p].m, w[i].m);
         }
     }
-    for (j = 0; j < hh->nparts; j++, pt++) {
+    for (j = 0; j < hh->nparts; pt++, j++) {
         s32 t = 0;
         MdlEnt *e;
         if (arg3) {

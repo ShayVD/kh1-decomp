@@ -1,4 +1,4 @@
-/* func_00f78978: score 45, 104 words differ. original keeps a dead D_0108FA74 == 66 compare that this draft lacks */
+/* func_00f78978: score 39, 102 words differ (round 30 wgb: func_001f9438 and func_001f3840 return s32 as defined in src/text, was 45/104). original keeps a dead D_0108FA74 == 66 compare that this draft lacks Round 30 (wgb, no gain): an empty if body for the D_0108FA74 == 66 test, (D_00FB5EC0 | 1) ? 2 : 3 for the second index (the target does ori 1 then movn, but this folds; worse), CONTEXT_ONLY callees (ctx2). */
 typedef struct {
     u32 c[2];
 } Cols;
@@ -19,10 +19,10 @@ extern s32 D_0108FA68;
 extern s32 D_0108FA6C;
 extern s32 D_00FB6130[];
 void func_001efb18(s32, s32);
-void func_001f9438(void *, s32, s32, s32, s32, s32, u32);
+s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
 void func_00207830(void *, s32, s32, s32, s32, s32, u32);
 void func_001f8f30(void);
-void func_001f3840(void *);
+s32 func_001f3840(void *);
 
 void func_00f78978(void *o) {
     Cols cols = D_00FBA708;

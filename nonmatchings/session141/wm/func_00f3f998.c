@@ -1,4 +1,4 @@
-/* ~3 real instructions differ (56 words shown due to shift): extra move a1,v0 (e lands in a1); permuter found nothing */
+/* ~3 real instructions differ (56 words shown due to shift): extra move a1,v0 (e lands in a1); permuter found nothing Round 30 (wgb, no gain): inline helpers for the box code (returning e or not), (E *) cast from an s32/void * return, e scoped in the loop, a local copy of arg0, do/while and n > i loop forms, all flag modes, CONTEXT_ONLY callees (ctx2). */
 typedef struct { u8 pad[0x18]; f32 v[4]; s32 flag; f32 len; } N3f998;
 typedef struct { u8 pad[4]; s32 n; N3f998 e[1]; } M3f998;
 typedef struct { u8 pad[0xA0]; s32 xa0; u8 pada4[12]; f32 lo[3]; f32 hi[3]; } E3f998;

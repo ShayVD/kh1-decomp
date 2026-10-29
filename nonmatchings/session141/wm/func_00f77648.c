@@ -1,4 +1,4 @@
-/* score 168 (first draft). Confirm dialog: builds a title, a box and three option windows with func_00f6b6a0 (19 args), fades them in, then loops on pad input (0x4000 cancel returns, 0x2000 confirm calls func_00f4d528(sel) and never returns, 0x10/0x40 move the selection with wraparound). Two S3 copies (D_00FBA218 -> sp+112, D_00FBA220 -> sp+128); declare w[3] first. Left: gcc CSEs the 256 constant into s6 across calls (the original reloads it with li each time); sel/k/loop registers are shifted from that. */
+/* score 168 (first draft); round 30 wgb: 228 words, score 166, 1192 vs 1192 bytes with func_00f6b5b0 declared (Win *, f32, f32) and called (*pw++, 256.0f, ...) like its matched callers, plus a CONTEXT_ONLY definition so the call is nothrow; was 253/168). Confirm dialog: builds a title, a box and three option windows with func_00f6b6a0 (19 args), fades them in, then loops on pad input (0x4000 cancel returns, 0x2000 confirm calls func_00f4d528(sel) and never returns, 0x10/0x40 move the selection with wraparound). Two S3 copies (D_00FBA218 -> sp+112, D_00FBA220 -> sp+128); declare w[3] first. Left: gcc CSEs the 256 constant into s6 across calls (the original reloads it with li each time); sel/k/loop registers are shifted from that. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct { u8 pad[4]; u8 b4; } Win;
 typedef struct { u8 pad[16]; s32 x10; } Hdl;
@@ -16,7 +16,7 @@ void func_00f6b5d0(s32, s32, s32);
 void *func_00f6b6a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00f47110(void);
 void func_00f74978(Win *, s32);
-void func_00f6b5b0(f32, f32, Win *);
+CONTEXT_ONLY void func_00f6b5b0(Win *a0, f32 a1, f32 a2) {}
 void func_0024e468(s32);
 void func_0011d768(s32);
 void func_00f6ade8(s32);
@@ -52,7 +52,7 @@ void func_00f77648(void)
     func_00f74978(w[0], 8);
     pw = w;
     for (i = 2; i >= 0; i--) {
-        func_00f6b5b0(256.0f, D_00FB4A70, *pw++);
+        func_00f6b5b0(*pw++, 256.0f, D_00FB4A70);
         func_0024e468(2);
     }
     func_0024e468(D_00FB4A70);

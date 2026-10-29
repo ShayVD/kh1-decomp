@@ -1,4 +1,4 @@
-/* func_00f7c880: score 64, 111 words differ. case 2: c[0] address not taken from the giv */
+/* func_00f7c880: score 64, 111 words differ. case 2: c[0] address not taken from the giv Round 30 (wgb, no gain): *D_0108FAA0[i] or ((u8 *)D_0108FAA0)[i * 4] for the case-2 [0] store, a chained store (56 words), D_0108FA98[i] = 0 after a = 0, a = [i][3] read before the switch (loses the s2 giv, worse), CONTEXT_ONLY callees (ctx2). */
 extern s32 D_0108FA60[2];
 extern s32 D_0108FA98[2];
 extern u8 D_0108FAA0[2][4];

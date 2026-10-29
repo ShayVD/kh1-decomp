@@ -1,4 +1,4 @@
-/* 24 words differ, score 43 (1052 vs 1056 bytes); logic complete (frustum cull + lod switch, case 1/default shared). Left: FPU register choice in the cull block (orig rad f9, z f11, 1.0f f10, ry f8), the final lod select (orig bc1t with li 1 in delay slot, then move 0), beqz vs beqzl in the switch tree. Tried: reciprocal temps, rx/ry order, 5 lod forms, case order, store placement; 10 min permuter found the new_var cx->x8 temp (49 -> 43) */
+/* 23 words differ, score 41 (1052 vs 1056 bytes; round 30 wgb: CONTEXT_ONLY func_00f29658 (ctx2) and parameters in the callers' order (..., f32 al, f32 sc, s32 flags), was 24/43); logic complete (frustum cull + lod switch, case 1/default shared). Left: FPU register choice in the cull block (orig rad f9, z f11, 1.0f f10, ry f8), the final lod select (orig bc1t with li 1 in delay slot, then move 0), beqz vs beqzl in the switch tree. Tried: reciprocal temps, rx/ry order, 5 lod forms, case order, store placement; 10 min permuter found the new_var cx->x8 temp (49 -> 43) */
 typedef struct 
 {
   s32 x0;
@@ -19,14 +19,14 @@ void func_00f5df38(s32, s32, s32 *);
 void func_00f5de50(s32 *, s32);
 void func_00f5e6e0(s32 *);
 u8 *func_00f29698(s32 *, u8 *, u8 *, s32);
-u8 *func_00f29658(s32 *, u8 *, u8 *, s32);
+CONTEXT_ONLY u8 *func_00f29658(s32 *a0, u8 *a1, u8 *a2, s32 a3) { return 0; }
 u8 *func_00f296d8(s32 *, u8 *, u8 *, s32);
 u64 *func_00f66b78(u64 *);
 void func_00f66b90(u64 *);
 u64 *func_00f66b20(s32);
 s32 func_00f66b38(u64 *);
 s32 func_00f667b8(s32, s32, s32);
-void func_00f29dc0(s32 id, f32 (*w)[4], f32 (*b)[4], u8 *obj, s32 flags, f32 al, f32 sc)
+void func_00f29dc0(s32 id, f32 (*w)[4], f32 (*b)[4], u8 *obj, f32 al, f32 sc, s32 flags)
 {
   f32 t[4][4];
   f32 a[4][4];

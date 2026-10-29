@@ -1,4 +1,4 @@
-/* func_00f632e8: score 35, 55 words differ. w*16 and h*32 adds placed differently; permuter gave nothing */
+/* func_00f632e8: score 35, 55 words differ. w*16 and h*32 adds placed differently; permuter gave nothing Round 30 (wgb, no gain): tx before ty (worse, 49), x/y shift order, x1/y1 computed after func_00f66b78 or h *= 32 between the two calls (worse), CONTEXT_ONLY callees (ctx2). Only 532 vs 536 is the end nop; the rest is s2/s3 (tx/ty) and s0/s1 (x1/y1) naming plus the h*32 schedule. */
 extern u64 **D_00FA66D8;
 extern s32 D_00FA66DC;
 void *func_00f632d0(void *);

@@ -1,4 +1,4 @@
-/* score 327 (2372 vs 2368). The count switch needs a separate `cnt++; break;` per case 0..8 plus an explicit case 9, or gcc turns it into a range test instead of the 10-entry jump table. The draw loop uses two pairs: palette ids pal[2] (sp16) and colours c[2] (sp32), both indexed by sel == i. func_001fd548 is called unconditionally (t = ...; if (!D_00FB5A64) sel = t). The x4 switch needs t = 0 before it, with case 0x2000 an empty break. Left: the scheduling of the colour globals in the D_00FB5A64 block (the original keeps five %hi parts in s3..s7), the count index should share the k stack slot (sp48), and the x4 decision tree around 0x100/0x200. */
+/* score 325, 365 words (2372 vs 2368; round 30 wgb: func_001f3840, func_001f9438 and func_002014a0 return s32 as defined in src/text, was 327/368). The count switch needs a separate `cnt++; break;` per case 0..8 plus an explicit case 9, or gcc turns it into a range test instead of the 10-entry jump table. The draw loop uses two pairs: palette ids pal[2] (sp16) and colours c[2] (sp32), both indexed by sel == i. func_001fd548 is called unconditionally (t = ...; if (!D_00FB5A64) sel = t). The x4 switch needs t = 0 before it, with case 0x2000 an empty break. Left: the scheduling of the colour globals in the D_00FB5A64 block (the original keeps five %hi parts in s3..s7), the count index should share the k stack slot (sp48), and the x4 decision tree around 0x100/0x200. */
 typedef struct { u8 pad[176]; s32 xB0; s32 xB4; } Obj;
 typedef struct { u8 b0; u8 pad1[3]; u32 x4; } Item;
 extern s32 D_00FB4A6C;
@@ -39,17 +39,17 @@ void func_001bb558(void);
 Item *func_001bc4f0(void);
 s32 func_001bc520(void);
 void func_001efb18(s32, s32);
-void func_001f3840(Obj *);
+s32 func_001f3840(Obj *);
 s32 func_001f42b8(Obj *);
 s32 func_001f4390(Obj *);
 void func_001f8ee0(Obj *);
 void func_001f8f30(void);
-void func_001f9438(Obj *, s32, s32, s32, s32, s32, s32);
+s32 func_001f9438(Obj *, s32, s32, s32, s32, s32, s32);
 s32 func_001fd548(Obj *);
 s32 func_001fd590(Obj *);
 s32 func_001fd618(Obj *);
 void func_001fd858(Obj *);
-void func_002014a0(Obj *, s32, s32, s32, s32, s32, s32, s32 *, s32, s32);
+s32 func_002014a0(Obj *, s32, s32, s32, s32, s32, s32, s32 *, s32, s32);
 void func_00202fc0(Obj *);
 void func_00206370(Obj *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_002078f0(Obj *, s32, s32, s32, s32, s32, s32, s32, s32);

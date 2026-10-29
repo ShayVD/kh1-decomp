@@ -1,4 +1,4 @@
-/* 253 words / score 168 (1184 vs 1192). Ported unchanged from the wm twin near miss func_00f77648 (port.py wm -> gb). Same open issue: gcc CSEs the 256 constant into an s-reg across calls where the original reloads it with li each time. */
+/* 253 words / score 168 (1184 vs 1192); round 30 wgb: 228 words, score 166, 1192 vs 1192 bytes with func_00f444b8 declared (Win *, f32, f32) and called (*pw++, 256.0f, ...) like its matched callers, plus a CONTEXT_ONLY definition so the call is nothrow; was 253/168). Ported unchanged from the wm twin near miss func_00f77648 (port.py wm -> gb). Same open issue: gcc CSEs the 256 constant into an s-reg across calls where the original reloads it with li each time. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct { u8 pad[4]; u8 b4; } Win;
 typedef struct { u8 pad[16]; s32 x10; } Hdl;
@@ -16,7 +16,7 @@ void func_00f444d8(s32, s32, s32);
 void *func_00f445a8(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00f20018(void);
 void func_00f4d880(Win *, s32);
-void func_00f444b8(f32, f32, Win *);
+CONTEXT_ONLY void func_00f444b8(Win *a0, f32 a1, f32 a2) {}
 void func_0024e468(s32);
 void func_0011d768(s32);
 void func_00f43cf0(s32);
@@ -52,7 +52,7 @@ void func_00f50550(void)
     func_00f4d880(w[0], 8);
     pw = w;
     for (i = 2; i >= 0; i--) {
-        func_00f444b8(256.0f, D_00F702F0, *pw++);
+        func_00f444b8(*pw++, 256.0f, D_00F702F0);
         func_0024e468(2);
     }
     func_0024e468(D_00F702F0);
