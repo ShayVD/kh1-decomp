@@ -291,6 +291,7 @@ int kh1_ovl_entry(int cmd, int arg) {
  * means no vblank: this says whether DMA sends still move) */
 int kh1_null_threads_state(char *buf, int n);
 extern u32 kh1_dma_walk_us; /* host/null/dmawalk.c */
+extern u32 kh1_gs_load_us, kh1_gs_loads, kh1_gs_loads_same, kh1_gs_load_bytes; /* host/null/gsimage.c */
 extern u8 D_004E4528[], D_002B75A0[];
 extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
@@ -298,7 +299,7 @@ extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
-    u32 rbusy0 = 0, rwait0 = 0, rwaits0 = 0;
+    u32 rbusy0 = 0, rwait0 = 0, rwaits0 = 0, ld0[4] = { 0 };
     u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0, log0 = 0, logn0 = 0, bad0 = 0;
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
@@ -361,6 +362,14 @@ static int watchdog(SceSize args, void *argp) {
             if (kh1_recq_on) /* session 146: the recording on the GPU frame's thread (the `cpu:` line's is then 0) */
                 vlog("kh1-vita: recording: %u ms on the gpu thread; the GS worker waited %u ms for it (%u waits)\n",
                      (kh1_recq_us_busy - rbusy0) / 1000, (kh1_recq_us_wait - rwait0) / 1000, kh1_recq_waits - rwaits0);
+            /* session 147: of the rest, the large LoadImages the game thread stores itself (gsimage.c LOAD_HERE) */
+            vlog("kh1-vita: large uploads: %u ms on the game thread, %u of them (%u unchanged), %u KiB\n",
+                 (kh1_gs_load_us - ld0[0]) / 1000, kh1_gs_loads - ld0[1], kh1_gs_loads_same - ld0[2],
+                 (kh1_gs_load_bytes - ld0[3]) >> 10);
+            ld0[0] = kh1_gs_load_us;
+            ld0[1] = kh1_gs_loads;
+            ld0[2] = kh1_gs_loads_same;
+            ld0[3] = kh1_gs_load_bytes;
             { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
                * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;

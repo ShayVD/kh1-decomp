@@ -26,6 +26,7 @@
 #include "common.h"
 #include "gsmem.h"
 #include "gsqueue.h"
+#include "platform/vu1.h"
 
 extern int kh1_host_trace;
 
@@ -80,11 +81,12 @@ static u32 psm_size(u32 psm) {
     }
 }
 
-/* the upload itself: BITBLTBUF's upper word bb, TRXPOS and TRXREG, then the bytes */
-static void load_image(u32 bb, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi, const u8 *s, u32 bytes) {
+/* the upload itself: BITBLTBUF's upper word bb, TRXPOS and TRXREG, then the bytes; 1 when the bytes were
+ * the same as the last time and nothing was stored */
+static int load_image(u32 bb, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi, const u8 *s, u32 bytes) {
     u32 done = 0, buf[64];
     kh1_gsmem_trxdir(0, 0, bb, pos_lo, pos_hi, reg_lo, reg_hi);
-    if (kh1_gsmem_image_same(s, bytes)) return; /* session 137: the title menus' every-frame uploads */
+    if (kh1_gsmem_image_same(s, bytes)) return 1; /* session 137: the title menus' every-frame uploads */
     while (done < bytes) { /* in words, as the IMAGE qwords bring it (src need not be aligned) */
         u32 k = bytes - done < sizeof buf ? bytes - done : sizeof buf, i;
         for (i = 0; i < (k + 3) / 4; i++) buf[i] = 0;
@@ -97,6 +99,7 @@ static void load_image(u32 bb, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi, c
         done += k;
     }
     kh1_gsmem_image_kept(s, bytes);
+    return 0;
 }
 
 /* bytes from which PlatGsExecLoadImage runs the upload on the game thread, not the worker */
@@ -104,8 +107,12 @@ static void load_image(u32 bb, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi, c
 
 static void w_load(const u32 *a, const u32 *d, u32 nqw) {
     (void)nqw;
-    load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)d, a[5]);
+    (void)load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)d, a[5]);
 }
+
+/* session 147: the game thread's large uploads below (on kh1_vu1_clock, the Vita's watchdog): their time
+ * (the sync before each not in it), how many, how many of them unchanged, their bytes */
+u32 kh1_gs_load_us, kh1_gs_loads, kh1_gs_loads_same, kh1_gs_load_bytes;
 
 int PlatGsExecLoadImage(void *lp, void *src) {
     const u32 *q = (const u32 *)lp;
@@ -122,8 +129,13 @@ int PlatGsExecLoadImage(void *lp, void *src) {
      * before the worker took the uploads: copied into the ring, its compare and pixels were the worker's on
      * top of the frame's GPU work, and on the Vita the worker became the busier side (3d-w's menus) */
     if (a[5] >= LOAD_HERE) {
+        u32 t0;
         kh1_gsq_sync();
-        load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)src, a[5]);
+        t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
+        kh1_gs_loads_same += load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)src, a[5]);
+        if (kh1_vu1_clock) kh1_gs_load_us += kh1_vu1_clock() - t0;
+        kh1_gs_loads++;
+        kh1_gs_load_bytes += a[5];
         return 0;
     }
     kh1_gsq_put_bytes(w_load, a, 6, src, a[5]);

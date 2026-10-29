@@ -840,6 +840,40 @@ a draw's mark moved page_seq, which the check also read).
   waiting ~285 ms for it in ~175 waits, the GPU thread ~130 ms, no vblank wait: the game thread is still the
   limit (~1.75 s of "the rest" per 2 s, ~20 ms a frame; the skip's ~2.5 MB memcmp a frame is in it).
 
+### The skip's compare on the A9 (session 147)
+
+The x86 profile above showed the skip's compare as small because glibc's memcmp is vectorised. **vitasdk's
+newlib memcmp is a C loop** (`arm-vita-eabi-objdump -d` of libc.a's lib_a-memcmp.o): a word every ~10
+instructions when both pointers are word aligned, a byte every ~6 when either is not. On the title, the game
+thread's large LoadImages (the two CT32 512 x 192, the two CT24 512 x 192, the menu's 512 x 32 strips: ~2 MB a
+frame, each over gsimage.c's LOAD_HERE) are all compared that way, so ~5M+ instructions and ~4 MB of reads a
+frame, most of the ~20 ms.
+
+- **host/null/bytesame.h** `kh1_bytes_same`: equality only, on ARM with NEON 256 bytes a step (the two runs'
+  XORs ORed into one register, moved to a core register once a step, since a NEON -> core move stalls the A9;
+  prefetches 512 bytes ahead), the tail through memcmp; elsewhere memcmp itself. kh1_gsmem_image_same uses it,
+  and same_pool's runs now start 16-byte aligned (the pool is aligned(16), each run's size rounded up).
+  tests/host/bytesame_test.c checks it against memcmp (~200,000 cases: lengths 0-1,300 and ~288 KiB, both
+  runs at every alignment mod 16, one byte changed anywhere, at a step's end and in the tail) on the host and,
+  in tests/selftest.sh, under qemu-arm with NEON; reading one 16-byte piece of a step twice instead of the
+  next is caught. Note that `gcc-multilib` (for the tests' `-m32`) and `gcc-arm-linux-gnueabihf` conflict on
+  Ubuntu 24.04; the ARM test can be built with `clang --target=arm-linux-gnueabihf -mcpu=cortex-a9 -mfpu=neon
+  -mfloat-abi=hard -fuse-ld=lld -static --sysroot=/usr/arm-linux-gnueabihf` (`libc6-dev-armhf-cross`
+  installed), as session 147 did.
+- **The watchdog's `large uploads:` line**: of "the rest", the game thread's time in those LoadImages (the sync
+  before each is in "waiting for the GS worker"), how many, how many unchanged, their KiB (gsimage.c
+  `kh1_gs_load_us` and the counts).
+- Checked on the English disc (dive_en.txt to frame 6500): the worker-order run with the GPU thread
+  (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1
+  KH1_HOST_RECQ=1`, the gxmcheck binary) gives the same GS digests and GPU target hashes as main's. On x86 that
+  checks only the pool's alignment (the compare is memcmp there); the NEON form rests on the unit test.
+- **On a Vita (s147a)**: the title with its art up, before the menu, at ~58-60 fps (~126 frames per 2.1 s, from
+  ~88), with 0.4-1.1 s of vblank wait per 2 s left. The `large uploads:` line: ~470-640 a window, all unchanged,
+  ~1.1-1.5 s per 2 s, so the NEON compare still runs at only ~125 MB/s (~2.3 ms per 288 KiB): memory-bound on the
+  game's source bytes and the kept copy, still the game thread's largest item. With the menu fading in and up
+  (frames ~1400-2000): 27-47 fps (from ~25-28), the GS worker busy ~0.9-1.3 s per 2 s and the game waiting
+  ~0.6-1.2 s for it: the worker is the limit there.
+
 ## The recording on the third core (session 146)
 
 A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;

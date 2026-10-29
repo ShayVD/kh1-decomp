@@ -165,6 +165,10 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
   "$W/dmawalk_test" > "$W/dmawalk.log" || { grep -v '^kh1-host:   ' "$W/dmawalk.log"; exit 1; }
   tail -n 1 "$W/dmawalk.log"
+  # session 147: kh1_bytes_same (host/null/bytesame.h) against memcmp, the host's form
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/bytesame_test" "$ROOT/tests/host/bytesame_test.c"
+  "$W/bytesame_test" > "$W/bytesame.log" || { cat "$W/bytesame.log"; exit 1; }
+  tail -n 1 "$W/bytesame.log"
   # session 141: VIF1's data path in blocks (host/port/vu1.c) against the word-at-a-time reader it replaced
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/vu1feed_test" "$ROOT/tests/host/vu1feed_test.c" -lm
   "$W/vu1feed_test" > "$W/vu1feed.log" || { cat "$W/vu1feed.log"; exit 1; }
@@ -176,6 +180,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
         -mfloat-abi=hard -static -DKH1_HOST -I"$ROOT/include" -o "$W/vu1neon_test" "$ROOT/tests/host/vu1neon_test.c" -lm
     qemu-arm "$W/vu1neon_test" 300000 > "$W/vu1neon.log" || { cat "$W/vu1neon.log"; exit 1; }
     tail -n 1 "$W/vu1neon.log"
+    # session 147: the large uploads' NEON compare (host/null/bytesame.h) against memcmp
+    arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -static -DKH1_HOST \
+        -I"$ROOT/include" -o "$W/bytesame_arm" "$ROOT/tests/host/bytesame_test.c"
+    qemu-arm "$W/bytesame_arm" > "$W/bytesame_arm.log" || { cat "$W/bytesame_arm.log"; exit 1; }
+    tail -n 1 "$W/bytesame_arm.log"
   fi
   # the GS register file it feeds (host/null/gsregs.c, session 79)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsregs_test" \
