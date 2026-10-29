@@ -149,12 +149,16 @@ static KH1DrawState last_d;
 static KH1RenderPass last_p;
 
 /* session 125: the primitive's vertex signature for batch.h's column groups (FNV-1a over the type and the
- * queued vertices; never 0) */
+ * queued vertices; never 0).  Session 143: a word a step, not a byte (KH1GsVert is all u32; the A9 paid
+ * a multiply a byte, ~7% of the GS worker); only equal signatures matter, so any good hash does */
 static u32 prim_sig(u32 prim, const KH1GsVert *v, u32 n) {
-    const u8 *q = (const u8 *)v;
+    const u32 *q = (const u32 *)v;
     u32 h = 2166136261u ^ (prim & 7), i;
     h *= 16777619u;
-    for (i = 0; i < n * sizeof *v; i++) h = (h ^ q[i]) * 16777619u;
+    for (i = 0; i < n * (sizeof *v / 4); i++) {
+        h = (h ^ q[i]) * 16777619u;
+        h ^= h >> 15;
+    }
     return h | 1;
 }
 
