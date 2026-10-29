@@ -1,4 +1,6 @@
-/* near miss: 202 words, score 267. Structure right; left: grid (g+8) must be a caller-saved t3 (sq/lq around func_001bbdf0) with x0/y0/z0 in s6-s8; ours gives grid s8 and spills z0. */
+/* gb.x func_00f24780: matched by hand (session 141, wwm1 round 19): portall port of wm func_00f4b878. */
+#include "ovl.h"
+
 typedef struct { u16 x : 4; u16 y : 4; u16 z : 4; u16 w : 4; } Cell;
 typedef struct { Cell pos; u16 f2; u16 f4; u16 f6; u16 f8; u16 f10; } Ent;
 typedef struct { Ent e; Cell size; u16 idx; } Slot;
@@ -7,19 +9,26 @@ typedef struct { u32 x0 : 4; u32 y0 : 4; u32 z0 : 4; u32 pad : 4; u32 x1 : 4; u3
 typedef struct { s32 f0; Box box; Slot grid[1]; } Grid;
 typedef struct { u8 pad0[160]; Hdr hdr; u8 pad[4332 - 160 - sizeof(Hdr)]; u8 tab[1]; } World;
 extern World *D_00F56DC0;
-s32 func_001bb740(void);
+s32 func_001bb740(void); CONTEXT_ONLY s32 func_001bb740() { return 0; }
 u8 func_001ba3f0(s32);
 void func_00f23e30(s32);
 u16 func_001bbdf0(Ent *);
 void func_00f24780(Grid *g) {
     Hdr *h = &D_00F56DC0->hdr;
+    Slot *grid;
     Ent *e;
     Slot s;
-    s32 i, x, y, z;
-    s32 x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
-    s32 first = 0;
+    s32 x0, y0, z0, x1, y1, z1;
+    s32 first;
     u8 *p;
-    Slot *grid;
+    s32 i, x, y, z;
+    x0 = 0;
+    y0 = 0;
+    z0 = 0;
+    first = 0;
+    x1 = 0;
+    y1 = 0;
+    z1 = 0;
     for (i = 0; i < func_001bb740(); i++) {
         D_00F56DC0->tab[i] = func_001ba3f0(i);
     }
@@ -32,9 +41,9 @@ void func_00f24780(Grid *g) {
     }
     for (i = 0, e = h->ents; i < h->count; i++, e++) {
         e->f6 = 33;
-        x = e->pos.x;
         y = e->pos.y;
         z = e->pos.z;
+        x = e->pos.x;
         s.e = *e;
         *(u16 *)&s.size = func_001bbdf0(e);
         s.idx = i;
@@ -43,26 +52,26 @@ void func_00f24780(Grid *g) {
             for (yy = y; yy < y + s.size.y; yy++) {
                 for (zz = z; zz < z + s.size.z; zz++) {
                     for (xx = x; xx < x + s.size.x; xx++) {
-                        grid[zz * h->w + yy * (h->w * h->h) + xx] = s;
+                        grid[yy * (h->w * h->h) + zz * h->w + xx] = s;
                     }
                 }
             }
         }
         if (first) {
-            if (x1 < x + s.size.x - 1) x1 = x + s.size.x - 1;
-            if (y1 < y + s.size.y - 1) y1 = y + s.size.y - 1;
-            if (z1 < z + s.size.z - 1) z1 = z + s.size.z - 1;
             if (x < x0) x0 = x;
             if (y < y0) y0 = y;
             if (z < z0) z0 = z;
+            if (x1 < x + s.size.x - 1) x1 = x + s.size.x - 1;
+            if (y1 < y + s.size.y - 1) y1 = y + s.size.y - 1;
+            if (z1 < z + s.size.z - 1) z1 = z + s.size.z - 1;
         } else {
             x0 = x;
             y0 = y;
             z0 = z;
             x1 = x + s.size.x - 1;
             y1 = y + s.size.y - 1;
-            z1 = z + s.size.z - 1;
             first = 1;
+            z1 = z + s.size.z - 1;
         }
     }
     g->box.x0 = x0;
