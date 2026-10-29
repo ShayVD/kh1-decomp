@@ -407,3 +407,44 @@ header updated).
   `q->field` accesses matched. `D[i].s.field` with no pointer did not.
 - **Duplicated `b; lui` after an if-then** came from `id += 20001` written
   in both arms of the if (f2a1e0).
+
+## Round 12
+
+Matched: f2e510, f2d738, f35e10 (wm 927 -> 928 after the rebase, byte-identical).
+Near misses saved: f21260 (2 words), f3ff98 (3), f32770 (6), f2dc50 (15),
+f2ba68 (48), f53758 (152), f47b60 (146), f58748 (202), f42f20 (205), f58bd0 (206).
+Not drafted: f5f940 (looks like f53758). gb twins: twins.py gb and near.py found none.
+
+- **`c1 0x10044` in a listing is EE `sqrt.s f1,f1`**: use PlatSqrtf.
+  In f2d738 the dot product is divided by `PlatSqrtf(|d|^2 * |z|^2)`.
+- **A local element pointer inside the loop** (`p = &D_00FBB5D0[idx];
+  p->a &= 0xFD; id = p->b;`) removed an extra spill (f2e510).
+- **Read xori and ori carefully**: the end of f2e510 is `^= 2`.
+- **Restore store order matters**: after the MulMatrix in f2d738,
+  m[3][0], m[3][1], m[3][2] in that order.
+- **A switch needs enough cases to become a jump table.** f35e10's table
+  covers 1..6 with only 4 and 5 doing work. With `case 1:` and `case 6:` only,
+  gcc used compares and also hoisted the float constants (0.5, 1.0) into
+  f20/f21. Adding `case 1: case 2: case 3: break;` gave the jump table and
+  stopped the hoisting.
+- **Load a shared value into a local before an if/else** when the target
+  loads it in the branch delay slot: `t = k->f0;` before
+  `if (dir == 0) { ... t ... } else { ... t ... }` (f35e10, last 3 words).
+- **The `(i*0x590+0x540)+base` address shape** (as in f3fb28) appears in
+  f3ff98 and f42f20. `static inline Sub *ssf(s32 idx) { s32 b_ =
+  (s32)D_00F86500; return (Sub *)((u8 *)(Sub *)(idx * 0x590 + 0x540) +
+  b_); }` reproduces it. The permuter can parse it, but not a GNU
+  statement expression. Use it as an expression each time; a `Sub *s` local
+  lets gcc CSE everything.
+- **`dir = D[idx].s.dir = k->b8 & 1;`** gave the `move s7,v0` plus a store
+  of v0 (f3ff98). Writing it as two statements did not.
+- **u16 bitfields in an 8-aligned struct** are read and written with ld/sd
+  (f47b60). In a 4-aligned struct they give lw/sw. Add
+  `__attribute__((aligned(8)))` to the struct.
+- **`k->kind == 1 && !(k->flag & 0x80)`** folds into one word load and
+  `& 0x8000FF` (f3ff98).
+- **gcc rounds float literals down** (0.17453292f is 0x3E32B8C1). The
+  constants 0x44bb6000/0x44bba000/0x453b7000 are 1499/1501/2999.
+- **A permuter "win" can change behaviour**: the f32770 outputs moved
+  cnt++ before the o store. Check each output against the source before
+  using it.
