@@ -51,6 +51,11 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    - `frames=N` exit after N frames (0, the default: never);
    - `mc=ux0:...` memory card 1's folder (default `ux0:data/kh1/mc0`);
    - `vu1=0` skips the VIF1 / VU1 path (session 137v, "The 3D path" below; 1, the default, runs it).
+   - `rcam=1` (the default): the right stick's left / right turns the camera. The game itself, Final Mix
+     included, turns the camera with L2 / R2 only and gives the right stick the d-pad's command-menu
+     cursor, so host/vita/pad.c sends the stick's x past half way as R2 (right) or L2 (left), held while
+     pushed (never pulsed: each L2 / R2 press also steps the lock-on target), and centres the x; the y is
+     unchanged. `rcam=-1` turns the other way, `rcam=0` sends the stick as the PS2 did.
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
