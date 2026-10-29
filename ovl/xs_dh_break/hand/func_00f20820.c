@@ -1,10 +1,27 @@
-/* score 16 (792 bytes, same size; was 156). Round 29 wwm2: the two distances live in a stack array d[2] (the original stores and reloads them at 0(sp)/4(sp)), d[1] += 0.0f is its own statement, the two jitters use separate locals a/b so neither crosses a call, the rot stores chain rot[0] = rot[1] = rot[2] = rot[3], hill2 on the statement order, and the literals 3.1415928f / 0.00088888888f / 2.2049995f (gcc 2.96 truncates). Left: the constants 50 and 25 swap $f20/$f21 (and the 1.0 loop copy follows 50); declaration orders, operand orders and every flag mode leave it. To score it with hand.py, paste shard.h's struct in place of the #include. */
+/* xs_dh_break.x func_00f20820: matched by hand (session 141, wwm1 round 21): wwm2's round 29 draft (8 words: the 50.0f / 25.0f constants in $f21 / $f20 the wrong way round) with the first jitter written inline, s->c[0] = (...) + func_00f20020() * 50.0f - 25.0f, instead of through a. */
+#include "ovl.h"
 /* xs_dh_break.x func_00f20820: draft (session 136), not byte-identical; the port runs it
  * (ovl/xs_dh_break/drafts.tsv). Sets up the shard at grid cell (row, col): its corners from
  * func_00f206a0's jittered 51 x 51 grid, a centre 30 apart (+-25), spins of 1-6 degrees a step,
  * and the time it starts to fall: later the farther it is from the two points D_00F311D0 /
  * D_00F311E0. */
-#include "shard.h"
+/* xs_dh_break.x (Dive to the Heart: the station's floor breaking into 2,500 falling shards): the
+ * shard record of the session 136 drafts (0xB0 bytes, 2,500 from D_00F317F0). */
+
+typedef struct {
+    OvlVec pt[4];  /* 0x00: the corners, from the centre after func_00f20820 */
+    OvlVec c;      /* 0x40: the centre (y 0, w 1) */
+    OvlVec rot;    /* 0x50: the angles */
+    OvlVec drot;   /* 0x60: the angles' steps (x y z) */
+    OvlVec vel;    /* 0x70: the fall (y only) */
+    f32 tu[4];     /* 0x80: the corners' texture u */
+    f32 tv[4];     /* 0x90: and v (1 - grid y) */
+    f32 start;     /* 0xA0: D_00F311C4's time it starts to fall */
+    u8 padA4[0xB0 - 0xA4];
+} DhShard;
+
+extern DhShard D_00F317F0[2500];
+
 
 f32 func_00f20020(void);
 void func_00f20798(DhShard *, s32, f32 *);
@@ -17,13 +34,12 @@ extern f32 D_00FA2400;
 void func_00f20820(DhShard *s, s32 row, s32 col) {
     f32 d[2];
     s32 k;
-    f32 a, b;
+    f32 b;
     func_00f20798(s, 0, D_00F9CEB0[row][col]);
     func_00f20798(s, 1, D_00F9CEB0[row + 1][col]);
     func_00f20798(s, 2, D_00F9CEB0[row][col + 1]);
     func_00f20798(s, 3, D_00F9CEB0[row + 1][col + 1]);
-    a = func_00f20020() * 50.0f;
-    s->c[0] = ((row + 0.5f) * 30.0f - 750.0f) + a - 25.0f;
+    s->c[0] = ((row + 0.5f) * 30.0f - 750.0f) + func_00f20020() * 50.0f - 25.0f;
     s->c[1] = 0.0f;
     b = func_00f20020() * 50.0f;
     s->c[2] = ((col + 0.5f) * 30.0f - 750.0f) + b - 25.0f;
