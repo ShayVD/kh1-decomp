@@ -1,4 +1,6 @@
-/* 2 words left: li s2,1 should fill the beqz s0 delay slot; tried inline-helper variants; 10-min permuter gave no output */
+/* wm.x func_00f38bf8: matched by hand. */
+#include "ovl.h"
+
 typedef struct { s32 v[5]; } T38bf8;
 typedef struct { u8 pad[0x18]; s32 k; s32 x; s32 y; } S38bf8;
 extern T38bf8 D_00FB7010;
@@ -7,7 +9,7 @@ void func_00f20b08(s32, s32);
 s32 func_00f20ac8(void);
 f32 func_00f20ad8(void);
 void func_001bfac8(void);
-void func_00f387a8(s32, S38bf8 *);
+CONTEXT_ONLY void func_00f387a8(s32 a0, S38bf8 *a1) {}
 void func_00f38630(s32, S38bf8 *);
 void func_00f38a38(f32, f32);
 
