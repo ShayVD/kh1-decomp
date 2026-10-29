@@ -738,9 +738,12 @@ class Prog:
                 call = f"vu_op(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], acc, {int(not ca)}, {int(not cb)}, {int(not cc)});"
             else:
                 cb = (up.tsrc[0] == "bc" and C & B(up.ft, up.tsrc[1])) or up.tsrc[0] == "q"
-                b = {"bc": f"&vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": "&" + self.qname(info["q_in"]),
-                     "i": "&i_reg"}[up.tsrc[0]]
-                call = f"vu_opb(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {int(not ca)}, {int(not cb)}, {int(not cc)});"
+                if up.tsrc[0] == "bc":  # session 147: the field from the VF's vector (vu1.c vu_opbl)
+                    call = (f"vu_opbl(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], {up.tsrc[1]}, acc, {int(not ca)}, "
+                            f"{int(not cb)}, {int(not cc)});")
+                else:
+                    b = {"q": "&" + self.qname(info["q_in"]), "i": "&i_reg"}[up.tsrc[0]]
+                    call = f"vu_opb(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {int(not ca)}, {int(not cb)}, {int(not cc)});"
             direct = up.dest == 0xF and up.to and not self.lower_touches(lw, up.to)
             if direct:  # nothing in the lower reads or writes the target: straight into it
                 o.append(f"    {{ u32 *u = {dst}; {call} }}")
@@ -768,9 +771,11 @@ class Prog:
             elif up.tsrc[0] == "vf":
                 o.append(f"    if (!vu_ope(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], acc, {up.dest:#x}, {mp})) {{")
             else:
-                b = {"bc": f"&vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": "&" + self.qname(info["q_in"]),
-                     "i": "&i_reg"}[up.tsrc[0]]
-                o.append(f"    if (!vu_opbe(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {up.dest:#x}, {mp})) {{")
+                if up.tsrc[0] == "bc":
+                    o.append(f"    if (!vu_opbel(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], {up.tsrc[1]}, acc, {up.dest:#x}, {mp})) {{")
+                else:
+                    b = {"q": "&" + self.qname(info["q_in"]), "i": "&i_reg"}[up.tsrc[0]]
+                    o.append(f"    if (!vu_opbe(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {up.dest:#x}, {mp})) {{")
             for f in fields(up.dest):
                 a = f"fin(vf[{up.fs}][{f}])" if up.tsrc[0] != "op" else f"fin(vf[{up.fs}][{(1, 2, 0)[f]}])"
                 if up.tsrc[0] == "bc": b = f"fin(vf[{up.ft}][{up.tsrc[1]}])"
@@ -832,7 +837,7 @@ class Prog:
                     commit.append(f"    vf[{up.to}][{f}] = u{f};")
             commit.append("    }")
         elif up.op == "clip":
-            o.append(f"    clip_last = clipw(vf[{up.fs}], vf[{up.ft}][3]);")
+            o.append(f"    clip_last = vu_clipw(vf[{up.fs}], vf[{up.ft}]);")
             o.append(f"    {self.clipname(info['fw'])} = clip_last;")
         if hi >> 31 & 1:
             o.append(f"    i_reg = {lo:#x}u;")

@@ -959,6 +959,32 @@ frame, so a chain on a lower coroutine's stack was refused and the rest of its s
 wrong on screen). It now owns the whole pool too (`kh1_costack_owns`). Not seen on the x86 host or the ARM Linux
 build, whose stacks are malloc'd. **Not yet checked on a Vita** (3d-zi): the `log:` line's bad DMA sends.
 
+## The VU1 programs on the Vita, timed (session 147)
+
+The watchdog now prints `vu1 programs:` (host/vita/main.c, from vu1.c's `kh1_vu1_prog_stats`): the four
+translated programs that took the most of the window, with their runs, instruction pairs and time per pair.
+3d-zj in the Dive, per 2 s: P0 ~420-530 ms at ~73 ns a pair (~32 A9 cycles), P11 / P18 ~160-260 ms at 33-52 ns,
+P4 ~100 ms at ~52 ns; VU1 ~750-1,000 ms in all. P0 is over half of it, and twice the cost a pair of the others.
+
+What the A9 pays for in P0's compiled code (`arm-vita-eabi-objdump` of tr_0): every FMAC stored its result with
+`vst1q` and the next read it back with `vld1q` (a MULA / MADDA chain through ACC: the NEON load waits for the
+store), and a broadcast field or CLIPw's fields were core loads of a word NEON had just stored. Three changes, the
+output the same:
+
+- **The registers as plain vector memory** (vu1.c `VU_LD` / `VU_ST`, a `uint32x4_t` with `aligned(4)` and
+  `may_alias`) instead of the intrinsics, which gcc cannot see through: a value one FMAC writes stays in its NEON
+  register for the next. tr_0: 9,700 instructions to 8,880, its NEON loads / stores of a whole register 1,113 to
+  224, core loads 1,083 to 553.
+- **A broadcast field from the vector** (`vu_opbl` / `vu_opbel`, `vdupq_lane`): the translator passes the VF and
+  the field; Q and I, which the core writes, keep `vu_opb`.
+- **CLIPw on NEON** (`vu_clipw`): fkey's magnitude compared unsigned with w's, the sign picking the bit, one
+  transfer of the six bits to the core.
+
+Checked: tests/host/vu1neon_test.c adds vu_opbl against the session 141 form on every lane and vu_clipw against
+clipw (2M cases each, ties of w with a field among them); the worker-order run with VU1 to frame 6500 gives the
+same 130 digests and VU1 counts as main's on x86 and on the ARM build under qemu. **Not yet measured on a Vita**
+(3d-zk): the `vu1 programs:` line's ns a pair for P0.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

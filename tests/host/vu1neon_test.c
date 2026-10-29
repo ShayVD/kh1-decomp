@@ -4,7 +4,7 @@
  * answers 1, every field of dest and the MAC bits must equal the scalar form's; where it answers 0, the
  * caller runs the scalar form.  Session 147: also vu_op / vu_opb (the FMACs' usual form) against their
  * session 141 form, kept here verbatim (old_*), bit for bit on every lane (their fin() / fout() clamps
- * changed), and vu_put against the field copy it replaced.  Meaningful on ARM with NEON (tests/selftest.sh: arm-linux-gnueabihf-gcc
+ * changed; vu_opbl takes the broadcast field from the vector), and vu_put against the field copy it replaced.  Meaningful on ARM with NEON (tests/selftest.sh: arm-linux-gnueabihf-gcc
  * -mfpu=neon under qemu-arm, when both are there); elsewhere vu_ope always answers 0. */
 #include "common.h"
 #include "../../host/port/vu1.c"
@@ -95,9 +95,16 @@ static u32 op_check(u32 n) {
             put[f] = ref[f] = rnd();
         }
         if (bc) {
-            u32 bb[4] = { b[1], b[1], b[1], b[1] };
+            u32 l = rnd() & 3, bb[4];
+            bb[0] = bb[1] = bb[2] = bb[3] = b[l];
             old_vu_op(t0, k, a, bb, c, fa, fb, fc);
-            vu_opb(t1, k, a, &b[1], c, fa, fb, fc);
+            if (rnd() & 1) vu_opb(t1, k, a, &b[l], c, fa, fb, fc);
+            else switch (l) { /* vu_opbl's lane is a constant where vu1_tr.c calls it */
+                case 0: vu_opbl(t1, k, a, b, 0, c, fa, fb, fc); break;
+                case 1: vu_opbl(t1, k, a, b, 1, c, fa, fb, fc); break;
+                case 2: vu_opbl(t1, k, a, b, 2, c, fa, fb, fc); break;
+                default: vu_opbl(t1, k, a, b, 3, c, fa, fb, fc); break;
+            }
         } else {
             old_vu_op(t0, k, a, b, c, fa, fb, fc);
             vu_op(t1, k, a, b, c, fa, fb, fc);
@@ -111,7 +118,16 @@ static u32 op_check(u32 n) {
             printf("vu1neon_test: vu_op%s k %d fa %d fb %d fc %d field %u: old %08x new %08x put %08x / %08x\n", bc ? "b" : "",
                    k, fa, fb, fc, f, t0[f], t1[f], put[f], ref[f]);
     }
-    printf("vu1neon_test: vu_op / vu_opb / vu_put, %u cases, %u differ\n", n, bad);
+    for (i = 0; i < n; i++) { /* vu_clipw against clipw */
+        u32 a[4], t[4], x, y;
+        for (f = 0; f < 4; f++) { a[f] = val(); t[f] = val(); }
+        if (rnd() % 4 == 0) t[3] = a[rnd() % 3] ^ (rnd() & 0x80000000u); /* ties with a field */
+        clip_last = rnd();
+        x = clipw(a, t[3]);
+        y = vu_clipw(a, t);
+        if (x != y && bad++ < 10) printf("vu1neon_test: clipw %08x %08x %08x w %08x: %06x, vu_clipw %06x\n", a[0], a[1], a[2], t[3], x, y);
+    }
+    printf("vu1neon_test: vu_op / vu_opb / vu_opbl / vu_put / vu_clipw, %u cases, %u differ\n", n, bad);
     return bad;
 }
 #else
