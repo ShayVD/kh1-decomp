@@ -420,3 +420,26 @@ Rebased onto origin/claude/project-thread-rl45wv.
 - func_00f7ad38: first draft, score 524 (saved). It is f7a350's sibling. The colour bytes need (s32) truncation,
   and id must be u32. hill2 does not help here, because the 24 extra bytes misalign the word count. No gb twin by
   size.
+
+## Round 25
+
+The last three high-half functions now have structurally complete drafts (time-boxed). All are saved as near
+misses.
+- func_00f71b68: score 660 (3904 vs 3848 bytes). It is the swap/delete list editor: an empty-list wait, a mode-1
+  swap-select, a mode-2 delete and a re-find step, then cleanup. The 4-byte S2 icon pair is copied from
+  D_00FBA128 (lwl/lwr). The remaining diffs are block placement (the wait loop and the end block). The gb twin
+  f4aa70 was ported with portmap2 and also scores 660.
+- func_00f6f2a8: score 835 (4396 vs 4464 bytes). It is the top menu: item count, 3 icons plus a 4th when
+  func_00f6cf78() >= 3, a help window, the pad loop with wrapping navigation, a kind-3 guard dialog, and a 4-way
+  switch that restarts the menu.
+  - Two changes helped. Writing the restart as `for (;;)` with `goto next` instead of a goto label let gcc hoist
+    the 0.0f constant (1028 -> 897), because loop.c only sees syntactic loops. Typing the tables as s16 and
+    D_00FB4B70 as s32 also helped; gcc narrows that load to lhu itself.
+  - What is left: 128.0f is not hoisted into f21 at entry, the original keeps &icons in s8 (an `ip = icons` base
+    did not reproduce this), and gcse's sel*2 slot is at sp7C. The gb twin f481b0 was ported, score 837.
+- func_00f7de08: score 897 (3868 vs 3792 bytes). It is the panel draw: backdrop, gradient quads, title, name and
+  option-list GIF packets, and the selected-row highlight. The logic is complete. Alpha scaling forms:
+  - a*10240/12800 compiles to (a*5)<<11 over 12800;
+  - u8 b*77/128 compiles to >>7 with no rounding.
+  What is left is register allocation, because the original caches a*2, a*4, a*5 and a<<8 in stack slots. No
+  gb twin exists (no 3792-byte gb function).
