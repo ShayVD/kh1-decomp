@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 327 -> 303, port.py of the wm twin func_00f49718 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* 217 words / score 327 (1316 vs 1320). Logic complete (endless frame loop: two sprites from D_00F61880[31/32 or 33/34] plus closing packet, then func_00f32a38/func_001efaf0/func_001bfac8). Switch needs case 0 to get the orig slti tree; orig puts show = 0 in the default path delay slot (ours hoists it before the switch). Orig loads table fields w, v, h, u in that order; locals for them made the switch shape regress (399). No more variants tried. */
 typedef struct { u8 pad0[0x2200]; u64 tex[1]; } GbWorld;
 typedef struct { s16 idx; s16 pad2; s32 u; s32 v; s32 w; s32 h; } GbTbl;
@@ -22,14 +23,14 @@ void func_00f3fa98(u64 *);
 void func_00f3fe80(s32, u64 *);
 u64 *func_00f22438(u64 *, s32, s32, s32, s32);
 void func_00f32a38(u64 **, s32, s32);
-void func_001efaf0(void);
+void func_001efaf0(void); CONTEXT_ONLY void func_001efaf0() {}
 void func_001bfac8(void);
 
 void func_00f22620(void) {
     s32 a, b;
-    s32 show;
-    u64 *p;
     s32 u, v, x1, y1, x2, y2;
+    u64 *p;
+    s32 show;
     for (;;) {
         if (D_00F56D88 == 0) {
             show = D_00F56D8C;
@@ -41,14 +42,14 @@ void func_00f22620(void) {
             case 0:
                 break;
             case 1:
+                show = 1;
                 a = 31;
                 b = 32;
-                show = 1;
                 break;
             case 2:
                 a = 33;
-                b = 34;
                 show = 1;
+                b = 34;
                 break;
             }
         }
@@ -62,24 +63,24 @@ void func_00f22620(void) {
             if (D_00F56D88 == 0)
                 p = func_00f22438(p, D_00F74270, D_00F74274, D_00F74278, D_00F7427C);
             if (show) {
-                u = D_00F61880[a].u;
                 v = D_00F61880[a].v;
-                x1 = D_00F61880[a].u + D_00F61880[a].w + 1;
-                y1 = D_00F61880[a].v + D_00F61880[a].h + 1;
-                x2 = D_00F61880[a].w + 82;
                 y2 = D_00F61880[a].h + 25;
+                u = D_00F61880[a].u;
+                x2 = D_00F61880[a].w + 82;
+                y1 = D_00F61880[a].v + D_00F61880[a].h + 1;
+                x1 = D_00F61880[a].u + D_00F61880[a].w + 1;
                 p = func_00f3fa80(p);
                 p[0] = 0;
                 p[1] = 20;
                 p += 2;
-                p[0] = 0x30000;
                 p[1] = 71;
+                p[0] = 0x30000;
                 p += 2;
                 p[0] = 0;
                 p[1] = 24;
                 p += 2;
-                p[0] = 68;
                 p[1] = 66;
+                p[0] = 68;
                 p += 2;
                 p[0] = D_00F56DC0->tex[a];
                 p[1] = 6;
@@ -87,34 +88,34 @@ void func_00f22620(void) {
                 p[0] = 342;
                 p[1] = 0;
                 p += 2;
-                p[0] = 0x3F8000004D808080;
                 p[1] = 1;
+                p[0] = 0x3F8000004D808080;
                 p += 2;
+                p[1] = 3;
                 p[0] = (u << 4) | ((u64)(v << 4) << 16);
-                p[1] = 3;
                 p += 2;
+                p[1] = 5;
                 p[0] = 0x101900520;
-                p[1] = 5;
                 p += 2;
-                p[0] = (x1 << 4) | ((u64)(y1 << 4) << 16);
                 p[1] = 3;
+                p[0] = (x1 << 4) | ((u64)(y1 << 4) << 16);
                 p += 2;
-                p[0] = (x2 << 4) | ((u64)(y2 << 4) << 16) | 0x100000000;
                 p[1] = 5;
+                p[0] = (x2 << 4) | ((u64)(y2 << 4) << 16) | 0x100000000;
                 p += 2;
                 func_00f3fa98(p);
                 u = D_00F61880[b].u + 1;
-                v = D_00F61880[b].v + 1;
                 x1 = u + D_00F61880[b].w;
-                y1 = v + D_00F61880[b].h;
-                x2 = D_00F61880[b].w + 82;
                 y2 = D_00F61880[b].h + 25;
+                x2 = D_00F61880[b].w + 82;
+                v = D_00F61880[b].v + 1;
+                y1 = v + D_00F61880[b].h;
                 p = func_00f3fa80(p);
                 p[0] = 0;
                 p[1] = 24;
                 p += 2;
-                p[0] = 0x8000000048;
                 p[1] = 66;
+                p[0] = 0x8000000048;
                 p += 2;
                 p[0] = D_00F56DC0->tex[b];
                 p[1] = 6;
@@ -125,8 +126,8 @@ void func_00f22620(void) {
                 p[0] = 0x3F80000038808080;
                 p[1] = 1;
                 p += 2;
-                p[0] = (u << 4) | ((u64)(v << 4) << 16);
                 p[1] = 3;
+                p[0] = (u << 4) | ((u64)(v << 4) << 16);
                 p += 2;
                 p[0] = 0x101900520;
                 p[1] = 5;
@@ -137,8 +138,8 @@ void func_00f22620(void) {
                 p[0] = (x2 << 4) | ((u64)(y2 << 4) << 16) | 0x100000000;
                 p[1] = 5;
                 p += 2;
-                p[0] = 68;
                 p[1] = 66;
+                p[0] = 68;
                 p += 2;
                 p[0] = 0x740000007000;
                 p[1] = 24;
@@ -146,8 +147,8 @@ void func_00f22620(void) {
                 p[0] = 0x5000D;
                 p[1] = 71;
                 p += 2;
-                p[0] = 96;
                 p[1] = 20;
+                p[0] = 96;
                 p += 2;
                 func_00f3fa98(p);
             }
