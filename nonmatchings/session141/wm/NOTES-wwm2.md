@@ -375,3 +375,18 @@ Rebased onto origin/claude/project-thread-rl45wv.
   the same size (1992 bytes) and is probably its twin.
 - func_00f74f30: first draft, score 290 (saved). Both count loops match, including the empty loop that ee-gcc pads
   with nops. The window calc becomes movn here, while the original uses a branch-likely; see the header.
+
+## Round 22
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- gb ports, both near misses at the same score as wm: f46718 (score 236, from f6d810) and f4de38 (score 290,
+  from f74f30). For f4de38 the m2c token lists do not line up, so plain zip fails. /tmp/.../wwm3/portmap2.py
+  builds the map from prefix plus suffix alignment instead. Hand-mapped: D_00F704FC, D_00F829D4.
+- hill.py (line-order hill climber) on f74a28 ran 600 s with blocks of decls, c[] pairs and selx/sely: 2549
+  tries, still 5 words. On f72f40 (decls, setup, the call args and clear-loop blocks) it ran 600 s: 2624 tries,
+  still 8 words. Statement order alone does not fix either one.
+- func_00f6cfa0: first draft, score 216 (saved). Notes in the header. The jump table spans 1..9, so the switch
+  needs explicit `case 1: case 2: case 7: case 8:` labels (476 -> 216 together with the other fixes). The
+  navigation loop is a for loop with the confirm check in its condition (comma expression).
+- func_00f6ae68: first draft, score 245 (saved). The jump table was read from wm.elf at 0x00FBA0A0 (rdw.py in the
+  same scratch dir).
