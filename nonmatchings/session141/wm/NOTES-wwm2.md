@@ -176,3 +176,23 @@ No matches.
   reproduces most of the frame.
 - func_00f78458: no gain. I tried every position for the -8 store and duplicate stores; it stays at score 13.
 - f63d18 and f70418: large packet and menu builders, looked at only. f64d48, f639c0 and f69aa8 not reached.
+
+## Round 10
+
+None of f64d48, f639c0, f69aa8 or f63d18 has a gb twin draft (twins f3dc50, f3c8c8, f429b0, f3cc20).
+
+Matched: func_00f64d48, an animation curve evaluator (pre/post infinity modes, key scan, lerp/Hermite).
+- Two switches have a `case 0:` that shares the default (this gives the slti <2 test). Put the post-infinity and
+  interpolation switches' `case 0: default:` first, so their return blocks sit right after the dispatch.
+- Keep the key times in an f32 `ts` that the cycle loops compare against. Without it, a mov.s copy appears.
+- Final step came from the permuter: in pre-infinity linear mode, write `kp = k; k2 = kp + 1; k1 = k2;` with a
+  separate `CKey *k2` declared after `dt`. That gives the `move a1,a2` copy and the right a2/a3/t0 registers.
+
+Near misses saved:
+- func_00f639c0 (score 5): menu text builder, same type table as f67928. Permuter: `r = 100 + i * 24;` as the
+  y argument. An s64 temp for the second qword's y part gets 4 words (score 7). Left: one addiu's position and
+  a move/lui swap.
+- func_00f69aa8 (score 43, registers only): picture viewer loop. Use `nb++; nb &= 1;`, because (nb+1)&1 becomes
+  xori. Load w/h/bpp before the func_00f471a0 call. Not permuted yet: worth a -j1 run.
+
+f63d18 not reached.
