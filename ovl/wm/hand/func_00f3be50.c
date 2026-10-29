@@ -1,4 +1,5 @@
-/* 135 words by address but about 8 after alignment (round 13). Logic is complete. Keys: func_00f62ea0 is (f32 t, f32 *out, s32 id) and takes k->f0; the visibility vector is m[3] (sp80), not its own local; the function ends with func_00f3bde8(). Left: delay-slot fill in the second switch (target puts move t0,s6 in the beqz-to-case-0 slot and its continue path is b L424; lw n), one bne vs bnel at the (u16)(q->h2 - 3) < 2 test, and the order of the func_00f35398 call. Tried: case 0 passing k->kind, a default: continue, continue instead of break. */
+/* wm.x func_00f3be50: matched by hand (session 141, wwm1 round 17): a CONTEXT_ONLY func_00f3b118 and func_00f3b370 above it. A call to a function defined earlier in the file is nothrow, which changes reorg's branch-likely choice (docs/overlays.md, "Branch-likely vs plain branch"). */
+#include "ovl.h"
 typedef struct { s32 id; s32 a; s32 b; f32 val; f32 v2; s32 dir; } Sub;
 typedef struct { f32 m0[4][4]; f32 m1[4][4]; f32 m2[4][4]; f32 m3[16][4][4]; f32 m4[2][4][4]; Sub s; u8 pad2[0x590 - 0x558]; } W;
 typedef struct { f32 f0; u8 kind; u8 pad5; u16 flag; f32 f8; f32 f12; f32 f16; f32 f20; f32 f24; f32 f28; u16 h32; u16 pad34; f32 pad36; f32 f40; f32 f44; f32 f48; f32 f52; f32 f56; f32 f60; } K;
@@ -12,8 +13,9 @@ K *func_00f3f260(s32, s32);
 s32 func_00f37170(K *);
 Q *func_00f62c78(s32, s32);
 s32 func_00f3b370(void);
+CONTEXT_ONLY s32 func_00f3b370() { return 0; }
 f32 (*func_00f3bc48(s32))[4];
-void func_00f3b118(s32, s32, s32, Q *, f32 (*)[4], f32 *);
+CONTEXT_ONLY void func_00f3b118(s32 a0, s32 a1, s32 a2, Q * a3, f32 (*a4)[4], f32 * a5) {}
 void func_00f62ea0(f32, f32 *, s32);
 void func_00f62c98(f32 *, s32, s32, f32);
 void func_001becb8(f32 (*)[4], f32 *, s32);
