@@ -256,3 +256,37 @@ for f5d498, f3a030, f3a0f0.
   UVs.
 - f24380 stays at 24 words: the same s-reg permutation (idx/h) shows up in
   every order, declaration order and form I tried.
+
+## Round 7 (rebased onto origin/claude/project-thread-rl45wv)
+
+Matched (11): f58140, f58300, f41660, f42a38, f42860, f446a0, f204d8,
+f39220, f21c48, f5d6b0, f43ae0 (and f58300 replaced its old near miss).
+Near misses: f47610 (2), f45e68 (27), f4fba0 (62), f28258 (90),
+f3a640 (127).
+
+### Round 7 tips
+
+- **Hill-climb statement order** (hill.py OVL FUNC src secs seed a b [a b]):
+  random swaps/moves inside 1-based line blocks, keep when the word count
+  does not get worse. f43ae0 went 20 -> 0 in 838 tries (8 min) after 250
+  plain random orders had failed; f45e68 went 54 -> 27 together with
+  mixed access forms. Use it before the permuter for any ordering-only
+  diff.
+- **Store-order diffs are not a simple reversal:** GCC's scheduler
+  reorders runs of independent stores (f21c48, f5d6b0, f43ae0). Brute-force
+  the permutations of the block (24-120 files) instead of reasoning it out.
+- **RGBAQ colour components:** pointer copies in the target come from u8
+  locals declared in reverse (b2, g, r) (f58140). Strength-reduced givs:
+  write `i * 93 / 40` instead of keeping an accumulator (f58300).
+- **Globals with addresses in s-registers** come from
+  `static inline void alloc(s32 *p, s32 size, s32 align)`, mixed with
+  direct stores (f204d8, f47610).
+- **An unused local struct** fixes the frame size (f43ae0).
+- **Packet pointer updated in place** (`p += 2; p = f(..., p)`) instead of a
+  second `q` keeps it in the right register (f5d6b0). Write the GIF header
+  through a union `{ kh1_u128 q; u32 w[4]; }`: clear `q`, then store the
+  words.
+- `x - 100.0f` folds to an add of the stored -100 constant only when you
+  write `x + -100.0f` (f5d6b0).
+- f39220: a twin of f39708; `arg0->pos[k] = d[k] = ...` keeps the scratch
+  vector in memory.
