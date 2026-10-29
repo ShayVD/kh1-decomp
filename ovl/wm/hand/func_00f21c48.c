@@ -1,0 +1,85 @@
+/* wm.x func_00f21c48: matched by hand. */
+#include "ovl.h"
+
+extern s32 D_003773EC;
+extern void *D_003773DC, *D_003773E0, *D_003773E4;
+extern s32 D_00F87308, D_002C1360, D_00F85098, D_00F8C23C, D_00F85088, D_00F850CC;
+extern f32 D_002C1320[], D_002C1330[];
+extern s32 D_00F850D0, D_00F9B2EC, D_00FBA800, D_00F850BC, D_00F850D4, D_00F850D8;
+extern s32 D_002BC148, D_00F850DC, D_002BBE0C, D_00F850F8;
+extern f32 D_00FBA900[4][4], D_00FBA880[4][4], D_00F85200[4][4], D_00F85180[4][4];
+void func_00112e98(void);
+void func_00f2c848(void);
+void func_00f2c2d8(void);
+void func_00f2c2f0(void);
+void func_001bade8(void);
+void func_00f640e8(void);
+void func_00f21e78(void);
+void func_00f3f2d0(f32);
+void func_00f2abe8(s32, s8);
+void func_001bb438(void);
+s32 func_001bfec8(void);
+s32 func_001bb500(s32, s32);
+void func_001bfe50(s32);
+void func_001bfc90(s32);
+void func_00f203c8(void);
+void func_00f21600(void);
+void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
+void func_001bb858(void *, void *);
+void func_00f68170(void);
+void func_0011ef10(s32, void *);
+void func_00f218e8(void);
+void func_00f66e98(void);
+void func_00f21bc8(void);
+s32 func_001c00e8(s32, void *, kh1_u128);
+
+void func_00f21c48(void) {
+    s32 v;
+
+    if (D_003773EC) func_00112e98();
+    D_003773DC = func_00f2c848;
+    D_003773E0 = func_00f2c2d8;
+    D_003773E4 = func_00f2c2f0;
+    D_003773EC = 0;
+    D_00F87308 = 0;
+    func_001bade8();
+    func_00f640e8();
+    D_002C1320[0] = -7500.0f;
+    D_002C1320[1] = 0.0f;
+    D_002C1320[2] = 1500.0f;
+    D_002C1330[0] = 7500.0f;
+    D_002C1330[1] = 0.0f;
+    D_002C1330[2] = 1500.0f;
+    D_002C1360 = 10000;
+    D_00F85088 = 0;
+    D_00F850CC = 0;
+    D_00F8C23C = 0;
+    D_00F85098 = 0;
+    func_00f21e78();
+    D_00F9B2EC = 0;
+    D_00FBA800 = 0;
+    D_00F850BC = 0;
+    D_00F850D0 = -1;
+    D_00F850D4 = 0;
+    D_00F850D8 = -1;
+    func_00f3f2d0(1.0f);
+    v = D_002BC148;
+    if (v < 0) v = 0;
+    D_00F850D8 = v;
+    D_002BBE0C = 1;
+    D_00F850DC = 1;
+    D_00F850F8 = 0;
+    func_00f2abe8(25, D_00F850D8);
+    func_001bb438();
+    func_001bfe50(func_001bb500(func_001bfec8(), 16));
+    func_001bfc90(1);
+    func_00f203c8();
+    func_00f21600();
+    sceVu0CopyMatrix(D_00FBA900, D_00F85200);
+    sceVu0CopyMatrix(D_00FBA880, D_00F85180);
+    func_001bb858(D_00FBA900, D_00FBA880);
+    func_00f68170();
+    func_0011ef10(0x1D4C1, func_00f218e8);
+    func_00f66e98();
+    func_001c00e8(-1, func_00f21bc8, 0);
+}
