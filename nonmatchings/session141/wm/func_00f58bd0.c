@@ -1,4 +1,4 @@
-/* 206 words left (round 12): 40-frame palette crossfade with sound (sibling of func_00f58748). Target hoists D_00379F28, D_0037A028 and &D_00F9B540 into s5..s7 and keeps dir, spd and to on the stack (frame 144 vs our 160). We do not hoist, and we keep c1+1 and c1+2 live instead. */
+/* 190 words, score 289 (964 vs 968; was 206/309). Round 33 wwm2: hill2 (c[5] before c[4] in the loop, c[0] last in the tail block); ctx2 and interleave give nothing. Earlier header: 206 words left (round 12): 40-frame palette crossfade with sound (sibling of func_00f58748). Target hoists D_00379F28, D_0037A028 and &D_00F9B540 into s5..s7 and keeps dir, spd and to on the stack (frame 144 vs our 160). We do not hoist, and we keep c1+1 and c1+2 live instead. */
 typedef struct { u8 pad[64]; u8 c[8]; } G58bd0;
 typedef struct { s8 t[40]; } T58bd0;
 extern G58bd0 *D_00F9B540;
@@ -49,9 +49,9 @@ void func_00f58bd0(s32 dir) {
         D_00F9B540->c[0] = D_00379F28[c0] + (D_00379F28[c1] - D_00379F28[c0]) * i / 40;
         D_00F9B540->c[1] = D_00379F28[c0 + 1] + (D_00379F28[c1 + 1] - D_00379F28[c0 + 1]) * i / 40;
         D_00F9B540->c[2] = D_00379F28[c0 + 2] + (D_00379F28[c1 + 2] - D_00379F28[c0 + 2]) * i / 40;
-        D_00F9B540->c[4] = D_0037A028[c0] + (D_0037A028[c1] - D_0037A028[c0]) * i / 40;
-        D_00F9B540->c[5] = D_0037A028[c0 + 1] + (D_0037A028[c1 + 1] - D_0037A028[c0 + 1]) * i / 40;
         D_00F9B540->c[6] = D_0037A028[c0 + 2] + (D_0037A028[c1 + 2] - D_0037A028[c0 + 2]) * i / 40;
+        D_00F9B540->c[5] = D_0037A028[c0 + 1] + (D_0037A028[c1 + 1] - D_0037A028[c0 + 1]) * i / 40;
+        D_00F9B540->c[4] = D_0037A028[c0] + (D_0037A028[c1] - D_0037A028[c0]) * i / 40;
         func_00f59820(7, spd + h);
         if (dir) h = (39 - i) / 2;
         if (tbl.t[h] >= 0) {
@@ -59,11 +59,11 @@ void func_00f58bd0(s32 dir) {
         }
         func_001bfac8();
     }
-    D_00F9B540->c[0] = D_00379F28[c1];
     D_00F9B540->c[1] = D_00379F28[c1 + 1];
     D_00F9B540->c[2] = D_00379F28[c1 + 2];
     D_00F9B540->c[4] = D_0037A028[c1];
     D_00F9B540->c[5] = D_0037A028[c1 + 1];
+    D_00F9B540->c[0] = D_00379F28[c1];
     D_00F9B540->c[6] = D_0037A028[c1 + 2];
     func_00f551a8();
 }

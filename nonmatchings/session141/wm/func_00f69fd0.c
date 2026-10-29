@@ -1,4 +1,4 @@
-/* score 184. Init function: around 30 global stores, sceGsSyncPath, func_001be278, then a one-time block that loads a module via func_0024b778/func_0024b7a0 and registers four callbacks through o->fn. The original preloads 1 (s8) and 128 (s3) into saved registers before sceGsSyncPath, so the 128 and 1 constants are probably shared variables. The store schedule is still far off. */
+/* 113 words, score 183 (732 vs 736; was 148/184). Round 33 wwm2: hill2 moved `D_0108F25C = D_00FB4F50.xC` and `D_00FB4EB8 = 0` within the init block; ctx2 gives nothing. Earlier header: score 184. Init function: around 30 global stores, sceGsSyncPath, func_001be278, then a one-time block that loads a module via func_0024b778/func_0024b7a0 and registers four callbacks through o->fn. The original preloads 1 (s8) and 128 (s3) into saved registers before sceGsSyncPath, so the 128 and 1 constants are probably shared variables. The store schedule is still far off. */
 typedef struct { void *x0; void *x4; void (*fn)(void (*)(void), s32, s32); } Obj;
 typedef struct { s32 x0, x4, x8, xC, x10, x14, x18; } Hdr;
 extern s32 D_0108F1B4;
@@ -99,12 +99,12 @@ void func_00f69fd0(s32 a)
     D_00FB4A5C = v;
     if (D_00FB4EBB == 0) {
         func_00f6ad98();
-        D_0108F25C = D_00FB4F50.xC;
         D_00FB4EBB = 1;
         D_0108F254 = 1;
         D_00FB4A50 = 1;
-        D_00FB4EB8 = 0;
+        D_0108F25C = D_00FB4F50.xC;
         D_00FB4EB9 = 0;
+        D_00FB4EB8 = 0;
         D_00FB4EBA = 0;
         sz = func_0024b778(5);
         top = D_00FB4F50.x14;

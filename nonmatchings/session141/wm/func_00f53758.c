@@ -1,4 +1,4 @@
-/* 152 words left (round 12): bounding box of 8 nibble-packed vertices through sceVu0RotTransPers, then a GIF sprite packet. Logic believed right; register allocation differs throughout (try v[] as a flat array or computing corners in the loop). */
+/* 148 words, score 231 (was 152/253). Round 33 wwm2: hill2 moved the x1 line after z1; ctx2 and interleave give nothing. Earlier header: 152 words left (round 12): bounding box of 8 nibble-packed vertices through sceVu0RotTransPers, then a GIF sprite packet. Logic believed right; register allocation differs throughout (try v[] as a flat array or computing corners in the loop). */
 typedef struct { u8 pad[8704]; u64 tex[1]; } G53758;
 extern G53758 *D_00F9B540;
 extern s32 D_00FA6000[];
@@ -23,9 +23,9 @@ u64 *func_00f53758(u16 a, u16 b, f32 (*mat)[4], s32 idx, u64 *p) {
     x0 = (a & 0xF) * 200.0f;
     y0 = -(f32)((a >> 4) & 0xF) * 200.0f;
     z0 = ((a >> 8) & 0xF) * 200.0f;
-    x1 = x0 + (b & 0xF) * 200.0f;
     y1 = y0 - ((b >> 4) & 0xF) * 200.0f;
     z1 = z0 + ((b >> 8) & 0xF) * 200.0f;
+    x1 = x0 + (b & 0xF) * 200.0f;
     v[0][0] = x0; v[0][1] = y0; v[0][2] = z0;
     v[1][0] = x1; v[1][1] = y0; v[1][2] = z0;
     v[2][0] = x0; v[2][1] = y1; v[2][2] = z0;

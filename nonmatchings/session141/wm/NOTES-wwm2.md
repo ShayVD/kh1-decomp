@@ -643,3 +643,32 @@ Lessons:
 - **Big store blocks hide register-allocation gains:** f387a8's header said the s0/s1 and float constant registers were wrong. They were fixed by store order alone, because the order of first use decides which constant gets which register.
 - **Don't copy the original's store order:** writing the blocks in the order the original stores them was much worse (104 words), because the scheduler moves stores anyway. hill2 on the source order is the way in.
 - **Watch the score, not just the word count:** hill2 lowers the word count, but on f4c610 that came with a worse score.
+
+## Round 33 (wwm2, f387a8 and RANKING.md rows 100-130)
+
+No matches.
+
+f387a8 stays at 7 words (score 12). I tried four searches:
+- Every ordered placement of f04, f34 and c in block 1 (5814 builds).
+- Block 1 written in the original's store order (105 words), then a single-move search from there (10 words).
+- Every single swap and move in both blocks, then all pairs of the 60 best edits, within one block and across the two (about 3800 builds).
+
+None goes below 7. Most single edits are neutral, so the search is stuck on a flat stretch. The reason: swapping just the c and f34 stores in block 1 (f34 stores zero) moves the float constants 200.0, 1.0 and -200.0 between f20, f21 and f22. The store order changes how long each constant is live, and so which register it gets. The remaining fix probably needs something outside store order, for example how the constants are introduced. The scripts are bf.py, ps.py and mv.py in /tmp/claude-0/s141/r33/.
+
+Rows 100-130:
+- Skipped for long attempt notes (460 characters or more): f28a68, f77648, f2a708, f73eb0, f26810, f56780, f625f0, f55fe0, f6cfa0, f5f940, f6d810, f6e278, f6ae68, f74f30.
+- No draft left: f57738, f56f30.
+- On the other 15 I ran ctx2 (singles and pairs), interleave.py and hill2 (240 s, on the 12 with independent blocks).
+- ctx2 and interleave changed nothing on any of the 15.
+
+| Function | Before | Now |
+| --- | --- | --- |
+| f69fd0 | 148 words, score 184 | 113, score 183 |
+| f47b60 | 146, score 232 | 138, score 223 |
+| f53758 | 152, score 253 | 148, score 231 |
+| f58bd0 | 206, score 309 | 190, score 289 |
+| f696a0 | 177, score 182 | 173, score 178 |
+
+Not saved:
+- hill2 lowered the word count but raised the score for f22358, f34998, f53af0, f59b30 and f6edd8.
+- No change at all: f4bdf8, f52ab0, f55d78, f5a4f0, f60cf0.

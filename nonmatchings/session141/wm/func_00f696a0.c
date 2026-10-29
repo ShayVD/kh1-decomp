@@ -1,4 +1,4 @@
-/* score 182 (760 vs 752). Sprite setup: uploads image + CLUT via func_00f69278, builds x/y/q/s/t arrays and calls func_00f68ec0. Statements and call args are right. Left: the original computes the 4bpp defaults (w*h/128) before the bpp tests and recomputes w*h in the 8bpp arm (mine CSEs it; if/else-chain, switch and commuted h*w all tried), and it spills psm/c to the stack where mine spills y. */
+/* 173 words, score 178 (was 177/182). Round 33 wwm2: hill2 over the bpp branches and the s/t stores; ctx2 and interleave give nothing. Earlier header: score 182 (760 vs 752). Sprite setup: uploads image + CLUT via func_00f69278, builds x/y/q/s/t arrays and calls func_00f68ec0. Statements and call args are right. Left: the original computes the 4bpp defaults (w*h/128) before the bpp tests and recomputes w*h in the 8bpp arm (mine CSEs it; if/else-chain, switch and commuted h*w all tried), and it spills psm/c to the stack where mine spills y. */
 typedef struct { u8 r, g, b, a; } Rgba;
 extern u64 *D_0108F248;
 extern s32 D_0108F25C;
@@ -23,13 +23,13 @@ void func_00f696a0(u32 img, u32 clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, Rgba 
     if (bpp != 4) {
         if (bpp == 8) {
             psm = 19;
-            cw = 16;
             ch = 16;
             off = w * h / 64;
+            cw = 16;
         } else {
-            psm = 0;
             ch = 0;
             cw = 0;
+            psm = 0;
             off = 0;
         }
     }
@@ -57,13 +57,13 @@ void func_00f696a0(u32 img, u32 clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, Rgba 
     for (n = 2; n < h; n *= 2)
         ;
     v = (f32)(h - 1) / (f32)n;
-    s[0] = 1.0f;
+    t[2] = v;
     t[0] = v;
+    s[1] = 1.0f;
+    s[0] = 1.0f;
+    s[2] = 0;
+    t[1] = 0;
     s[3] = 0;
     t[3] = 0;
-    s[2] = 0;
-    t[2] = v;
-    s[1] = 1.0f;
-    t[1] = 0;
     func_00f68ec0(xs, ys, un, q, w, n, s, t, psm, off, c, alpha, flag, test);
 }
