@@ -53,3 +53,4 @@ Rules: a function counts only when `make ovl` is byte-identical and `make ovl-re
 |---|---|---|---|
 | start | 2026-10-28 | 1532 / 2122 | |
 | batch 1 | 2026-10-28 | 1590 / 2114 | autodecomp rerun (0 new), dktitle func_00f21068, dkmovie 6 MMI routines as asm, gb/wm main state machine (layout fixed: its switch cases were split off), xs_simba complete (4 by hand), xs_dumbo +4, xs_genie +1, workers: gb +12, wm +8, 12 wm twins via portall.py. Near misses: nonmatchings/session141/. |
+| batch 2 | 2026-10-29 | 1662 / 2114 | gb +15 by hand and by the gb worker (each with its wm twin where one exists), wm +50 (two wm workers, twins via portall.py), dkmovie +0 (5 drafts within 7-51 words), xs_mushu func_00f20c58, xs_dh_break +1 (old draft in nostrict mode), xl_limit func_00f20e10, xs_genie +3. gb VU0 / sq functions f3e0d8, f41dc8 (15 words), f24780 left as near misses. |
