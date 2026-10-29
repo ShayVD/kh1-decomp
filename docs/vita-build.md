@@ -780,6 +780,31 @@ the gxmcheck binary) gives the same 130 GS digests and the same GPU target hashe
 and its 4,758 shots byte-identical; tests/host/ring_test.c checks the kept slot. **Not yet measured on a Vita**
 (3d-ze): the `split` line's wait for the GS worker and the `gpu thread` line's waits should fall.
 
+## The title's backdrop on the GPU thread (session 146, 2026-10-29)
+
+A Vita log of #171's build (Shay's, English disc): the title ran at 60 fps until the art came up (frame ~1160),
+then at ~13 (~30 frames per 2.3 s). The GPU thread was busy the whole window (~2,230 ms of ~2,250), ~1,705 ms of
+it in gxm.c's draw part (programs, textures, sceGxmDraw) for only ~57 draws a frame, with 0 GS memory pages
+copied (nothing the frame stored changed). The cost was `tex_loose`: the title's full-screen CT24 layer at
+0x0E00 lies in the depth buffer's pages, which the frame's Z target marks drawn every frame, and a draw's mark
+moves a page's stamp (gsmem.c `kh1_gsmem_draw`). So each frame the loose entry's stamp missed and the layer was
+read back from the frame copy and converted again, and `kh1_gsmem_snap_read_rect` had none of read_rect's fast
+paths (kh1_gsmem_addr and a PSM switch a pixel: 1.56 ms for 512 x 256 CT24 on the x86 host against 0.10 with
+the fast path, so ~25-30 ms a read on the Vita's A9). This came in with session 142's GPU thread: before it,
+tex_loose read the live model through read_rect's fast path.
+
+- **The copy's version** (gsmem.c `kh1_gsmem_snap_tex_ver`): each take numbers the pages it copies; a texture's
+  version is the newest of its pages'. While it holds, the copy's bytes there are the same, so with the GPU
+  thread gxm.c's `gs_tex_stamp` (only tex_loose uses it) keys on it instead of the stamp. Exact: the loose
+  texels come only from the copy's bytes. Without the GPU thread (`gpuq=0`) the stamp as before.
+- **The copy's read_rect through read_rect's fast paths** (gsmem.c `rect_in` from either memory, its own split
+  slot `SPLIT_SNAP` and tables, the T8 / T4 in-block tables made by the GS side's thread before any copy is read).
+- tests/host/gsfast_test.c: 200 random rectangles from the copy against the live read_rect (every PSM, the
+  0x4000 wrap), and the version: a draw's mark keeps it, a write moves it only at the next take, a write
+  elsewhere keeps it.
+
+**Not measured on a Vita yet** (build s146a): the art stage's `gpu parts` draws column should fall from ~1,700 ms.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
