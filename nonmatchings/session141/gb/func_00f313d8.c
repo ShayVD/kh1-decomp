@@ -1,5 +1,5 @@
+/* Round 42 wwm2: score 99 -> 74, port.py of the wm twin func_00f584d0 draft. Earlier header below. */
 /* Round 41 wwm2: score 145 -> 99, port.py of the wm twin func_00f584d0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* 151 words / score 145: packet contents are right (sibling of f39bf8, sprite D_00F61880[n + 22]). Left: the target shifts g and b (dsll 8/16) and spills r (as s32) in the prologue before the packet calls; only u+w, w<<4 and h<<4 are computed before the calls. Early-shift and order variants did not get closer. */
 typedef struct { s32 a; s32 u; s32 v; s32 w; s32 h; } T584d0;
 typedef struct { u8 pad[0x2200]; u64 tex[1]; } W584d0;
 extern T584d0 D_00F61880[];
@@ -18,14 +18,14 @@ void func_00f313d8(s32 n, s32 r, s32 g, s32 b) {
     s32 idx = n + 22;
     u64 *p;
 
-    u0 = D_00F61880[idx].u;
-    u1 = u0 + D_00F61880[idx].w + 1;
-    v0 = D_00F61880[idx].v;
-    y0 = 142;
     x0 = 0;
+    y0 = 142;
     x1 = x0 + D_00F61880[idx].w;
-    y1 = y0 + D_00F61880[idx].h;
+    v0 = D_00F61880[idx].v;
+    y1 = D_00F61880[idx].h;
+    u0 = D_00F61880[idx].u;
     v1 = v0 + D_00F61880[idx].h + 1;
+    u1 = u0 + D_00F61880[idx].w + 1;
     p = func_00f3fa80(func_00f3f9d0(D_00F56DC8));
     p[0] = 0x30003;
     p[1] = 71;
@@ -57,7 +57,7 @@ void func_00f313d8(s32 n, s32 r, s32 g, s32 b) {
     p[0] = (s64)(u1 << 4) | ((s64)(v1 << 4) << 16);
     p[1] = 3;
     p += 2;
-    p[0] = (s64)(x1 << 4) | ((s64)(y1 << 4) << 16) | ((s64)0x8000 << 17);
+    p[0] = (s64)(x1 << 4) | ((s64)((y1 << 4) + 2272) << 16) | ((s64)0x8000 << 17);
     p[1] = 5;
     p += 2;
     p[0] = 96;
