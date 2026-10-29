@@ -780,6 +780,43 @@ the gxmcheck binary) gives the same 130 GS digests and the same GPU target hashe
 and its 4,758 shots byte-identical; tests/host/ring_test.c checks the kept slot. **Not yet measured on a Vita**
 (3d-ze): the `split` line's wait for the GS worker and the `gpu thread` line's waits should fall.
 
+## The recording on the third core (session 146)
+
+A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;
+the GPU thread busy only ~0.45 s, so the third core sat idle ~75% of the time. An ARM profile of the worker (the qemu
+instruction counter of session 143, `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=1000 KH1_HOST_GPUQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, en.iso, dive_en.txt, frames 5000-5060 as the difference of two runs): 999M
+instructions, of them the command recorder ~300M (kh1_pipes_prim and what it calls: the port draw state, the
+primitive's GPU vertices, the batcher and the commands, ~3,100 kicks a drawn frame), kh1_gsmem_image 205M, the GIF
+decode and register file ~260M, libc's memcmp / memcpy / memset ~190M. Three changes:
+
+- **The recording on the GPU frame's thread** (host/null/gsqueue.h `kh1_recq`, host/null/pipes.c): a second ordered
+  queue of the gsq's kind whose ops run on the GPU frame's thread between its jobs (a posted job first, so the frame
+  before's GPU work is not held up). The worker's side of a kick (kh1_pipes_prim) builds the draw's registers and
+  compares them with the last kick's as before; a change puts a state op (the registers, SCISSOR and XYOFFSET), then
+  the kick puts a primitive op (PRIM, the vertex count and the queued vertices; the next kicks of the same PRIM and
+  count join it). The recorder's side (r_state, r_prim) does what kh1_pipes_prim did after the compare: the port draw
+  state and pass, primitive assembly, the GPU vertices, kh1_cmd_prim. What reads GS memory stays on the worker and
+  hands the op its answer: the texture cache lookup (r_texture: the slot, decoded, the texel count), the palette cache
+  (r_palette, r_clut, with the bound palette slot kept on the worker's side, `a_pslot`), the transfers (r_upload).
+  The ops read only their arguments and the recorder. kh1_pipes_frame (and kh1_pipes_recorder / _batcher / _report)
+  first waits for the queue (kh1_recq_sync), so the frame op, its copy and the reset see the recorder as before;
+  the GPU frame's job runs on the same thread, so the rings' slots and the commands it reads are never written while
+  it runs. gsqueue.c's ring is now a struct (KH1Q) both queues use; the GPU frame's thread sleeps on one semaphore
+  for either work, the recording queue's producer on a third. config.txt `recq=0` keeps the recording on the worker;
+  with the queue on, the kicks are not timed one by one any more (two clock reads a kick) and the watchdog prints
+  `recording: N ms on the gpu thread; the GS worker waited M ms for it (K waits)` (the `cpu:` line's recording is
+  then 0). Host: `KH1_HOST_RECQ=1` with `KH1_HOST_GPUQ=1`.
+- **PATH2's IMAGE data in one piece** (host/null/dmawalk.c `w_qwords`): the Dive's texture streams come through VIF1
+  DIRECT, whose qwords went through gif_qword one at a time, a kh1_gsmem_image call a qword (~285,000 calls a second
+  of game); now a packet's IMAGE qwords in the op go in one call, as gif_block already did for the GIF channel.
+- **The palette cache's hash a word at a time** (host/port/palcache.c): FNV a byte (1,024 multiplies for a 256-entry
+  CLUT, ~22M); the hash only picks which slots `same()` compares.
+
+The worker on that profile: 999M -> ~680M (its idle spin aside: it now waits for the game thread under qemu), the
+GPU frame's thread +~270M. tests/host/gsqueue_test.c puts ops of random sizes through both queues (joined runs,
+ops past half the ring, wraps, jobs between) and checks their order and data.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

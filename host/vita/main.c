@@ -35,6 +35,10 @@
  *       latewait=N            session 145: 0 (the default) skips the vblank wait when a vblank has already begun
  *                             since the last one ended (the frame is late: waiting would only lose time); 1 always
  *                             waits for the next vblank, as before
+ *       recq=N                session 146: 1 (the default, with gpuq=1) runs the command recorder's work (the draw
+ *                             states, the primitives' GPU vertices, the batches and commands) on the GPU frame's
+ *                             thread, between its frames, while the GS worker goes on (gsqueue.h's kh1_recq); 0
+ *                             keeps it on the worker
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -94,6 +98,7 @@ static int gpu_on;      /* the GPU renderer runs (gxm.c) */
 static int use_gsq = 1; /* session 141: config.txt's gsq= */
 static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
 static int late_wait;    /* session 145: config.txt's latewait= */
+static int use_recq = 1; /* session 146: config.txt's recq= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
  * out) of each 2 s */
@@ -290,6 +295,7 @@ extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
+    u32 rbusy0 = 0, rwait0 = 0, rwaits0 = 0;
     u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0, log0 = 0, logn0 = 0, bad0 = 0;
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
@@ -349,6 +355,9 @@ static int watchdog(SceSize args, void *argp) {
                 vlog("kh1-vita: gpu thread: %u ms busy; the GS worker waited %u ms for it (%u waits); %u GS memory pages "
                      "copied\n", (kh1_gpuq_us_busy - qbusy0) / 1000, (kh1_gpuq_us_wait - qwait0) / 1000,
                      kh1_gpuq_waits - qwaits0, kh1_gsmem_snap_pages - qpages0);
+            if (kh1_recq_on) /* session 146: the recording on the GPU frame's thread (the `cpu:` line's is then 0) */
+                vlog("kh1-vita: recording: %u ms on the gpu thread; the GS worker waited %u ms for it (%u waits)\n",
+                     (kh1_recq_us_busy - rbusy0) / 1000, (kh1_recq_us_wait - rwait0) / 1000, kh1_recq_waits - rwaits0);
             { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
                * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
@@ -373,6 +382,9 @@ static int watchdog(SceSize args, void *argp) {
         qbusy0 = kh1_gpuq_us_busy;
         qwait0 = kh1_gpuq_us_wait;
         qwaits0 = kh1_gpuq_waits;
+        rbusy0 = kh1_recq_us_busy;
+        rwait0 = kh1_recq_us_wait;
+        rwaits0 = kh1_recq_waits;
         qpages0 = kh1_gsmem_snap_pages;
         gwait0 = kh1_gsq_us_wait;
         gwaits0 = kh1_gsq_waits;
@@ -428,6 +440,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gsq") == 0) use_gsq = atoi(v);
         else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
         else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
+        else if (strcmp(line, "recq") == 0) use_recq = atoi(v);
     }
     fclose(f);
 }
@@ -549,6 +562,10 @@ int main(int argc, char **argv) {
                     kh1_pipes_gpu_put = kh1_gpuq_put;
                 }
                 vlog("kh1-vita: the frame's GPU work: %s\n", kh1_pipes_snap ? "a thread on the third core" : "the GS worker (no thread)");
+                /* session 146: the recording on that thread too (a kick's own time is then not timed: two clock
+                 * reads a kick, ~3,000 kicks a drawn frame in the Dive, were a share of the worker's time) */
+                if (kh1_pipes_snap && use_recq && kh1_recq_start(2u << 20) == 0) kh1_gs_prim_hook = kh1_pipes_prim;
+                vlog("kh1-vita: the recording: %s\n", kh1_recq_on ? "on the GPU frame's thread" : "the GS worker's");
             }
         }
     } else {

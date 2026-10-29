@@ -48,4 +48,18 @@ void kh1_gpuq_wait(void);
 /* microseconds the thread ran jobs, microseconds its callers waited for it, the waits that had to wait */
 extern volatile u32 kh1_gpuq_us_busy, kh1_gpuq_us_wait, kh1_gpuq_waits;
 
+/* Session 146 (docs/vita-build.md "The recording on the third core"): a second ordered queue of ops, the
+ * gsq's kind (an op put right after one of the same fn and args joins it), whose ops run on the GPU frame's
+ * thread between its jobs (a posted job first).  The GS worker puts the command recorder's work there
+ * (host/null/pipes.c), so the recording runs beside the worker's GIF decode and GS memory.  kh1_recq_start
+ * needs kh1_gpuq_on; off (kh1_recq_on 0) every op runs at once on the caller's thread.  kh1_recq_sync returns
+ * once every op put so far has run */
+extern int kh1_recq_on;
+int kh1_recq_start(u32 bytes);
+void kh1_recq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw);
+void kh1_recq_sync(void);
+/* microseconds the thread ran the queue's ops, microseconds the producer waited for it (room, syncs), the
+ * waits that had to wait */
+extern volatile u32 kh1_recq_us_busy, kh1_recq_us_wait, kh1_recq_waits;
+
 #endif

@@ -182,6 +182,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/gsregs_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsregs_test" > "$W/gsregs.log" || { grep -v '^kh1-host:' "$W/gsregs.log"; exit 1; }
   tail -n 1 "$W/gsregs.log"
+  # the GS worker's queue and the recording queue on the GPU frame's thread (host/null/gsqueue.c, session 146)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsqueue_test" \
+      "$ROOT/tests/host/gsqueue_test.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c"
+  "$W/gsqueue_test" > "$W/gsqueue.log" || { cat "$W/gsqueue.log"; exit 1; }
+  tail -n 1 "$W/gsqueue.log"
   # the GS memory it feeds (host/null/gsmem.c, session 80)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsmem_test" \
       "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
@@ -269,6 +274,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   tail -n 1 "$W/vertex.log"
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/batch_test" \
       "$ROOT/tests/host/batch_test.c" "$ROOT/host/null/pipes.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
+      "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" \
       "$ROOT/host/port/canvas.c" "$ROOT/host/port/batch.c" "$ROOT/host/port/vertex.c" "$ROOT/host/port/target.c" \
       "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" \
       "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c" \
@@ -284,6 +290,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   # the draw list as GPU commands, the passes' load / store needs (renderer-spec 4.13 "Session 126")
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/cmdbuf_test" \
       "$ROOT/tests/host/cmdbuf_test.c" "$ROOT/host/null/pipes.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
+      "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" \
       "$ROOT/host/port/canvas.c" "$ROOT/host/port/batch.c" "$ROOT/host/port/vertex.c" "$ROOT/host/port/target.c" \
       "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" \
       "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c" \
