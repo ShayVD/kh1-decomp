@@ -1,3 +1,4 @@
+/* Round 42 wwm2: score 35 -> 31, store order from r42/hill3o.py (score-ranked, dependency-safe, distinct array elements may swap): ws[1] and ys[3] before xs[0], xs[new_var] last. The float-store block (us/vs) gave nothing in 300 iterations. Earlier header below. */
 /* Round 41 wwm2: score 166 -> 35, port.py of the gb twin func_00f425a8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f696a0 near miss: score 178 -> 166 (173 -> 175 words, 760 vs 752); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 362). Earlier header below. */
 extern s32 D_0108F248;
@@ -69,19 +70,19 @@ void func_00f696a0(s32 tex0, s32 tex1, s32 x, s32 y, s32 w, s32 h, s32 psm, s32 
     xs[3] = x;
     d = x - (d << 4);
   }
-  xs[new_var] = x;
-  xs[1] = d;
-  xs[0] = d;
-  ys[3] = y;
   new_var2 = ((s32) (s * h)) << 4;
+  ws[1] = 1;
+  ys[3] = y;
+  xs[0] = d;
   ys[1] = y;
+  xs[1] = d;
+  ws[0] = 1;
+  ws[3] = 1;
   e = y + new_var2;
   ys[0] = e;
   ys[new_var] = e;
-  ws[0] = 1;
-  ws[1] = 1;
-  ws[3] = 1;
   ws[new_var] = 1;
+  xs[new_var] = x;
   for (p = new_var; p < h; p <<= 1)
   {
     ;
