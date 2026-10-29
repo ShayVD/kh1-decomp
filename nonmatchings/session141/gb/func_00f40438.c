@@ -1,3 +1,4 @@
+/* 88 words / score 60 (376 vs 392); was 90/64. Round 8: separate j = i + 1 for the uv source index helps slightly. Orig copies w twice at entry (move t3,a2; move t8,t3) and keeps the uv source loop unreduced. Tried w2 copy, u8 *p base, j-reuse forms (j = i; i = j + 1), counting j from 1; none coalesce like orig. */
 /* 90 words / score 64 (368 vs 392); same body as the tail of f37270 (f37270 likely inlines it). Orig copies w twice at entry (move t3,a2; move t8,t3) and keeps the uv loop unreduced on the source side ((uv+8)+i*8, (uv+12)+i*8) while the dest is reduced; GbArgs is 16 bytes (frame 48). Tried inline wrapper / colour / uv helpers (copies always coalesce), all flag modes (norlo 88/60), and -O1 by hand (no) */
 typedef struct {
     u8 pad0[0x10];
@@ -27,15 +28,16 @@ void func_00f40438(s32 flag, s32 x, GbWork *w, s32 ci, s32 r, s32 r2, f32 (*uv)[
     GbMode m;
     GbArgs a;
     void *buf;
-    s32 i;
+    s32 i, j;
     a.col = (GbCol *)((u8 *)w + 0xD0);
     buf = (u8 *)w + 0x1E0;
     if (uv != NULL) {
         a.tex = buf;
         buf = (u8 *)w + 0x2F0;
         for (i = 0; i < 4; i++) {
-            w->uv[i][0] = uv[i + 1][0];
-            w->uv[i][1] = uv[i + 1][1];
+            j = i + 1;
+            w->uv[i][0] = uv[j][0];
+            w->uv[i][1] = uv[j][1];
         }
         a.x4 = 0;
     } else {
