@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 126 -> 120, port.py of the wm twin func_00f4c238 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f25140 near miss: 70 words differ, score 126; size matches (728 bytes). Resizes the world: re-centres the entity box, shifts every entity's x/z nibbles and the cursor, then stores w/d/h. A 10-minute -j1 permuter run found a zero variable used three times: wd->ents[i].y = wd->ents[i].y + (oz = 0), plus x = oz / z < oz in the cursor clamp. That suggests the original has a zero-valued y offset variable. Left: the original reuses ox/oz's registers (t6/t7) for the cursor x/z, copies the world pointer for the loop's count reload (move a2,t3), and stores h, w, d in that order. Doing the ox/oz reuse by hand (r1) made it worse (187). Bitfields: GbBox x0 as u16 and the rest as u32, plus the f29f10 GbWorld layout. */
 typedef struct {
     u16 x : 4;
@@ -123,9 +124,9 @@ s32 func_00f25140(s32 w, s32 d, s32 h)
     D_00F56DC0->py = y;
     D_00F56DC0->pz = z;
   }
-  D_00F56DC0->h = h;
   D_00F56DC0->w = w;
   D_00F56DC0->d = d;
+  D_00F56DC0->h = h;
   func_00f24780(D_00F56DC4);
   func_00f24240(D_00F56DC4, 0);
   return 1;
