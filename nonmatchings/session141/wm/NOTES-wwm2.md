@@ -543,3 +543,25 @@ Lessons:
   | 0.5235987f | 0x3f060a90 |
   | 1.9098597f | 0x3ff47648 |
   | 57599.996f | 0x4760ffff |
+
+## Round 29 (wwm2, small overlays)
+
+None of these matched. xs_mushu f20550 was dropped after wwm1 matched it.
+
+| Function | Before | Now | What changed |
+| --- | --- | --- | --- |
+| xs_dh_break f20820 | 156 | 16 | stack array d[2] for the two distances, separate a/b jitters, `d[1] += 0.0f`, truncated literals, hill2 |
+| xs_dh_break f20288 | 173 | 95 | literals 3.2f/0.975f, declaration order (stack slots), header via q, store order, end-test shape |
+| xl_limit f225b0 | 60 | 41 | test/store as c->res[i], final read through rp (norlo) |
+| xs_dumbo f222f8 | none | 93 | first draft; the row loop as a goto loop |
+| xs_dumbo f20570 | (scratch 49) | 49 | saved; %hi s1/s2 swap left |
+| xs_genie f218f8 | 3 | 3 | 10 more loop/pointer forms, all modes, s32 return for func_00f21580: no change |
+| xs_genie f22078 | 74 | 74 | goto loop gives the right shape but no LICM (75); real loops get strength-reduced (101) |
+| xs_tink f20818 | 35 | 35 | direct/global/local create forms; a noreturn __assert gives 33 but is not the original |
+
+Lessons:
+- **A loop that loop.c must leave alone:** f222f8's row loop reloads its constants every pass and nothing in it is strength-reduced. Writing it as a goto loop, or as a `goto start;` into a `for (;;)` with the pointer step at the top, gives that. A structured for or while loop hoists the constants out.
+- **Stack slots follow declaration order:** for spilled scalars (f20288: n, start, spr, jx, jy at 80-96), declaring them in slot order fixed every slot offset.
+- **A value kept in a register and then spilled:** when the original writes through a register first and spills it afterwards, do the writes through a second pointer variable (q), then assign the spilled variable (start = q).
+- **hill2 and semantics:** line permutation moves statements across braces and data dependencies (xl_limit gave 38 that way, but the code was wrong). Only trust hill2 results inside blocks of independent statements. Slots `{{a@@b}}` must fit on one line.
+- **Truncated literals checked with cs.py:** 3.1415928f gives 0x40490fdb, 0.00088888888f gives 0x3a690452, 2.2049995f gives 0x400d1eb6, 3.2f gives 0x404ccccc, 0.975f gives 0x3f799999.
