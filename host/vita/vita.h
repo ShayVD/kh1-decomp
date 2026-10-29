@@ -25,6 +25,8 @@ void kh1_vita_gxm_stats(unsigned int *frames, unsigned int *draws, unsigned int 
 
 /* pad.c: the buttons as sceCtrl read them this frame (for main.c's own screens) */
 unsigned int kh1_vita_buttons(void);
+/* pad.c: config.txt's rcam= (1 the right stick's x turns the camera, -1 the other way, 0 the stick as it is) */
+extern int kh1_vita_rcam;
 
 /* main.c: the data directory, "ux0:data/kh1" */
 extern const char kh1_vita_dir[];

@@ -39,6 +39,9 @@
  *                             states, the primitives' GPU vertices, the batches and commands) on the GPU frame's
  *                             thread, between its frames, while the GS worker goes on (gsqueue.h's kh1_recq); 0
  *                             keeps it on the worker
+ *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
+ *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
+ *                             the command menu's cursor)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -441,6 +444,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
         else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
         else if (strcmp(line, "recq") == 0) use_recq = atoi(v);
+        else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
     }
     fclose(f);
 }

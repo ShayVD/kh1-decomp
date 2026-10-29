@@ -5,8 +5,13 @@
  * are L1 / R1 (the game's lock-on and camera); L2 / R2 / L3 / R3 are the rear touch pad's four
  * quarters (upper left L2, upper right R2, lower left L3, lower right R3).  Circle confirms and
  * cross cancels, as on the Japanese PS2.  Vibration is a no-op.  Session 137v: config.txt's pad=FILE plays a
- * host pad script (host/null/pad.c, tests/host/pads/) instead, so a run reaches a place unattended.  Not part of
- * the PS2 build. */
+ * host pad script (host/null/pad.c, tests/host/pads/) instead, so a run reaches a place unattended.  The right
+ * stick turns the camera: the game (Final Mix included) turns it with L2 / R2 only (fieldcam.c func_00178e10, 2
+ * degrees a step while held) and gives the right stick the d-pad's actions (the command menu's cursor;
+ * docs/vita-port-plan.md 5.1ab), so its x past half way is sent as R2 (right) or L2 (left), held, and the x
+ * itself as the centre; its y stays as it was.  Held, never pulsed: each L2 / R2 press also steps the lock-on
+ * target.  config.txt's rcam=0 sends the stick as it is, rcam=-1 turns the other way.  Not part of the PS2
+ * build. */
 #include <psp2/ctrl.h>
 #include <psp2/touch.h>
 #include "common.h"
@@ -14,6 +19,20 @@
 #include "vita.h"
 
 static unsigned int cur;
+int kh1_vita_rcam = 1; /* config.txt's rcam= (main.c) */
+
+/* the right stick's x as L2 / R2: on past 64 from the centre, off again inside 48 */
+static unsigned int rcam(u8 *stick) {
+    static int held; /* -1 left, 1 right */
+    int dx = (int)stick[0] - 128;
+    if (!kh1_vita_rcam) return 0;
+    if (kh1_vita_rcam < 0) dx = -dx;
+    if (dx > 64) held = 1;
+    else if (dx < -64) held = -1;
+    else if (dx > -48 && dx < 48) held = 0;
+    stick[0] = 128;
+    return held > 0 ? PAD_R2 : held < 0 ? PAD_L2 : 0;
+}
 
 static void sample(u8 *stick) {
     SceCtrlData c;
@@ -72,10 +91,12 @@ int PlatPadGetButtonProfile(int socket, void *profile) {
 }
 int PlatPadRead(int socket, u8 *data) {
     u8 stick[4];
+    unsigned int b;
     if (kh1_vita_pad_script) return kh1_script_PadRead(socket, data);
     sample(stick);
-    data[0] = ~cur & 0xFF;
-    data[1] = (~cur >> 8) & 0xFF;
+    b = cur | rcam(stick);
+    data[0] = ~b & 0xFF;
+    data[1] = (~b >> 8) & 0xFF;
     data[2] = stick[0];
     data[3] = stick[1];
     data[4] = stick[2];
