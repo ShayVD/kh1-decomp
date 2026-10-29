@@ -145,3 +145,27 @@ on main), and the shapes shared with gb unmatched functions.
   whether the branch delay slot was filled (f25288).
 - **ptest.py marker:** ptest.py's marker (the first line of the draft) can
   match inside ovl.h. pt2.py cuts at the function signature instead.
+
+## Round 3 (wm below f60000, 51-250 insns)
+
+Matched (11): f39b10, f442d8, f48f98, f48aa8, f40d20, f37c08, f5c9b0, f3a268,
+f35188, f2f400, f2e960.
+
+Near misses saved here: f2fcf8 (3), f2fa68 (3), f2cfd8 (6), f35c08 (9),
+f296d8 (10), f491e0 (10), f5e368 (65), f502e8 (73), f58300 (89), f56538 (115).
+
+### Round 3 tips
+
+- **CONTEXT_ONLY empty bodies** for lower-address callees change delay-slot /
+  branch-likely choices (f442d8, f2f400 needed two together, f2e960).
+- **Callee return type** changes register choice (`s32 func_001c0310`, f40d20).
+- **Switch case bodies** are emitted in source order (f48f98 needed 2,1,0).
+- **Reuse the argument** (`arg0 |= old<<8`) instead of a fresh local (f48aa8).
+- **abs()** emits bgez/negu; `if (d<0) d=-d` emits movn.
+- **Indexed loop** `list[off]` gives strength-reduced givs initialised after
+  hoisted invariants (f3a268); writing the mask as `!(x & 0x80000000)` in both
+  condition and body keeps the constant in a register.
+- **Write `D[idx].field` directly** rather than via a pointer local to get the
+  address-CSE copies (f2cfd8 partly; f2fcf8/f2fa68 still 3 words off).
+- Unsolved: globals held in s-regs across calls (f204d8, f47610), obj copy into
+  a separate pseudo (f5e368/f5e540), word-wise struct copy (f491e0).
