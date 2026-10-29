@@ -1,4 +1,4 @@
-/* gb.x func_00f2fe38 near miss: 204 words differ, score 225 (ours 1460 bytes, original 1464). Card-flip animation: 5 loops of func_00f27b38 rows, then func_00f32728(4, k / 2). Logic is complete. The angle needs an accumulator a += 90 with a / 10 so the div stays (i * 90 / 10 folds to i * 9). Left: loops 2 and 5 (the 90 - a/10 ones). In the original these count 10 -> 0 with bnez and reload the 0.017453292f constant every iteration, while ours reverses them like loops 1/4 (9, bgez) and hoists the constant into f22. That drift also changes the s-register numbering. Already tried: do-while, while (i--), counting down, i != 10 and i <= 9 bounds, a negated r, a goto loop (325), and a 300 s hill climb over decls and preamble (no gain). Mirror: func_00f30640. */
+/* gb.x func_00f2fe38 near miss: 195 words differ, score 199 (ours 1460 bytes, original 1464). Card-flip animation: 5 loops of func_00f27b38 rows, then func_00f32728(4, k / 2). Logic is complete. Loops 2 and 5 are now do { a += 90; ... } while (--i != 0) with 90 - (a - 90) / 10, which gives the original's 10 -> 0 bnez counter (was 225 as for loops). Left: the original divides a before the a += 90 (separate s2 accumulator, 10 and 90 held in s5/s6) and reloads 0.017453292f into f1 every iteration, while ours hoists it into f22, which shifts the s-registers. Tried in round 18: for (i = 10; i != 0 / > 0; i--) (225), do-while with a += 90 at the end (225), decrementing accumulator a = 900; a / 10; a -= 90 (206-238), goto loops (325: the constant stays in the loop but nothing else is hoisted). Mirror: func_00f30640. */
 typedef struct { u8 pad[0x82]; s16 id; s16 x84; } World;
 extern World *D_00F56DC0;
 extern u8 D_00F56DC8[];
@@ -56,16 +56,17 @@ void func_00f2fe38(void) {
         a += 90;
     }
     a = 0;
-    for (i = 0; i < 10; i++) {
+    i = 10;
+    do {
         func_001bfac8();
-        r = (f32)(90 - a / 10) * 0.017453292f;
+        a += 90;
+        r = (f32)(90 - (a - 90) / 10) * 0.017453292f;
         id = func_00f27b38(11200, D_00F56DC8, 41, 76, ids[0][0], 58, 0.0f, 0.0f, D_00F61564);
         id = func_00f27b38(id, D_00F56DC8, 41, 76, ids[1][0], 58, -r, 0.0f, D_00F61564);
         func_00f27b38(id, D_00F56DC8, 41, 347, ids[0][1], 58, 0.0f, 0.0f, D_00F61564);
         func_00f32728(4, k / 2);
         k++;
-        a += 90;
-    }
+    } while (--i != 0);
     for (i = 0; i < 8; i++) {
         func_001bfac8();
         id = func_00f27b38(11200, D_00F56DC8, 41, 76, ids[1][0], 58, 0.0f, 0.0f, D_00F61564);
@@ -85,16 +86,17 @@ void func_00f2fe38(void) {
         a += 90;
     }
     a = 0;
-    for (i = 0; i < 10; i++) {
+    i = 10;
+    do {
         func_001bfac8();
-        r = (f32)(90 - a / 10) * 0.017453292f;
+        a += 90;
+        r = (f32)(90 - (a - 90) / 10) * 0.017453292f;
         id = func_00f27b38(11200, D_00F56DC8, 41, 347, ids[0][1], 58, 0.0f, 0.0f, D_00F61564);
         id = func_00f27b38(id, D_00F56DC8, 41, 347, ids[1][1], 58, -r, 0.0f, D_00F61564);
         func_00f27b38(id, D_00F56DC8, 41, 76, ids[1][0], 58, 0.0f, 0.0f, D_00F61564);
         func_00f32728(4, k / 2);
         k++;
-        a += 90;
-    }
+    } while (--i != 0);
     func_00f32728(4, 0);
     func_001c0078(h0);
     func_001c0078(h1);

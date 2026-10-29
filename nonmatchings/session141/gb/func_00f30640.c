@@ -1,4 +1,4 @@
-/* gb.x func_00f30640 near miss: 202 words differ, score 225 (ours 1460 bytes, original 1464). Mirror of the func_00f2fe38 near miss: k starts at 48 and counts down, the ids roles swap (f23c70 / f23d50), the rows are mirrored, and it uses func_00f2f440 and func_00f303f0. Same open loop-2/5 problem as f2fe38; fixing it there should carry over. */
+/* gb.x func_00f30640 near miss: 193 words differ, score 199 (ours 1460 bytes, original 1464). Mirror of func_00f2fe38 (k counts down from 48, func_00f303f0 / func_00f2f440 handlers, id roles swapped). Loops 2 and 5 use the same do { a += 90; ... } while (--i != 0) form as f2fe38 (was 225). The remaining issue is the same: the original reloads the 0.017453292f constant every iteration and divides a before the increment. See func_00f2fe38 for what was tried. */
 typedef struct { u8 pad[0x82]; s16 id; s16 x84; } World;
 extern World *D_00F56DC0;
 extern u8 D_00F56DC8[];
@@ -56,16 +56,17 @@ void func_00f30640(void) {
         a += 90;
     }
     a = 0;
-    for (i = 0; i < 10; i++) {
+    i = 10;
+    do {
         func_001bfac8();
-        r = (f32)(90 - a / 10) * 0.017453292f;
+        a += 90;
+        r = (f32)(90 - (a - 90) / 10) * 0.017453292f;
         id = func_00f27b38(11200, D_00F56DC8, 41, 347, ids[0][1], 58, 0.0f, 0.0f, D_00F61564);
         id = func_00f27b38(id, D_00F56DC8, 41, 347, ids[1][1], 58, 0.0f, r, D_00F61564);
         func_00f27b38(id, D_00F56DC8, 41, 76, ids[0][0], 58, 0.0f, 0.0f, D_00F61564);
         func_00f32728(4, k / 2);
         k--;
-        a += 90;
-    }
+    } while (--i != 0);
     for (i = 0; i < 8; i++) {
         func_001bfac8();
         id = func_00f27b38(11200, D_00F56DC8, 41, 76, ids[0][0], 58, 0.0f, 0.0f, D_00F61564);
@@ -85,16 +86,17 @@ void func_00f30640(void) {
         a += 90;
     }
     a = 0;
-    for (i = 0; i < 10; i++) {
+    i = 10;
+    do {
         func_001bfac8();
-        r = (f32)(90 - a / 10) * 0.017453292f;
+        a += 90;
+        r = (f32)(90 - (a - 90) / 10) * 0.017453292f;
         id = func_00f27b38(11200, D_00F56DC8, 41, 76, ids[0][0], 58, 0.0f, 0.0f, D_00F61564);
         id = func_00f27b38(id, D_00F56DC8, 41, 76, ids[1][0], 58, 0.0f, r, D_00F61564);
         func_00f27b38(id, D_00F56DC8, 41, 347, ids[1][1], 58, 0.0f, 0.0f, D_00F61564);
         func_00f32728(4, k / 2);
         k--;
-        a += 90;
-    }
+    } while (--i != 0);
     func_00f32728(4, 0);
     func_001c0078(h0);
     func_001c0078(h1);
