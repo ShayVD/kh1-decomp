@@ -138,3 +138,16 @@ No matches this round (about 45 minutes).
   reproduce it.
 - func_00f69fd0: a long run of global initializer stores whose order is set by the scheduler. Not attempted.
 - Not reached: f64d48, f639c0, f63d18, f70418, f69aa8.
+
+## Round 7 (wm high half, no near-miss files yet)
+
+Matched: func_00f65bb8, which computes TEX0 only, without uploading. It is the f65f28 code with `cbp = tb + cidx` (or
+`* 4`) in the 4/8 cases. The `do { i <<= 1; } while (0);` first shift loop from f65f28 carried over unchanged, so
+these texture siblings share one source shape.
+
+Near misses saved:
+- func_00f66b38 (15 words, registers only).
+- func_00f78458 (score 13; one constant's load placement is left).
+- func_00f66bd0 (score 102).
+
+Not reached: f606a0, f60af0, f663a8, f651d0, f64d48, f639c0, f63d18, f70418, f69aa8.
