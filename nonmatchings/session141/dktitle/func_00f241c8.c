@@ -1,4 +1,4 @@
-/* 2 words differ, score 3. Only diff: orig schedules dsra32 t1 (reg>>32 for q[1] at pk+6) before dsll32 a3,a3,16 (dy<<48 of pos). Tried: moving pos everywhere (before/after/inside the pk+6 line, at decl), splitting pos into = and |=, s64/u64 casts on pos and reg, swapped q[0]/q[1] order, greedy permutation of the pk+6 statements; all stay at 3 or get worse. */
+/* 2 words differ, score 3. Only diff: orig schedules dsra32 t1 (reg>>32 for q[1] at pk+6) before dsll32 a3,a3,16 (dy<<48 of pos). Tried: moving pos everywhere (before/after/inside the pk+6 line, at decl), splitting pos into = and |=, s64/u64 casts on pos and reg, swapped q[0]/q[1] order, greedy permutation of the pk+6 statements; all stay at 3 or get worse. Round 27: computing hi = reg >> 32 (u32/s32/u64) in its own statement before pos, at the top, or before the pk+4 line, splitting pos into hy = dy << 48 then pos = hy | dx << 32, or u32 hh in the decls, all stay at 3. */
 #include "ovl.h"
 
 u64 *func_00f241c8(u64 *pk, u32 addr, s32 dx, s32 dy, s32 w, s32 h, s32 dbp, s32 dpsm, s32 dbw, s32 bpp) {
