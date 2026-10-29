@@ -1,4 +1,4 @@
-/* score 128 (1240 vs 1232). The main pad loop has its test at the bottom (`goto test; loop: ... test: a = pad; if (!(a & 0x4000)) goto loop;`), and the window-clear loop must be a goto loop with its own pointer (a do/for loop is fully unrolled). w[8] gives the 224 frame. Left: register rotation of k/ps/y (target s3/s1/s2; declaration order makes no difference), `D_0108F52C = 2` goes through s3 in the original, and 8 bytes too many. */
+/* score 39 (1244 vs 1232, was 128). The first window loop is `for (k = 0; k < 2; k++)` (gcc reverses it; the final k == 2 is then reused for the constant 2 argument), and the clear loop is `for (k = 0; k < 2; k++) w[k]->b4 = 0; D_0108F52C = k;` (this gives `li s3,2; sw s3`). Both pad loops stay goto/for(;;) loops; a for loop with the test in its header duplicates the test at the top. Left: the original hoists only `lui s2,0x2c` into the delay slot of the jump to the outer test, while this draft schedules it before the second func_00f6b6a0 call (in s6). That costs 12 bytes plus register drift. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct { u8 pad[4]; u8 b4; u8 pad5[2]; u8 b7; } Win;
 typedef struct { u8 pad[16]; s32 x10; } Hdl;
@@ -37,18 +37,17 @@ void func_00f72a70(s32 arg0, Hdl *h)
     u32 a, b;
     Itm *e;
 
-    k = 1;
     pw = w;
     t = D_00FB4A70;
     h->x10 = 109;
     y = D_00FB4B3C;
     ps = D_00FB5A20;
-    do {
+    for (k = 0; k < 2; k++) {
         *pw = func_00f6b6a0(14, 0, 2, 1, 2, 15, *ps++, 1, D_00FB4B18, y, 0, D_00FB4B20, 0, 0, 0, 0, 0, 256, t);
         (*pw)->b7 = D_00FB4B1C;
         (*pw++)->b4 = 0;
         y += D_00FB4B6C;
-    } while (--k >= 0);
+    }
     func_00f6b6a0(14, 3, 0, 2, 0, 0, 0, 0, 0, D_00FB4B3C + 12, 0, D_00FB4B38, 2, D_00FB4CB8, D_00FB4CBC, D_00FB4CC0, D_00FB4CC4, 256, t);
     func_00f6b6a0(14, 0, 2, 1, 0, 15, 86, 7, D_00FB4B38, D_00FB4B3C, 0, D_00FB4B70, 0, 0, 0, 0, 0, 256, t);
     goto test;
@@ -139,12 +138,8 @@ loop: {
                 func_00f74978(w[sel], 8);
                 func_0024e468(1);
             }
-            k = 1;
-            pw2 = w;
-        clr:
-            (*pw2++)->b4 = 0;
-            if (--k >= 0) goto clr;
-            D_0108F52C = 2;
+            for (k = 0; k < 2; k++) w[k]->b4 = 0;
+            D_0108F52C = k;
             func_001f3dc0(arg0);
         }
         func_0024e468(1);
