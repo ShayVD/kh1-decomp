@@ -74,3 +74,20 @@ More tips:
   while __extendsfdf2 slots are filled; no flag mode reproduces this yet.
 - `python3 tools/ovl/twins.py` writes ports into other overlays too (it wrote two gb files here); check git status after running it.
 - Chained assignments (`a = b = c = 0;`) and how the chain is split change the lui register order of zero stores to globals; brute-force chain orders and splits when only those registers differ.
+
+## Round 3 (small overlays)
+
+Matched: xs_dh_break func_00f20128 (the session 136 draft as is, in nostrict mode: with strict aliasing the u32 vertex
+stores do not depend on the u64 GIF-tag sd, so it is scheduled later), xl_limit func_00f20e10 (the >= 60 block sets
+kind = 5 itself instead of before the inner if, and the < 40 block is ordered kind, h, n, s; any order that makes the
+two blocks identical gets them crossjumped).
+
+Tips:
+- Run every old draft through all flag modes (/tmp/claude-0/s141/modes.sh) before hand work; f20128 was one rename away.
+- When two blocks end up with the same instructions in a different order, look for an assignment that reorg moved into
+  a delay slot from the branch target and brute-force the statement orders of both blocks together.
+
+Still open (headers updated): xs_mushu func_00f20550 (2 words), xs_genie func_00f218f8 (2 words), xs_tink
+func_00f20818 (35). Not reached: xs_dh_break func_00f20288 / func_00f20820 (104+ / 142 words), xl_limit func_00f225b0
+(60), xs_dumbo func_00f20570 / func_00f222f8 and xs_genie func_00f22078 (no draft in nonmatchings; scratch drafts in
+/tmp/claude-0/s141/db and gn2 score 49 and 101+).

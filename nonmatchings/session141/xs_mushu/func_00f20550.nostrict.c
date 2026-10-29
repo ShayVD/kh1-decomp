@@ -1,4 +1,4 @@
-/* xs_mushu.x func_00f20550: near miss (session 141), 2 words: the original loads o->eff before D_00F21380 for the src store (ours the other way round). */
+/* xs_mushu.x func_00f20550: near miss (session 141), 2 words: the original loads o->eff before D_00F21380 for the src store (ours the other way round). Round 3 (wwm2): a temp (`void *t = D_00F21380; o->eff->src = t;`) gets the load order right but swaps v0/a0 (3 words); store-order permutations, inline setters, casts and every flag mode give nothing better; permuter 10 min found nothing. */
 #include "ovl.h"
 typedef struct { s32 a, b; } MuPair;
 typedef struct {

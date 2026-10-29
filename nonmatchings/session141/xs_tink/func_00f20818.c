@@ -1,6 +1,6 @@
 /* xs_tink.x func_00f20818: near miss (session 141), score 35. The original threads the jump after
    func_00147ed8 succeeds past the tail null check (the tail reloads D_00F20E90 through &D_00F20E90),
-   and leaves the blez delay slot empty; no C ordering tried (48 variants) reproduces that. */
+   and leaves the blez delay slot empty; no C ordering tried (48 variants) reproduces that. Round 3 (wwm2): inline helpers for the create and tail parts, and type-punned or volatile tail null checks, change nothing (35-37). */
 #include "ovl.h"
 typedef struct { f32 *pos; u8 pad[0x10]; s32 state; } TinkObj;
 extern s32 D_00F20D88;
