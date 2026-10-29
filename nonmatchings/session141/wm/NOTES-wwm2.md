@@ -852,3 +852,52 @@ portall wm gb: ported 0 (the gb twin was found by peel.py).
 - Swapping those two statements alone gives 19.
 - The goto/do-while form has no VTOP note, so reorg predicts the EQ branch not taken. Every rotated while/for form (w, f, wb, fw) gets the VTOP note, but loop opt then hoists the full D_002C5AD0 address into s0, and the loop top can no longer be stolen (45-49).
 - So the original needs a rotated loop in which only the %hi is hoisted. I found no such form.
+
+## Round 41 (wwm2)
+
+**f7ecd8: score 17 -> 11.** Following the coordinator's hint, the loop test reads the next pass's first load: `test: v = D_002C5AD0.x10; } while (!(D_002C5AD0.x8 & 0x2000));` with `u32 v;` and the top check written `if (((v >> 24) | v) & 0x10)`. What is left: the srl operand registers are swapped, and the original's back branch is beqzl.
+
+**Small wins:**
+- f41990: 27 -> 23. Loop 1's colour word is `c | ((c << 16) | (c << 8))`.
+- f632e8: 35 -> 29. The packed word is `((u64)(y + h * 32) << 16) | (x + w * 16) | 0x100000000`.
+- f79868: 37 -> 25. It indexes `g[i].offset / g[i].count` instead of stepping g, and divides in place (`sx /= f->n; ... *ox = sx;`).
+- f5dfd8: 38 -> 30. This is the gb f37270 copy family: `tex = base; o = tex; tex = o + 208; f = tex; s.p0 = tex; tex = o + 480;` with the call taking (o, tex). The 255.0f chain is written `f[6] = f[5] = f[4]`.
+- f5e368: 40 -> 26. This is a port of gb f37270.
+
+**orsweep (r41/orsweep.py):**
+- It tries every order of the `|` terms on packed GS-word lines that contain `<< 16`.
+- Results:
+
+  | Overlay | Function | Score |
+  |---|---|---|
+  | wm | f5f940 | 188 -> 162 |
+  | wm | f60cf0 | 136 -> 95 |
+  | gb | f38848 | 171 -> 159 |
+  | gb | f39bf8 | 52 -> 42 |
+  | gb | f3c1f0 | 35 -> 29 |
+
+- The best order usually puts the y/v `<< 16` half first.
+
+**twins (r41/twins.py, r41/applytw.py):**
+- twins.py pairs wm and gb drafts whose target mnemonic sequences are identical. It ports the better draft onto its twin with tools/ovl/port.py and scores the port.
+- applytw.py commits each port that improves the score and has no unmapped symbols. Each committed draft gets a new header and keeps its old header.
+- Results: 31 gb drafts and 6 wm drafts improved. The biggest gains were wm f55d78 (223 -> 27), wm f696a0 (166 -> 35), wm f79700 (84 -> 41), wm f60cf0 (95 -> 42), gb f39eb0 (1270 -> 1062), gb f4de38 (290 -> 190), gb f51360 (11 -> 3) and gb f20518 (13 -> 4).
+- Rerun twins.py after improving either side of a pair.
+- gb f3fa40 (draft does not build) did not take the wm port.
+- Skipped for unmapped symbols: gb f2ac20, gb f446d0 and wm f66bd0.
+
+**No gain:**
+- f30d48 and f20d08: skipped.
+- f7f628 (21): a goto count loop scored 24, and the arg0 copy variants stayed the same. The `move s8,a0` in the bnez delay slot is a sched2 ordering difference.
+- f33270: 16 fx/fy orders.
+- f651d0: pt/root variants (94 and 90); an s6/s7 swap remains.
+- f37770: an s5/s6 swap.
+- f4fba0: packet variants.
+- f72f40: arg temps.
+- f56780 and f71748: scheduling/FP.
+- f3a860 and f72a70: scheduling inside the cases.
+- gb f51360 (3): moving any of the ten stores and removing or swapping the duplicate `D_00F829E0 = 8` does not improve it. The t6/t5 stores stay swapped.
+- f78978 (39):
+  - The original keeps `lw D_0108FA74; li a0,66` but not the compare, so the 66 test went dead only after reload, when jump2 dropped the branch.
+  - I tried a switch with one case, an if/else with identical arms, goto-to-next, a col/x self-assignment, `x = 66; ... == x`, and the test as an expression. Each one either deletes the loads or makes no change.
+- wm f55d78 and wm f696a0 after their ports: what remains is register swaps (s3/s4, s6/s7) and scheduling.
