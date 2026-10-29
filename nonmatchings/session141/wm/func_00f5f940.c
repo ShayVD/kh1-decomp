@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 188 -> 162. The second UV word is written with its v (<< 16) half first. Found by r41/orsweep.py, which tries every order of the | terms in each packed GS word line; no other single line helps. */
 /* Round 36 (wwm2): wm.x func_00f5f940 near miss: score 205 -> 188 (214 -> 217 words, 928 vs 944); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* 214 words (round 13): 8 RotTransPers corners plus a sprite packet per corner, same family as func_00f53758. Helps: r = out set before the calls (loop pointer s6 = sp16), *q++ for the call outputs, D_00FA6000 as a 20-byte struct array (gives the four separate field pointers). Left: the target hoists the 0x100000000 constant into s7 at entry and the 5 constant after the calls; we do the opposite. A u64 z local for the constant made it worse (221). The frame is 256 vs 240. */
 typedef struct { u8 pad[8704]; u64 tex[1]; } G5f940;
@@ -72,7 +73,7 @@ u64 *func_00f5f940(f32 *a, f32 *b, u64 c, s32 idx, f32 (*mat)[4], u64 *p) {
         p[1] = 5;
         p[0] = (u64)x | ((u64)y << 16) | 0x100000000LL;
         p += 2;
-        p[0] = (u64)(((D_00FA6000[idx].w1 + D_00FA6000[idx].w3) << 4) + 16) | ((u64)(((D_00FA6000[idx].w2 + D_00FA6000[idx].w4) << 4) + 16) << 16);
+        p[0] = ((u64)(((D_00FA6000[idx].w2 + D_00FA6000[idx].w4) << 4) + 16) << 16) | (u64)(((D_00FA6000[idx].w1 + D_00FA6000[idx].w3) << 4) + 16);
         p[1] = 3;
         p += 2;
         p[1] = 5;
