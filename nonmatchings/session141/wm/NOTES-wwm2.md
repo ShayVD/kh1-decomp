@@ -565,3 +565,23 @@ Lessons:
 - **A value kept in a register and then spilled:** when the original writes through a register first and spills it afterwards, do the writes through a second pointer variable (q), then assign the spilled variable (start = q).
 - **hill2 and semantics:** line permutation moves statements across braces and data dependencies (xl_limit gave 38 that way, but the code was wrong). Only trust hill2 results inside blocks of independent statements. Slots `{{a@@b}}` must fit on one line.
 - **Truncated literals checked with cs.py:** 3.1415928f gives 0x40490fdb, 0.00088888888f gives 0x3a690452, 2.2049995f gives 0x400d1eb6, 3.2f gives 0x404ccccc, 0.975f gives 0x3f799999.
+
+## Round 30 (wwm2, RANKING.md rows 10-30)
+
+Four matches: f2c330, f2cfd8, f5bba0 and f3d978. Skipped as already worked in wwm1's round 14: f3be50, f3ba08, f465a8, f3fd60 and f3a0f0. wwm1's protofix had already checked the callee return types of every draft, so that step found nothing new.
+
+| Function | Before | Now | What did it |
+| --- | --- | --- | --- |
+| f2c330 | 8 words | match | hill2 over the two independent store blocks (u loaded before t, `g->x8` second) |
+| f2cfd8 | 6 | match | hill2 over the nine field stores after `idx = func_00f2ccb8()` |
+| f5bba0 | 68 | match | hill2 on the s[] stores (1, 2, 3, then 0), then ctx2: a CONTEXT_ONLY func_00f5ae10 |
+| f3d978 | 99 | match | ctx2 (CONTEXT_ONLY func_00f3b480) took it to 8 words, then `rad = o->f256;` right after `s = o->s;` |
+| f78458 | 11 words | 6 | hill2 over all ten setup stores |
+| f43430 | 7 | 6 | ctx2 (CONTEXT_ONLY func_00f41320) |
+
+No change from hill2 (detected independent blocks only) or from ctx2 singles and pairs: f22e60, f74440, f5d498, f639c0, f69aa8, f32770, f72f40, f74a28, f7ecd8, f7f628.
+
+Lessons:
+- **Store order is never "done":** f2c330 and f2cfd8 had headers saying store orders had been tried, yet both matched with hill2 over the whole block. Earlier passes had covered only part of each block.
+- **ctx2 first, then look at the diff again:** f3d978 went from 99 raw words to 8 with one CONTEXT_ONLY callee. After that, the leftover (the f256 load in a delay slot) was a one-line temp that the old header had already tried, but before the callee fix.
+- **Independent blocks:** /tmp/claude-0/s141/r29/blocks.py lists runs of three or more simple assignments with no calls and no reads of each other's targets. Its substring test is cautious (it skips `pos[0] = s->pos[0]` runs), so check by hand for blocks it misses.
