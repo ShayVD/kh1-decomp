@@ -272,11 +272,11 @@ int kh1_gsq_start(u32 bytes) {
     return 0;
 }
 
-/* ---- session 142: the GPU frame's thread (gsqueue.h's kh1_gpuq_*) ---- */
+/* ---- session 142: the GPU frame's thread (gsqueue.h's kh1_gpuq_*); session 145: two jobs may wait ---- */
 int kh1_gpuq_on;
 volatile u32 kh1_gpuq_us_busy, kh1_gpuq_us_wait, kh1_gpuq_waits;
-static KH1GsqFn gq_fn;
-static u32 gq_args[KH1_GPUQ_ARGS];
+static KH1GsqFn gq_fn[2];
+static u32 gq_args[2][KH1_GPUQ_ARGS];
 static volatile u32 gq_posted, gq_done;
 static volatile int gq_worker_sleeps, gq_waiter_sleeps;
 
@@ -292,7 +292,7 @@ static void gq_worker(void) {
             continue;
         }
         t0 = clock_us();
-        gq_fn(gq_args, 0, 0);
+        gq_fn[seen & 1](gq_args[seen & 1], 0, 0);
         kh1_gpuq_us_busy += clock_us() - t0;
         seen++;
         STORE(gq_done, seen);
@@ -303,31 +303,37 @@ static void gq_worker(void) {
     }
 }
 
-void kh1_gpuq_wait(void) {
+/* returns once at most `left` jobs are posted and not yet ended */
+static void gq_wait_left(u32 left) {
     u32 spin, t0;
-    if (!kh1_gpuq_on || LOAD(gq_done) == LOAD(gq_posted)) return;
+    if (LOAD(gq_posted) - LOAD(gq_done) <= left) return;
     t0 = clock_us();
     kh1_gpuq_waits++;
     for (;;) {
-        for (spin = 0; spin < SPINS && LOAD(gq_done) != LOAD(gq_posted); spin++) ;
-        if (LOAD(gq_done) == LOAD(gq_posted)) break;
+        for (spin = 0; spin < SPINS && LOAD(gq_posted) - LOAD(gq_done) > left; spin++) ;
+        if (LOAD(gq_posted) - LOAD(gq_done) <= left) break;
         STORE(gq_waiter_sleeps, 1);
-        if (LOAD(gq_done) != LOAD(gq_posted)) gq_sem_wait(1);
+        if (LOAD(gq_posted) - LOAD(gq_done) > left) gq_sem_wait(1);
         STORE(gq_waiter_sleeps, 0);
     }
     kh1_gpuq_us_wait += clock_us() - t0;
 }
 
+void kh1_gpuq_wait(void) {
+    if (kh1_gpuq_on) gq_wait_left(0);
+}
+
 void kh1_gpuq_put(KH1GsqFn fn, const u32 *args, u32 nargs) {
-    u32 i;
+    u32 i, p;
     if (!kh1_gpuq_on) {
         fn(args, 0, 0);
         return;
     }
-    kh1_gpuq_wait();
-    gq_fn = fn;
-    for (i = 0; i < nargs && i < KH1_GPUQ_ARGS; i++) gq_args[i] = args[i];
-    STORE(gq_posted, gq_posted + 1);
+    gq_wait_left(1); /* a slot free: the job before may still run */
+    p = LOAD(gq_posted);
+    gq_fn[p & 1] = fn;
+    for (i = 0; i < nargs && i < KH1_GPUQ_ARGS; i++) gq_args[p & 1][i] = args[i];
+    STORE(gq_posted, p + 1);
     if (LOAD(gq_worker_sleeps)) {
         STORE(gq_worker_sleeps, 0);
         gq_sem_post(0);

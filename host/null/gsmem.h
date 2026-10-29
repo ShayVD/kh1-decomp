@@ -108,6 +108,8 @@ u32 kh1_gsmem_tex_raw(u32 tex0_lo, u32 tex0_hi, u32 *out, u32 max);
  * the copy's 4 MiB cannot be had), then read from the copy as kh1_gsmem_read_block / _read_rect /
  * _tex_stamp read the live memory, by another thread too (the GPU frame's, gsqueue.h's kh1_gpuq) */
 int kh1_gsmem_snap_take(void);
+/* session 145: 1 when a take now would change nothing in the copy */
+int kh1_gsmem_snap_same(void);
 extern u32 kh1_gsmem_snap_pages;
 void kh1_gsmem_snap_read_block(u32 b, u32 *out);
 int kh1_gsmem_snap_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride);

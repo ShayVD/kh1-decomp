@@ -5,7 +5,8 @@
  *   bump      allocations are aligned, in order, inside the current frame's slot.
  *   overflow  one that does not fit returns 0, is counted, and leaves the slot as it was; a smaller one
  *             still fits.
- *   frames    kh1_ring_frame alternates the two slots, each starts empty, the high-water mark is kept.
+ *   frames    kh1_ring_frame alternates the two slots, each starts empty, the high-water mark is kept; a frame
+ *             that wrote nothing keeps its slot (session 145).
  *   sizes     the rings hold the static packets' worst send, every static send at once and 4,096
  *             batches' uniforms; a vertex is 32 bytes. */
 #include "common.h"
@@ -41,6 +42,10 @@ int main(void) {
     kh1_ring_frame(&r);
     a = kh1_ring_alloc(&r, 16, 16);
     CHECK("frames: back to the first slot, the high-water mark kept", a == mem && r.frames == 2 && r.high == 1024);
+    kh1_ring_frame(&r);
+    kh1_ring_frame(&r); /* the second slot's frame wrote nothing: the next one writes it again */
+    a = kh1_ring_alloc(&r, 16, 16);
+    CHECK("frames: an empty frame keeps its slot", a == mem + 1024 && r.frames == 4);
 
     CHECK("sizes: a GPU vertex is 32 bytes", kh1_ring_vertex_bytes(1) == 32);
     CHECK("sizes: the vertex ring holds every static send at once 34 times over",

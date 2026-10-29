@@ -214,9 +214,10 @@ static void gsq_frame(unsigned long frame) {
     printf("kh1-host: gsq digest frame %lu: state %08x, memory %08x, %u commands in %u passes\n", frame, h,
            fnv(2166136261u, gsq_mem, sizeof gsq_mem), ncmd, npass);
 }
-/* with the worker: the frame's op after its sends, one frame in flight (host/vita/main.c's order) */
+/* with the worker: the frame's op after its sends, the vblank waiting for the op before the last (host/vita/main.c's
+ * order, session 145) */
 static void w_gsq_frame(const u32 *a, const u32 *d, u32 n) { gsq_frame(a[0]); }
-static u32 gsq_frame_end;
+static u32 gsq_frame_end[2];
 
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */
 extern void *kh1_vsync_cb;
@@ -234,9 +235,10 @@ void kh1_host_vblank(void) {
         kh1_pipes_frame(); /* session 124: the frame's batches */
     } else if (gsq_check && kh1_gsq_on) {
         u32 f = (u32)frames;
-        kh1_gsq_wait(gsq_frame_end);
+        kh1_gsq_wait(gsq_frame_end[1]);
         kh1_gsq_put(w_gsq_frame, &f, 1, 0, 0);
-        gsq_frame_end = kh1_gsq_pos();
+        gsq_frame_end[1] = gsq_frame_end[0];
+        gsq_frame_end[0] = kh1_gsq_pos();
         kh1_gsq_flush();
     } else if (gsq_check)
         gsq_frame(frames);
