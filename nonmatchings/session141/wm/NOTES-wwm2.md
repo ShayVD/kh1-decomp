@@ -98,3 +98,29 @@ Matched: func_00f67928 (string builder: `n /= 2; if (r >= n)` keeps n/2 in n's r
 All old upper-half drafts went through every flag mode: none matches; func_00f78d50 improves to score 57 in nofill.
 Near misses saved: func_00f67c60 (46), func_00f62440 (98), func_00f79700 (187, same code as func_00f69278).
 Tried without progress: func_00f7cb60 (tail-arm variants all worse than the saved 3-word draft).
+
+## Round 5 (wm upper half, continued)
+
+Matched: func_00f681f8 (matrix to Euler angles; float constants spelled from the exact bit patterns, e.g. 1.5707963f,
+3.141592503f), func_00f601f0 (mode loop; reuse `p` as the u32 buffer pointer instead of a second local),
+func_00f62c98 (Hermite spline; `n = sp->n` local, and an unused `f32 v[8];` declared before m gives the 32 extra frame
+bytes), func_00f65d18 (texture upload: `e = tx->ent; e += idx;` instead of `&tx->ent[idx]`, `sz = e->size;` temp with
+tbp updated before data, and the copy loop wrapped in `if (e->count != 0)` for the doubled beqz), func_00f65f28 (its immediate-load sibling; found by a
+10-minute -j1 permuter run: the first shift loop body is `do { i <<= 1; } while (0);`, which keeps the original's
+`move v1,a3` copy of e->w for the loop compare).
+
+Tips:
+- GS packet writers: a macro that reassigns one `Qw *q = &p[i]` per qword makes the original's single base register
+  (addiu t7,a0,N per qword) and removes the spill frame; separate inline params do not.
+- A loop the original does not optimize (address recomputed in the loop, `b` into a shared `jal`) is a goto loop; two
+  identical "call; update; test" tails are crossjumped (func_00f78bc0).
+- Reusing one counter variable for several loops gives the shared saved register; `n /= 2` in place keeps the register.
+
+- A `do { ... } while (0);` around a loop body changes the loop notes enough to keep an extra register copy; worth a try
+  when the only diff is a `move` before a loop.
+
+Near misses saved (headers say what was tried): func_00f78bc0 (59), func_00f676b8 (60, same code as
+func_00f67530: the uv copy loop is not reversed in the original and only the dst giv is reduced), func_00f6dfd8 (77),
+func_00f79700 (84, was 187; same code as func_00f69278), func_00f60cf0 (138).
+func_00f7cb60: one 20-minute -j1 permuter run, no improvement (best non-hack candidate worse than the 3-word draft;
+the only lower-scoring output used a volatile index).
