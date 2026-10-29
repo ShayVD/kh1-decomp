@@ -1,4 +1,5 @@
-/* wm f31118 near miss: 1 word differs, score 2 (792 vs 792 bytes). The original has a non-likely bgtz v0 at 0xf31340 (the D_00FBBA50 > 0 test, li v0,1 in the delay slot); ours emits bgtzl. Key pieces: the multiplier switch is in a static inline getm() (fixes s0/s1), with default merged into case 1; the top checks are split as D_00F8C23C alone, then one || chain; the bottom checks are one || chain. Tried: >= 1 / 0 < x / ! forms, nested-if and goto tails, splitting the chain, (f32) casts, a ret variable, and a 10-min permuter (-j1), all with no change. */
+/* wm.x func_00f31118: matched by hand (session 141, wwm1 round 17): a CONTEXT_ONLY func_00f2bfb8 above it. A call to a function defined earlier in the file is nothrow, which changes reorg's branch-likely choice (docs/overlays.md, "Branch-likely vs plain branch"). */
+#include "ovl.h"
 extern s32 D_00F8C23C;
 extern s32 D_00FBB828;
 extern s32 D_00F9B2EC;
@@ -20,6 +21,7 @@ void func_00176ba8(void *, s32);
 void func_00f302e8(s32, s32, s32);
 void func_0017f580(s32, f32, f32, f32, f32);
 s32 func_00f2bfb8(void);
+CONTEXT_ONLY s32 func_00f2bfb8() { return 0; }
 void func_00114820(void);
 void func_00f30d48(void);
 void func_001c0310(s32, void (*)(void));
