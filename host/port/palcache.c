@@ -6,10 +6,14 @@
 
 void *memset(void *, int, __SIZE_TYPE__);
 
+/* session 146: a word a step, not a byte (a multiply a byte, 1,024 for a 256-entry CLUT, was ~3% of the GS
+ * worker in the Dive); the hash only picks the slots same() compares, so any good one does */
 static u32 fnv(const u32 *col, u32 n) {
-    u32 h = 2166136261u, i, k;
-    for (i = 0; i < n; i++)
-        for (k = 0; k < 32; k += 8) h = (h ^ (col[i] >> k & 0xFF)) * 16777619u;
+    u32 h = 2166136261u, i;
+    for (i = 0; i < n; i++) {
+        h = (h ^ col[i]) * 16777619u;
+        h ^= h >> 15;
+    }
     return h ^ n;
 }
 
@@ -28,11 +32,33 @@ void kh1_palcache_init(KH1PalCache *c) {
 
 void kh1_palcache_frame(KH1PalCache *c) { c->frame++; }
 
+/* session 147c: slot k to the front of the recent four */
+static void recent(KH1PalCache *c, u32 k) {
+    u32 i;
+    for (i = 0; i < 3 && c->recent[i] != k; i++) ;
+    for (; i > 0; i--) c->recent[i] = c->recent[i - 1];
+    c->recent[0] = k;
+}
+
 int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill) {
     u32 h, i;
     int best = -1;
     *fill = 0;
     if (n != 16 && n != 256) return -1;
+    /* session 147c: the title menu's text loads one of a few CLUTs before each of ~60 glyphs a frame: the slots the
+     * last four gets answered are tried first, and a match is the hit the scan below would find (two slots never
+     * hold the same entries: a fill comes only when no slot matched), without the hash and the 256 slots' scan */
+    for (i = 0; i < 4; i++)
+        if (c->recent[i] < KH1_PALCACHE_SLOTS && same(&c->slot[c->recent[i]], col, n)) {
+            KH1PalSlot *s = &c->slot[c->recent[i]];
+            int k = (int)c->recent[i];
+            c->use++;
+            s->frame = c->frame;
+            s->use = c->use;
+            c->hits++;
+            recent(c, (u32)k);
+            return k;
+        }
     h = fnv(col, n);
     c->use++;
     for (i = 0; i < KH1_PALCACHE_SLOTS; i++) {
@@ -41,6 +67,7 @@ int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill) {
             s->frame = c->frame;
             s->use = c->use;
             c->hits++;
+            recent(c, i);
             return (int)i;
         }
         /* an empty slot first, then the least recently used one no draw of this frame reads */
@@ -61,6 +88,7 @@ int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill) {
     }
     c->misses++;
     *fill = 1;
+    recent(c, (u32)best);
     return best;
 }
 

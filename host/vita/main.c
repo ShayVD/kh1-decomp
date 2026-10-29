@@ -32,6 +32,16 @@
  *       gpuq=N                session 142: 1 (the default, with gsq=1) runs the frame's GPU work (gxm.c's commands,
  *                             the latch, the present) on a thread of its own on the third core, from a copy of the
  *                             frame (host/null/pipes.c), while the worker records the next; 0 keeps it on the worker
+ *       latewait=N            session 145: 0 (the default) skips the vblank wait when a vblank has already begun
+ *                             since the last one ended (the frame is late: waiting would only lose time); 1 always
+ *                             waits for the next vblank, as before
+ *       recq=N                session 146: 1 (the default, with gpuq=1) runs the command recorder's work (the draw
+ *                             states, the primitives' GPU vertices, the batches and commands) on the GPU frame's
+ *                             thread, between its frames, while the GS worker goes on (gsqueue.h's kh1_recq); 0
+ *                             keeps it on the worker
+ *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
+ *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
+ *                             the command menu's cursor)
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -90,6 +100,8 @@ static int use_gpu = 1; /* session 136: config.txt's gpu= */
 static int gpu_on;      /* the GPU renderer runs (gxm.c) */
 static int use_gsq = 1; /* session 141: config.txt's gsq= */
 static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
+static int late_wait;    /* session 145: config.txt's latewait= */
+static int use_recq = 1; /* session 146: config.txt's recq= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
  * out) of each 2 s */
@@ -98,9 +110,20 @@ static SceUID log_fd = -1;
 
 /* the log goes straight to sceIoWrite (a FILE from funopen, unbuffered): newlib's own fopen'd log
  * stayed empty in Vita3K through two runs */
+/* session 143: every write to the log is one sceIoWrite, timed (the watchdog's "log:" line) */
+static volatile u32 us_log, log_writes;
+static void log_out(const void *buf, int n) {
+    u32 t0;
+    if (log_fd < 0 || n <= 0) return;
+    t0 = (u32)sceKernelGetProcessTimeWide();
+    sceIoWrite(log_fd, buf, n);
+    us_log += (u32)sceKernelGetProcessTimeWide() - t0;
+    log_writes++;
+}
+
 static int log_write(void *cookie, const char *buf, int n) {
     (void)cookie;
-    if (log_fd >= 0) sceIoWrite(log_fd, buf, n);
+    log_out(buf, n);
     return n;
 }
 
@@ -114,7 +137,7 @@ void kh1_vita_log(const char *fmt, ...) {
     n = vsnprintf(buf, sizeof buf, fmt, ap);
     va_end(ap);
     if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
-    if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
+    log_out(buf, n);
 }
 
 /* session 137v: the game's and host/null's printf straight into the log. Pointing newlib's stdout at the
@@ -124,7 +147,7 @@ int vprintf(const char *fmt, va_list ap) {
     char buf[1024];
     int n = vsnprintf(buf, sizeof buf, fmt, ap);
     if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
-    if (log_fd >= 0 && n > 0) sceIoWrite(log_fd, buf, n);
+    log_out(buf, n);
     return n;
 }
 
@@ -139,10 +162,8 @@ int printf(const char *fmt, ...) {
 
 int puts(const char *s) {
     int n = (int)strlen(s);
-    if (log_fd >= 0) {
-        sceIoWrite(log_fd, s, n);
-        sceIoWrite(log_fd, "\n", 1);
-    }
+    log_out(s, n);
+    log_out("\n", 1);
     return n + 1;
 }
 
@@ -190,10 +211,14 @@ static void gpu_frame(int copied) {
 }
 
 /* session 141: with the GS side on its worker the frame's commands are its last op of the frame, so the game
- * goes on with the next frame while the worker builds, submits and shows this one; the vblank waits only for
- * the frame before (one frame in flight).  Every GPU call is then the worker's (gxm.c, vita2d) */
+ * goes on with the next frame while the worker builds, submits and shows this one.  Every GPU call is then the
+ * worker's (gxm.c, vita2d).  Session 145: the vblank waits for the frame op before the last one, not the last:
+ * the Dive draws every other frame, and waiting for the last op at the empty frame after a drawn one made the
+ * game wait for the worker's whole frame, so the game's next frame and the worker never overlapped */
 static void w_gpu_frame(const u32 *a, const u32 *d, u32 n) { gpu_frame((int)a[0]); }
-static u32 frame_end; /* the queue's position after the last frame's op */
+static u32 frame_end[2]; /* the queue's position after the last frame's op [0] and the one before [1] */
+
+extern volatile u32 kh1_vita_sends; /* display.c */
 
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
@@ -203,22 +228,48 @@ void kh1_host_vblank(void) {
     in_vblank = 1;
     frames++;
     if (frames % 60 == 0) vlog("kh1-vita: frame %lu, %u disc reads\n", frames, kh1_host_cd_reads);
+    { /* session 147b: the title's menu sends ~100-200 a frame on the Vita against ~7 on the host; the first frame
+       * with over 50 (and one more at least 600 frames later) has its send lines printed, as the host's would be */
+        static u32 sends0, dumps;
+        static unsigned long dump_at, dumped_at;
+        if (dump_at && frames > dump_at) {
+            kh1_dma_quiet = 1;
+            dump_at = 0;
+            vlog("kh1-vita: frame %lu: the send lines end\n", frames);
+        } else if (dumps < 2 && kh1_dma_quiet && kh1_vita_sends - sends0 > 50 && (!dumps || frames >= dumped_at + 600)) {
+            vlog("kh1-vita: frame %lu: %u sends in the last frame; the next frame's send lines follow\n", frames,
+                 kh1_vita_sends - sends0);
+            kh1_dma_quiet = 0;
+            dump_at = dumped_at = frames;
+            dumps++;
+        }
+        sends0 = kh1_vita_sends;
+    }
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     if (gpu_on && kh1_gsq_on) { /* session 141: on the worker after the frame's sends */
         u32 copied = (u32)kh1_vita_frame_copied();
-        kh1_gsq_wait(frame_end);
+        kh1_gsq_wait(frame_end[1]);
         kh1_gsq_put(w_gpu_frame, &copied, 1, 0, 0);
-        frame_end = kh1_gsq_pos();
+        frame_end[1] = frame_end[0];
+        frame_end[0] = kh1_gsq_pos();
         kh1_gsq_flush();
     } else if (gpu_on) /* session 136: the frame's GS draws on the GPU */
         gpu_frame(kh1_vita_frame_copied());
     kh1_vita_status(frames, kh1_host_cd_reads);
     {
+        /* session 145: a frame that ends after the next vblank has begun goes on at once (one frame a vblank at
+         * most: the next one waits unless another vblank begins first) */
+        static int vcount;
         SceUInt64 t0 = sceKernelGetProcessTimeWide();
+        int vc = sceDisplayGetVcount();
         if (woke && (u32)(t0 - woke) > us_worst) us_worst = (u32)(t0 - woke);
-        sceDisplayWaitVblankStart();
+        if (late_wait || !woke || vc == vcount) {
+            sceDisplayWaitVblankStart();
+            vc = sceDisplayGetVcount();
+        }
+        vcount = vc;
         woke = sceKernelGetProcessTimeWide();
         kh1_vita_us_wait += (u32)(woke - t0);
     }
@@ -259,6 +310,7 @@ int kh1_ovl_entry(int cmd, int arg) {
  * means no vblank: this says whether DMA sends still move) */
 int kh1_null_threads_state(char *buf, int n);
 extern u32 kh1_dma_walk_us; /* host/null/dmawalk.c */
+extern u32 kh1_gs_load_us, kh1_gs_loads, kh1_gs_loads_same, kh1_gs_load_bytes; /* host/null/gsimage.c */
 extern u8 D_004E4528[], D_002B75A0[];
 extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
@@ -266,7 +318,8 @@ extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
-    u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0;
+    u32 rbusy0 = 0, rwait0 = 0, rwaits0 = 0, ld0[4] = { 0 };
+    u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0, log0 = 0, logn0 = 0, bad0 = 0;
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
@@ -318,6 +371,28 @@ static int watchdog(SceSize args, void *argp) {
             /* session 137v: of the rest, the VU1 programs (the kicks they hand on included, then alone) */
             vlog("kh1-vita: vu1: %u ms in programs, %u ms of it passing their kicks on\n", (kh1_vu1_us - vu0) / 1000,
                  (kh1_vu1_kick_us - kick0) / 1000);
+            { /* session 147: the programs that took the most of it, and their time per instruction pair */
+                static u32 p_us[KH1_VU1_PROGS], p_runs[KH1_VU1_PROGS], p_pairs[KH1_VU1_PROGS];
+                u32 d[KH1_VU1_PROGS], us, runs, pairs, k;
+                int i, num, best;
+                char line[512];
+                int len = snprintf(line, sizeof line, "kh1-vita: vu1 programs:");
+                for (i = 0; i < KH1_VU1_PROGS; i++) d[i] = kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs) ? us - p_us[i] : 0;
+                for (k = 0; k < 4; k++) {
+                    best = -1;
+                    for (i = 0; i < KH1_VU1_PROGS; i++)
+                        if (d[i] && (best < 0 || d[i] > d[best])) best = i;
+                    if (best < 0 || d[best] < 1000) break;
+                    kh1_vu1_prog_stats(best, &num, &us, &runs, &pairs);
+                    len += snprintf(line + len, sizeof line - len, "%s P%d %u ms (%u runs, %u K pairs, %u ns a pair)",
+                                    k ? "," : "", num, d[best] / 1000, runs - p_runs[best], (pairs - p_pairs[best]) >> 10,
+                                    pairs - p_pairs[best] ? (u32)((u64)d[best] * 1000 / (pairs - p_pairs[best])) : 0);
+                    d[best] = 0;
+                }
+                vlog("%s\n", line);
+                for (i = 0; i < KH1_VU1_PROGS; i++)
+                    if (kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs)) { p_us[i] = us; p_runs[i] = runs; p_pairs[i] = pairs; }
+            }
             if (kh1_gsq_on) /* session 141: the GS side's worker (the recording above is its time now) */
                 vlog("kh1-vita: gs worker: %u ms busy; the game waited %u ms for it (%u waits)\n",
                      (kh1_gsq_us_busy - gbusy0) / 1000, (kh1_gsq_us_wait - gwait0) / 1000, kh1_gsq_waits - gwaits0);
@@ -325,6 +400,25 @@ static int watchdog(SceSize args, void *argp) {
                 vlog("kh1-vita: gpu thread: %u ms busy; the GS worker waited %u ms for it (%u waits); %u GS memory pages "
                      "copied\n", (kh1_gpuq_us_busy - qbusy0) / 1000, (kh1_gpuq_us_wait - qwait0) / 1000,
                      kh1_gpuq_waits - qwaits0, kh1_gsmem_snap_pages - qpages0);
+            if (kh1_recq_on) /* session 146: the recording on the GPU frame's thread (the `cpu:` line's is then 0) */
+                vlog("kh1-vita: recording: %u ms on the gpu thread; the GS worker waited %u ms for it (%u waits)\n",
+                     (kh1_recq_us_busy - rbusy0) / 1000, (kh1_recq_us_wait - rwait0) / 1000, kh1_recq_waits - rwaits0);
+            if (kh1_gsq_on) { /* session 147b: the worker's busy time by op function (addresses: out/vita/kh1.elf) */
+                u32 fn[KH1_GSQ_OPS], us[KH1_GSQ_OPS], nn[KH1_GSQ_OPS];
+                char ob[400];
+                int i, k = kh1_gsq_ops_take(fn, us, nn), o = 0;
+                for (i = 0; i < k && o < (int)sizeof ob - 40; i++)
+                    if (us[i] >= 1000) o += snprintf(ob + o, sizeof ob - o, " %08x %u ms (%u),", fn[i], us[i] / 1000, nn[i]);
+                vlog("kh1-vita: gs worker ops:%s\n", o ? ob : " none over 1 ms");
+            }
+            /* session 147: of the rest, the large LoadImages the game thread stores itself (gsimage.c LOAD_HERE) */
+            vlog("kh1-vita: large uploads: %u ms on the game thread, %u of them (%u unchanged), %u KiB\n",
+                 (kh1_gs_load_us - ld0[0]) / 1000, kh1_gs_loads - ld0[1], kh1_gs_loads_same - ld0[2],
+                 (kh1_gs_load_bytes - ld0[3]) >> 10);
+            ld0[0] = kh1_gs_load_us;
+            ld0[1] = kh1_gs_loads;
+            ld0[2] = kh1_gs_loads_same;
+            ld0[3] = kh1_gs_load_bytes;
             { /* session 137v: the whole window split: the DMA walks (the VU1 programs and the recording in
                * them), the frame's commands and present, the vblank wait; the rest is the game's own code */
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
@@ -337,11 +431,21 @@ static int watchdog(SceSize args, void *argp) {
                      (kh1_vita_us_wait - wait0) / 1000, gw / 1000, all > known ? (all - known) / 1000 : 0);
             }
         }
+        /* session 143: the log's own cost (each line an sceIoWrite on the thread that prints it) and the sends
+         * with a problem, whose tag lists only the first few print (dmawalk.h) */
+        vlog("kh1-vita: log: %u writes, %u ms in them; %u bad DMA sends (%u so far, the first %d printed)\n",
+             log_writes - logn0, (us_log - log0) / 1000, kh1_dma_bad_sends - bad0, kh1_dma_bad_sends, KH1_DMA_BAD_SHOWN);
+        log0 = us_log;
+        logn0 = log_writes;
+        bad0 = kh1_dma_bad_sends;
         at0 = (u32)sceKernelGetProcessTimeWide();
         gbusy0 = kh1_gsq_us_busy;
         qbusy0 = kh1_gpuq_us_busy;
         qwait0 = kh1_gpuq_us_wait;
         qwaits0 = kh1_gpuq_waits;
+        rbusy0 = kh1_recq_us_busy;
+        rwait0 = kh1_recq_us_wait;
+        rwaits0 = kh1_recq_waits;
         qpages0 = kh1_gsmem_snap_pages;
         gwait0 = kh1_gsq_us_wait;
         gwaits0 = kh1_gsq_waits;
@@ -396,6 +500,9 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
         else if (strcmp(line, "gsq") == 0) use_gsq = atoi(v);
         else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
+        else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
+        else if (strcmp(line, "recq") == 0) use_recq = atoi(v);
+        else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
     }
     fclose(f);
 }
@@ -427,6 +534,9 @@ int main(int argc, char **argv) {
         if (sceKernelGetThreadInfo(sceKernelGetThreadId(), &ti) >= 0 && ti.stack &&
             (u8 *)&here - (u8 *)ti.stack > MAIN_OWN)
             kh1_costack_pool(ti.stack, costack_bytes = (u32)((u8 *)&here - (u8 *)ti.stack) - MAIN_OWN);
+        /* session 147: the DMA walk owns all of it (3d-zk: a chain's data at 0x846a3c30, the main thread's own
+         * part, refused) */
+        if (ti.stack && ti.stackSize > 0) kh1_costack_stack(ti.stack, (u32)ti.stackSize);
     }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
@@ -517,6 +627,10 @@ int main(int argc, char **argv) {
                     kh1_pipes_gpu_put = kh1_gpuq_put;
                 }
                 vlog("kh1-vita: the frame's GPU work: %s\n", kh1_pipes_snap ? "a thread on the third core" : "the GS worker (no thread)");
+                /* session 146: the recording on that thread too (a kick's own time is then not timed: two clock
+                 * reads a kick, ~3,000 kicks a drawn frame in the Dive, were a share of the worker's time) */
+                if (kh1_pipes_snap && use_recq && kh1_recq_start(2u << 20) == 0) kh1_gs_prim_hook = kh1_pipes_prim;
+                vlog("kh1-vita: the recording: %s\n", kh1_recq_on ? "on the GPU frame's thread" : "the GS worker's");
             }
         }
     } else {

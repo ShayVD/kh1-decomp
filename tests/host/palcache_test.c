@@ -133,6 +133,35 @@ int main(void) {
     }
     CHECK("used slot: kept for the whole frame", i == KH1_PALCACHE_SLOTS);
 
+    { /* session 147c: the recent slots' fast path against the scan alone (the recent four cleared before each get): the same
+       * answers, fills and slot states over random gets that repeat, return to and evict palettes */
+        static KH1PalCache a, b;
+        static u32 col[256];
+        u32 it, rs = 147, k, bad = 0, fast = 0;
+        kh1_palcache_init(&a);
+        kh1_palcache_init(&b);
+        for (it = 0; it < 200000; it++) {
+            u32 n = (rs >> 9) & 1 ? 256 : 16, key;
+            int fa, fb, sa, sb;
+            rs = rs * 1103515245u + 12345u;
+            key = rs >> 20 & 511; /* ~500 palettes over 256 slots: evictions */
+            if ((rs >> 4 & 3) == 0) key = 7; /* and one often again in a row */
+            for (k = 0; k < n; k++) col[k] = key * 2654435761u + k;
+            if (it % 97 == 0) { kh1_palcache_frame(&a); kh1_palcache_frame(&b); }
+            for (k = 0; k < 4; k++)
+                fast += a.recent[k] < KH1_PALCACHE_SLOTS && a.slot[a.recent[k]].n == n &&
+                        a.slot[a.recent[k]].col[0] == col[0] && a.slot[a.recent[k]].col[n - 1] == col[n - 1];
+            sa = kh1_palcache_get(&a, col, n, &fa);
+            b.recent[0] = b.recent[1] = b.recent[2] = b.recent[3] = KH1_PALCACHE_SLOTS;
+            sb = kh1_palcache_get(&b, col, n, &fb);
+            if (sa != sb || fa != fb || a.use != b.use || a.hits != b.hits || a.misses != b.misses || a.full != b.full ||
+                (sa >= 0 && (a.slot[sa].use != b.slot[sb].use || a.slot[sa].frame != b.slot[sb].frame)))
+                bad++;
+        }
+        for (k = 0; k < KH1_PALCACHE_SLOTS; k++) bad += a.slot[k].n != b.slot[k].n || a.slot[k].use != b.slot[k].use;
+        CHECK("the recent slots' fast path answers as the scan", bad == 0);
+        CHECK("the fast path is taken", fast > 5000);
+    }
     printf("palcache_test: %d checks, %s\n", checks, fails ? "FAIL" : "PASS");
     return fails != 0;
 }

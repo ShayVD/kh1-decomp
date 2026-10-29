@@ -55,6 +55,11 @@ extern int kh1_dma_after_send_reads;
  * send's "dma ch" line, the ~7 lines a frame the Vita wrote through an unbuffered log; 0 (the host's
  * default) prints them.  Levels 3-5's extra lines still print. */
 extern int kh1_dma_quiet;
+/* Session 143: the sends with a problem (bad chain, data outside, a word that is no VIF code ...), counted.  A quiet
+ * walk (the Vita's) prints the tag list and problem lines of the first KH1_DMA_BAD_SHOWN only: the Vita's Dive sent
+ * ~8 a second, each ~20 lines through the unbuffered log, from inside the walk's time */
+#define KH1_DMA_BAD_SHOWN 16
+extern u32 kh1_dma_bad_sends;
 /* Session 137v: 1 runs each VIF1 stream's codes on VIF1 / VU1 (host/port/vu1.c, include/platform/vu1.h) and reads
  * their XGKICK output as GIF packets, so renderer A / B's meshes reach the register file, the GS model and the GPU
  * recorder; 0 (the default) only counts the program starts (kh1_gs_path1).  KH1_HOST_VU1=1, the Vita's vu1=1. */

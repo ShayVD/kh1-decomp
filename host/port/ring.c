@@ -25,9 +25,11 @@ void *kh1_ring_alloc(KH1Ring *r, u32 bytes, u32 align) {
     return r->base + r->cur * r->slot + at;
 }
 
+/* session 145: a frame that wrote nothing keeps its slot, so the next frame does not write the slot the frame
+ * before it may still be reading (the Vita's GPU thread runs an empty frame's job without waiting for that one) */
 void kh1_ring_frame(KH1Ring *r) {
     if (r->head > r->high) r->high = r->head;
-    r->cur = (r->cur + 1) % KH1_RING_FRAMES;
+    if (r->head) r->cur = (r->cur + 1) % KH1_RING_FRAMES;
     r->head = 0;
     r->frames++;
 }

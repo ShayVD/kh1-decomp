@@ -51,6 +51,11 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    - `frames=N` exit after N frames (0, the default: never);
    - `mc=ux0:...` memory card 1's folder (default `ux0:data/kh1/mc0`);
    - `vu1=0` skips the VIF1 / VU1 path (session 137v, "The 3D path" below; 1, the default, runs it).
+   - `rcam=1` (the default): the right stick's left / right turns the camera. The game itself, Final Mix
+     included, turns the camera with L2 / R2 only and gives the right stick the d-pad's command-menu
+     cursor, so host/vita/pad.c sends the stick's x past half way as R2 (right) or L2 (left), held while
+     pushed (never pulsed: each L2 / R2 press also steps the lock-on target), and centres the x; the y is
+     unchanged. `rcam=-1` turns the other way, `rcam=0` sends the stick as the PS2 did.
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
@@ -686,6 +691,330 @@ per 2 s, recording ~0.29 s, the frame's commands ~0.29 s, the game waiting ~0.4 
   (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1`) the GPU targets' hashes at every
   50th frame (123 of them, to frame 6150) and the GS digests are the same with `KH1_HOST_GPUQ=1` as without,
   and without the worker too.
+
+## The game thread's walk (session 143)
+
+3d-za on a Vita (the Dive, ~8.4 fps): of each 2 s the game thread spent ~1.36 s in the DMA walks, of them only
+~0.32 s in the VU1 programs (`vu1:` line); the GS worker was busy ~1.16 s and the GPU thread ~0.29 s. Two findings
+and four changes, the output the same:
+
+- **Broken VIF1 chains, printed from the walk.** The log had ~900 sends with a problem in the Dive (~8 a second):
+  `N words no VIF code` after a ref list whose first ref (qwc 2) has nonzero upper words, and a `refe qwc 49154`
+  chain (786 KB) whose data is ASCII. dma_walk printed each one's whole tag list (~20 lines) through the unbuffered
+  log, one sceIoWrite a line, inside the walk's time. The same disc and dive_en.txt give none on the x86 host and
+  none on the ARM Linux build under qemu to frame 5060, so the game built or pointed at a wrong chain only on the
+  Vita: the one-byte enums ("The flashing floor" below); with that fix a Vita log of the Dive has none. A quiet walk (the Vita's) now prints the first
+  `KH1_DMA_BAD_SHOWN` (16) bad sends in full and counts the rest (`kh1_dma_bad_sends`); the host prints all as
+  before. The watchdog adds `log: N writes, M ms in them; K bad DMA sends (T so far, ...)`, every log write timed.
+- **An ARM profile.** The x86 callgrind profile is no guide here (fin / fo are scalar there, NEON on the Vita), so
+  `make vita-armcheck` now builds with `-mfpu=neon` as vitasdk's gcc does by default, and the walk was measured
+  under a qemu-arm 8.2 built with `--enable-plugins` and a small plugin counting each thread's executed
+  instructions per translation block (frames 5000-5060 as the difference of a run to 5000 and one to 5060, en.iso,
+  dive_en.txt, `KH1_HOST_GSQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`). The game thread: 1,110M instructions (the spin of
+  its waits aside): the translated programs ~555M (P0 255M, P12 140M), clipw 115M, unpack 106M, vif_word 94M,
+  kh1_gsmem_image 84M (the large LoadImages, LOAD_HERE), the ring's put and copies ~90M, kh1_vif1_data 43M.
+- **clipw on integers** (host/port/vu1.c `fkey`): fin()'s values are finite and never denormal, so a sign and
+  magnitude integer orders as the float does; no VFP compare (each a flag transfer on the A9). 115M -> 75M.
+- **UNPACK per format** (`unpack_run`): when every element read is in the data (always but a V3's last w), one
+  loop per V1-V4 x 32 / 16 / 8 bits with no test of the format or the data's end per element. 106M -> 46M.
+- **DIRECT's data in runs** (dmawalk.c `vif_block`, `direct_qwords`): PATH2's words went through vif_word and
+  kh1_vif1_data one at a time and into the ring one qword a put; now a run's whole qwords are counted and put
+  together (1,024 at most an op; w_qwords decodes them one at a time as before) and kh1_vif1_data_n takes
+  DIRECT's words at once. vif_word 94M -> 6M, kh1_vif1_data 43M -> 8M, put 47M -> 4M.
+
+The game thread: 1,110M -> 772M (-30%) on that profile. Checked: the gxmcheck log at trace 5 to frame 6500 on
+the English disc (dive_en.txt, `KH1_HOST_GXM=100`) the same as main's, host pointers aside, and its 4,758 shots
+byte-identical; the worker-order digests (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50`, 130 of them) and the VU1
+counts the same; the ARM build's digests and VU1 counts the same under qemu. tests/host/vu1feed_test.c also
+compares clipw with the float form it replaced over 2M operand sets weighted to zeros, denormals, Inf / NaN and
+equal magnitudes (a deliberate break of each change is caught). Left on the game thread: the programs themselves
+(their FMACs' operands go through memory: `u32 u[4]` then a field copied out, a NEON store and a core load the
+A9 pays for), the large LoadImages, and the ring copy of the kicks.
+
+### The GS worker after the enum fix (session 143)
+
+3d-zc on a Vita (the enum fix and the walk above): the Dive at ~11.4 fps, up from ~7.8; the game thread's walks
+~0.71 s per 2 s, and the GS worker now the limit, busy ~1.8 s of every 2 s (~0.4 s of that waiting for the GPU
+thread), the game waiting ~0.8 s for it. Each log write took ~6 ms (`log:` line, ~90 ms per 2 s, mostly the
+watchdog's own lines on the GPU thread's core). The worker under the qemu instruction counter (as above, its
+thread's file): 1,199M over frames 5000-5060 (its idle spin aside): kh1_gsmem_image 355M, ~266M of it the T8 loop
+of trx_bulk (~425,000 T8 pixels a frame in ~28 uploads, 88% of them changed bytes: the streamed textures land in
+pages the targets draw into, so kh1_gsmem_image_same never holds), libc's memcmp / memset / memcpy ~190M,
+kh1_pipes_prim 107M (73M of it prim_sig's FNV a byte), gs_kick 95M, gif_qword 73M. Two changes:
+
+- **T8 uploads a run at a time** (gsmem.c trx_bulk): a row's pixels inside one 16-wide block column are one block,
+  so one page; each pixel is stored without a test (an equal byte stored again changes nothing) and the page's
+  stamp, dirty bit and marks are set once a run, as the per-pixel tests left them. 8 ARM instructions a pixel.
+  tests/host/gsfast_test.c's uploads (every PSM, random pieces, over drawn pages) are the same with the fast
+  paths off; dropping the run's stamp is caught.
+- **prim_sig a word at a time** (pipes.c): only equal signatures matter to batch.h's column groups.
+
+The worker: 1,199M -> 1,002M (-16%; kh1_gsmem_image 355M -> 210M, kh1_pipes_prim 107M -> 56M).
+
+## The frame pacing: the game, the worker and the GPU thread (session 145)
+
+A Vita log of 3d-zd (the Dive, ~15 vblank calls a second, the game drawing on every other one) per 2 s: the
+GS worker busy ~1.7 s (~0.28 s of it waiting for the GPU thread, in ~15 waits), the game waiting ~0.6 s for the
+worker, the walks ~0.76 s, the vblank wait ~0.33 s. Those numbers hid a serialization, not a slow function: on
+the host (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=..`, frames 5000-5060) each drawn frame puts ~390,000 words in the
+queue and the vblank call after it none (`0 cmds 0 passes`). host/vita/main.c's vblank waited for the last frame
+op, so at that empty call the game waited for the worker to finish the whole drawn frame; and the worker, at that
+empty frame's op, waited for the GPU thread to finish the drawn frame's job before it could copy the (empty)
+frame. The game's next frame and the worker hardly overlapped. Three changes, the GS side's output the same:
+
+- **The vblank waits for the frame op before the last** (host/vita/main.c `frame_end[2]`; the host's
+  `KH1_HOST_GSQ_CHECK` order in host/null/main.c the same): at the empty call the game goes straight on, and at
+  the drawn one it waits for the drawn frame before (two frame ops in flight, ~3 MB of the 8 MB ring in the Dive).
+- **An empty frame's job is posted without waiting** (host/null/pipes.c `empty_frame`, `w_hook_empty`): a frame op
+  with no commands, no passes, nothing in either ring, no frame copy and GS memory as the last copy has it
+  (gsmem.c `kh1_gsmem_snap_same`: no page stored to, no stamp moved) is copied into a small KH1CmdRec of its own
+  and posted behind the drawn frame's job, which may still run. That job reads nothing the worker changes after
+  it: no commands means no texels or palettes, the GS memory copy is not retaken until the next op, which waits
+  for both jobs; and the rings now move to their other slot only after a frame that wrote them
+  (host/port/ring.c `kh1_ring_frame`), so the next drawn frame writes the slot the empty frame names (empty), not
+  the one the drawn frame's job reads. gsqueue.c's `kh1_gpuq` holds two jobs (`kh1_gpuq_put` waits only when two
+  are posted and not ended; `kh1_gpuq_wait` for all).
+- **A late frame skips the vblank wait** (host/vita/main.c): when a vblank has begun since the last wait ended
+  (`sceDisplayGetVcount`), the frame goes on at once; at most one frame a vblank still. config.txt `latewait=1`
+  waits for the next vblank always, as before.
+
+Checked on the English disc to frame 6500 (dive_en.txt), against #170's head: the worker-order run with the GPU
+thread (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1`,
+the gxmcheck binary) gives the same 130 GS digests and the same GPU target hashes; empty frames take the new path
+(~1,000 of them by frame 5100); the gxmcheck log at trace 5 is the same but for host pointers (`node draw ... arg`)
+and its 4,758 shots byte-identical; tests/host/ring_test.c checks the kept slot. **Not yet measured on a Vita**
+(3d-ze): the `split` line's wait for the GS worker and the `gpu thread` line's waits should fall.
+
+## The title's backdrop on the GPU thread (session 146, 2026-10-29)
+
+A Vita log of #171's build (Shay's, English disc): the title ran at 60 fps until the art came up (frame ~1160),
+then at ~13 (~30 frames per 2.3 s). The GPU thread was busy the whole window (~2,230 ms of ~2,250), ~1,705 ms of
+it in gxm.c's draw part (programs, textures, sceGxmDraw) for only ~57 draws a frame, with 0 GS memory pages
+copied (nothing the frame stored changed). The cost was `tex_loose`: the title's full-screen CT24 layer at
+0x0E00 lies in the depth buffer's pages, which the frame's Z target marks drawn every frame, and a draw's mark
+moves a page's stamp (gsmem.c `kh1_gsmem_draw`). So each frame the loose entry's stamp missed and the layer was
+read back from the frame copy and converted again, and `kh1_gsmem_snap_read_rect` had none of read_rect's fast
+paths (kh1_gsmem_addr and a PSM switch a pixel: 1.56 ms for 512 x 256 CT24 on the x86 host against 0.10 with
+the fast path, so ~25-30 ms a read on the Vita's A9). This came in with session 142's GPU thread: before it,
+tex_loose read the live model through read_rect's fast path.
+
+- **The copy's version** (gsmem.c `kh1_gsmem_snap_tex_ver`): each take numbers the pages it copies; a texture's
+  version is the newest of its pages'. While it holds, the copy's bytes there are the same, so with the GPU
+  thread gxm.c's `gs_tex_stamp` (only tex_loose uses it) keys on it instead of the stamp. Exact: the loose
+  texels come only from the copy's bytes. Without the GPU thread (`gpuq=0`) the stamp as before.
+- **The copy's read_rect through read_rect's fast paths** (gsmem.c `rect_in` from either memory, its own split
+  slot `SPLIT_SNAP` and tables, the T8 / T4 in-block tables made by the GS side's thread before any copy is read).
+- tests/host/gsfast_test.c: 200 random rectangles from the copy against the live read_rect (every PSM, the
+  0x4000 wrap), and the version: a draw's mark keeps it, a write moves it only at the next take, a write
+  elsewhere keeps it.
+
+On a Vita (s146a): the GPU thread ~100 ms busy per 2 s (from ~2,230) and the draws column ~43 ms (from ~1,705),
+but the title only ~15 fps (from ~13): the game thread now the limit, ~1.2-1.5 s per 2 s of "the rest" and
+~0.8 s waiting for the GS worker (busy ~0.88 s; LoadImage syncs, two a frame).
+
+### The CT24 backdrops' uploads (session 146)
+
+A callgrind profile of the game thread (en.iso, the Vita's order `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GPUQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, `KH1_HOST_PROF=1260:60`, the gxmcheck binary, `--separate-threads=yes`): 416M
+instructions over the 60 frames, 80% kh1_gsmem_image and 12% gsimage.c's load_image: the two 512 x 192 CT24
+backdrops through trx_bulk24 every frame (~200,000 pixels). They are the same bytes each frame, but
+kh1_gsmem_image_same refused them: their pages are the Z buffer's, which the frame's Z target marks drawn (and
+a draw's mark moved page_seq, which the check also read).
+
+- `kh1_gsmem_image_same` now checks `wr_pg` (gsmem.c: seq at each page's last store, set wherever dirty_pg
+  is; a draw's mark is not a store) instead of page_seq, and allows a draw's marks: on a skip it clears the
+  upload's bits (psm_bits) on each page the rectangle's pixels lie in (`at_key.pg`, a page bitmap made with
+  the addresses), with marks moved, as the pixels' stores would (mark with the bytes unchanged: the stamp
+  stays). `kh1_gsmem_image_kept` moves seq after it stamps, so any later store is newer.
+- tests/host/gsfast_test.c: random uploads (CT24 / CT32 / T8 / T4 / T8H / CT16) of kept bytes or changed
+  ones, interleaved with draws over their pages and pixel writes, run with the skip and with every upload
+  whole: the same pixels, drawn bits per page and PSM, textures' targets and stamp moves after every 8 ops
+  (364 skipped, 92 over a draw's marks). Refusing marked pages (the old rule) or not clearing the marks is
+  caught.
+- Measured: the game thread 416M -> 40M over those 60 frames (left: libc's memcmp, the skip's byte
+  compare of ~2.5 MB a frame). The worker-order run (`KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50
+  KH1_HOST_GXM_HASH=1`, dive_en.txt) gives the same GS digests and GPU target hashes as main's.
+- **On a Vita (s146b)**: the title with its art up at ~43 fps (~88 frames per 2 s, from ~15): the GS worker
+  ~335 ms busy per 2 s (from ~880; its ~30 ms a frame before was not its own instructions, whose host profile is
+  ~0.3M a frame, so most likely the game thread's uploads' memory traffic and the LoadImage syncs), the game
+  waiting ~285 ms for it in ~175 waits, the GPU thread ~130 ms, no vblank wait: the game thread is still the
+  limit (~1.75 s of "the rest" per 2 s, ~20 ms a frame; the skip's ~2.5 MB memcmp a frame is in it).
+
+### The skip's compare on the A9 (session 147)
+
+The x86 profile above showed the skip's compare as small because glibc's memcmp is vectorised. **vitasdk's
+newlib memcmp is a C loop** (`arm-vita-eabi-objdump -d` of libc.a's lib_a-memcmp.o): a word every ~10
+instructions when both pointers are word aligned, a byte every ~6 when either is not. On the title, the game
+thread's large LoadImages (the two CT32 512 x 192, the two CT24 512 x 192, the menu's 512 x 32 strips: ~2 MB a
+frame, each over gsimage.c's LOAD_HERE) are all compared that way, so ~5M+ instructions and ~4 MB of reads a
+frame, most of the ~20 ms.
+
+- **host/null/bytesame.h** `kh1_bytes_same`: equality only, on ARM with NEON 256 bytes a step (the two runs'
+  XORs ORed into one register, moved to a core register once a step, since a NEON -> core move stalls the A9;
+  prefetches 512 bytes ahead), the tail through memcmp; elsewhere memcmp itself. kh1_gsmem_image_same uses it,
+  and same_pool's runs now start 16-byte aligned (the pool is aligned(16), each run's size rounded up).
+  tests/host/bytesame_test.c checks it against memcmp (~200,000 cases: lengths 0-1,300 and ~288 KiB, both
+  runs at every alignment mod 16, one byte changed anywhere, at a step's end and in the tail) on the host and,
+  in tests/selftest.sh, under qemu-arm with NEON; reading one 16-byte piece of a step twice instead of the
+  next is caught. Note that `gcc-multilib` (for the tests' `-m32`) and `gcc-arm-linux-gnueabihf` conflict on
+  Ubuntu 24.04; the ARM test can be built with `clang --target=arm-linux-gnueabihf -mcpu=cortex-a9 -mfpu=neon
+  -mfloat-abi=hard -fuse-ld=lld -static --sysroot=/usr/arm-linux-gnueabihf` (`libc6-dev-armhf-cross`
+  installed), as session 147 did.
+- **The watchdog's `large uploads:` line**: of "the rest", the game thread's time in those LoadImages (the sync
+  before each is in "waiting for the GS worker"), how many, how many unchanged, their KiB (gsimage.c
+  `kh1_gs_load_us` and the counts).
+- Checked on the English disc (dive_en.txt to frame 6500): the worker-order run with the GPU thread
+  (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1
+  KH1_HOST_RECQ=1`, the gxmcheck binary) gives the same GS digests and GPU target hashes as main's. On x86 that
+  checks only the pool's alignment (the compare is memcmp there); the NEON form rests on the unit test.
+- **On a Vita (s147a)**: the title with its art up, before the menu, at ~58-60 fps (~126 frames per 2.1 s, from
+  ~88), with 0.4-1.1 s of vblank wait per 2 s left. The `large uploads:` line: ~470-640 a window, all unchanged,
+  ~1.1-1.5 s per 2 s, so the NEON compare still runs at only ~125 MB/s (~2.3 ms per 288 KiB): memory-bound on the
+  game's source bytes and the kept copy, still the game thread's largest item. With the menu fading in and up
+  (frames ~1400-2000): 27-47 fps (from ~25-28), the GS worker busy ~0.9-1.3 s per 2 s and the game waiting
+  ~0.6-1.2 s for it: the worker is the limit there.
+
+### The menu's palette loads (session 147c)
+
+**On a Vita (s147b/c)**: with the menu up, the GS worker is busy ~1.2-1.3 s per 2 s and the game waits ~1.1 s
+of it (~190 waits); the `gs worker ops:` line (gsqueue.c's per-op times, the watchdog's) puts ~940 ms of that in
+w_block, the GIF decode. The one-frame send dump shows why: the menu's text is ~60 glyph sprites a frame, each
+with a TEX2 of CLD=1, so each glyph reloads its 16-entry CLUT and runs the hooks behind it (pipes.c on_clut:
+kh1_gsmem_clut, kh1_palcache_get, a recording op; pal_loaded; and pal_of per draw). The menu's own host profile
+(callgrind on the gxmcheck binary, `KH1_HOST_PROF`, dive_en.txt frames 2050+, thread 3 the worker): 673M
+instructions per 60 frames.
+
+- **gsmem.c's CLUT cache**: kh1_gsmem_tex0 keeps the last 64 loads' source blocks (by CBP, CPSM and 4/8-bit),
+  each with a copy of its GS memory words and its converted entries. A load whose blocks still hold the same
+  words (kh1_bytes_same in place) takes the kept entries instead of re-reading the rectangle, and a load
+  identical to the one already in the CLUT buffer (same entries, same CPSM / CSA) skips the copy. The reset
+  drops them; a CLUT version moves with every real change for kh1_gsmem_clut's memo.
+- **palcache.c's recent slots**: kh1_palcache_get tries the 4 most recently used slots before its scan; a
+  hit updates the slot as the scan's would.
+- Host worker on the menu: 673M -> ~233M instructions per 60 frames. What is left: kh1_gsmem_clut (~56M, its
+  memo misses since the glyphs alternate palettes), memcmp (~25M), palcache (~21M).
+- Tests: gsfast_test's CLUT section (6,000 loads over 4 CBPs, CT32 / CT16 / CT16S, 4- and 8-bit, random pixel
+  writes between, repeated and alternated loads, two TEXAs) checks every fast load's kh1_gsmem_clut answers
+  against a slow load's; palcache_test runs 200,000 random gets with and without the recent slots and
+  checks the results and the cache state stay the same.
+- Checked on the English disc (dive_en.txt to frame 6500, the worker-order run above): all 130 GS digests and
+  260 GPU target hashes are the same as main's.
+## The recording on the third core (session 146)
+
+A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;
+the GPU thread busy only ~0.45 s, so the third core sat idle ~75% of the time. An ARM profile of the worker (the qemu
+instruction counter of session 143, `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=1000 KH1_HOST_GPUQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, en.iso, dive_en.txt, frames 5000-5060 as the difference of two runs): 999M
+instructions, of them the command recorder ~300M (kh1_pipes_prim and what it calls: the port draw state, the
+primitive's GPU vertices, the batcher and the commands, ~3,100 kicks a drawn frame), kh1_gsmem_image 205M, the GIF
+decode and register file ~260M, libc's memcmp / memcpy / memset ~190M. Three changes:
+
+- **The recording on the GPU frame's thread** (host/null/gsqueue.h `kh1_recq`, host/null/pipes.c): a second ordered
+  queue of the gsq's kind whose ops run on the GPU frame's thread between its jobs (a posted job first, so the frame
+  before's GPU work is not held up). The worker's side of a kick (kh1_pipes_prim) builds the draw's registers and
+  compares them with the last kick's as before; a change puts a state op (the registers, SCISSOR and XYOFFSET), then
+  the kick puts a primitive op (PRIM, the vertex count and the queued vertices; the next kicks of the same PRIM and
+  count join it). The recorder's side (r_state, r_prim) does what kh1_pipes_prim did after the compare: the port draw
+  state and pass, primitive assembly, the GPU vertices, kh1_cmd_prim. What reads GS memory stays on the worker and
+  hands the op its answer: the texture cache lookup (r_texture: the slot, decoded, the texel count), the palette cache
+  (r_palette, r_clut, with the bound palette slot kept on the worker's side, `a_pslot`), the transfers (r_upload).
+  The ops read only their arguments and the recorder. kh1_pipes_frame (and kh1_pipes_recorder / _batcher / _report)
+  first waits for the queue (kh1_recq_sync), so the frame op, its copy and the reset see the recorder as before;
+  the GPU frame's job runs on the same thread, so the rings' slots and the commands it reads are never written while
+  it runs. gsqueue.c's ring is now a struct (KH1Q) both queues use; the GPU frame's thread sleeps on one semaphore
+  for either work, the recording queue's producer on a third. config.txt `recq=0` keeps the recording on the worker;
+  with the queue on, the kicks are not timed one by one any more (two clock reads a kick) and the watchdog prints
+  `recording: N ms on the gpu thread; the GS worker waited M ms for it (K waits)` (the `cpu:` line's recording is
+  then 0). Host: `KH1_HOST_RECQ=1` with `KH1_HOST_GPUQ=1`.
+- **PATH2's IMAGE data in one piece** (host/null/dmawalk.c `w_qwords`): the Dive's texture streams come through VIF1
+  DIRECT, whose qwords went through gif_qword one at a time, a kh1_gsmem_image call a qword (~285,000 calls a second
+  of game); now a packet's IMAGE qwords in the op go in one call, as gif_block already did for the GIF channel.
+- **The palette cache's hash a word at a time** (host/port/palcache.c): FNV a byte (1,024 multiplies for a 256-entry
+  CLUT, ~22M); the hash only picks which slots `same()` compares.
+
+The worker on that profile: 999M -> ~680M (its idle spin aside: it now waits for the game thread under qemu), the
+GPU frame's thread +~270M. tests/host/gsqueue_test.c puts ops of random sizes through both queues (joined runs,
+ops past half the ring, wraps, jobs between) and checks their order and data. Checked on the English disc
+(dive_en.txt) against #171's head: the worker-order run with the GPU thread (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1
+KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1`, the gxmcheck binary) to frame 6500 gives
+the same 130 GS digests and GPU target hashes with `KH1_HOST_RECQ=1` and without, and the same run with
+`KH1_HOST_VU1=1 KH1_HOST_VU1TR=1` (the Dive's 3D, where most kicks are) to frame 5600 the same with the queue as
+main's without. **Not yet measured on a Vita** (3d-zf): the `gs worker` line's busy time and the `split` line's
+wait for it should fall; the game thread (the VU1 programs, clipw, its LoadImages) is likely the limit next.
+
+On a Vita (3d-zf, the Dive): the game's wait for the GS worker fell from ~740 to ~340 ms per 2 s, the recording
+~400 ms on the GPU thread with the worker waiting ~12 ms for it; ~17-20 fps. The game thread is the limit: the VU1
+programs ~0.9-1.2 s of every 2 s (`vu1:` line). Bursts of ~6 s at ~7 fps, the GPU thread's draw part ~1.7 s per
+2 s for ~300 draws, were the title's loose-texture re-read ("The title's backdrop on the GPU thread", #173): a
+count of `tex_loose`'s reads on the host (the gxmcheck binary, dive_en.txt) gives one every frame from the title
+through the Dive's opening (frames ~1200-3000), none after.
+
+## The VU1 programs' NEON forms (session 147)
+
+The game thread under the qemu instruction counter (as in session 143, main after #173 and #174, frames 5000-5060):
+tr_0 255M and tr_12 140M of its ~800M, most of them in arm_neon.h's `vand` / `vmin` (vu1.c's `vfin` / `vfo`, the
+clamp on every operand and result). Three changes in host/port/vu1.c and tools/vu/vu1_translate.py, the output
+the same:
+
+- **The clamps in two instructions.** `vfin` (fin(): Inf / NaN patterns to the largest finite of their sign) is a
+  signed minimum with 0x7F7FFFFF (the positive words) then an unsigned one with 0xFF7FFFFF (the negative); `vfo`
+  is a float minimum and maximum with +-FLT_MAX, exact because its operands are finite (fin()'s, or what the VU
+  wrote), so a result is finite or an infinity, never a NaN. Four instructions and a sign mask each before.
+- **Results merged on NEON** (`vu_put`): an upper result with a partial dest, or one the pair's lower reads, went
+  from the four-lane temporary into the register field by field through core registers; it is now one
+  `vbsl` with the dest's lanes. The A9 is slow to read from the core a word NEON just stored.
+- **Broadcast operands read by NEON** (`vu_opb` / `vu_opbe` take the field's address, `vld1q_dup`), not loaded
+  into a core register and moved across.
+
+The profile: tr_0 255M -> 233M, tr_12 140M -> 128M (qemu counts instructions; the two NEON-to-core changes save
+stalls it does not count). Checked: tests/host/vu1neon_test.c now also compares vu_op / vu_opb against their
+session 141 form (kept in the test verbatim) bit for bit on every lane over 2M operand sets weighted to the edges,
+the operands a translated program passes without fin() made canonical, and vu_put against the field copy;
+dropping either new clamp's second instruction is caught. The worker-order run with VU1 (`KH1_HOST_GSQ=1
+KH1_HOST_GSQ_CHECK=50 KH1_HOST_GPUQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, dive_en.txt) to frame 6500 gives the same
+130 digests and VU1 counts as main's, on x86 and on the ARM build under qemu. **Not yet measured on a Vita**
+(3d-zh): the `vu1:` line's time.
+
+On a Vita (3d-zh): the Dive at ~17 fps, stretches at 24-27; the GPU thread's draw bursts gone (#173); the `vu1:`
+line ~1.2 s per 2 s, no better than 3d-zf's, so these forms did not measurably help on the A9. The log also had a
+bad DMA send about every frame from frame 11 (the logos on): `tag at 84620c40 outside`. The ELF's bss ends at
+0x8461e97c, so that is the next pages: the main thread's stack, whose lower part is the coroutines' pool
+(host/port/costack.c). plat_null.c's `null_dma_where` only owned the stack above the walking coroutine's own
+frame, so a chain on a lower coroutine's stack was refused and the rest of its send dropped (nothing visibly
+wrong on screen). It now owns the whole pool too (`kh1_costack_owns`). Not seen on the x86 host or the ARM Linux
+build, whose stacks are malloc'd. **Not yet checked on a Vita** (3d-zi): the `log:` line's bad DMA sends.
+
+## The VU1 programs on the Vita, timed (session 147)
+
+The watchdog now prints `vu1 programs:` (host/vita/main.c, from vu1.c's `kh1_vu1_prog_stats`): the four
+translated programs that took the most of the window, with their runs, instruction pairs and time per pair.
+3d-zj in the Dive, per 2 s: P0 ~420-530 ms at ~73 ns a pair (~32 A9 cycles), P11 / P18 ~160-260 ms at 33-52 ns,
+P4 ~100 ms at ~52 ns; VU1 ~750-1,000 ms in all. P0 is over half of it, and twice the cost a pair of the others.
+
+What the A9 pays for in P0's compiled code (`arm-vita-eabi-objdump` of tr_0): every FMAC stored its result with
+`vst1q` and the next read it back with `vld1q` (a MULA / MADDA chain through ACC: the NEON load waits for the
+store), and a broadcast field or CLIPw's fields were core loads of a word NEON had just stored. Three changes, the
+output the same:
+
+- **The registers as plain vector memory** (vu1.c `VU_LD` / `VU_ST`, a `uint32x4_t` with `aligned(4)` and
+  `may_alias`) instead of the intrinsics, which gcc cannot see through: a value one FMAC writes stays in its NEON
+  register for the next. tr_0: 9,700 instructions to 8,880, its NEON loads / stores of a whole register 1,113 to
+  224, core loads 1,083 to 553.
+- **A broadcast field from the vector** (`vu_opbl` / `vu_opbel`, `vdupq_lane`): the translator passes the VF and
+  the field; Q and I, which the core writes, keep `vu_opb`.
+- **CLIPw on NEON** (`vu_clipw`): fkey's magnitude compared unsigned with w's, the sign picking the bit, one
+  transfer of the six bits to the core.
+
+Checked: tests/host/vu1neon_test.c adds vu_opbl against the session 141 form on every lane and vu_clipw against
+clipw (2M cases each, ties of w with a field among them); the worker-order run with VU1 to frame 6500 gives the
+same 130 digests and VU1 counts as main's on x86 and on the ARM build under qemu. **Not yet measured on a Vita**
+(3d-zk): the `vu1 programs:` line's ns a pair for P0.
+
+On a Vita (3d-zk): P0 at 64-70 ns a pair, from ~73 (-10%); the Dive at ~17-20 fps as before (the scenes vary;
+later in the run P13 takes most, ~740 ms per 2 s at 53 ns a pair). That run also had ~80 bad DMA sends late in
+the Dive: `ref` data at 0x846a3c30, in the main thread's stack above the coroutines' pool (its own MAIN_OWN part).
+The Vita now hands the whole stack to `kh1_costack_stack` and the walk owns all of it. **Not yet checked on a
+Vita** (3d-zl).
 
 ## The flashing floor: one-byte enums (2026-10-28)
 

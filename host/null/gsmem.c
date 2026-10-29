@@ -25,6 +25,7 @@
  * Fed, like gsregs.c, only while KH1_HOST_TRACE >= 2 walks the chains. */
 #include "common.h"
 #include "gsmem.h"
+#include "bytesame.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
@@ -38,7 +39,15 @@ static u8 vm[VM_BYTES];
 /* session 142: the pages any store reached since the last kh1_gsmem_snap_take (stored bits changed or not,
  * the drawn sprites' pixels too), so the snapshot copies only those */
 static u8 dirty_pg[512];
+/* session 146: seq at the last store into each page (bytes changed or not; a draw's mark alone is not one) */
+static u32 wr_pg[512];
+#define STORED(pg) (dirty_pg[(pg) & 511] = 1, wr_pg[(pg) & 511] = seq)
 static u16 clut[512];
+/* session 147c: the kept entries (clut_kept) the last load wrote into the CLUT buffer and how (CPSM, 8-bit, CSA): a
+ * load that finds the same entries kept and loads them the same way would store what the buffer already holds */
+static const u32 *clut_done;
+static u32 clut_done_how;
+static u32 clut_ver = 1; /* session 147c: moved by every load that stores into the buffer, and by a reset */
 static u32 cbp0, cbp1;
 static u32 seq, page_seq[512], clut_seq;
 static KH1GsMemStats st;
@@ -69,9 +78,10 @@ static struct {
 static u32 at_pool[AT_POOL], at_used, at_n;
 /* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
  * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
-static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi; } at_key[AT_KEYS];
+static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16]; } at_key[AT_KEYS];
+/* session 146: pg, the pages the rectangle's pixels lie in (bit p of pg[p >> 5]) */
 #define SAME_POOL (4u << 20)
-static u8 same_pool[SAME_POOL];
+static u8 same_pool[SAME_POOL] __attribute__((aligned(16))); /* session 147: each run at 16 (bytesame.h) */
 static u32 same_used;
 static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h);
 
@@ -79,6 +89,7 @@ void kh1_gsmem_reset(void) {
     u32 i;
     memset(vm, 0, sizeof vm);
     memset(dirty_pg, 1, sizeof dirty_pg);
+    memset(wr_pg, 0, sizeof wr_pg);
     memset(clut, 0, sizeof clut);
     memset(page_seq, 0, sizeof page_seq);
     memset(&st, 0, sizeof st);
@@ -90,6 +101,8 @@ void kh1_gsmem_reset(void) {
     for (i = 0; i < AT_KEYS; i++) at_key[i].dlen = 0; /* the pages' stamps start again at 0 */
     same_used = 0;
     cbp0 = cbp1 = clut_seq = nlog = ntgt = useq = 0;
+    clut_done = 0; /* session 147c: the buffer is cleared */
+    clut_ver++;
     /* session 118: seq goes on counting, so a texture cache's stamp from before a reset is never one
      * after it (the pages start again at 0, which only memory never written since a reset has) */
     seq++;
@@ -166,7 +179,7 @@ static u32 ld32(u32 w) {
 #endif
 }
 static void st32(u32 w, u32 v) {
-    dirty_pg[w >> 11 & 511] = 1;
+    STORED(w >> 11);
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     __builtin_memcpy(vm + w * 4, &v, 4);
 #else
@@ -193,20 +206,29 @@ static void wr32(u32 w, u32 v, u32 bits) {
     mark(w >> 11, o != v, bits);
 }
 
-/* a pixel's stored bits at address a (kh1_gsmem_addr's units for the PSM) */
-static u32 read_at(u32 psm, u32 a) {
+/* a pixel's stored bits at address a (kh1_gsmem_addr's units for the PSM), in memory m (the model's, or the
+ * frame copy's: session 146) */
+static u32 at_in(const u8 *m, u32 psm, u32 a) {
     switch (psm) {
-    case KH1_PSMCT32: case KH1_PSMZ32: return rd32(a);
-    case KH1_PSMCT24: case KH1_PSMZ24: return rd32(a) & 0xFFFFFF;
-    case KH1_PSMT8H:  return rd32(a) >> 24;
-    case KH1_PSMT4HL: return rd32(a) >> 24 & 15;
-    case KH1_PSMT4HH: return rd32(a) >> 28;
-    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: return vm[a * 2] | vm[a * 2 + 1] << 8;
-    case KH1_PSMT8:   return vm[a];
-    case KH1_PSMT4:   return vm[a >> 1] >> (a & 1) * 4 & 15;
+    case KH1_PSMCT32: case KH1_PSMZ32: case KH1_PSMCT24: case KH1_PSMZ24:
+    case KH1_PSMT8H: case KH1_PSMT4HL: case KH1_PSMT4HH: {
+        const u8 *p = m + a * 4;
+        u32 w = p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24;
+        switch (psm) {
+        case KH1_PSMCT24: case KH1_PSMZ24: return w & 0xFFFFFF;
+        case KH1_PSMT8H: return w >> 24;
+        case KH1_PSMT4HL: return w >> 24 & 15;
+        case KH1_PSMT4HH: return w >> 28;
+        }
+        return w;
+    }
+    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: return m[a * 2] | m[a * 2 + 1] << 8;
+    case KH1_PSMT8:   return m[a];
+    case KH1_PSMT4:   return m[a >> 1] >> (a & 1) * 4 & 15;
     }
     return 0;
 }
+static u32 read_at(u32 psm, u32 a) { return at_in(vm, psm, a); }
 
 u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
     return read_at(psm, kh1_gsmem_addr(psm, bp, bw, x, y));
@@ -223,21 +245,21 @@ static void put_at(u32 psm, u32 a, u32 v) {
     case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: {
         u32 o = vm[a * 2] | vm[a * 2 + 1] << 8;
         vm[a * 2] = v; vm[a * 2 + 1] = v >> 8;
-        dirty_pg[a >> 12 & 511] = 1;
+        STORED(a >> 12);
         if (!flat_raw) mark(a >> 12, o != (v & 0xFFFF), ~0u);
         return;
     }
     case KH1_PSMT8: {
         u32 o = vm[a];
         vm[a] = v;
-        dirty_pg[a >> 13 & 511] = 1;
+        STORED(a >> 13);
         mark(a >> 13, o != (v & 0xFF), ~0u);
         return;
     }
     case KH1_PSMT4: {
         u32 o = vm[a >> 1];
         vm[a >> 1] = (o & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
-        dirty_pg[a >> 14 & 511] = 1;
+        STORED(a >> 14);
         mark(a >> 14, o != vm[a >> 1], ~0u);
         return;
     }
@@ -258,7 +280,7 @@ void kh1_gsmem_fast(int on) { fast_on = on; }
 
 /* slot: which pair of tables (SPLIT_*), each keeping the rectangle it holds: the frame copy's 16 strips
  * read one texture, the present one buffer, every frame */
-enum { SPLIT_FRAME, SPLIT_TEX, SPLIT_RECT, SPLITS };
+enum { SPLIT_FRAME, SPLIT_TEX, SPLIT_RECT, SPLIT_SNAP, SPLITS }; /* SPLIT_SNAP: the copy's reader */
 static struct { u32 psm, bp, bw; s32 x0, x1, y0, y1; int ok; } split_had[SPLITS];
 static int addr_split(int slot, u32 psm, u32 bp, u32 bw, s32 x0, s32 x1, s32 y0, s32 y1, u32 *cx, u32 *ry) {
     u32 a0, bmax;
@@ -289,20 +311,48 @@ static int addr_split(int slot, u32 psm, u32 bp, u32 bw, s32 x0, s32 x1, s32 y0,
     return 1;
 }
 
-int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride) {
-    static u32 cx[2048], ry[2048];
+/* a word of memory m as ld32 reads the model's */
+static u32 ld32_in(const u8 *m, u32 w) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    u32 v;
+    __builtin_memcpy(&v, m + w * 4, 4);
+    return v;
+#else
+    const u8 *p = m + w * 4;
+    return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24;
+#endif
+}
+
+/* T8 / T4's place inside a block by (x, y)'s low bits (the read_rect fast path's); made by the GS side's thread
+ * (kh1_gsmem_read_rect, kh1_gsmem_snap_take) before the copy's readers on another thread use them */
+static u16 in8[16][16], in4[16][32];
+static int in_made;
+static void in_tables(void) {
+    u32 i, j;
+    if (in_made) return;
+    for (j = 0; j < 16; j++)
+        for (i = 0; i < 32; i++) {
+            if (i < 16) in8[j][i] = (u16)(col8w(i, j) * 4 + (i >> 3 & 1) * 2 + (j >> 1 & 1));
+            in4[j][i] = (u16)(col8w(i, j) * 8 + (i >> 3 & 3) * 2 + (j >> 1 & 1));
+        }
+    in_made = 1;
+}
+
+/* kh1_gsmem_read_rect from memory m, with split slot `slot` and its tables cx / ry (one set a thread) */
+static int rect_in(const u8 *m, int slot, u32 *cx, u32 *ry, u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h,
+                   u32 *out, u32 stride) {
     u32 x, y;
     if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u || x0 + w > 2048 || y0 + h > 2048) return -1;
     if (!w || !h) return 0;
-    if (addr_split(SPLIT_RECT, psm, bp, bw, (s32)x0, (s32)(x0 + w), (s32)y0, (s32)(y0 + h), cx, ry)) {
+    if (addr_split(slot, psm, bp, bw, (s32)x0, (s32)(x0 + w), (s32)y0, (s32)(y0 + h), cx, ry)) {
         for (y = 0; y < h; y++, out += stride) {
             u32 r = ry[y];
             if (psm == KH1_PSMCT32)
-                for (x = 0; x < w; x++) out[x] = ld32(cx[x] + r);
+                for (x = 0; x < w; x++) out[x] = ld32_in(m, cx[x] + r);
             else if (psm == KH1_PSMCT24)
-                for (x = 0; x < w; x++) out[x] = ld32(cx[x] + r) & 0xFFFFFF;
+                for (x = 0; x < w; x++) out[x] = ld32_in(m, cx[x] + r) & 0xFFFFFF;
             else
-                for (x = 0; x < w; x++) out[x] = read_at(psm, cx[x] + r);
+                for (x = 0; x < w; x++) out[x] = at_in(m, psm, cx[x] + r);
         }
         return 0;
     }
@@ -310,19 +360,9 @@ int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u
         /* session 137v (the real Vita's speed: the recorder decodes a few indexed textures a frame, a sixth
          * of a Dive frame pixel by pixel): T8 / T4 as kh1_gsmem_addr has them, the in-block part (it
          * depends on x's and y's low bits together, so no split) from a table, the block once per block */
-        static u16 in8[16][16], in4[16][32];
-        static int made;
         int t4 = psm == KH1_PSMT4;
         u32 bxs = t4 ? 5 : 4, bmask = (1u << bxs) - 1;
-        if (!made) {
-            u32 i, j;
-            for (j = 0; j < 16; j++)
-                for (i = 0; i < 32; i++) {
-                    if (i < 16) in8[j][i] = (u16)(col8w(i, j) * 4 + (i >> 3 & 1) * 2 + (j >> 1 & 1));
-                    in4[j][i] = (u16)(col8w(i, j) * 8 + (i >> 3 & 3) * 2 + (j >> 1 & 1));
-                }
-            made = 1;
-        }
+        in_tables();
         for (y = 0; y < h; y++, out += stride) {
             u32 yy = y0 + y, cbx = ~0u, base = 0;
             const u16 *row = t4 ? in4[yy & 15] : in8[yy & 15];
@@ -336,14 +376,19 @@ int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u
                     base = (b & 0x3FFF) * (t4 ? 512 : 256);
                 }
                 a = base + row[xx & bmask];
-                out[x] = t4 ? vm[a >> 1] >> (a & 1) * 4 & 15 : vm[a];
+                out[x] = t4 ? m[a >> 1] >> (a & 1) * 4 & 15 : m[a];
             }
         }
         return 0;
     }
     for (y = 0; y < h; y++, out += stride)
-        for (x = 0; x < w; x++) out[x] = kh1_gsmem_read_pixel(psm, bp, bw, x0 + x, y0 + y);
+        for (x = 0; x < w; x++) out[x] = at_in(m, psm, kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y));
     return 0;
+}
+
+int kh1_gsmem_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride) {
+    static u32 cx[2048], ry[2048];
+    return rect_in(vm, SPLIT_RECT, cx, ry, psm, bp, bw, x0, y0, w, h, out, stride);
 }
 
 void kh1_gsmem_read_block(u32 b, u32 *out) {
@@ -480,8 +525,11 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
         }
     if (at_n == AT_KEYS || at_used + w * h > AT_POOL) at_n = at_used = same_used = 0;
     a = at_pool + at_used;
+    memset(at_key[at_n].pg, 0, sizeof at_key[at_n].pg);
     if (addr_rect(psm, bp, bw, x0, y0, w, h, a)) {
         for (i = 0; i < w * h; i++) {
+            u32 p = page_of(psm, a[i]);
+            at_key[at_n].pg[p >> 5] |= 1u << (p & 31);
             if (a[i] < lo) lo = a[i];
             if (a[i] > hi) hi = a[i];
         }
@@ -489,6 +537,7 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
         for (y = 0; y < h; y++)
             for (x = 0; x < w; x++) {
                 *a = kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y);
+                at_key[at_n].pg[page_of(psm, *a) >> 5] |= 1u << (page_of(psm, *a) & 31);
                 if (*a < lo) lo = *a;
                 if (*a > hi) hi = *a;
                 a++;
@@ -503,19 +552,31 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
     return at_pool + at_key[at_n++].off;
 }
 
+/* the word bits an upload of psm stores (put_at's, trx_bulk's): a draw's marks it clears */
+static u32 psm_bits(u32 psm);
+
 /* Session 137 (the title's menus on the Vita, docs/vita-build.md "Speed"): the menus upload the same
  * ~840,000 pixels every frame, the bytes the memory already holds.  A whole upload of the bytes the
- * same rectangle's last one brought, none of its pages written since (no stamp after that upload's)
- * nor drawn (no draw's bits for it to clear), stores nothing: put_at would find each pixel the same.
+ * same rectangle's last one brought, none of its pages stored to since, stores nothing: put_at would find
+ * each pixel the same.  Session 146: a draw's marks on its pages no longer refuse it (the title's two
+ * 512 x 192 CT24 backdrops lie in the Z buffer's pages, which the frame's Z target marks every frame: ~200,000
+ * pixels a frame through trx_bulk24, most of the Vita title's game thread); the marks are cleared page by
+ * page as the pixels' stores would clear them (mark: the upload's bits, the stamp kept).
  * 1 when that is so, the counts and the position then as the pixels would leave them; 0 to send the
  * pixels through kh1_gsmem_image, then kh1_gsmem_image_kept */
 int kh1_gsmem_image_same(const void *src, u32 bytes) {
-    u32 p;
+    u32 p, bits;
     if (!trx.active || trx.key < 0 || trx.ai || trx.nacc || flat_raw) return 0;
     if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
-        if (page_seq[p] > at_key[trx.key].stamp || page_drawn[p]) return 0;
-    if (memcmp(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
+        if (wr_pg[p] > at_key[trx.key].stamp) return 0;
+    if (!kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
+    bits = psm_bits(trx.psm);
+    for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
+        if (at_key[trx.key].pg[p >> 5] >> (p & 31) & 1 && page_drawn[p] & bits) {
+            page_drawn[p] &= ~bits;
+            marks++;
+        }
     st.pixels += trx.w * trx.h;
     if (trx.log) trx.log->pixels += trx.w * trx.h;
     trx.ai = trx.w * trx.h;
@@ -536,10 +597,11 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes) {
         }
         at_key[trx.key].doff = same_used;
         at_key[trx.key].dlen = bytes;
-        same_used += bytes;
+        same_used += (bytes + 15) & ~15u;
     }
     memcpy(same_pool + at_key[trx.key].doff, src, bytes);
     at_key[trx.key].stamp = seq;
+    seq++; /* session 146: a later store's wr_pg is newer than the stamp, whatever op makes it */
     trx.key = -1;
 }
 
@@ -580,24 +642,44 @@ static int trx_bulk(const u32 *w, u32 n) {
     /* session 141 (the Dive's T8 texture streams, a tenth of its frame): mark's work inline, marks moved
      * once a piece (tex_scan's memo only asks whether it moved) */
     case KH1_PSMT8: {
+        /* session 143 (the Dive's ~425,000 T8 pixels a frame on the GS worker): a row's run inside one 16-wide
+         * block column is one block, so one page; its pixels stored with no test each (an equal byte stored
+         * again changes nothing), and the page's stamp and marks once a run, as the test a pixel left them */
         int moved = 0;
+        u32 x = trx.ai % trx.w, run, pg, d, i;
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        const u8 *b = (const u8 *)w;
+#define T8_BYTE(i) b[i]
+#else
+#define T8_BYTE(i) (w[(i) >> 2] >> ((i) & 3) * 8 & 0xFF)
+#endif
         k = n * 4 < left ? n * 4 : left;
-        for (j = 0; j < k; j++) {
-            u32 pg;
-            a = at[j];
-            v = w[j >> 2] >> (j & 3) * 8 & 0xFF;
-            o = vm[a];
-            pg = a >> 13;
-            if (o != v) {
+        for (j = 0; j < k; j += run) {
+            run = 16 - (trx.x0 + x) % 16;
+            if (run > trx.w - x) run = trx.w - x;
+            if (run > k - j) run = k - j;
+            pg = at[j] >> 13;
+            if (at[j + run - 1] >> 13 != pg) run = 1; /* never for the block layout: a pixel alone */
+            d = 0;
+            for (i = j; i < j + run; i++) {
+                a = at[i];
+                v = T8_BYTE(i);
+                d |= vm[a] ^ v;
                 vm[a] = (u8)v;
-                page_seq[pg] = seq;
-                dirty_pg[pg & 511] = 1;
-            } else if (!page_drawn[pg]) {
-                continue;
             }
-            page_drawn[pg] = 0;
-            moved = 1;
+            if (d) {
+                page_seq[pg] = seq;
+                STORED(pg);
+                page_drawn[pg] = 0;
+                moved = 1;
+            } else if (page_drawn[pg]) {
+                page_drawn[pg] = 0;
+                moved = 1;
+            }
+            x += run;
+            if (x == trx.w) x = 0;
         }
+#undef T8_BYTE
         marks += moved;
         break;
     }
@@ -614,7 +696,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (o != nv) {
                 vm[a >> 1] = (u8)nv;
                 page_seq[pg] = seq;
-                dirty_pg[pg & 511] = 1;
+                STORED(pg);
             } else if (!page_drawn[pg]) {
                 continue;
             }
@@ -741,9 +823,61 @@ void (*kh1_gsmem_clut_loaded)(u32 lo, u32 hi);
 const u32 *(*kh1_gsmem_palette)(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi);
 const u32 *(*kh1_gsmem_texels)(u32 lo, u32 hi);
 
+/* Session 147c (the title's menu on the Vita): its text is ~60 sprites a frame, each with a TEX2 that loads a
+ * 16 x 16 CLUT, and each load read its entries through kh1_gsmem_read_rect's tables built anew for each CBP (~80%
+ * of the GS worker's menu frame on the host profile, ~11 ms a frame on a Vita).  The entries a load reads are kept
+ * by (CPSM, CBP, 8-bit or 4-bit) with the raw words of the blocks they lie in (the rectangle's four corners' blocks:
+ * a 16 x 16 CT32 / CT16 CLUT is 2 x 2 / 1 x 2 blocks, a 4-bit one's 8 x 2 one block); a load whose blocks hold the
+ * same words takes the kept entries.  Exact: the entries are a function of those words alone. */
+#define CLUT_KEPT 64
+static struct { u32 key, nb, b[4], raw[4][64], v[256]; } clut_k[CLUT_KEPT];
+static int clut_k_at = -1;
+static void clut_blocks(u32 cpsm, u32 cbp, int b8, u32 *b, u32 *nb) {
+    u32 w = b8 ? 16 : 8, h = b8 ? 16 : 2, i, j, a, blk, shift = cpsm == KH1_PSMCT32 ? 2 : 1;
+    *nb = 0;
+    for (i = 0; i < 4; i++) {
+        a = kh1_gsmem_addr(cpsm, cbp, 1, i & 1 ? w - 1 : 0, i & 2 ? h - 1 : 0);
+        blk = (a << shift) >> 8 & 0x3FFF;
+        for (j = 0; j < *nb && b[j] != blk; j++) ;
+        if (j == *nb) b[(*nb)++] = blk;
+    }
+}
+static u32 clut_hash(u32 key) { return (key * 0x9E3779B1u) >> 26; } /* 64 slots */
+/* the kept entries (16x16 for b8, else 8x2, in read order) when the blocks hold the words they held; else 0, and
+ * clut_keep then keeps what the caller reads */
+static const u32 *clut_kept(u32 cpsm, u32 cbp, int b8) {
+    u32 key = cbp | cpsm << 14 | (u32)b8 << 20, i = clut_hash(key), b[4], nb, j;
+    clut_k_at = -1;
+    if (!fast_on) return 0;
+    clut_blocks(cpsm, cbp, b8, b, &nb);
+    clut_k_at = (int)i;
+    if (clut_k[i].key != key || clut_k[i].nb != nb) {
+        clut_k[i].key = key;
+        clut_k[i].nb = nb;
+        for (j = 0; j < nb; j++) {
+            clut_k[i].b[j] = b[j];
+            kh1_gsmem_read_block(b[j], clut_k[i].raw[j]);
+        }
+        return 0;
+    }
+    for (j = 0; j < nb; j++)
+        if (clut_k[i].b[j] != b[j] || !kh1_bytes_same(vm + (b[j] & 0x3FFF) * 256, clut_k[i].raw[j], 256)) break;
+    if (j == nb) return clut_k[i].v;
+    for (j = 0; j < nb; j++) {
+        clut_k[i].b[j] = b[j];
+        kh1_gsmem_read_block(b[j], clut_k[i].raw[j]);
+    }
+    return 0;
+}
+static const u32 *clut_keep(const u32 *v, u32 n) {
+    if (clut_k_at < 0) return v;
+    memcpy(clut_k[clut_k_at].v, v, n * 4);
+    return clut_k[clut_k_at].v;
+}
+
 void kh1_gsmem_tex0(u32 lo, u32 hi) {
     u32 psm = lo >> 20 & 63, cbp = hi >> 5 & 0x3FFF, cpsm = cpsm_of(hi), csm = hi >> 23 & 1;
-    u32 csa = hi >> 24 & 31, cld = hi >> 29 & 7, e, p, v;
+    u32 csa = hi >> 24 & 31, cld = hi >> 29 & 7, e, p, v, how;
     if (!indexed(psm)) return;
     switch (cld) {
     case 0: case 6: case 7: return;
@@ -758,18 +892,35 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
     }
     st.clut_loads++;
     clut_seq++;
+    how = cpsm | (u32)bits8(psm) << 8 | csa << 16;
     if (bits8(psm)) {
         static u32 c16[256]; /* session 141: the 16 x 16 at once (kh1_gsmem_read_rect's tables), not 256 swizzles */
-        kh1_gsmem_read_rect(cpsm, cbp, 1, 0, 0, 16, 16, c16, 16);
+        const u32 *c = clut_kept(cpsm, cbp, 1);
+        if (c && c == clut_done && how == clut_done_how) goto loaded;
+        if (!c) {
+            kh1_gsmem_read_rect(cpsm, cbp, 1, 0, 0, 16, 16, c16, 16);
+            c = clut_keep(c16, 256);
+        }
+        clut_done = clut_k_at < 0 ? 0 : c;
+        clut_ver++;
         for (e = 0; e < 256; e++) {
             p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1; /* entries 8-15 / 16-23 of each 32 swapped */
-            v = c16[p];
+            v = c[p];
             clut[e] = v;
             if (cpsm == KH1_PSMCT32) clut[e + 256] = v >> 16;
         }
     } else {
+        const u32 *c = clut_kept(cpsm, cbp, 0);
+        u32 c8[16];
+        if (c && c == clut_done && how == clut_done_how) goto loaded;
+        if (!c) {
+            for (e = 0; e < 16; e++) c8[e] = kh1_gsmem_read_pixel(cpsm, cbp, 1, e & 7, e >> 3);
+            c = clut_keep(c8, 16);
+        }
+        clut_done = clut_k_at < 0 ? 0 : c;
+        clut_ver++;
         for (e = 0; e < 16; e++) {
-            v = kh1_gsmem_read_pixel(cpsm, cbp, 1, e & 7, e >> 3);
+            v = c[e];
             if (cpsm == KH1_PSMCT32) {
                 clut[(csa & 15) * 16 + e] = v;
                 clut[(csa & 15) * 16 + e + 256] = v >> 16;
@@ -778,6 +929,8 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
             }
         }
     }
+    clut_done_how = how;
+loaded:
     if (kh1_gsmem_clut_loaded) kh1_gsmem_clut_loaded(lo, hi);
     if (kh1_gsmem_clut_hook) kh1_gsmem_clut_hook(lo, hi);
 }
@@ -813,13 +966,28 @@ static u32 texel_rgba(u32 psm, u32 tbp, u32 tbw, u32 cpsm, u32 csa, u32 x, u32 y
  * for a 4-bit one.  Returns the count, or 0 for a PSM that is not indexed or a CLUT the model does not
  * have. */
 int kh1_gsmem_clut(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
-    u32 psm = lo >> 20 & 63, cpsm = cpsm_of(hi), csa = hi >> 24 & 31, n, e, i;
+    /* session 147c: the last answer kept, with the CLUT buffer's version (clut_ver: a load that stored) and how it
+     * was asked (CT32 ignores TEXA): the title menu's glyphs ask for the same palette ~60 times a frame */
+    static u32 memo[256], memo_how = ~0u, memo_ver, memo_ta, memo_tb;
+    u32 psm = lo >> 20 & 63, cpsm = cpsm_of(hi), csa = hi >> 24 & 31, n, e, i, how;
     if (!indexed(psm) || hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa)) return 0;
     n = bits8(psm) ? 256 : 16;
+    how = cpsm | n << 8 | csa << 20;
+    if (cpsm != KH1_PSMCT32) texa_lo &= 0x80FF, texa_hi &= 0xFF; /* rgba16's TA0, AEM and TA1 */
+    else texa_lo = texa_hi = 0;
+    if (how == memo_how && memo_ver == clut_ver && memo_ta == texa_lo && memo_tb == texa_hi) {
+        memcpy(out, memo, n * 4);
+        return (int)n;
+    }
     for (i = 0; i < n; i++) {
         e = n == 256 ? i : (cpsm == KH1_PSMCT32 ? csa & 15 : csa) * 16 + i;
         out[i] = cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
     }
+    memcpy(memo, out, n * 4);
+    memo_how = how;
+    memo_ver = clut_ver;
+    memo_ta = texa_lo;
+    memo_tb = texa_hi;
     return (int)n;
 }
 
@@ -959,6 +1127,8 @@ u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
  * no state with the model, so another thread may call them while the model goes on (never during a take) */
 static u8 *snap_vm;
 static u32 snap_seq[512];
+/* session 146: the take that last copied each page (its bytes in the copy unchanged since), and the takes */
+static u32 snap_ver[512], snap_takes;
 u32 kh1_gsmem_snap_pages; /* pages copied so far (the Vita watchdog's) */
 
 int kh1_gsmem_snap_take(void) {
@@ -967,10 +1137,13 @@ int kh1_gsmem_snap_take(void) {
         if (!(snap_vm = (u8 *)malloc(VM_BYTES))) return -1;
         memset(dirty_pg, 1, sizeof dirty_pg);
     }
+    in_tables(); /* the copy's read_rect uses them on the GPU thread */
+    snap_takes++;
     for (p = 0; p < 512; p++)
         if (dirty_pg[p]) {
             memcpy(snap_vm + p * 8192, vm + p * 8192, 8192);
             dirty_pg[p] = 0;
+            snap_ver[p] = snap_takes;
             n++;
         }
     memcpy(snap_seq, page_seq, sizeof snap_seq);
@@ -978,38 +1151,25 @@ int kh1_gsmem_snap_take(void) {
     return (int)n;
 }
 
+/* session 145: 1 when a take now would copy nothing new (no page stored to, no stamp moved since the last) */
+int kh1_gsmem_snap_same(void) {
+    u32 p;
+    if (!snap_vm) return 0;
+    for (p = 0; p < 512; p++)
+        if (dirty_pg[p]) return 0;
+    return memcmp(snap_seq, page_seq, sizeof snap_seq) == 0;
+}
+
 void kh1_gsmem_snap_read_block(u32 b, u32 *out) {
     memcpy(out, snap_vm + (b & 0x3FFF) * 256, 256);
 }
 
-static u32 snap_at(u32 psm, u32 a) {
-    const u8 *m = snap_vm;
-    u32 w;
-    switch (psm) {
-    case KH1_PSMCT32: case KH1_PSMZ32: case KH1_PSMCT24: case KH1_PSMZ24:
-    case KH1_PSMT8H: case KH1_PSMT4HL: case KH1_PSMT4HH:
-        w = m[a * 4] | m[a * 4 + 1] << 8 | m[a * 4 + 2] << 16 | (u32)m[a * 4 + 3] << 24;
-        switch (psm) {
-        case KH1_PSMCT24: case KH1_PSMZ24: return w & 0xFFFFFF;
-        case KH1_PSMT8H: return w >> 24;
-        case KH1_PSMT4HL: return w >> 24 & 15;
-        case KH1_PSMT4HH: return w >> 28;
-        }
-        return w;
-    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: return m[a * 2] | m[a * 2 + 1] << 8;
-    case KH1_PSMT8: return m[a];
-    case KH1_PSMT4: return m[a >> 1] >> (a & 1) * 4 & 15;
-    }
-    return 0;
-}
-
-/* kh1_gsmem_read_rect's answer (each pixel as read_at), from the copy */
+/* kh1_gsmem_read_rect's answer, from the copy.  Session 146: through read_rect's fast paths (its own split
+ * slot and tables: the copy's reader is another thread); pixel by pixel, the title's full-screen CT24 layer
+ * (512 x 256) was ~16x the fast path's time on the x86 host, ~25-30 ms a read estimated on the Vita */
 int kh1_gsmem_snap_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u32 *out, u32 stride) {
-    u32 x, y;
-    if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u || x0 + w > 2048 || y0 + h > 2048) return -1;
-    for (y = 0; y < h; y++, out += stride)
-        for (x = 0; x < w; x++) out[x] = snap_at(psm, kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y));
-    return 0;
+    static u32 cx[2048], ry[2048];
+    return rect_in(snap_vm, SPLIT_SNAP, cx, ry, psm, bp, bw, x0, y0, w, h, out, stride);
 }
 
 /* kh1_gsmem_tex_stamp's answer (the newest stamp of the pages the texels lie in), from the copy */
@@ -1023,6 +1183,22 @@ u32 kh1_gsmem_snap_tex_stamp(u32 lo, u32 hi) {
         for (x = 0; x < 1u << tw; x += bwid) {
             page = page_of(psm, kh1_gsmem_addr(psm, tbp, tbw, x, y));
             if (snap_seq[page] > s) s = snap_seq[page];
+        }
+    return s;
+}
+
+/* session 146: the newest take that copied a page the texels lie in: while it holds, the copy's texels are the
+ * same bytes (a page's stamp also moves when a draw marks it, or for bytes stored again unchanged) */
+u32 kh1_gsmem_snap_tex_ver(u32 lo, u32 hi) {
+    u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
+    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, page, s = 0;
+    if (!known(psm) || tw > 10 || th > 10) return 0;
+    bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
+    bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
+    for (y = 0; y < 1u << th; y += bhgt)
+        for (x = 0; x < 1u << tw; x += bwid) {
+            page = page_of(psm, kh1_gsmem_addr(psm, tbp, tbw, x, y));
+            if (snap_ver[page] > s) s = snap_ver[page];
         }
     return s;
 }

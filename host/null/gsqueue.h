@@ -35,10 +35,15 @@ void kh1_gsq_sync(void);
 /* the watchdog's counts (host/vita/main.c): microseconds the worker spent running ops, microseconds the
  * game thread waited for it (syncs and a full ring), the syncs that had to wait; kh1_vu1_clock's */
 extern volatile u32 kh1_gsq_us_busy, kh1_gsq_us_wait, kh1_gsq_waits;
+/* session 147b: the worker's time by op function since the last take (up to KH1_GSQ_OPS functions, the last
+ * slot also taking any beyond): fn the op's function address (out/vita/kh1.elf's symbols name it), us, n;
+ * the count returned, each slot's time and count zeroed */
+#define KH1_GSQ_OPS 12
+int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n);
 
 /* Session 142 (docs/vita-build.md "The GPU frame on the third core"): one more thread, for the frame's GPU
- * work.  kh1_gpuq_put runs fn(args, 0, 0) on it once the job before has ended (one job at a time: the caller
- * waits for the last one first), kh1_gpuq_wait returns once the last job has ended.  Off (kh1_gpuq_on 0) fn
+ * work.  kh1_gpuq_put runs fn(args, 0, 0) on it after the jobs before (session 145: up to two posted and not
+ * yet ended; a third put waits for the first), kh1_gpuq_wait returns once every job posted has ended.  Off (kh1_gpuq_on 0) fn
  * runs at once on the caller's thread.  The Vita's runs on the third core (the GS worker on the second) */
 #define KH1_GPUQ_ARGS 4
 extern int kh1_gpuq_on;
@@ -47,5 +52,19 @@ void kh1_gpuq_put(KH1GsqFn fn, const u32 *args, u32 nargs);
 void kh1_gpuq_wait(void);
 /* microseconds the thread ran jobs, microseconds its callers waited for it, the waits that had to wait */
 extern volatile u32 kh1_gpuq_us_busy, kh1_gpuq_us_wait, kh1_gpuq_waits;
+
+/* Session 146 (docs/vita-build.md "The recording on the third core"): a second ordered queue of ops, the
+ * gsq's kind (an op put right after one of the same fn and args joins it), whose ops run on the GPU frame's
+ * thread between its jobs (a posted job first).  The GS worker puts the command recorder's work there
+ * (host/null/pipes.c), so the recording runs beside the worker's GIF decode and GS memory.  kh1_recq_start
+ * needs kh1_gpuq_on; off (kh1_recq_on 0) every op runs at once on the caller's thread.  kh1_recq_sync returns
+ * once every op put so far has run */
+extern int kh1_recq_on;
+int kh1_recq_start(u32 bytes);
+void kh1_recq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw);
+void kh1_recq_sync(void);
+/* microseconds the thread ran the queue's ops, microseconds the producer waited for it (room, syncs), the
+ * waits that had to wait */
+extern volatile u32 kh1_recq_us_busy, kh1_recq_us_wait, kh1_recq_waits;
 
 #endif

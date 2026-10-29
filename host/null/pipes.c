@@ -54,16 +54,64 @@ static KH1TexCache *tex;
 static int tex_ok, tex_look = 1; /* tex_look: a transfer since the last lookup */
 static u32 pal_buf[256];
 
+/* Session 146 (docs/vita-build.md "The recording on the third core"): the recorder's own work (the draw state's
+ * port form, the primitive's GPU vertices, the batches, commands and rings) is a queue's ops (gsqueue.h's
+ * kh1_recq), run in order on the GPU frame's thread while the GS worker goes on with the GIF decode and GS memory;
+ * off, each op runs at once here.  An op reads only its arguments and the recorder: what it needs of the register
+ * file is copied into it, and what reads GS memory (the texture and palette caches' lookups) stays here and hands
+ * the op its answer.  The recorder is the worker's again at the frame op, once the queue is done (kh1_recq_sync) */
+static s16 a_pslot = -1; /* the recorder's bound palette slot (cmdbuf.c's clut_cmd sets rec->pslot), kept here */
+static KH1DrawRegs rec_r; /* the registers of the last state op (the recorder's side) */
+static KH1DrawState last_d;
+static KH1RenderPass last_p;
+
+static void r_upload(const u32 *a, const u32 *d, u32 n) {
+    (void)d;
+    (void)n;
+    kh1_cmd_upload(rec, a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+}
+
+static void r_clut(const u32 *a, const u32 *d, u32 n) {
+    (void)d;
+    (void)n;
+    kh1_cmd_clut(rec, a[0], a[1], (s32)a[2], (int)a[3]);
+}
+
+static void r_palette(const u32 *a, const u32 *d, u32 n) {
+    (void)d;
+    (void)n;
+    kh1_cmd_palette(rec, a[0], a[1], (s32)a[2], (int)a[3]);
+}
+
+static void r_texture(const u32 *a, const u32 *d, u32 n) {
+    (void)d;
+    (void)n;
+    kh1_cmd_texture(rec, a[0], a[1], (s32)a[2], (int)a[3], a[4]);
+}
+
 static void on_xfer(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi) {
-    kh1_cmd_upload(rec, dir, bb_lo, bb_hi, pos_lo, pos_hi, reg_lo, reg_hi);
+    u32 a[7];
+    a[0] = dir;
+    a[1] = bb_lo;
+    a[2] = bb_hi;
+    a[3] = pos_lo;
+    a[4] = pos_hi;
+    a[5] = reg_lo;
+    a[6] = reg_hi;
+    kh1_recq_put(r_upload, a, 7, 0, 0);
     tex_look = 1;
 }
 
 static void on_clut(u32 lo, u32 hi) {
     const KH1GsState *s = kh1_gs_state();
-    u32 n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_buf);
+    u32 n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_buf), a[4];
     int fill = 0, slot = n ? kh1_palcache_get(pal, pal_buf, n, &fill) : -1;
-    kh1_cmd_clut(rec, lo, hi, slot, fill);
+    a[0] = lo;
+    a[1] = hi;
+    a[2] = (u32)slot;
+    a[3] = (u32)fill;
+    kh1_recq_put(r_clut, a, 4, 0, 0);
+    a_pslot = (s16)slot;
     tex_look = 1;
 }
 
@@ -89,21 +137,30 @@ static void tex_lookup(u32 lo, u32 hi) {
     const u32 *t = 0;
     int decoded = 0;
     s32 slot = -1, i;
+    u32 a[5];
     if (tex_ok) t = kh1_texcache_get(tex, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), tex_read, 0,
                                      &decoded);
     for (i = 0; t && i < KH1_TEXCACHE_SLOTS; i++)
         if (tex->slot[i].tex == t) slot = i;
-    kh1_cmd_texture(rec, lo, hi, slot, decoded, decoded && slot >= 0 ? tex->slot[slot].n : 0);
+    a[0] = lo;
+    a[1] = hi;
+    a[2] = (u32)slot;
+    a[3] = (u32)decoded;
+    a[4] = decoded && slot >= 0 ? tex->slot[slot].n : 0;
+    kh1_recq_put(r_texture, a, 5, 0, 0);
     /* session 136: an indexed draw reads the CLUT buffer at its own CSA, loaded or not (the GS's rule, and
      * present.c's pal_for): when its entries are not the bound slot's, bind theirs */
     if (pal_of(lo, hi)) {
-        const KH1PalSlot *p = rec->pslot >= 0 ? &pal->slot[rec->pslot] : 0;
+        const KH1PalSlot *p = a_pslot >= 0 ? &pal->slot[a_pslot] : 0;
         if (p && p->n == pal_n && !memcmp(p->col, pal_draw, pal_n * 4)) {
-            kh1_palcache_use(pal, rec->pslot); /* session 141: bound from an earlier frame's load (CLD 0) */
+            kh1_palcache_use(pal, a_pslot); /* session 141: bound from an earlier frame's load (CLD 0) */
         } else {
             int fill = 0;
             slot = kh1_palcache_get(pal, pal_draw, pal_n, &fill);
-            kh1_cmd_palette(rec, lo, hi, slot, fill);
+            a[2] = (u32)slot;
+            a[3] = (u32)fill;
+            kh1_recq_put(r_palette, a, 4, 0, 0);
+            a_pslot = (s16)slot;
         }
     }
 }
@@ -138,36 +195,82 @@ const KH1TexCache *kh1_pipes_texcache(void) { recorder(); return tex_ok ? tex : 
 
 int memcmp(const void *, const void *, __SIZE_TYPE__);
 
-const KH1Batcher *kh1_pipes_batcher(void) { return &recorder()->b; }
-const KH1CmdRec *kh1_pipes_recorder(void) { return recorder(); }
+/* session 146: the recorder's own state is read once its queue is done */
+const KH1Batcher *kh1_pipes_batcher(void) {
+    kh1_recq_sync();
+    return &recorder()->b;
+}
+const KH1CmdRec *kh1_pipes_recorder(void) {
+    kh1_recq_sync();
+    return recorder();
+}
 
-/* the registers of the last kick's state, its draw state and pass (most kicks repeat the last one's) */
+/* the registers of the last kick's state (most kicks repeat the last one's); the draw state and pass made from
+ * them are the recorder's (last_d, last_p above) */
 static KH1DrawRegs last_r;
 static u32 last_scissor[2];
 static int have_last;
-static KH1DrawState last_d;
-static KH1RenderPass last_p;
 
 /* session 125: the primitive's vertex signature for batch.h's column groups (FNV-1a over the type and the
- * queued vertices; never 0) */
+ * queued vertices; never 0).  Session 143: a word a step, not a byte (KH1GsVert is all u32; the A9 paid
+ * a multiply a byte, ~7% of the GS worker); only equal signatures matter, so any good hash does */
 static u32 prim_sig(u32 prim, const KH1GsVert *v, u32 n) {
-    const u8 *q = (const u8 *)v;
+    const u32 *q = (const u32 *)v;
     u32 h = 2166136261u ^ (prim & 7), i;
     h *= 16777619u;
-    for (i = 0; i < n * sizeof *v; i++) h = (h ^ q[i]) * 16777619u;
+    for (i = 0; i < n * (sizeof *v / 4); i++) {
+        h = (h ^ q[i]) * 16777619u;
+        h ^= h >> 15;
+    }
     return h | 1;
 }
 
-void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
+/* session 146: the recorder's side of a kick.  The state op: data the draw's registers (KH1DrawRegs), then SCISSOR's
+ * and XYOFFSET's lo / hi words (the pass reads them; as before, only a change of the registers or SCISSOR makes a
+ * new state), 6 qwords an op (ops put one after another join, the last one then holds) */
+#define STATE_QW 6
+static void r_state(const u32 *a, const u32 *d, u32 nqw) {
     static const KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
-    const KH1GsState *gs = kh1_gs_state();
-    const KH1GsContext *c = &gs->ctx[prim >> 9 & 1];
-    KH1DrawRegs r;
+    const u32 *w;
+    (void)a;
+    if (nqw < STATE_QW) return;
+    d += (nqw - STATE_QW) * 4;
+    w = d + sizeof rec_r / 4;
+    memcpy(&rec_r, d, sizeof rec_r);
+    kh1_drawstate_of(&rec_r, &last_d);
+    kh1_target_of(rec_r.frame_lo, rec_r.frame_hi, rec_r.zbuf_lo, rec_r.zbuf_hi, rec_r.test_lo, w[0], w[1], w[2], w[3], &c43, 1.0f,
+                  &last_p);
+}
+
+/* the primitive op: arguments PRIM and the vertex count n, data the n queued vertices (KH1GsVert, 2 qwords each);
+ * the ops of the next primitives with the same PRIM and n join it */
+static void r_prim(const u32 *a, const u32 *d, u32 nqw) {
+    u32 prim = a[0], n = a[1], t = prim & 7, step = n * (u32)(sizeof(KH1GsVert) / 16), q = 0, i, nv;
     KH1PrimAsm pa;
     KH1PaVert out[6];
     KH1GpuVert gv[6];
     KH1VertCtx vc;
-    u32 i, nv = 0, t = prim & 7;
+    do {
+        const KH1GsVert *v = (const KH1GsVert *)(d + q * 4);
+        /* session 126: the primitive's GPU vertices: a fresh list of its type (a strip's or fan's kick is one triangle
+         * of the vertices the hook gives) through primasm.h and vertex.h */
+        nv = 0;
+        memset(&pa, 0, sizeof pa);
+        kh1_pa_prim(&pa, (prim & ~7u) | (t == 2 ? 1 : t == 4 || t == 5 ? 3 : t));
+        for (i = 0; i < n; i++) nv = kh1_pa_vertex(&pa, (const KH1PaVert *)&v[i], 1, out);
+        kh1_vertex_ctx(&vc, &last_p, rec_r.zbuf_lo, prim, rec_r.tex0_lo, rec_r.tex0_hi);
+        kh1_vertex_of(&vc, out, nv, gv);
+        kh1_cmd_prim(rec, &last_d, &last_p, gv, t == 6 ? 6 : n, prim_sig(prim, v, n));
+    } while (step && (q += step) < nqw);
+}
+
+/* the GS worker's side: the registers compared with the last kick's, a new state op when they moved; the texture
+ * lookup (it reads GS memory); then the primitive op */
+void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
+    const KH1GsState *gs = kh1_gs_state();
+    const KH1GsContext *c = &gs->ctx[prim >> 9 & 1];
+    KH1DrawRegs r;
+    u32 a[2];
     (void)state;
     recorder();
     memset(&r, 0, sizeof r);
@@ -191,9 +294,14 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     /* session 127: the transfers break the batch from gsmem.c's hooks (kh1_cmd_upload, kh1_cmd_clut) */
     if (!have_last || memcmp(&r, &last_r, sizeof r) || c->scissor.lo != last_scissor[0] ||
         c->scissor.hi != last_scissor[1]) {
-        kh1_drawstate_of(&r, &last_d);
-        kh1_target_of(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->test.lo, c->scissor.lo, c->scissor.hi,
-                      c->xyoffset.lo, c->xyoffset.hi, &c43, 1.0f, &last_p);
+        u32 w[STATE_QW * 4], k = sizeof r / 4;
+        memcpy(w, &r, sizeof r);
+        w[k] = c->scissor.lo;
+        w[k + 1] = c->scissor.hi;
+        w[k + 2] = c->xyoffset.lo;
+        w[k + 3] = c->xyoffset.hi;
+        for (k += 4; k < STATE_QW * 4; k++) w[k] = 0;
+        kh1_recq_put(r_state, 0, 0, w, STATE_QW);
         last_r = r;
         last_scissor[0] = c->scissor.lo;
         last_scissor[1] = c->scissor.hi;
@@ -204,14 +312,9 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
         tex_lookup(c->tex0.lo, c->tex0.hi);
         tex_look = 0;
     }
-    /* session 126: the primitive's GPU vertices: a fresh list of its type (a strip's or fan's kick is one triangle
-     * of the vertices the hook gives) through primasm.h and vertex.h */
-    memset(&pa, 0, sizeof pa);
-    kh1_pa_prim(&pa, (prim & ~7u) | (t == 2 ? 1 : t == 4 || t == 5 ? 3 : t));
-    for (i = 0; i < n; i++) nv = kh1_pa_vertex(&pa, (const KH1PaVert *)&v[i], 1, out);
-    kh1_vertex_ctx(&vc, &last_p, c->zbuf.lo, prim, c->tex0.lo, c->tex0.hi);
-    kh1_vertex_of(&vc, out, nv, gv);
-    kh1_cmd_prim(rec, &last_d, &last_p, gv, t == 6 ? 6 : n, prim_sig(prim, v, n));
+    a[0] = prim;
+    a[1] = n;
+    kh1_recq_put(r_prim, a, 2, (const u32 *)v, n * (u32)(sizeof *v / 16));
 }
 
 /* session 126: called with the frame's commands before they are cleared (tests/host/cmdbuf_test.c) */
@@ -322,6 +425,26 @@ static void w_hook(const u32 *a, const u32 *d, u32 n) {
     kh1_pipes_frame_hook(snap);
 }
 
+/* Session 145: the game draws every other frame in the Dive, so every other frame op finds nothing recorded,
+ * nothing written to the rings and GS memory as the last copy has it.  Such a frame's job reads nothing the
+ * worker changes (no commands, so no texels or palettes; the rings' slots it names hold nothing and are kept,
+ * ring.c; GS memory is the copy the job before reads too), so it is posted behind that job without waiting for
+ * it, from a copy of its own.  The next frame's op waits for both as before. */
+static KH1CmdRec *snap_empty;
+static int empty_posted; /* the last job posted is an empty frame's (snap_empty is its) */
+
+static int empty_frame(void) {
+    return !kh1_pipes_frame_arg && !rec->ncmd && !rec->npass && !rec->vring.head && !rec->uring.head &&
+           kh1_gsmem_snap_same();
+}
+
+static void w_hook_empty(const u32 *a, const u32 *d, u32 n) {
+    (void)d;
+    (void)n;
+    kh1_pipes_job_arg = a[0];
+    kh1_pipes_frame_hook(snap_empty);
+}
+
 /* the texels of texture cache entry `slot` the frame's upload reads (the copy's when the frame was copied) */
 const u32 *kh1_pipes_frame_texels(s32 slot) {
     if (slot < 0 || slot >= KH1_TEXCACHE_SLOTS) return 0;
@@ -337,10 +460,24 @@ const u32 *kh1_pipes_frame_pal(s32 slot) {
 }
 
 void kh1_pipes_frame(void) {
+    kh1_recq_sync(); /* session 146: the frame's recording done */
     frame_begin();
     if (kh1_pipes_frame_hook && kh1_pipes_snap) {
         u32 a = kh1_pipes_frame_arg;
+        if (kh1_pipes_gpu_put && empty_frame() && (snap_empty || (snap_empty = (KH1CmdRec *)calloc(1, sizeof *snap_empty)))) {
+            if (empty_posted && kh1_pipes_gpu_wait) kh1_pipes_gpu_wait(); /* its copy is about to change */
+            empty_posted = 1;
+            snap_empty->vring = rec->vring;
+            snap_empty->uring = rec->uring;
+            snap_empty->ncmd = snap_empty->npass = 0;
+            snap_empty->ntgt = rec->ntgt;
+            memcpy(snap_empty->tgt, rec->tgt, sizeof rec->tgt);
+            kh1_pipes_gpu_put(w_hook_empty, &a, 1);
+            frame_end();
+            return;
+        }
         if (kh1_pipes_gpu_wait) kh1_pipes_gpu_wait(); /* the last frame's hook is done with the copies */
+        empty_posted = 0;
         if (snap_frame()) {
             printf("kh1-host: pipes: the frame's copy failed (no memory): the GPU frame on this thread from now\n");
             kh1_pipes_snap = 0;
@@ -486,6 +623,7 @@ static void report_shaders(u32 vmask) {
 
 void kh1_pipes_report(void) {
     u32 i, vmask, nv;
+    kh1_recq_sync();
     if (rec) {
         if (batcher.frame.prims) kh1_pipes_frame(); /* the last frame's primitives */
         report_batches();

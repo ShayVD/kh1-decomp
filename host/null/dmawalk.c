@@ -44,6 +44,7 @@ const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded t
 void (*kh1_dma_after_send)(u32 tadr); /* session 94: KH1_HOST_SHOT's present (host/null/present.c) */
 int kh1_dma_after_send_reads = 1; /* session 141: it reads the GS model (dmawalk.h) */
 int kh1_dma_quiet; /* session 135: no send line (the Vita, dmawalk.h) */
+u32 kh1_dma_bad_sends; /* session 143: and only the first KH1_DMA_BAD_SHOWN bad sends' tag lists (dmawalk.h) */
 int kh1_dma_vu1; /* session 137v: VIF1's codes run on host/port/vu1.c, its XGKICKs drawn (dmawalk.h) */
 void (*kh1_dma_draw_state)(const KH1GsDraw *d); /* session 123: each send's draw states (KH1_HOST_TRACE=5) */
 
@@ -211,8 +212,20 @@ static GifStream ws[2];
 static u32 path1_packets, block_seq;
 static void w_block(const u32 *a, const u32 *d, u32 n) { gif_block(&ws[0], d, n); } /* a[0]: never joined */
 static void w_qwords(const u32 *a, const u32 *d, u32 n) { /* PATH2 qwords: joined, one stream either way */
-    u32 i;
-    for (i = 0; i < n; i++) gif_qword(&ws[0], d + i * 4);
+    GifStream *g = &ws[0];
+    u32 i, k;
+    for (i = 0; i < n; i++) {
+        /* session 146: an IMAGE packet's qwords here in one piece, as gif_block takes them (the Dive's texture
+         * streams come this way: a call a qword was ~a tenth of the GS worker on a Vita) */
+        if (g->left && g->flg >= 2) {
+            k = n - i < g->left ? n - i : g->left;
+            kh1_gsmem_image(d + i * 4, k * 4);
+            g->left -= k;
+            i += k - 1;
+            continue;
+        }
+        gif_qword(g, d + i * 4);
+    }
 }
 static void w_kick(const u32 *a, const u32 *d, u32 n) {
     memset(&ws[1], 0, sizeof ws[1]);
@@ -315,6 +328,17 @@ static u32 vif_unpack_words(VifStream *v, u32 cmd, u32 num) {
     return (n * bits + 31) / 32;
 }
 
+/* PATH2's qwords from a DIRECT, as vif_word hands them on one at a time */
+static void direct_qwords(VifStream *v, const u32 *q, u32 n) {
+    u32 i;
+    if (!kh1_gsq_on) {
+        for (i = 0; i < n; i++) gif_qword(&v->gif, q + i * 4);
+        return;
+    }
+    for (i = 0; i < n; i++) skim_qword(&v->gif, q + i * 4);
+    kh1_gsq_put(w_qwords, 0, 0, q, n); /* joined with the last op either way: one stream (w_qwords) */
+}
+
 static void vif_word(VifStream *v, u32 w, u32 addr) {
     u32 cmd = w >> 24 & 0x7F, imm = w & 0xFFFF, num = w >> 16 & 0xFF;
     v->pos = (v->pos + 1) & 3;
@@ -324,12 +348,8 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
         if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data(w);
         if (v->in_direct) {
             v->q[v->nq++] = w;
-            if (v->nq == 4) {
-                if (kh1_gsq_on) { /* session 141: counted here, decoded by the worker */
-                    skim_qword(&v->gif, v->q);
-                    kh1_gsq_put(w_qwords, 0, 0, v->q, 1);
-                } else
-                    gif_qword(&v->gif, v->q);
+            if (v->nq == 4) { /* session 141: with the worker, counted here and decoded there */
+                direct_qwords(v, v->q, 1);
                 v->nq = 0;
             }
             if (!v->need) v->in_direct = 0;
@@ -382,6 +402,30 @@ static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
     v->blocks++;
     if (v->need || v->pad) v->mid++;
     for (i = 0; i < n * 4;) {
+        /* session 143: a DIRECT's data words in a run too, its whole qwords handed on together */
+        if (v->need && !v->pad && v->in_direct) {
+            u32 k = n * 4 - i < v->need ? n * 4 - i : v->need, j = 0, nq;
+            if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q + i, k);
+            for (; j < k && v->nq; j++) {
+                v->q[v->nq++] = q[i + j];
+                if (v->nq == 4) {
+                    direct_qwords(v, v->q, 1);
+                    v->nq = 0;
+                }
+            }
+            for (nq = (k - j) / 4; nq; ) { /* at most 1024 qwords an op, far below half the ring */
+                u32 c = nq < 1024 ? nq : 1024;
+                direct_qwords(v, q + i + j, c);
+                j += c * 4;
+                nq -= c;
+            }
+            for (; j < k; j++) v->q[v->nq++] = q[i + j];
+            v->need -= k;
+            v->pos = (v->pos + k) & 3;
+            i += k;
+            if (!v->need) v->in_direct = 0;
+            continue;
+        }
         /* session 137v (the Dive's speed on a Vita): a code's data words other than DIRECT's in a run */
         if (v->need && !v->pad && !v->in_direct) {
             u32 k = n * 4 - i < v->need ? n * 4 - i : v->need;
@@ -569,7 +613,7 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
     u32 tag = tadr, asr[2], qwords = 0, ntags = 0, tte_hi = 0;
-    int asp = 0, bad = 0, done = 0, i, tte = (chcr & 0x40) != 0;
+    int asp = 0, bad = 0, done = 0, i, tte = (chcr & 0x40) != 0, show = 1;
     const char *last = "?";
     GifStream g = { 0 };
     VifStream v = { 0 };
@@ -678,14 +722,18 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
         gs_print_targets();
     }
     if (kh1_host_texdump) gs_dump_textures();
-    if (bad || kh1_host_trace == 3)
+    if (bad) {
+        kh1_dma_bad_sends++;
+        show = !kh1_dma_quiet || kh1_dma_bad_sends <= KH1_DMA_BAD_SHOWN;
+    }
+    if ((bad && show) || kh1_host_trace == 3)
         for (i = 0; i < (int)ntags; i++) {
             u32 *t = (u32 *)(unsigned long)tags[i][0];
             printf("kh1-host:   %08x %-4s qwc %u addr %08x upper %08x %08x%s\n", tags[i][0], ids[tags[i][1]],
                    t[0] & 0xFFFF, t[1], t[2], t[3], tte ? " (TTE)" : "");
         }
-    if (bad & KH1_DMA_TAG_OUTSIDE) printf("kh1-host:   tag at %08x outside\n", tag);
-    if (bad & KH1_DMA_VIF_BAD) printf("kh1-host:   %u words no VIF code, the first %08x at %08x\n", v.bad,
+    if (show && bad & KH1_DMA_TAG_OUTSIDE) printf("kh1-host:   tag at %08x outside\n", tag);
+    if (show && bad & KH1_DMA_VIF_BAD) printf("kh1-host:   %u words no VIF code, the first %08x at %08x\n", v.bad,
                                      v.bad_word, v.bad_addr);
     if (kh1_dma_after_send) kh1_dma_after_send(tadr);
     return bad;

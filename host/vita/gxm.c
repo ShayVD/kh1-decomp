@@ -72,8 +72,12 @@ static int gs_read_rect(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h, u
     return kh1_pipes_snap ? kh1_gsmem_snap_read_rect(psm, bp, bw, x0, y0, w, h, out, stride)
                           : kh1_gsmem_read_rect(psm, bp, bw, x0, y0, w, h, out, stride);
 }
+/* a loose texture's key check.  Session 146: from the copy, the take that last changed its pages' bytes, not
+ * their stamp: the title's full-screen CT24 layer lies in the depth buffer's pages, which the frame's Z target
+ * marks drawn (a new stamp) every frame though the copy's bytes stay, so it was read back and converted each
+ * frame (the Vita's GPU thread ~1.7 s of every 2 s in the draws, the title at ~13 fps) */
 static u32 gs_tex_stamp(u32 lo, u32 hi) {
-    return kh1_pipes_snap ? kh1_gsmem_snap_tex_stamp(lo, hi) : kh1_gsmem_tex_stamp(lo, hi);
+    return kh1_pipes_snap ? kh1_gsmem_snap_tex_ver(lo, hi) : kh1_gsmem_tex_stamp(lo, hi);
 }
 void kh1_vita_log(const char *fmt, ...);     /* main.c */
 

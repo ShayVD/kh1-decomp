@@ -165,6 +165,10 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
   "$W/dmawalk_test" > "$W/dmawalk.log" || { grep -v '^kh1-host:   ' "$W/dmawalk.log"; exit 1; }
   tail -n 1 "$W/dmawalk.log"
+  # session 147: kh1_bytes_same (host/null/bytesame.h) against memcmp, the host's form
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/bytesame_test" "$ROOT/tests/host/bytesame_test.c"
+  "$W/bytesame_test" > "$W/bytesame.log" || { cat "$W/bytesame.log"; exit 1; }
+  tail -n 1 "$W/bytesame.log"
   # session 141: VIF1's data path in blocks (host/port/vu1.c) against the word-at-a-time reader it replaced
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/vu1feed_test" "$ROOT/tests/host/vu1feed_test.c" -lm
   "$W/vu1feed_test" > "$W/vu1feed.log" || { cat "$W/vu1feed.log"; exit 1; }
@@ -176,12 +180,22 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
         -mfloat-abi=hard -static -DKH1_HOST -I"$ROOT/include" -o "$W/vu1neon_test" "$ROOT/tests/host/vu1neon_test.c" -lm
     qemu-arm "$W/vu1neon_test" 300000 > "$W/vu1neon.log" || { cat "$W/vu1neon.log"; exit 1; }
     tail -n 1 "$W/vu1neon.log"
+    # session 147: the large uploads' NEON compare (host/null/bytesame.h) against memcmp
+    arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -static -DKH1_HOST \
+        -I"$ROOT/include" -o "$W/bytesame_arm" "$ROOT/tests/host/bytesame_test.c"
+    qemu-arm "$W/bytesame_arm" > "$W/bytesame_arm.log" || { cat "$W/bytesame_arm.log"; exit 1; }
+    tail -n 1 "$W/bytesame_arm.log"
   fi
   # the GS register file it feeds (host/null/gsregs.c, session 79)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsregs_test" \
       "$ROOT/tests/host/gsregs_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsregs_test" > "$W/gsregs.log" || { grep -v '^kh1-host:' "$W/gsregs.log"; exit 1; }
   tail -n 1 "$W/gsregs.log"
+  # the GS worker's queue and the recording queue on the GPU frame's thread (host/null/gsqueue.c, session 146)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsqueue_test" \
+      "$ROOT/tests/host/gsqueue_test.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c"
+  "$W/gsqueue_test" > "$W/gsqueue.log" || { cat "$W/gsqueue.log"; exit 1; }
+  tail -n 1 "$W/gsqueue.log"
   # the GS memory it feeds (host/null/gsmem.c, session 80)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsmem_test" \
       "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
@@ -269,6 +283,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   tail -n 1 "$W/vertex.log"
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/batch_test" \
       "$ROOT/tests/host/batch_test.c" "$ROOT/host/null/pipes.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
+      "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" \
       "$ROOT/host/port/canvas.c" "$ROOT/host/port/batch.c" "$ROOT/host/port/vertex.c" "$ROOT/host/port/target.c" \
       "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" \
       "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c" \
@@ -284,6 +299,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   # the draw list as GPU commands, the passes' load / store needs (renderer-spec 4.13 "Session 126")
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/cmdbuf_test" \
       "$ROOT/tests/host/cmdbuf_test.c" "$ROOT/host/null/pipes.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
+      "$ROOT/host/null/gsqueue.c" "$ROOT/tests/host/vu1_none.c" \
       "$ROOT/host/port/canvas.c" "$ROOT/host/port/batch.c" "$ROOT/host/port/vertex.c" "$ROOT/host/port/target.c" \
       "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" \
       "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c" \

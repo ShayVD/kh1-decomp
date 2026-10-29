@@ -50,6 +50,10 @@ typedef struct {
  * kh1_vu1_kick_us the part of it spent in kh1_vu1_kick (the GIF path past the VU) */
 extern u32 (*kh1_vu1_clock)(void);
 extern u32 kh1_vu1_us, kh1_vu1_kick_us;
+/* session 147: with that clock, each translated program's time, runs and pairs (instruction pairs) so far:
+ * nonzero for i a translated program (0..KH1_VU1_PROGS-1), *num its number in tools/vu/find_vu1.py's list */
+#define KH1_VU1_PROGS 32
+int kh1_vu1_prog_stats(int i, int *num, u32 *us, u32 *runs, u32 *pairs);
 
 /* 1 (the default): a program out/gen/vu1_tr.c has runs as its C; 0: the interpreter only; 2: both, compared */
 extern int kh1_vu1_tr;

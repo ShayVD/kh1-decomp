@@ -176,14 +176,24 @@ static u32 absf(u32 u) {
     return y.u & 0x7FFFFFFF;
 }
 
-/* the clip flag after CLIPw.xyz of fs against |w| */
+/* session 143: fin(u) as an integer that orders as the float does: fin's values are finite and never
+ * denormal, so sign and magnitude are enough (both zeros 0); no VFP, whose compares the A9 pays a flag
+ * transfer each for */
+static __inline__ s32 fkey(u32 u) {
+    u32 e = u & 0x7F800000, m = u & 0x7FFFFFFF;
+    if (e == 0x7F800000) m = 0x7F7FFFFF;
+    else if (!e) m = 0;
+    return u >> 31 ? -(s32)m : (s32)m;
+}
+
+/* the clip flag after CLIPw.xyz of fs against |w| (the float compares of fin()'s values, on fkey) */
 static u32 clipw(const u32 *s, u32 wb) {
-    f32 w = fin(wb), v;
+    s32 w = fkey(wb), v;
     u32 b = 0;
     if (w < 0) w = -w;
-    v = fin(s[0]); if (v > w) b |= 1; if (v < -w) b |= 2;
-    v = fin(s[1]); if (v > w) b |= 4; if (v < -w) b |= 8;
-    v = fin(s[2]); if (v > w) b |= 16; if (v < -w) b |= 32;
+    v = fkey(s[0]); if (v > w) b |= 1; if (v < -w) b |= 2;
+    v = fkey(s[1]); if (v > w) b |= 4; if (v < -w) b |= 8;
+    v = fkey(s[2]); if (v > w) b |= 16; if (v < -w) b |= 32;
     return ((clip_last << 6) | b) & 0xFFFFFF;
 }
 
@@ -834,15 +844,25 @@ static void run(u32 pc) {
  * add, the scalar C keeps it), which only moves a sum of magnitude below 2^-126 */
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
 #include <arm_neon.h>
+/* session 147: the VU's registers read and written as plain vector memory, not through vld1q / vst1q: gcc sees
+ * through these (an ACC stored by one FMAC and read by the next stays in its register; the A9 makes a NEON load
+ * of what a NEON store just wrote wait for it) where the intrinsics are opaque to it.  aligned(4): vf / acc / mem
+ * are u32 arrays */
+typedef uint32x4_t vu_u4 __attribute__((aligned(4), may_alias));
+#define VU_LD(p) (*(const vu_u4 *)(p))
+#define VU_ST(p, v) (*(vu_u4 *)(p) = (v))
+/* session 147: fin()'s clamp in two minimums: a signed one brings a positive word down to 0x7F7FFFFF and
+ * leaves a negative one, an unsigned one the reverse with 0xFF7FFFFF (Inf and NaN to the largest finite of
+ * their sign; a denormal NEON flushes as it reads it) */
 static __inline__ float32x4_t vfin(uint32x4_t u) {
-    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
-    uint32x4_t m = vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu));
-    return vreinterpretq_f32_u32(vorrq_u32(s, m));
+    int32x4_t p = vminq_s32(vreinterpretq_s32_u32(u), vdupq_n_s32(0x7F7FFFFF));
+    return vreinterpretq_f32_u32(vminq_u32(vreinterpretq_u32_s32(p), vdupq_n_u32(0xFF7FFFFFu)));
 }
-static __inline__ uint32x4_t vfo(float32x4_t r) { /* an arithmetic result: NEON flushed it already */
-    uint32x4_t u = vreinterpretq_u32_f32(r);
-    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
-    return vorrq_u32(s, vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu)));
+/* an arithmetic result: NEON flushed it already.  Its operands are finite (fin()'s, or what the VU wrote), so
+ * it is finite or an infinity, never a NaN: the float clamp to +-FLT_MAX is fout()'s, -0 kept */
+static __inline__ uint32x4_t vfo(float32x4_t r) {
+    float32x4_t m = vreinterpretq_f32_u32(vdupq_n_u32(0x7F7FFFFFu));
+    return vreinterpretq_u32_f32(vmaxq_f32(vminq_f32(r, m), vnegq_f32(m)));
 }
 static __inline__ uint32x4_t vflush(uint32x4_t u) { /* a value passed through (MAX / MINI): denormal to 0 */
     uint32x4_t z = vceqq_u32(vandq_u32(u, vdupq_n_u32(0x7F800000u)), vdupq_n_u32(0));
@@ -857,22 +877,37 @@ static __inline__ void vu_k(u32 *t, int k, float32x4_t a, float32x4_t b, const u
     case K_ADD: r = vaddq_f32(a, b); break;
     case K_SUB: r = vsubq_f32(a, b); break;
     case K_MUL: r = vmulq_f32(a, b); break;
-    case K_MADD: r = vaddq_f32(vin(vld1q_u32(c), fc), vmulq_f32(a, b)); break;
-    case K_MSUB: r = vsubq_f32(vin(vld1q_u32(c), fc), vmulq_f32(a, b)); break;
+    case K_MADD: r = vaddq_f32(vin(VU_LD(c), fc), vmulq_f32(a, b)); break;
+    case K_MSUB: r = vsubq_f32(vin(VU_LD(c), fc), vmulq_f32(a, b)); break;
     default: { /* MAX / MINI: a > b ? a : b, a < b ? a : b (b on a tie, as the interpreter) */
         uint32x4_t gt = k == K_MAX ? vcgtq_f32(a, b) : vcltq_f32(a, b);
-        vst1q_u32(t, vfo(vreinterpretq_f32_u32(vflush(vbslq_u32(gt, vreinterpretq_u32_f32(a), vreinterpretq_u32_f32(b))))));
+        VU_ST(t, vfo(vreinterpretq_f32_u32(vflush(vbslq_u32(gt, vreinterpretq_u32_f32(a), vreinterpretq_u32_f32(b))))));
         return;
     }
     }
-    vst1q_u32(t, vfo(r));
+    VU_ST(t, vfo(r));
 }
 /* fa, fb, fc: whether a, b, c need fin() (vu1_translate.py knows when they hold what the VU wrote) */
 static __inline__ void vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
-    vu_k(t, k, vin(vld1q_u32(a), fa), vin(vld1q_u32(b), fb), c, fc);
+    vu_k(t, k, vin(VU_LD(a), fa), vin(VU_LD(b), fb), c, fc);
 }
-static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, int fa, int fb, int fc) {
-    vu_k(t, k, vin(vld1q_u32(a), fa), vin(vdupq_n_u32(b), fb), c, fc);
+/* b one field, broadcast: a word the core wrote (Q, I) */
+static __inline__ void vu_opb(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
+    vu_k(t, k, vin(VU_LD(a), fa), vin(vdupq_n_u32(*b), fb), c, fc);
+}
+/* lane l of v in all four (l a constant) */
+static __inline__ uint32x4_t vu_lane(uint32x4_t v, int l) {
+    switch (l) {
+    case 0: return vdupq_lane_u32(vget_low_u32(v), 0);
+    case 1: return vdupq_lane_u32(vget_low_u32(v), 1);
+    case 2: return vdupq_lane_u32(vget_high_u32(v), 0);
+    default: return vdupq_lane_u32(vget_high_u32(v), 1);
+    }
+}
+/* b field l of a VF: taken from the register's vector, so a VF an FMAC just wrote is not read back through a core
+ * register (on the A9 a core load of a word NEON stored waits for the store) */
+static __inline__ void vu_opbl(u32 *t, int k, const u32 *a, const u32 *b, int l, const u32 *c, int fa, int fb, int fc) {
+    vu_k(t, k, vin(VU_LD(a), fa), vin(vu_lane(VU_LD(b), l), fb), c, fc);
 }
 /* session 141: four lanes for the forms vu1_tr.c ran field by field (an FMAC whose MAC flag a later FMAND /
  * FMEQ / FMOR reads, OPMULA / OPMSUB), exact: the operands always through fin(), the MAC bits (into *macf
@@ -887,7 +922,7 @@ static const u32 vu_lanes[16][4] = {
     { ~0u, ~0u, 0, 0 }, { ~0u, ~0u, 0, ~0u }, { ~0u, ~0u, ~0u, 0 }, { ~0u, ~0u, ~0u, ~0u },
 };
 static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u32 *c, u32 dest, u32 *macf) {
-    uint32x4_t act = vld1q_u32(vu_lanes[dest & 15]), z = vdupq_n_u32(0), abs7 = vdupq_n_u32(0x7FFFFFFFu);
+    uint32x4_t act = VU_LD(vu_lanes[dest & 15]), z = vdupq_n_u32(0), abs7 = vdupq_n_u32(0x7FFFFFFFu);
     uint32x4_t ru, bad = z;
     uint32x2_t any;
     float32x4_t p = vmulq_f32(a, b), r;
@@ -900,7 +935,7 @@ static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u
         uint32x4_t pz = vceqq_u32(vandq_u32(vreinterpretq_u32_f32(p), abs7), z);
         uint32x4_t an = vtstq_u32(vreinterpretq_u32_f32(a), abs7), bn = vtstq_u32(vreinterpretq_u32_f32(b), abs7);
         bad = vandq_u32(pz, vandq_u32(an, bn));
-        r = k == K_MADD ? vaddq_f32(vfin(vld1q_u32(c)), p) : vsubq_f32(vfin(vld1q_u32(c)), p);
+        r = k == K_MADD ? vaddq_f32(vfin(VU_LD(c)), p) : vsubq_f32(vfin(VU_LD(c)), p);
         break;
     }
     default: return 0; /* MAX / MINI: never here */
@@ -910,9 +945,9 @@ static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u
     bad = vandq_u32(bad, act);
     any = vorr_u32(vget_low_u32(bad), vget_high_u32(bad));
     if (vget_lane_u32(vpmax_u32(any, any), 0)) return 0;
-    vst1q_u32(t, vfo(r));
+    VU_ST(t, vfo(r));
     if (!macf) return 1;
-    vst1q_u32(raw, ru);
+    VU_ST(raw, ru);
     for (f = 0; f < 4; f++) {
         u32 bit = 3 - f;
         if (!(dest >> bit & 1)) continue;
@@ -923,18 +958,40 @@ static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u
     return 1;
 }
 static __inline__ int vu_ope(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) {
-    return vu_ek(t, k, vfin(vld1q_u32(a)), vfin(vld1q_u32(b)), c, dest, macf);
+    return vu_ek(t, k, vfin(VU_LD(a)), vfin(VU_LD(b)), c, dest, macf);
 }
-static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, u32 b, const u32 *c, u32 dest, u32 *macf) {
-    return vu_ek(t, k, vfin(vld1q_u32(a)), vfin(vdupq_n_u32(b)), c, dest, macf);
+static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) {
+    return vu_ek(t, k, vfin(VU_LD(a)), vfin(vdupq_n_u32(*b)), c, dest, macf);
+}
+static __inline__ int vu_opbel(u32 *t, int k, const u32 *a, const u32 *b, int l, const u32 *c, u32 dest, u32 *macf) {
+    return vu_ek(t, k, vfin(VU_LD(a)), vfin(vu_lane(VU_LD(b), l)), c, dest, macf);
+}
+/* session 147: an upper result's fields in dest (x the 8 bit) from u into t, on NEON: the A9 reads a word NEON
+ * just stored slowly from the core, and u is always one */
+/* session 147: clipw() of fs against ft.w on NEON: fkey's magnitude (Inf / NaN the largest, a denormal 0) compared
+ * unsigned with w's, the sign then picking the + or - bit; one transfer to the core for the six bits instead of a
+ * core load of each field an FMAC just stored */
+static __inline__ u32 vu_clipw(const u32 *s, const u32 *t) {
+    static const u32 wp[4] = { 1, 4, 16, 0 }, wn[4] = { 2, 8, 32, 0 };
+    uint32x4_t u = VU_LD(s), w = VU_LD(t), lim = vdupq_n_u32(0x7F7FFFFFu), ex = vdupq_n_u32(0x7F800000u);
+    uint32x4_t m = vandq_u32(vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), lim), vtstq_u32(u, ex));
+    uint32x4_t wm = vandq_u32(vminq_u32(vandq_u32(w, vdupq_n_u32(0x7FFFFFFFu)), lim), vtstq_u32(w, ex));
+    uint32x4_t gt = vcgtq_u32(m, vu_lane(wm, 3)), neg = vreinterpretq_u32_s32(vshrq_n_s32(vreinterpretq_s32_u32(u), 31));
+    uint32x4_t b = vorrq_u32(vandq_u32(vbicq_u32(gt, neg), VU_LD(wp)), vandq_u32(vandq_u32(gt, neg), VU_LD(wn)));
+    uint32x2_t h = vadd_u32(vget_low_u32(b), vget_high_u32(b));
+    h = vpadd_u32(h, h);
+    return ((clip_last << 6) | vget_lane_u32(h, 0)) & 0xFFFFFF;
+}
+static __inline__ void vu_put(u32 *t, const u32 *u, u32 dest) {
+    VU_ST(t, vbslq_u32(VU_LD(vu_lanes[dest & 15]), VU_LD(u), VU_LD(t)));
 }
 static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
     static const f32 inv[4] = { 1.0f, 1.0f / 16.0f, 1.0f / 4096.0f, 1.0f / 32768.0f };
-    vst1q_u32(t, vreinterpretq_u32_f32(vmulq_n_f32(vcvtq_f32_s32(vreinterpretq_s32_u32(vld1q_u32(a))), inv[sc])));
+    VU_ST(t, vreinterpretq_u32_f32(vmulq_n_f32(vcvtq_f32_s32(vreinterpretq_s32_u32(VU_LD(a))), inv[sc])));
 }
 static __inline__ void vu_ftoi(u32 *t, const u32 *a, int sc) {
     static const f32 mul[4] = { 1.0f, 16.0f, 4096.0f, 32768.0f };
-    vst1q_u32(t, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(vfin(vld1q_u32(a)), mul[sc]))));
+    VU_ST(t, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(vfin(VU_LD(a)), mul[sc]))));
 }
 #else
 static __inline__ f32 sin1(u32 u, int fi) {
@@ -958,14 +1015,24 @@ static __inline__ void vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u3
         }
     }
 }
-static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, int fa, int fb, int fc) {
+static __inline__ void vu_opb(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
     u32 bb[4];
-    bb[0] = bb[1] = bb[2] = bb[3] = b;
+    bb[0] = bb[1] = bb[2] = bb[3] = *b;
     vu_op(t, k, a, bb, c, fa, fb, fc);
+}
+static __inline__ void vu_opbl(u32 *t, int k, const u32 *a, const u32 *b, int l, const u32 *c, int fa, int fb, int fc) {
+    vu_opb(t, k, a, b + l, c, fa, fb, fc);
+}
+static __inline__ u32 vu_clipw(const u32 *s, const u32 *t) { return clipw(s, t[3]); }
+static __inline__ void vu_put(u32 *t, const u32 *u, u32 dest) {
+    int f;
+    for (f = 0; f < 4; f++)
+        if (dest >> (3 - f) & 1) t[f] = u[f];
 }
 /* session 141: the scalar form runs (see the NEON vu_ope) */
 static __inline__ int vu_ope(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) { return 0; }
-static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, u32 b, const u32 *c, u32 dest, u32 *macf) { return 0; }
+static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) { return 0; }
+static __inline__ int vu_opbel(u32 *t, int k, const u32 *a, const u32 *b, int l, const u32 *c, u32 dest, u32 *macf) { return 0; }
 static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
     static const f32 d[4] = { 1.0f, 16.0f, 4096.0f, 32768.0f };
     int f;
@@ -997,6 +1064,15 @@ typedef struct {
 static const TrProg tr_progs[1] = { { 0, 0, 0, 0 } };
 #define TR_PROGS 0
 #endif
+static u32 tr_us[KH1_VU1_PROGS], tr_runs[KH1_VU1_PROGS], tr_pairs[KH1_VU1_PROGS];
+int kh1_vu1_prog_stats(int i, int *num, u32 *us, u32 *runs, u32 *pairs) {
+    if (i < 0 || i >= TR_PROGS || i >= KH1_VU1_PROGS) return 0;
+    *num = tr_progs[i].num;
+    *us = tr_us[i];
+    *runs = tr_runs[i];
+    *pairs = tr_pairs[i];
+    return 1;
+}
 static int tr_cur = -1;
 static u32 tr_gen = ~0u;
 
@@ -1128,8 +1204,16 @@ static void start_run(u32 pc) {
         return;
     }
     if (prog >= 0) {
+        u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, n0 = st.insns;
+        int ran;
         tr_lost = 0;
-        if (tr_progs[prog].run(pc)) {
+        ran = tr_progs[prog].run(pc);
+        if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
+            tr_us[prog] += kh1_vu1_clock() - t0;
+            tr_runs[prog]++;
+            tr_pairs[prog] += st.insns - n0;
+        }
+        if (ran) {
             st.runs++;
             st_runs_all++;
             st.tr_runs++;
@@ -1164,6 +1248,40 @@ static u32 elem(u32 e, u32 bits, int usn, u32 nwords) {
     return v;
 }
 
+/* session 143: element e of the data words, 32, 16 or 8 bits (vl 0, 1, 2), sign-extended unless usn */
+static __inline__ u32 unpack_el(u32 vl, u32 usn, u32 e) {
+    u32 h;
+    if (vl == 0) return dbuf[e];
+    if (vl == 1) {
+        h = dbuf[e >> 1] >> (e & 1) * 16 & 0xFFFF;
+        return !usn && h & 0x8000 ? h | 0xFFFF0000u : h;
+    }
+    h = dbuf[e >> 2] >> (e & 3) * 8 & 0xFF;
+    return !usn && h & 0x80 ? h | 0xFFFFFF00u : h;
+}
+
+/* session 143: unpack_fast's loop when every element it reads is here, one copy per format (vn, vl constants
+ * at each call) so that no test of the format or of the data's end runs an element */
+static __inline__ __attribute__((always_inline)) void unpack_run(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
+    u32 nel = vn + 1, i, cycle = 0, e = 0, v[4], *d;
+    for (i = 0; i < num; i++, e += nel) {
+        v[0] = unpack_el(vl, usn, e);
+        if (vn >= 1) v[1] = unpack_el(vl, usn, e + 1);
+        if (vn >= 2) {
+            v[2] = unpack_el(vl, usn, e + 2);
+            v[3] = unpack_el(vl, usn, e + 3); /* V3: w is the next element in the stream */
+        }
+        if (vn == 0) v[1] = v[2] = v[3] = v[0];
+        else if (vn == 1) { v[2] = v[0]; v[3] = v[1]; }
+        d = mem[addr & (DATA_QW - 1)];
+        if (mode == 1) { d[0] = v[0] + row[0]; d[1] = v[1] + row[1]; d[2] = v[2] + row[2]; d[3] = v[3] + row[3]; }
+        else if (mode == 2) { d[0] = row[0] += v[0]; d[1] = row[1] += v[1]; d[2] = row[2] += v[2]; d[3] = row[3] += v[3]; }
+        else { d[0] = v[0]; d[1] = v[1]; d[2] = v[2]; d[3] = v[3]; }
+        addr++;
+        if (++cycle == wl) { addr += cl - wl; cycle = 0; }
+    }
+}
+
 /* Session 137v (the Dive's speed on a Vita): the unmasked V1 / V2 / V3 / V4 of 32, 16 and 8 bits with no
  * filling cycle (WL <= CL), unpack's loop without a call an element; 0 for the rest, which unpack does */
 static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
@@ -1173,6 +1291,23 @@ static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
     if (vl == 0 && vn >= 2 && mode == 0 && cl == wl && num * nel + (vn == 2) <= got) {
         for (i = 0; i < num; i++) memcpy(mem[(addr + i) & (DATA_QW - 1)], dbuf + i * nel, 16);
         return 1;
+    }
+    /* session 143: the last element read, (num - 1) * nel + (V3 ? 3 : nel - 1), is inside the got words */
+    if ((num - 1) * nel + (vn == 2 ? 4 : nel) <= got << vl) {
+        switch (vl << 2 | vn) {
+        case 0x0: unpack_run(0, 0, num, usn, addr); return 1;
+        case 0x1: unpack_run(1, 0, num, usn, addr); return 1;
+        case 0x2: unpack_run(2, 0, num, usn, addr); return 1;
+        case 0x3: unpack_run(3, 0, num, usn, addr); return 1;
+        case 0x4: unpack_run(0, 1, num, usn, addr); return 1;
+        case 0x5: unpack_run(1, 1, num, usn, addr); return 1;
+        case 0x6: unpack_run(2, 1, num, usn, addr); return 1;
+        case 0x7: unpack_run(3, 1, num, usn, addr); return 1;
+        case 0x8: unpack_run(0, 2, num, usn, addr); return 1;
+        case 0x9: unpack_run(1, 2, num, usn, addr); return 1;
+        case 0xA: unpack_run(2, 2, num, usn, addr); return 1;
+        case 0xB: unpack_run(3, 2, num, usn, addr); return 1;
+        }
     }
     for (i = 0; i < num; i++) {
         u32 *d = mem[addr & (DATA_QW - 1)];
@@ -1285,6 +1420,10 @@ void kh1_vif1_code(u32 w) {
 /* session 137v: n of the current code's data words at once (the walk's run of them), as n calls of
  * kh1_vif1_data */
 void kh1_vif1_data_n(const u32 *w, u32 n) {
+    if ((cur == 0x50 || cur == 0x51) && n <= need) { /* session 143: DIRECT's words are the walk's (PATH2) */
+        need -= n;
+        return;
+    }
     if ((cur & 0x60) == 0x60 && n <= need) {
         u32 k = got < sizeof dbuf / 4 ? sizeof dbuf / 4 - got : 0;
         memcpy(dbuf + got, w, (n < k ? n : k) * 4);

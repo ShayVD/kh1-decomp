@@ -250,6 +250,53 @@ static double now(void) {
     return t.tv_sec + t.tv_nsec * 1e-9;
 }
 
+/* ------------------------------------------------------------------ session 143: CLIPw on integers */
+
+/* the float form clipw replaced, verbatim */
+static u32 ref_clipw(const u32 *s, u32 wb) {
+    f32 w = fin(wb), v;
+    u32 b = 0;
+    if (w < 0) w = -w;
+    v = fin(s[0]); if (v > w) b |= 1; if (v < -w) b |= 2;
+    v = fin(s[1]); if (v > w) b |= 4; if (v < -w) b |= 8;
+    v = fin(s[2]); if (v > w) b |= 16; if (v < -w) b |= 32;
+    return ((clip_last << 6) | b) & 0xFFFFFF;
+}
+
+/* a float's bits weighted to the edges: zeros, denormals, Inf / NaN, the largest, equal magnitudes */
+static u32 clip_operand(u32 like) {
+    static const u32 edge[] = { 0, 0x80000000u, 1, 0x807FFFFFu, 0x7F800000u, 0xFF800000u, 0x7FC00000u, 0xFFFFFFFFu,
+                                0x7F7FFFFFu, 0xFF7FFFFFu, 0x00800000u, 0x80800000u, 0x3F800000u, 0xBF800000u };
+    u32 r = rnd();
+    switch (r & 7) {
+    case 0: return edge[(r >> 3) % (sizeof edge / sizeof edge[0])];
+    case 1: return like ^ (r & 0x80000000u);              /* +-|w| itself */
+    case 2: return (like & 0x80000000u) | ((like + (r >> 30) - 2) & 0x7FFFFFFFu); /* next to it */
+    case 3: return (r >> 8) & 0x807FFFFFu;                /* a denormal */
+    default: return rnd();
+    }
+}
+
+static int clip_check(void) {
+    u32 n, s[3], w, a, b;
+    for (n = 0; n < 2000000; n++) {
+        w = clip_operand(rnd());
+        s[0] = clip_operand(w);
+        s[1] = clip_operand(w);
+        s[2] = clip_operand(w);
+        clip_last = rnd() & 0x3FFFF;
+        a = ref_clipw(s, w);
+        b = clipw(s, w);
+        if (a != b) {
+            printf("vu1feed_test: CLIPw of %08x %08x %08x against %08x: %06x, the float form %06x\n", s[0], s[1], s[2], w,
+                   b, a);
+            return 1;
+        }
+    }
+    printf("vu1feed_test: CLIPw on integers the same as on floats over 2M operand sets\n");
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int pass, fails = 0;
     u32 unpacks = 0, fills = 0;
@@ -282,7 +329,7 @@ int main(int argc, char **argv) {
         printf("vu1feed_test: mesh stream x %d (%u words): word at a time %.1f ns a word, blocks %.1f ns a word\n", n, sn,
                (t1 - t0) * 1e9 / ((double)n * sn), (t2 - t1) * 1e9 / ((double)n * sn));
     }
-    if (fails) return 1;
+    if (fails || clip_check()) return 1;
     printf("vu1feed_test: 40 streams (%u UNPACKs, %u filling writes) the same both ways\n", unpacks, fills);
     return 0;
 }
