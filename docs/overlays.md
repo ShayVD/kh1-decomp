@@ -167,6 +167,24 @@ and gb func_00f25a68 is wm func_00f35800 with gb's own literal (0.17453292f).
   gave wm func_00f50968, func_00f55ad8, func_00f781c0).
 - autodecomp's `--diff` now runs `objdump -z`: without it runs of zero words (nops) were
   folded out and the side-by-side diff went out of step.
+- **sq / lq around a call is a caller-save spill.** gcc keeps a value live across a call in
+  a t register and saves it as a whole 128-bit quadword (gb func_00f3e388's t2 / t3 around
+  func_00f3f548, gb func_00f24780's grid base). The source is plain C; the work is the
+  register allocation.
+- **A `v0` set and never read before `jr ra` is a return value** (gb func_00f38408 returns
+  `p + 24`; the "unused" `addiu v0,s4,384` was it).
+- **Pointer copies change allocation and jump threading.** gb func_00f3e388 matched only when
+  the header was read through a copy (`hh = h;` after the first call, every later use through
+  `hh`): the stage-1 bound moved from v1 to v0 and the early exit stopped being threaded past
+  a reload. The permuter found it (new_var); try it by hand when a loop guard's register is off.
+- **An inner loop whose base goes straight into an s register** (no `move s0,t0`) increments
+  the pointer itself: `for (i = 0; i < n; i++, e++)`, not `e[i]` (gb func_00f3e388 / f3e0d8).
+- **GIF packet builders** (gb func_00f42cf8, func_00f41dc8, func_00f38408): a union of
+  `kh1_u128` / `u32 w[4]` / `{u64 lo, hi}` per qword and an inline `ad(q, data, reg)` that
+  stores both halves keep the per-qword address registers; incremented-pointer calls
+  (`f(o++, ...)`) give the `addiu s7,sp,N` before each `jal`.
+- **The permuter's base.c can lose `do {} while (0)`** and some casts (pycparser): check
+  that base.c still holds what you gave it.
 
 ## decomp-permuter on an overlay function (session 135)
 
