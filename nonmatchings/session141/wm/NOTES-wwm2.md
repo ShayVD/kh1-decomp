@@ -227,3 +227,21 @@ No matches.
   line above `x = ...` (106 to 62).
 - Not reached: f792c8, f77648, f74440, f646c0 (f646c0 is a large texture upload / GIF packet builder; looked at
   only).
+
+## Round 13
+
+Matched:
+- func_00f792c8 (nostrict): a sibling of f68ec0 (gb f41dc8) with a vertex count `cnt` and prim types for 3 versus N
+  vertices. Built from the f68ec0 template:
+  - `do {} while (0);` at the top of the flag branch.
+  - The vertex loop is written as `i = 0; if (cnt > 0) { u32 ff = 0xFFFFFF; o = (u32 *)(n * 16 + (s32)p); do {...}
+    while (++i < cnt); }`. That puts o's setup after the guard, and the ff local fixes the `lui t0,0xff` position.
+  - The store order was brute-forced: s/z, t/z, 0, 1/z, then x, y, 0xFFFFFF, 0.
+- func_00f68ec0 (nostrict): the same trick finishes the 3-word twin draft. Write `i = 0; ff = 0xFFFFFF;
+  o = (u32 *)(n * 16 + (s32)p);` before the colour loads, then `for (; i < 4; i++)`, and store `o[2] = ff`. The gb
+  twin f41dc8 should take the same change.
+
+Near miss saved: func_00f77648 (score 168, first draft; see the header).
+f74440 not reached.
+f71748: a 30-minute -j1 permuter run from the score-62 draft. Its best output only swaps two statements in the first
+panel block, which hand.py scores at 66 (worse), so the saved draft is kept.
