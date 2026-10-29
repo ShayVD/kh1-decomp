@@ -1,4 +1,5 @@
-/* 3 words left (round 12): only the reorg delay-slot fill in the second loop (target bne with slt in the slot and bc1f with nop; we get bnel/bc1fl). Keys that got it from 159 to 3: the ssf() address helper (same idea as func_00f3fb28), array expressions instead of a Sub pointer, a local for k->f0, and dir = D[idx].s.dir = k->b8 & 1. Tried: continue/nested/reordered conditions (6 orders), k->sp > 0 forms; a 10 min permuter found nothing usable. Round 13: a 600 s hill2 pass (store order plus type and declaration slots for f21260; loop condition and initialiser slots for f3ff98) found nothing. */
+/* wm.x func_00f3ff98: matched by hand (session 141, wwm1 round 17): a CONTEXT_ONLY func_00f3fe68 above it. A call to a function defined earlier in the file is nothrow, which changes reorg's branch-likely choice (docs/overlays.md, "Branch-likely vs plain branch"). */
+#include "ovl.h"
 typedef struct { s32 id; s32 a; s32 b; f32 val; f32 v2; s32 dir; } Sub;
 typedef struct { f32 m0[4][4]; f32 m1[4][4]; f32 m2[4][4]; f32 m3[16][4][4]; f32 m4[2][4][4]; Sub s; u8 pad2[0x590 - 0x558]; } W;
 typedef struct { f32 f0; u8 kind; u8 pad; u16 flag; u8 b8; u8 pad9[23]; u16 h32; u8 pad34[2]; u16 h36; u8 pad38[14]; f32 sp; } K;
@@ -12,7 +13,7 @@ f32 func_00f3f718(s32);
 s32 func_00f62b90(s32);
 K *func_00f62b98(s32, s32);
 Q *func_00f62c78(s32, s32);
-void func_00f3fe68(K *, s32);
+CONTEXT_ONLY void func_00f3fe68(K * a0, s32 a1) {}
 void func_00f3de10(void);
 void func_00f3cac8(void);
 void sceVu0UnitMatrix(f32 (*)[4]);
