@@ -35,6 +35,11 @@ void kh1_gsq_sync(void);
 /* the watchdog's counts (host/vita/main.c): microseconds the worker spent running ops, microseconds the
  * game thread waited for it (syncs and a full ring), the syncs that had to wait; kh1_vu1_clock's */
 extern volatile u32 kh1_gsq_us_busy, kh1_gsq_us_wait, kh1_gsq_waits;
+/* session 147b: the worker's time by op function since the last take (up to KH1_GSQ_OPS functions, the last
+ * slot also taking any beyond): fn the op's function address (out/vita/kh1.elf's symbols name it), us, n;
+ * the count returned, each slot's time and count zeroed */
+#define KH1_GSQ_OPS 12
+int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n);
 
 /* Session 142 (docs/vita-build.md "The GPU frame on the third core"): one more thread, for the frame's GPU
  * work.  kh1_gpuq_put runs fn(args, 0, 0) on it after the jobs before (session 145: up to two posted and not
