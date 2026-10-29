@@ -91,3 +91,10 @@ Still open (headers updated): xs_mushu func_00f20550 (2 words), xs_genie func_00
 func_00f20818 (35). Not reached: xs_dh_break func_00f20288 / func_00f20820 (104+ / 142 words), xl_limit func_00f225b0
 (60), xs_dumbo func_00f20570 / func_00f222f8 and xs_genie func_00f22078 (no draft in nonmatchings; scratch drafts in
 /tmp/claude-0/s141/db and gn2 score 49 and 101+).
+
+## Round 4 (wm upper half)
+
+Matched: func_00f67928 (string builder: `n /= 2; if (r >= n)` keeps n/2 in n's register; `if (r >= n / 2)` uses a new one).
+All old upper-half drafts went through every flag mode: none matches; func_00f78d50 improves to score 57 in nofill.
+Near misses saved: func_00f67c60 (46), func_00f62440 (98), func_00f79700 (187, same code as func_00f69278).
+Tried without progress: func_00f7cb60 (tail-arm variants all worse than the saved 3-word draft).
