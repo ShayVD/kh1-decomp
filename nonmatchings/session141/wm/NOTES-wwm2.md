@@ -285,3 +285,24 @@ Near misses saved:
 High-half (>= 0xf4fb14) unmatched functions under 1300 bytes with no hand or near-miss file, after this round:
 f67530 (392), f58140 (448), f4fba0 (456), f5d6b0 (560), f584d0 (632), f696a0 (752), f7b9e0 (816), f58748 (856),
 f53758 (920), f5f940 (944), f58bd0 (968), f5d8e0 (1048), f5fcf0 (1280), f74a28 (1288), f51008 (1296).
+
+## Round 16
+
+Rebased onto origin/claude/project-thread-rl45wv; build byte-identical (891 -> 894 functions).
+
+Matched:
+- func_00f67530 and its twin func_00f676b8 (the f676b8 near miss is removed). Three changes did it:
+  - The uv copy is a goto loop (no loop notes, so nothing gets strength-reduced or reversed) with split source
+    pointers: `pu = &src[1].u; pv = &src[1].v; dd = (f32 *)(base + 500); i = 0; loop: dd[-1] = *(f32 *)((u8 *)pu
+    + (i << 3)); dd[0] = *(f32 *)((u8 *)pv + (i << 3)); i++; dd += 4; if (i < 4) goto loop;`.
+  - The head is `tex = base; o = tex; tex += 208; d.col = (f32 *)tex; tex = base + 480;` and the call passes `o`.
+    That gives the extra `move t8,t3` and the t3 reuse.
+  - The argument order differs: f67530 calls func_00f65480(arg, o, tex, &d, a4, a5, &m), while f676b8 calls
+    func_00f651d0(arg, o, tex, &d, a4, &m, a5).
+- func_00f7b9e0: five or six func_00f7a1a8 quads with `Rgba c[4]` and `s32 x[4], y[4]`. Two things mattered:
+  - The function takes an argument and passes it on to func_00f7ad38(arg). That is the only way to keep a0 live, so
+    the %hi temps use a1.
+  - The third quad is written as pairs: c[0]/c[2] rgb and a, then c[1]/c[3], with x/y stored in [2],[3],[0],[1]
+    order.
+
+Near miss saved: func_00f696a0 (182, see the header).
