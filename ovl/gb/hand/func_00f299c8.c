@@ -1,6 +1,9 @@
-/* 133 words / score 92 (632 vs 632); logic complete. A u64 member in GbWorld (8-byte alignment) gives the ld/dsrl/andi 0xffff/andi 0xf bitfield reads. Left: ret lives in s8 in the original but ours spills it (orig spills y<<4); the lock bit at 0x74 must be read with lhu (ours: ld + mask hoisted to s8; a separate u16 GbFlags struct fixes that but costs 8 bytes elsewhere); GbLoc copy uses lwl/lwr for its last 4 bytes (2-byte aligned) */
+/* gb.x func_00f299c8: matched by hand. */
+#include "ovl.h"
+
+/* gb.x func_00f299c8: matched by hand (session 141, from the wgb worker draft). The lock flag is a plain u16 read as (u16)(flags & 1), GbLoc is all u16 (2-byte aligned, so the copy uses ldl/lwl), and func_00f291f0 takes no argument. */
 typedef struct { u16 x : 4; u16 y : 4; u16 z : 4; u16 r : 4; } GbPos;
-typedef struct { u16 pos; u16 pad2; u16 id; u16 pad6; u32 pad8; } GbLoc;
+typedef struct { u16 pos; u16 pad2; u16 id; u16 pad6; u16 pad8; u16 pad10; } GbLoc;
 typedef struct { u8 pad0[6]; u16 w; u8 pad8[2]; u16 h; } GbDims;
 typedef struct {
     u64 pad0[9];
@@ -14,7 +17,7 @@ typedef struct {
     u16 sz : 4;
     u16 q2 : 4;
     u8 pad64[0x74 - 0x64];
-    u16 lock : 1;
+    u16 flags;
     u8 pad76[0xA0 - 0x76];
     GbDims dims;
 } GbWorld;
@@ -23,7 +26,7 @@ extern GbWorld *D_00F56DC0;
 extern s32 D_00F56DC4;
 GbPad *func_001ba488(s32);
 void func_00f2a470(s32 *, s32 *);
-s32 func_00f291f0(GbLoc *);
+s32 func_00f291f0(void);
 void func_0011d768(s32);
 void func_00f24680(GbLoc *);
 void func_00f291c0(s32);
@@ -50,10 +53,10 @@ s32 func_00f299c8(void) {
             pad = func_001ba488(0);
             func_00f2a470(&dx, &dz);
             if (dx | dz) {
-                if (!D_00F56DC0->lock) {
+                if (!(u16)(D_00F56DC0->flags & 1)) {
                     loc = D_00F56DC0->loc;
                     loc.pos = *(u16 *)&D_00F56DC0->cur;
-                    r = func_00f291f0(&loc);
+                    r = func_00f291f0();
                     if (r == 0) {
                         func_0011d768(2);
                         func_00f24680(&loc);
@@ -78,15 +81,15 @@ s32 func_00f299c8(void) {
                     z = 0;
                 if (z > d->h - 1)
                     z = d->h - 1;
-                if (D_00F56DC0->lock && (ox != x || oz != z))
+                if ((u16)(D_00F56DC0->flags & 1) && (ox != x || oz != z))
                     func_0011d768(20);
                 pos.x = x;
                 pos.y = y;
                 pos.z = z;
                 func_001bfac8();
                 func_001bfac8();
-                D_00F56DC0->cur = pos;
                 D_00F56DC0->prev = pos;
+                D_00F56DC0->cur = pos;
                 func_00f24240(D_00F56DC4, 0);
             }
             func_001bfac8();
