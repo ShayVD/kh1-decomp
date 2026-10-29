@@ -1,6 +1,5 @@
-/* dktitle.x func_00f25528: near-miss draft (session 133, 6 words: the 512 constant and the 1022 rounding temporary swap a0 / a1), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
+/* dktitle.x func_00f25528: matched by hand. */
 #include "ovl.h"
-
 
 typedef unsigned int size_t;
 void *memcpy(void *, const void *, size_t);
@@ -30,16 +29,19 @@ s32 func_00f25528(s32 fd) {
     Hdr h;
     u8 *buf;
     s32 i, r, size, off, n, t;
+    s32 o;
 
     buf = D_00F26E44;
 
     func_00265190(h.magic, D_00F27528, 9);
     memset(h.pad, 0, 3);
-    h.e[0].off = 512;
+    o = 512;
+    h.e[0].off = o;
     h.x0c = 0;
     n = D_00F26E2C;
     h.e[0].size = n;
-    h.e[1].off = h.e[0].off + ALIGN512(n);
+    o += ALIGN512(n);
+    h.e[1].off = o;
     if (D_0046A678) n = strlen(D_00F26EE8); else n = strlen(D_00F27090);
     h.e[1].size = n;
     t = h.e[1].off + ALIGN512(n);
