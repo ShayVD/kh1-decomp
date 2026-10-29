@@ -443,3 +443,35 @@ misses.
   - u8 b*77/128 compiles to >>7 with no rounding.
   What is left is register allocation, because the original caches a*2, a*4, a*5 and a<<8 in stack slots. No
   gb twin exists (no 3792-byte gb function).
+
+## Round 26 (wm low half)
+
+None of the ten functions matched. All have near-miss drafts, and each header says what is left and what was tried.
+
+| Function | Score | Size (draft vs original) | Source |
+| --- | --- | --- | --- |
+| f37770 | 24 | 1176, same size | new |
+| f33270 | 30 | 1056, same size | new |
+| f24fe0 | 39 | 1084 vs 1088 | new |
+| f3cdd0 | 49 | the 4 bytes are end padding | new |
+| f32df0 | 89 | 1140 vs 1152 | new |
+| f23018 | 99 | 1308 vs 1336 | new |
+| f46cb8 | 109 | 1100 vs 1088 | new |
+| f4bdf8 | 179 | 1084 vs 1088 | ported from the gb near miss f24d00 |
+| f4b878 | 267 | 1084 vs 1072 | ported from the gb near miss f24780 |
+| f49718 | 327 | 1316 vs 1320 | ported from the gb near miss f22620 |
+
+The three gb near misses were ported to wm with portmap3.py, a copy of portmap2 that takes the target overlay as an argument. Each port keeps the score of its gb draft. In f49718, three raw gb addresses had to be mapped by hand:
+- D_00F56D90 -> D_00F9B510
+- D_00F56D98 -> D_00F9B518
+- D_00F74210 -> D_010809C8
+
+The seven new drafts have no gb twin: no gb function has a matching size or call set. gb f38408 is 1088 bytes but calls nothing, so it is not a twin.
+
+Lessons:
+- **Switch case 0 (f37770):** a switch over cases {1, 2} plus default needs `default: case 0:` to reproduce the original's slti tree. This was also seen in gb f22620.
+- **Float constant rounding (f37770):** gcc 2.96 rounds the literal 0.01745329f to 0x3C8EFA33, while the original has 0x3C8EFA34; 0.017453291f gives 0x3C8EFA34.
+- **Unused locals and frame size:** an unused local array can reproduce the original's frame size. This worked in f46cb8 (`s32 buf[24]`, a 192-byte frame) and in f3cdd0 (`f32 u[4]`).
+- **Reused coordinate variables (f24fe0):** assigning new values to the same cx/cy variables, instead of writing the expressions inline, took the score from 218 to 39.
+- **Field pointers (f32df0):** when the original keeps a separate register per struct field across calls, explicit field-pointer locals reproduce it. This took the score from 292 to 121.
+- **Global array (f23018):** declaring the run of globals D_00FBAA78..8C as one `s32 [6]` array helped (149 -> 99).
