@@ -1,5 +1,7 @@
-/* 3 words left (484 vs 488): same address-CSE order issue as f2fcf8, one missing move. Tried same as f2fcf8. Supersedes the older 73-word draft. */
-typedef struct { u8 p[6]; u16 f; u16 h; u16 pad; } N2fa68;
+/* wm.x func_00f2fa68: matched by hand. */
+#include "ovl.h"
+
+typedef struct { u8 p[6]; u16 lo : 8; u16 kind : 4; u16 hi : 4; u16 h; u16 pad; } N2fa68;
 typedef struct { s32 n; u8 pad[0x2C]; N2fa68 ent[1]; } D2fa68;
 extern D2fa68 D_00F85240;
 extern s32 D_00F8C1EC;
@@ -33,7 +35,7 @@ void func_00f2fa68(void) {
     for (i = 0; i < D_00F85240.n; i++) {
         h = D_00F85240.ent[i].h;
         t = h - 1;
-        if (((D_00F85240.ent[i].f >> 8) & 0xF) == 4) {
+        if (D_00F85240.ent[i].kind == 4) {
             r = -1;
             switch (h) {
             case 5:
