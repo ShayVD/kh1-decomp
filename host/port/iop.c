@@ -1,0 +1,917 @@
+/* The IOP off the PS2 (docs/sound-spec.md "The IOP on the port"): the user's own sound driver
+ * (LIBSSL.IRX, "Ohori_Sound_Driver", read from the disc at run time, never in the repo or the VPK)
+ * run by an R3000A interpreter, with what it imports answered here:
+ *
+ *   - the CPU: MIPS I integer instructions with their branch delay slots (the IOP's load delay slot is
+ *     not modelled: gcc never reads a register in the slot after its load), no COP0 / GTE;
+ *   - the loader: the IRX's .iopmod (entry), its sections at KH1_IOP_BASE, its REL relocations
+ *     (R_MIPS_32 / 26 / HI16 / LO16 as loadcore applies them), and its import tables: a stub
+ *     (`jr $ra; li $zero, N`) is library N's export, answered in C when the CPU reaches it;
+ *   - the kernel: threads (each its own register file, run until it blocks: the IOP's threads only
+ *     switch in a kernel call, and interrupts are delivered between runs), semaphores, variable pools,
+ *     one hardware timer (the driver's 240 Hz tick, kh1_iop_tick), the interrupt calls (no-ops);
+ *   - SIF: the RPC server the module registers (kh1_iop_rpc calls its function as sifcmd would),
+ *     sceSifGetOtherData (EE -> IOP) and sceSifSetDma (IOP -> EE): EE addresses are the port's own
+ *     32-bit pointers (the game's C hands them over as the EE did);
+ *   - libsd: kh1_sd_call (host/port/spu2.c).
+ *
+ * One caller at a time (host/port/snd.c holds its lock).  Not part of the PS2 build. */
+#include "common.h"
+#include "iop.h"
+
+int printf(const char *, ...);
+void *memcpy(void *, const void *, unsigned int);
+void *memset(void *, int, unsigned int);
+int strcmp(const char *, const char *);
+int memcmp(const void *, const void *, unsigned int);
+
+u8 kh1_iop_ram[KH1_IOP_RAM] __attribute__((aligned(16)));
+u32 kh1_iop_insns;
+
+/* where the module goes, the heap for thread stacks and pools, the interrupt stack, and the return
+ * address that ends a call from C (never code) */
+#define KH1_IOP_BASE 0x00040000
+#define IOP_HEAP_END 0x001F0000
+#define IOP_INTR_STACK 0x001FF000
+#define IOP_MAGIC_RET 0x001FFFF0
+
+#define IOP_THREADS 8
+#define IOP_SEMAS 16
+#define IOP_VPLS 4
+#define IOP_STUBS 128
+
+typedef struct {
+    u32 r[32];
+    u32 hi, lo, pc, npc;
+} IopCtx;
+
+enum { TH_FREE, TH_DORMANT, TH_READY, TH_WAIT_SEMA, TH_DELAY, TH_RPC_WAIT };
+typedef struct {
+    IopCtx c;
+    int state;
+    int prio;
+    int sema;    /* the semaphore it waits for */
+    int in_rpc;  /* running an RPC call from kh1_iop_rpc */
+    u32 entry, stack, stack_size;
+} IopThread;
+
+typedef struct {
+    int used, count, max;
+} IopSema;
+
+/* a variable-length pool: first fit over a list of blocks kept in a side table */
+#define VPL_BLOCKS 64
+typedef struct {
+    int used;
+    u32 base, size;
+    u32 at[VPL_BLOCKS], len[VPL_BLOCKS];
+    int n;
+} IopVpl;
+
+typedef struct {
+    u32 addr;
+    const char *lib;
+    int fn;
+} IopStub;
+
+static IopThread iop_th[IOP_THREADS];
+static IopSema iop_sema[IOP_SEMAS];
+static IopVpl iop_vpl[IOP_VPLS];
+static IopStub iop_stub[IOP_STUBS];
+static int iop_nstubs;
+static u32 iop_stub_lo, iop_stub_hi;
+static int iop_cur = -1; /* the thread running, -1 for an interrupt or the loader */
+static u32 iop_heap;
+static int iop_ok;
+static u32 iop_mod_end;
+static int iop_log_on = -1;
+
+/* the RPC server (one is enough for the sound driver) */
+static u32 rpc_sid = (u32)-1, rpc_func, rpc_buf;
+static int rpc_thread = -1;
+
+/* the hardware timer */
+static u32 tm_compare, tm_handler, tm_arg;
+static int tm_started;
+static u32 tm_count;
+
+/* pending libsd transfer interrupts */
+static u32 trans_func[2], trans_arg[2];
+static int trans_pending[2];
+
+/* why a run stopped */
+enum { RUN_RET, RUN_BLOCK, RUN_BUDGET, RUN_FAULT };
+
+char *getenv(const char *);
+static int iop_log(void) {
+    if (iop_log_on < 0) {
+        const char *s = getenv("KH1_HOST_IOP");
+        iop_log_on = s && *s && *s != '0';
+    }
+    return iop_log_on;
+}
+
+/* ---- memory ---- */
+
+u8 *kh1_iop_ptr(u32 addr, u32 size) {
+    addr &= 0x1FFFFFFF;
+    if (addr >= KH1_IOP_RAM || size > KH1_IOP_RAM - addr) return 0;
+    return kh1_iop_ram + addr;
+}
+
+static int iop_bad_reported;
+static void bad_access(u32 addr, u32 pc) {
+    if (iop_bad_reported < 8) {
+        iop_bad_reported++;
+        printf("kh1-iop: access outside RAM 0x%08x at pc 0x%05x\n", addr, pc - KH1_IOP_BASE);
+    }
+}
+
+#define RAM_OK(a) (((a) & 0x1FFFFFFF) < KH1_IOP_RAM)
+#define RAM(a) (kh1_iop_ram + ((a) & 0x1FFFFF))
+
+static u32 rd32(u32 a, u32 pc) {
+    if (!RAM_OK(a)) { bad_access(a, pc); return 0; }
+    return *(u32 *)RAM(a & ~3u);
+}
+static u32 rd16(u32 a, u32 pc) {
+    if (!RAM_OK(a)) { bad_access(a, pc); return 0; }
+    return *(u16 *)RAM(a & ~1u);
+}
+static u32 rd8(u32 a, u32 pc) {
+    if (!RAM_OK(a)) { bad_access(a, pc); return 0; }
+    return *RAM(a);
+}
+static void wr32(u32 a, u32 v, u32 pc) {
+    if (!RAM_OK(a)) { bad_access(a, pc); return; }
+    *(u32 *)RAM(a & ~3u) = v;
+}
+static void wr16(u32 a, u32 v, u32 pc) {
+    if (!RAM_OK(a)) { bad_access(a, pc); return; }
+    *(u16 *)RAM(a & ~1u) = (u16)v;
+}
+static void wr8(u32 a, u32 v, u32 pc) {
+    if (!RAM_OK(a)) { bad_access(a, pc); return; }
+    *RAM(a) = (u8)v;
+}
+
+static u32 iop_alloc(u32 size) {
+    u32 at = (iop_heap + 15) & ~15u;
+    if (at + size > IOP_HEAP_END) return 0;
+    iop_heap = at + size;
+    return at;
+}
+
+/* ---- the CPU ---- */
+
+static int hle(IopCtx *c, const IopStub *s);
+
+static const IopStub *find_stub(u32 pc) {
+    int i;
+    for (i = 0; i < iop_nstubs; i++)
+        if (iop_stub[i].addr == pc) return &iop_stub[i];
+    return 0;
+}
+
+#define RS ((op >> 21) & 31)
+#define RT ((op >> 16) & 31)
+#define RD ((op >> 11) & 31)
+#define SA ((op >> 6) & 31)
+#define IMM ((u32)(s32)(s16)op)
+#define IMMU (op & 0xFFFF)
+
+static int run(IopCtx *c, u32 budget) {
+    u32 *r = c->r;
+    while (budget--) {
+        u32 pc = c->pc, op, a;
+        if (pc == IOP_MAGIC_RET) return RUN_RET;
+        if (pc >= iop_stub_lo && pc < iop_stub_hi) {
+            const IopStub *s = find_stub(pc);
+            if (s) {
+                int k = hle(c, s);
+                r[0] = 0;
+                if (k != RUN_RET) return k; /* blocked: c->pc already points past the call */
+                c->pc = r[31];
+                c->npc = c->pc + 4;
+                continue;
+            }
+        }
+        if (!RAM_OK(pc)) {
+            printf("kh1-iop: pc 0x%08x outside RAM (ra 0x%08x)\n", pc, r[31]);
+            return RUN_FAULT;
+        }
+        op = *(u32 *)RAM(pc);
+        c->pc = c->npc;
+        c->npc += 4;
+        kh1_iop_insns++;
+        switch (op >> 26) {
+        case 0x00:
+            switch (op & 63) {
+            case 0x00: r[RD] = r[RT] << SA; break;
+            case 0x02: r[RD] = r[RT] >> SA; break;
+            case 0x03: r[RD] = (u32)((s32)r[RT] >> SA); break;
+            case 0x04: r[RD] = r[RT] << (r[RS] & 31); break;
+            case 0x06: r[RD] = r[RT] >> (r[RS] & 31); break;
+            case 0x07: r[RD] = (u32)((s32)r[RT] >> (r[RS] & 31)); break;
+            case 0x08: c->npc = r[RS]; break;
+            case 0x09: a = r[RS]; r[RD] = pc + 8; c->npc = a; break;
+            case 0x0C: /* syscall */
+            case 0x0D: /* break: gcc's divide-by-zero trap */
+                printf("kh1-iop: %s at 0x%05x\n", (op & 63) == 0x0C ? "syscall" : "break", pc - KH1_IOP_BASE);
+                return RUN_FAULT;
+            case 0x10: r[RD] = c->hi; break;
+            case 0x11: c->hi = r[RS]; break;
+            case 0x12: r[RD] = c->lo; break;
+            case 0x13: c->lo = r[RS]; break;
+            case 0x18: {
+                s64 p = (s64)(s32)r[RS] * (s32)r[RT];
+                c->lo = (u32)p;
+                c->hi = (u32)((u64)p >> 32);
+                break;
+            }
+            case 0x19: {
+                u64 p = (u64)r[RS] * r[RT];
+                c->lo = (u32)p;
+                c->hi = (u32)(p >> 32);
+                break;
+            }
+            case 0x1A: {
+                s32 n = (s32)r[RS], d = (s32)r[RT];
+                if (d == 0) { c->lo = n >= 0 ? 0xFFFFFFFFu : 1; c->hi = (u32)n; }
+                else if (n == (s32)0x80000000 && d == -1) { c->lo = 0x80000000u; c->hi = 0; }
+                else { c->lo = (u32)(n / d); c->hi = (u32)(n % d); }
+                break;
+            }
+            case 0x1B: {
+                u32 n = r[RS], d = r[RT];
+                if (d == 0) { c->lo = 0xFFFFFFFFu; c->hi = n; }
+                else { c->lo = n / d; c->hi = n % d; }
+                break;
+            }
+            case 0x20: case 0x21: r[RD] = r[RS] + r[RT]; break;
+            case 0x22: case 0x23: r[RD] = r[RS] - r[RT]; break;
+            case 0x24: r[RD] = r[RS] & r[RT]; break;
+            case 0x25: r[RD] = r[RS] | r[RT]; break;
+            case 0x26: r[RD] = r[RS] ^ r[RT]; break;
+            case 0x27: r[RD] = ~(r[RS] | r[RT]); break;
+            case 0x2A: r[RD] = (s32)r[RS] < (s32)r[RT]; break;
+            case 0x2B: r[RD] = r[RS] < r[RT]; break;
+            default: goto bad;
+            }
+            break;
+        case 0x01:
+            a = pc + 4 + (IMM << 2);
+            switch (RT) {
+            case 0x00: if ((s32)r[RS] < 0) c->npc = a; break;
+            case 0x01: if ((s32)r[RS] >= 0) c->npc = a; break;
+            case 0x10: { int t = (s32)r[RS] < 0; r[31] = pc + 8; if (t) c->npc = a; break; }
+            case 0x11: { int t = (s32)r[RS] >= 0; r[31] = pc + 8; if (t) c->npc = a; break; }
+            default: goto bad;
+            }
+            break;
+        case 0x02: c->npc = (pc & 0xF0000000u) | ((op & 0x03FFFFFF) << 2); break;
+        case 0x03: r[31] = pc + 8; c->npc = (pc & 0xF0000000u) | ((op & 0x03FFFFFF) << 2); break;
+        case 0x04: if (r[RS] == r[RT]) c->npc = pc + 4 + (IMM << 2); break;
+        case 0x05: if (r[RS] != r[RT]) c->npc = pc + 4 + (IMM << 2); break;
+        case 0x06: if ((s32)r[RS] <= 0) c->npc = pc + 4 + (IMM << 2); break;
+        case 0x07: if ((s32)r[RS] > 0) c->npc = pc + 4 + (IMM << 2); break;
+        case 0x08: case 0x09: r[RT] = r[RS] + IMM; break;
+        case 0x0A: r[RT] = (s32)r[RS] < (s32)IMM; break;
+        case 0x0B: r[RT] = r[RS] < IMM; break;
+        case 0x0C: r[RT] = r[RS] & IMMU; break;
+        case 0x0D: r[RT] = r[RS] | IMMU; break;
+        case 0x0E: r[RT] = r[RS] ^ IMMU; break;
+        case 0x0F: r[RT] = IMMU << 16; break;
+        case 0x10: /* COP0: mfc0 reads 0, the rest ignored */
+            if (((op >> 21) & 31) == 0) r[RT] = 0;
+            break;
+        case 0x20: r[RT] = (u32)(s32)(s8)rd8(r[RS] + IMM, pc); break;
+        case 0x21: r[RT] = (u32)(s32)(s16)rd16(r[RS] + IMM, pc); break;
+        case 0x22: {
+            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+            r[RT] = (r[RT] & (0x00FFFFFFu >> sh)) | (w << (24 - sh));
+            break;
+        }
+        case 0x23: r[RT] = rd32(r[RS] + IMM, pc); break;
+        case 0x24: r[RT] = rd8(r[RS] + IMM, pc); break;
+        case 0x25: r[RT] = rd16(r[RS] + IMM, pc); break;
+        case 0x26: {
+            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+            r[RT] = (r[RT] & (0xFFFFFF00u << (24 - sh))) | (w >> sh);
+            break;
+        }
+        case 0x28: wr8(r[RS] + IMM, r[RT], pc); break;
+        case 0x29: wr16(r[RS] + IMM, r[RT], pc); break;
+        case 0x2A: {
+            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+            wr32(ad, (w & (0xFFFFFF00u << sh)) | (r[RT] >> (24 - sh)), pc);
+            break;
+        }
+        case 0x2B: wr32(r[RS] + IMM, r[RT], pc); break;
+        case 0x2E: {
+            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+            wr32(ad, (w & (0x00FFFFFFu >> (24 - sh))) | (r[RT] << sh), pc);
+            break;
+        }
+        default:
+        bad:
+            printf("kh1-iop: unknown instruction 0x%08x at 0x%05x\n", op, pc - KH1_IOP_BASE);
+            return RUN_FAULT;
+        }
+        r[0] = 0;
+    }
+    return RUN_BUDGET;
+}
+
+/* one call from C into IOP code, on the interrupt stack (an interrupt handler, the module's start) */
+static u32 call_func(u32 func, u32 a0, u32 a1, u32 a2, u32 a3, u32 sp) {
+    IopCtx c;
+    int k, save = iop_cur;
+    memset(&c, 0, sizeof c);
+    c.pc = func;
+    c.npc = func + 4;
+    c.r[4] = a0;
+    c.r[5] = a1;
+    c.r[6] = a2;
+    c.r[7] = a3;
+    c.r[29] = sp;
+    c.r[31] = IOP_MAGIC_RET;
+    iop_cur = -1;
+    k = run(&c, 20000000);
+    iop_cur = save;
+    if (k != RUN_RET) printf("kh1-iop: call to 0x%05x did not return (%d)\n", func - KH1_IOP_BASE, k);
+    return c.r[2];
+}
+
+/* ---- threads ---- */
+
+static void deliver_interrupts(void) {
+    int core;
+    for (core = 0; core < 2; core++)
+        if (trans_pending[core]) {
+            trans_pending[core] = 0;
+            if (trans_func[core]) call_func(trans_func[core], (u32)core, trans_arg[core], 0, 0, IOP_INTR_STACK);
+        }
+}
+
+static int pick_ready(void) {
+    int i, best = -1;
+    for (i = 0; i < IOP_THREADS; i++)
+        if (iop_th[i].state == TH_READY && (best < 0 || iop_th[i].prio < iop_th[best].prio)) best = i;
+    return best;
+}
+
+/* run the ready threads (highest priority first) until none is ready */
+static void schedule(void) {
+    int t, guard = 0;
+    deliver_interrupts();
+    while ((t = pick_ready()) >= 0 && guard++ < 10000) {
+        int k;
+        iop_cur = t;
+        k = run(&iop_th[t].c, 20000000);
+        iop_cur = -1;
+        if (k == RUN_RET) {
+            if (iop_th[t].in_rpc) {
+                iop_th[t].in_rpc = 0;
+                iop_th[t].state = TH_RPC_WAIT;
+            } else {
+                iop_th[t].state = TH_DORMANT; /* the thread's function returned: ExitThread */
+            }
+        } else if (k != RUN_BLOCK) {
+            printf("kh1-iop: thread %d stopped (%s at 0x%05x)\n", t + 1, k == RUN_BUDGET ? "no block" : "fault",
+                   iop_th[t].c.pc - KH1_IOP_BASE);
+            iop_th[t].state = TH_DORMANT;
+            iop_th[t].in_rpc = 0;
+        }
+        deliver_interrupts();
+    }
+}
+
+static void wake_delayed(void) {
+    int i;
+    for (i = 0; i < IOP_THREADS; i++)
+        if (iop_th[i].state == TH_DELAY) iop_th[i].state = TH_READY;
+}
+
+/* ---- the kernel and SIF ---- */
+
+#define A(n) (c->r[4 + (n)])
+/* the n-th word argument past the four in registers */
+static u32 stack_arg(IopCtx *c, int n) { return rd32(c->r[29] + 16 + 4 * n, c->pc); }
+
+static int block(IopCtx *c, int state) {
+    /* resume after the call with 0 in v0 */
+    c->r[2] = 0;
+    c->pc = c->r[31];
+    c->npc = c->pc + 4;
+    if (iop_cur >= 0) iop_th[iop_cur].state = state;
+    return RUN_BLOCK;
+}
+
+static void kprintf(IopCtx *c) {
+    char out[256];
+    const char *f = (const char *)kh1_iop_ptr(A(0), 1);
+    int o = 0, n = 1;
+    if (!f) return;
+    while (*f && o < (int)sizeof out - 16) {
+        u32 v;
+        char spec[16];
+        int k = 0;
+        if (*f != '%') { out[o++] = *f++; continue; }
+        spec[k++] = *f++;
+        while (*f && k < 12 && ((*f >= '0' && *f <= '9') || *f == '-' || *f == '.' || *f == 'l')) spec[k++] = *f++;
+        if (!*f) break;
+        spec[k++] = *f;
+        spec[k] = 0;
+        if (*f == '%') { out[o++] = '%'; f++; continue; }
+        v = n < 4 ? A(n) : stack_arg(c, n - 4);
+        n++;
+        if (*f == 's') {
+            const char *s = (const char *)kh1_iop_ptr(v, 1);
+            while (s && *s && o < (int)sizeof out - 16) out[o++] = *s++;
+        } else {
+            static const char hex[] = "0123456789abcdef";
+            char tmp[12];
+            int t = 0;
+            if (*f == 'c') tmp[t++] = (char)v;
+            else if (*f == 'x' || *f == 'X' || *f == 'p') do tmp[t++] = hex[v & 15]; while (v >>= 4);
+            else {
+                int neg = *f == 'd' && (s32)v < 0;
+                if (neg) v = (u32)-(s32)v;
+                do tmp[t++] = (char)('0' + v % 10); while (v /= 10);
+                if (neg) tmp[t++] = '-';
+            }
+            if (*f != 'c') {
+                int w = 0, i;
+                for (i = 1; spec[i] >= '0' && spec[i] <= '9'; i++) w = w * 10 + spec[i] - '0';
+                while (t < w && t < 11) tmp[t++] = spec[1] == '0' ? '0' : ' ';
+                while (t) out[o++] = tmp[--t];
+            } else out[o++] = tmp[0];
+        }
+        f++;
+    }
+    out[o] = 0;
+    if (iop_log()) printf("kh1-iop: %s%s", out, o && out[o - 1] == '\n' ? "" : "\n");
+}
+
+static u32 vpl_alloc(IopVpl *p, u32 size) {
+    u32 at = p->base;
+    int i, j;
+    size = (size + 15) & ~15u;
+    if (p->n >= VPL_BLOCKS) return 0;
+    /* blocks are kept in address order: find the first gap that fits */
+    for (i = 0; i <= p->n; i++) {
+        u32 end = i < p->n ? p->at[i] : p->base + p->size;
+        if (end >= at && end - at >= size) {
+            for (j = p->n; j > i; j--) { p->at[j] = p->at[j - 1]; p->len[j] = p->len[j - 1]; }
+            p->at[i] = at;
+            p->len[i] = size;
+            p->n++;
+            return at;
+        }
+        if (i < p->n) at = p->at[i] + p->len[i];
+    }
+    return 0;
+}
+
+static u32 vpl_free_bytes(IopVpl *p) {
+    u32 used = 0;
+    int i;
+    for (i = 0; i < p->n; i++) used += p->len[i];
+    return p->size - used;
+}
+
+/* The import answers.  RUN_RET: v0 set, return to $ra; RUN_BLOCK: the thread waits. */
+static int hle(IopCtx *c, const IopStub *s) {
+    const char *lib = s->lib;
+    int fn = s->fn;
+    u32 *v0 = &c->r[2];
+    *v0 = 0;
+    if (!strcmp(lib, "libsd")) {
+        u32 a[6];
+        a[0] = A(0); a[1] = A(1); a[2] = A(2); a[3] = A(3);
+        a[4] = stack_arg(c, 0); a[5] = stack_arg(c, 1);
+        *v0 = kh1_sd_call(fn, a);
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "thbase")) {
+        switch (fn) {
+        case 4: { /* CreateThread(iop_thread_t *): attr, option, thread, stacksize, priority */
+            u32 p = A(0);
+            int i;
+            for (i = 0; i < IOP_THREADS && iop_th[i].state != TH_FREE; i++)
+                ;
+            if (i == IOP_THREADS) { *v0 = (u32)-400; break; }
+            memset(&iop_th[i], 0, sizeof iop_th[i]);
+            iop_th[i].state = TH_DORMANT;
+            iop_th[i].entry = rd32(p + 8, c->pc);
+            iop_th[i].stack_size = rd32(p + 12, c->pc);
+            iop_th[i].prio = (int)rd32(p + 16, c->pc);
+            iop_th[i].stack = iop_alloc(iop_th[i].stack_size + 0x100);
+            *v0 = (u32)(i + 1);
+            break;
+        }
+        case 6: { /* StartThread(id, arg) */
+            int i = (int)A(0) - 1;
+            if (i < 0 || i >= IOP_THREADS || iop_th[i].state != TH_DORMANT) { *v0 = (u32)-1; break; }
+            memset(&iop_th[i].c, 0, sizeof iop_th[i].c);
+            iop_th[i].c.pc = iop_th[i].entry;
+            iop_th[i].c.npc = iop_th[i].entry + 4;
+            iop_th[i].c.r[4] = A(1);
+            iop_th[i].c.r[29] = (iop_th[i].stack + iop_th[i].stack_size) & ~15u;
+            iop_th[i].c.r[31] = IOP_MAGIC_RET;
+            iop_th[i].c.r[28] = c->r[28];
+            iop_th[i].state = TH_READY;
+            break;
+        }
+        case 0x0E: { /* ChangeThreadPriority(id, prio) */
+            int i = (int)A(0) - 1;
+            if (A(0) == 0) i = iop_cur;
+            if (i >= 0 && i < IOP_THREADS) iop_th[i].prio = (int)A(1);
+            break;
+        }
+        case 0x14: *v0 = (u32)(iop_cur + 1); break; /* GetThreadId */
+        case 0x21: return block(c, TH_DELAY);   /* DelayThread: wakes at the next tick */
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "thsemap")) {
+        switch (fn) {
+        case 4: { /* CreateSema(iop_sema_t *): attr, option, initial, max */
+            int i;
+            for (i = 0; i < IOP_SEMAS && iop_sema[i].used; i++)
+                ;
+            if (i == IOP_SEMAS) { *v0 = (u32)-400; break; }
+            iop_sema[i].used = 1;
+            iop_sema[i].count = (int)rd32(A(0) + 8, c->pc);
+            iop_sema[i].max = (int)rd32(A(0) + 12, c->pc);
+            *v0 = (u32)(i + 1);
+            break;
+        }
+        case 6: case 7: { /* SignalSema / iSignalSema */
+            int i = (int)A(0) - 1, t;
+            if (i < 0 || i >= IOP_SEMAS || !iop_sema[i].used) { *v0 = (u32)-1; break; }
+            for (t = 0; t < IOP_THREADS; t++)
+                if (iop_th[t].state == TH_WAIT_SEMA && iop_th[t].sema == i) break;
+            if (t < IOP_THREADS) iop_th[t].state = TH_READY;
+            else if (iop_sema[i].count < iop_sema[i].max) iop_sema[i].count++;
+            break;
+        }
+        case 8: case 9: { /* WaitSema / PollSema */
+            int i = (int)A(0) - 1;
+            if (i < 0 || i >= IOP_SEMAS || !iop_sema[i].used) { *v0 = (u32)-1; break; }
+            if (iop_sema[i].count > 0) { iop_sema[i].count--; break; }
+            if (fn == 9 || iop_cur < 0) { *v0 = (u32)-419; break; }
+            iop_th[iop_cur].sema = i;
+            return block(c, TH_WAIT_SEMA);
+        }
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "thvpool")) {
+        switch (fn) {
+        case 4: { /* CreateVpl(iop_vpl_param_t *): attr, option, size */
+            int i;
+            u32 size = rd32(A(0) + 8, c->pc);
+            for (i = 0; i < IOP_VPLS && iop_vpl[i].used; i++)
+                ;
+            if (i == IOP_VPLS) { *v0 = (u32)-400; break; }
+            memset(&iop_vpl[i], 0, sizeof iop_vpl[i]);
+            iop_vpl[i].base = iop_alloc(size);
+            if (!iop_vpl[i].base) { *v0 = (u32)-400; break; }
+            iop_vpl[i].size = size;
+            iop_vpl[i].used = 1;
+            *v0 = (u32)(i + 1);
+            break;
+        }
+        case 5: { /* DeleteVpl: the heap is not given back (the driver makes one pool) */
+            int i = (int)A(0) - 1;
+            if (i >= 0 && i < IOP_VPLS) iop_vpl[i].used = 0;
+            break;
+        }
+        case 6: case 7: case 8: { /* AllocateVpl / pAllocateVpl / ipAllocateVpl(id, size) */
+            int i = (int)A(0) - 1;
+            u32 at = i >= 0 && i < IOP_VPLS && iop_vpl[i].used ? vpl_alloc(&iop_vpl[i], A(1)) : 0;
+            *v0 = at ? at : (u32)-427;
+            break;
+        }
+        case 9: { /* FreeVpl(id, addr) */
+            int i = (int)A(0) - 1, k;
+            if (i < 0 || i >= IOP_VPLS) { *v0 = (u32)-1; break; }
+            for (k = 0; k < iop_vpl[i].n && iop_vpl[i].at[k] != A(1); k++)
+                ;
+            if (k == iop_vpl[i].n) { *v0 = (u32)-1; break; }
+            for (; k + 1 < iop_vpl[i].n; k++) { iop_vpl[i].at[k] = iop_vpl[i].at[k + 1]; iop_vpl[i].len[k] = iop_vpl[i].len[k + 1]; }
+            iop_vpl[i].n--;
+            break;
+        }
+        case 0x0B: { /* ReferVplStatus(id, iop_vpl_info_t *): attr, option, size, freeSize, numWaitThreads */
+            int i = (int)A(0) - 1;
+            if (i < 0 || i >= IOP_VPLS) { *v0 = (u32)-1; break; }
+            wr32(A(1) + 0, 0, c->pc);
+            wr32(A(1) + 4, 0, c->pc);
+            wr32(A(1) + 8, iop_vpl[i].size, c->pc);
+            wr32(A(1) + 12, vpl_free_bytes(&iop_vpl[i]), c->pc);
+            wr32(A(1) + 16, 0, c->pc);
+            break;
+        }
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "intrman")) {
+        /* EnableIntr / CpuEnableIntr / CpuSuspendIntr(&state) / CpuResumeIntr: nothing interrupts a run */
+        if (fn == 17 && A(0)) wr32(A(0), 0, c->pc);
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "loadcore")) return RUN_RET; /* FlushDcache */
+    if (!strcmp(lib, "sysmem")) {
+        switch (fn) {
+        case 6: *v0 = KH1_IOP_RAM; break;                 /* QueryMemSize */
+        case 7: case 8: *v0 = IOP_HEAP_END - iop_heap; break; /* QueryMaxFreeMemSize / QueryTotalFreeMemSize */
+        case 14: kprintf(c); break;                        /* Kprintf */
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "sysclib")) {
+        switch (fn) {
+        case 12: { /* memcpy */
+            u8 *d = kh1_iop_ptr(A(0), A(2)), *sr = kh1_iop_ptr(A(1), A(2));
+            if (d && sr) memcpy(d, sr, A(2));
+            *v0 = A(0);
+            break;
+        }
+        case 14: { /* memset */
+            u8 *d = kh1_iop_ptr(A(0), A(2));
+            if (d) memset(d, (int)A(1), A(2));
+            *v0 = A(0);
+            break;
+        }
+        case 22: { /* strcmp */
+            const char *x = (const char *)kh1_iop_ptr(A(0), 1), *y = (const char *)kh1_iop_ptr(A(1), 1);
+            *v0 = x && y ? (u32)strcmp(x, y) : 1;
+            break;
+        }
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "sifcmd")) {
+        switch (fn) {
+        case 0x0E: case 0x13: break; /* sceSifInitRpc, sceSifSetRpcQueue */
+        case 0x11:                   /* sceSifRegisterRpc(sd, sid, func, buf, cfunc, cbuf, qd) */
+            rpc_sid = A(1);
+            rpc_func = A(2);
+            rpc_buf = A(3);
+            if (iop_log()) printf("kh1-iop: RPC server %u: function 0x%05x, buffer 0x%05x\n", rpc_sid,
+                                  rpc_func - KH1_IOP_BASE, rpc_buf - KH1_IOP_BASE);
+            break;
+        case 0x12: break; /* sceSifCheckStatRpc: never busy */
+        case 0x16:        /* sceSifRpcLoop: the thread now answers kh1_iop_rpc */
+            if (iop_cur < 0) goto unknown;
+            rpc_thread = iop_cur;
+            return block(c, TH_RPC_WAIT);
+        case 0x17: { /* sceSifGetOtherData(rd, src (EE), dest (IOP), size, mode) */
+            u32 size = A(3);
+            u8 *d = kh1_iop_ptr(A(2), size);
+            const u8 *src = (const u8 *)(unsigned long)A(1);
+            if (d && src && size) memcpy(d, src, size);
+            break;
+        }
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "sifman")) {
+        switch (fn) {
+        case 5: break; /* sceSifInit */
+        case 7: {      /* sceSifSetDma(transfers, count): {src (IOP), dest (EE), size, attr} each */
+            u32 p = A(0), n = A(1), k;
+            for (k = 0; k < n; k++, p += 16) {
+                u32 src = rd32(p, c->pc), size = rd32(p + 8, c->pc);
+                u8 *dst = (u8 *)(unsigned long)rd32(p + 4, c->pc);
+                const u8 *from = kh1_iop_ptr(src, size);
+                if (dst && from && size) memcpy(dst, from, size);
+            }
+            *v0 = 1;
+            break;
+        }
+        case 8: *v0 = (u32)-1; break;  /* sceSifDmaStat: done */
+        case 0x1D: *v0 = 1; break;     /* sceSifCheckInit */
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "timrman")) {
+        switch (fn) {
+        case 4: *v0 = 1; break; /* AllocHardTimer(source, size, prescale) */
+        case 10: *v0 = tm_count; break; /* GetTimerCounter */
+        case 20: /* SetTimerHandler(id, compare, handler, arg) */
+            tm_compare = A(1);
+            tm_handler = A(2);
+            tm_arg = A(3);
+            break;
+        case 22: break; /* SetupHardTimer */
+        case 23: tm_started = 1; break; /* StartHardTimer */
+        default: goto unknown;
+        }
+        return RUN_RET;
+    }
+    if (!strcmp(lib, "cdvdman")) {
+        *v0 = 0; /* the drive's status / error: nothing to report (no tray, no read error) */
+        return RUN_RET;
+    }
+unknown:
+    printf("kh1-iop: import %s %d not answered (0x%x 0x%x 0x%x 0x%x)\n", lib, fn, A(0), A(1), A(2), A(3));
+    *v0 = 0;
+    return RUN_RET;
+}
+
+/* ---- the loader ---- */
+
+static u32 le32(const u8 *p) { return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24; }
+static u32 le16(const u8 *p) { return p[0] | p[1] << 8; }
+
+static char stub_names[16][9];
+
+static void find_imports(u32 text, u32 size) {
+    u32 a;
+    int nlib = 0;
+    iop_nstubs = 0;
+    iop_stub_lo = 0xFFFFFFFF;
+    iop_stub_hi = 0;
+    for (a = text; a + 20 <= text + size; a += 4) {
+        u32 p;
+        char *name;
+        if (*(u32 *)RAM(a) != 0x41E00000 || nlib == 16) continue;
+        name = stub_names[nlib++];
+        memcpy(name, RAM(a + 12), 8);
+        name[8] = 0;
+        for (p = a + 20; p + 8 <= text + size && iop_nstubs < IOP_STUBS; p += 8) {
+            u32 w0 = *(u32 *)RAM(p), w1 = *(u32 *)RAM(p + 4);
+            if (w0 != 0x03E00008 || (w1 & 0xFFFF0000) != 0x24000000) break;
+            iop_stub[iop_nstubs].addr = p;
+            iop_stub[iop_nstubs].lib = name;
+            iop_stub[iop_nstubs].fn = (int)(w1 & 0xFFFF);
+            iop_nstubs++;
+            if (p < iop_stub_lo) iop_stub_lo = p;
+            if (p + 4 > iop_stub_hi) iop_stub_hi = p + 4;
+        }
+        a = p;
+    }
+}
+
+static int relocate(const u8 *f, u32 size, u32 shoff, u32 shnum, u32 base) {
+    u32 i;
+    for (i = 0; i < shnum; i++) {
+        const u8 *sh = f + shoff + i * 40;
+        u32 k, n, off, hi_pend[64];
+        int nhi = 0;
+        if (le32(sh + 4) != 9) continue; /* SHT_REL */
+        off = le32(sh + 16);
+        n = le32(sh + 20) / 8;
+        if (off + n * 8 > size) return -1;
+        for (k = 0; k < n; k++) {
+            u32 at = base + le32(f + off + 8 * k), type = f[off + 8 * k + 4] & 0xFF, w;
+            if (!RAM_OK(at)) return -1;
+            w = *(u32 *)RAM(at);
+            switch (type) {
+            case 2: *(u32 *)RAM(at) = w + base; break; /* R_MIPS_32 */
+            case 4: /* R_MIPS_26 */
+                *(u32 *)RAM(at) = (w & 0xFC000000) | ((((w & 0x03FFFFFF) << 2) + base) >> 2 & 0x03FFFFFF);
+                break;
+            case 5: /* R_MIPS_HI16: fixed with the LO16 that follows */
+                if (nhi < 64) hi_pend[nhi++] = at;
+                break;
+            case 6: { /* R_MIPS_LO16 */
+                u32 lo = w & 0xFFFF, j;
+                for (j = 0; j < (u32)nhi; j++) {
+                    u32 hw = *(u32 *)RAM(hi_pend[j]);
+                    u32 v = ((hw & 0xFFFF) << 16) + (u32)(s32)(s16)lo + base;
+                    *(u32 *)RAM(hi_pend[j]) = (hw & 0xFFFF0000) | (((v + 0x8000) >> 16) & 0xFFFF);
+                }
+                nhi = 0;
+                *(u32 *)RAM(at) = (w & 0xFFFF0000) | ((lo + base) & 0xFFFF);
+                break;
+            }
+            case 0: break;
+            default:
+                printf("kh1-iop: relocation type %u not handled\n", type);
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+int kh1_iop_loaded(void) { return iop_ok; }
+
+int kh1_iop_load(const u8 *f, u32 size) {
+    u32 shoff, shnum, i, entry = 0, gp = 0, text = 0, text_size = 0, ret;
+    if (size < 0x34 || memcmp(f, "\177ELF", 4) != 0) return -1;
+    memset(kh1_iop_ram, 0, sizeof kh1_iop_ram);
+    memset(iop_th, 0, sizeof iop_th);
+    memset(iop_sema, 0, sizeof iop_sema);
+    memset(iop_vpl, 0, sizeof iop_vpl);
+    rpc_sid = (u32)-1;
+    rpc_thread = -1;
+    tm_started = 0;
+    tm_handler = 0;
+    trans_func[0] = trans_func[1] = 0;
+    trans_pending[0] = trans_pending[1] = 0;
+    iop_ok = 0;
+    shoff = le32(f + 0x20);
+    shnum = le16(f + 0x30);
+    if (shoff + shnum * 40 > size) return -1;
+    iop_mod_end = KH1_IOP_BASE;
+    for (i = 0; i < shnum; i++) {
+        const u8 *sh = f + shoff + i * 40;
+        u32 type = le32(sh + 4), flags = le32(sh + 8), addr = le32(sh + 12), off = le32(sh + 16), sz = le32(sh + 20);
+        if (type == 0x70000080 && off + 12 <= size) { /* .iopmod: module info, entry, gp */
+            entry = le32(f + off + 4);
+            gp = le32(f + off + 8);
+        }
+        if (!(flags & 2)) continue; /* SHF_ALLOC */
+        if (KH1_IOP_BASE + addr + sz > IOP_HEAP_END) return -1;
+        if (type == 1) { /* PROGBITS */
+            if (off + sz > size) return -1;
+            memcpy(RAM(KH1_IOP_BASE + addr), f + off, sz);
+            if (flags & 4) { text = KH1_IOP_BASE + addr; text_size = sz; }
+        }
+        if (KH1_IOP_BASE + addr + sz > iop_mod_end) iop_mod_end = KH1_IOP_BASE + addr + sz;
+    }
+    if (!text || relocate(f, size, shoff, shnum, KH1_IOP_BASE) != 0) return -1;
+    find_imports(text, text_size);
+    iop_heap = (iop_mod_end + 0xFFF) & ~0xFFFu;
+    if (iop_log()) printf("kh1-iop: module at 0x%x..0x%x, entry +0x%x, %d imports\n", KH1_IOP_BASE, iop_mod_end, entry,
+                          iop_nstubs);
+    ret = call_func(KH1_IOP_BASE + entry, 0, 0, 0, 0, IOP_INTR_STACK);
+    (void)gp;
+    if ((ret & 3) == 1) { /* NO_RESIDENT_END */
+        printf("kh1-iop: the module did not stay resident (%u)\n", ret);
+        return -1;
+    }
+    schedule();
+    iop_ok = rpc_thread >= 0;
+    if (!iop_ok) printf("kh1-iop: the module registered no RPC server\n");
+    return iop_ok ? 0 : -1;
+}
+
+/* ---- the interfaces ---- */
+
+int kh1_iop_rpc(u32 sid, u32 fno, const void *send, int ssize, void *recv, int rsize) {
+    IopThread *t;
+    u8 *buf;
+    int guard;
+    if (!iop_ok || sid != rpc_sid || rpc_thread < 0) return -1;
+    t = &iop_th[rpc_thread];
+    if (t->state != TH_RPC_WAIT) return -1;
+    buf = kh1_iop_ptr(rpc_buf, (u32)ssize);
+    if (buf && send && ssize > 0) memcpy(buf, send, (unsigned)ssize);
+    t->c.pc = rpc_func;
+    t->c.npc = rpc_func + 4;
+    t->c.r[4] = fno;
+    t->c.r[5] = rpc_buf;
+    t->c.r[6] = (u32)ssize;
+    t->c.r[31] = IOP_MAGIC_RET;
+    t->in_rpc = 1;
+    t->state = TH_READY;
+    /* a call that waits on another thread (a delay) gets time to pass until it answers */
+    for (guard = 0; guard < 64; guard++) {
+        schedule();
+        if (!t->in_rpc) break;
+        wake_delayed();
+    }
+    if (t->in_rpc) {
+        printf("kh1-iop: RPC %u did not finish\n", fno);
+        return -1;
+    }
+    if (recv && rsize > 0) {
+        const u8 *ans = kh1_iop_ptr(t->c.r[2], (u32)rsize);
+        if (ans) memcpy(recv, ans, (unsigned)rsize);
+    }
+    return 0;
+}
+
+void kh1_iop_tick(void) {
+    if (!iop_ok) return;
+    wake_delayed();
+    if (tm_started && tm_handler) {
+        u32 next = call_func(tm_handler, tm_arg, 0, 0, 0, IOP_INTR_STACK);
+        if (next) tm_compare = next;
+        tm_count += tm_compare;
+    }
+    schedule();
+}
+
+u32 kh1_iop_timer_hz(void) { return tm_started && tm_compare ? 36864000u / tm_compare : 0; }
+
+void kh1_iop_raise_trans(int core) { trans_pending[core & 1] = 1; }
+
+void kh1_iop_set_trans_handler(int core, u32 func, u32 arg) {
+    trans_func[core & 1] = func;
+    trans_arg[core & 1] = arg;
+}

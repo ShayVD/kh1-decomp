@@ -170,7 +170,8 @@ loads on it.
 
 Open: the meaning of `0xC`'s last three words, cmd 2's value, RPC `0x24` / `0x27`, the slot numbers -1 /
 -3 ... -9, and every command with no caller in the main ELF; the file formats behind commands 3, 4 and
-`0xB`. The IOP module (on the disc, the user's own copy) settles all of these.
+`0xB`. The IOP module (on the disc, the user's own copy) settles all of these; since 2026-10-29 the port runs
+it (section 6).
 
 ## 5. The null server on the host (session 86)
 
@@ -196,3 +197,105 @@ fake disc's boot (`KH1_HOST_OVL=stub:2`): 43 commands to the room load (38 `0x26
 SE-table transfer to slot 2, two music stops, an SE stop) and the RPCs bind x2, `0x27` x2, pause x1; no
 SE plays before the fault.
 
+
+## 6. The IOP on the port (2026-10-29)
+
+The port plays the game's sound with **the user's own IOP sound driver**: LIBSSL.IRX ("Ohori_Sound_Driver",
+SquareSounds SoundDriver, built Apr 26 2002), read from the disc image's root at run time (85,501 bytes on
+SLPS_251.98 and on the English patch's image). Nothing from it is in the repo or the VPK: the port carries
+a small IOP (an R3000A interpreter and the system calls the driver imports) and an SPU2, and the driver
+does the rest, so the sequence, wave bank and SE table formats (section 3's open list) never had to be
+reimplemented. src/sound/snd_rpc.c and sndctl.c are unchanged; `PlatSifCallRpc` (host/null/plat_null.c)
+hands server 17's calls to host/port/snd.c once the driver is running, and to the null server (section 5)
+when it is not (no disc image, no LIBSSL.IRX on it, or the sound switched off).
+
+Files (none in the PS2 build):
+
+| File | What |
+|---|---|
+| host/port/iop.c, iop.h | 2 MiB of IOP RAM; the IRX loader (R_MIPS_32 / 26 / HI16 / LO16, the import tables, magic `0x41E00000`, stubs `jr ra; li $0, N`); a MIPS I interpreter with delay slots; IOP threads, semaphores, the timer and the SIF RPC server, as high-level answers to the driver's imports |
+| host/port/spu2.c | the SPU2: 2 MiB of sound RAM, 2 cores x 24 voices, ADPCM, ADSR, the reverb, and libsd's exports (`kh1_sd_call`) |
+| host/port/snd.c | the glue: starts the driver at the game's bind (RPC 0), runs RPCs, ticks and mixes; the host runner's WAV |
+| host/vita/audio.c | the Vita's output: a thread on its own core, sceAudioOut's main port, 48 kHz, 256-sample buffers |
+| tools/host/sndplay.c | a standalone player: a `.bgm` + `.wd`, a music `.dat`, or SEs from `se000.dat`, to a WAV, without the game |
+
+### The driver's structure (read from the IRX with m2c; addresses are the IRX's own)
+
+- Start: creates its threads, sets the timer handler (0x14e0), registers RPC server 17 (function 0x3174,
+  buffer 0xf5c0) on its own thread (0x17f0), which then sits in `sceSifRpcLoop`.
+- The timer handler calls func_00650 and returns 0x25800 (the next compare): **a 240 Hz tick**, 200 samples
+  at 48 kHz. It signals the tick thread (0x15c4), which waits on a semaphore and works the sequencer and the
+  voices; the queue the game sent is run by the RPC function itself (RPC 30, jump table 0xe688), so the
+  commands of section 3 take effect between ticks, as on the console.
+- The status block (section 2) is written back by `sceSifSetDma` to the EE address the bind gave. On the
+  port EE addresses are the 32-bit host pointers; iop.c's SetDma copies straight to them.
+
+Imports the driver uses and how iop.c answers them (export numbers):
+
+| Library | Numbers |
+|---|---|
+| thbase | 4 CreateThread, 6 StartThread, 0xE ChangeThreadPriority, 0x14 GetThreadId, 0x21 DelayThread |
+| thsemap | 4 CreateSema, 7 iSignalSema, 8 WaitSema |
+| thvpool | 4, 5, 7, 9, 0xB (a pool kept on the IOP heap) |
+| timrman | 4, 10, 20 SetTimerHandler, 22, 23 |
+| sifcmd | 0xE, 0x11 RegisterRpc, 0x12, 0x13, 0x16 RpcLoop, 0x17 GetOtherData |
+| sifman | 5, 7 SetDma, 8, 0x1D |
+| sysmem | 6, 7, 8 (allocations), 14 Kprintf (printed at `KH1_HOST_IOP=1`) |
+| sysclib | 12 memcpy, 22 strcmp |
+| intrman | 6, 9, 17, 18 |
+| loadcore | 5 FlushDcache |
+| cdvdman | 0x1C, answered 0 |
+| libsd | 4 Init, 5 / 6 Set / GetParam, 7 / 8 Set / GetSwitch, 9 / 10 Set / GetAddr, 11 SetCoreAttr, 17 VoiceTrans, 18 BlockTrans, 19 / 20 the transfers' status, 23 / 24 Set / GetEffectAttr, 25 ClearEffectWorkArea, 26 SetTransIntrHandler, 27 SetSpu2IntrHandler, 30 StopTrans |
+
+libsd's parameter words: register `(p >> 8) & 0xFF`, core `p & 1`, voice `(p >> 1) & 0x1F`. Voice registers
+0 VOLL, 1 VOLR, 2 PITCH, 3 ADSR1, 4 ADSR2, 5 ENVX, 6 VOLXL, 7 VOLXR; core registers 8 MMIX, 9 / 0xA MVOL,
+0xB / 0xC EVOL, 0xD / 0xE AVOL (a plain s16, no sweep bit: the driver writes 0x7FFF, which read as a sweep
+was nearly silent), 0xF / 0x10 BVOL; switches 0x13 PMON ... 0x15 KON, 0x16 KOFF, 0x17 ENDX, 0x18-0x1B
+VMIXL / VMIXEL / VMIXR / VMIXER; addresses (bytes) 0x1C ESA, 0x1D EEA, 0x1F IRQA, 0x20 SSA, 0x21 LSAX,
+0x22 NAX. SetCoreAttr's entry `2 | core` is the effect enable.
+
+### The SPU2 model
+
+ADPCM (filters {0, 60, 115, 98, 122} / {0, 0, -52, -55, -60}, a shift over 12 read as 9; the loop flags
+bit 0 end, bit 1 repeat, bit 2 start), the ADSR envelope's rates as the PSX's, 4-point cubic
+interpolation (the console's is Gaussian), core 0's output into core 1 through AVOL, and the reverb: the
+PSX algorithm at half rate over the core's work area, with **the presets read from the disc's own
+LIBSD.IRX** (found by the signature `7d 00 5b 00 80 6d`, 0x44 bytes a mode; mode m at the room preset +
+(m - 1) x 0x44: 1 room, 2-4 studio, 5 hall, 6 space, 7 echo, 8 delay, 9 pipe). The driver sets mode 5 on
+core 0 and 4 on core 1. Without LIBSD.IRX the reverb is off and the rest plays.
+
+**Not modelled** (be direct): BlockTrans (the core's PCM input: the movies' sound, dkmovie.x; answered
+0), noise, pitch modulation, the IRQ address, the echo / delay modes' feedback, Gaussian interpolation.
+Nothing here was compared against a console recording.
+
+### Threads and cost
+
+- The host runner (`KH1_HOST_SND=iop`, or `wav:FILE` to also write what it plays) runs every call at once
+  and four ticks a vblank (host/null/main.c).
+- The Vita runs the ticks and the mix on an audio thread (host/vita/audio.c), paced by sceAudioOut. The
+  game thread's per-frame queue send (RPC 30) is copied into an 8-deep FIFO and returns; the audio thread
+  runs the FIFO before each tick. The other RPCs (the game reads their answer) take the lock, drain the
+  FIFO and run at once. One SceKernelLwMutex keeps the two apart. The thread is on core 2 by default
+  (config.txt `sndcore=`), beside the GPU frame's thread, at a higher priority.
+- Cost on the host: about 2.5 million IOP instructions a second of sound over the Dive run (3.7 G in
+  25 minutes), plus the mix. **Not measured on a Vita**: the watchdog's sound line (vita-build.md
+  "Sound") prints the thread's milliseconds per 2 s.
+
+### Checked (2026-10-29, on the English patch's image)
+
+- `tools/host/sndplay.c`: the title's and other tracks (`music097.bgm` + `wave0099.wd` and others) and
+  system SEs from se000.dat render at sensible levels; the reverb adds energy without running away.
+- The host runner over tests/host/pads/dive_en.txt (91,000 frames): the driver starts at the bind, 44,020
+  RPCs; the title music from about 15 s, then Dive's music, SEs and the event voices into Destiny
+  Islands, with sound in every 10 s of the 25-minute WAV.
+- **Timing moves with real sound**: the run is frame-identical to the null server's until frame 63,559,
+  where the next event voice set (voice/event/di/di_002.vset) loads 24 frames later, since the event
+  waits for the line before to finish playing (the null server ends a stream by its computed length).
+  The pad script, timed against the null server, then drifts and misses the last room change near frame
+  77,600. Pad scripts stay on the null server (the host's default); a script for the driver would need
+  retiming.
+- `make` byte-identical, `make test` and the selftests pass (the null server is still the host's default,
+  so tests/host/sound_test.c is unchanged).
+
+Section 3's open questions can now be answered from the driver's own code (the m2c output of the IRX is
+easy to make again, but it is the user's copy and stays out of the repo); that is not done here.

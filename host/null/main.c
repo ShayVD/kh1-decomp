@@ -18,6 +18,9 @@
  *                       each draw / immediate list node as it starts (plat_null.c, session 83)
  *   KH1_HOST_SND=trace  print each sound command and RPC (host/null/sound.c, session 86; also at
  *                       KH1_HOST_TRACE=6); tools/host/sndlog.py summarises them
+ *   KH1_HOST_SND=iop    run the disc's own sound driver (LIBSSL.IRX) instead of the null server
+ *                       (host/port/snd.c, docs/sound-spec.md 6); KH1_HOST_SND=wav:FILE also writes what
+ *                       it plays, 48 kHz stereo; the summary prints its ticks, RPCs and IOP instructions
  *   KH1_HOST_PAD=FILE   a scripted controller, "FRAME BUTTONS [RX RY LX LY]" lines (host/null/pad.c,
  *                       session 87); without it one pad is connected with nothing pressed, and
  *                       KH1_HOST_PAD=none has no pad (the "no controller" band from frame 32)
@@ -124,6 +127,8 @@ unsigned long kh1_host_frame(void) { return frames; }
 extern unsigned kh1_gs_list_nodes, kh1_gs_pending_sends, kh1_gs_list_waits; /* host/null/plat_null.c */
 extern int kh1_host_dmac_defer;
 extern unsigned kh1_snd_commands; /* host/null/sound.c */
+extern unsigned kh1_snd_ticks, kh1_snd_rpcs, kh1_iop_insns; /* host/port/snd.c, iop.c */
+void kh1_snd_host_end(void);
 extern int kh1_counts_on; /* host/null/counts.c */
 void kh1_counts_sample(void);
 int kh1_counts_report(void);
@@ -148,6 +153,10 @@ static void summary(void) {
         fprintf(stderr, "kh1-host: %lu overlay calls answered 0 (KH1_HOST_OVL=stub)\n", ovl_calls);
     if (kh1_snd_commands)
         fprintf(stderr, "kh1-host: %u sound commands queued (KH1_HOST_SND=trace prints them)\n", kh1_snd_commands);
+    if (kh1_snd_ticks)
+        fprintf(stderr, "kh1-host: sound driver: %u ticks, %u RPCs, %u IOP instructions\n", kh1_snd_ticks, kh1_snd_rpcs,
+                kh1_iop_insns);
+    kh1_snd_host_end();
     fflush(stderr);
     kh1_counts_report();
     kh1_present_pal_report();
@@ -222,6 +231,10 @@ static u32 gsq_frame_end[2];
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */
 extern void *kh1_vsync_cb;
 void kh1_null_iop_frame(void);
+void kh1_snd_frame(void); /* host/port/snd.c: the sound driver's four ticks a frame */
+void kh1_snd_host_end(void);
+int kh1_snd_host_init(void);
+extern int kh1_snd_wanted;
 void kh1_host_vblank(void) {
     static int in_vblank;
     if (in_vblank) return;
@@ -244,6 +257,7 @@ void kh1_host_vblank(void) {
         gsq_frame(frames);
     prof_frame();
     kh1_null_iop_frame();
+    kh1_snd_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     in_vblank = 0;
     if (frames >= max_frames) {
@@ -352,6 +366,7 @@ int main(int argc, char **argv) {
     }
     if (cd && strcmp(cd, "go") == 0)
         kh1_host_stop_at_cdread = 0;
+    kh1_snd_wanted = kh1_snd_host_init();
     if (nf)
         max_frames = strtoul(nf, 0, 0);
     {

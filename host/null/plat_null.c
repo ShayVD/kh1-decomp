@@ -194,8 +194,24 @@ int PlatSifBindRpc(void *client, unsigned int num, unsigned int mode) {
 /* The sound server (17, src/sound/snd_rpc.c) is host/null/sound.c's null server: it keeps the
  * status block the game polls (the bank transfer count, the SE voices and streams) and, with
  * KH1_HOST_SND=trace, prints each command (docs/sound-spec.md). No other server is bound. */
+/* With kh1_snd_wanted (the Vita's default, KH1_HOST_SND=iop / wav:FILE on the host) the bind starts the
+ * user's own sound driver from the disc instead (host/port/snd.c, docs/sound-spec.md "The IOP on the
+ * port") and every call goes to it; without the driver the null server stays. */
 void kh1_null_snd_rpc(unsigned num, void *send, int ssize, void *recv, int rsize);
+int kh1_snd_wanted;
+int kh1_snd_active(void);
+int kh1_snd_start(void);
+void kh1_snd_rpc(unsigned num, void *send, int ssize, void *recv, int rsize);
+void (*kh1_snd_started)(void); /* the platform's audio output, started with the driver */
 int PlatSifCallRpc(void *client, unsigned int num, unsigned int mode, void *send, int ssize, void *recv, int rsize, void (*end)(void *), void *param) {
+    if (num == 0 && kh1_snd_wanted && !kh1_snd_active()) {
+        kh1_snd_wanted = 0; /* one try */
+        if (kh1_snd_start() == 0 && kh1_snd_started) kh1_snd_started();
+    }
+    if (kh1_snd_active()) {
+        kh1_snd_rpc(num, send, ssize, recv, rsize);
+        return 0;
+    }
     kh1_null_snd_rpc(num, send, ssize, recv, rsize);
     return 0;
 }

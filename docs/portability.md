@@ -61,6 +61,10 @@ rewrite matched code.
    view stretches, keyed by the send, host/port/fullscreen.c) and include/platform/canvas.h
    (the 2D canvas map onto the screen, the stretch and the scissor rule as pure functions,
    host/port/canvas.c): port data and maths only, nothing under src/ includes them.
+   2026-10-29: the sound needed no new wrapper. iop.h's PlatSifCallRpc already carries every
+   call of src/sound/snd_rpc.c; a port answers server 17 with the user's own IOP driver run
+   by host/port/iop.c / spu2.c / snd.c (docs/sound-spec.md 6), and the null server stays for
+   a run without it. No src/ file changed.
    **Session 56 wrote the wrappers** (each byte-identical, one header per
    commit): `dma.h` (PlatDmaGetChan / PlatDmaSend, 38 files; libdma named in
    functions.tsv), `gs.h` (PlatGsSyncPath, image load / store packets and
