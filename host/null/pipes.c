@@ -20,6 +20,7 @@
 #include "common.h"
 #include "gsregs.h"
 #include "gsmem.h"
+#include "bytesame.h"
 #include "platform/drawstate.h"
 #include "platform/target.h"
 #include "platform/batch.h"
@@ -102,10 +103,38 @@ static void on_xfer(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 r
     tex_look = 1;
 }
 
+/* Session 147d (the title's New Game pages: ~200 glyph CLUT loads a frame over more palettes than the palette
+ * cache's recent four): the palette slot each of kh1_gsmem_clut's kept answers (kh1_gsmem_clut_id) was got for,
+ * with the slot's gen.  While the gen holds, the slot holds those entries, so the lookup is the hit
+ * kh1_palcache_get would answer, without its hash and scan or a compare */
+static struct { u32 id, gen; s16 slot; } pal_ids[64];
+static int pal_known(u32 id, u32 n) {
+    const KH1PalSlot *p;
+    if (!id || pal_ids[id & 63].id != id) return -1;
+    p = &pal->slot[pal_ids[id & 63].slot];
+    return p->gen == pal_ids[id & 63].gen && p->n == n ? pal_ids[id & 63].slot : -1;
+}
+static int pal_get(const u32 *col, u32 n, int *fill) {
+    u32 id = kh1_gsmem_clut_id();
+    int slot = pal_known(id, n);
+    *fill = 0;
+    if (slot >= 0) {
+        kh1_palcache_hit(pal, slot);
+        return slot;
+    }
+    slot = kh1_palcache_get(pal, col, n, fill);
+    if (id && slot >= 0) {
+        pal_ids[id & 63].id = id;
+        pal_ids[id & 63].gen = pal->slot[slot].gen;
+        pal_ids[id & 63].slot = (s16)slot;
+    }
+    return slot;
+}
+
 static void on_clut(u32 lo, u32 hi) {
     const KH1GsState *s = kh1_gs_state();
     u32 n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_buf), a[4];
-    int fill = 0, slot = n ? kh1_palcache_get(pal, pal_buf, n, &fill) : -1;
+    int fill = 0, slot = n ? pal_get(pal_buf, n, &fill) : -1;
     a[0] = lo;
     a[1] = hi;
     a[2] = (u32)slot;
@@ -152,11 +181,12 @@ static void tex_lookup(u32 lo, u32 hi) {
      * present.c's pal_for): when its entries are not the bound slot's, bind theirs */
     if (pal_of(lo, hi)) {
         const KH1PalSlot *p = a_pslot >= 0 ? &pal->slot[a_pslot] : 0;
-        if (p && p->n == pal_n && !memcmp(p->col, pal_draw, pal_n * 4)) {
+        if (p && p->n == pal_n &&
+            (pal_known(kh1_gsmem_clut_id(), pal_n) == a_pslot || kh1_bytes_same(p->col, pal_draw, pal_n * 4))) {
             kh1_palcache_use(pal, a_pslot); /* session 141: bound from an earlier frame's load (CLD 0) */
         } else {
             int fill = 0;
-            slot = kh1_palcache_get(pal, pal_draw, pal_n, &fill);
+            slot = pal_get(pal_draw, pal_n, &fill);
             a[2] = (u32)slot;
             a[3] = (u32)fill;
             kh1_recq_put(r_palette, a, 4, 0, 0);

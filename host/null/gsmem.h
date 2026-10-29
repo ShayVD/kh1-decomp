@@ -80,6 +80,9 @@ int kh1_gsmem_read_tex(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *
 /* session 116: the palette the TEX0 reads from the CLUT buffer (256 entries for T8 / T8H, CSA's 16 for
  * the 4-bit PSMs) as RGBA8 words; returns the count, 0 for one the model does not have */
 int kh1_gsmem_clut(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *out);
+/* session 147d: nonzero when the last kh1_gsmem_clut answer is a kept one: the same id, the same entries (ids are
+ * never reused) */
+u32 kh1_gsmem_clut_id(void);
 /* session 117 (the palette cache in the present, renderer-spec 4.13 "Session 117"): called after each
  * CLUT buffer load with the TEX0 that loaded it; and, when set, the textured flat sprite's indexed
  * decode (kh1_gsmem_flat_sprite) asks it for the TEX0's palette (as kh1_gsmem_clut gives: 256 entries,

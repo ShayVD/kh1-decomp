@@ -180,7 +180,7 @@ static int cover_cmd(const KH1CmdRec *r, const KH1CmdPass *p, const KH1Cmd *c) {
     if (!c->hasv || c->lost || c->nv % 6) return 0;
     for (i = 0; i < c->nv; i += 6) {
         f32 x0 = v[i].x, x1 = v[i].x, y0 = v[i].y, y1 = v[i].y;
-        s32 px0, px1, py0, py1, cx, cy;
+        s32 px0, px1, py0, py1, cx, cy, cx0;
         for (j = 1; j < 6; j++) {
             if (v[i + j].x < x0) x0 = v[i + j].x;
             if (v[i + j].x > x1) x1 = v[i + j].x;
@@ -205,14 +205,16 @@ static int cover_cmd(const KH1CmdRec *r, const KH1CmdPass *p, const KH1Cmd *c) {
         /* session 142: only the cells the rectangle can cover (a cell's start at or after px0 / py0, its end
          * rising with it), not the whole grid for every rectangle (Dive to the Heart: 133M of the GS worker's
          * 1,978M host instructions over 60 frames, now 6M) */
-        for (cy = py0 > 0 ? (py0 + CELL - 1) / CELL : 0; cy * CELL < (s32)p->h && cy < CELLS_W; cy++) {
+        /* session 147d: the columns once, the same for every row (a full-screen rectangle was ~60K instructions) */
+        cx0 = px0 > 0 ? (px0 + CELL - 1) / CELL : 0;
+        for (cx = cx0; cx * CELL < (s32)p->w && cx < CELLS_W; cx++) {
+            s32 ex = cx * CELL + CELL < (s32)p->w ? cx * CELL + CELL : (s32)p->w;
+            if (px1 < ex) break;
+        }
+        for (cy = py0 > 0 ? (py0 + CELL - 1) / CELL : 0; cx > cx0 && cy * CELL < (s32)p->h && cy < CELLS_W; cy++) {
             s32 ey = cy * CELL + CELL < (s32)p->h ? cy * CELL + CELL : (s32)p->h;
             if (py1 < ey) break;
-            for (cx = px0 > 0 ? (px0 + CELL - 1) / CELL : 0; cx * CELL < (s32)p->w && cx < CELLS_W; cx++) {
-                s32 ex = cx * CELL + CELL < (s32)p->w ? cx * CELL + CELL : (s32)p->w;
-                if (px1 < ex) break;
-                cell[cy][cx] = 1;
-            }
+            memset(&cell[cy][cx0], 1, (u32)(cx - cx0));
         }
     }
     return 1;

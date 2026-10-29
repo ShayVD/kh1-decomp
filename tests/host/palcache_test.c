@@ -135,19 +135,24 @@ int main(void) {
 
     { /* session 147c: the recent slots' fast path against the scan alone (the recent four cleared before each get): the same
        * answers, fills and slot states over random gets that repeat, return to and evict palettes */
-        static KH1PalCache a, b;
+        static KH1PalCache a, b, c;
         static u32 col[256];
-        u32 it, rs = 147, k, bad = 0, fast = 0;
+        /* session 147d: c as host/null/pipes.c uses it: the slot and its gen a palette (here its key and size) was got
+         * in, and while the gen holds, kh1_palcache_hit instead of a get */
+        static struct { int slot; u32 gen; } known[512][2];
+        u32 it, rs = 147, k, bad = 0, fast = 0, badc = 0, hitc = 0;
         kh1_palcache_init(&a);
         kh1_palcache_init(&b);
+        kh1_palcache_init(&c);
+        for (k = 0; k < 512; k++) known[k][0].slot = known[k][1].slot = -1;
         for (it = 0; it < 200000; it++) {
             u32 n = (rs >> 9) & 1 ? 256 : 16, key;
-            int fa, fb, sa, sb;
+            int fa, fb, fc, sa, sb, sc;
             rs = rs * 1103515245u + 12345u;
             key = rs >> 20 & 511; /* ~500 palettes over 256 slots: evictions */
             if ((rs >> 4 & 3) == 0) key = 7; /* and one often again in a row */
             for (k = 0; k < n; k++) col[k] = key * 2654435761u + k;
-            if (it % 97 == 0) { kh1_palcache_frame(&a); kh1_palcache_frame(&b); }
+            if (it % 97 == 0) { kh1_palcache_frame(&a); kh1_palcache_frame(&b); kh1_palcache_frame(&c); }
             for (k = 0; k < 4; k++)
                 fast += a.recent[k] < KH1_PALCACHE_SLOTS && a.slot[a.recent[k]].n == n &&
                         a.slot[a.recent[k]].col[0] == col[0] && a.slot[a.recent[k]].col[n - 1] == col[n - 1];
@@ -157,10 +162,26 @@ int main(void) {
             if (sa != sb || fa != fb || a.use != b.use || a.hits != b.hits || a.misses != b.misses || a.full != b.full ||
                 (sa >= 0 && (a.slot[sa].use != b.slot[sb].use || a.slot[sa].frame != b.slot[sb].frame)))
                 bad++;
+            sc = known[key][n == 256].slot;
+            if (sc >= 0 && c.slot[sc].gen == known[key][n == 256].gen && c.slot[sc].n == n) {
+                kh1_palcache_hit(&c, sc);
+                fc = 0;
+                hitc++;
+            } else {
+                sc = kh1_palcache_get(&c, col, n, &fc);
+                known[key][n == 256].slot = sc;
+                if (sc >= 0) known[key][n == 256].gen = c.slot[sc].gen;
+            }
+            if (sa != sc || fa != fc || a.use != c.use || a.hits != c.hits || a.misses != c.misses || a.full != c.full ||
+                (sa >= 0 && (a.slot[sa].use != c.slot[sc].use || a.slot[sa].frame != c.slot[sc].frame)))
+                badc++;
         }
         for (k = 0; k < KH1_PALCACHE_SLOTS; k++) bad += a.slot[k].n != b.slot[k].n || a.slot[k].use != b.slot[k].use;
         CHECK("the recent slots' fast path answers as the scan", bad == 0);
         CHECK("the fast path is taken", fast > 5000);
+        for (k = 0; k < KH1_PALCACHE_SLOTS; k++) badc += a.slot[k].n != c.slot[k].n || a.slot[k].use != c.slot[k].use;
+        CHECK("a known slot's kh1_palcache_hit answers as the get", badc == 0);
+        CHECK("the known slots are hit", hitc > 20000);
     }
     printf("palcache_test: %d checks, %s\n", checks, fails ? "FAIL" : "PASS");
     return fails != 0;
