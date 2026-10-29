@@ -918,8 +918,8 @@ which the 147c profile at 2,050 had already measured: it was this screen).
 - **cmdbuf.c cover_cmd**: a rectangle's covered cells by rows (the columns found once), not cell by cell.
 - texcache.c's raw and texel compares and pipes.c's palette compare through kh1_bytes_same (NEON on the Vita).
 - Host worker on those pages: 232M -> 158M instructions per 60 frames.
-- **gsimage.c**: a large upload's compare (after the sync, the worker idle) is shared: its first half on the
-  worker, the rest on the game thread, then a sync for the answer; the same bytes compared either way.
+- **gsimage.c** (s147f): a large upload's compare (after the sync, the worker idle) shared: its first half on
+  the worker, the rest on the game thread, then a sync for the answer. Replaced in s147h (below).
 - Tests: gsfast_test checks that every id kh1_gsmem_clut_id gives back comes with the same entries (6,000 loads);
   palcache_test runs a third cache as pipes.c uses it (known slot and gen, kh1_palcache_hit) and checks its answers
   and slot states against the plain gets over 200,000 gets.
@@ -929,6 +929,16 @@ which the 147c profile at 2,050 had already measured: it was this screen).
   after the choice (51-58 fps: ~26,000 w_block a window against ~18,000 once the pages settle, the worker busy
   ~2 s per 2 s; Shay notes that stretch may have been the Load Game screen). The watchdog's new `gpu waits:` line (gxm.c's sceGxmFinish by where) puts all of the pages'
   GPU waits at the frame's start, none at target uploads, CLUT readbacks or blits.
+- **The syncs before the large uploads (s147h)**: each of the ~5 a frame waited for the worker to empty its queue,
+  so the game and the worker took turns (the game waited ~1 s per 2 s in them on the first New Game page).
+  gsimage.c `load_big` now keeps each large upload's bytes on the game thread (8 kept, by BITBLTBUF, TRXPOS, TRXREG
+  and size) with a generation. The same bytes again (compared there, no sync) go to the worker as an op naming
+  the generation and the kept copy; kh1_gsmem_image_same matches the generation the rectangle's kept bytes came
+  with (gsmem.c `kh1_gsmem_image_gen`, kept by kh1_gsmem_image_kept) instead of comparing. New bytes are copied in
+  after a sync (no op reads a copy then), with a new generation, and the worker uploads them from the copy.
+  gsimage_test loads 12 rectangles 400 times with the queue on (bytes the same, changed, changed after the call,
+  pixels written into the rectangles between) and checks GS memory against the bytes loaded; matching any
+  generation is caught.
 
 ## The recording on the third core (session 146)
 
