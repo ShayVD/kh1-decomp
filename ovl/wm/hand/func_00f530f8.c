@@ -1,4 +1,6 @@
-/* func_00f530f8: score 6, 3 words differ. only diff: x74 test loads lhu into v1 where original uses v0; tried return/test forms, ctx stubs, permuter */
+/* wm.x func_00f530f8: matched by hand. */
+#include "ovl.h"
+
 typedef struct {
     u16 x0;
     u16 x2;
@@ -67,19 +69,20 @@ s32 func_00f530f8(s32 pri, Ctx *c) {
     s32 k;
 
     if (o == NULL) {
-        if (D_00F9B540->x74 & 2) {
+        if (!(D_00F9B540->x74 & 2)) {
+            e = &D_00F9B540->x48;
+            id = e->x4 - 1;
+            if (D_00FA5AF0 == 0 && func_00f4afb8(id) <= 0) {
+                return 0;
+            }
+            D_0108CE7C = func_00f4ca10(id);
+            D_0108CE80 = func_00f4ca70(id);
+            if (D_0108CD40) {
+                func_00f50130(e);
+                ret = 1;
+            }
+        } else {
             return 0;
-        }
-        e = &D_00F9B540->x48;
-        id = e->x4 - 1;
-        if (D_00FA5AF0 == 0 && func_00f4afb8(id) <= 0) {
-            return 0;
-        }
-        D_0108CE7C = func_00f4ca10(id);
-        D_0108CE80 = func_00f4ca70(id);
-        if (D_0108CD40) {
-            func_00f50130(e);
-            ret = 1;
         }
     } else {
         e = o;
