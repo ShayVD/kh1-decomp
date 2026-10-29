@@ -1,4 +1,4 @@
-/* 17 words / score 28 (472 = 472); was 83/86. Copy-family pattern from f40438: tex = base; o = tex; c = (f32 *)(o + 208); d.col = c; tex = o + 480; colours through c; Desc padded to 32 bytes (frame 112); the uv copy is a plain pointer loop (ps = src + 3; dd = o + 500; dd[-1] = ps[-1]; dd[0] = ps[0]) because the original strength-reduces it. Left: the original also copies c into tex (t2 = a0) before storing d.col and keeps o (t3) for the 752/500 offsets; every form that adds that copy (tex = (u8 *)c; d.col = (f32 *)tex) swaps s1/s2 and adds a second copy (score 86-90). Hill-climb of the head block: no gain. */
+/* 17 words / score 28 (472 = 472); was 83/86. Copy-family pattern from f40438: tex = base; o = tex; c = (f32 *)(o + 208); d.col = c; tex = o + 480; colours through c; Desc padded to 32 bytes (frame 112); the uv copy is a plain pointer loop (ps = src + 3; dd = o + 500; dd[-1] = ps[-1]; dd[0] = ps[0]) because the original strength-reduces it. Left: the original also copies c into tex (t2 = a0) before storing d.col and keeps o (t3) for the 752/500 offsets; every form that adds that copy (tex = (u8 *)c; d.col = (f32 *)tex) swaps s1/s2 and adds a second copy (score 86-90). Hill-climb of the head block: no gain. Round 15 (wwm1): func_00f3e388 returns MdlWork * (ovl/gb/hand/func_00f3e388.c); declaring it as returning a pointer takes this from 17 to 14 words. */
 typedef struct {
     f32 *col;
     s32 zero;
@@ -18,7 +18,7 @@ extern u8 D_0037A028[];
 extern f32 *D_00F813CC[];
 s32 func_00f23860(s32);
 s32 func_00f23908(s32);
-void func_00f3e388(s32, u8 *, u8 *, Desc *, s32, s32, Mode *, f32);
+void *func_00f3e388(s32, u8 *, u8 *, Desc *, s32, s32, Mode *, f32);
 
 void func_00f37270(s32 arg, u8 *base, s32 id, s32 id2, s32 idx, f32 f) {
     Mode m;

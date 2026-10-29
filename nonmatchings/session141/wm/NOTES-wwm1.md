@@ -509,3 +509,33 @@ aligned words after a 10-minute permuter run (no gain over the base).
   materialised 1 is hoisted out of the outer loop), f465a8 (a double load
   through one shared lui), f3fd60 (`v - 1` is not folded into the table
   offset), f7cb60 (crossjumping), f3a0f0 (FP registers).
+
+## Round 15
+
+protofix2.py (`OVL DIR...`) runs the round 14 prototype check on any
+overlay. It looks callees up in src/, in that overlay's ovl/OVL/hand, and,
+for main-ELF addresses only, in the other overlays' hand dirs. Overlay
+addresses repeat between overlays, so the round 14 script could pick up
+a wrong definition from another overlay. Unknown typedefs are replaced
+with `void *` or `s32`. When more than one prototype changes, it also
+tries each change on its own.
+
+- gb (79 drafts in session141/gb; session131b has none): no matches.
+  f37270 went from 17 to 14 (func_00f3e388 returns MdlWork *). The other
+  callees it re-typed, such as func_001c01b0, func_001f3840 and the
+  wintext ones, changed nothing.
+- Small overlays: xs_mushu f20550 matched. func_00148968 returns a
+  pointer (src/obj/effobj.nostrict.c); declared void, it swapped two
+  loads. dktitle f26710 is 2 words with the s32 func_0011ef10, the same
+  as the session132 draft. xs_genie f218f8 stays at 2 words. dkmovie
+  f207a0/f20140, dktitle f228c8 and xl_limit f225b0 did not change.
+  xs_tink, xs_dh_break, xs_bambi, xs_dumbo and xs_simba have no
+  candidates.
+- Before `hand.py try` works on the xs_* and xl_limit overlays, run
+  `python3 tools/ovl/build.py wrap NAME...` to write the target
+  out/ovl/NAME.elf. Without it, the objdump step fails with a
+  CalledProcessError.
+- nonmatchings/session141/gb/RANKING.md ranks gb by aligned diff. Its
+  top rows are f350d0 (1), f2c000 and f35a80 (3), f4d348.nofill and
+  f3c8c8 (4), and f34aa8 (5 aligned, 65 raw). f350d0 and f34aa8 differ
+  on branch-likely use (bltz vs bltzl, beql), not on statement shape.
