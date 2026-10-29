@@ -167,3 +167,12 @@ Near misses saved:
 - func_00f663a8 (73, nostrict): VU memory writes. The original reloads every global after each VU store.
 
 Not reached: f651d0 (a large matrix loop; looked at only), f64d48, f639c0, f63d18, f70418, f69aa8.
+
+## Round 9
+
+No matches.
+- func_00f651d0: draft saved at score 155. It is a skinned-bone matrix build. The original saves t2..t5 with sq/lq
+  around the per-mesh call (caller-save) and keeps the bone pointer on the stack. An unused `f32 u[4][4]`
+  reproduces most of the frame.
+- func_00f78458: no gain. I tried every position for the -8 store and duplicate stores; it stays at score 13.
+- f63d18 and f70418: large packet and menu builders, looked at only. f64d48, f639c0 and f69aa8 not reached.
