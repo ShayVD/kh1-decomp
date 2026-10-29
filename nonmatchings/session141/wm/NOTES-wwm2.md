@@ -346,3 +346,16 @@ Rebased onto origin/claude/project-thread-rl45wv.
   exit code lives inside the loop (and runs the function epilogue code before `break`).
 - func_00f72f40: score 11 (saved). See its header. It wants goto loops, not for loops.
 - func_00f73eb0: the for-loop form made it worse (262 vs 152); still 152.
+
+## Round 20
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f72a70: score 128 -> 39 (saved).
+  - The first window loop must be `for (k = 0; k < 2; k++)`; gcc reverses it, and the final k == 2 is reused for the
+    constant 2 argument.
+  - The clear loop is `for (k = 0; k < 2; k++) w[k]->b4 = 0; D_0108F52C = k;`.
+  - Left: where `lui 0x2c` (the pad base) is placed; see the header.
+- func_00f625f0: first draft, score 217 (saved). Frame and register-pressure differences remain; see the header.
+- func_00f6ae68: m2c fails (jump table); not drafted. Its gb twin is f43d70 (same shape).
+- func_00f74f30 (gb twin f4de38, same shape), func_00f6d810 and func_00f6a530: not drafted (m2c and asm dumped
+  only).
