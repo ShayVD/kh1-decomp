@@ -11,6 +11,8 @@
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
 int memcmp(const void *, const void *, __SIZE_TYPE__);
+void *memcpy(void *, const void *, __SIZE_TYPE__);
+void *memset(void *, int, __SIZE_TYPE__);
 
 static int fails;
 #define CHECK(name, cond) do { if (!(cond)) { printf("gsfast_test: %s\n", name); fails++; } } while (0)
@@ -171,6 +173,45 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
     return stamps;
 }
 
+/* session 146: an upload as gsimage.c's load_image sends it, with kh1_gsmem_image_same (same 1) or always whole */
+static int up(int same, u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 w, u32 h, const u8 *b, u32 bytes) {
+    u32 done = 0, buf[64];
+    kh1_gsmem_trxdir(0, 0, psm << 24 | bw << 16 | bp, 0, x | y << 16, w, h);
+    if (same && kh1_gsmem_image_same(b, bytes)) return 1;
+    while (done < bytes) {
+        u32 k = bytes - done < sizeof buf ? bytes - done : sizeof buf, i;
+        for (i = 0; i < (k + 3) / 4; i++) buf[i] = 0;
+        memcpy(buf, b + done, k);
+        kh1_gsmem_image(buf, (k + 3) / 4);
+        done += k;
+    }
+    kh1_gsmem_image_kept(b, bytes);
+    return 0;
+}
+
+/* the state a reader can see: every pixel's bits (CT32 view), each page's drawn bits for each PSM, a few
+ * textures' targets and whether their stamps moved since the last call (stamps are seq values, which the
+ * skip's own bookkeeping moves differently) */
+static u32 stamp_was[64];
+static u32 state_hash(void) {
+    static const u32 ps[] = { KH1_PSMCT32, KH1_PSMCT24, KH1_PSMT8H, KH1_PSMT4HL, KH1_PSMT4HH, KH1_PSMT8 };
+    static u32 all[1024 * 1024];
+    u32 h = 2166136261u, p, i;
+    kh1_gsmem_read_rect(KH1_PSMCT32, 0, 16, 0, 0, 1024, 1024, all, 1024);
+    for (i = 0; i < 1024 * 1024; i++) h = (h ^ all[i]) * 16777619u;
+    for (p = 0; p < 512; p++)
+        for (i = 0; i < 6; i++)
+            h = (h ^ (u32)kh1_gsmem_drawn(ps[i], p * 32, 1, 0, 0)) * 16777619u;
+    for (i = 0; i < 64; i++) {
+        u32 lo = (i * 256) | 4u << 14 | ps[i % 6] << 20 | 8u << 26 | 2u << 30, hi = 1;
+        u32 st0 = kh1_gsmem_tex_stamp(lo, hi);
+        h = (h ^ (st0 != stamp_was[i])) * 16777619u;
+        stamp_was[i] = st0;
+        h = (h ^ kh1_gsmem_tex_target(lo, hi)) * 16777619u;
+    }
+    return h;
+}
+
 int main(void) {
     u32 it, h0, h1, drawn = 0, x, y, hits = 0;
     KH1GsMemStats s0, s1;
@@ -212,6 +253,97 @@ int main(void) {
                 if (rect[y * 256 + x] != kh1_gsmem_read_pixel(psm, bp, bw, x0 + x, y0 + y)) { bad = 1; break; }
         if (bad) printf("gsfast_test: read_rect psm %02x bp %04x bw %u (%u, %u) %u x %u differs\n", psm, bp, bw, x0, y0, w, hh);
         fails += bad;
+    }
+    /* session 146: the frame copy's read_rect (the GPU thread's, its own fast paths) against the live one, and
+     * its texture version: moved by a take that copied the texture's pages, not by a draw marking them */
+    {
+        u32 i, lo = 0x0E00 | 8 << 14 | (u32)KH1_PSMCT24 << 20 | 9u << 26, hi = 2, v0, v1, n = 0;
+        static u32 live[256 * 256];
+        CHECK("the copy is taken", kh1_gsmem_snap_take() >= 0);
+        for (it = 0; it < 200; it++) {
+            u32 psm = it < 22 ? tpsms[it % 11] : it % 3 ? fpsms[it % 6] : tpsms[R() % 11];
+            u32 bp = it % 5 == 0 ? 0x3F00 + R() % 0x100 : R() % 0x4000, bw = 1 + R() % 16;
+            u32 x0 = R() % 600, y0 = R() % 600, w = 1 + R() % 256, hh = 1 + R() % 256;
+            CHECK("snap read_rect answers", kh1_gsmem_snap_read_rect(psm, bp, bw, x0, y0, w, hh, rect, 256) == 0);
+            kh1_gsmem_read_rect(psm, bp, bw, x0, y0, w, hh, live, 256);
+            for (y = 0; y < hh; y++)
+                if (memcmp(rect + y * 256, live + y * 256, w * 4)) {
+                    printf("gsfast_test: snap read_rect psm %02x bp %04x bw %u (%u, %u) %u x %u differs\n", psm, bp, bw, x0,
+                           y0, w, hh);
+                    fails++;
+                    break;
+                }
+            n++;
+        }
+        kh1_gsmem_snap_take();
+        v0 = kh1_gsmem_snap_tex_ver(lo, hi);
+        v1 = kh1_gsmem_tex_stamp(lo, hi);
+        CHECK("a version", v0 != 0);
+        kh1_gsmem_draw(0x70 | 8 << 16 | 1u << 24, 0, 0x70 | 1u << 24, 0, 511u << 16, 255u << 16, 0x10000);
+        CHECK("the draw moves the stamp", kh1_gsmem_tex_stamp(lo, hi) != v1);
+        kh1_gsmem_snap_take();
+        CHECK("a draw's mark keeps the version", kh1_gsmem_snap_tex_ver(lo, hi) == v0);
+        for (i = 0; i < 4; i++) kh1_gsmem_write_pixel(KH1_PSMCT24, 0x0E00, 8, 100 + i, 50, R());
+        CHECK("no take, the same version", kh1_gsmem_snap_tex_ver(lo, hi) == v0);
+        kh1_gsmem_snap_take();
+        v1 = kh1_gsmem_snap_tex_ver(lo, hi);
+        CHECK("a write and a take move it", v1 != v0);
+        kh1_gsmem_write_pixel(KH1_PSMCT32, 0x2000, 8, 0, 0, 1);
+        kh1_gsmem_snap_take();
+        CHECK("a write elsewhere keeps it", kh1_gsmem_snap_tex_ver(lo, hi) == v1);
+        CHECK("200 copy rectangles", n == 200);
+    }
+    /* session 146: uploads of the bytes a rectangle already holds, over pages draws marked, skipped
+     * (kh1_gsmem_image_same) or sent whole: the same pixels, marks, stamps and targets after every op */
+    {
+        static const u32 ups[] = { KH1_PSMCT24, KH1_PSMCT32, KH1_PSMT8, KH1_PSMT4, KH1_PSMT8H, KH1_PSMCT16 };
+        static u8 bytes[6][128 * 64 * 4];
+        u32 run, op, skips = 0, marked = 0;
+        for (run = 0; run < 8; run++) {
+            u32 ha[120], hb[120], k, rect[6][5];
+            for (k = 0; k < 6; k++) {
+                rect[k][0] = (R() % 0x3000) & ~31u; rect[k][1] = 2 + R() % 3;
+                rect[k][2] = R() % 64; rect[k][3] = 1 + R() % 128; rect[k][4] = 1 + R() % 64;
+            }
+            for (k = 0; k < 2; k++) {
+                u32 j, ss = run * 7919u + 1;
+                rs = ss;
+                kh1_gsmem_reset();
+                kh1_gsmem_fast(1);
+                memset(stamp_was, 0, sizeof stamp_was);
+                state_hash();
+                for (j = 0; j < 6; j++) {
+                    u32 n;
+                    for (n = 0; n < sizeof bytes[j]; n++) bytes[j][n] = (u8)R();
+                }
+                for (op = 0; op < 120; op++) {
+                    u32 c = R() % 10, j = R() % 6, psm = ups[j], *q = rect[j];
+                    u32 n = psm == KH1_PSMT4 ? (q[3] * q[4] + 1) / 2 : q[3] * q[4] * (psm == KH1_PSMCT32 ? 4 : psm == KH1_PSMCT24 ? 3 : psm == KH1_PSMCT16 ? 2 : 1);
+                    if (c < 6) {
+                        int was = kh1_gsmem_drawn(psm, q[0], q[1], q[2], 0);
+                        if (up(k == 0, psm, q[0], q[1], q[2], 0, q[3], q[4], bytes[j], n)) {
+                            skips++;
+                            marked += was;
+                        }
+                    }
+                    else if (c < 8) /* a draw (and its Z) over some pages */
+                        kh1_gsmem_draw((q[0] >> 5) | q[1] << 16 | (R() % 2 ? 1u : 0) << 24, 0, (rect[R() % 6][0] >> 5) | 1u << 24, 0,
+                                       (R() % 256) << 16, (R() % 128) << 16, R() % 2 ? 0x10000 : 0);
+                    else if (c < 9) kh1_gsmem_write_pixel(psm, q[0], q[1], q[2] + R() % q[3], R() % q[4], R());
+                    else bytes[j][R() % n] ^= 1 + R() % 255; /* new bytes for the next upload */
+                    (k ? hb : ha)[op] = op % 8 == 7 || op == 119 ? state_hash() : 0; /* stamps compared hash to hash */
+                }
+            }
+            for (op = 0; op < 120; op++)
+                if (ha[op] != hb[op]) {
+                    printf("gsfast_test: same-skip run %u differs after op %u\n", run, op);
+                    fails++;
+                    break;
+                }
+        }
+        CHECK("uploads were skipped", skips > 100);
+        CHECK("some of them over a draw's marks", marked > 20);
+        printf("gsfast_test: %u uploads skipped, %u of them over a draw's marks\n", skips, marked);
     }
     /* tex_scan's memo: a write into the texture's pages, or a draw into them, is seen at once */
     kh1_gsmem_reset();
@@ -256,6 +388,6 @@ int main(void) {
     }
     CHECK("some textures read a target", hits > 40);
     CHECK("read_rect refuses a PSM the model has not", kh1_gsmem_read_rect(0x3B, 0, 1, 0, 0, 4, 4, rect, 256) == -1);
-    printf("gsfast_test: %s (600 sprites both ways, %u drawn; 150 upload runs; 200 rectangles; 400 texture scans, %u on a target)\n", fails ? "FAIL" : "PASS", drawn, hits);
+    printf("gsfast_test: %s (600 sprites both ways, %u drawn; 150 upload runs; 200 rectangles, 200 from the copy; 400 texture scans, %u on a target)\n", fails ? "FAIL" : "PASS", drawn, hits);
     return fails != 0;
 }
