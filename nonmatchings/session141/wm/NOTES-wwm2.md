@@ -196,3 +196,21 @@ Near misses saved:
   xori. Load w/h/bpp before the func_00f471a0 call. Not permuted yet: worth a -j1 run.
 
 f63d18 not reached.
+
+## Round 11
+
+Matched: func_00f70418, a menu draw loop (gb twin f49320).
+- Index `D_0108F2C8[i]` directly inside the loop, not through a pointer set up earlier. The pointer form lets gcse
+  keep the 0x109 high part in a saved register and spills `n`. With the index, loop.c builds the giv's start value
+  fresh.
+- Use one variable for the 5/6 slot count and the 9..0 loop counter (both s5).
+- func_001f8f30 is called with no argument.
+
+Near misses saved:
+- func_00f68ec0.nostrict (score 9): ported from the gb f41dc8 draft (15 words), then fixed the n*16+p operand order and
+  hoisted the C00A constant into a local `u64 c`. What is left is scheduling in the flag branch.
+- func_00f63d18 (score 102): same family as f639c0. The packet qword is strength-reduced as a giv in my build but not
+  in the original.
+- func_00f69fd0 (score 184): an init function with a long run of global stores; not converging.
+
+f71748 (1040 bytes; reset loops, a link-building loop over 96-byte entries, then layout) was only looked at.
