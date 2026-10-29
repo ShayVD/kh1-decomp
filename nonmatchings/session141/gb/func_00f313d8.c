@@ -1,0 +1,74 @@
+/* 151 words / score 145: packet contents are right (sibling of f39bf8, sprite D_00F61880[n + 22]). Left: the target shifts g and b (dsll 8/16) and spills r (as s32) in the prologue before the packet calls; only u+w, w<<4 and h<<4 are computed before the calls. Early-shift and order variants did not get closer. */
+#include "ovl.h"
+
+typedef struct { s32 pad0; s32 u; s32 v; s32 w; s32 h; } GbSprite;
+typedef struct { u8 pad0[0x2200]; u64 tex0[1]; } GbTexState;
+extern GbSprite D_00F61880[];
+extern GbTexState *D_00F56DC0;
+extern u64 *D_00F56DC8;
+u64 *func_00f3f9d0(u64 *);
+u64 *func_00f3f9e8(u64 *);
+u64 *func_00f3fa80(u64 *);
+void func_00f3fa98(u64 *);
+void func_00f3fe80(s32, u64 *);
+
+void func_00f313d8(s32 n, u64 r, u64 g, u64 b) {
+    u64 *q;
+    s32 k = n + 22;
+    s32 w = D_00F61880[k].w;
+    s32 u = D_00F61880[k].u;
+    s32 v = D_00F61880[k].v;
+    s32 h = D_00F61880[k].h;
+    s32 u1 = u + w;
+    s32 v1 = v + h;
+    s32 x1 = w << 4;
+    s32 y1 = h << 4;
+    b <<= 16;
+    g <<= 8;
+    q = func_00f3fa80(func_00f3f9d0(D_00F56DC8));
+    q[0] = 0x30003;
+    q[1] = 0x47;
+    q += 2;
+    q[0] = 0;
+    q[1] = 0x18;
+    q += 2;
+    q[0] = 0;
+    q[1] = 0x14;
+    q += 2;
+    q[0] = 0x44;
+    q[1] = 0x42;
+    q += 2;
+    q[0] = D_00F56DC0->tex0[k];
+    q[1] = 6;
+    q += 2;
+    q[0] = 0x156;
+    q[1] = 0;
+    q += 2;
+    q[0] = r | 0x3F80000000000000 | (b | 0x80000000) | g;
+    q[1] = 1;
+    q += 2;
+    q[0] = (u << 4) | ((u64)(v << 4) << 16);
+    q[1] = 3;
+    q += 2;
+    q[0] = ((u64)(142 << 4) << 16) | 0x100000000;
+    q[1] = 5;
+    q += 2;
+    q[0] = ((u1 + 1) << 4) | ((u64)((v1 + 1) << 4) << 16);
+    q[1] = 3;
+    q += 2;
+    q[0] = x1 | ((u64)(y1 + 0x8E0) << 16) | 0x100000000;
+    q[1] = 5;
+    q += 2;
+    q[0] = 0x60;
+    q[1] = 0x14;
+    q += 2;
+    q[0] = 0x740000007000;
+    q[1] = 0x18;
+    q += 2;
+    q[0] = 0x5000D;
+    q[1] = 0x47;
+    q += 2;
+    func_00f3fa98(q);
+    func_00f3fe80(12160, func_00f3f9e8(q));
+    D_00F56DC8 = q;
+}
