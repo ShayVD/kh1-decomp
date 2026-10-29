@@ -1,70 +1,99 @@
+/* Round 41 wwm2: score 166 -> 35, port.py of the gb twin func_00f425a8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f696a0 near miss: score 178 -> 166 (173 -> 175 words, 760 vs 752); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 362). Earlier header below. */
-/* 173 words, score 178 (was 177/182). Round 33 wwm2: hill2 over the bpp branches and the s/t stores; ctx2 and interleave give nothing. Earlier header: score 182 (760 vs 752). Sprite setup: uploads image + CLUT via func_00f69278, builds x/y/q/s/t arrays and calls func_00f68ec0. Statements and call args are right. Left: the original computes the 4bpp defaults (w*h/128) before the bpp tests and recomputes w*h in the 8bpp arm (mine CSEs it; if/else-chain, switch and commuted h*w all tried), and it spills psm/c to the stack where mine spills y. */
-typedef struct { u8 r, g, b, a; } Rgba;
-extern u64 *D_0108F248;
+extern s32 D_0108F248;
 extern s32 D_0108F25C;
-u64 *func_00f69278(u64 *, u32, s32, s32, s32, s32, s32, s32, s32, s32);
-void func_00f68ec0(s32 *, s32 *, s32 *, s32 *, s32, s32, f32 *, f32 *, s32, s32, Rgba *, u64, s32, u64);
-
-void func_00f696a0(u32 img, u32 clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, Rgba *c, f32 sc, s32 flip, u64 alpha, s32 flag, u64 test)
+s32 func_00f69278(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
+void func_00f68ec0(s32 *, s32 *, s32 *, s32 *, s32, s32, f32 *, f32 *, s32, s32, s32, u64, s32, u64);
+void func_00f696a0(s32 tex0, s32 tex1, s32 x, s32 y, s32 w, s32 h, s32 psm, s32 a7, f32 s, s32 flip, u64 a9, s32 a10, u64 a11)
 {
-    s32 xs[4];
-    s32 ys[4];
-    s32 un[4];
-    s32 q[4];
-    f32 s[4];
-    f32 t[4];
-    s32 psm, cw, ch, off, n, x0, x1, y0;
-    f32 v;
+  s32 xs[4];
+  s32 ys[4];
+  s32 zs[4];
+  s32 ws[4];
+  f32 us[4];
+  s32 new_var2;
+  f32 vs[4];
+  s32 a;
+  s32 b;
+  s32 c;
+  int new_var;
+  s32 k;
+  s32 p;
+  s32 d;
+  s32 e;
+  switch (psm)
+  {
+    case 4:
+      a = 2;
+      b = 8;
+      c = (w * h) / 128;
+      k = 20;
+      break;
 
-    ch = 2;
-    psm = 20;
-    off = w * h / 128;
-    cw = 8;
-    if (bpp != 4) {
-        if (bpp == 8) {
-            off = w * h / 64;
-            ch = 16;
-            cw = 16;
-            psm = 19;
-        } else {
-            cw = 0;
-            ch = 0;
-            psm = 0;
-            off = 0;
-        }
-    }
-    if (img) D_0108F248 = func_00f69278(D_0108F248, img, 0, 0, w, h, D_0108F25C, psm, w / 64, bpp);
-    if (clut) D_0108F248 = func_00f69278(D_0108F248, clut, 0, 0, cw, ch, D_0108F25C + off, 0, 1, 32);
-    y0 = (y + 1856) * 16;
-    x0 = (x + 1792) * 16;
-    if (flip == 0) {
-        x1 = x0 + (s32)(sc * w) * 16;
-        xs[3] = x0;
-    } else {
-        xs[3] = x0;
-        x1 = x0 - (s32)(sc * w) * 16;
-    }
-    xs[1] = x1;
-    q[3] = 1;
-    ys[1] = y0;
-    q[0] = 1;
-    ys[3] = y0;
-    xs[0] = x1;
-    ys[2] = ys[0] = y0 + (s32)(sc * h) * 16;
-    q[2] = 1;
-    xs[2] = x0;
-    q[1] = 1;
-    for (n = 2; n < h; n *= 2)
-        ;
-    v = (f32)(h - 1) / (f32)n;
-    t[2] = v;
-    t[0] = v;
-    s[3] = 0;
-    t[3] = 0;
-    s[2] = 0;
-    s[1] = 1.0f;
-    t[1] = 0;
-    s[0] = 1.0f;
-    func_00f68ec0(xs, ys, un, q, w, n, s, t, psm, off, c, alpha, flag, test);
+    case 8:
+      k = 19;
+      b = 16;
+      a = 16;
+      c = (w * h) / 64;
+      break;
+
+    default:
+      c = 0;
+      k = (b = 0);
+      a = 0;
+      break;
+
+  }
+
+  if (tex0)
+  {
+    D_0108F248 = func_00f69278(D_0108F248, tex0, 0, 0, w, h, D_0108F25C, k, w / 64, psm);
+  }
+  if (tex1)
+  {
+    D_0108F248 = func_00f69278(D_0108F248, tex1, 0, 0, b, a, D_0108F25C + c, 0, 1, 32);
+  }
+  x += 1792;
+  x <<= 4;
+  y += 1856;
+  y <<= 4;
+  new_var = 2;
+  d = (s32) (s * w);
+  if (flip == 0)
+  {
+    xs[3] = x;
+    d = x + (d << 4);
+  }
+  else
+  {
+    xs[3] = x;
+    d = x - (d << 4);
+  }
+  xs[new_var] = x;
+  xs[1] = d;
+  xs[0] = d;
+  ys[3] = y;
+  new_var2 = ((s32) (s * h)) << 4;
+  ys[1] = y;
+  e = y + new_var2;
+  ys[0] = e;
+  ys[new_var] = e;
+  ws[0] = 1;
+  ws[1] = 1;
+  ws[3] = 1;
+  ws[new_var] = 1;
+  for (p = new_var; p < h; p <<= 1)
+  {
+    ;
+  }
+
+  vs[0] = ((f32) (h - 1)) / ((f32) p);
+  us[3] = 0.0f;
+  vs[3] = 0.0f;
+  us[new_var] = 0.0f;
+  vs[new_var] = vs[0];
+  us[1] = 1.0f;
+  us[0] = 1.0f;
+  vs[1] = 0.0f;
+  func_00f68ec0(xs, ys, zs, ws, w, p, us, vs, k, c, a7, a9, a10, a11);
 }
