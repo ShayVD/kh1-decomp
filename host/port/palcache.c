@@ -6,10 +6,14 @@
 
 void *memset(void *, int, __SIZE_TYPE__);
 
+/* session 146: a word a step, not a byte (a multiply a byte, 1,024 for a 256-entry CLUT, was ~3% of the GS
+ * worker in the Dive); the hash only picks the slots same() compares, so any good one does */
 static u32 fnv(const u32 *col, u32 n) {
-    u32 h = 2166136261u, i, k;
-    for (i = 0; i < n; i++)
-        for (k = 0; k < 32; k += 8) h = (h ^ (col[i] >> k & 0xFF)) * 16777619u;
+    u32 h = 2166136261u, i;
+    for (i = 0; i < n; i++) {
+        h = (h ^ col[i]) * 16777619u;
+        h ^= h >> 15;
+    }
     return h ^ n;
 }
 
