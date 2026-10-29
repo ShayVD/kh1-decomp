@@ -170,7 +170,8 @@ loads on it.
 
 Open: the meaning of `0xC`'s last three words, cmd 2's value, RPC `0x24` / `0x27`, the slot numbers -1 /
 -3 ... -9, and every command with no caller in the main ELF; the file formats behind commands 3, 4 and
-`0xB`. The IOP module (on the disc, the user's own copy) settles all of these.
+`0xB`. The IOP module (on the disc, the user's own copy) settles all of these; since 2026-10-29 the port runs
+it (section 6).
 
 ## 5. The null server on the host (session 86)
 
@@ -196,3 +197,145 @@ fake disc's boot (`KH1_HOST_OVL=stub:2`): 43 commands to the room load (38 `0x26
 SE-table transfer to slot 2, two music stops, an SE stop) and the RPCs bind x2, `0x27` x2, pause x1; no
 SE plays before the fault.
 
+
+## 6. The IOP on the port (2026-10-29)
+
+The port plays the game's sound with **the user's own IOP sound driver**: LIBSSL.IRX ("Ohori_Sound_Driver",
+SquareSounds SoundDriver, built Apr 26 2002), read from the disc image's root at run time (85,501 bytes on
+SLPS_251.98 and on the English patch's image). Nothing from it is in the repo or the VPK: the port carries
+a small IOP (an R3000A interpreter and the system calls the driver imports) and an SPU2, and the driver
+does the rest, so the sequence, wave bank and SE table formats (section 3's open list) never had to be
+reimplemented. src/sound/snd_rpc.c and sndctl.c are unchanged; `PlatSifCallRpc` (host/null/plat_null.c)
+hands server 17's calls to host/port/snd.c once the driver is running, and to the null server (section 5)
+when it is not (no disc image, no LIBSSL.IRX on it, or the sound switched off).
+
+Files (none in the PS2 build):
+
+| File | What |
+|---|---|
+| host/port/iop.c, iop.h | 2 MiB of IOP RAM; the IRX loader (R_MIPS_32 / 26 / HI16 / LO16, the import tables, magic `0x41E00000`, stubs `jr ra; li $0, N`); a MIPS I interpreter with delay slots; IOP threads, semaphores, the timer and the SIF RPC server, as high-level answers to the driver's imports |
+| host/port/spu2.c | the SPU2: 2 MiB of sound RAM, 2 cores x 24 voices, ADPCM, ADSR, the reverb, and libsd's exports (`kh1_sd_call`) |
+| host/port/snd.c | the glue: starts the driver at the game's bind (RPC 0), runs RPCs, ticks and mixes; the host runner's WAV |
+| host/vita/audio.c | the Vita's output: a thread on its own core, sceAudioOut's main port, 48 kHz, 256-sample buffers |
+| tools/host/sndplay.c | a standalone player: a `.bgm` + `.wd`, a music `.dat`, or SEs from `se000.dat`, to a WAV, without the game |
+
+### The driver's structure (read from the IRX with m2c; addresses are the IRX's own)
+
+- Start: creates its threads, sets the timer handler (0x14e0), registers RPC server 17 (function 0x3174,
+  buffer 0xf5c0) on its own thread (0x17f0), which then sits in `sceSifRpcLoop`.
+- The timer handler calls func_00650 and returns 0x25800 (the next compare): **a 240 Hz tick**, 200 samples
+  at 48 kHz. It signals the tick thread (0x15c4), which waits on a semaphore and works the sequencer and the
+  voices; the queue the game sent is run by the RPC function itself (RPC 30, jump table 0xe688), so the
+  commands of section 3 take effect between ticks, as on the console.
+- The status block (section 2) is written back by `sceSifSetDma` to the EE address the bind gave. On the
+  port EE addresses are the 32-bit host pointers; iop.c's SetDma copies straight to them.
+
+Imports the driver uses and how iop.c answers them (export numbers):
+
+| Library | Numbers |
+|---|---|
+| thbase | 4 CreateThread, 6 StartThread, 0xE ChangeThreadPriority, 0x14 GetThreadId, 0x21 DelayThread |
+| thsemap | 4 CreateSema, 7 iSignalSema, 8 WaitSema |
+| thvpool | 4, 5, 7, 9, 0xB (a pool kept on the IOP heap) |
+| timrman | 4, 10, 20 SetTimerHandler, 22, 23 |
+| sifcmd | 0xE, 0x11 RegisterRpc, 0x12, 0x13, 0x16 RpcLoop, 0x17 GetOtherData |
+| sifman | 5, 7 SetDma, 8, 0x1D |
+| sysmem | 6, 7, 8 (allocations), 14 Kprintf (printed at `KH1_HOST_IOP=1`) |
+| sysclib | 12 memcpy, 22 strcmp |
+| intrman | 6, 9, 17, 18 |
+| loadcore | 5 FlushDcache |
+| cdvdman | 0x1C, answered 0 |
+| libsd | 4 Init, 5 / 6 Set / GetParam, 7 / 8 Set / GetSwitch, 9 / 10 Set / GetAddr, 11 SetCoreAttr, 17 VoiceTrans, 18 BlockTrans, 19 / 20 the transfers' status, 23 / 24 Set / GetEffectAttr, 25 ClearEffectWorkArea, 26 SetTransIntrHandler, 27 SetSpu2IntrHandler, 30 StopTrans |
+
+libsd's parameter words: register `(p >> 8) & 0xFF`, core `p & 1`, voice `(p >> 1) & 0x1F`. Voice registers
+0 VOLL, 1 VOLR, 2 PITCH, 3 ADSR1, 4 ADSR2, 5 ENVX, 6 VOLXL, 7 VOLXR; core registers 8 MMIX, 9 / 0xA MVOL,
+0xB / 0xC EVOL, 0xD / 0xE AVOL (a plain s16, no sweep bit: the driver writes 0x7FFF, which read as a sweep
+was nearly silent), 0xF / 0x10 BVOL; switches 0x13 PMON ... 0x15 KON, 0x16 KOFF, 0x17 ENDX, 0x18-0x1B
+VMIXL / VMIXEL / VMIXR / VMIXER; addresses (bytes) 0x1C ESA, 0x1D EEA, 0x1F IRQA, 0x20 SSA, 0x21 LSAX,
+0x22 NAX. SetCoreAttr's entry `2 | core` is the effect enable.
+
+### The SPU2 model
+
+ADPCM (filters {0, 60, 115, 98, 122} / {0, 0, -52, -55, -60}, a shift over 12 read as 9; the loop flags
+bit 0 end, bit 1 repeat, bit 2 start), the ADSR envelope's rates as the PSX's, 4-point Catmull-Rom
+interpolation at 256 steps (the console's is Gaussian), core 0's output into core 1 through AVOL, and the reverb: the
+PSX algorithm at half rate over the core's work area, with **the presets read from the disc's own
+LIBSD.IRX** (found by the signature `7d 00 5b 00 80 6d`, 0x44 bytes a mode; mode m at the room preset +
+(m - 1) x 0x44: 1 room, 2-4 studio, 5 hall, 6 space, 7 echo, 8 delay, 9 pipe). The driver sets mode 5 on
+core 0 and 4 on core 1. Without LIBSD.IRX the reverb is off and the rest plays.
+
+**Not modelled** (be direct): BlockTrans (the core's PCM input: the movies' sound, dkmovie.x; answered
+0), noise, pitch modulation, the IRQ address, the echo / delay modes' feedback, Gaussian interpolation.
+Nothing here was compared against a console recording.
+
+### Threads and cost
+
+- The host runner (`KH1_HOST_SND=iop`, or `wav:FILE` to also write what it plays) runs every call at once
+  and four ticks a vblank (host/null/main.c).
+- The Vita (host/vita/audio.c) uses three threads. A tick thread runs the driver's ticks up to 8 ticks
+  (33 ms) ahead of a mixer thread. spu2.c's deferred mode logs each tick's SPU2 writes (SetParam,
+  SetSwitch, SetAddr, SetCoreAttr, ClearEffectWorkArea) with a mark at the tick's end, and the mixer
+  applies one tick's writes, then mixes its 200 samples into a ring 64 ms ahead of the output. Both
+  threads run below the game's threads on any core, so they take the time the game leaves on two cores
+  at once. The driver's only read of the mix's state, GetParam ENVX (2,402 reads in 30 s of music110;
+  nothing else is read), answers the envelope the mixer published after its last tick. Sound RAM
+  transfers and the reverb's attributes still take effect at once. An output thread, paced by
+  sceAudioOut, copies 256 samples at a time from the ring and plays silence for any gap (counted as
+  "short" on the watchdog's sound line). The game thread's per-frame queue send (RPC 30) goes into a
+  16-deep FIFO and returns at once; the tick thread runs the FIFO before each tick. The other RPCs (the
+  game reads their answer) take the lock, drain the FIFO and run at once. A sound the game starts
+  plays about 100 ms later. `SNDPLAY_THREADS=1` runs tools/host/sndplay.c the same way; over 30 s of
+  music110 its output is the same as the one-thread run.
+- First Vita run (2026-10-29, the first version: one thread on core 2 above the GPU thread): once the
+  title music started, the thread needed about 80% of core 2 (4.7 s of 6 s for 19 voices). It fell behind,
+  so the sound broke up, and it starved the GPU frame's thread, so the picture lagged. Since then:
+  - the interpreter is direct-threaded, with no per-instruction checks of the pc (import stubs and the
+    C-call return address are two made-up opcodes in RAM), and does one divide for div / divu (the A9 has
+    no divider);
+  - the mix runs voice by voice over each stretch between ticks, with no aliasing reloads, inlined
+    envelopes and a 256-step table for the interpolation;
+  - the threads were split as above.
+  The host does the same work in 0.55 times the time it took before. The output is the same apart from
+  the interpolation table's rounding, and the game's run over the Dive script is line for line the same.
+- Second Vita run (the two threads): no lag; the title's music (19-26 voices, about 5.4 million IOP
+  instructions a second) kept the mixer busy the whole time and it fell short in a few 2 s windows
+  (4-24 of about 400 buffers), heard as small breaks. In Dive (3 voices) none fell short. Since then
+  three of the driver's functions run as C (iop.c `natives[]`, a fourth since): func_00150, func_00434 and func_004f0,
+  the leaf functions the per-tick voice loop calls for every voice to set or clear the voice's bit in
+  the masks of registers to send. They were about 28% of the instructions with 18 voices playing.
+  Each one is patched only when an FNV-1a of its relocated words matches the known LIBSSL.IRX, so
+  another driver is still interpreted, and `KH1_HOST_IOP=nonative` turns them off. The output is the same
+  byte for byte (sndplay over music110.dat; the Dive run's WAV and log).
+- Third Vita run (build c): no lag; the title's music still left the one sound thread busy the whole
+  time and 5-16 buffers in 400 short in some 2 s windows; the New Game load into Dive (game, GS worker
+  and sound all busy for about 10 s) 17-61 short. Hence the split of the ticks and the mix onto two
+  threads above.
+- Fourth Vita run (build d, the two threads): no short buffers on the title's music (about 1.1 s ticking
+  and 1.2 s mixing per 2 s, on two cores) or in Dive. The New Game load into Dive still fell short for
+  about 10 s (14-51 buffers in 400 per 2 s). There the driver does about twice its usual work: 45% of
+  its instructions in that load are func_0d8dc, a linear search of its table of loaded banks, run for
+  each bank chunk it takes in. func_0d8dc now runs as C too (iop.c `native_0d8dc`: the same scan, with
+  the pool's FreeVpl / pAllocateVpl answered by the same import code, patched only when its hash
+  matches and its two stubs are thvpool 9 and 7). The Dive run's log and WAV stay byte-identical.
+- Cost on the host: about 2.5 million IOP instructions a second of sound over the Dive run (3.7 G in
+  25 minutes), plus the mix. **Not measured on a Vita yet** after these changes; the watchdog's sound
+  line (vita-build.md "Sound") prints the mixer's milliseconds per 2 s.
+
+### Checked (2026-10-29, on the English patch's image)
+
+- `tools/host/sndplay.c`: the title's and other tracks (`music097.bgm` + `wave0099.wd` and others) and
+  system SEs from se000.dat render at sensible levels; the reverb adds energy without running away.
+- The host runner over tests/host/pads/dive_en.txt (91,000 frames): the driver starts at the bind, 44,020
+  RPCs; the title music from about 15 s, then Dive's music, SEs and the event voices into Destiny
+  Islands, with sound in every 10 s of the 25-minute WAV.
+- **Timing moves with real sound**: the run is frame-identical to the null server's until frame 63,559,
+  where the next event voice set (voice/event/di/di_002.vset) loads 24 frames later, since the event
+  waits for the line before to finish playing (the null server ends a stream by its computed length).
+  The pad script, timed against the null server, then drifts and misses the last room change near frame
+  77,600. Pad scripts stay on the null server (the host's default); a script for the driver would need
+  retiming.
+- `make` byte-identical, `make test` and the selftests pass (the null server is still the host's default,
+  so tests/host/sound_test.c is unchanged).
+
+Section 3's open questions can now be answered from the driver's own code (the m2c output of the IRX is
+easy to make again, but it is the user's copy and stays out of the repo); that is not done here.

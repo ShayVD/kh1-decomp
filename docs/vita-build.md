@@ -56,6 +56,8 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
      cursor, so host/vita/pad.c sends the stick's x past half way as R2 (right) or L2 (left), held while
      pushed (never pulsed: each L2 / R2 press also steps the lock-on target), and centres the x; the y is
      unchanged. `rcam=-1` turns the other way, `rcam=0` sends the stick as the PS2 did.
+   - `snd=0` keeps the game silent (the null server); 1, the default, plays the sound through the disc's
+     own driver ("Sound" below). `sndcore=N` pins the sound threads to core N (default -1: any core).
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
@@ -104,7 +106,7 @@ What a run can show, at best:
   shown as one GXM textured quad through vita2d, "Speed" below). The port code from sessions 116 to 122 (palette and texture
   caches, texture formats, TFX, sampler, blend, alpha / destination-alpha tests, depth, fog, primitive
   assembly) is linked and feeds the model's present, but nothing draws with GXM yet.
-- **No sound** (host/null/sound.c's null server keeps the status the game polls), **no movies**
+- **Sound since 2026-10-29** ("Sound" below; before it the null server kept the status the game polls), **no movies**
   (dkmovie.x is an overlay too). **Saves** (session 140): memory card 1 is the folder
   `ux0:data/kh1/mc0` when it exists ("Memory card" below); card 2 is always empty.
 - gumisave.c's func_001b9c60 keeps the overlay entry as a pointer and calls it later: on the Vita
@@ -1040,6 +1042,33 @@ out for one-byte enums, and no struct the two sides share has an enum field (inc
 unnamed constants). The link takes `--no-enum-size-warning` for the mix; `readelf -A` on an object shows
 `Tag_ABI_enum_size: int` for the game's and `small` for host/vita's.
 
+## Sound (2026-10-29)
+
+The game's sound plays through **the disc's own IOP sound driver** (LIBSSL.IRX, read from the image at the
+game's sound bind; nothing of it is in the VPK), run by a small IOP and SPU2 in host/port/ (iop.c, spu2.c,
+snd.c; docs/sound-spec.md section 6 has the details and what is not modelled). host/vita/audio.c runs it
+on three threads. A tick thread runs the driver's 240 Hz ticks up to 33 ms ahead of a mixer, which applies
+each tick's SPU2 writes and mixes 64 ms ahead into a ring; both run below the game's threads on any core.
+An output thread hands the ring to sceAudioOut's main port (48 kHz stereo, 256-sample buffers) and plays
+silence where the mixer has fallen behind. The game thread only copies its per-frame command queue into
+a FIFO; the RPCs whose answer the game reads wait on the tick thread's lock.
+
+- `snd=0` in config.txt turns it off (the null server, silence, as before). Without LIBSSL.IRX on the
+  image (a wrong or partial image) the log says so and the game runs silent. `sndcore=N` pins the tick
+  thread and the mixer to core N (0, 1 or 2); the default, -1, lets them run on any core.
+- The log: `kh1-snd: sound driver LIBSSL.IRX (85501 bytes) running, tick 240 Hz`, `kh1-vita: sound: the
+  disc's driver ticking and mixing on any cores ...`, and every 2 s a watchdog line, `kh1-vita: sound: K ms
+  ticking, N ms mixing, B buffers played (S short), Q frames queued, T ticks, I IOP instructions, V voices
+  on, R RPCs (F FIFO full)`. B is about 375 per 2 s (48,000 / 256 x 2). S counts the buffers the mixer had not
+  filled in time (the sound breaks up). Q is how far ahead the mixer was (up to 3072). K or N over
+  about 2000 means that thread needs more than a core (both count time they were preempted too).
+- The first test (one thread on core 2, above the GPU thread) broke up and made the picture lag once
+  the title music started: it needed about 80% of core 2 (sound-spec 6). Builds b and c (one mixer
+  thread below the game's) stopped the lag but still fell short on the title's music and the New Game
+  load; build d splits the ticks and the mix onto two threads.
+- Movies have no sound (the core PCM input is not modelled). The real driver also changes timing where
+  an event waits for a voice line, so host pad scripts drift when run with sound (sound-spec 6).
+
 ## What next, in order
 
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
@@ -1049,4 +1078,5 @@ unnamed constants). The link takes `--no-enum-size-warning` for the mix; `readel
    the new game, the frame reads on a Vita, and the "Not checked yet" list.
 3. **dktitle.x** (vita-port-plan 5.2): the inventory, the toolchain check, then its C, so the title
    screen and its menu run instead of the stub.
-4. Renderer A / B on the CPU (vita-port-plan section 2 step 3), then sound (docs/sound-spec.md).
+4. Renderer A / B on the CPU (vita-port-plan section 2 step 3). Sound: started 2026-10-29 ("Sound"
+   above); next, its cost on a real Vita and the movies' PCM (BlockTrans).

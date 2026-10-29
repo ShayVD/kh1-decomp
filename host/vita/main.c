@@ -42,6 +42,11 @@
  *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
  *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
  *                             the command menu's cursor)
+ *       snd=N                 1 (the default) plays the game's sound: the disc's own sound driver (LIBSSL.IRX) in
+ *                             host/port/iop.c's IOP and spu2.c's SPU2, out through host/vita/audio.c; 0 keeps the
+ *                             null server (silence)
+ *       sndcore=N             pins the sound's tick thread and mixer to core N (0, 1 or 2); the default, -1, lets
+ *                             them run on any core below the game's threads
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -58,6 +63,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+/* host/vita/audio.c: the sound */
+extern int kh1_vita_snd, kh1_vita_snd_core;
+extern u32 kh1_vita_snd_us, kh1_vita_snd_tick_us, kh1_vita_snd_bufs, kh1_vita_snd_under, kh1_vita_snd_queued;
+void kh1_vita_audio_init(void);
+int kh1_snd_active(void);
+extern u32 kh1_snd_ticks, kh1_snd_rpcs, kh1_snd_fifo_full, kh1_iop_insns;
+int kh1_spu2_voices_on(void);
 #include "platform/ovl.h"
 #include "present.h"
 #include "gsmem.h"
@@ -332,6 +344,20 @@ static int watchdog(SceSize args, void *argp) {
              (unsigned long long)(sceKernelGetProcessTimeWide() / 1000), frames, kh1_host_cd_reads,
              kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown, (kh1_vita_us_wait - wait0) / 1000,
              (kh1_vita_us_present - present0) / 1000, frames == last ? " (no vblank since the last)" : "");
+        if (kh1_snd_active()) { /* the sound threads (host/vita/audio.c): the mixer's share of the 2 s, the driver's work */
+            static u32 snd_us0, snd_tick_us0, snd_bufs0, snd_under0, snd_ticks0, snd_insns0;
+            vlog("kh1-vita: sound: %u ms ticking, %u ms mixing, %u buffers played (%u short), %u frames queued, %u ticks, "
+                 "%u IOP instructions, %d voices on, %u RPCs (%u FIFO full)\n", (kh1_vita_snd_tick_us - snd_tick_us0) / 1000,
+                 (kh1_vita_snd_us - snd_us0) / 1000, kh1_vita_snd_bufs - snd_bufs0, kh1_vita_snd_under - snd_under0,
+                 kh1_vita_snd_queued,
+                 kh1_snd_ticks - snd_ticks0, kh1_iop_insns - snd_insns0, kh1_spu2_voices_on(), kh1_snd_rpcs, kh1_snd_fifo_full);
+            snd_us0 = kh1_vita_snd_us;
+            snd_tick_us0 = kh1_vita_snd_tick_us;
+            snd_bufs0 = kh1_vita_snd_bufs;
+            snd_under0 = kh1_vita_snd_under;
+            snd_ticks0 = kh1_snd_ticks;
+            snd_insns0 = kh1_iop_insns;
+        }
         { /* session 137v: the game's threads (host/null/threads.c): which one a stalled load waits on */
             char tb[192];
             kh1_null_threads_state(tb, sizeof tb);
@@ -503,6 +529,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
         else if (strcmp(line, "recq") == 0) use_recq = atoi(v);
         else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
+        else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
+        else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
     }
     fclose(f);
 }
@@ -644,6 +672,7 @@ int main(int argc, char **argv) {
         SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
         if (t >= 0) sceKernelStartThread(t, 0, 0);
     }
+    kh1_vita_audio_init();
     vlog("kh1-vita: func_00100558 (the game's main)\n");
     func_00100558(argc, argv);
     vlog("kh1-vita: func_00100558 returned after %lu frames, %u disc reads, %lu overlay calls\n", frames,
