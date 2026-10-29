@@ -1,5 +1,4 @@
-/* dkmovie.x func_00f25658: near miss (session 141), 800 vs 800 bytes, 46 words differ, score 72 (m2c draft was 236). IPU decode task. Keys: off as n * 768 giv (n starts -1, n++ at loop top), k == 0 ? 0x2C000000 : 0x28000000 (gives bnezl), cont = !(CTRL>>14&1) && !(CTRL>>15&1). Left: the original has a dead reload lw a1,0(sp) of size after the first IPU wait loop (ours has no such insn, so a nop shifts), the 0x10002010 pointer is a1 (ours a2) and the header pointer a0 (ours a1), and the bF bit terms are computed andi-first. Tried: volatile size, base term orders, if/else for the CMD value. */
-#include "ovl.h"
+/* dkmovie.x func_00f25658: near miss (session 141), 800 vs 800 bytes, 46 words differ, score 72 (m2c draft was 236). IPU decode task. Keys: off as n * 768 giv (n starts -1, n++ at loop top), k == 0 ? 0x2C000000 : 0x28000000 (gives bnezl), cont = !(CTRL>>14&1) && !(CTRL>>15&1). Left: the original has a dead reload lw a1,0(sp) of size after the first IPU wait loop (ours has no such insn, so a nop shifts), the 0x10002010 pointer is a1 (ours a2) and the header pointer a0 (ours a1), and the bF bit terms are computed andi-first. Tried: volatile size, base term orders, if/else for the CMD value. Round 21 (wwm1): score 72 -> 70 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). */
 typedef struct { s32 f0; u8 pad4[5]; u8 b9; u8 padA[4]; u8 bE; u8 bF; } MvHdr;
 typedef struct {
     u8 pad[0x3DD08];
@@ -30,16 +29,16 @@ s32 func_00f25658(void) {
 
     h = D_00F28460->f3DD90;
     base = ((h->bF & 1) << 22) + ((h->bF >> 1) << 16);
-    base = (h->bE << 20) + base;
     size = h->f0;
     b9 = h->b9;
+    base = (h->bE << 20) + base;
     IPU_CTRL = base + 0x1200000;
     IPU_CTRL = (IPU_CTRL | 0x40000000) + base;
     while (IPU_CTRL < 0) {
     }
     n = -1;
-    k = 0;
     D_00F28460->f3DD90 = (MvHdr *)((u8 *)D_00F28460->f3DD90 + 16);
+    k = 0;
     func_00f269c0();
     do {
         IPU_CMD = 0x30000000;

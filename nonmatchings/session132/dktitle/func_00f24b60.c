@@ -1,5 +1,4 @@
-/* dktitle.x func_00f24b60: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
-#include "ovl.h"
+/* dktitle.x func_00f24b60: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 410 -> 368 with sclimb.py. Then 368 -> 358 with the dependency-checked reorderer (w3.py). */
 #include "platform/thread.h"
 
 typedef unsigned int size_t;
@@ -8,21 +7,21 @@ void *memset(void *, int, size_t);
 s32 memcmp(const void *, const void *, size_t);
 size_t strlen(const char *);
 u8 *func_00f26648(const char *, u8 *, s32, s32 *);
-char *func_0011fd30(void);
+char *func_0011fd30(void); CONTEXT_ONLY char * func_0011fd30() { return 0; }
 void func_0011d768(s32);
 void func_0024e468(s32);
 void func_0020bda8(s32);
 void func_0020be10(s32);
 s32 func_001f31a8(void *, s32);
 s32 func_0024e098(void);
-s32 func_0024db68(void);
+s32 func_0024db68(void); CONTEXT_ONLY s32 func_0024db68() { return 0; }
 void func_0010c170(void *, s32);
 s32 func_00f24a58(void);
 s32 func_00f24a70(void);
 void func_00f24a88(s32);
-void func_00f24b28(void);
-void func_00f26520(void);
-void func_00f20000(void);
+void func_00f24b28(void); CONTEXT_ONLY void func_00f24b28() {}
+void func_00f26520(void); CONTEXT_ONLY void func_00f26520() {}
+void func_00f20000(void); CONTEXT_ONLY void func_00f20000() {}
 extern s32 D_0046A614;
 extern s32 D_0046A678;
 extern Cfg D_0046A688;
@@ -89,11 +88,11 @@ void func_00f24b60(void) {
     {
         char *d = D_00F2C8C0 + j + 5;
         char *t = D_00F26E28 + i + 5;
-        d[0] = t[0];
-        d[1] = t[1];
         d[2] = t[2];
-        d[3] = t[4];
+        d[1] = t[1];
         d[4] = t[5];
+        d[3] = t[4];
+        d[0] = t[0];
     }
     D_00F26E2C = strlen(D_00F26E28);
     if (D_00F26E28[D_00F26E2C - 1] == '\n') {
@@ -121,10 +120,10 @@ void func_00f24b60(void) {
     D_00F26E24 = p;
     if (D_0046A678) p = func_00f26648(D_00F274B0, p, 64, &size);
     else p = func_00f26648(D_00F274C8, p, 64, &size);
-    D_00F26E20 = size;
     p = (u8 *)(((s32)p + 63) & ~63);
     D_00F2C8A4 = p;
     D_00F2C8A8 = p;
+    D_00F26E20 = size;
     D_00F2C8AC = func_00f26648(D_00F274E0, p, 64, 0);
     D_00F2C8B0 = func_00f26648(D_00F274F8, D_00F2C8AC, 64, 0);
     D_00F2C8B4 = func_00f26648(D_00F27510, D_00F2C8B0, 256, 0);
@@ -135,8 +134,8 @@ void func_00f24b60(void) {
     func_0024e468(30);
     D_00F2C8F8 = 0;
     func_0020bda8(16);
-    no = 1;
     D_00F26E64 = 1;
+    no = 1;
     for (;;) {
         if (func_00f24a58() & 0x2000) {
             if (D_00F26E64 != 0) func_0011d768(2);
@@ -174,8 +173,8 @@ void func_00f24b60(void) {
         func_0011d768(4);
         func_00f24a88(9);
     }
-    D_00F2C8FC = 0;
     D_0046A614 = 150;
+    D_00F2C8FC = 0;
     func_0010c170(func_00f24b28, D_00F26E38);
     while (D_00F2C8FC == 0) func_0024e468(1);
     D_0046A614 = 160;
@@ -236,13 +235,13 @@ ask:
         func_0024e468(1);
     }
     D_00F26E6C = 128;
-    D_00F2C89C = 3;
-    D_00F2C8D4 = 1;
-    D_00F2C8E0[2] = 0;
-    D_00F26E6C = 8;
-    D_00F2C8D8 = 0;
     D_00F2C8E0[0] = 0;
     D_00F2C8E0[1] = 0;
+    D_00F2C8D8 = 0;
+    D_00F2C89C = 3;
+    D_00F2C8E0[2] = 0;
+    D_00F2C8D4 = 1;
+    D_00F26E6C = 8;
     do {
         func_0024e468(1);
     } while ((D_00F26E6C += 8) < 256);

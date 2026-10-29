@@ -649,3 +649,21 @@ hit the stub callee sits at a lower address than the function.
   xs_genie f218f8.
 - sclimb.py OBJ=score, seed 5, 300 s each on wm rows 130+: wm f58748 352 -> 331, f7de08 855 -> 807 (saved). The rest
   moved by 4 or less or not at all. No match.
+
+## Round 21 (small overlays, closest first)
+
+- Matched: xs_dh_break f20820 (8 words, the 50.0f / 25.0f constants in $f21 / $f20 the wrong way round). It matched
+  when the first jitter was written inline (`s->c[0] = (...) + func_00f20020() * 50.0f - 25.0f;`), and the local `a`
+  was dropped. The -dl/-dg dump showed why statement moves could not fix it: sched1 hoists both constant loads (50 is
+  live across 6 calls, 25 across 4), so the order comes from live lengths that the source order barely touches. Its
+  ovl/xs_dh_break/drafts.tsv line is removed. /tmp/claude-0/s141/wwm1/inl.py tries each single-use temp inline; it
+  finds this match and nothing else in my range. It also inlines global stores, which is wrong, so check its output.
+- xs_genie f218f8 (2 words: lui s4 / move s0,sp order): the gcse-inserted %hi of D_00FC1DD0 lands after `p = a` at the
+  end of the preheader block. Tried every compile mode, address temps before and after the early return, for/while/goto
+  loop forms, declaration orders, n/m set late, array types. Still 2 words; no movable blocks for w3.
+- dkmovie f20140 (score 29): the packet address is built in a2 and copied to a1; pointer temps, store order, `|`
+  operand order and every mode leave it. f25180 (8 words): h and ht swap a1/a2 (local-alloc; h 3 refs / 12 insns,
+  ht 3 / 4); 14 variants, no change. f20b48: register allocation only, no movable blocks.
+- Saved (hand.py score): xs_dh_break f20288 95 -> 57 (w3.py, wwm2's r35 hill3 reorderer made per overlay), dktitle
+  f21808 59 -> 45, f21ca0 207 -> 187, f23aa8 144 -> 138, f228c8 408 -> 398, f24b60 410 -> 358 (sclimb OBJ=score
+  and w3), dkmovie f270c8 96 -> 76, f25288 115 -> 107, f25658 72 -> 70.

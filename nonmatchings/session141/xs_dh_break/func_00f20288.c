@@ -1,4 +1,4 @@
-/* score 95 (1036 vs 1048; was 173). Round 29 wwm2: the literals 3.2f / 0.975f (gcc 2.96 truncates), the scalars declared n, start, spr, jx, jy first (their stack slots 80-96 now match), the second header written through q and q += 16 before start = q (the original keeps it in s1 and spills it), the strip stores in order [0], [1], [2], and the end test as `if (!D_00425BC4 || D_00F311C4 > 1200) { ...; return 4; }`. Left: register choice and schedule in the shard loop, buf + 2 header writes through s1, and three unfilled delay slots (12 bytes). To score it with hand.py, paste shard.h's struct in place of the #include. */
+/* score 95 (1036 vs 1048; was 173). Round 29 wwm2: the literals 3.2f / 0.975f (gcc 2.96 truncates), the scalars declared n, start, spr, jx, jy first (their stack slots 80-96 now match), the second header written through q and q += 16 before start = q (the original keeps it in s1 and spills it), the strip stores in order [0], [1], [2], and the end test as `if (!D_00425BC4 || D_00F311C4 > 1200) { ...; return 4; }`. Left: register choice and schedule in the shard loop, buf + 2 header writes through s1, and three unfilled delay slots (12 bytes). To score it with hand.py, paste shard.h's struct in place of the #include. Round 21 (wwm1): score 95 -> 57 (206 words) with the dependency-checked reorderer (wwm2 r35 hill3, as /tmp/claude-0/s141/wwm1/w3.py). */
 /* xs_dh_break.x func_00f20288: draft (session 136), not byte-identical; the port runs it
  * (ovl/xs_dh_break/drafts.tsv). The per-frame task func_00f20b38 installs: the texture and its
  * CLUT (D_00F31340, D_00F31290) and the draw settings (D_00F313F0) are sent, then each of the
@@ -68,9 +68,9 @@ s32 func_00f20288(void) {
             ((u32 *)q)[0] = 0x80; ((u32 *)q)[1] = 0x80; ((u32 *)q)[2] = 0x80; ((u32 *)q)[3] = 0x80;
             q += 16;
             sceVu0FTOI4Vector((s32 *)q, t);
+            ((u32 *)q)[3] = k < 2 ? 0x8000 : 0;
             ((s32 *)q)[0] += jx;
             ((s32 *)q)[1] += jy;
-            ((u32 *)q)[3] = k < 2 ? 0x8000 : 0;
             q += 16;
         }
         if (func_00236e80((u32 *)(q - 0xA0), (u32 *)(q - 0x70), (u32 *)(q - 0x40), (u32 *)(q - 0x10))) {

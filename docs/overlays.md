@@ -337,6 +337,14 @@ on N random orders (default 40), and writes the best version to `$I2A_DIR/best_O
 counts, so check the best file's hand.py score before you keep it. Starting from the 4-word
 f4b878 draft it finds the match.
 
+Round 21: xs_dh_break func_00f20820 had two FP constants (50.0f, 25.0f) in each other's
+registers ($f20 / $f21). global-alloc orders pseudos by floor_log2(refs) * refs / live length,
+and sched1 had hoisted both constant loads, so changing the order of statements did not help.
+Writing the first single-use temp inline matched it:
+`s->c[0] = (...) + func_00f20020() * 50.0f - 25.0f;` instead of `a = func_00f20020() * 50.0f;`
+on the line before. For a register swap between two long-lived values, try inlining a temp that
+is used only once, on the next line (/tmp/claude-0/s141/wwm1/inl.py does it one temp at a time).
+
 ## decomp-permuter on an overlay function (session 135)
 
 tools/permuter.py works in overlay mode as it is (KH1_OVL points kh1tool at the overlay's layout,

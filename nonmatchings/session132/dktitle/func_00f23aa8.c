@@ -1,5 +1,4 @@
-/* dktitle.x func_00f23aa8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). */
-#include "ovl.h"
+/* dktitle.x func_00f23aa8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 144 -> 138 with sclimb.py. */
 
 void func_00206370(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 extern u32 D_00F26E38;
@@ -14,10 +13,10 @@ s32 func_00f23aa8(void *o, s32 x, s32 a) {
 
     p = (s64)((u64)D_00F26E3C * 100) / D_00F26E38;
     if (p > 100) p = 100;
+    c[6][0] = a / 2 << 24;
     i = p / 20;
     f = p % 20;
     j = i + 1;
-    c[6][0] = a / 2 << 24;
     c[0][0] = D_00F26E70[i * 3 + 0]; c[0][1] = D_00F26E70[j * 3 + 0];
     c[1][0] = D_00F26E70[i * 3 + 1]; c[1][1] = D_00F26E70[j * 3 + 1];
     c[2][0] = D_00F26E70[i * 3 + 2]; c[2][1] = D_00F26E70[j * 3 + 2];
