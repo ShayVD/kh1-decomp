@@ -1,73 +1,72 @@
-/* Round 31 (wgb): 65 -> 62 words with func_00f65480 declared and called in the order (f32, s32, Obj5e368 *, void *, void *, s32, s32, void *): same EE EABI registers, but the target sets the arguments up in this order (cf. wm func_00f3a860). 65 words left (464 vs 472): target copies obj ptr into a separate pseudo (t3); not reproduced. Twin f5e540 same issue (80). */
-typedef struct { f32 u, v, p0, p1; } UV5e368;
-typedef struct { s32 x[4]; f32 c0[4]; f32 c1[4]; } Col5e368;
+/* Round 41 wwm2: score 40 -> 26 (472 = 472). port.py of the gb twin func_00f37270 draft, which uses the copy family (tex = base; o = tex; c = o + 208; tex = o + 480). See that file for what is left. The earlier wm header was: 65 words, target copies the obj pointer into t3; that copy is what the port reproduces. */
 typedef struct {
-    u8 pad[0xD0];
-    Col5e368 col;
-    u8 pad2[0x1E0 - 0x100];
-    s32 f1E0[4];
-    UV5e368 uv[16];
-    s32 f2F0[4];
-} Obj5e368;
-typedef struct { s32 hdr[2]; f32 uv[4][2]; } Src5e368;
-typedef struct { s32 a, b, c, d; } Blk5e368;
-CONTEXT_ONLY s32 func_00f4a958(s32 p0) { return 0; }
-CONTEXT_ONLY s32 func_00f4aa00(s32 p0) { return 0; }
-void func_00f65480(f32, s32, Obj5e368 *, void *, void *, s32, s32, void *);
+    f32 *col;
+    s32 zero;
+    u8 *uv;
+    s32 xc;
+    OvlVec pad;
+} Desc;
+
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+} Mode;
+
 extern u8 D_00379F28[];
 extern u8 D_0037A028[];
-extern Src5e368 *D_0108DB8C[];
+extern f32 *D_0108DB8C[];
+s32 func_00f4a958(s32);
+s32 func_00f4aa00(s32);
+void *func_00f65480(s32, u8 *, u8 *, Desc *, s32, s32, Mode *, f32);
 
-void func_00f5e368(s32 arg0, Obj5e368 *obj, s32 arg2, s32 arg3, s32 arg4, f32 f) {
-    Blk5e368 b0;
-    Blk5e368 b1;
-    s32 pad[4];
-    s32 r0;
-    s32 r1;
-    Src5e368 *src;
-    Col5e368 *col;
-    void *a6;
+void func_00f5e368(s32 arg, u8 *base, s32 id, s32 id2, s32 idx, f32 f) {
+    Mode m;
+    Desc d;
+    u8 *tex;
+    u8 *o;
     s32 i;
-
-    r0 = func_00f4a958(arg2 - 1);
-    if (arg3 > 0) {
-        r1 = func_00f4aa00(arg3 - 1);
-    } else {
-        r1 = 0;
-    }
-    col = &obj->col;
-    a6 = col;
-    col->c0[0] = D_00379F28[arg4 * 4];
-    b1.a = (s32)a6;
-    a6 = obj->f1E0;
-    src = D_0108DB8C[arg2];
-    col->c0[1] = D_00379F28[arg4 * 4 + 1];
-    col->c0[3] = 128.0f;
-    col->c0[2] = D_00379F28[arg4 * 4 + 2];
-    col->c1[0] = D_0037A028[arg4 * 4];
-    col->c1[1] = D_0037A028[arg4 * 4 + 1];
-    col->c1[3] = 128.0f;
-    col->c1[2] = D_0037A028[arg4 * 4 + 2];
+    f32 *src;
+    f32 *c;
+    f32 *ps, *dd;
+    s32 r = func_00f4a958(id - 1);
+    s32 r2;
+    if (id2 > 0)
+        r2 = func_00f4aa00(id2 - 1);
+    else
+        r2 = 0;
+    tex = base;
+    o = tex;
+    c = (f32 *)(o + 208);
+    d.col = c;
+    tex = o + 480;
+    c[4] = D_00379F28[idx * 4 + 0];
+    c[5] = D_00379F28[idx * 4 + 1];
+    c[6] = D_00379F28[idx * 4 + 2];
+    c[7] = 128.0f;
+    c[8] = D_0037A028[idx * 4 + 0];
+    c[9] = D_0037A028[idx * 4 + 1];
+    c[10] = D_0037A028[idx * 4 + 2];
+    c[11] = 128.0f;
+    src = D_0108DB8C[id];
     if (src != NULL) {
-        b1.c = (s32)a6;
-        a6 = obj->f2F0;
-        {
-            f32 *q = &obj->uv[0].v;
-            f32 *p = &src->uv[0][1];
-            for (i = 0; i < 4; i++) {
-                q[-1] = p[-1];
-                q[0] = p[0];
-                p += 2;
-                q += 4;
-            }
+        d.uv = tex;
+        tex = o + 752;
+        ps = src + 3;
+        dd = (f32 *)(o + 500);
+        for (i = 0; i < 4; i++) {
+            dd[-1] = ps[-1];
+            dd[0] = ps[0];
+            ps += 2;
+            dd += 4;
         }
-        b1.b = 0;
+        d.zero = 0;
     } else {
-        b1.b = 0;
-        b1.c = 0;
+        d.zero = 0;
+        d.uv = NULL;
     }
-    b0.a = 5;
-    b0.c = 1;
-    b0.b = 1;
-    func_00f65480(f, arg0, obj, a6, &b1, r0, r1, &b0);
+    m.a = 5;
+    m.b = 1;
+    m.c = 1;
+    func_00f65480(arg, o, tex, &d, r, r2, &m, f);
 }
