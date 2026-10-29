@@ -585,3 +585,31 @@ Lessons:
 - **Store order is never "done":** f2c330 and f2cfd8 had headers saying store orders had been tried, yet both matched with hill2 over the whole block. Earlier passes had covered only part of each block.
 - **ctx2 first, then look at the diff again:** f3d978 went from 99 raw words to 8 with one CONTEXT_ONLY callee. After that, the leftover (the f256 load in a delay slot) was a one-line temp that the old header had already tried, but before the callee fix.
 - **Independent blocks:** /tmp/claude-0/s141/r29/blocks.py lists runs of three or more simple assignments with no calls and no reads of each other's targets. Its substring test is cautious (it skips `pos[0] = s->pos[0]` runs), so check by hand for blocks it misses.
+
+## Round 31 (wwm2, RANKING.md rows 27-50)
+
+No matches. I ran ctx2 (singles and pairs) on 17 drafts, then hill2 (300 s each) on the 8 with independent blocks that had not had a hill climb yet.
+
+Skipped:
+- Listed in wgb's round 29 report: f74a28, f41990, f2b598, f5c1c8.
+- Worked by wgb in round 29: f651d0, f23550, f79868, f7c078.
+- Matched already, so no draft left: f296d8.
+
+| Function | Before | Now | What did it |
+| --- | --- | --- | --- |
+| f20d08 | 64 words, score 53 | 10, score 21 | hill2 over the st stores (xC, xD and x4 right after x8), then the first tail branch stores D_00F85120 before D_00F85124 like the else-if branch |
+| f67c60 | 35, score 46 | 23, score 24 | hill2 moved `v = 0` after `cur = 0`; then `sel = (cur + 6) % 6` instead of `cur += 6` at the loop top |
+| f29dc0 | 24, score 43 | 23, score 41 | ctx2: CONTEXT_ONLY func_00f29658 |
+| f66b38 | 15, score 30 | 14, score 28 | hill2: the [3] store first, the [0] store last |
+
+No change from ctx2 or hill2:
+- f30d48, f37770, f33270, f42ce0, f2dc50, f2ac98, f422c0, f24fe0, f72a70, f24380, f44158, f632e8, f5dfd8.
+- Several of these had a hill climb in earlier rounds (f37770, f33270, f422c0), so only ctx2 was new for them.
+
+Callee return types (src/ and ovl/*/hand/ definitions vs draft prototypes, scratch script /tmp/claude-0/s141/r31/rt.py):
+- Only a few mismatches are not just pointer vs pointer: f20d08 func_001621e0 (void vs void *), f2ac98 func_00f2ac38 (s8 vs s32), f422c0 func_001bb7c8/func_00f404c8/func_00f64b88 (void vs s32) and func_001bff70 (s32 vs u16), f5dfd8 func_00f65480 (void vs pointer).
+- Fixing them changes nothing.
+
+Lessons:
+- **Make sibling blocks agree:** f20d08's two tail blocks did the same three stores in different orders. Writing them in one order let gcc cross-jump them, which took the score from 51 to 21.
+- **Fold an add into its one use:** in f67c60, `cur += 6` at the loop top followed by `cur % 6` matched better as `(cur + 6) % 6`.

@@ -1,4 +1,4 @@
-/* score 53 (1060 vs 1056 bytes); left: st byte-store order (orig xE,xF,x13,x30,x34,x38,x40,xC,xD,x4), tail regs and cross-jump of D_00F85120/28 stores; tried greedy store perms, if/switch reorder, goto shared tail (worse, 151+) */
+/* score 21 (10 words, 1052 vs 1056 bytes with the trailing pad; was 53). Round 31 wwm2: hill2 over the st stores (xC, xD and x4 moved up after x8) took it to 56 words; then writing the first tail branch in the same order as the else-if branch (D_00F85120 before D_00F85124) gave 10. Left: both D_00F8512C decrements put the address in v1 and the value in v0 (the original has them the other way round). Tried --x, -= 1, x = x - 1, a local copy, a pointer, u32, the != 0 branch order and about 1900 orders of the two tail blocks; ctx2 (pairs) gives nothing. Earlier header: score 53 (1060 vs 1056 bytes); left: st byte-store order (orig xE,xF,x13,x30,x34,x38,x40,xC,xD,x4), tail regs and cross-jump of D_00F85120/28 stores; tried greedy store perms, if/switch reorder, goto shared tail (worse, 151+) */
 typedef struct {
     s32 x0;
     s32 x4;
@@ -63,17 +63,17 @@ void func_00f20d08(s32 id, OvlMtx m, OvlMtx w, f32 a) {
     sceVu0CopyMatrix(D_00FBA9D0, D_00F872C0);
     D_00FBA9D0[3][3] = a;
     func_001655e0(m, D_00F850EC, D_00F850E8[D_00F85120], D_00F8511C);
+    st.xC = -128;
+    st.xD = -128;
     st.x8 = id;
     st.xE = -128;
     st.xF = al;
     st.x13 = -1;
     st.x30 = func_00f20068;
     st.x34 = func_00f20088;
+    st.x4 = 1;
     st.x38 = 0x31000070;
     st.x40 = 0x800D0;
-    st.xD = -128;
-    st.xC = -128;
-    st.x4 = 1;
     func_001621e0(D_00F850EC, v, &st, 0);
     if (0.0f <= D_00F8511C && D_00F8511C <= 0.09999999404f) {
         if (D_00F850F0 == 0) {
@@ -111,8 +111,8 @@ skip:
                 D_00F8512C--;
                 D_00F8511C = 0.0f;
                 i = D_00F85128;
-                D_00F85124 = D_00FBAA38[i];
                 D_00F85120 = D_00FBAA18[i];
+                D_00F85124 = D_00FBAA38[i];
                 D_00F85128 = (i + 1) & 7;
             }
         }
