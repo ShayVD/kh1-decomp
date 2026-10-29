@@ -1,3 +1,4 @@
+/* Round 38 (wwm2): wm.x func_00f32770 near miss: score 8 -> 2 (6 -> 2 words, 856 = 856). fx and fy copied into locals inside the if: `x = fx; c[cnt].id = o->id; y = fy; c[cnt].x = x; c[cnt].o = o; c[cnt].y = y;` (1374 orders of the copies and stores enumerated, /tmp/claude-0/s141/r38/e327c.py). Left: the original stores x (swc1 $f0,4) before loading fy (lwc1 $f1); no tried order does both. Earlier header below. */
 /* 6 words left (round 12): only the delay-slot fill after if (func_00f323b8(o,&fx,&fy)) differs (target beqz to i++ with the fx load in the slot). Tried all 24 store orders of the c[cnt] block (this is the best), continue/else/!=0 forms, c[cnt++].o, one shared counter for sort and assign; a 10 min permuter only found outputs that move cnt++ before the o store (changes behaviour, rejected). Round 13: a 300 s hill2 pass (store order, if-form and loop-condition slots) found nothing. */
 typedef struct { s32 active; s32 id; s32 cnt; s32 pad; f32 pos[4]; } S32770;
 typedef struct { u8 pad[2]; u16 h2; u8 pad2[2]; u16 h6; } K32770;
@@ -57,10 +58,13 @@ void func_00f32770(void) {
         }
         if (func_00f32718(o->id)) continue;
         if (func_00f323b8(o, &fx, &fy)) {
-            c[cnt].x = fx;
+            f32 x, y;
+            x = fx;
             c[cnt].id = o->id;
-            c[cnt].y = fy;
+            y = fy;
+            c[cnt].x = x;
             c[cnt].o = o;
+            c[cnt].y = y;
             cnt++;
         }
     }
