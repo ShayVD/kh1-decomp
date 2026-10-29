@@ -1,5 +1,7 @@
+/* Round 41 wwm2: score 150 -> 134, port.py of the wm twin func_00f73eb0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* Round 35 (wgb): gb.x func_00f4cdb8 near miss: 105 -> 99 words, score 152 -> 150. Order of the global initialisations from a dependency-safe statement-order hill climb (round 35 hill3.py: only orders that keep every read/write conflict in place). Earlier header below. */
-/* gb.x func_00f4cdb8 near miss: 105 words differ, score 152 (1424 = 1424 bytes). Port of wm func_00f73eb0's near miss (port.py maps it cleanly), not worked further. See the wm notes. */
+/* Round 35 (wgb): wm.x func_00f4cdb8 near miss: 105 -> 99 words, score 152 -> 150. port.py of gb func_00f4cdb8's round 35 draft. Earlier header below. */
+/* score 152 (1424 vs 1424, was 358). func_001bc520 takes no arguments and func_001f31a8 takes 2; m2c invents the rest. The pad loop is a goto loop with its test at the bottom. Icons are reached through `pp = ic`. The selection is `sel++; sel &= 1;` with a byte offset `idx = sel * 4` (with `(sel+1)&1` gcc uses xori). Left: the scheduling and order of the global stores in the prologue and the epilogue (120 orders of the end block tried, best kept), and the temp register numbering in the icon loop. */
 typedef struct { s16 v[2]; } S2;
 typedef struct { u8 pad[4]; u8 on; } Ic;
 typedef struct { u8 pad[16]; s32 x10; } Win;
@@ -73,19 +75,19 @@ void func_00f4cdb8(void)
 
     a = D_00F74138;
     b = D_00F74140;
-    D_00F829EC = 0;
-    D_00F82D68 = 0;
-    D_00F82A0C = D_00F705BC;
-    D_00F82A10 = D_00F705C0;
-    sel = 0;
-    D_00F702E0 = D_00F70330;
-    mode = D_00F702F0;
-    D_00F82A14 = D_00F705D0;
-    pa = a.v;
-    D_00F712E4 = 0;
     D_00F82D70 = 0;
     D_00F82D6C = 0;
+    D_00F702E0 = D_00F70330;
     D_00F82A28 = 128.0f;
+    D_00F82A0C = D_00F705BC;
+    D_00F712E4 = 0;
+    mode = D_00F702F0;
+    pa = a.v;
+    D_00F82A10 = D_00F705C0;
+    D_00F829EC = 0;
+    D_00F82A14 = D_00F705D0;
+    sel = 0;
+    D_00F82D68 = 0;
     t = func_001bc520();
     D_00F712F0.xc = D_00F7038C;
     D_00F712F0.xe = D_00F703B0;
@@ -152,10 +154,10 @@ test:
     func_0011d768(3);
     D_00F702E0 = D_00F70330;
     D_00F82D68 = 1;
-    D_00F82A0C = D_00F705BC;
-    D_00F82A10 = D_00F705C0;
-    D_00F82A14 = D_00F705D0;
     D_00F82A28 = 128.0f;
+    D_00F82A0C = D_00F705BC;
+    D_00F82A14 = D_00F705D0;
+    D_00F82A10 = D_00F705C0;
     func_00f444d8(13, 0, D_00F702F0);
     func_0024e468(D_00F702F0);
     func_00f43cf0(13);
