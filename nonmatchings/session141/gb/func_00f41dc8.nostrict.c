@@ -1,4 +1,4 @@
-/* near miss (nostrict): 15 words, score 21. The do {} while (0) (found by the permuter) stops CSE folding p[n]; left: flag-branch store order and o = p[n].w operand order. */
+/* gb.x func_00f41dc8: near miss (session 141), 3 words: `lui t0,0xff` / `sll v0,t9,4` order at the vertex loop head and `addu a2,v0,t8` operand order for o = p[n].w. Key fix from 15 words: `do {} while (0);` before the flag block's first ad(). Its wm twin func_00f68ec0 ports to the same 3 words. Permuter runs (strict and nostrict) found nothing better. */
 typedef struct { u64 lo, hi; } GQ;
 typedef union { kh1_u128 q; u32 w[4]; GQ d; f32 f[4]; } GPkt;
 extern GPkt *D_00F82A88[];
@@ -43,8 +43,8 @@ void func_00f41dc8(s32 *x, s32 *y, s32 unused, s32 *q, s32 w, s32 h, f32 *s, f32
     ad(&p[7].d, 0, 0x14);
     n = 8;
     if (flag) {
-        ad(&p[n++].d, (u64)flag << 32 | 0x800D0, 0x4C);
         do {} while (0);
+        ad(&p[n++].d, (u64)flag << 32 | 0x800D0, 0x4C);
         p[n].d.lo = 0xC00A400000000001;
     } else {
         p[n].d.lo = 0xC02A400000008001;

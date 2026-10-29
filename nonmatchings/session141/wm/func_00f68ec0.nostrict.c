@@ -1,5 +1,4 @@
-/* score 9 (9 words, nostrict). The twin of the gb f41dc8 near miss; porting it gives 15 words. Two changes: `o = (u32 *)(n * 16 + (s32)p);` (operand order), and hoisting the 0xC00A400000000001 constant into a local `u64 c` declared at the top of the flag branch. Left: in the flag branch, the original builds 0x800D0 before the dsll32 of flag, and stores lo before hi, then `li t9,9` (n); a `lui t0,0xff` / `sll` swap at the loop head. Tried lo/hi store orders, operand orders, a u64 temp, and n written as a constant. A 10-minute -j1 permuter only proposed making flag `long`, which turns a lw into an ld. */
-/* near miss (nostrict): 15 words, score 21. The do {} while (0) (found by the permuter) stops CSE folding p[n]; left: flag-branch store order and o = p[n].w operand order. */
+/* wm.x func_00f68ec0: near miss, 3 words, ported from the gb twin draft nonmatchings/session141/gb/func_00f41dc8.nostrict.c (see its header). wwm2's own draft reached 9 words with o = (u32 *)(n * 16 + (s32)p) and a u64 local for 0xC00A400000000001. */
 typedef struct { u64 lo, hi; } GQ;
 typedef union { kh1_u128 q; u32 w[4]; GQ d; f32 f[4]; } GPkt;
 extern GPkt *D_0108F248[];
@@ -44,16 +43,15 @@ void func_00f68ec0(s32 *x, s32 *y, s32 unused, s32 *q, s32 w, s32 h, f32 *s, f32
     ad(&p[7].d, 0, 0x14);
     n = 8;
     if (flag) {
-        u64 c = 0xC00A400000000001;
-        ad(&p[n++].d, (u64)flag << 32 | 0x800D0, 0x4C);
         do {} while (0);
-        p[n].d.lo = c;
+        ad(&p[n++].d, (u64)flag << 32 | 0x800D0, 0x4C);
+        p[n].d.lo = 0xC00A400000000001;
     } else {
         p[n].d.lo = 0xC02A400000008001;
     }
     p[n].d.hi = 0x412412412412;
     n++;
-    o = (u32 *)(n * 16 + (s32)p);
+    o = p[n].w;
     cr = c->r;
     cg = c->g;
     cb = c->b;
