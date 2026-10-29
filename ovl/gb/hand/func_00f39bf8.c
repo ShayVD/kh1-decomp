@@ -1,5 +1,4 @@
-/* Round 41 wwm2: score 52 -> 42. The UV word is written with its v (<< 16) half first, ((u64)((v1 << 4) + 16) << 16) | ((u1 << 4) + 16). Found by r41/orsweep.py, which tries every order of the | terms in each packed GS word line. */
-/* 53 words / score 52: the prologue and the non-flip branch match. Index D_00F61880[idx] directly per field (no pointer). Writing q[1] before q[0] in the last flip store stops cross-jumping. Left: the flip branch is scheduled differently, starting with v<<4 where we load sp0 first. */
+/* gb.x func_00f39bf8: matched by hand. */
 #include "ovl.h"
 
 typedef struct { s32 pad0; s32 u; s32 v; s32 w; s32 h; } GbSprite;
@@ -45,7 +44,7 @@ u64 *func_00f39bf8(u64 *p, s32 x, s32 y, s32 idx, u64 rgba, s32 flip) {
         q[0] = (x1 << 4) | ((u64)(y << 4) << 16) | 0x100000000;
         q[1] = 5;
         q += 2;
-        q[0] = ((u64)((v1 << 4) + 16) << 16) | ((u1 << 4) + 16);
+        q[0] = (u1 << 4) | ((u64)((v1 << 4) + 16) << 16);
         q[1] = 3;
         q += 2;
         q[1] = 5;
