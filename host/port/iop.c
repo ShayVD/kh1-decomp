@@ -40,6 +40,7 @@ u32 kh1_iop_insns;
  * neither needs a check of the pc at every instruction */
 #define OP_STUB 0xF8000000u
 #define OP_MAGIC 0xFC000000u
+#define OP_NATIVE 0xF4000000u /* (primary 0x3D) a driver function run as C: natives[] below */
 
 #define IOP_THREADS 8
 #define IOP_SEMAS 16
@@ -90,6 +91,7 @@ static u32 iop_heap;
 static int iop_ok;
 static u32 iop_mod_end;
 static int iop_log_on = -1;
+static int iop_natives_on = 1; /* 0: interpret every driver function (KH1_HOST_IOP=nonative) */
 
 /* the RPC server (one is enough for the sound driver) */
 static u32 rpc_sid = (u32)-1, rpc_func, rpc_buf;
@@ -112,6 +114,7 @@ static int iop_log(void) {
     if (iop_log_on < 0) {
         const char *s = getenv("KH1_HOST_IOP");
         iop_log_on = s && *s && *s != '0';
+        if (s && !strcmp(s, "nonative")) { iop_natives_on = 0; iop_log_on = 0; }
     }
     return iop_log_on;
 }
@@ -178,6 +181,77 @@ static int hle(IopCtx *c, const IopStub *s);
 #define IMM ((u32)(s32)(s16)op)
 #define IMMU (op & 0xFFFF)
 
+/* ---- the driver's hottest small functions as C ----
+ * LIBSSL.IRX's per-tick voice loop calls three leaf functions for every voice: each sets or clears a
+ * voice's bit in pairs of "registers to send to the SPU2" masks (two words each, voices 0-23 and
+ * 24-47, the top bit a dirty flag).  They are about a third of the driver's instructions, so once the
+ * module is loaded each one whose words match the known driver (an FNV-1a of the relocated function)
+ * has its first word replaced by OP_NATIVE and runs here; any other driver is left to the
+ * interpreter.  The masks are module data at the module's base + the offsets below. */
+#define MOD_U32(off) (*(u32 *)RAM(KH1_IOP_BASE + (off)))
+
+static u32 native_bit(u32 voice, u32 *word) {
+    s32 v = (s32)voice;
+    *word = v >= 24 ? 4 : 0;
+    return 1u << ((u32)(v % 24) & 31);
+}
+
+/* func_00150(voice, a, b): a and b each 0 (set the first mask, clear the second), 1 (the other way
+ * round) or 2 (set both); a for the masks at 0xF4E0 / 0xF530, b for 0xF540 / 0xF4C8 */
+static void native_00150(IopCtx *c) {
+    u32 w, bit = native_bit(c->r[4], &w), a = c->r[5], b = c->r[6];
+    if (a == 0) { MOD_U32(0xF4E0 + w) |= bit; MOD_U32(0xF530 + w) &= ~bit; }
+    else if (a == 1) { MOD_U32(0xF4E0 + w) &= ~bit; MOD_U32(0xF530 + w) |= bit; }
+    else if (a == 2) { MOD_U32(0xF4E0 + w) |= bit; MOD_U32(0xF530 + w) |= bit; }
+    if (b == 0) { MOD_U32(0xF540 + w) |= bit; MOD_U32(0xF4C8 + w) &= ~bit; }
+    else if (b == 1) { MOD_U32(0xF540 + w) &= ~bit; MOD_U32(0xF4C8 + w) |= bit; }
+    else if (b == 2) { MOD_U32(0xF540 + w) |= bit; MOD_U32(0xF4C8 + w) |= bit; }
+    MOD_U32(0xF4E0 + w) |= 0x80000000u;
+    MOD_U32(0xF540 + w) |= 0x80000000u;
+    MOD_U32(0xF530 + w) |= 0x80000000u;
+    MOD_U32(0xF4C8 + w) |= 0x80000000u;
+}
+
+/* func_00434 / func_004f0(voice, on): set or clear the voice's bit in one mask */
+static void native_mask(IopCtx *c, u32 off) {
+    u32 w, bit = native_bit(c->r[4], &w);
+    if (c->r[5] == 0) MOD_U32(off + w) &= ~bit;
+    else MOD_U32(off + w) |= bit;
+    MOD_U32(off + w) |= 0x80000000u;
+}
+static void native_00434(IopCtx *c) { native_mask(c, 0xF488); }
+static void native_004f0(IopCtx *c) { native_mask(c, 0xF520); }
+
+typedef struct {
+    u32 off, size, hash; /* in the module's text; the hash of its words once relocated */
+    void (*fn)(IopCtx *c);
+} IopNative;
+static const IopNative natives[] = {
+    { 0x150, 0x2E4, 0x381F6730u, native_00150 },
+    { 0x434, 0x0BC, 0x58CDFB82u, native_00434 },
+    { 0x4F0, 0x0BC, 0x289775EDu, native_004f0 },
+};
+#define N_NATIVES ((int)(sizeof natives / sizeof natives[0]))
+
+static u32 fnv1a(const u8 *p, u32 n) {
+    u32 h = 2166136261u, i;
+    for (i = 0; i < n; i++) h = (h ^ p[i]) * 16777619u;
+    return h;
+}
+
+static int patch_natives(void) {
+    int i, k = 0;
+    for (i = 0; i < N_NATIVES; i++) {
+        const IopNative *nv = &natives[i];
+        u32 h = fnv1a(RAM(KH1_IOP_BASE + nv->off), nv->size);
+        if (iop_log()) printf("kh1-iop: function +0x%x hash 0x%08x\n", nv->off, h);
+        if (h != nv->hash || !iop_natives_on) continue;
+        *(u32 *)RAM(KH1_IOP_BASE + nv->off) = OP_NATIVE | (u32)i;
+        k++;
+    }
+    return k;
+}
+
 /* The interpreter: direct-threaded (each handler jumps to the next instruction's through the
  * opcode tables, GNU C's labels as values), with pc, npc and the instruction count in locals that go
  * back to the context at every exit.  On the Vita the sound thread spends about half its time here.
@@ -191,7 +265,7 @@ static __attribute__((optimize("no-gcse", "no-crossjumping"))) int run(IopCtx *c
         &&op_lb, &&op_lh, &&op_lwl, &&op_lw, &&op_lbu, &&op_lhu, &&op_lwr, &&op_bad,
         &&op_sb, &&op_sh, &&op_swl, &&op_sw, &&op_bad, &&op_bad, &&op_swr, &&op_bad,
         &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
-        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_stub, &&op_magic,
+        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_native, &&op_stub, &&op_magic,
     };
     static void *const special_tbl[64] = {
         &&op_sll, &&op_bad, &&op_srl, &&op_sra, &&op_sllv, &&op_bad, &&op_srlv, &&op_srav,
@@ -232,6 +306,11 @@ op_magic: /* the return address of a call from C: the call is over */
     n--;
     k = RUN_RET;
     goto out;
+op_native: /* the function's C, then its jr ra (natives[]: leaf functions, nothing in a delay slot) */
+    natives[(op & 0xFFFF) % N_NATIVES].fn(c);
+    xpc = r[31];
+    npc = xpc + 4;
+    NEXT_B;
 op_stub: {
     const IopStub *s = &iop_stub[(op & 0xFFFF) % IOP_STUBS];
     c->pc = pc;
@@ -888,6 +967,10 @@ int kh1_iop_load(const u8 *f, u32 size) {
     }
     if (!text || relocate(f, size, shoff, shnum, KH1_IOP_BASE) != 0) return -1;
     find_imports(text, text_size);
+    {
+        int k = patch_natives();
+        if (k) printf("kh1-iop: %d of the driver's functions run as C\n", k);
+    }
     iop_heap = (iop_mod_end + 0xFFF) & ~0xFFFu;
     if (iop_log()) printf("kh1-iop: module at 0x%x..0x%x, entry +0x%x, %d imports\n", KH1_IOP_BASE, iop_mod_end, entry,
                           iop_nstubs);

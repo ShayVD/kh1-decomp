@@ -291,6 +291,15 @@ Nothing here was compared against a console recording.
   - the threads were split as above.
   The host does the same work in 0.55 times the time it took before. The output is the same apart from
   the interpolation table's rounding, and the game's run over the Dive script is line for line the same.
+- Second Vita run (the two threads): no lag; the title's music (19-26 voices, about 5.4 million IOP
+  instructions a second) kept the mixer busy the whole time and it fell short in a few 2 s windows
+  (4-24 of about 400 buffers), heard as small breaks. In Dive (3 voices) none fell short. Since then
+  three of the driver's functions run as C (iop.c `natives[]`): func_00150, func_00434 and func_004f0,
+  the leaf functions the per-tick voice loop calls for every voice to set or clear the voice's bit in
+  the masks of registers to send. They were about 28% of the instructions with 18 voices playing.
+  Each one is patched only when an FNV-1a of its relocated words matches the known LIBSSL.IRX, so
+  another driver is still interpreted, and `KH1_HOST_IOP=nonative` turns them off. The output is the same
+  byte for byte (sndplay over music110.dat; the Dive run's WAV and log).
 - Cost on the host: about 2.5 million IOP instructions a second of sound over the Dive run (3.7 G in
   25 minutes), plus the mix. **Not measured on a Vita yet** after these changes; the watchdog's sound
   line (vita-build.md "Sound") prints the mixer's milliseconds per 2 s.
