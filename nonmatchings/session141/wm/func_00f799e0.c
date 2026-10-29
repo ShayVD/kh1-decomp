@@ -1,4 +1,6 @@
-/* func_00f799e0: score 115, 154 words differ. regalloc and CSE of constant 8 differ; size divide matches via t temp (t = w*h; t /= 128) */
+/* score 93 (72 words; 716 vs 712 bytes), was 115. Ported back from func_00f693e0 (same code plus the trailing 4 argument): `(nv = bpp) == 8` with an unsigned long nv fixes the bpp branch block. Left: the y/h register swap, img in t5 instead of t1, and store order. Earlier note: size divide matches via t temp (t = w*h; t /= 128). */
+#include "ovl.h"
+
 extern void *D_0108FA60;
 extern s32 D_00FB64A4;
 void *func_00f79700(void *, void *, s32, s32, s32, s32, s32, s32, s32, s32);
@@ -15,6 +17,7 @@ void func_00f799e0(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     s32 cw, ch, size;
     s32 p;
     s32 t;
+    unsigned long nv;
     s32 x1, y1;
     f32 v;
 
@@ -25,7 +28,7 @@ void func_00f799e0(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     cw = 8;
     ch = 2;
     if (bpp != 4) {
-        if (bpp == 8) {
+        if ((nv = bpp) == 8) {
             psm = 19;
             cw = 16;
             ch = 16;
@@ -52,13 +55,13 @@ void func_00f799e0(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     if (flip == 0) {
         xs[3] = x;
         xs[2] = x;
-        xs[1] = x + w * 16;
         xs[0] = x + w * 16;
+        xs[1] = x + w * 16;
     } else {
         xs[3] = x;
         xs[2] = x;
-        xs[1] = x - w * 16;
         xs[0] = x - w * 16;
+        xs[1] = x - w * 16;
     }
     y1 = y + h * 16;
     ys[2] = y1;

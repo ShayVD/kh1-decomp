@@ -124,3 +124,17 @@ func_00f67530: the uv copy loop is not reversed in the original and only the dst
 func_00f79700 (84, was 187; same code as func_00f69278), func_00f60cf0 (138).
 func_00f7cb60: one 20-minute -j1 permuter run, no improvement (best non-hack candidate worse than the 3-word draft;
 the only lower-scoring output used a volatile index).
+
+## Round 6 (wm upper half, remaining)
+
+No matches this round (about 45 minutes).
+- func_00f693e0 is func_00f799e0 without the last stack argument (4) to its draw call, so one fix gives both. A
+  15-minute -j1 permuter run found `unsigned long nv; if ((nv = bpp) == 8)`, which stops gcc from reusing cw's
+  constant 8 for the compare and fixes the whole bpp branch block. Both near misses are updated: f693e0 111 -> 89,
+  f799e0 115 -> 93. Left: y/h are swapped between s3/s4, img lands in t5 instead of t1, and the stores of the vertex
+  arrays come in a different order.
+- func_00f7c510: complete draft at score 86, saved. The original copies x and y into new registers in each arm of the
+  flag `if`, which looks like inline or crossjump structure. Per-arm copies and an inline helper per arm did not
+  reproduce it.
+- func_00f69fd0: a long run of global initializer stores whose order is set by the scheduler. Not attempted.
+- Not reached: f64d48, f639c0, f63d18, f70418, f69aa8.
