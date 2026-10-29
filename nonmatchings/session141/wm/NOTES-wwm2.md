@@ -214,3 +214,16 @@ Near misses saved:
 - func_00f69fd0 (score 184): an init function with a long run of global stores; not converging.
 
 f71748 (1040 bytes; reset loops, a link-building loop over 96-byte entries, then layout) was only looked at.
+
+## Round 12
+
+No matches.
+- func_00f63d18: the goto loop did not help (score 145, against 102 for the for loop). The loop has to stay a real
+  loop, because the original hoists the 1, 5 and 0x8000<<17 constants. The problem is that gcc turns the
+  (s64)((y + 1920) << 4) << 16 qword into a 64-bit loop induction variable (daddu by 0x1c00000). The original
+  recomputes it each pass. Tried s32 temps, s64 temps, an explicit y, and SCE_GS_SET_XYZ-style u64 casts. The
+  saved draft is unchanged.
+- func_00f71748: near miss saved at score 62 (see the header). A -j1 permuter run moved the second panel block's `w = ...`
+  line above `x = ...` (106 to 62).
+- Not reached: f792c8, f77648, f74440, f646c0 (f646c0 is a large texture upload / GIF packet builder; looked at
+  only).
