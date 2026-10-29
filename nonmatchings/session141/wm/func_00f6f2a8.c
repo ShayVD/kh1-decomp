@@ -1,4 +1,4 @@
-/* score 835 (4396 vs 4464 bytes): full structure (item count, 3+1 icon build, help window, pad loop with wrap nav, kind-3 guard dialog, 4-way switch, exit). Tried icon pointer var/ip base, chained-store order, s16 tables; remaining: 0.0f/128.0f not hoisted to f20/f21 at entry, icons base not in s8, sel*2 PRE slot sp7C. Round 25 wwm2. */
+/* score 835 (4396 vs 4464 bytes): full structure (item count, 3+1 icon build, help window, pad loop with wrap nav, kind-3 guard dialog, 4-way switch, exit). Tried icon pointer var/ip base, chained-store order, s16 tables; remaining: 0.0f/128.0f not hoisted to f20/f21 at entry, icons base not in s8, sel*2 PRE slot sp7C. Round 25 wwm2. Round 19 (wwm1): score 835 -> 713 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
 typedef struct { u8 pad[16]; s32 x10; } Win;
 typedef struct { u8 pad[12]; s16 xc; s16 xe; u8 pad10[14]; s16 x1e; } Lay;
@@ -59,7 +59,7 @@ extern s32 D_0108F2B0;
 extern s32 D_0108F2B4;
 void func_0011d768(s32);
 Item *func_001bc4e0(void);
-s32 func_001bc510(void);
+s32 func_001bc510(void); CONTEXT_ONLY s32 func_001bc510() { return 0; }
 void func_001bd7f8(s32);
 s32 func_001be278(void);
 void func_001be320(s32);
@@ -73,16 +73,16 @@ s32 func_0024d408(void);
 void func_0024e468(s32);
 s32 func_00f47110(void);
 s32 func_00f68e50(s32);
-Ic *func_00f6a480(void);
+Ic *func_00f6a480(void); CONTEXT_ONLY Ic * func_00f6a480() { return 0; }
 void func_00f6ade8(s32);
 void func_00f6ae60(Win *);
 void func_00f6b5b0(Ic *, f32, f32);
 void func_00f6b5d0(s32, s32, s32);
 Win *func_00f6b6a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00f6cf78(void);
+s32 func_00f6cf78(void); CONTEXT_ONLY s32 func_00f6cf78() { return 0; }
 void func_00f6ed80(void *);
 void func_00f71b68(void);
-void func_00f73eb0(void);
+void func_00f73eb0(void); CONTEXT_ONLY void func_00f73eb0() {}
 void func_00f74978(Ic *, s32);
 
 #define MAKE(n, nm) \
@@ -110,16 +110,16 @@ void func_00f74978(Ic *, s32);
 
 void func_00f6f2a8(void)
 {
-    Ic *icons[4];
+    s32 v;
+    Item *items;
+    u32 t;
     Ic **pp;
+    Win *w;
+    Ic *icons[4];
+    s32 sel, old, n, i, k, x, cnt;
     s32 lay;
     s32 mode;
     Win *help;
-    Win *w;
-    Item *items;
-    s32 sel, old, n, i, k, x, cnt;
-    u32 t;
-    s32 v;
 
     sel = 0;
     mode = D_00FB4A70;
@@ -133,11 +133,11 @@ void func_00f6f2a8(void)
         }
     }
     D_0108F2B0 = -999;
+    D_0108F290 = 0;
+    D_0108F2B4 = 0;
     D_00FB5930.x1e = cnt;
     D_00FB5930.xc = D_00FB4D28;
     D_00FB5930.xe = D_00FB4D2C;
-    D_0108F2B4 = 0;
-    D_0108F290 = 0;
     lay = func_001f31a8(&D_00FB5930, 1);
     func_001f3dc0(D_0108F18C);
     func_00f6b6a0(4, 0, 2, 1, 0, 15, 3, 4, D_00FB4C24, D_00FB4C28, 0, D_00FB4C2C, 0, 0, 0, 0, 0, 256, mode);
@@ -147,15 +147,15 @@ void func_00f6f2a8(void)
     MAKE(1, 35)
     x += D_00FB4B6C;
     MAKE(2, 5)
-    x += D_00FB4B6C;
     n = 3;
+    x += D_00FB4B6C;
     if (func_00f6cf78() >= 3) {
         MAKE(n, 7)
         n++;
     }
     help = func_00f6b6a0(4, 2, 0, 1, 0, D_00FB4C98, D_0108F178[sel], 0, D_00FB4C9C, D_00FB4CA0, 0, 0, 0, D_00FB4CA4, D_00FB4CA8, D_00FB4CAC, D_00FB4CB0, 256, func_00f47110() == 0 ? mode : 1);
-    D_0108F1E8 = 128.0f;
     D_0108F2AC = D_0108F170[sel];
+    D_0108F1E8 = 128.0f;
     for (i = 0; i < n; i++) {
         func_00f6b5b0(icons[i], 256.0f, (f32)D_00FB4A70);
         func_0024e468(2);
@@ -165,8 +165,8 @@ void func_00f6f2a8(void)
             func_0011d768(3);
             break;
         }
-        old = sel;
         t = D_002C5AD0.x8;
+        old = sel;
         if (((t | t >> 24) & 0x10) && sel == 0) {
             sel = n - 1;
         } else {
@@ -241,8 +241,8 @@ void func_00f6f2a8(void)
             switch (D_0108F170[sel]) {
             case 0:
                 D_0108F290 = 1;
-                D_0108F2B0 = -999;
                 D_0108F2B4 = 0;
+                D_0108F2B0 = -999;
                 func_001f3dc0(lay);
                 while (D_0108F2B0 < -1) {
                     func_0024e468(1);
@@ -262,15 +262,15 @@ void func_00f6f2a8(void)
                 goto next;
             case 1:
                 D_0108F290 = 1;
-                D_0108F2B0 = -999;
                 D_0108F2B4 = 0;
+                D_0108F2B0 = -999;
                 func_001f3dc0(lay);
                 while (D_0108F2B0 < -1) {
                     func_0024e468(1);
                 }
                 if (D_0108F2B0 >= 0) {
-                    D_0108F2B4 = 1;
                     D_0108F1E8 = 0.0f;
+                    D_0108F2B4 = 1;
                     func_00f6b5d0(2, 0, D_00FB4A70);
                     func_00f6b5d0(0x13, 0, D_00FB4A70);
                     func_0020be10(16);
@@ -345,8 +345,8 @@ void func_00f6f2a8(void)
                 D_0108F1E8 = 128.0f;
                 func_00f6b5d0(2, 256, D_00FB4A70);
                 v = func_001be278() + 1;
-                D_00FB4A58 = v;
                 D_00FB4A5C = v;
+                D_00FB4A58 = v;
                 goto next;
             }
         }

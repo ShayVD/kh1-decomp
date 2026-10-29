@@ -18,6 +18,8 @@ Round 17: f5c1c8 matched as the port of gb func_00f350d0.
 
 Round 18: f2cfd8 and f2c330 matched with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). f77648, f42f20, f29dc0, f7d0a8 and f7ad38 moved a little with ctx2.py; their counts here are not rechecked (NOTES-wwm1.md, round 18).
 
+Round 19 (wwm1): f4b878 matched (sclimb.py, then the index sum and zero-initializer assignments; docs/overlays.md). Rows 130+ moved with sclimb.py (raw words, then OBJ=score); the counts here are not rechecked (NOTES-wwm1.md, round 19).
+
 | Aligned | Raw | Function | Mode | Hill/permuter | File |
 |---|---|---|---|---|---|
 | 2 | 2 | func_00f21260 |  | yes | func_00f21260.c |
@@ -149,7 +151,6 @@ Round 18: f2cfd8 and f2c330 matched with sclimb.py (CONTEXT_ONLY toggles plus de
 | 185 | 355 | func_00f74f30 |  |  | func_00f74f30.c |
 | 189 | 206 | func_00f58bd0 |  |  | func_00f58bd0.c |
 | 190 | 507 | func_00f7d0a8 |  |  | func_00f7d0a8.c |
-| 199 | 202 | func_00f4b878 |  |  | func_00f4b878.c |
 | 223 | 389 | func_00f54050 |  |  | func_00f54050.c |
 | 227 | 202 | func_00f58748 |  |  | func_00f58748.c |
 | 233 | 368 | func_00f73570 |  |  | func_00f73570.c |

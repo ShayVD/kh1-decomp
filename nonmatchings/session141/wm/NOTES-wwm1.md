@@ -615,3 +615,27 @@ hit the stub callee sits at a lower address than the function.
 - Careful: an earlier mctx.py removed src/hand (it holds the tracked src/hand/vu0.c) when it
   cleaned up. It was restored with git checkout; the scripts now remove only the directory
   they made.
+
+## Round 19 (sclimb.py on wm rows 130+ and the small overlays)
+
+- Matched: wm f4b878 (202 -> 17 with sclimb.py: CONTEXT_ONLY func_001bb740 and dependency-checked
+  reorders; -> 4 with the grid index as `yy * (h->w * h->h) + zz * h->w + xx`; -> 0 with the
+  seven zero locals assigned after the declarations in the order x0, y0, z0, first, x1, y1, z1).
+  No order of the initializer list (`s32 x0 = 0, ...`, all 5040) gave the 32/20/24/28 stack-slot
+  store order; one order of plain assignments did. gb f24780 matched as its portall port.
+- /tmp/claude-0/s141/wwm1/i2a.py OVL draft.c [N] does that conversion (initializers to
+  assignments, source order plus N random orders). It finds f4b878 from the 4-word draft. No
+  other draft in my range has two or more constant initializers.
+- Raw word counts mislead when the size differs. The first raw-word pass "improved" dkmovie f23750,
+  f25288, f23ae8, f245c0 and wm f646c0, f7ad38, f71b68, f6f2a8, f7de08, f60fa8, f6b7c8, f75d80
+  while hand.py's score got worse. Those were not saved. sclimb.py now takes OBJ=score, and
+  r19save.py saves only when the score is not worse.
+- Saved (hand.py score): dkmovie f270c8 148 -> 96, f245c0 608 -> 538, f23ae8 675 -> 629,
+  f26d90 211 -> 206, f25978 262 -> 256; wm f6f2a8 835 -> 713, f60fa8 1210 -> 1062, f71b68
+  660 -> 584, f7ad38 675 -> 628, f47f40 -> 249, f5e8a8 935 -> 901, f7de08 897 -> 855, f51d18
+  -> 460, f54050 -> 294, f49718 -> 303, f58748 (raw 202 -> 191), f6b7c8, f75d80 (small).
+- The xs_dh_break drafts compile only with nonmatchings/session136/xs_dh_break/shard.h pasted
+  in (as their headers say). f20820 stays at 8 words, f20288 210 -> 206 raw (not saved).
+- No change: dkmovie f20b48, f25180, f22d28, f275e0, f23750; xs_genie f218f8 (2), f22078;
+  xs_tink f20818; xs_dumbo f20570, f222f8; xl_limit f225b0. Reserved (not climbed): dkmovie
+  f207a0, f212c0; dktitle f26710, f241c8.

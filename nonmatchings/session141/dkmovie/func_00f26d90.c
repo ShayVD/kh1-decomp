@@ -1,5 +1,4 @@
-/* dkmovie.x func_00f26d90: draft (session 141, round 28), structurally complete, not polished, 788 vs 824 bytes, 188 words differ, score 211 (m2c draft did not compile). Opens the stream (from the disc table or by name), copies the two 64-byte tables out, then primes slot f3DD40 and starts reading slot f3DD44. */
-#include "ovl.h"
+/* dkmovie.x func_00f26d90: draft (session 141, round 28), structurally complete, not polished, 788 vs 824 bytes, 188 words differ, score 211 (m2c draft did not compile). Opens the stream (from the disc table or by name), copies the two 64-byte tables out, then primes slot f3DD40 and starts reading slot f3DD44. Round 19 (wwm1): score 211 -> 206 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
 
 s32 func_00f22048(s32, s32, s32, s32);
@@ -15,9 +14,9 @@ extern u8 D_00F28690[];
 extern u8 D_00F286D0[];
 
 void func_00f26d90(s32 arg0, s32 arg1) {
+    s32 n;
     MovieWork *m;
     s32 i;
-    s32 n;
 
     if (D_00F28460->f3DF51 != 0) {
         if (D_00F28460->f3DF52 != 0) {
@@ -52,8 +51,8 @@ void func_00f26d90(s32 arg0, s32 arg1) {
     m = D_00F28460;
     m->f3DD74[m->f3DD40] = 2;
     n = m->f3DD40;
-    m->f3DD40 = n + 1;
     m->f3DD90 = m->f3DD5C[n];
+    m->f3DD40 = n + 1;
     m->f3DD40 = (n + 1) % m->f3DF50;
     m->f3DD74[m->f3DD40] = 1;
     FlushCache(0);

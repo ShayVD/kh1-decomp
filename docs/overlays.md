@@ -319,6 +319,16 @@ Round 18:
 - A k=2 ctx2.py run over every near miss found no further direct match; the gains were in big
   drafts (gb f50550 / wm f77648 253 -> 228, wm f42f20 205 -> 170).
 
+Round 19: wm func_00f4b878 (and its gb twin func_00f24780 by portall) went 202 -> 17 words
+with sclimb.py, 4 with the index sum reordered, and 0 when the seven zero locals were
+initialized by assignments after the declarations (`x0 = 0; y0 = 0; z0 = 0; first = 0;
+x1 = 0; ...`) instead of `s32 x0 = 0, y0 = 0, ...`. No order of the initializer list
+gave the target's stack-slot store order (32, 20, 24, 28); one order of plain assignments did.
+For a near miss that differs only in which stack slot each spilled zero-initialized local
+gets, try assignments in different orders instead of initializers.
+For drafts with a size difference, run sclimb.py with `OBJ=score` (hand.py's score). The raw
+word count often goes down while the alignment gets worse.
+
 ## decomp-permuter on an overlay function (session 135)
 
 tools/permuter.py works in overlay mode as it is (KH1_OVL points kh1tool at the overlay's layout,

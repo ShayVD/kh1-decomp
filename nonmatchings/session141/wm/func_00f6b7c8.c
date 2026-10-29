@@ -1,4 +1,4 @@
-/* NEAR MISS 1405 words, score 1324 (5984 vs 6064 bytes). Port of gb func_00f446d0 (same score); D_00FB4AFC mapped by hand = gb D_00F7037C. See the gb file for notes. */
+/* NEAR MISS 1405 words, score 1324 (5984 vs 6064 bytes). Port of gb func_00f446d0 (same score); D_00FB4AFC mapped by hand = gb D_00F7037C. See the gb file for notes. Round 19 (wwm1): score 1324 -> 1280 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct {
     u8 x0, x1, x2, x3, x4, x5;
     u8 pad6[2];
@@ -27,12 +27,12 @@ extern s32 D_00FB4BBC, D_00FB4BC0, D_00FB4BC4, D_00FB4BC8;
 extern s32 D_00FB4BCC, D_00FB4BD0, D_00FB4BD4, D_00FB4BD8;
 extern s32 D_00FB4BE0, D_00FB4BE4, D_00FB4BE8, D_00FB4BEC;
 extern s32 D_00FB4BF0, D_00FB4BF4, D_00FB4BF8, D_00FB4BFC;
-Item *func_00f6a480(void);
+Item *func_00f6a480(void); CONTEXT_ONLY Item * func_00f6a480() { return 0; }
 void func_00f6b5b0(Item *, f32, f32);
-u8 *func_001bc4e0(void);
+u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 void func_0011d768(s32);
 void func_0024e468(s32);
-void func_001bfac8(void);
+void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
 void func_00f6b5d0(s32, s32);
 void func_00f6ade8(s32);
 
@@ -79,29 +79,29 @@ void func_00f6ade8(s32);
 
 void func_00f6b7c8(void) {
     Item *lab[16];
+    Item *cur;
+    s32 i, y, n;
     Item *box[8];
     Item *rows[8];
+    f32 depth;
+    Item *s15;
+    u8 *t;
+    Item *it;
     s32 flag;
     s32 wait;
     Item *head;
-    f32 depth;
-    Item *it;
-    Item *s15;
-    Item *cur;
-    s32 i, y, n;
-    u8 *t;
 
-    depth = D_00FB4A70;
     wait = D_00FB4A70;
+    depth = D_00FB4A70;
     for (;;) {
         it = func_00f6a480();
+        it->x5 = 15;
         it->x1 = 6;
-        head = it;
-        it->x0 = 2;
         it->xC = 1;
         it->x3 = 0;
-        it->x5 = 15;
         it->x10 = 0;
+        it->x0 = 2;
+        head = it;
         POS(it, D_00FB4B84, D_00FB4B88);
         it->xA = (D_00FB4B9C + 1) * D_00FB4BA0;
         it->x8 = *(u16 *)&D_00FB4B8C;
@@ -110,15 +110,15 @@ void func_00f6b7c8(void) {
         y = D_00FB4B88 + D_00FB4BA0 + D_00FB4BA0;
         for (i = 0; i < D_00FB4B9C / 2; i++) {
             it = func_00f6a480();
-            it->x1 = 3;
             it->xC = 2;
+            it->x1 = 3;
             it->x0 = 2;
-            it->x3 = 0;
             it->x5 = 15;
+            it->x3 = 0;
             it->x10 = 0;
             POS(it, D_00FB4B84 + 2, y);
-            rows[i] = it;
             it->xA = *(u16 *)&D_00FB4BA0 - 1;
+            rows[i] = it;
             it->x8 = *(u16 *)&D_00FB4B8C - 4;
             COL(it, D_00FB4BBC, D_00FB4BC0, D_00FB4BC4, D_00FB4BC8);
             func_00f6b5b0(it, 256.0f, depth);
@@ -129,11 +129,11 @@ void func_00f6b7c8(void) {
         lab[0] = it;
         it = func_00f6a480();
         box[0] = it;
-        it->x5 = 4;
-        it->x1 = 4;
         it->x0 = 2;
-        it->xC = 3;
+        it->x1 = 4;
+        it->x5 = 4;
         it->x3 = 1;
+        it->xC = 3;
         it->x10 = 0;
         POS(it, D_00FB4C10 + 2, y);
         lab[1] = it;
@@ -144,21 +144,21 @@ void func_00f6b7c8(void) {
         s15 = it;
         lab[2] = it;
         BOX(it, 1, D_00FB4C10);
+        y += D_00FB4BA0;
         box[3] = it;
         lab[3] = it;
-        y += D_00FB4BA0;
         LABEL(it, 16);
         lab[4] = it;
         BOX(it, 1, D_00FB4C10);
+        y += D_00FB4BA0;
         box[4] = it;
         lab[5] = it;
-        y += D_00FB4BA0;
         LABEL(it, 17);
         lab[6] = it;
         BOX(it, 1, D_00FB4C10);
+        y += D_00FB4BA0;
         box[5] = it;
         lab[7] = it;
-        y += D_00FB4BA0;
         LABEL(it, 20);
         lab[8] = it;
         BOX(it, 1, D_00FB4C10);
@@ -169,20 +169,20 @@ void func_00f6b7c8(void) {
         lab[10] = it;
         BOX(it, 5, D_00FB4C10);
         box[1] = it;
-        lab[11] = it;
         y += D_00FB4BA0;
+        lab[11] = it;
         LABEL(it, 19);
         lab[12] = it;
         BOX(it, 5, D_00FB4C10);
-        box[2] = it;
         lab[13] = it;
+        box[2] = it;
         cur = func_00f6a480();
-        cur->x1 = 14;
-        cur->x0 = 2;
-        cur->xC = 3;
         cur->x3 = 0;
+        cur->xC = 3;
         cur->x5 = 15;
+        cur->x1 = 14;
         n = D_00FB4A5C;
+        cur->x0 = 2;
         cur->x10 = (s32)(func_001bc4e0() + n * 96 + 52);
         if (D_0108F27C == 0) {
             cur->x1C = D_00FB4BDC;
@@ -191,11 +191,11 @@ void func_00f6b7c8(void) {
             cur->x1C = D_00FB4BDC + D_00FB4BA4;
             cur->x20 = D_00FB4B88 + D_00FB4BA8 + 4;
         }
-        cur->x14 = cur->x1C;
-        cur->x18 = cur->x20;
         flag = 0;
-        cur->x30 = 0.0f;
+        cur->x14 = cur->x1C;
         cur->x2C = 0.0f;
+        cur->x18 = cur->x20;
+        cur->x30 = 0.0f;
         COL(cur, D_00FB4BE0, D_00FB4BE4, D_00FB4BE8, D_00FB4BEC);
         func_00f6b5b0(cur, 256.0f, depth);
         for (;;) {

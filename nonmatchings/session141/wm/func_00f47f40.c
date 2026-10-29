@@ -1,4 +1,4 @@
-/* wm.x func_00f47f40 near miss: 236 words differ, score 337 (ours 1420 bytes, original 1480). Port of gb func_00f20e48 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. */
+/* wm.x func_00f47f40 near miss: 236 words differ, score 337 (ours 1420 bytes, original 1480). Port of gb func_00f20e48 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. Round 19 (wwm1): 236 -> 200 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 285 -> 249 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 b[16]; } Blk16;
 typedef struct {
     u8 b0;
@@ -72,11 +72,11 @@ void sceVu0ViewScreenMatrix(OvlMtx, f32, f32, f32, f32, f32, f32, f32, f32, f32)
 void sceVu0CopyMatrix(OvlMtx, OvlMtx);
 void func_00f66950(OvlMtx);
 s32 sceDmaGetChan(s32);
-Blk16 *func_001ba980(void);
-s32 func_00f4acc8(void);
+Blk16 *func_001ba980(void); CONTEXT_ONLY Blk16 * func_001ba980() { return 0; }
+s32 func_00f4acc8(void); CONTEXT_ONLY s32 func_00f4acc8() { return 0; }
 s32 func_001bb6d0(s32);
-u16 func_001bb678(void);
-void func_00f4afd0(void);
+u16 func_001bb678(void); CONTEXT_ONLY u16 func_001bb678() { return 0; }
+void func_00f4afd0(void); CONTEXT_ONLY void func_00f4afd0() {}
 void func_001be820(void *, s32);
 void func_00f597b0(void);
 void func_00f4b878(void *);
@@ -84,9 +84,9 @@ void func_00f4b338(void *, s32);
 s32 func_001ba3f0(s32);
 
 void func_00f47f40(void) {
-    OvlMtx *mm;
     s32 i;
     u16 v;
+    OvlMtx *mm;
     s32 n;
     mm = D_00F9B540->m;
     sceVu0ViewScreenMatrix(mm[0], 512.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 16777000.0f, 1.0f, 65536.0f);
@@ -107,8 +107,8 @@ void func_00f47f40(void) {
     mm[1][3][0] = 0.0f;
     mm[1][3][1] = 0.0f;
     mm[1][3][2] = 0.0f;
-    mm[1][3][3] = 1.0f;
     mm[2][0][0] = 0.8f;
+    mm[1][3][3] = 1.0f;
     mm[2][0][1] = 0.8f;
     mm[2][0][2] = 0.8f;
     mm[2][0][3] = 0.0f;
@@ -122,20 +122,20 @@ void func_00f47f40(void) {
     mm[2][2][3] = 0.0f;
     mm[2][3][0] = 0.1f;
     mm[2][3][1] = 0.1f;
+    D_00F9B540->x7C = 0;
     mm[2][3][2] = 0.3f;
     mm[2][3][3] = 1.0f;
-    D_00F9B540->x88 = -2944.0f;
-    D_00F9B540->x76 = 3;
-    D_00F9B540->x90 = 0;
     D_00F9B540->x78 = 1;
-    D_00F9B540->x7C = 0;
     D_00F9B540->x8C = 0;
+    D_00F9B540->x76 = 3;
+    D_00F9B540->x88 = -2944.0f;
+    D_00F9B540->x90 = 0;
     D_00F9B540->dma = sceDmaGetChan(2);
-    D_00F9B540->x84 = 1;
     D_00F9B540->x82 = 0;
+    D_00F9B540->x84 = 1;
     *(Blk16 *)D_00F9B540 = *func_001ba980();
-    n = D_00F9B540->b0;
     D_00F9B540->x80 = 0;
+    n = D_00F9B540->b0;
     D_00F9B540->x7E = n;
     D_00F9B540->c40[0] = D_00379F28[n * 4 + 0];
     D_00F9B540->c40[1] = D_00379F28[n * 4 + 1];
@@ -146,39 +146,39 @@ void func_00f47f40(void) {
     D_00F9B540->c44[2] = D_0037A028[n * 4 + 2];
     D_00F9B540->c44[3] = D_0037A028[n * 4 + 3];
     D_00F9B540->x4C = func_00f4acc8() + 1;
-    D_00F9B540->b50 = D_00F9B540->x7E;
     D_00F9B540->x4A = 0;
     D_00F9B540->y4A = 2;
     D_00F9B540->z4A = 4;
+    D_00F9B540->b50 = D_00F9B540->x7E;
     D_00F9B540->x62 = D_00F9B540->x54 = func_001bb6d0(D_00F9B540->x4C - 1);
-    D_00F9B540->x74 = 0;
     D_00F9B540->x58 = 0;
+    D_00F9B540->x74 = 0;
     for (i = 0; i < 16; i++) {
         D_00F9B540->b64[i] = 0;
     }
     D_00F9B540->x10D4 = 256;
-    D_00F9B540->b9C = 0;
     D_00F9B540->x10D8 = 0;
     D_00F9B540->x10DC = 0;
     D_00F9B540->x98 = 0;
+    D_00F9B540->b9C = 0;
     D_00F9B540->b9E = 0;
     D_00F9B540->x7A = 128;
     D_00F9B540->bF0 = 0;
     v = func_001bb678();
-    D_00F9B540->xA6 = v;
-    D_00F9B540->xAA = v;
-    D_00F9B540->xA8 = v;
-    D_00F9B540->x5C = v / 2 - 1;
     D_00F9B540->y5C = v / 2;
+    D_00F9B540->xAA = v;
     D_00F9B540->z5C = v / 2 - 1;
-    D_00F9B540->x5E = D_00F9B540->x5C;
-    D_00F9B540->y5E = D_00F9B540->y5C;
-    D_00F9B540->z5E = D_00F9B540->z5C;
-    D_00F9B540->x88 = -2944.0f - (v * 420 - 2520);
-    D_00F9B540->x60 = D_00F9B540->x5C;
-    D_00F9B540->y60 = D_00F9B540->y5C;
+    D_00F9B540->xA6 = v;
     D_00F9B540->z60 = D_00F9B540->z5C;
+    D_00F9B540->xA8 = v;
+    D_00F9B540->y60 = D_00F9B540->y5C;
+    D_00F9B540->y5E = D_00F9B540->y5C;
+    D_00F9B540->x88 = -2944.0f - (v * 420 - 2520);
+    D_00F9B540->x5C = v / 2 - 1;
+    D_00F9B540->x60 = D_00F9B540->x5C;
     D_00F9B540->xA4 = 0;
+    D_00F9B540->x5E = D_00F9B540->x5C;
+    D_00F9B540->z5E = D_00F9B540->z5C;
     func_00f4afd0();
     func_001be820(D_00F9B544, 0x13008);
     func_00f597b0();

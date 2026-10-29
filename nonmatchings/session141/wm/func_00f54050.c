@@ -1,4 +1,4 @@
-/* NEAR MISS 389 words, score 306 (2392 vs 2432 bytes). Port of gb func_00f2cf58 (same score); see that file for what was tried. */
+/* NEAR MISS 389 words, score 306 (2392 vs 2432 bytes). Port of gb func_00f2cf58 (same score); see that file for what was tried. Round 19 (wwm1): 389 -> 384 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 306 -> 294 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 b[16]; } Blk16;
 typedef struct { s32 w; s32 h; s32 pad[2]; } Tex;
 typedef struct { u8 pad[0x244]; s16 x244; s16 pad246; s32 x248; s32 x24C; s32 x250; s32 x254; } D61880;
@@ -25,38 +25,38 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
     Blk16 idx;
     OvlMtx m;
     OvlVec t;
-    f32 ua[2];
     f32 va[2];
-    f32 uc[2];
-    f32 vd[2];
+    s32 i;
     u32 col[2];
     f32 h;
-    f32 nh;
-    f32 one;
-    s32 i;
-    s32 j;
-    s32 k;
-    s32 a;
+    f32 uc[2];
     u8 *ix;
-    Tex *tx;
+    s32 k;
     f32 x0, y0, du, dv;
+    f32 one;
+    f32 nh;
+    s32 j;
+    Tex *tx;
+    s32 a;
+    f32 vd[2];
+    f32 ua[2];
 
-    i = 8;
-    one = 1.0f;
-    h = *(u16 *)(D_00F9B540 + 166) * 200.0f * 0.5f;
     idx = D_00FB7820;
+    h = *(u16 *)(D_00F9B540 + 166) * 200.0f * 0.5f;
+    one = 1.0f;
+    i = 8;
+    nh = -h;
     t[3] = one;
     t[0] = h;
     t[2] = h;
     t[1] = 200.0f - h;
-    nh = -h;
     sceVu0UnitMatrix(m);
     sceVu0TransMatrix(m, m, t);
     sceVu0MulMatrix(m, base, m);
-    v[3] = one;
     v[2] = 0.0f;
     v[0] = 0.0f;
     v[1] = h - (((u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF) + 1) * 200.0f;
+    v[3] = one;
     sceVu0ApplyMatrix(out, m, v);
     q[0] = one / out[3];
     sceVu0ScaleVectorXYZ(out, out, q[0]);
@@ -113,11 +113,11 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
     }
     tx = &D_00FA6310[D_00FA6000.x244];
     {
-        f32 s166 = *(u16 *)(D_00F9B540 + 166);
         f32 w = D_00FA6000.x250;
+        f32 s166 = *(u16 *)(D_00F9B540 + 166);
         du = w * 0.5f;
-        x0 = D_00FA6000.x248 + w * s166 * 0.25f;
         y0 = D_00FA6000.x24C + (f32)D_00FA6000.x254 * s166 * 0.25f;
+        x0 = D_00FA6000.x248 + w * s166 * 0.25f;
     }
     va[0] = va[1] = D_00FA6000.x24C / (f32)tx->h;
     a = D_00FA5B04 * 90 / 128;
@@ -125,8 +125,8 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
     ua[0] = D_00FA6000.x248 / (f32)tx->w;
     vd[0] = vd[1] = y0 / tx->h;
     uc[1] = (x0 + du) / tx->w;
-    uc[0] = x0 / tx->w;
     ua[1] = (D_00FA6000.x248 + du) / tx->w;
+    uc[0] = x0 / tx->w;
     p = func_00f66b78(p);
     p[0] = 0x3F0003FF;
     p[1] = 8;
@@ -139,13 +139,13 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
         p = func_00f66b78(p);
         p[0] = 84;
         p[1] = 0;
-        p += 2;
         k = j & 1;
+        p += 2;
         p[0] = *(u64 *)(D_00F9B540 + 232 + 8704);
         p[1] = 6;
-        p += 2;
         st[0] = ua[k] * q[*ix];
         st[1] = va[k] * q[*ix];
+        p += 2;
         p[0] = *(u64 *)st;
         p[1] = 2;
         p += 2;
@@ -154,24 +154,24 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
         ix++;
         st[0] = uc[k] * q[*ix];
         st[1] = va[k] * q[*ix];
-        p[0] = *(u64 *)st;
         p[1] = 2;
+        p[0] = *(u64 *)st;
         p += 2;
         p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;
         ix++;
         st[0] = ua[k] * q[*ix];
         st[1] = vd[k] * q[*ix];
-        p[0] = *(u64 *)st;
         p[1] = 2;
+        p[0] = *(u64 *)st;
         p += 2;
         p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;
         ix++;
         st[0] = uc[k] * q[*ix];
         st[1] = vd[k] * q[*ix];
-        p[0] = *(u64 *)st;
         p[1] = 2;
+        p[0] = *(u64 *)st;
         p += 2;
         p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;

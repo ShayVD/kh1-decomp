@@ -15,6 +15,8 @@ Round 17: f350d0, f35a80 and f34aa8 matched with CONTEXT_ONLY callee definitions
 
 Round 18: no match. f50550 (253 -> 228), f37448 (77 -> 65), f4a650 (35 -> 27), f25518 (62 -> 44) and f36ee0 (81 -> 78) raw words moved with ctx2.py / sclimb.py; the aligned counts here are not rechecked (NOTES-wwm1.md, round 18).
 
+Round 19 (wwm1): f24780 matched as the port of wm func_00f4b878.
+
 | Aligned | Raw | Function | Mode | Hill/permuter | File |
 |---|---|---|---|---|---|
 | 3 | 3 | func_00f2c000 |  |  | func_00f2c000.c |
@@ -76,7 +78,6 @@ Round 18: no match. f50550 (253 -> 228), f37448 (77 -> 65), f4a650 (35 -> 27), f
 | 181 | 428 | func_00f43d70 |  |  | func_00f43d70.c |
 | 185 | 355 | func_00f4de38 |  |  | func_00f4de38.c |
 | 192 | 235 | func_00f20a68 |  |  | func_00f20a68.c |
-| 199 | 202 | func_00f24780 |  |  | func_00f24780.c |
 | 216 | 217 | func_00f31ad8 |  |  | func_00f31ad8.c |
 | 224 | 389 | func_00f2cf58 |  |  | func_00f2cf58.c |
 | 233 | 368 | func_00f4c478 |  |  | func_00f4c478.c |

@@ -1,4 +1,4 @@
-/* NEAR MISS 1531 words, score 2430 (6200 vs 6344 bytes). Port of gb func_00f4ec88 (same score; port.py mapped every symbol). Structurally complete draft, not polished; see the gb file for notes. */
+/* NEAR MISS 1531 words, score 2430 (6200 vs 6344 bytes). Port of gb func_00f4ec88 (same score; port.py mapped every symbol). Structurally complete draft, not polished; see the gb file for notes. Round 19 (wwm1): score 2430 -> 2412 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct {
     u8 x0, x1, x2, x3, x4, x5;
     u8 pad6[2];
@@ -28,8 +28,8 @@ extern s32 D_00FB4D20, D_00FB4D24, D_00FB4B6C, D_00FB4B70, D_00FB4B38, D_00FB4B3
 extern s32 D_00FB4DA4, D_00FB4DA8, D_00FB4DB4;
 extern Pad D_002C5AD0;
 extern u8 D_0108F298[];
-u8 *func_001bc4e0(void);
-s32 func_001bc510(void);
+u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
+s32 func_001bc510(void); CONTEXT_ONLY s32 func_001bc510() { return 0; }
 Snd *func_001f31a8(Cfg *);
 void func_001f3dc0(s32);
 Item *func_00f6b6a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
@@ -43,7 +43,7 @@ void func_00f749b8(s32, s32, s32);
 void func_00f6b5d0(s32, s32, s32);
 void func_00f6ade8(s32);
 void func_00f6ae60(Item *);
-s32 func_001be278(void);
+s32 func_001be278(void); CONTEXT_ONLY s32 func_001be278() { return 0; }
 s32 func_001be010(void);
 void func_001be320(s32);
 void func_001be430(void);
@@ -52,7 +52,7 @@ void func_0020bda8(s32);
 void func_00f6ed80(s32);
 void func_0024d1c8(void *, s32, s32, s32);
 s32 func_0024d408(void);
-s32 func_0024cf80(void);
+s32 func_0024cf80(void); CONTEXT_ONLY s32 func_0024cf80() { return 0; }
 s32 func_0024cf90(void);
 
 #define HILITE(s0)                                                              \
@@ -72,27 +72,27 @@ s32 func_0024cf90(void);
 void func_00f75d80(void) {
     Item *items[4];
     P2 t0;
-    s32 pad0[2];
+    u8 *rec;
+    s32 pad2[2];
     P2 t1;
     s32 pad1[2];
-    P2 t2;
-    s32 pad2[2];
     s32 wait;
-    s32 old;
-    s32 sel;
-    u8 *rec;
-    Item *r;
-    s32 idx;
-    u8 *base;
-    s32 n, i, cnt, k, v;
-    Snd *snd;
     Item *s0;
     s32 y;
+    s32 idx;
+    u8 *base;
     u32 b;
+    Item *r;
+    s32 n, i, cnt, k, v;
+    Snd *snd;
+    s32 old;
+    P2 t2;
+    s32 pad0[2];
+    s32 sel;
     s32 s2;
 
-    t0 = D_00FBA200;
     sel = 0;
+    t0 = D_00FBA200;
     t1 = D_00FBA208;
     t2 = D_00FBA210;
     wait = D_00FB4A70;
@@ -106,28 +106,28 @@ void func_00f75d80(void) {
         if (base[104 + k] == 0) cnt++;
         k += 96;
     }
-    D_0108F1D0 = D_00FB4D48;
     D_0108F1CC = D_00FB4D44;
+    D_0108F1D0 = D_00FB4D48;
     D_0108F1D4 = D_00FB4D54;
-    D_0108F554 = -999;
-    D_00FB4A60 = D_00FB4AB4;
-    D_00FB5AD0.xC = D_00FB4D28;
     D_00FB5AD0.x1E = cnt;
-    idx = 0;
-    D_00FB5AD0.xE = D_00FB4D2C;
-    D_0108F560 = 0;
-    D_0108F564 = 0;
     D_0108F55C = 0;
-    D_0108F550 = 0;
+    D_00FB4A60 = D_00FB4AB4;
+    D_0108F554 = -999;
+    D_0108F560 = 0;
+    D_00FB5AD0.xC = D_00FB4D28;
+    idx = 0;
     D_0108F558 = 0;
+    D_0108F550 = 0;
+    D_00FB5AD0.xE = D_00FB4D2C;
+    D_0108F564 = 0;
     snd = func_001f31a8(&D_00FB5AD0);
     func_001f3dc0(D_0108F18C);
     func_00f6b6a0(18, 0, 2, 1, 0, 15, 1, 4, D_00FB4C24, D_00FB4C28, 0, D_00FB4C2C, 0, 0, 0, 0, 0, 256, wait);
 main:
-    D_00FB4A54 = 0;
-    D_00FB4A58 = 0;
     D_00FB4A5C = 0;
+    D_00FB4A54 = 0;
     v = 1;
+    D_00FB4A58 = 0;
     if (func_00f47110() == 0) v = wait;
     r = func_00f6b6a0(17, 2, 0, 1, 0, D_00FB4C98, t0.v[idx / 2], 0, D_00FB4C9C, D_00FB4CA0, 0, 0, 0,
                       D_00FB4CA4, D_00FB4CA8, D_00FB4CAC, D_00FB4CB0, 256, v);
@@ -139,13 +139,13 @@ main:
     items[0]->x3 = 0;
     items[0]->x10 = 33;
     items[0]->xC = 1;
+    items[0]->x14 = D_00FB4D20;
     items[0]->x20 = y;
     items[0]->x18 = y;
-    items[0]->x2C = 0.0f;
     items[0]->x30 = 0.0f;
-    items[0]->x14 = D_00FB4D20;
-    items[0]->x1C = D_00FB4D20;
     items[0]->x8 = D_00FB4B70;
+    items[0]->x2C = 0.0f;
+    items[0]->x1C = D_00FB4D20;
     if (sel == 0) {
         items[0]->x4 = 1;
         func_00f74978(items[0], 8);
@@ -159,13 +159,13 @@ main:
     items[1]->x2 = 2;
     items[1]->x3 = 0;
     items[1]->x10 = 37;
-    items[1]->xC = 1;
-    items[1]->x20 = y;
     items[1]->x18 = y;
-    items[1]->x2C = 0.0f;
-    items[1]->x30 = 0.0f;
-    items[1]->x14 = D_00FB4D20;
     items[1]->x1C = D_00FB4D20;
+    items[1]->x20 = y;
+    items[1]->xC = 1;
+    items[1]->x30 = 0.0f;
+    items[1]->x2C = 0.0f;
+    items[1]->x14 = D_00FB4D20;
     items[1]->x8 = D_00FB4B70;
     if (sel == 1) {
         items[1]->x4 = 1;
@@ -264,9 +264,9 @@ leave:
     func_00f6ade8(18);
     if (D_0108F1B8 > 0) D_0108F1B8 = -1;
     v = func_001be278() + 1;
+    D_00FB4A5C = v;
     D_00FB4A54 = 0;
     D_00FB4A58 = v;
-    D_00FB4A5C = v;
     return;
 next:
     func_0024e468(1);
@@ -276,8 +276,8 @@ next:
     func_00f6b5d0(17, 0, D_00FB4A70);
     func_0024e468(D_00FB4A70);
     func_00f6ade8(17);
-    if (D_0108F1B8 > 0) D_0108F1B8 = -1;
     v = 1;
+    if (D_0108F1B8 > 0) D_0108F1B8 = -1;
     if (func_00f47110() == 0) v = D_00FB4A70;
     func_00f6b6a0(17, 2, 0, 1, 0, D_00FB4C98, t1.v[idx / 2], 0, D_00FB4C9C, D_00FB4CA0, 0, 0, 0,
                   D_00FB4CA4, D_00FB4CA8, D_00FB4CAC, D_00FB4CB0, 256, v);
@@ -288,9 +288,9 @@ state:
     while (D_0108F554 < -1) {
         func_0024e468(1);
     }
-    snd->xD0 = D_0108F560;
-    snd->xD2 = D_0108F564;
     D_0108F558 = 0;
+    snd->xD2 = D_0108F564;
+    snd->xD0 = D_0108F560;
     if (sel != 0) {
         if (D_0108F550 == 0) goto end;
         func_001f3dc0(D_0108F18C);
@@ -311,8 +311,8 @@ state:
             D_0108F550 = 0;
             func_001f3dc0((s32)snd);
             func_0020bda8(16);
-            D_0108F554 = -999;
             D_0108F558 = 1;
+            D_0108F554 = -999;
             goto state;
         }
         if (func_001be278() == D_0108F554) {
@@ -335,9 +335,9 @@ state:
             func_00f6b5b0(s0, 0.0f, D_00FB4A70);
             func_0024e468(D_00FB4A70);
             func_00f6ae60(s0);
+            D_0108F558 = 1;
             D_0108F550 = 0;
             D_0108F554 = -999;
-            D_0108F558 = 1;
             func_001f3dc0((s32)snd);
             goto state;
         }

@@ -1,4 +1,4 @@
-/* score 524 (3200 vs 3176 bytes). Sibling of f7a350: the same 3-pack texture upload, then each kind 3/4 entry is filtered by id (66..70 skipped; >= 100 are map markers for sel/D_00FB6498.x94, with dim set when they differ; 2..64 need f[id] & 1 and not & 2; 72..97 need f[id-70] & 2; D_00FB649C.f is the flag array, addressed from D_00FB649C+16 as the original does). It is then lifted by func_00f787b0, projected per vertex (skipped when z is invalid), coloured by the D_0108F7C0/830/8A0 fades and the pack-k switch, and ids 21..26 are drawn 4 times rotated by D_0108F918 (the original reuses the id-21 index variable as the inner loop counter; kept). Colour bytes need (s32) truncation (u8 from float gives the 0x4f000000 sequence). u32 id gives the sltiu compares. Left: 24 bytes: the texture-upload argument order, the s4/s5 and t5/t6 register numbering, the double col[3] store, and the blend=72 merge in the k switch. hill2 found nothing (the word count is dominated by misalignment). Round 18 (wwm1): 732 words with CONTEXT_ONLY definitions of cosf and sinf (ctx2.py). */
+/* score 524 (3200 vs 3176 bytes). Sibling of f7a350: the same 3-pack texture upload, then each kind 3/4 entry is filtered by id (66..70 skipped; >= 100 are map markers for sel/D_00FB6498.x94, with dim set when they differ; 2..64 need f[id] & 1 and not & 2; 72..97 need f[id-70] & 2; D_00FB649C.f is the flag array, addressed from D_00FB649C+16 as the original does). It is then lifted by func_00f787b0, projected per vertex (skipped when z is invalid), coloured by the D_0108F7C0/830/8A0 fades and the pack-k switch, and ids 21..26 are drawn 4 times rotated by D_0108F918 (the original reuses the id-21 index variable as the inner loop counter; kept). Colour bytes need (s32) truncation (u8 from float gives the 0x4f000000 sequence). u32 id gives the sltiu compares. Left: 24 bytes: the texture-upload argument order, the s4/s5 and t5/t6 register numbering, the double col[3] store, and the blend=72 merge in the k switch. hill2 found nothing (the word count is dominated by misalignment). Round 18 (wwm1): 732 words with CONTEXT_ONLY definitions of cosf and sinf (ctx2.py). Round 19 (wwm1): score 675 -> 628 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { s32 n; s32 grp; s32 tex; } Hdr;
 typedef struct { s32 n; s32 off; } Grp;
 typedef struct { s32 w; s32 h; s32 fmt; s32 off; } Tex;
@@ -55,8 +55,8 @@ void func_00f7ad38(s32 sel)
     f32 lift, cx, cy, ang, fx, fy;
     f32 *pa;
 
-    D_0108F6E4 = 0;
     mode = 0;
+    D_0108F6E4 = 0;
     t = 0;
     blend = 0;
     if (sel >= 2 && sel < 28) {
@@ -64,13 +64,13 @@ void func_00f7ad38(s32 sel)
     }
     for (k = 2; k >= 0; k--) {
         last = -1;
-        h = (Hdr *)D_0108F6B8[k];
-        th = 0;
         v[3] = 1.0f;
+        th = 0;
+        h = (Hdr *)D_0108F6B8[k];
         w = 0;
+        tx = (Tex *)((u8 *)h + h->tex);
         d4 = 0;
         g = (Grp *)((u8 *)h + h->grp);
-        tx = (Tex *)((u8 *)h + h->tex);
         d0 = 0;
         for (i = 0; i < h->n; i++, g++) {
             e = (Ent *)(D_0108F6B8[k] + g->off);
@@ -81,16 +81,16 @@ void func_00f7ad38(s32 sel)
                     th = tx[last].h;
                     switch (tx[last].fmt) {
                     case 4:
-                        mode = 20;
-                        d0 = 8;
-                        d4 = 2;
                         t = w * th / 128;
+                        d0 = 8;
+                        mode = 20;
+                        d4 = 2;
                         break;
                     case 8:
-                        mode = 19;
-                        d0 = 16;
-                        d4 = 16;
                         t = w * th / 64;
+                        mode = 19;
+                        d4 = 16;
+                        d0 = 16;
                         break;
                     default:
                         mode = 0;
@@ -106,8 +106,8 @@ void func_00f7ad38(s32 sel)
                 if (id < 71) {
                     if (id >= 66) continue;
                 }
-                lift = 0.0f;
                 dim = 0;
+                lift = 0.0f;
                 if (id >= 100) {
                     if (sel + 100 == id || (sel == 27 && id == 113)) {
                         if (D_00FB6498.x94 != sel) {
@@ -143,9 +143,9 @@ void func_00f7ad38(s32 sel)
                     zs[n] = sc[2];
                     q[n] = sc[3];
                 }
-                col[0] = 0x80;
                 col[1] = 0x80;
                 col[2] = 0x80;
+                col[0] = 0x80;
                 col[3] = 0x80;
                 if (e->id >= 2 && e->id < 28) {
                     if (sel == e->id) {
@@ -167,9 +167,9 @@ void func_00f7ad38(s32 sel)
                     col[1] = (s32)D_0108F830[e->id];
                     col[2] = (s32)D_0108F8A0[e->id];
                     if (e->id == D_00FB6498.x94) {
-                        col[0] = 0x80;
-                        col[1] = 0x80;
                         col[2] = 0x80;
+                        col[1] = 0x80;
+                        col[0] = 0x80;
                         col[3] = 0x80;
                     }
                 }
@@ -193,27 +193,27 @@ void func_00f7ad38(s32 sel)
                     blend = 72;
                     break;
                 case 2:
-                    col[0] = 0x80;
-                    col[3] = 80;
                     blend = 72;
+                    col[3] = 80;
+                    col[0] = 0x80;
                     col[1] = 0x80;
                     col[2] = 0x80;
                     break;
                 }
                 if (e->id < 27) {
                     if (e->id < 21) goto one;
-                    m = e->id - 21;
                     cx = (xs[0] + xs[1] + xs[2] + xs[3]) / 4;
                     cy = (ys[0] + ys[1] + ys[2] + ys[3]) / 4;
                     a = col[3];
+                    m = e->id - 21;
                     for (n = 0; n < 4; n++) {
                         pa = &D_0108F918[m * 4 + n];
                         *pa -= (n + 1) * 0.00019174743f;
                         if (*pa < 0.0f) *pa += 6.2831836f;
                         ang = *pa;
                         for (m = 0; m < 4; m++) {
-                            fx = xs[m];
                             fy = ys[m];
+                            fx = xs[m];
                             fx -= cx;
                             fy -= cy;
                             xs[m] = cosf(ang) * fx - sinf(ang) * fy + cx;
