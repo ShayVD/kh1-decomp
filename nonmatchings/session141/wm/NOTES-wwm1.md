@@ -315,3 +315,34 @@ loop with func_00f3caf0/f3cb90) and the rest of the list.
   a separate t0 = idx*20+base) come out naturally from writing
   `D[idx].field` inside each coordinate expression (f584d0), not from
   loading the fields into locals first.
+
+## Round 9
+
+Matched (2): f2eb78, f22ac8.
+Near misses: f43430 (7), f30d48 (13), f41990 (16). f45e68 stays at 27:
+hill2 over access forms (D[idx].f, e->f, (D + idx)->f, (&D[idx])->f) x
+statement order reached only 28. Not reached: f3d978, f33aa0, f36bc0,
+f46750, f2c518, f3d4d8.
+
+### Round 9 tips
+
+- **hill2.py** (`/tmp/claude-0/s141/wwm1/hill2.py OVL FUNC src secs seed
+  a b ...`): like hill.py, but the source may hold choice slots
+  `{{opt1@@opt2@@...}}`. Each step either swaps lines in a block or
+  changes one slot. Use it to search expression forms and order together.
+  (The separator is `@@` because options often contain `|`.)
+- **Separate variable for a second call result** (f2eb78): reusing `r` for
+  both func_00f2cd88 and func_00f2cfd8 added a `move`; a fresh `k`
+  matched it.
+- **Colour bytes into u8 locals** (f22ac8): `cr = c[0]; cg = c[1]; ...;
+  col = cr | (cg << 8) | (cb << 16) | (ca << 24)` matched the target's load
+  order. No ordering of the plain inline OR expression did.
+- **Single exit**: when the target sets v0 = 0 only in the epilogue, use
+  `goto end; ... end: return 0;` instead of early `return 0;` (f22ac8).
+- **Division by a power of two that stays div.s**: divide by `(f32)n` with
+  an int local `n = 4`. A float constant or `f32 n = 4.0f` becomes a
+  multiply by 0.25 at expand time (f41990).
+- **Float literals**: gcc 2.96 rounds some decimal literals differently;
+  0x40490FDA needed `3.141592503f` (f30d48).
+- **A temp computed before a call goes in a callee-saved FPR**: `t = fi /
+  60.0f;` before sceVu0UnitMatrix put it in f20 as in the target.
