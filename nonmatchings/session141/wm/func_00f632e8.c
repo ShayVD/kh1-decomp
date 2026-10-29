@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 35 -> 29 (46 words). The second XYZ word written with the y half first, ((u64)(y + h * 32) << 16) | (x + w * 16) | 0x100000000. Left: tx/ty (s3/s2) and the h * 32 shift, which the original puts in the second call's delay slot. Tried with no gain: operand orders of the first word, h * 32 + y and w * 16 + x, and splitting the two calls with h *= 32 or w *= 16 between them (61). */
 /* func_00f632e8: score 35, 55 words differ. w*16 and h*32 adds placed differently; permuter gave nothing Round 30 (wgb, no gain): tx before ty (worse, 49), x/y shift order, x1/y1 computed after func_00f66b78 or h *= 32 between the two calls (worse), CONTEXT_ONLY callees (ctx2). Only 532 vs 536 is the end nop; the rest is s2/s3 (tx/ty) and s0/s1 (x1/y1) naming plus the h*32 schedule. */
 extern u64 **D_00FA66D8;
 extern s32 D_00FA66DC;
@@ -41,7 +42,7 @@ void func_00f632e8(s32 x, s32 y, void *str) {
     p[0] = x | ((u64)y << 16) | 0x100000000;
     p[1] = 5;
     p += 2;
-    p[0] = (x + w * 16) | ((u64)(y + h * 32) << 16) | 0x100000000;
+    p[0] = ((u64)(y + h * 32) << 16) | (x + w * 16) | 0x100000000;
     p[1] = 5;
     p += 2;
     func_00f66b90(p);
