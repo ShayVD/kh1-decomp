@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 837 -> 713, port.py of the wm twin func_00f6f2a8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* score 837: gb port of wm f6f2a8 via portmap2; same remaining diffs. Round 25 wwm2. */
 typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
 typedef struct { u8 pad[16]; s32 x10; } Win;
@@ -42,7 +43,7 @@ extern s32 D_00F705D0;
 extern s32 D_00F705D4;
 extern Lay D_00F711B0;
 extern s16 D_00F711D8[];
-extern u16 D_00FB5960[];
+extern u16 D_00F711E0[];
 extern s16 D_00F829A8[];
 extern s8 D_00F829B0[];
 extern s16 D_00F829B8[];
@@ -59,7 +60,7 @@ extern s32 D_00F82AF0;
 extern s32 D_00F82AF4;
 void func_0011d768(s32);
 Item *func_001bc4e0(void);
-s32 func_001bc510(void);
+s32 func_001bc510(void); CONTEXT_ONLY s32 func_001bc510() { return 0; }
 void func_001bd7f8(s32);
 s32 func_001be278(void);
 void func_001be320(s32);
@@ -73,16 +74,16 @@ s32 func_0024d408(void);
 void func_0024e468(s32);
 s32 func_00f20018(void);
 s32 func_00f41d58(s32);
-Ic *func_00f43388(void);
+Ic *func_00f43388(void); CONTEXT_ONLY Ic * func_00f43388() { return 0; }
 void func_00f43cf0(s32);
 void func_00f43d68(Win *);
 void func_00f444b8(Ic *, f32, f32);
 void func_00f444d8(s32, s32, s32);
 Win *func_00f445a8(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00f45e80(void);
+s32 func_00f45e80(void); CONTEXT_ONLY s32 func_00f45e80() { return 0; }
 void func_00f47c88(void *);
 void func_00f4aa70(void);
-void func_00f4cdb8(void);
+void func_00f4cdb8(void); CONTEXT_ONLY void func_00f4cdb8() {}
 void func_00f4d880(Ic *, s32);
 
 #define MAKE(n, nm) \
@@ -106,20 +107,20 @@ void func_00f4d880(Ic *, s32);
         (*pp)->x4 = 0; \
     } \
     D_00F829B0[n] = n; \
-    D_00F829B8[n] = D_00FB5960[n];
+    D_00F829B8[n] = D_00F711E0[n];
 
 void func_00f481b0(void)
 {
-    Ic *icons[4];
+    s32 v;
+    Item *items;
+    u32 t;
     Ic **pp;
+    Win *w;
+    Ic *icons[4];
+    s32 sel, old, n, i, k, x, cnt;
     s32 lay;
     s32 mode;
     Win *help;
-    Win *w;
-    Item *items;
-    s32 sel, old, n, i, k, x, cnt;
-    u32 t;
-    s32 v;
 
     sel = 0;
     mode = D_00F702F0;
@@ -133,11 +134,11 @@ void func_00f481b0(void)
         }
     }
     D_00F82AF0 = -999;
+    D_00F82AD0 = 0;
+    D_00F82AF4 = 0;
     D_00F711B0.x1e = cnt;
     D_00F711B0.xc = D_00F705A8;
     D_00F711B0.xe = D_00F705AC;
-    D_00F82AF4 = 0;
-    D_00F82AD0 = 0;
     lay = func_001f31a8(&D_00F711B0, 1);
     func_001f3dc0(D_00F829CC);
     func_00f445a8(4, 0, 2, 1, 0, 15, 3, 4, D_00F704A4, D_00F704A8, 0, D_00F704AC, 0, 0, 0, 0, 0, 256, mode);
@@ -147,15 +148,15 @@ void func_00f481b0(void)
     MAKE(1, 35)
     x += D_00F703EC;
     MAKE(2, 5)
-    x += D_00F703EC;
     n = 3;
+    x += D_00F703EC;
     if (func_00f45e80() >= 3) {
         MAKE(n, 7)
         n++;
     }
     help = func_00f445a8(4, 2, 0, 1, 0, D_00F70518, D_00F829B8[sel], 0, D_00F7051C, D_00F70520, 0, 0, 0, D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, func_00f20018() == 0 ? mode : 1);
-    D_00F82A28 = 128.0f;
     D_00F82AEC = D_00F829B0[sel];
+    D_00F82A28 = 128.0f;
     for (i = 0; i < n; i++) {
         func_00f444b8(icons[i], 256.0f, (f32)D_00F702F0);
         func_0024e468(2);
@@ -165,8 +166,8 @@ void func_00f481b0(void)
             func_0011d768(3);
             break;
         }
-        old = sel;
         t = D_002C5AD0.x8;
+        old = sel;
         if (((t | t >> 24) & 0x10) && sel == 0) {
             sel = n - 1;
         } else {
@@ -241,8 +242,8 @@ void func_00f481b0(void)
             switch (D_00F829B0[sel]) {
             case 0:
                 D_00F82AD0 = 1;
-                D_00F82AF0 = -999;
                 D_00F82AF4 = 0;
+                D_00F82AF0 = -999;
                 func_001f3dc0(lay);
                 while (D_00F82AF0 < -1) {
                     func_0024e468(1);
@@ -262,15 +263,15 @@ void func_00f481b0(void)
                 goto next;
             case 1:
                 D_00F82AD0 = 1;
-                D_00F82AF0 = -999;
                 D_00F82AF4 = 0;
+                D_00F82AF0 = -999;
                 func_001f3dc0(lay);
                 while (D_00F82AF0 < -1) {
                     func_0024e468(1);
                 }
                 if (D_00F82AF0 >= 0) {
-                    D_00F82AF4 = 1;
                     D_00F82A28 = 0.0f;
+                    D_00F82AF4 = 1;
                     func_00f444d8(2, 0, D_00F702F0);
                     func_00f444d8(0x13, 0, D_00F702F0);
                     func_0020be10(16);
@@ -345,8 +346,8 @@ void func_00f481b0(void)
                 D_00F82A28 = 128.0f;
                 func_00f444d8(2, 256, D_00F702F0);
                 v = func_001be278() + 1;
-                D_00F702D8 = v;
                 D_00F702DC = v;
+                D_00F702D8 = v;
                 goto next;
             }
         }
