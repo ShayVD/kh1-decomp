@@ -373,6 +373,8 @@ static s32 mvol(u16 reg) { return reg & 0x8000 ? 0x7FFF : (s16)(reg << 1); }
  * register changes inside one), into these sums per core and side; then the reverb and the master
  * volumes sample by sample.  The sums are the same as a sample-by-sample loop's. */
 #define MIX_MAX 256
+static int sd_deferred;
+static void publish_env(void);
 static s32 mix_dry[2][2][MIX_MAX], mix_wet[2][2][MIX_MAX];
 
 static void voice_render(Voice *__restrict__ v, int c, int n, int frames, s32 (*__restrict__ dry)[MIX_MAX], s32 (*__restrict__ wet)[MIX_MAX]) {
@@ -432,6 +434,7 @@ void kh1_spu2_mix(s16 *out, int frames) {
         out += 2 * n;
         frames -= n;
     }
+    if (sd_deferred) publish_env();
 }
 
 void kh1_spu2_reset(void) {
@@ -569,8 +572,89 @@ static u32 get_addr(u32 p) {
 
 static int sd_log_n;
 
+/* ---- the deferred mode (the Vita's two sound threads, host/vita/audio.c) ----
+ * The driver's ticks run on one thread and the mix on another, a few ticks behind.  The writes a tick
+ * makes (SetParam, SetSwitch, SetAddr, SetCoreAttr, ClearEffectWorkArea) go into a log with a mark at
+ * each tick's end, and the mixer applies one tick's worth before it mixes that tick's 200 samples.
+ * The driver's only read of the mix's state, GetParam ENVX (to find voices that have ended), answers
+ * the envelope the mixer published after its last tick.  Sound RAM transfers and the reverb's
+ * attributes still take effect at once.  The host runs everything on one thread, as before. */
+typedef struct {
+    u32 fn, a0, a1; /* fn 0: the end of a tick */
+} SdCmd;
+#define SD_LOG 32768 /* commands, a power of two */
+static SdCmd sd_log[SD_LOG];
+static volatile u32 sd_log_head, sd_log_tail, sd_marks_in, sd_marks_out;
+static volatile s32 env_pub[2][24];
+
+static void sd_apply(u32 fn, u32 a0, u32 a1) {
+    switch (fn) {
+    case 5: set_param(a0, a1); break;
+    case 7: set_switch(a0, a1); break;
+    case 9: set_addr(a0, a1); break;
+    case 11: if ((a0 & ~1u) == 2) core[a0 & 1].fx_on = (u16)(a1 != 0); break;
+    case 25: memset(&rv[a0 & 1], 0, sizeof rv[0]); break;
+    }
+}
+
+static void sd_push(u32 fn, u32 a0, u32 a1) {
+    u32 h = sd_log_head; /* never full: the tick thread waits for kh1_spu2_log_room first */
+    sd_log[h & (SD_LOG - 1)].fn = fn;
+    sd_log[h & (SD_LOG - 1)].a0 = a0;
+    sd_log[h & (SD_LOG - 1)].a1 = a1;
+    __sync_synchronize();
+    sd_log_head = h + 1;
+}
+
+void kh1_spu2_set_deferred(int on) {
+    int c, n;
+    for (c = 0; c < 2; c++)
+        for (n = 0; n < 24; n++) env_pub[c][n] = core[c].v[n].env;
+    sd_deferred = on;
+}
+
+/* the tick thread: room for one more tick's writes, and the mark at a tick's end */
+u32 kh1_spu2_log_room(void) { return SD_LOG - (sd_log_head - sd_log_tail); }
+void kh1_spu2_tick_mark(void) {
+    sd_push(0, 0, 0);
+    __sync_synchronize();
+    sd_marks_in++;
+}
+
+/* the mixer: apply the next tick's writes; 0 when the tick thread has not finished one yet */
+int kh1_spu2_apply_tick(void) {
+    u32 t;
+    if (sd_marks_out == sd_marks_in) return 0;
+    __sync_synchronize();
+    for (t = sd_log_tail; t != sd_log_head; t++) {
+        const SdCmd *e = &sd_log[t & (SD_LOG - 1)];
+        if (e->fn == 0) { t++; break; }
+        sd_apply(e->fn, e->a0, e->a1);
+    }
+    __sync_synchronize();
+    sd_log_tail = t;
+    sd_marks_out++;
+    return 1;
+}
+
+static void publish_env(void) {
+    int c, n;
+    for (c = 0; c < 2; c++)
+        for (n = 0; n < 24; n++) env_pub[c][n] = core[c].v[n].phase == PH_OFF ? 0 : core[c].v[n].env;
+}
+
 /* libsd's exports by number (its import table in the driver) */
 u32 kh1_sd_call(int fn, const u32 *a) {
+    if (sd_deferred) {
+        switch (fn) {
+        case 5: case 7: case 9: case 11: case 25:
+            sd_push((u32)fn, a[0], a[1]);
+            return 0;
+        case 6:
+            if (((a[0] >> 8) & 0xFF) == 0x05 && ((a[0] >> 1) & 31) < 24) return (u32)env_pub[a[0] & 1][(a[0] >> 1) & 31];
+            break;
+        }
+    }
     switch (fn) {
     case 4: /* sceSdInit(flag) */
         memset(core, 0, sizeof core);

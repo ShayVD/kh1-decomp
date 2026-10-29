@@ -89,6 +89,40 @@ static void tick(int record) {
     }
 }
 
+/* the Vita's two threads: ticks on a second thread up to 8 ahead, SPU2 writes deferred to the mix */
+#include <pthread.h>
+void kh1_spu2_set_deferred(int on);
+void kh1_spu2_tick_mark(void);
+int kh1_spu2_apply_tick(void);
+static volatile u32 th_run, th_mixed, th_total;
+static void *tick_main(void *p) {
+    (void)p;
+    while (th_run < th_total) {
+        if (th_run - th_mixed >= 8) continue;
+        kh1_iop_tick();
+        kh1_spu2_tick_mark();
+        __sync_synchronize();
+        th_run++;
+    }
+    return 0;
+}
+static void threaded(u32 total) {
+    pthread_t th;
+    s16 buf[400];
+    th_total = total;
+    kh1_spu2_set_deferred(1);
+    pthread_create(&th, 0, tick_main, 0);
+    while (th_mixed < total) {
+        if (!kh1_spu2_apply_tick()) continue;
+        kh1_spu2_mix(buf, 200);
+        __sync_synchronize();
+        th_mixed++;
+        fwrite(buf, 4, 200, wav);
+        wav_bytes += 800;
+    }
+    pthread_join(th, 0);
+}
+
 static void wait_transfers(void) {
     int t;
     for (t = 0; t < 2400 && pending() != 0; t++) tick(0);
@@ -163,7 +197,8 @@ int main(int argc, char **argv) {
         /* func_0011e610: start track 0 at the game's full volume */
         q(0xC, 0, 0x3000, 0x3000, 0, 0, 0, 0);
         flush();
-        for (t = 0; t < total; t++) tick(1);
+        if (getenv("SNDPLAY_THREADS")) threaded(total); /* the Vita's split (host/vita/audio.c) */
+        else for (t = 0; t < total; t++) tick(1);
     } else {
         /* the boot bank (func_0011cd20): chunk 0 the SE tables, chunk 1 the waves, slot 2 */
         u8 *d = load(argv[4], &size);

@@ -5,11 +5,13 @@
  * (host/null/sound.c) answers them otherwise (no disc image, or the sound off).
  *
  * Two ways to run it:
- *   - with an audio thread (the Vita, host/vita/audio.c): kh1_snd_render runs the driver's 240 Hz
- *     tick every 200 samples and mixes; the game thread's queue sends (RPC 30, every frame) are
- *     copied into a FIFO and run by the audio thread before its next tick, so the game does not
- *     wait for the driver; the other calls (the game reads their answer) drain the FIFO and run at
- *     once.  One lock (kh1_snd_set_lock) keeps the two threads out of each other.
+ *   - with threads (the Vita, host/vita/audio.c): a tick thread runs the driver's 240 Hz ticks
+ *     (kh1_snd_tick_step) a few ticks ahead of a mixer thread (kh1_snd_mix_step), which applies
+ *     each tick's SPU2 writes and mixes its 200 samples (spu2.c's deferred mode); the game thread's
+ *     queue sends (RPC 30, every frame) are copied into a FIFO and run by the tick thread before its
+ *     next tick, so the game does not wait for the driver; the other calls (the game reads their
+ *     answer) drain the FIFO and run at once.  One lock (kh1_snd_set_lock) keeps the game thread
+ *     and the tick thread out of each other.
  *   - without one (the host runner): every call runs at once and kh1_snd_frame (kh1_host_vblank)
  *     runs four ticks a frame, mixing into an optional WAV file (KH1_HOST_SND=wav:FILE).
  *
@@ -37,7 +39,6 @@ static int snd_on;
 static int snd_threaded;
 static void (*snd_lock_fn)(void);
 static void (*snd_unlock_fn)(void);
-static int tick_left;
 
 /* the queued RPC 30 sends (threaded mode) */
 static u8 fifo_buf[SND_FIFO][SND_MSG];
@@ -86,7 +87,6 @@ int kh1_snd_start(void) {
         return -1;
     }
     printf("kh1-snd: sound driver LIBSSL.IRX (%u bytes) running, tick %u Hz\n", size, kh1_iop_timer_hz());
-    tick_left = 0;
     snd_on = 1;
     return 0;
 }
@@ -104,7 +104,7 @@ static void drain(void) {
     }
 }
 
-/* PlatSifCallRpc for server 17 */
+/* PlatSifCallRpc for server 17 (from the game thread) */
 void kh1_snd_rpc(unsigned num, void *send, int ssize, void *recv, int rsize) {
     if (ssize > SND_MSG) ssize = SND_MSG;
     if (snd_threaded && num == 30 && send && ssize > 0) {
@@ -129,25 +129,44 @@ void kh1_snd_rpc(unsigned num, void *send, int ssize, void *recv, int rsize) {
     unlock();
 }
 
-/* the audio thread: `frames` 48 kHz stereo samples, the driver's ticks between them */
-void kh1_snd_render(s16 *out, int frames) {
+/* ---- the Vita's two threads (host/vita/audio.c) ----
+ * The tick thread runs the driver's ticks (and the queued sends before each) up to SND_AHEAD ticks
+ * ahead of the mixer; spu2.c's deferred mode logs each tick's writes to the SPU2, and the mixer
+ * applies one tick's writes and mixes its 200 samples. */
+#define SND_AHEAD 8 /* ticks: 33 ms */
+static volatile u32 ticks_run, ticks_mixed;
+void kh1_spu2_set_deferred(int on);
+u32 kh1_spu2_log_room(void);
+void kh1_spu2_tick_mark(void);
+int kh1_spu2_apply_tick(void);
+
+void kh1_snd_threads_begin(void) {
+    lock();
     snd_threaded = 1;
-    while (frames > 0) {
-        int n;
-        lock();
-        if (tick_left == 0) {
-            drain();
-            kh1_iop_tick();
-            kh1_snd_ticks++;
-            tick_left = SND_TICK_SAMPLES;
-        }
-        n = frames < tick_left ? frames : tick_left;
-        kh1_spu2_mix(out, n);
-        tick_left -= n;
-        unlock();
-        out += 2 * n;
-        frames -= n;
-    }
+    kh1_spu2_set_deferred(1);
+    unlock();
+}
+
+/* the tick thread: 1 when it ran a tick, 0 when it is far enough ahead (or the log is full) */
+int kh1_snd_tick_step(void) {
+    if (ticks_run - ticks_mixed >= SND_AHEAD || kh1_spu2_log_room() < 4096) return 0;
+    lock();
+    drain();
+    kh1_iop_tick();
+    kh1_snd_ticks++;
+    kh1_spu2_tick_mark();
+    unlock();
+    ticks_run++;
+    return 1;
+}
+
+/* the mixer: the next tick's SND_TICK_SAMPLES 48 kHz stereo samples; 0 when no tick is ready */
+int kh1_snd_mix_step(s16 *out) {
+    if (!kh1_spu2_apply_tick()) return 0;
+    kh1_spu2_mix(out, SND_TICK_SAMPLES);
+    __sync_synchronize();
+    ticks_mixed++;
+    return SND_TICK_SAMPLES;
 }
 
 /* ---- the host runner: four ticks a frame, an optional WAV file ---- */

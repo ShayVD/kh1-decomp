@@ -272,14 +272,20 @@ Nothing here was compared against a console recording.
 
 - The host runner (`KH1_HOST_SND=iop`, or `wav:FILE` to also write what it plays) runs every call at once
   and four ticks a vblank (host/null/main.c).
-- The Vita (host/vita/audio.c) uses two threads. A mixer runs the ticks and the mix ahead of the output
-  into a ring of 85 ms, at a lower priority than the game's threads and on any core (config.txt
-  `sndcore=` pins it), so it only takes time the game leaves. An output thread, paced by sceAudioOut,
-  copies 256 samples at a time from the ring and plays silence for any gap the mixer has not filled
-  (counted as "short" on the watchdog's sound line). The game thread's per-frame queue send (RPC 30)
-  goes into a 16-deep FIFO and returns at once; the mixer runs the FIFO before each tick. The other
-  RPCs (the game reads their answer) take the lock, drain the FIFO and run at once. One
-  SceKernelLwMutex keeps the threads apart. A sound the game starts plays the ring's length later.
+- The Vita (host/vita/audio.c) uses three threads. A tick thread runs the driver's ticks up to 8 ticks
+  (33 ms) ahead of a mixer thread. spu2.c's deferred mode logs each tick's SPU2 writes (SetParam,
+  SetSwitch, SetAddr, SetCoreAttr, ClearEffectWorkArea) with a mark at the tick's end, and the mixer
+  applies one tick's writes, then mixes its 200 samples into a ring 64 ms ahead of the output. Both
+  threads run below the game's threads on any core, so they take the time the game leaves on two cores
+  at once. The driver's only read of the mix's state, GetParam ENVX (2,402 reads in 30 s of music110;
+  nothing else is read), answers the envelope the mixer published after its last tick. Sound RAM
+  transfers and the reverb's attributes still take effect at once. An output thread, paced by
+  sceAudioOut, copies 256 samples at a time from the ring and plays silence for any gap (counted as
+  "short" on the watchdog's sound line). The game thread's per-frame queue send (RPC 30) goes into a
+  16-deep FIFO and returns at once; the tick thread runs the FIFO before each tick. The other RPCs (the
+  game reads their answer) take the lock, drain the FIFO and run at once. A sound the game starts
+  plays about 100 ms later. `SNDPLAY_THREADS=1` runs tools/host/sndplay.c the same way; over 30 s of
+  music110 its output is the same as the one-thread run.
 - First Vita run (2026-10-29, the first version: one thread on core 2 above the GPU thread): once the
   title music started, the thread needed about 80% of core 2 (4.7 s of 6 s for 19 voices). It fell behind,
   so the sound broke up, and it starved the GPU frame's thread, so the picture lagged. Since then:
@@ -300,6 +306,10 @@ Nothing here was compared against a console recording.
   Each one is patched only when an FNV-1a of its relocated words matches the known LIBSSL.IRX, so
   another driver is still interpreted, and `KH1_HOST_IOP=nonative` turns them off. The output is the same
   byte for byte (sndplay over music110.dat; the Dive run's WAV and log).
+- Third Vita run (build c): no lag; the title's music still left the one sound thread busy the whole
+  time and 5-16 buffers in 400 short in some 2 s windows; the New Game load into Dive (game, GS worker
+  and sound all busy for about 10 s) 17-61 short. Hence the split of the ticks and the mix onto two
+  threads above.
 - Cost on the host: about 2.5 million IOP instructions a second of sound over the Dive run (3.7 G in
   25 minutes), plus the mix. **Not measured on a Vita yet** after these changes; the watchdog's sound
   line (vita-build.md "Sound") prints the mixer's milliseconds per 2 s.
