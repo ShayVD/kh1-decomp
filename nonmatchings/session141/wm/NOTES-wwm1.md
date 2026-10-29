@@ -205,3 +205,28 @@ f55d78 (120). f2cfd8 unchanged at 6.
   func_00f387a8 (an unmatched neighbour).
 - Lerp loops (f55d78/f56538) need the m[4] array (gcc 2.96 keeps arrays in
   memory); the remaining gap is spilled induction variables.
+
+## Round 5 (base 9ef986d)
+
+Matched: f21bc8, f4db70, f20950.
+
+Near misses saved (words left): f355a8 (4), f5e178 (4, twin of f355a8),
+f4b1e8 (11), f5d498 (13), f4b7d8 (29), f4b258 (31), f5e710 (54),
+f4d9c0 (67), f5bba0 (68), f4c610 (69), f27ff0 (71).
+Not started: f5e540 (old r3 draft at 80 words), f24ac8/f24c80/f24380/
+f24738/f24900 family.
+
+### Round 5 tips
+
+- **Callee return type picks v0/v1.** f21bc8 matched after declaring
+  func_00f20a98 as returning s32 (unused result still changes allocation).
+- **128-bit args:** func_001c00e8's third arg is `kh1_u128 q`.
+- **`(a<<4) + (b<<4)` is not folded like `a*16 + b*16`.** f4db70 needed the
+  shift spelling, then source store order fixed register allocation.
+- **sprintf-style arg order:** func_001bef40(buf, fmt, name) in f20950;
+  the name table is a 2-pointer struct copied into a local.
+- **GS packet copies with in-order ld/sd alternating v0/v1** (f5e710) look
+  like a MIPS movstr block move, not by-pieces; struct/u64 copies so far get
+  scheduled. Unsolved.
+- f355a8/f5e178: only the order of two lui differs; worth a fresh idea since
+  fixing one fixes both.
