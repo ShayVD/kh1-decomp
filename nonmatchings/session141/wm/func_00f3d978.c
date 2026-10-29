@@ -1,4 +1,4 @@
-/* 98 words (648 vs 640), but only 2 instructions off; the rest is an offset shift. Collision scan over func_00f3b460 objects (f218d8 parity filter, f3af58 for f4<0, f3caf0 sphere then f3cb90 box when s->f200 > 1500, then func_0024e640 walk with func_00f3d300). Left: reorg fills (d == NULL uses beqz+li v0,255 in the target, beqzl here) and the target loads o->f256 into f13 in the h8 branch delay slot. hill2 over the f4/d/h2 test forms (2x7 min), a rad temp, and a goto for the d test. */
+/* 99 words (648 vs 640), score 40 (was 48): round 11 swapped the prototypes to func_00f3caf0(p, r, m[3], f256) and func_00f3cb90(p, r, pos, size, m) as in the matched sibling func_00f3d4d8. Still 2 instructions off; the rest is an offset shift plus one alignment nop. Left: reorg fills (d == NULL uses beqz+li v0,255 in the target, beqzl here) and the target loads o->f256 into f13 in the h8 branch delay slot. Tried: hill2 over the f4/d/h2 test forms (2x7 min), a rad temp, a goto for the d test, and four placements of s = o->s. */
 typedef struct { u8 b0; u8 pad1; u16 h2; u8 pad4[4]; u16 h8; } D3d978;
 typedef struct { u8 pad[176]; f32 pos[3]; f32 size[3]; f32 f200; } S3d978;
 typedef struct {
@@ -17,8 +17,8 @@ O3d978 *func_00f3b460(s32);
 s32 func_00f3b480(void);
 s32 func_00f218d8(void);
 s32 func_00f3af58(f32 *, f32);
-s32 func_00f3caf0(f32 *, f32 *, f32, f32);
-s32 func_00f3cb90(f32 *, f32 *, f32 *, f32 (*)[4], f32);
+s32 func_00f3caf0(f32 *, f32, f32 *, f32);
+s32 func_00f3cb90(f32 *, f32, f32 *, f32 *, f32 (*)[4]);
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 void *func_00f650f0(s32, S3d978 *);
 void func_0024e640(s32, s32, void (*)(A3d978 *), A3d978 *);
@@ -64,7 +64,7 @@ O3d978 *func_00f3d978(f32 *p, s32 mode, f32 r1, f32 r2) {
         if (r == 0.0f) {
             continue;
         }
-        if (!func_00f3caf0(p, o->m[3], r, o->f256)) {
+        if (!func_00f3caf0(p, r, o->m[3], o->f256)) {
             continue;
         }
         if (s->f200 > 1500.0f) {
@@ -77,7 +77,7 @@ O3d978 *func_00f3d978(f32 *p, s32 mode, f32 r1, f32 r2) {
             size[2] = s->size[2];
             size[3] = 1.0f;
             sceVu0ApplyMatrix(pos, o->m, pos);
-            if (!func_00f3cb90(p, pos, size, o->m, r)) {
+            if (!func_00f3cb90(p, r, pos, size, o->m)) {
                 continue;
             }
         }

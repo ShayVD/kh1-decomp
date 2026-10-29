@@ -366,3 +366,44 @@ lbu-1), f46750, f2c518.
 - f30d48's 11-store prologue is not a source-order problem: random orders,
   hill-climbing and chained assignments all bottom out at 13-14 words.
   The fix is probably in how the globals are declared, not the order.
+
+## Round 11
+
+Matched (9): f46750, f2c518, f39448, f27d18, f2e0b8, f218e8, f3d4d8,
+f2a1e0, f371d8.
+Near misses: f36bc0 (3 words, new file), f4c238 (70 words, a port of the gb
+twin's near miss with the same diff, new file), f3d978 (score 48 -> 40,
+header updated).
+
+### Round 11 tips
+
+- **gcc 2.96 rounds float literals down**: `1.2f` gives 0x3F999999, and
+  `6.283185006f` gives 0x40C90FDA (f2c518, f218e8). Check the constant bits
+  before blaming anything else.
+- **`if (arg != 0 && n > 0)` around a for loop** gives the duplicated
+  `blez` guard (f39448).
+- **Continue a loop index into the next loop** with `for (; i < 3; i++)`
+  (f27d18). Hoist a repeated expression such as `y + 128` into a local.
+- **Pure function-pointer-store functions** can be generated straight from
+  the asm with a short script (f46750, mk467.py).
+- **Argument evaluation order follows temps**: when the target sets a later
+  argument register before an earlier one, load that argument into a temp
+  first. `g = D_00F864C0->f1344;` before the `&=` store moved obj to a3
+  (f2e0b8). `t = func_00f20048(...); id += 20001; f294a0(id, 13824, t);`
+  put `li a1` in the delay slot (f2a1e0).
+- **Prototype parameter order for float args**: with EE floats in f12/f13,
+  `func_00f3caf0(s32, f32, f32 *, f32)` and
+  `func_00f3cb90(s32, f32, f32 *, f32 *, f32 (*)[4])` matched f3d4d8. The
+  (ptr, ptr, f32, f32) order compiles but schedules f12 after a1.
+- **A dead store can be real**: f218e8 stores 0 to rot[1] and then the
+  computed value. Writing `rot[3] = 1; rot[0] = rot[1] = rot[2] = 0;` and
+  then `rot[1] = ...` (as separate statements) matched.
+- **A switch with case bodies that only fall to a common store**: in
+  f218e8, `switch (x) { case 0: f(); break; case 1: g(); break; } x = -1;`
+  matched. Per-case `x = -1` did not.
+- **Inner struct members are not the same as pointer to them**: in f371d8
+  the loop induction pointer was based on a mid-struct field (base+224).
+  `q = &D[i].s;` (a pointer to a sub-struct starting at that field) and
+  `q->field` accesses matched. `D[i].s.field` with no pointer did not.
+- **Duplicated `b; lui` after an if-then** came from `id += 20001` written
+  in both arms of the if (f2a1e0).
