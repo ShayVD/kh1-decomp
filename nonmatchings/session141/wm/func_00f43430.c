@@ -1,4 +1,4 @@
-/* score 8 (6 words; was 10). Round 30 wwm2: a CONTEXT_ONLY definition of func_00f41320 above the function (the call becomes nothrow) fixes the beqz/beqzl after func_00f40c98. Left: s5/s6 for the D_00F9B1C8/D_00F9B1CC addresses and the buf-loop move; hill2 over the four store blocks found nothing more. Earlier header: 7 words (656 bytes). Structure right (cross-jumped f46cb8(64,1)+4 stores tails, buf loop via *p++, main wait loop). Left: s5/s6 swapped for D_00F9B1C8/D_00F9B1CC addresses, buf-loop move order, and beqz vs beqzl after func_00f40c98. hill2 over the 4 store blocks plus loop/condition forms (2x5 min), and a 10-min permuter run (best was not semantics-preserving). Round 10: hill2 over loop forms (while/for/do, five shapes of the B2C0/f41c28 test, five f40c98 forms), f41320 prototypes and p = buf placements: still 7. Round 17 (wwm1): a CONTEXT_ONLY func_00f41320 above it takes this to 6 words (two addiu bases and two stores swapped); ctx2.py singles and pairs. */
+/* score 2 (2 words; was 8). Round 34 wwm2: the -dg dump showed global-alloc giving the D_00F9B1CC address (5 refs, live 128) s5 before D_00F9B1C8 (live 136). Swapping the two stores in the init block and in all three branches flips them (4 words); then enumerating the four branch stores (24 orders for branches 1 and 3 together, 24 for branch 2) gave 2 with C4, C8, CC, AC in branches 1 and 3. Left: `move s0,v0` and `move s1,sp` before the buf loop are swapped; for-init, while, index, count-down, p placement and all 24 declaration orders do not change it. Earlier header: score 8 (6 words; was 10). Round 30 wwm2: a CONTEXT_ONLY definition of func_00f41320 above the function (the call becomes nothrow) fixes the beqz/beqzl after func_00f40c98. Left: s5/s6 for the D_00F9B1C8/D_00F9B1CC addresses and the buf-loop move; hill2 over the four store blocks found nothing more. Earlier header: 7 words (656 bytes). Structure right (cross-jumped f46cb8(64,1)+4 stores tails, buf loop via *p++, main wait loop). Left: s5/s6 swapped for D_00F9B1C8/D_00F9B1CC addresses, buf-loop move order, and beqz vs beqzl after func_00f40c98. hill2 over the 4 store blocks plus loop/condition forms (2x5 min), and a 10-min permuter run (best was not semantics-preserving). Round 10: hill2 over loop forms (while/for/do, five shapes of the B2C0/f41c28 test, five f40c98 forms), f41320 prototypes and p = buf placements: still 7. Round 17 (wwm1): a CONTEXT_ONLY func_00f41320 above it takes this to 6 words (two addiu bases and two stores swapped); ctx2.py singles and pairs. */
 typedef struct { u8 pad[32]; s32 x20; } S43430;
 extern S43430 D_00F87310;
 extern s32 D_002C5958, D_00F9B1C8, D_00F9B1CC, D_00F9B1C4, D_00F850AC, D_00F850E0, D_00F850D0;
@@ -40,8 +40,8 @@ void func_00f43430(void) {
     func_001c00e8(15, func_00f42f20, 0);
     func_00f309d0(0);
     func_00f344e0(0);
-    D_00F9B1CC = 0;
     D_00F9B1C8 = 0;
+    D_00F9B1CC = 0;
     D_00F9B1C4 = 0;
     D_00F850AC = 0;
     D_00F9B2D0 = func_00f3ff98(D_00F850E0, 0, D_00F850D0);
@@ -59,15 +59,15 @@ void func_00f43430(void) {
         func_00f344e0(0);
         func_00f46cb8(64, 1);
         D_00F9B1C4 = 1;
-        D_00F850AC = 1;
         D_00F9B1C8 = 1;
         D_00F9B1CC = 1;
+        D_00F850AC = 1;
     } else if (D_00F850C0 == 0) {
         func_001c0310(-1, func_00f40f58, 60);
         func_00f46cb8(64, 1);
         D_00F9B1C4 = 1;
-        D_00F9B1CC = 1;
         D_00F9B1C8 = 1;
+        D_00F9B1CC = 1;
         D_00F850AC = 1;
         func_00f309d0(0);
         D_002C5958 |= 8;
@@ -79,9 +79,9 @@ void func_00f43430(void) {
     } else {
         func_00f46cb8(64, 1);
         D_00F9B1C4 = 1;
-        D_00F850AC = 1;
         D_00F9B1C8 = 1;
         D_00F9B1CC = 1;
+        D_00F850AC = 1;
     }
     while (1) {
         if (D_00F8C23C == 0) {

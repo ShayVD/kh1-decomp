@@ -1,4 +1,4 @@
-/* 15 words left (round 12): s2/s3 swap between obj and the &s->m address. Tried 12 declaration orders, an sm pointer, ternary/else/goto-out forms, 10 min permuter (no gain). Sibling func_00f2e510 matched with the same skeleton, compare against ovl/wm/hand/func_00f2e510.c. */
+/* score 10 (6 words; was 15/30). Round 34 wwm2: the -dg dump showed obj (pseudo 86: 15 refs, live 300) and the s->m address (pseudo 122: 6 refs, live 75) nearly tied, with s->m winning s2. `f32 (*sm)[4] = s->m` set right after the `ok:` label makes it live longer, so obj takes s2 as in the original. Left: the original computes s+32 inside the loop (in the beqz delay slot), ours before it; setting sm again in the loop is CSE'd away and sm = 0 at ok: undoes the fix. Earlier header: 15 words left (round 12): s2/s3 swap between obj and the &s->m address. Tried 12 declaration orders, an sm pointer, ternary/else/goto-out forms, 10 min permuter (no gain). Sibling func_00f2e510 matched with the same skeleton, compare against ovl/wm/hand/func_00f2e510.c. */
 typedef struct { u8 b0; u8 pad[13]; u16 h14; u16 pad2; s16 h18; u8 pad3[12]; f32 m[4][4]; u8 pad4[32]; s32 idx; } A2dc50;
 typedef struct { s32 a; s32 b; u8 pad[24]; } B2dc50;
 typedef struct { s32 f0; s32 f4; u8 pad[72]; f32 v80[4]; } O2dc50;
@@ -31,6 +31,7 @@ void func_00f2dc50(s32 arg) {
     f32 v;
     f32 vmax;
     f32 acc;
+    f32 (*sm)[4];
 
     s = func_00f2cae8();
     v = D_002BBDEC * 2000.0f;
@@ -57,6 +58,7 @@ void func_00f2dc50(s32 arg) {
         obj = NULL;
     }
 ok:
+    sm = s->m;
     done = 0;
     cnt = 0;
     while (func_00f680c0(s->h14)) {
@@ -67,7 +69,7 @@ ok:
         if (s->b0 == 0) {
             return;
         }
-        sceVu0CopyMatrix(m, s->m);
+        sceVu0CopyMatrix(m, sm);
         m[0][0] = -m[0][0];
         m[0][1] = -m[0][1];
         m[0][2] = -m[0][2];
@@ -96,7 +98,7 @@ ok:
         m[2][0] = -m[2][0];
         m[2][1] = -m[2][1];
         m[2][2] = -m[2][2];
-        sceVu0CopyMatrix(s->m, m);
+        sceVu0CopyMatrix(sm, m);
         if (s->h18 & 1) {
             func_00f68ab0(s->h14);
             while (func_00f680c0(s->h14)) {

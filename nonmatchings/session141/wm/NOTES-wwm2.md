@@ -672,3 +672,25 @@ Rows 100-130:
 Not saved:
 - hill2 lowered the word count but raised the score for f22358, f34998, f53af0, f59b30 and f6edd8.
 - No change at all: f4bdf8, f52ab0, f55d78, f5a4f0, f60cf0.
+
+## Round 34 (wwm2, register dispositions with -dl -dg)
+
+No matches. To get the dumps I compile with `ee-gcc -c -x c -O2 -G0 -Iinclude -dl -dg` from a scratch folder (/tmp/claude-0/s141/r34/dump.sh). Then I read the `Register N used ... across L insns` lines in .lreg and the dispositions table in .greg. Allocation order follows priority = floor_log2(refs) * refs / live length. Higher priority is allocated first and takes the lower register.
+
+| Function | Before | Now | Fix |
+| --- | --- | --- | --- |
+| f78458 | 6 words, score 11 | 2, score 3 | the constant 8 (local-alloc, live 30 insns) beat the %hi of D_0108F568 (live 32) for t4. Writing `D_0108F1A0 = 8;` twice (early and late) flips them; then I enumerated the order of seven stores |
+| f43430 | 6, score 8 | 2, score 2 | the D_00F9B1CC and D_00F9B1C8 addresses are global pseudos with 5 refs each, so live length decides. Swapping the two stores everywhere (init and all three branches) flips s5/s6; then I enumerated the branch store order |
+| f2dc50 | 15, score 30 | 6, score 10 | obj (15 refs, live 300) and &s->m (6 refs, live 75) were almost tied. `sm = s->m` right after `ok:` makes &s->m live longer, so obj wins s2 |
+
+Still open:
+- **f387a8 (7 words):**
+  - The three float constants are local-alloc pseudos and already get the original's f20/f21/f22.
+  - Constant locals (`f32 kp = 200.0f` etc., three positions, all definition and declaration orders, with and without int locals) fold back to constants and give 104 words when combined with the original's store order.
+  - Duplicate stores (each misplaced field duplicated at every position in its block, then pairs of the 40 best) stay at 7.
+- **f20d08 (10 words):** D_00F8512C's address (3 refs, live 14) and value (3 refs, live 4) are global pseudos. The value wins v0. Making the value live longer (reading it into a local earlier) or using a pointer changes the code shape and gives 76 words or more.
+- **f37770 (s5/s6):** n (7 refs, live 181) has priority 0.077 against 0.0106 for &rot (3 refs, live 284). The gap is too wide to close by reordering; the original probably keeps &rot alive in some other way. Not tried further.
+- **f33270 and f422c0:** not reached this round.
+
+Leads:
+- docs/overlays.md (Batch 4 patterns) says that `ld; dsrl32; andi 0xffff; andi 0xf` reads are u16 bitfields (`lo:8, kind:4, hi:4`) in a struct with a u64 member. That is exactly f4c610's leftover (Round 32), so it should be the next thing to try there.
