@@ -8,6 +8,5 @@ func_0010d470	nonmatchings/session12/s12w6__0010d470_179w_tlcs.c	src/hand/	179
 func_00110618	nonmatchings/session130/s130__00110618_90w_aznum.c	src/hand/	90
 func_001636d0	nonmatchings/session23-match/s23m3__001636d0_394w_b2.c	src/hand/nostrict/	394
 func_001c62a0	nonmatchings/session129/s129__001c62a0_14w_lk0.c	src/hand/nostrict/	14
-func_001fd858	nonmatchings/session13/s13w3__001fd858_1w_flagged.c	src/hand/nostrict/	1
 func_00200e28	nonmatchings/session144-match/s144__00200e28_23w_climb.c	src/hand/nostrict/	23
 sceGsDefDispEnv	nonmatchings/session21/s21m1__00265608_4w_pins.c	src/sdk/gcc991111/	4

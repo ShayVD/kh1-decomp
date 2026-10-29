@@ -779,3 +779,13 @@ from dead code. Read the allocation first, then find the source change.
   (`(f32, f32 *, V3 *)`) is the same call as libvu0's (v0, v1, f32) with the float last, and
   DropShadowMatrix's `(m, lp, 0, a, b, c)` is `(m, lp, a, b, c, 0)`; reordering compiled the same here.
 - libgraph's `short` parameters gave the same code as opimage.c's (s32, u32, u8, ..) pointer view.
+
+## Session 145
+
+- **Matched 001fd858** (6,982): the 1-word `bnez` / `bnezl` was not reorg liveness after all but the CONTEXT_ONLY copy
+  of its callee func_001fe408 defined above it. gcc 2.96 treats a call to a function whose body it has already seen
+  as nothrow, which changes reorg's view of the call; with a prototype above and the copy below, the flagged draft
+  matches (docs/overlays.md "Branch-likely vs plain branch", found on the overlays). So s13w4's "no source change on
+  this path can make reorg annul" was right about the path and wrong about the cause. When a draft's only miss is a
+  likely / plain branch near a call, move the callee copies below it first.
+
