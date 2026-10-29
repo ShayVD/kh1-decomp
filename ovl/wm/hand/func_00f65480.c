@@ -1,4 +1,6 @@
-/* near miss: 12 words, score 22. Left: the stage-1 bound must be in v0 (ours v1) so the an == 0 exit isn't jump-threaded past the nbones reload; spill-store order at entry. */
+/* wm.x func_00f65480: matched by hand. */
+#include "ovl.h"
+
 typedef struct { f32 rot[4]; f32 pos[4]; f32 sc[4]; s32 parent; u8 pad34[12]; } MdlBone;
 typedef struct { s32 count; s32 off; u8 pad8[32]; } MdlPart;
 typedef struct { s32 off; s32 bone; u8 pad8[32]; } MdlEnt;
@@ -8,21 +10,23 @@ typedef struct { u8 chan; u8 pad[3]; void *curve; } AnmKey;
 typedef struct { u16 bone; u16 nkeys; u8 pad4[4]; AnmKey *keys; } AnmTrack;
 typedef struct { u8 pad0[8]; u32 count; AnmTrack *tracks; } Anm;
 typedef struct { f32 rot[4]; f32 pos[4]; f32 sc[4]; } Pose;
-extern u32 D_00F6C9C4;
-f32 func_00f3dc50(f32, void *);
-void *func_00f3f548(void *, s32, MdlWork *, s32, void *, s32);
-MdlWork *func_00f3e388(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, Anm *an, s32 *arg5, f32 time) {
+extern u32 D_00FB1144;
+f32 func_00f64d48(f32, void *);
+void *func_00f66640(void *, s32, MdlWork *, s32, void *, s32);
+MdlWork *func_00f65480(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, Anm *an, s32 *arg5, f32 time) {
     Pose ps;
     OvlMtx unit;
     OvlMtx r;
     OvlMtx t;
+    MdlHdr *hh;
     MdlPart *pt;
     MdlBone *b;
     s32 i, j, k;
     b = (MdlBone *)((u8 *)h + h->bones);
     pt = (MdlPart *)((u8 *)h + h->parts);
     PlatVu0UnitMatrix(unit);
-    for (i = 0; i < h->nbones; i++) {
+    hh = h;
+    for (i = 0; i < hh->nbones; i++) {
         PlatVu0RotMatrixX(r, unit, b[i].rot[0]);
         PlatVu0RotMatrixY(r, r, b[i].rot[1]);
         PlatVu0RotMatrixZ(r, r, b[i].rot[2]);
@@ -51,7 +55,7 @@ MdlWork *func_00f3e388(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, Anm
                 pp->sc[1] = b[bone].sc[1];
                 pp->sc[2] = b[bone].sc[2];
                 for (j = 0, ky = tr->keys; j < tr->nkeys; j++, ky++) {
-                    ((f32 *)pp)[ky->chan] = func_00f3dc50(time, ky->curve);
+                    ((f32 *)pp)[ky->chan] = func_00f64d48(time, ky->curve);
                 }
                 for (k = 0; k < 3; k++) {
                     while (ps.rot[k] > 180.0f) ps.rot[k] -= 360.0f;
@@ -67,25 +71,25 @@ MdlWork *func_00f3e388(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, Anm
             }
         }
     }
-    for (i = 0; i < h->nbones; i++) {
+    for (i = 0; i < hh->nbones; i++) {
         s32 p = b[i].parent;
         if (p >= 0) {
             PlatVu0MulMatrix(w[i].m2, w[p].m2, w[i].m2);
             PlatVu0MulMatrix(w[i].m, w[p].m, w[i].m);
         }
     }
-    for (j = 0; j < h->nparts; j++, pt++) {
+    for (j = 0; j < hh->nparts; j++, pt++) {
         s32 tt = 0;
         MdlEnt *e;
         if (arg3) {
             tt = arg3[j];
         }
-        e = (MdlEnt *)((u8 *)h + pt->off);
+        e = (MdlEnt *)((u8 *)hh + pt->off);
         for (i = 0; i < pt->count; i++, e++) {
-            if (D_00F6C9C4 & (1 << i)) {
-                out[j] = func_00f3f548(out[j], a1, &w[e->bone], tt, (u8 *)h + e->off, arg5[j]);
+            if (D_00FB1144 & (1 << i)) {
+                out[j] = func_00f66640(out[j], a1, &w[e->bone], tt, (u8 *)hh + e->off, arg5[j]);
             }
         }
     }
-    return &w[h->nbones];
+    return &w[hh->nbones];
 }
