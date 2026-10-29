@@ -926,7 +926,7 @@ static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u
     uint32x4_t ru, bad = z;
     uint32x2_t any;
     float32x4_t p = vmulq_f32(a, b), r;
-    u32 raw[4], f, m = 0;
+    u32 m;
     switch (k) {
     case K_ADD: r = vaddq_f32(a, b); break;
     case K_SUB: r = vsubq_f32(a, b); break;
@@ -943,17 +943,24 @@ static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u
     ru = vreinterpretq_u32_f32(r);
     if (macf) bad = vorrq_u32(bad, vceqq_u32(vandq_u32(ru, abs7), z));
     bad = vandq_u32(bad, act);
-    any = vorr_u32(vget_low_u32(bad), vget_high_u32(bad));
-    if (vget_lane_u32(vpmax_u32(any, any), 0)) return 0;
-    VU_ST(t, vfo(r));
-    if (!macf) return 1;
-    VU_ST(raw, ru);
-    for (f = 0; f < 4; f++) {
-        u32 bit = 3 - f;
-        if (!(dest >> bit & 1)) continue;
-        if ((raw[f] & 0x7F800000u) == 0x7F800000u) m |= 0x1000u << bit;
-        if (t[f] >> 31) m |= 0x10u << bit;
+    if (!macf) {
+        any = vorr_u32(vget_low_u32(bad), vget_high_u32(bad));
+        if (vget_lane_u32(vpmax_u32(any, any), 0)) return 0;
+        VU_ST(t, vfo(r));
+        return 1;
     }
+    { /* session 147: the MAC bits summed on NEON with a bad lane as 0x10000, one transfer to the core instead of
+       * a store and a core load of each field (fout()'s O for an infinity, S for the sign; Z / U never here) */
+        static const u32 wo[4] = { 0x8000, 0x4000, 0x2000, 0x1000 }, ws[4] = { 0x80, 0x40, 0x20, 0x10 };
+        uint32x4_t ex = vdupq_n_u32(0x7F800000u);
+        uint32x4_t ov = vandq_u32(vceqq_u32(vandq_u32(ru, ex), ex), VU_LD(wo));
+        uint32x4_t sg = vandq_u32(vtstq_u32(ru, vdupq_n_u32(0x80000000u)), VU_LD(ws));
+        uint32x4_t v = vorrq_u32(vandq_u32(vorrq_u32(ov, sg), act), vandq_u32(bad, vdupq_n_u32(0x10000u)));
+        any = vadd_u32(vget_low_u32(v), vget_high_u32(v));
+        m = vget_lane_u32(vpadd_u32(any, any), 0);
+    }
+    if (m >> 16) return 0;
+    VU_ST(t, vfo(r));
     *macf |= m;
     return 1;
 }
@@ -983,7 +990,8 @@ static __inline__ u32 vu_clipw(const u32 *s, const u32 *t) {
     return ((clip_last << 6) | vget_lane_u32(h, 0)) & 0xFFFFFF;
 }
 static __inline__ void vu_put(u32 *t, const u32 *u, u32 dest) {
-    VU_ST(t, vbslq_u32(VU_LD(vu_lanes[dest & 15]), VU_LD(u), VU_LD(t)));
+    if ((dest & 15) == 15) VU_ST(t, VU_LD(u));
+    else VU_ST(t, vbslq_u32(VU_LD(vu_lanes[dest & 15]), VU_LD(u), VU_LD(t)));
 }
 static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
     static const f32 inv[4] = { 1.0f, 1.0f / 16.0f, 1.0f / 4096.0f, 1.0f / 32768.0f };

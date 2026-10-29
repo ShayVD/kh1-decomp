@@ -1016,6 +1016,23 @@ the Dive: `ref` data at 0x846a3c30, in the main thread's stack above the corouti
 The Vita now hands the whole stack to `kh1_costack_stack` and the walk owns all of it. **Not yet checked on a
 Vita** (3d-zl).
 
+### Round 2: moves and the MAC flag on NEON (session 147)
+
+3d-zk's `vu1 programs:` line later in the Dive: P13 ~740 ms per 2 s at 53 ns a pair, P0 at 64 ns, P18 at ~48.
+P13's loop (a 4-FMAC transform, an FMAC with the MAC flag, LQ / SQ, a JR table) still crossed between NEON and
+the core every pass. Two changes, the output the same:
+
+- **LQ / LQI / LQD, SQ / SQI / SQD and MOVE as one NEON merge** (vu1_translate.py emits `vu_put(dst, src,
+  dest)`, a plain store for xyzw): before, a field-by-field copy through core registers, so an SQ of a VF an FMAC
+  had just written read NEON's stores from the core.
+- **The MAC flag summed on NEON** (vu1.c `vu_ek`): the O and S bits of the fields in dest, weighted, with a lane
+  the scalar form must take as 0x10000, added across the lanes and moved to the core once; before, the result
+  went to memory and four core loads built the bits.
+
+Checked: vu1neon_test (the same 1,421,531 of 2M cases on four lanes as before, the MAC bits equal; dropping the
+O term is caught); the worker-order run with VU1 to frame 6500 the same 130 digests and VU1 counts as main's
+on x86 and ARM. **Not yet measured on a Vita** (3d-zm).
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
