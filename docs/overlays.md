@@ -365,7 +365,22 @@ and sched1 had hoisted both constant loads, so changing the order of statements 
 Writing the first single-use temp inline matched it:
 `s->c[0] = (...) + func_00f20020() * 50.0f - 25.0f;` instead of `a = func_00f20020() * 50.0f;`
 on the line before. For a register swap between two long-lived values, try inlining a temp that
-is used only once, on the next line (/tmp/claude-0/s141/wwm1/inl.py does it one temp at a time).
+is used only once, on the next line (tools/ovl/inl.py does it one temp at a time).
+
+`tools/ovl/inl.py OVL DRAFT` takes each local temp that is set with `v = EXPR;` and read only once
+more, on the next statement line. One temp at a time, it writes EXPR inline at that read, in
+parentheses, and runs hand.py try. It skips names that are not declared in the function, so it never
+removes a global store. It does not check side effects, so make sure the inlined expression
+(usually a call) does not now run after some other call before you keep a result. On f20820 it finds
+the match. Over all gb and wm drafts in round 22 it found nothing better.
+
+`tools/ovl/ifswap.py OVL DRAFT` takes each `if (C) {A} else {B}` at a single nesting level and tries
+`if (!C) {B} else {A}`. It flips a simple comparison directly (`==` to `!=`, `<` to `>=` and so on)
+and wraps anything else in `!(...)`. This changes which arm falls through, `beqz` vs `bnezl`, and the
+order of the arms in the output. `ONLY=12,40` applies only the sites at those line numbers, all
+together, and `OUT=path` saves that version. In round 22 it took wm f78978 from score 39 to 19,
+dkmovie f270c8 from 52 to 38, dktitle f228c8 from 398 to 378 and wm f6edd8 from 186 to 167. Keep a
+result only if hand.py's score goes down.
 
 **Orphan divide-by-zero check.** Sometimes the target has a `li vN,C; beqzl vN; break 7` with
 no `div` that uses vN, often next to a shift that does the real division. gcc 2.96 emits
