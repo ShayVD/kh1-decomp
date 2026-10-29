@@ -1,4 +1,4 @@
-/* Round 36 (wwm2): wm.x func_00f6cfa0 near miss: score 216 -> 188 (307 -> 427 words, 2168 vs 2160); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
+/* Round 36 (wwm2): wm.x func_00f6cfa0 near miss: score 216 -> 180 (307 -> 427 words, 2168 vs 2160); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
 /* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00FB58C8/D_00FB58D0 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00FB4A70) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct Win {
@@ -88,25 +88,25 @@ s32 func_00f6cfa0(void)
     sel = 0;
     lst[0] = 1;
     if (D_00FB4EB4 >= 0) sel = D_00FB4EB4;
-    lst[2] = 9;
     lst[5] = 13;
     lst[1] = 3;
-    codes[5] = 9;
-    D_0108F158.v[0] = D_00FB58E0.v[0];
     pw = w;
+    codes[0] = 1;
     codes[1] = 2;
     codes[2] = 5;
-    codes[0] = 1;
+    lst[2] = 9;
+    D_0108F158.v[0] = D_00FB58E0.v[0];
     lst[3] = 11;
+    D_0108F158.v[1] = D_00FB58E0.v[1];
+    y = D_00FB4B68;
     lst[4] = 213;
     codes[3] = 6;
-    D_0108F158.v[1] = D_00FB58E0.v[1];
     D_0108F158.v[2] = D_00FB58E0.v[2];
+    codes[5] = 9;
     D_0108F158.v[3] = D_00FB58E0.v[3];
-    codes[4] = 8;
     D_0108F158.v[4] = D_00FB58E0.v[4];
     D_0108F158.v[5] = D_00FB58E0.v[5];
-    y = D_00FB4B68;
+    codes[4] = 8;
     D_00FB4A50 = codes[sel];
     for (i = 0; i < 6; i++) {
         *pw = func_00f6a480();
@@ -126,13 +126,13 @@ s32 func_00f6cfa0(void)
         } else {
             (*pw)->b4 = 0;
         }
+        y += D_00FB4B6C;
         pl++;
         pw++;
-        y += D_00FB4B6C;
     }
     if (D_0108F19C == 0) {
-        D_0108F19C = 1;
         D_0108F1A0 = 0;
+        D_0108F19C = 1;
         func_0024e468(2);
         D_0108F1A0 = 16;
     }
@@ -151,9 +151,9 @@ s32 func_00f6cfa0(void)
             func_0011d768(2);
             func_00106880(30);
             func_0024e468(60);
+            D_0108F184 = 0;
             D_00FB4EBA = 3;
             D_00FB4EB4 = -1;
-            D_0108F184 = 0;
             func_00f4d528(0);
             for (;;) func_0024e468(1);
         }
@@ -217,8 +217,8 @@ top:
             func_0011d768(4);
             func_0020be10(16);
             if (D_00FB58C8[0] != 0) {
-                pl = D_00FB58D0;
                 pc = D_00FB58C8;
+                pl = D_00FB58D0;
                 do {
                     if (*pc & p->aA) {
                         if (w3 == 0) {
@@ -240,8 +240,8 @@ top:
                             func_0024e468(1);
                         }
                     }
-                    pc++;
                     pl++;
+                    pc++;
                 } while (*pc);
             }
             func_0020bda8(16);

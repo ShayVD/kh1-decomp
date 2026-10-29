@@ -726,3 +726,29 @@ Lessons:
 - **Aliasing sets the order of stores and loads:** stores through a pointer argument cannot move past a load of a global pointer. When the original stores before loading a global, write the stores first.
 - **A temp keeps an add order:** a sum written inline gets reassociated, while a separate temp (`o2 = off + 0x540`) keeps the original's order.
 - **Search by score:** when the word count and the score disagree, the score (aligned) is the better guide.
+
+## Round 36 (wwm2, hill3 on RANKING.md rows 100-130)
+
+I ran the score-ranked hill3 (/tmp/claude-0/s141/r35/hill3.py) on every draft in rows 100-130: 120 s each with seed 362 or 363, then a second 180 s pass (seed 364) on the biggest gainers. No matches. Seventeen drafts got a better score, and each new header says by how much:
+
+| Draft | Score | Draft | Score |
+|---|---|---|---|
+| f74f30 | 290 -> 190 | f2a708 | 179 -> 151 |
+| f6e278 | 268 -> 202 | f696a0 | 178 -> 166 |
+| f6ae68 | 245 -> 215 | f52ab0 | 185 -> 175 |
+| f6cfa0 | 216 -> 180 | f28a68 | 146 -> 138 |
+| f5a4f0 | 220 -> 196 | f60cf0 | 138 -> 136 |
+| f69fd0 | 183 -> 127 | f73eb0 | 150 -> 134 |
+| f5f940 | 205 -> 188 | f59b30 | 273 -> 259 |
+| f47b60 | 223 -> 211 | f625f0 | 217 -> 215 |
+| f6d810 | 236 -> 234 | | |
+
+No change: f56780, f55fe0, f53758, f77648, f4bdf8 (one word fewer, same score), f6edd8, f22358, f26810, f34998, f58bd0.
+
+`portall.py wm gb` found no new gb twins to port.
+
+**f55fe0 / f56780 (the func_00f4f6d8 call pair):** the matched callee ovl/wm/hand/func_00f4f6d8.c declares its parameters ints first: (id, pp, x, y, a4, scl, flag, ry, f1, s, f3). The drafts declare them in register order, with the floats third to fifth.
+- Every order that keeps the ints in order and the floats in order (126 of them, /tmp/claude-0/s141/r36/perms.py) was tried on f55fe0. None beats the draft's order (46). The callee's own order scores 66, because the mov.s $f12 then moves after t2.
+- The original puts `li a3,192` before `mov.s $f12`, and `mov.s $f12` before t1/t2. That fits no single parameter order, so the call scheduling comes from something else.
+
+**f55fe0, loop 2 s0/s1 swap:** in the dump, j (90 - i, 8 refs over 94 insns) gets s0 ahead of m (i + 90, 6 refs over 45 insns); the original has them the other way round. Single edits did not move it: j /= 2 in place, m /= 2 in place, m computed late as (i + 90) / 2, `68 + j / 2`, and j folded into its uses.

@@ -1,4 +1,4 @@
-/* Round 36 (wwm2): wm.x func_00f6e278 near miss: score 268 -> 204 (565 -> 446 words, 2816 vs 2824); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
+/* Round 36 (wwm2): wm.x func_00f6e278 near miss: score 268 -> 202 (565 -> 444 words, 2816 vs 2824); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
 /* score 268 (2808 vs 2824 bytes). Menu setup (like f73eb0): 6 info windows, an icon row from func_00f6a480, then 4 + 3 windows (the last gets x40 = func_00f6dfd8), then a loop until D_0108F188: copy item bytes x2..x4 into the 3 counters (zero when x5 == 0 and x6 < 71), refresh D_003E8E08, and draw the D_0108F28C icon (jump table 0x40..0x46 at 0x00FBA100, default first) with D_0108F248.x0/x8 swapped around func_00f693e0. The draft scored 401. Putting default first plus `t = e->x6 >= 71;` gave 410, then two hill2 passes over the declaration, prologue, icon-field and colour-store order gave 268. Left: the original reaches D_00FB4CC8/CD0/CD4 through a raw `lui 0xfb; move; addiu` (no symbol; treating them as an array made it worse, 498), the prologue register choice (i in s1), and the 16 bytes it lacks. */
 typedef struct { u8 x0; u8 x1; u8 pad2; u8 x3; u8 pad4; u8 x5; u8 pad6[2]; s16 x8; s16 xa; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; u8 pad34[4]; u8 x38; u8 x39; u8 x3a; u8 x3b; } Ic;
 typedef struct { u8 pad[16]; s32 x10; u8 pad2[44]; void *x40; } Win;
@@ -91,15 +91,15 @@ void func_00f6e278(void)
     s32 mode, i, x, n, t;
     s32 fmt;
     D_0108F1E8 = 0;
-    D_0108F204 = 0;
     D_0108F1BC = 4;
+    D_0108F204 = 0;
     D_0108F1D4 = 400;
     D_0108F1C0 = 0;
+    i = 0;
+    mode = D_00FB4A70;
     D_0108F200 = 190;
     D_0108F1F8 = 0;
-    i = 0;
     D_0108F1FC = 430;
-    mode = D_00FB4A70;
 
     save = D_00FB4A58;
     D_0108F288 = 0;
@@ -108,24 +108,24 @@ void func_00f6e278(void)
     x = D_00FB4B88 + D_00FB4BB0 + D_00FB4BB0;
     for (; i < D_00FB4BAC / 2; i++) {
         ic = func_00f6a480();
+        ic->x0 = 3;
         ic->xc = 2;
         ic->x3 = 0;
         ic->x10 = 0;
         ic->x1 = 3;
-        ic->x0 = 3;
         ic->x5 = 15;
         ic->x1c = D_00FB4B84 + 2;
-        ic->xa = D_00FB4BB0 - 1;
-        ic->x18 = x;
         ic->x2c = 0.0f;
-        ic->x20 = x;
         ic->x14 = D_00FB4B84 + 2;
+        ic->xa = D_00FB4BB0 - 1;
+        ic->x20 = x;
         ic->x8 = D_00FB4B8C - 4;
-        ic->x30 = 0.0f;
+        ic->x38 = D_00FB4BBC;
         ic->x3a = D_00FB4BC4;
         ic->x39 = D_00FB4BC0;
-        ic->x38 = D_00FB4BBC;
+        ic->x18 = x;
         ic->x3b = D_00FB4BC8;
+        ic->x30 = 0.0f;
         func_00f6b5b0(ic, 256.0f, mode);
         x += D_00FB4BB0 * 2;
     }
@@ -136,8 +136,8 @@ void func_00f6e278(void)
     D_0108F1F0 = 128.0f;
     D_0108F1EC = 128.0f;
     D_00FB58F0.x1e = n;
-    D_00FB58F0.xc = D_00FB4C40;
     D_0108F28C = 0;
+    D_00FB58F0.xc = D_00FB4C40;
     D_0108F188 = 0;
     D_00FB58F0.xe = D_00FB4C44;
     func_001f31a8(&D_00FB58F0, 1);
@@ -207,9 +207,9 @@ void func_00f6e278(void)
             break;
         }
         if (cw) {
-            t = D_0108F248.x0;
             col[2] = 0x80;
             col[1] = 0x80;
+            t = D_0108F248.x0;
             col[0] = 0x80;
             D_0108F248.x0 = D_0108F248.x8;
             col[3] = 0x80;
@@ -224,8 +224,8 @@ void func_00f6e278(void)
     func_0024e468(D_00FB4A70 + 1);
     D_0108F254 = 1;
     D_00FB4A58 = save;
-    D_0108F204 = 1;
     D_0108F1BC = 0;
+    D_0108F204 = 1;
     func_00f6ade8(3);
     if (D_0108F1B8 > 0) D_0108F1B8 = -1;
 }
