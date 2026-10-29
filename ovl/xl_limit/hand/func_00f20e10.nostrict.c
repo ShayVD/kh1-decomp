@@ -1,4 +1,4 @@
-/* 2 words: mtc1 zero,$f21 / li s3,10 swapped in the >= 60 default block (EE8/EEC); needs the KH1_REG pin on mot (else s0/s4 swap, 15 words). nostrict mode. */
+/* xl_limit.x func_00f20e10: matched by hand. */
 #include "ovl.h"
 
 typedef struct { u8 pad[0xC]; void *fC; } Res;
@@ -38,12 +38,10 @@ void func_00f20e10(void) {
 
     mot = 0xF7;
     if (D_00F23484 < 40.0f) {
-
         kind = 5;
         h = 10.0f;
-        s = 0.0f;
         n = 10;
-
+        s = 0.0f;
     } else if (D_00F23484 < 50.0f) {
         kind = 5;
         h = 20.0f;
@@ -51,7 +49,6 @@ void func_00f20e10(void) {
         n = 17;
         func_00147790(3);
     } else {
-        kind = 5;
         if (D_00F23484 < 60.0f) {
             kind = 6;
             n = 25;
@@ -60,6 +57,7 @@ void func_00f20e10(void) {
             mot = 0xF8;
             func_00147790(4);
         } else {
+            kind = 5;
             h = 10.0f;
             s = 0.0f;
             n = 10;
