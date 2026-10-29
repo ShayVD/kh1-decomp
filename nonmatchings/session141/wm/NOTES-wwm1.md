@@ -448,3 +448,30 @@ Not drafted: f5f940 (looks like f53758). gb twins: twins.py gb and near.py found
 - **A permuter "win" can change behaviour**: the f32770 outputs moved
   cnt++ before the o store. Check each output against the source before
   using it.
+
+## Round 13
+
+No new matches. hill2 passes on f21260 (2 words), f3ff98 (3) and f32770 (6)
+found nothing; their headers now say what was tried. New near misses:
+f3be50 (135 words by address, about 8 after alignment), f5f940 (214),
+f34998 (387 by address, 173 aligned). Not drafted: f33e48 and f36498
+(420+ instructions each).
+
+- **Look for the matched callee's prototype before drafting.** f3be50 called
+  func_00f62ea0 with k->f0 in f12, and the dead-looking `lwc1 f12` loads
+  before the join were that argument. The matched source has
+  `func_00f62ea0(f32 t, f32 *out, ...)`.
+- **A vector at matrix+48 is usually m[3]**: in f3be50 (func_00f3c4d8) and
+  f34998 (sceVu0ApplyMatrix output and func_00f3d978 input), the "local"
+  at sp80 is row 3 of the matrix at sp32. A separate local makes the frame
+  16 bytes larger.
+- **A struct array gives one pointer per field**: when the target keeps
+  separate loop-invariant pointers for e+4, e+8, e+12 and e+16, declare
+  the table as `struct { s32 w0..w4; } D[]` and write `D[idx].wN` in the
+  loop, instead of `s32 *e = &D[idx*5]` (f5f940).
+- **Check what follows the last loop.** f3be50 ends with a call
+  (func_00f3bde8) after the loop exit label. It is easy to miss.
+- **Aligned diff**: /tmp/claude-0/s141/wwm1/adiff.py OVL FUNC draft.c runs
+  difflib over the target and our instructions, with branch targets masked.
+  When one inserted instruction shifts every address after it, it shows
+  the real handful of differences.

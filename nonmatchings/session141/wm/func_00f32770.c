@@ -1,4 +1,4 @@
-/* 6 words left (round 12): only the delay-slot fill after if (func_00f323b8(o,&fx,&fy)) differs (target beqz to i++ with the fx load in the slot). Tried all 24 store orders of the c[cnt] block (this is the best), continue/else/!=0 forms, c[cnt++].o, one shared counter for sort and assign; a 10 min permuter only found outputs that move cnt++ before the o store (changes behaviour, rejected). */
+/* 6 words left (round 12): only the delay-slot fill after if (func_00f323b8(o,&fx,&fy)) differs (target beqz to i++ with the fx load in the slot). Tried all 24 store orders of the c[cnt] block (this is the best), continue/else/!=0 forms, c[cnt++].o, one shared counter for sort and assign; a 10 min permuter only found outputs that move cnt++ before the o store (changes behaviour, rejected). Round 13: a 300 s hill2 pass (store order, if-form and loop-condition slots) found nothing. */
 typedef struct { s32 active; s32 id; s32 cnt; s32 pad; f32 pos[4]; } S32770;
 typedef struct { u8 pad[2]; u16 h2; u8 pad2[2]; u16 h6; } K32770;
 typedef struct { s32 f0; s32 id; u8 pad[20]; K32770 *k; u8 pad2[48]; f32 v80[4]; u8 pad3[112]; f32 pos[4]; } O32770;
