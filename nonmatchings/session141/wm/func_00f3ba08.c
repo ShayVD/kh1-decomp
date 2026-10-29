@@ -1,4 +1,4 @@
-/* 6 words left; tried 9 variants (a-i) */
+/* 6 words left; tried 9 variants (a-i) Round 14: the target materialises a separate `li v1,1` for the first `c->type != 1` test (bnez delay slot) and shares s4 between the shift and the loop-bottom test; literal-1 tests, a do-while with an if guard, `^ one`, and a break-in-body form either hoist the 1 out of the outer loop (31+ words) or change nothing. */
 typedef struct { s32 type; s32 a; s32 b; u8 pad[36]; } C3ba08;
 typedef struct { u8 pad[0xA0]; s32 flags; u32 mask; s32 id; C3ba08 *conds; s32 cnt; u8 pad2[12]; } E3ba08;
 typedef struct { u16 h0; u16 h2; u16 h4; u16 h6; } R3ba08;

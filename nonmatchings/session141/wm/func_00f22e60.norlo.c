@@ -1,4 +1,4 @@
-/* 4 words left (norlo mode took it from 86 to 4): movz operand register order; tried variants e-m */
+/* 4 words left (norlo mode took it from 86 to 4): movz operand register order; tried variants e-m Round 14: no new variants; left for the permuter. */
 s32 func_00f66ac8(s32);
 s32 func_00f66ae0(u64 *);
 u64 *func_00f66b78(s32);

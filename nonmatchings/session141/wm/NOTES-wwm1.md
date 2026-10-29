@@ -475,3 +475,37 @@ f34998 (387 by address, 173 aligned). Not drafted: f33e48 and f36498
   difflib over the target and our instructions, with branch targets masked.
   When one inserted instruction shifts every address after it, it shows
   the real handful of differences.
+
+## Round 14
+
+Five matches: f326a0, f3dbf8, f2c910, f2bfb8 and f25660. f38630 went
+from 16 to 2 words. RANKING.md ranks every wm near miss by aligned diff;
+the five matched rows are now removed from it. f3be50 is unchanged at 6
+aligned words after a 10-minute permuter run (no gain over the base).
+
+- **Check callee return types against their definitions.** Declaring a
+  callee `void` when it really returns a value changes scheduling, even
+  when the result is ignored. func_001c0310 and func_001c01b0 return s32
+  (src/util/task.nostrict.c), and func_001bb658 returns a GumiBlock pointer
+  (src/gummi/ship.c). This fixed f2bfb8 (the separate `li v0,1` after
+  the store) and f2c910 (the prologue `sll s2` / `sd ra` order; the
+  permuter found it by declaring the callee `unsigned int`). It also took
+  f25660 from 12 to 2 words, and one store swap matched it. f38630 went
+  from 16 to 12 this way. /tmp/claude-0/s141/wwm1/protofix.py compares
+  every prototype in the drafts with the definitions in src/ and
+  ovl/*/hand and retries each draft that differs. No other draft gained.
+- **`(base + idx)->f` and `base[idx].f` give different operand order.**
+  f326a0: `return (D + idx)->val` computes the base first (addiu, then
+  sll). Then putting `best` before `idx` in the declarations fixed the
+  last two registers.
+- **A big raw count can still be a one-line fix.** f3dbf8 had 50 raw
+  words but 5 aligned. Writing `if (q == NULL || q->h2 >= 2) return 0;`
+  instead of nesting the body under `q != NULL && q->h2 < 2` matched it.
+- **Open the aligned diff before trying variants.** In f38630 the
+  target's own store order compiles worse (16) than the order hill.py
+  found (2). The scheduler moves stores, so use the hill climb, not the
+  source order.
+- Dead ends this round (written in each header): f3ba08 (the
+  materialised 1 is hoisted out of the outer loop), f465a8 (a double load
+  through one shared lui), f3fd60 (`v - 1` is not folded into the table
+  offset), f7cb60 (crossjumping), f3a0f0 (FP registers).

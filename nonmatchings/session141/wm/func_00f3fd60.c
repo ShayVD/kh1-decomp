@@ -1,4 +1,4 @@
-/* 34 words left; tried variants b-k */
+/* 34 words left; tried variants b-k Round 14: the target keeps `v - 1` as a separate addiu instead of folding -4 into the table offset; v--, v -= 1, pointer arithmetic, a NAME() macro, u32 v and a ternary all fold it. */
 typedef struct { s32 cur; u8 pad[1420]; } P3fd60;
 typedef struct { char name[16]; s32 kind; u8 pad[68]; } N3fd60;
 extern P3fd60 D_00F86A58[];
