@@ -1,4 +1,5 @@
-/* 3 words differ, score 6 (1440 vs 1440 bytes). Only delay slots left: orig has non-likely beqz with the next andi test in the slot at f5ce98/f5cf1c/f5cf78, ours gets beqzl. Needs 0.0349065810442f for 0x3d0efa34 and func_00f4ff08(s32, f32, s32). Tried: cached flags var types/positions, reusing i for flags (fixes 2 of 3 slots but costs regs, score 56), nested/goto loop forms, && for the f47158 test, 10 min permuter */
+/* wm.x func_00f5cb78: matched by hand (session 141, wwm1 round 17): a CONTEXT_ONLY func_00f5c8a8 and func_00f5c9b0 above it. A call to a function defined earlier in the file is nothrow, which changes reorg's branch-likely choice (docs/overlays.md, "Branch-likely vs plain branch"). */
+#include "ovl.h"
 typedef struct {
     u8 pad0[0xA0];
     u8 xA0[6];
@@ -57,12 +58,12 @@ void sceVu0RotMatrix(f32 (*)[4], f32 (*)[4], f32 *);
 void func_001bfac8(void);
 P5c *func_001ba488(s32);
 s32 func_00f4c510(P5c *);
-void func_00f5c8a8(void);
+CONTEXT_ONLY void func_00f5c8a8(void) {}
 void func_00f4cb10(void);
 void func_00f48aa8(s32);
 s32 func_00f47158(void);
 void func_00f47268(s32, s32);
-void func_00f5c9b0(s32);
+CONTEXT_ONLY void func_00f5c9b0(s32 a0) {}
 void func_001bebd0(f32 (*)[4], C5c *, f32 (*)[4]);
 void func_00f4ff08(s32, f32, s32);
 void func_00f4cb60(void);
