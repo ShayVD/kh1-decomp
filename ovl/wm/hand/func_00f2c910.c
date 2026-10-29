@@ -1,10 +1,14 @@
-/* 2 words left: prologue order sll s2 vs sd ra; tried 6 variants (a-f) */
+/* wm.x func_00f2c910: matched by hand. */
+#include "ovl.h"
+
+/* wm.x func_00f2c910: matched by hand; func_001bb658 returns the gummi block pointer (src/gummi/ship.c), and declaring it void changed the prologue order. */
+#include "ovl.h"
 typedef struct { s32 a; u16 h; u16 pad; s32 c; } N2c910;
 typedef struct { u8 pad[16]; f32 v10[4]; u8 pad20[12]; f32 f2c; u8 pad30[4]; N2c910 ent[1]; } D2c910;
 extern D2c910 D_00F85240;
 extern f32 D_00F8C240[4][4];
 extern s32 D_00FBDA70;
-void func_001bb658(s32);
+void *func_001bb658(s32);
 void func_001bbf38(f32 (*)[4], N2c910 *);
 void sceVu0UnitMatrix(f32 (*)[4]);
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
