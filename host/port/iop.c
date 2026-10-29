@@ -35,6 +35,12 @@ u32 kh1_iop_insns;
 #define IOP_INTR_STACK 0x001FF000
 #define IOP_MAGIC_RET 0x001FFFF0
 
+/* two opcodes the R3000 does not have (primary 0x3E / 0x3F), put in RAM for run(): an import stub's
+ * first word becomes OP_STUB | its index (find_imports), and the word at IOP_MAGIC_RET is OP_MAGIC, so
+ * neither needs a check of the pc at every instruction */
+#define OP_STUB 0xF8000000u
+#define OP_MAGIC 0xFC000000u
+
 #define IOP_THREADS 8
 #define IOP_SEMAS 16
 #define IOP_VPLS 4
@@ -79,7 +85,6 @@ static IopSema iop_sema[IOP_SEMAS];
 static IopVpl iop_vpl[IOP_VPLS];
 static IopStub iop_stub[IOP_STUBS];
 static int iop_nstubs;
-static u32 iop_stub_lo, iop_stub_hi;
 static int iop_cur = -1; /* the thread running, -1 for an interrupt or the loader */
 static u32 iop_heap;
 static int iop_ok;
@@ -166,13 +171,6 @@ static u32 iop_alloc(u32 size) {
 
 static int hle(IopCtx *c, const IopStub *s);
 
-static const IopStub *find_stub(u32 pc) {
-    int i;
-    for (i = 0; i < iop_nstubs; i++)
-        if (iop_stub[i].addr == pc) return &iop_stub[i];
-    return 0;
-}
-
 #define RS ((op >> 21) & 31)
 #define RT ((op >> 16) & 31)
 #define RD ((op >> 11) & 31)
@@ -180,147 +178,195 @@ static const IopStub *find_stub(u32 pc) {
 #define IMM ((u32)(s32)(s16)op)
 #define IMMU (op & 0xFFFF)
 
-static int run(IopCtx *c, u32 budget) {
+/* The interpreter: direct-threaded (each handler jumps to the next instruction's through the
+ * opcode tables, GNU C's labels as values), with pc, npc and the instruction count in locals that go
+ * back to the context at every exit.  On the Vita the sound thread spends about half its time here.
+ * Fetches mask the pc into RAM; a register jump outside RAM stops the run (the only way there). */
+static __attribute__((optimize("no-gcse", "no-crossjumping"))) int run(IopCtx *c, u32 budget) {
+    static void *const main_tbl[64] = {
+        &&op_special, &&op_regimm, &&op_j, &&op_jal, &&op_beq, &&op_bne, &&op_blez, &&op_bgtz,
+        &&op_addi, &&op_addi, &&op_slti, &&op_sltiu, &&op_andi, &&op_ori, &&op_xori, &&op_lui,
+        &&op_cop0, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+        &&op_lb, &&op_lh, &&op_lwl, &&op_lw, &&op_lbu, &&op_lhu, &&op_lwr, &&op_bad,
+        &&op_sb, &&op_sh, &&op_swl, &&op_sw, &&op_bad, &&op_bad, &&op_swr, &&op_bad,
+        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_stub, &&op_magic,
+    };
+    static void *const special_tbl[64] = {
+        &&op_sll, &&op_bad, &&op_srl, &&op_sra, &&op_sllv, &&op_bad, &&op_srlv, &&op_srav,
+        &&op_jr, &&op_jalr, &&op_bad, &&op_bad, &&op_trap, &&op_trap, &&op_bad, &&op_bad,
+        &&op_mfhi, &&op_mthi, &&op_mflo, &&op_mtlo, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+        &&op_mult, &&op_multu, &&op_div, &&op_divu, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+        &&op_add, &&op_add, &&op_sub, &&op_sub, &&op_and, &&op_or, &&op_xor, &&op_nor,
+        &&op_bad, &&op_bad, &&op_slt, &&op_sltu, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
+    };
     u32 *r = c->r;
-    while (budget--) {
-        u32 pc = c->pc, op, a;
-        if (pc == IOP_MAGIC_RET) return RUN_RET;
-        if (pc >= iop_stub_lo && pc < iop_stub_hi) {
-            const IopStub *s = find_stub(pc);
-            if (s) {
-                int k = hle(c, s);
-                r[0] = 0;
-                if (k != RUN_RET) return k; /* blocked: c->pc already points past the call */
-                c->pc = r[31];
-                c->npc = c->pc + 4;
-                continue;
-            }
-        }
-        if (!RAM_OK(pc)) {
-            printf("kh1-iop: pc 0x%08x outside RAM (ra 0x%08x)\n", pc, r[31]);
-            return RUN_FAULT;
-        }
-        op = *(u32 *)RAM(pc);
-        c->pc = c->npc;
-        c->npc += 4;
-        kh1_iop_insns++;
-        switch (op >> 26) {
-        case 0x00:
-            switch (op & 63) {
-            case 0x00: r[RD] = r[RT] << SA; break;
-            case 0x02: r[RD] = r[RT] >> SA; break;
-            case 0x03: r[RD] = (u32)((s32)r[RT] >> SA); break;
-            case 0x04: r[RD] = r[RT] << (r[RS] & 31); break;
-            case 0x06: r[RD] = r[RT] >> (r[RS] & 31); break;
-            case 0x07: r[RD] = (u32)((s32)r[RT] >> (r[RS] & 31)); break;
-            case 0x08: c->npc = r[RS]; break;
-            case 0x09: a = r[RS]; r[RD] = pc + 8; c->npc = a; break;
-            case 0x0C: /* syscall */
-            case 0x0D: /* break: gcc's divide-by-zero trap */
-                printf("kh1-iop: %s at 0x%05x\n", (op & 63) == 0x0C ? "syscall" : "break", pc - KH1_IOP_BASE);
-                return RUN_FAULT;
-            case 0x10: r[RD] = c->hi; break;
-            case 0x11: c->hi = r[RS]; break;
-            case 0x12: r[RD] = c->lo; break;
-            case 0x13: c->lo = r[RS]; break;
-            case 0x18: {
-                s64 p = (s64)(s32)r[RS] * (s32)r[RT];
-                c->lo = (u32)p;
-                c->hi = (u32)((u64)p >> 32);
-                break;
-            }
-            case 0x19: {
-                u64 p = (u64)r[RS] * r[RT];
-                c->lo = (u32)p;
-                c->hi = (u32)(p >> 32);
-                break;
-            }
-            case 0x1A: {
-                s32 n = (s32)r[RS], d = (s32)r[RT];
-                if (d == 0) { c->lo = n >= 0 ? 0xFFFFFFFFu : 1; c->hi = (u32)n; }
-                else if (n == (s32)0x80000000 && d == -1) { c->lo = 0x80000000u; c->hi = 0; }
-                else { c->lo = (u32)(n / d); c->hi = (u32)(n % d); }
-                break;
-            }
-            case 0x1B: {
-                u32 n = r[RS], d = r[RT];
-                if (d == 0) { c->lo = 0xFFFFFFFFu; c->hi = n; }
-                else { c->lo = n / d; c->hi = n % d; }
-                break;
-            }
-            case 0x20: case 0x21: r[RD] = r[RS] + r[RT]; break;
-            case 0x22: case 0x23: r[RD] = r[RS] - r[RT]; break;
-            case 0x24: r[RD] = r[RS] & r[RT]; break;
-            case 0x25: r[RD] = r[RS] | r[RT]; break;
-            case 0x26: r[RD] = r[RS] ^ r[RT]; break;
-            case 0x27: r[RD] = ~(r[RS] | r[RT]); break;
-            case 0x2A: r[RD] = (s32)r[RS] < (s32)r[RT]; break;
-            case 0x2B: r[RD] = r[RS] < r[RT]; break;
-            default: goto bad;
-            }
-            break;
-        case 0x01:
-            a = pc + 4 + (IMM << 2);
-            switch (RT) {
-            case 0x00: if ((s32)r[RS] < 0) c->npc = a; break;
-            case 0x01: if ((s32)r[RS] >= 0) c->npc = a; break;
-            case 0x10: { int t = (s32)r[RS] < 0; r[31] = pc + 8; if (t) c->npc = a; break; }
-            case 0x11: { int t = (s32)r[RS] >= 0; r[31] = pc + 8; if (t) c->npc = a; break; }
-            default: goto bad;
-            }
-            break;
-        case 0x02: c->npc = (pc & 0xF0000000u) | ((op & 0x03FFFFFF) << 2); break;
-        case 0x03: r[31] = pc + 8; c->npc = (pc & 0xF0000000u) | ((op & 0x03FFFFFF) << 2); break;
-        case 0x04: if (r[RS] == r[RT]) c->npc = pc + 4 + (IMM << 2); break;
-        case 0x05: if (r[RS] != r[RT]) c->npc = pc + 4 + (IMM << 2); break;
-        case 0x06: if ((s32)r[RS] <= 0) c->npc = pc + 4 + (IMM << 2); break;
-        case 0x07: if ((s32)r[RS] > 0) c->npc = pc + 4 + (IMM << 2); break;
-        case 0x08: case 0x09: r[RT] = r[RS] + IMM; break;
-        case 0x0A: r[RT] = (s32)r[RS] < (s32)IMM; break;
-        case 0x0B: r[RT] = r[RS] < IMM; break;
-        case 0x0C: r[RT] = r[RS] & IMMU; break;
-        case 0x0D: r[RT] = r[RS] | IMMU; break;
-        case 0x0E: r[RT] = r[RS] ^ IMMU; break;
-        case 0x0F: r[RT] = IMMU << 16; break;
-        case 0x10: /* COP0: mfc0 reads 0, the rest ignored */
-            if (((op >> 21) & 31) == 0) r[RT] = 0;
-            break;
-        case 0x20: r[RT] = (u32)(s32)(s8)rd8(r[RS] + IMM, pc); break;
-        case 0x21: r[RT] = (u32)(s32)(s16)rd16(r[RS] + IMM, pc); break;
-        case 0x22: {
-            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
-            r[RT] = (r[RT] & (0x00FFFFFFu >> sh)) | (w << (24 - sh));
-            break;
-        }
-        case 0x23: r[RT] = rd32(r[RS] + IMM, pc); break;
-        case 0x24: r[RT] = rd8(r[RS] + IMM, pc); break;
-        case 0x25: r[RT] = rd16(r[RS] + IMM, pc); break;
-        case 0x26: {
-            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
-            r[RT] = (r[RT] & (0xFFFFFF00u << (24 - sh))) | (w >> sh);
-            break;
-        }
-        case 0x28: wr8(r[RS] + IMM, r[RT], pc); break;
-        case 0x29: wr16(r[RS] + IMM, r[RT], pc); break;
-        case 0x2A: {
-            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
-            wr32(ad, (w & (0xFFFFFF00u << sh)) | (r[RT] >> (24 - sh)), pc);
-            break;
-        }
-        case 0x2B: wr32(r[RS] + IMM, r[RT], pc); break;
-        case 0x2E: {
-            u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
-            wr32(ad, (w & (0x00FFFFFFu >> (24 - sh))) | (r[RT] << sh), pc);
-            break;
-        }
-        default:
-        bad:
-            printf("kh1-iop: unknown instruction 0x%08x at 0x%05x\n", op, pc - KH1_IOP_BASE);
-            return RUN_FAULT;
-        }
-        r[0] = 0;
+    u32 xpc = c->pc, npc = c->npc, n = 0, pc, op, a;
+    int k;
+
+    *(u32 *)RAM(IOP_MAGIC_RET) = OP_MAGIC;
+/* the next instruction, fetched and dispatched at the end of every handler (one indirect jump each, so
+ * the branch predictor sees the opcode pairs); NEXT_B after a branch or jump also stops a run past its budget (only a loop
+ * can run that long, and a loop has a branch) */
+#define NEXT                                                     \
+    do {                                                         \
+        r[0] = 0;                                                \
+        pc = xpc;                                                \
+        op = *(u32 *)(kh1_iop_ram + (pc & (KH1_IOP_RAM - 4)));   \
+        xpc = npc;                                               \
+        npc += 4;                                                \
+        n++;                                                     \
+        goto *main_tbl[op >> 26];                                \
+    } while (0)
+#define NEXT_B goto next_b
+next_b:
+    if (n >= budget) { k = RUN_BUDGET; goto out; }
+    NEXT;
+
+op_magic: /* the return address of a call from C: the call is over */
+    xpc = pc;
+    npc = pc + 4;
+    n--;
+    k = RUN_RET;
+    goto out;
+op_stub: {
+    const IopStub *s = &iop_stub[(op & 0xFFFF) % IOP_STUBS];
+    c->pc = pc;
+    c->npc = pc + 4;
+    k = hle(c, s);
+    r[0] = 0;
+    if (k != RUN_RET) { kh1_iop_insns += n; return k; } /* blocked: c->pc already points past the call */
+    xpc = r[31];
+    npc = xpc + 4;
+    NEXT_B;
+}
+op_special: goto *special_tbl[op & 63];
+op_sll: r[RD] = r[RT] << SA; NEXT;
+op_srl: r[RD] = r[RT] >> SA; NEXT;
+op_sra: r[RD] = (u32)((s32)r[RT] >> SA); NEXT;
+op_sllv: r[RD] = r[RT] << (r[RS] & 31); NEXT;
+op_srlv: r[RD] = r[RT] >> (r[RS] & 31); NEXT;
+op_srav: r[RD] = (u32)((s32)r[RT] >> (r[RS] & 31)); NEXT;
+op_jr: npc = r[RS]; goto jump_check;
+op_jalr: a = r[RS]; r[RD] = pc + 8; npc = a; goto jump_check;
+jump_check:
+    if (!RAM_OK(npc)) {
+        printf("kh1-iop: jump to 0x%08x outside RAM at 0x%05x (ra 0x%08x)\n", npc, pc - KH1_IOP_BASE, r[31]);
+        k = RUN_FAULT;
+        xpc = pc;
+        goto out;
     }
-    return RUN_BUDGET;
+    NEXT_B;
+op_trap: /* syscall, or break (gcc's divide-by-zero trap) */
+    printf("kh1-iop: %s at 0x%05x\n", (op & 63) == 0x0C ? "syscall" : "break", pc - KH1_IOP_BASE);
+    k = RUN_FAULT;
+    xpc = pc;
+    goto out;
+op_mfhi: r[RD] = c->hi; NEXT;
+op_mthi: c->hi = r[RS]; NEXT;
+op_mflo: r[RD] = c->lo; NEXT;
+op_mtlo: c->lo = r[RS]; NEXT;
+op_mult: {
+    s64 p = (s64)(s32)r[RS] * (s32)r[RT];
+    c->lo = (u32)p;
+    c->hi = (u32)((u64)p >> 32);
+    NEXT;
+}
+op_multu: {
+    u64 p = (u64)r[RS] * r[RT];
+    c->lo = (u32)p;
+    c->hi = (u32)(p >> 32);
+    NEXT;
+}
+op_div: {
+    s32 nn = (s32)r[RS], d = (s32)r[RT];
+    if (d == 0) { c->lo = nn >= 0 ? 0xFFFFFFFFu : 1; c->hi = (u32)nn; }
+    else if (nn == (s32)0x80000000 && d == -1) { c->lo = 0x80000000u; c->hi = 0; }
+    else { s32 q = nn / d; c->lo = (u32)q; c->hi = (u32)(nn - q * d); } /* one divide (the A9 has no divider) */
+    NEXT;
+}
+op_divu: {
+    u32 nn = r[RS], d = r[RT];
+    if (d == 0) { c->lo = 0xFFFFFFFFu; c->hi = nn; }
+    else { u32 q = nn / d; c->lo = q; c->hi = nn - q * d; }
+    NEXT;
+}
+op_add: r[RD] = r[RS] + r[RT]; NEXT;
+op_sub: r[RD] = r[RS] - r[RT]; NEXT;
+op_and: r[RD] = r[RS] & r[RT]; NEXT;
+op_or: r[RD] = r[RS] | r[RT]; NEXT;
+op_xor: r[RD] = r[RS] ^ r[RT]; NEXT;
+op_nor: r[RD] = ~(r[RS] | r[RT]); NEXT;
+op_slt: r[RD] = (s32)r[RS] < (s32)r[RT]; NEXT;
+op_sltu: r[RD] = r[RS] < r[RT]; NEXT;
+
+op_regimm:
+    a = pc + 4 + (IMM << 2);
+    switch (RT) {
+    case 0x00: if ((s32)r[RS] < 0) npc = a; NEXT_B;
+    case 0x01: if ((s32)r[RS] >= 0) npc = a; NEXT_B;
+    case 0x10: { int t = (s32)r[RS] < 0; r[31] = pc + 8; if (t) npc = a; NEXT_B; }
+    case 0x11: { int t = (s32)r[RS] >= 0; r[31] = pc + 8; if (t) npc = a; NEXT_B; }
+    default: goto op_bad;
+    }
+op_j: npc = (pc & 0xF0000000u) | ((op & 0x03FFFFFF) << 2); NEXT_B;
+op_jal: r[31] = pc + 8; npc = (pc & 0xF0000000u) | ((op & 0x03FFFFFF) << 2); NEXT_B;
+op_beq: if (r[RS] == r[RT]) npc = pc + 4 + (IMM << 2); NEXT_B;
+op_bne: if (r[RS] != r[RT]) npc = pc + 4 + (IMM << 2); NEXT_B;
+op_blez: if ((s32)r[RS] <= 0) npc = pc + 4 + (IMM << 2); NEXT_B;
+op_bgtz: if ((s32)r[RS] > 0) npc = pc + 4 + (IMM << 2); NEXT_B;
+op_addi: r[RT] = r[RS] + IMM; NEXT;
+op_slti: r[RT] = (s32)r[RS] < (s32)IMM; NEXT;
+op_sltiu: r[RT] = r[RS] < IMM; NEXT;
+op_andi: r[RT] = r[RS] & IMMU; NEXT;
+op_ori: r[RT] = r[RS] | IMMU; NEXT;
+op_xori: r[RT] = r[RS] ^ IMMU; NEXT;
+op_lui: r[RT] = IMMU << 16; NEXT;
+op_cop0: /* mfc0 reads 0, the rest ignored */
+    if (((op >> 21) & 31) == 0) r[RT] = 0;
+    NEXT;
+op_lb: r[RT] = (u32)(s32)(s8)rd8(r[RS] + IMM, pc); NEXT;
+op_lh: r[RT] = (u32)(s32)(s16)rd16(r[RS] + IMM, pc); NEXT;
+op_lwl: {
+    u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+    r[RT] = (r[RT] & (0x00FFFFFFu >> sh)) | (w << (24 - sh));
+    NEXT;
+}
+op_lw: r[RT] = rd32(r[RS] + IMM, pc); NEXT;
+op_lbu: r[RT] = rd8(r[RS] + IMM, pc); NEXT;
+op_lhu: r[RT] = rd16(r[RS] + IMM, pc); NEXT;
+op_lwr: {
+    u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+    r[RT] = (r[RT] & (0xFFFFFF00u << (24 - sh))) | (w >> sh);
+    NEXT;
+}
+op_sb: wr8(r[RS] + IMM, r[RT], pc); NEXT;
+op_sh: wr16(r[RS] + IMM, r[RT], pc); NEXT;
+op_swl: {
+    u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+    wr32(ad, (w & (0xFFFFFF00u << sh)) | (r[RT] >> (24 - sh)), pc);
+    NEXT;
+}
+op_sw: wr32(r[RS] + IMM, r[RT], pc); NEXT;
+op_swr: {
+    u32 ad = r[RS] + IMM, sh = (ad & 3) * 8, w = rd32(ad, pc);
+    wr32(ad, (w & (0x00FFFFFFu >> (24 - sh))) | (r[RT] << sh), pc);
+    NEXT;
+}
+op_bad:
+    printf("kh1-iop: unknown instruction 0x%08x at 0x%05x\n", op, pc - KH1_IOP_BASE);
+    k = RUN_FAULT;
+    xpc = pc;
+#undef NEXT
+#undef NEXT_B
+out:
+    c->pc = xpc;
+    c->npc = npc;
+    kh1_iop_insns += n;
+    return k;
 }
 
 /* one call from C into IOP code, on the interrupt stack (an interrupt handler, the module's start) */
@@ -482,7 +528,7 @@ static u32 vpl_free_bytes(IopVpl *p) {
 }
 
 /* The import answers.  RUN_RET: v0 set, return to $ra; RUN_BLOCK: the thread waits. */
-static int hle(IopCtx *c, const IopStub *s) {
+static __attribute__((noinline)) int hle(IopCtx *c, const IopStub *s) {
     const char *lib = s->lib;
     int fn = s->fn;
     u32 *v0 = &c->r[2];
@@ -741,8 +787,6 @@ static void find_imports(u32 text, u32 size) {
     u32 a;
     int nlib = 0;
     iop_nstubs = 0;
-    iop_stub_lo = 0xFFFFFFFF;
-    iop_stub_hi = 0;
     for (a = text; a + 20 <= text + size; a += 4) {
         u32 p;
         char *name;
@@ -756,9 +800,8 @@ static void find_imports(u32 text, u32 size) {
             iop_stub[iop_nstubs].addr = p;
             iop_stub[iop_nstubs].lib = name;
             iop_stub[iop_nstubs].fn = (int)(w1 & 0xFFFF);
+            *(u32 *)RAM(p) = OP_STUB | (u32)iop_nstubs; /* run() answers it from the table */
             iop_nstubs++;
-            if (p < iop_stub_lo) iop_stub_lo = p;
-            if (p + 4 > iop_stub_hi) iop_stub_hi = p + 4;
         }
         a = p;
     }

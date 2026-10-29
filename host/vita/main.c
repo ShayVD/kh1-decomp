@@ -45,7 +45,8 @@
  *       snd=N                 1 (the default) plays the game's sound: the disc's own sound driver (LIBSSL.IRX) in
  *                             host/port/iop.c's IOP and spu2.c's SPU2, out through host/vita/audio.c; 0 keeps the
  *                             null server (silence)
- *       sndcore=N             the core the sound thread runs on (default 2, the GPU frame's)
+ *       sndcore=N             pins the sound mixer to core N (0, 1 or 2); the default, -1, lets it run on any core
+ *                             below the game's threads
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -64,7 +65,7 @@
 #include "common.h"
 /* host/vita/audio.c: the sound */
 extern int kh1_vita_snd, kh1_vita_snd_core;
-extern u32 kh1_vita_snd_us, kh1_vita_snd_bufs;
+extern u32 kh1_vita_snd_us, kh1_vita_snd_bufs, kh1_vita_snd_under, kh1_vita_snd_queued;
 void kh1_vita_audio_init(void);
 int kh1_snd_active(void);
 extern u32 kh1_snd_ticks, kh1_snd_rpcs, kh1_snd_fifo_full, kh1_iop_insns;
@@ -324,13 +325,15 @@ static int watchdog(SceSize args, void *argp) {
              (unsigned long long)(sceKernelGetProcessTimeWide() / 1000), frames, kh1_host_cd_reads,
              kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown, (kh1_vita_us_wait - wait0) / 1000,
              (kh1_vita_us_present - present0) / 1000, frames == last ? " (no vblank since the last)" : "");
-        if (kh1_snd_active()) { /* the sound thread (host/vita/audio.c): its share of the 2 s, the driver's work */
-            static u32 snd_us0, snd_bufs0, snd_ticks0, snd_insns0;
-            vlog("kh1-vita: sound: %u ms mixing and ticking for %u buffers, %u ticks, %u IOP instructions, %d voices on, "
-                 "%u RPCs (%u FIFO full)\n", (kh1_vita_snd_us - snd_us0) / 1000, kh1_vita_snd_bufs - snd_bufs0,
+        if (kh1_snd_active()) { /* the sound threads (host/vita/audio.c): the mixer's share of the 2 s, the driver's work */
+            static u32 snd_us0, snd_bufs0, snd_under0, snd_ticks0, snd_insns0;
+            vlog("kh1-vita: sound: %u ms mixing and ticking, %u buffers played (%u short), %u frames queued, %u ticks, "
+                 "%u IOP instructions, %d voices on, %u RPCs (%u FIFO full)\n", (kh1_vita_snd_us - snd_us0) / 1000,
+                 kh1_vita_snd_bufs - snd_bufs0, kh1_vita_snd_under - snd_under0, kh1_vita_snd_queued,
                  kh1_snd_ticks - snd_ticks0, kh1_iop_insns - snd_insns0, kh1_spu2_voices_on(), kh1_snd_rpcs, kh1_snd_fifo_full);
             snd_us0 = kh1_vita_snd_us;
             snd_bufs0 = kh1_vita_snd_bufs;
+            snd_under0 = kh1_vita_snd_under;
             snd_ticks0 = kh1_snd_ticks;
             snd_insns0 = kh1_iop_insns;
         }

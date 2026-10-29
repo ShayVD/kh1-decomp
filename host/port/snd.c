@@ -30,7 +30,7 @@ int kh1_spu2_find_presets(const u8 *irx, u32 size);
 
 #define SND_SID 17
 #define SND_TICK_SAMPLES 200 /* 48000 / 240 */
-#define SND_FIFO 8
+#define SND_FIFO 16 /* about five frames of sends queue while the Vita's mixer is ahead */
 #define SND_MSG 0x2000
 
 static int snd_on;

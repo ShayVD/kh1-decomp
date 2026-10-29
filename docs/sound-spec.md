@@ -257,8 +257,8 @@ VMIXL / VMIXEL / VMIXR / VMIXER; addresses (bytes) 0x1C ESA, 0x1D EEA, 0x1F IRQA
 ### The SPU2 model
 
 ADPCM (filters {0, 60, 115, 98, 122} / {0, 0, -52, -55, -60}, a shift over 12 read as 9; the loop flags
-bit 0 end, bit 1 repeat, bit 2 start), the ADSR envelope's rates as the PSX's, 4-point cubic
-interpolation (the console's is Gaussian), core 0's output into core 1 through AVOL, and the reverb: the
+bit 0 end, bit 1 repeat, bit 2 start), the ADSR envelope's rates as the PSX's, 4-point Catmull-Rom
+interpolation at 256 steps (the console's is Gaussian), core 0's output into core 1 through AVOL, and the reverb: the
 PSX algorithm at half rate over the core's work area, with **the presets read from the disc's own
 LIBSD.IRX** (found by the signature `7d 00 5b 00 80 6d`, 0x44 bytes a mode; mode m at the room preset +
 (m - 1) x 0x44: 1 room, 2-4 studio, 5 hall, 6 space, 7 echo, 8 delay, 9 pipe). The driver sets mode 5 on
@@ -272,14 +272,28 @@ Nothing here was compared against a console recording.
 
 - The host runner (`KH1_HOST_SND=iop`, or `wav:FILE` to also write what it plays) runs every call at once
   and four ticks a vblank (host/null/main.c).
-- The Vita runs the ticks and the mix on an audio thread (host/vita/audio.c), paced by sceAudioOut. The
-  game thread's per-frame queue send (RPC 30) is copied into an 8-deep FIFO and returns; the audio thread
-  runs the FIFO before each tick. The other RPCs (the game reads their answer) take the lock, drain the
-  FIFO and run at once. One SceKernelLwMutex keeps the two apart. The thread is on core 2 by default
-  (config.txt `sndcore=`), beside the GPU frame's thread, at a higher priority.
+- The Vita (host/vita/audio.c) uses two threads. A mixer runs the ticks and the mix ahead of the output
+  into a ring of 85 ms, at a lower priority than the game's threads and on any core (config.txt
+  `sndcore=` pins it), so it only takes time the game leaves. An output thread, paced by sceAudioOut,
+  copies 256 samples at a time from the ring and plays silence for any gap the mixer has not filled
+  (counted as "short" on the watchdog's sound line). The game thread's per-frame queue send (RPC 30)
+  goes into a 16-deep FIFO and returns at once; the mixer runs the FIFO before each tick. The other
+  RPCs (the game reads their answer) take the lock, drain the FIFO and run at once. One
+  SceKernelLwMutex keeps the threads apart. A sound the game starts plays the ring's length later.
+- First Vita run (2026-10-29, the first version: one thread on core 2 above the GPU thread): once the
+  title music started, the thread needed about 80% of core 2 (4.7 s of 6 s for 19 voices). It fell behind,
+  so the sound broke up, and it starved the GPU frame's thread, so the picture lagged. Since then:
+  - the interpreter is direct-threaded, with no per-instruction checks of the pc (import stubs and the
+    C-call return address are two made-up opcodes in RAM), and does one divide for div / divu (the A9 has
+    no divider);
+  - the mix runs voice by voice over each stretch between ticks, with no aliasing reloads, inlined
+    envelopes and a 256-step table for the interpolation;
+  - the threads were split as above.
+  The host does the same work in 0.55 times the time it took before. The output is the same apart from
+  the interpolation table's rounding, and the game's run over the Dive script is line for line the same.
 - Cost on the host: about 2.5 million IOP instructions a second of sound over the Dive run (3.7 G in
-  25 minutes), plus the mix. **Not measured on a Vita**: the watchdog's sound line (vita-build.md
-  "Sound") prints the thread's milliseconds per 2 s.
+  25 minutes), plus the mix. **Not measured on a Vita yet** after these changes; the watchdog's sound
+  line (vita-build.md "Sound") prints the mixer's milliseconds per 2 s.
 
 ### Checked (2026-10-29, on the English patch's image)
 

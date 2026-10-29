@@ -38,7 +38,7 @@ static u8 *load(const char *path, u32 *size) {
     fseek(f, 0, SEEK_END);
     n = ftell(f);
     fseek(f, 0, SEEK_SET);
-    b = malloc((size_t)n + 16);
+    b = calloc(1, (size_t)n + 0x10000); /* the driver reads whole transfer chunks past the end */
     if (fread(b, 1, (size_t)n, f) != (size_t)n) { perror(path); exit(1); }
     fclose(f);
     *size = (u32)n;

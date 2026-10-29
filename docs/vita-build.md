@@ -57,7 +57,7 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
      pushed (never pulsed: each L2 / R2 press also steps the lock-on target), and centres the x; the y is
      unchanged. `rcam=-1` turns the other way, `rcam=0` sends the stick as the PS2 did.
    - `snd=0` keeps the game silent (the null server); 1, the default, plays the sound through the disc's
-     own driver ("Sound" below). `sndcore=N` puts the sound thread on core N (default 2).
+     own driver ("Sound" below). `sndcore=N` pins the sound mixer to core N (default -1: any core).
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
@@ -989,23 +989,27 @@ unnamed constants). The link takes `--no-enum-size-warning` for the mix; `readel
 
 The game's sound plays through **the disc's own IOP sound driver** (LIBSSL.IRX, read from the image at the
 game's sound bind; nothing of it is in the VPK), run by a small IOP and SPU2 in host/port/ (iop.c, spu2.c,
-snd.c; docs/sound-spec.md section 6 has the details and what is not modelled). host/vita/audio.c opens
-sceAudioOut's main port (48 kHz stereo, 256-sample buffers) and runs the driver's 240 Hz tick and the mix
-on a thread of its own, on core 2 by default (`sndcore=`), at a higher priority than the GPU frame's
-thread there. The game thread only copies its per-frame command queue into a FIFO; the RPCs whose answer
-the game reads wait on the sound thread's lock.
+snd.c; docs/sound-spec.md section 6 has the details and what is not modelled). host/vita/audio.c runs it
+on two threads. A mixer runs the driver's 240 Hz tick and the mix 85 ms ahead into a ring, below the
+game's threads and on any core. An output thread hands the ring to sceAudioOut's main port (48 kHz
+stereo, 256-sample buffers) and plays silence where the mixer has fallen behind. The game thread only
+copies its per-frame command queue into a FIFO; the RPCs whose answer the game reads wait on the mixer's
+lock.
 
 - `snd=0` in config.txt turns it off (the null server, silence, as before). Without LIBSSL.IRX on the
-  image (a wrong or partial image) the log says so and the game runs silent.
+  image (a wrong or partial image) the log says so and the game runs silent. `sndcore=N` pins the mixer
+  to core N (0, 1 or 2); the default, -1, lets it run on any core.
 - The log: `kh1-snd: sound driver LIBSSL.IRX (85501 bytes) running, tick 240 Hz`, `kh1-vita: sound: the
-  disc's driver on a thread on core 2 ...`, and every 2 s a watchdog line, `kh1-vita: sound: N ms mixing
-  and ticking for B buffers, T ticks, I IOP instructions, V voices on, R RPCs (F FIFO full)`. B should be
-  about 375 per 2 s (48,000 / 256 x 2); fewer means the thread is late and the sound breaks up. N over
-  about 2000 means the core cannot keep up. F counts the times the game sent faster than the thread ran.
-- Not measured yet on a Vita: the cost (about 2.5 million interpreted IOP instructions a second on the
-  host), and whether sharing core 2 with the GPU thread slows the frame. Try `sndcore=` 0 or 1 if it does.
-- Movies have no sound (the core PCM input is not modelled); the real driver also changes timing where an
-  event waits for a voice line, so host pad scripts drift when run with sound (sound-spec 6).
+  disc's driver mixing on any core ...`, and every 2 s a watchdog line, `kh1-vita: sound: N ms mixing and
+  ticking, B buffers played (S short), Q frames queued, T ticks, I IOP instructions, V voices on, R RPCs
+  (F FIFO full)`. B is about 375 per 2 s (48,000 / 256 x 2). S counts the buffers the mixer had not
+  filled in time (the sound breaks up). Q is how far ahead the mixer was (up to 4096). N over about
+  2000 means the mixer needs more than a core.
+- The first test (one thread on core 2, above the GPU thread) broke up and made the picture lag once
+  the title music started: it needed about 80% of core 2 (sound-spec 6). The mixer now does the same
+  work in about half the time and no longer holds up a frame. Not yet run on a Vita in this form.
+- Movies have no sound (the core PCM input is not modelled). The real driver also changes timing where
+  an event waits for a voice line, so host pad scripts drift when run with sound (sound-spec 6).
 
 ## What next, in order
 

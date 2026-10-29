@@ -91,7 +91,7 @@ static void env_set(Env *e, int rate, int dec, int exp) {
     else if (rate >= 48) e->inc >>= (rate >> 2) - 11;
 }
 
-static s32 env_tick(Env *e, s32 level) {
+static __inline__ __attribute__((always_inline)) s32 env_tick(Env *e, s32 level) {
     s32 step = e->step;
     u32 inc = e->inc;
     if (e->exp) {
@@ -121,7 +121,7 @@ static void adsr_phase(Voice *v, int ph) {
     }
 }
 
-static void adsr_tick(Voice *v) {
+static __inline__ __attribute__((always_inline)) void adsr_tick(Voice *v) {
     s32 sl;
     switch (v->phase) {
     case PH_ATTACK:
@@ -154,7 +154,7 @@ static void vol_set(Voice *v, int side, u16 reg) {
     env_set(&v->sweep[side], reg & 0x7F, (reg >> 13) & 1, (reg >> 14) & 1);
 }
 
-static void vol_tick(Voice *v, int side, u16 reg) {
+static __inline__ __attribute__((always_inline)) void vol_tick(Voice *v, int side, u16 reg) {
     s32 lv;
     if (!(reg & 0x8000)) return;
     lv = v->vol[side] < 0 ? -v->vol[side] : v->vol[side];
@@ -236,20 +236,31 @@ static void key_off(int c, int n) {
 
 /* ---- mixing ---- */
 
-static s32 cubic(const s16 *s, u32 frac) {
-    /* Catmull-Rom between s[1] and s[2], t = frac / 4096 */
-    s32 p0 = s[0], p1 = s[1], p2 = s[2], p3 = s[3];
-    s32 t = (s32)frac, t2 = (t * t) >> 12, t3 = (t2 * t) >> 12;
-    s32 a = (-p0 + 3 * p1 - 3 * p2 + p3), b = (2 * p0 - 5 * p1 + 4 * p2 - p3), cc = (-p0 + p2);
-    s64 r = ((s64)a * t3 + (s64)b * t2 + (s64)cc * t) >> 13;
-    r += p1;
-    if (r > 32767) r = 32767;
-    if (r < -32768) r = -32768;
-    return (s32)r;
+/* Catmull-Rom between s[1] and s[2] at 256 steps (the pitch counter's top 8 fraction bits): four
+ * 15-bit weights a step, made once (kh1_spu2_reset).  The console's own filter is Gaussian. */
+static s32 interp_w[256][4];
+
+static s32 round15(double x) { x *= 32768.0; return x >= 0 ? (s32)(x + 0.5) : -(s32)(0.5 - x); }
+
+static void interp_init(void) {
+    int i;
+    for (i = 0; i < 256; i++) {
+        double t = i / 256.0, t2 = t * t, t3 = t2 * t;
+        interp_w[i][0] = round15((-t3 + 2 * t2 - t) * 0.5);
+        interp_w[i][1] = round15((3 * t3 - 5 * t2 + 2) * 0.5);
+        interp_w[i][2] = round15((-3 * t3 + 4 * t2 + t) * 0.5);
+        interp_w[i][3] = round15((t3 - t2) * 0.5);
+    }
+}
+
+static __inline__ __attribute__((always_inline)) s32 cubic(const s16 *s, u32 frac) {
+    const s32 *w = interp_w[frac >> 4];
+    s32 r = (s[0] * w[0] + s[1] * w[1] + s[2] * w[2] + s[3] * w[3]) >> 15;
+    return r > 32767 ? 32767 : r < -32768 ? -32768 : r;
 }
 
 /* one 48 kHz sample of one voice, before its volumes: 0 for a voice that is off */
-static s32 voice_sample(Voice *v, int c, int n) {
+static __inline__ __attribute__((always_inline)) s32 voice_sample(Voice *v, int c, int n) {
     s32 out;
     u32 step;
     if (v->phase == PH_OFF) return 0;
@@ -358,27 +369,47 @@ static void reverb(int c, const s32 *wet, s32 *dry) {
 
 static s32 mvol(u16 reg) { return reg & 0x8000 ? 0x7FFF : (s16)(reg << 1); }
 
-void kh1_spu2_mix(s16 *out, int frames) {
+/* the mix runs voice by voice over a stretch of samples (the driver's ticks fall between calls, so no
+ * register changes inside one), into these sums per core and side; then the reverb and the master
+ * volumes sample by sample.  The sums are the same as a sample-by-sample loop's. */
+#define MIX_MAX 256
+static s32 mix_dry[2][2][MIX_MAX], mix_wet[2][2][MIX_MAX];
+
+static void voice_render(Voice *__restrict__ v, int c, int n, int frames, s32 (*__restrict__ dry)[MIX_MAX], s32 (*__restrict__ wet)[MIX_MAX]) {
+    const Core *k = &core[c];
+    u32 bit = 1u << n;
+    s32 ml = -(s32)((k->vmixl & bit) != 0), mr = -(s32)((k->vmixr & bit) != 0);
+    s32 mel = -(s32)((k->vmixel & bit) != 0), mer = -(s32)((k->vmixer & bit) != 0);
+    int sweep_l = v->voll & 0x8000, sweep_r = v->volr & 0x8000, i;
+    for (i = 0; i < frames && v->phase != PH_OFF; i++) {
+        s32 s = voice_sample(v, c, n), l, r;
+        if (sweep_l) vol_tick(v, 0, v->voll);
+        if (sweep_r) vol_tick(v, 1, v->volr);
+        l = (s * v->vol[0]) >> 15;
+        r = (s * v->vol[1]) >> 15;
+        dry[0][i] += l & ml;
+        dry[1][i] += r & mr;
+        wet[0][i] += l & mel;
+        wet[1][i] += r & mer;
+    }
+}
+
+static void mix_part(s16 *out, int frames) {
     int f, c, n;
+    for (c = 0; c < 2; c++) {
+        memset(mix_dry[c], 0, sizeof mix_dry[c]);
+        memset(mix_wet[c], 0, sizeof mix_wet[c]);
+        for (n = 0; n < 24; n++)
+            if (core[c].v[n].phase != PH_OFF) voice_render(&core[c].v[n], c, n, frames, mix_dry[c], mix_wet[c]);
+    }
     for (f = 0; f < frames; f++) {
-        s32 lr[2][2] = { { 0, 0 }, { 0, 0 } };
+        s32 lr[2][2];
         for (c = 0; c < 2; c++) {
-            Core *k = &core[c];
-            s32 wet[2] = { 0, 0 };
-            for (n = 0; n < 24; n++) {
-                Voice *v = &k->v[n];
-                s32 s;
-                if (v->phase == PH_OFF) continue;
-                s = voice_sample(v, c, n);
-                vol_tick(v, 0, v->voll);
-                vol_tick(v, 1, v->volr);
-                if (k->vmixl & (1u << n)) lr[c][0] += (s * v->vol[0]) >> 15;
-                if (k->vmixr & (1u << n)) lr[c][1] += (s * v->vol[1]) >> 15;
-                if (k->vmixel & (1u << n)) wet[0] += (s * v->vol[0]) >> 15;
-                if (k->vmixer & (1u << n)) wet[1] += (s * v->vol[1]) >> 15;
-            }
-            wet[0] = clamp16(wet[0]);
-            wet[1] = clamp16(wet[1]);
+            s32 wet[2];
+            lr[c][0] = mix_dry[c][0][f];
+            lr[c][1] = mix_dry[c][1][f];
+            wet[0] = clamp16(mix_wet[c][0][f]);
+            wet[1] = clamp16(mix_wet[c][1][f]);
             reverb(c, wet, lr[c]);
         }
         /* core 0's output into core 1 (AVOL), then core 1's master volume */
@@ -394,7 +425,17 @@ void kh1_spu2_mix(s16 *out, int frames) {
     }
 }
 
+void kh1_spu2_mix(s16 *out, int frames) {
+    while (frames > 0) {
+        int n = frames < MIX_MAX ? frames : MIX_MAX;
+        mix_part(out, n);
+        out += 2 * n;
+        frames -= n;
+    }
+}
+
 void kh1_spu2_reset(void) {
+    interp_init();
     memset(core, 0, sizeof core);
     memset(rv, 0, sizeof rv);
     memset(spu_ram, 0, sizeof spu_ram);
