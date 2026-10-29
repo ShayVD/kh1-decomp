@@ -1,3 +1,4 @@
+/* Round 39 (wwm2): wm.x func_00f78d50 near miss: score 67 -> 59 (124 words). The loop stores in address order: D_0108F7C0[i], then D_0108F830[i], then D_0108F8A0[i] (alias-pattern sweep, /tmp/claude-0/s141/r39/as2.py). Earlier header below. */
 /* 124 words, score 67 (was 126/71). Round 32 wwm2: hill2 reordered the global clears; ctx2 gives nothing. Earlier header: func_00f78d50: score 71, 126 words differ. original leaves soft-double libcall delay slots empty; global stores scheduled differently; all flag modes tried */
 typedef struct {
     s32 x0;
@@ -66,8 +67,8 @@ void func_00f78d50(s32 arg) {
     D_0108F730[0] = 1;
     D_0108F6B8.x8 = 0;
     for (i = 0; i < 27; i++) {
-        D_0108F830[i] = D_00FB5BC0;
         D_0108F7C0[i] = D_00FB5BBC;
+        D_0108F830[i] = D_00FB5BC0;
         D_0108F8A0[i] = D_00FB5BC4;
     }
     for (i = 0; i < 6; i++) {
