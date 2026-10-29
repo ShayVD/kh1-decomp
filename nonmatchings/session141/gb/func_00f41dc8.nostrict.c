@@ -1,4 +1,4 @@
-/* near miss (nostrict): 99 words, score 23. Left: original keeps n*16 for p[n].hi as a PRE'd constant per branch (li v1,128/144), +1 nop before the loop, post-loop n++ order. */
+/* near miss (nostrict): 15 words, score 21. The do {} while (0) (found by the permuter) stops CSE folding p[n]; left: flag-branch store order and o = p[n].w operand order. */
 typedef struct { u64 lo, hi; } GQ;
 typedef union { kh1_u128 q; u32 w[4]; GQ d; f32 f[4]; } GPkt;
 extern GPkt *D_00F82A88[];
@@ -44,6 +44,7 @@ void func_00f41dc8(s32 *x, s32 *y, s32 unused, s32 *q, s32 w, s32 h, f32 *s, f32
     n = 8;
     if (flag) {
         ad(&p[n++].d, (u64)flag << 32 | 0x800D0, 0x4C);
+        do {} while (0);
         p[n].d.lo = 0xC00A400000000001;
     } else {
         p[n].d.lo = 0xC02A400000008001;
