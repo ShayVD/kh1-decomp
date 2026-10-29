@@ -844,15 +844,18 @@ static void run(u32 pc) {
  * add, the scalar C keeps it), which only moves a sum of magnitude below 2^-126 */
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
 #include <arm_neon.h>
+/* session 147: fin()'s clamp in two minimums: a signed one brings a positive word down to 0x7F7FFFFF and
+ * leaves a negative one, an unsigned one the reverse with 0xFF7FFFFF (Inf and NaN to the largest finite of
+ * their sign; a denormal NEON flushes as it reads it) */
 static __inline__ float32x4_t vfin(uint32x4_t u) {
-    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
-    uint32x4_t m = vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu));
-    return vreinterpretq_f32_u32(vorrq_u32(s, m));
+    int32x4_t p = vminq_s32(vreinterpretq_s32_u32(u), vdupq_n_s32(0x7F7FFFFF));
+    return vreinterpretq_f32_u32(vminq_u32(vreinterpretq_u32_s32(p), vdupq_n_u32(0xFF7FFFFFu)));
 }
-static __inline__ uint32x4_t vfo(float32x4_t r) { /* an arithmetic result: NEON flushed it already */
-    uint32x4_t u = vreinterpretq_u32_f32(r);
-    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
-    return vorrq_u32(s, vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu)));
+/* an arithmetic result: NEON flushed it already.  Its operands are finite (fin()'s, or what the VU wrote), so
+ * it is finite or an infinity, never a NaN: the float clamp to +-FLT_MAX is fout()'s, -0 kept */
+static __inline__ uint32x4_t vfo(float32x4_t r) {
+    float32x4_t m = vreinterpretq_f32_u32(vdupq_n_u32(0x7F7FFFFFu));
+    return vreinterpretq_u32_f32(vmaxq_f32(vminq_f32(r, m), vnegq_f32(m)));
 }
 static __inline__ uint32x4_t vflush(uint32x4_t u) { /* a value passed through (MAX / MINI): denormal to 0 */
     uint32x4_t z = vceqq_u32(vandq_u32(u, vdupq_n_u32(0x7F800000u)), vdupq_n_u32(0));
@@ -881,8 +884,9 @@ static __inline__ void vu_k(u32 *t, int k, float32x4_t a, float32x4_t b, const u
 static __inline__ void vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
     vu_k(t, k, vin(vld1q_u32(a), fa), vin(vld1q_u32(b), fb), c, fc);
 }
-static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, int fa, int fb, int fc) {
-    vu_k(t, k, vin(vld1q_u32(a), fa), vin(vdupq_n_u32(b), fb), c, fc);
+/* b one field, read by NEON itself (vld1q_dup) rather than through a core register */
+static __inline__ void vu_opb(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
+    vu_k(t, k, vin(vld1q_u32(a), fa), vin(vld1q_dup_u32(b), fb), c, fc);
 }
 /* session 141: four lanes for the forms vu1_tr.c ran field by field (an FMAC whose MAC flag a later FMAND /
  * FMEQ / FMOR reads, OPMULA / OPMSUB), exact: the operands always through fin(), the MAC bits (into *macf
@@ -935,8 +939,13 @@ static __inline__ int vu_ek(u32 *t, int k, float32x4_t a, float32x4_t b, const u
 static __inline__ int vu_ope(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) {
     return vu_ek(t, k, vfin(vld1q_u32(a)), vfin(vld1q_u32(b)), c, dest, macf);
 }
-static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, u32 b, const u32 *c, u32 dest, u32 *macf) {
-    return vu_ek(t, k, vfin(vld1q_u32(a)), vfin(vdupq_n_u32(b)), c, dest, macf);
+static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) {
+    return vu_ek(t, k, vfin(vld1q_u32(a)), vfin(vld1q_dup_u32(b)), c, dest, macf);
+}
+/* session 147: an upper result's fields in dest (x the 8 bit) from u into t, on NEON: the A9 reads a word NEON
+ * just stored slowly from the core, and u is always one */
+static __inline__ void vu_put(u32 *t, const u32 *u, u32 dest) {
+    vst1q_u32(t, vbslq_u32(vld1q_u32(vu_lanes[dest & 15]), vld1q_u32(u), vld1q_u32(t)));
 }
 static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
     static const f32 inv[4] = { 1.0f, 1.0f / 16.0f, 1.0f / 4096.0f, 1.0f / 32768.0f };
@@ -968,14 +977,19 @@ static __inline__ void vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u3
         }
     }
 }
-static __inline__ void vu_opb(u32 *t, int k, const u32 *a, u32 b, const u32 *c, int fa, int fb, int fc) {
+static __inline__ void vu_opb(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
     u32 bb[4];
-    bb[0] = bb[1] = bb[2] = bb[3] = b;
+    bb[0] = bb[1] = bb[2] = bb[3] = *b;
     vu_op(t, k, a, bb, c, fa, fb, fc);
+}
+static __inline__ void vu_put(u32 *t, const u32 *u, u32 dest) {
+    int f;
+    for (f = 0; f < 4; f++)
+        if (dest >> (3 - f) & 1) t[f] = u[f];
 }
 /* session 141: the scalar form runs (see the NEON vu_ope) */
 static __inline__ int vu_ope(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) { return 0; }
-static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, u32 b, const u32 *c, u32 dest, u32 *macf) { return 0; }
+static __inline__ int vu_opbe(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 dest, u32 *macf) { return 0; }
 static __inline__ void vu_itof(u32 *t, const u32 *a, int sc) {
     static const f32 d[4] = { 1.0f, 16.0f, 4096.0f, 32768.0f };
     int f;

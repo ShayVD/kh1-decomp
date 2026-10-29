@@ -2,7 +2,9 @@
  * field (the MAC flag's, OPMULA / OPMSUB) against that scalar form, on random operands weighted to the
  * edges (0, -0, denormals, the smallest normals, the largest, inf / NaN patterns fin() clamps).  Where it
  * answers 1, every field of dest and the MAC bits must equal the scalar form's; where it answers 0, the
- * caller runs the scalar form.  Meaningful on ARM with NEON (tests/selftest.sh: arm-linux-gnueabihf-gcc
+ * caller runs the scalar form.  Session 147: also vu_op / vu_opb (the FMACs' usual form) against their
+ * session 141 form, kept here verbatim (old_*), bit for bit on every lane (their fin() / fout() clamps
+ * changed), and vu_put against the field copy it replaced.  Meaningful on ARM with NEON (tests/selftest.sh: arm-linux-gnueabihf-gcc
  * -mfpu=neon under qemu-arm, when both are there); elsewhere vu_ope always answers 0. */
 #include "common.h"
 #include "../../host/port/vu1.c"
@@ -50,6 +52,72 @@ static void scalar(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, u32 
     }
 }
 
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+static float32x4_t old_vfin(uint32x4_t u) {
+    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
+    uint32x4_t m = vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu));
+    return vreinterpretq_f32_u32(vorrq_u32(s, m));
+}
+static uint32x4_t old_vfo(float32x4_t r) {
+    uint32x4_t u = vreinterpretq_u32_f32(r);
+    uint32x4_t s = vandq_u32(u, vdupq_n_u32(0x80000000u));
+    return vorrq_u32(s, vminq_u32(vandq_u32(u, vdupq_n_u32(0x7FFFFFFFu)), vdupq_n_u32(0x7F7FFFFFu)));
+}
+static float32x4_t old_vin(uint32x4_t u, int fi) { return fi ? old_vfin(u) : vreinterpretq_f32_u32(u); }
+static void old_vu_op(u32 *t, int k, const u32 *a, const u32 *b, const u32 *c, int fa, int fb, int fc) {
+    float32x4_t x = old_vin(vld1q_u32(a), fa), y = old_vin(vld1q_u32(b), fb), r;
+    switch (k) {
+    case K_ADD: r = vaddq_f32(x, y); break;
+    case K_SUB: r = vsubq_f32(x, y); break;
+    case K_MUL: r = vmulq_f32(x, y); break;
+    case K_MADD: r = vaddq_f32(old_vin(vld1q_u32(c), fc), vmulq_f32(x, y)); break;
+    case K_MSUB: r = vsubq_f32(old_vin(vld1q_u32(c), fc), vmulq_f32(x, y)); break;
+    default: {
+        uint32x4_t gt = k == K_MAX ? vcgtq_f32(x, y) : vcltq_f32(x, y);
+        vst1q_u32(t, old_vfo(vreinterpretq_f32_u32(vflush(vbslq_u32(gt, vreinterpretq_u32_f32(x), vreinterpretq_u32_f32(y))))));
+        return;
+    }
+    }
+    vst1q_u32(t, old_vfo(r));
+}
+/* an operand the translator passes without fin() (fa 0) is one the VU wrote: canonical, never inf / NaN */
+static u32 canon(u32 u) { return fo(fin(u) * 1.0f); }
+static u32 op_check(u32 n) {
+    static const int ks[7] = { K_ADD, K_SUB, K_MUL, K_MADD, K_MSUB, K_MAX, K_MINI };
+    u32 i, f, bad = 0;
+    for (i = 0; i < n; i++) {
+        u32 a[4], b[4], c[4], t0[4], t1[4], put[4], ref[4], dest = rnd() % 16;
+        int k = ks[rnd() % 7], fa = rnd() & 1, fb = rnd() & 1, fc = rnd() & 1, bc = rnd() % 3 == 0;
+        for (f = 0; f < 4; f++) {
+            a[f] = fa ? val() : canon(val());
+            b[f] = fb ? val() : canon(val());
+            c[f] = fc ? val() : canon(val());
+            put[f] = ref[f] = rnd();
+        }
+        if (bc) {
+            u32 bb[4] = { b[1], b[1], b[1], b[1] };
+            old_vu_op(t0, k, a, bb, c, fa, fb, fc);
+            vu_opb(t1, k, a, &b[1], c, fa, fb, fc);
+        } else {
+            old_vu_op(t0, k, a, b, c, fa, fb, fc);
+            vu_op(t1, k, a, b, c, fa, fb, fc);
+        }
+        vu_put(put, t1, dest);
+        for (f = 0; f < 4; f++)
+            if (dest >> (3 - f) & 1) ref[f] = t0[f];
+        for (f = 0; f < 4; f++)
+            if (t0[f] != t1[f] || put[f] != ref[f]) break;
+        if (f < 4 && bad++ < 10)
+            printf("vu1neon_test: vu_op%s k %d fa %d fb %d fc %d field %u: old %08x new %08x put %08x / %08x\n", bc ? "b" : "",
+                   k, fa, fb, fc, f, t0[f], t1[f], put[f], ref[f]);
+    }
+    printf("vu1neon_test: vu_op / vu_opb / vu_put, %u cases, %u differ\n", n, bad);
+    return bad;
+}
+#else
+static u32 op_check(u32 n) { return 0; }
+#endif
+
 int main(int argc, char **argv) {
     static const int ks[5] = { K_ADD, K_SUB, K_MUL, K_MADD, K_MSUB };
     u32 n = argc > 1 ? (u32)atoi(argv[1]) : 2000000, i, fast = 0, bad = 0;
@@ -59,7 +127,7 @@ int main(int argc, char **argv) {
         for (f = 0; f < 4; f++) { a[f] = val(); b[f] = val(); c[f] = val(); }
         for (f = 0; f < 4; f++) bb[f] = bcast ? b[0] : b[f];
         scalar(te, k, a, bb, c, dest, withmac ? &me : 0);
-        ok = bcast ? vu_opbe(tv, k, a, b[0], c, dest, withmac ? &mv : 0) : vu_ope(tv, k, a, b, c, dest, withmac ? &mv : 0);
+        ok = bcast ? vu_opbe(tv, k, a, b, c, dest, withmac ? &mv : 0) : vu_ope(tv, k, a, b, c, dest, withmac ? &mv : 0);
         if (!ok) continue;
         fast++;
         for (f = 0; f < 4; f++)
@@ -70,6 +138,7 @@ int main(int argc, char **argv) {
                        k, dest, withmac, f, f < 4 ? te[f] : 0, me, f < 4 ? tv[f] : 0, mv, a[f & 3], bb[f & 3], c[f & 3]);
         }
     }
+    bad += op_check(n);
     printf("vu1neon_test: %u cases, %u on four lanes, %u differ: %s\n", n, fast, bad, bad ? "FAIL" : "PASS");
     return bad != 0;
 }

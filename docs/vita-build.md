@@ -917,6 +917,48 @@ the same 130 GS digests and GPU target hashes with `KH1_HOST_RECQ=1` and without
 main's without. **Not yet measured on a Vita** (3d-zf): the `gs worker` line's busy time and the `split` line's
 wait for it should fall; the game thread (the VU1 programs, clipw, its LoadImages) is likely the limit next.
 
+On a Vita (3d-zf, the Dive): the game's wait for the GS worker fell from ~740 to ~340 ms per 2 s, the recording
+~400 ms on the GPU thread with the worker waiting ~12 ms for it; ~17-20 fps. The game thread is the limit: the VU1
+programs ~0.9-1.2 s of every 2 s (`vu1:` line). Bursts of ~6 s at ~7 fps, the GPU thread's draw part ~1.7 s per
+2 s for ~300 draws, were the title's loose-texture re-read ("The title's backdrop on the GPU thread", #173): a
+count of `tex_loose`'s reads on the host (the gxmcheck binary, dive_en.txt) gives one every frame from the title
+through the Dive's opening (frames ~1200-3000), none after.
+
+## The VU1 programs' NEON forms (session 147)
+
+The game thread under the qemu instruction counter (as in session 143, main after #173 and #174, frames 5000-5060):
+tr_0 255M and tr_12 140M of its ~800M, most of them in arm_neon.h's `vand` / `vmin` (vu1.c's `vfin` / `vfo`, the
+clamp on every operand and result). Three changes in host/port/vu1.c and tools/vu/vu1_translate.py, the output
+the same:
+
+- **The clamps in two instructions.** `vfin` (fin(): Inf / NaN patterns to the largest finite of their sign) is a
+  signed minimum with 0x7F7FFFFF (the positive words) then an unsigned one with 0xFF7FFFFF (the negative); `vfo`
+  is a float minimum and maximum with +-FLT_MAX, exact because its operands are finite (fin()'s, or what the VU
+  wrote), so a result is finite or an infinity, never a NaN. Four instructions and a sign mask each before.
+- **Results merged on NEON** (`vu_put`): an upper result with a partial dest, or one the pair's lower reads, went
+  from the four-lane temporary into the register field by field through core registers; it is now one
+  `vbsl` with the dest's lanes. The A9 is slow to read from the core a word NEON just stored.
+- **Broadcast operands read by NEON** (`vu_opb` / `vu_opbe` take the field's address, `vld1q_dup`), not loaded
+  into a core register and moved across.
+
+The profile: tr_0 255M -> 233M, tr_12 140M -> 128M (qemu counts instructions; the two NEON-to-core changes save
+stalls it does not count). Checked: tests/host/vu1neon_test.c now also compares vu_op / vu_opb against their
+session 141 form (kept in the test verbatim) bit for bit on every lane over 2M operand sets weighted to the edges,
+the operands a translated program passes without fin() made canonical, and vu_put against the field copy;
+dropping either new clamp's second instruction is caught. The worker-order run with VU1 (`KH1_HOST_GSQ=1
+KH1_HOST_GSQ_CHECK=50 KH1_HOST_GPUQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, dive_en.txt) to frame 6500 gives the same
+130 digests and VU1 counts as main's, on x86 and on the ARM build under qemu. **Not yet measured on a Vita**
+(3d-zh): the `vu1:` line's time.
+
+On a Vita (3d-zh): the Dive at ~17 fps, stretches at 24-27; the GPU thread's draw bursts gone (#173); the `vu1:`
+line ~1.2 s per 2 s, no better than 3d-zf's, so these forms did not measurably help on the A9. The log also had a
+bad DMA send about every frame from frame 11 (the logos on): `tag at 84620c40 outside`. The ELF's bss ends at
+0x8461e97c, so that is the next pages: the main thread's stack, whose lower part is the coroutines' pool
+(host/port/costack.c). plat_null.c's `null_dma_where` only owned the stack above the walking coroutine's own
+frame, so a chain on a lower coroutine's stack was refused and the rest of its send dropped (nothing visibly
+wrong on screen). It now owns the whole pool too (`kh1_costack_owns`). Not seen on the x86 host or the ARM Linux
+build, whose stacks are malloc'd. **Not yet checked on a Vita** (3d-zi): the `log:` line's bad DMA sends.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

@@ -738,21 +738,21 @@ class Prog:
                 call = f"vu_op(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], acc, {int(not ca)}, {int(not cb)}, {int(not cc)});"
             else:
                 cb = (up.tsrc[0] == "bc" and C & B(up.ft, up.tsrc[1])) or up.tsrc[0] == "q"
-                b = {"bc": f"vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": self.qname(info["q_in"]),
-                     "i": "i_reg"}[up.tsrc[0]]
+                b = {"bc": f"&vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": "&" + self.qname(info["q_in"]),
+                     "i": "&i_reg"}[up.tsrc[0]]
                 call = f"vu_opb(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {int(not ca)}, {int(not cb)}, {int(not cc)});"
             direct = up.dest == 0xF and up.to and not self.lower_touches(lw, up.to)
             if direct:  # nothing in the lower reads or writes the target: straight into it
                 o.append(f"    {{ u32 *u = {dst}; {call} }}")
             else:
                 o.append(f"    {{ u32 u[4]; {call}")
-                if up.to:
-                    commit.extend(self.store4(dst, "u", up.dest))
+                if up.to:  # session 147: u is NEON's, so NEON merges it (vu1.c vu_put)
+                    commit.append(f"    vu_put({dst}, u, {up.dest:#x});")
                 commit.append("    }")
         elif up.op in ("itof", "ftoi"):
             o.append(f"    {{ u32 u[4]; vu_{up.op}(u, vf[{up.fs}], {up.k});")
             if up.to:
-                commit.extend(self.store4(dst, "u", up.dest))
+                commit.append(f"    vu_put({dst}, u, {up.dest:#x});")
             commit.append("    }")
         elif up.op == "fmac" and up.k not in (K_MAX, K_MINI):
             # session 141: the MAC-flag and cross-product (OPMULA / OPMSUB) forms on four lanes too (vu1.c's
@@ -768,8 +768,8 @@ class Prog:
             elif up.tsrc[0] == "vf":
                 o.append(f"    if (!vu_ope(u, {KN[up.k]}, vf[{up.fs}], vf[{up.ft}], acc, {up.dest:#x}, {mp})) {{")
             else:
-                b = {"bc": f"vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": self.qname(info["q_in"]),
-                     "i": "i_reg"}[up.tsrc[0]]
+                b = {"bc": f"&vf[{up.ft}][{up.tsrc[1] if up.tsrc[0] == 'bc' else 0}]", "q": "&" + self.qname(info["q_in"]),
+                     "i": "&i_reg"}[up.tsrc[0]]
                 o.append(f"    if (!vu_opbe(u, {KN[up.k]}, vf[{up.fs}], {b}, acc, {up.dest:#x}, {mp})) {{")
             for f in fields(up.dest):
                 a = f"fin(vf[{up.fs}][{f}])" if up.tsrc[0] != "op" else f"fin(vf[{up.fs}][{(1, 2, 0)[f]}])"
@@ -788,8 +788,7 @@ class Prog:
             if mac:
                 o.append(f"    {self.macname(info['fw'])} = m;")
             if up.to:
-                for f in fields(up.dest):
-                    commit.append(f"    {dst}[{f}] = u[{f}];")
+                commit.append(f"    vu_put({dst}, u, {up.dest:#x});")
             commit.append("    }")
         elif up.op == "fmac":
             o.append("    {")

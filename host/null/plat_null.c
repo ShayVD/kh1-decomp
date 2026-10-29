@@ -4,6 +4,7 @@
  * and answer "done" or "nothing there". Not part of the PS2 build (it lives
  * outside src/). The Vita build replaces it with src/vita/. */
 #include "common.h"
+#include "platform/costack.h"
 #include "platform/cd.h"
 #include "platform/dma.h"
 #include "platform/file.h"
@@ -122,6 +123,9 @@ static const char *null_dma_where(u32 a, u32 n) {
     if (p >= (unsigned long)__executable_start && e <= (unsigned long)end) return "image";
     if (p >= (unsigned long)PlatSpr && e <= (unsigned long)PlatSpr + sizeof PlatSpr) return "spr";
     if (p - (unsigned long)&local < 0x1000000) return "stack";
+    /* session 147: any coroutine's stack in the Vita's pool, not only the walking one's part above its frame
+     * (from 3d-zh on a Vita a title chain at 0x84620c40 sat below it, ~1 send a frame dropped) */
+    if (kh1_costack_owns(p, n)) return "stack";
     return 0;
 }
 static void null_dma_walk(int ch, u32 chcr, u32 tadr) { kh1_dma_walk(ch, chcr, tadr, null_dma_where); }
