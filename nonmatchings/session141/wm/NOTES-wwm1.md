@@ -346,3 +346,23 @@ f46750, f2c518, f3d4d8.
   0x40490FDA needed `3.141592503f` (f30d48).
 - **A temp computed before a call goes in a callee-saved FPR**: `t = fi /
   60.0f;` before sceVu0UnitMatrix put it in f20 as in the target.
+
+## Round 10
+
+Matched (1): f33aa0 (first draft; nested fill loops into D_00FBBA70).
+Near misses: f3d978 (2 instructions off, new file); f30d48 (13) and
+f43430 (7) are unchanged, with this round's attempts added to their
+headers. Not reached: f36bc0 (looked at: a long state loop with a switch on
+lbu-1), f46750, f2c518.
+
+### Round 10 tips
+
+- **hill2.py fixes**: slot choices are now keyed by slot text, so moving a
+  line that holds a slot keeps its choice. (Before, a moved slot could pick
+  another slot's choice or raise IndexError.) Leave a space before the
+  closing braces when an option itself ends in `}` (`... } }}`). Otherwise
+  the non-greedy match cuts the option short and the template does not
+  compile.
+- f30d48's 11-store prologue is not a source-order problem: random orders,
+  hill-climbing and chained assignments all bottom out at 13-14 words.
+  The fix is probably in how the globals are declared, not the order.

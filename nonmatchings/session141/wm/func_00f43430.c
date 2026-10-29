@@ -1,4 +1,4 @@
-/* 7 words (656 bytes). Structure right (cross-jumped f46cb8(64,1)+4 stores tails, buf loop via *p++, main wait loop). Left: s5/s6 swapped for D_00F9B1C8/D_00F9B1CC addresses, buf-loop move order, and beqz vs beqzl after func_00f40c98. hill2 over the 4 store blocks plus loop/condition forms (2x5 min), and a 10-min permuter run (best was not semantics-preserving). */
+/* 7 words (656 bytes). Structure right (cross-jumped f46cb8(64,1)+4 stores tails, buf loop via *p++, main wait loop). Left: s5/s6 swapped for D_00F9B1C8/D_00F9B1CC addresses, buf-loop move order, and beqz vs beqzl after func_00f40c98. hill2 over the 4 store blocks plus loop/condition forms (2x5 min), and a 10-min permuter run (best was not semantics-preserving). Round 10: hill2 over loop forms (while/for/do, five shapes of the B2C0/f41c28 test, five f40c98 forms), f41320 prototypes and p = buf placements: still 7. */
 typedef struct { u8 pad[32]; s32 x20; } S43430;
 extern S43430 D_00F87310;
 extern s32 D_002C5958, D_00F9B1C8, D_00F9B1CC, D_00F9B1C4, D_00F850AC, D_00F850E0, D_00F850D0;

@@ -1,4 +1,4 @@
-/* 13 words (696 bytes). Camera slerp from m1 (D_00F85200 copy) to m2 over 60 frames; pi needs the 3.141592503f literal (0x40490FDA) and t = fi / 60.0f before UnitMatrix gives the f20 temp. Left: the 11 opening global stores (register/lui order); hill-climbed them 3x5 min from different seeds, stuck at 13. */
+/* 13 words (696 bytes). Camera slerp from m1 (D_00F85200 copy) to m2 over 60 frames; pi needs the 3.141592503f literal (0x40490FDA) and t = fi / 60.0f before UnitMatrix gives the f20 temp. Left: the 11 opening global stores (register/lui order); hill-climbed them 3x5 min from different seeds, stuck at 13. Round 10: 500 random orders of the 11 stores (best 14), hill2 with chained-assignment slots (13), and a struct for the globals (worse, one base) also failed. */
 extern s32 D_002BC080[4];
 extern s32 D_002BC090, D_002BC094, D_002BC098, D_002BC09C, D_002BC0A0, D_002BC0A4, D_002BBE04;
 extern s32 D_00F87048;
