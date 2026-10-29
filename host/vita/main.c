@@ -32,6 +32,9 @@
  *       gpuq=N                session 142: 1 (the default, with gsq=1) runs the frame's GPU work (gxm.c's commands,
  *                             the latch, the present) on a thread of its own on the third core, from a copy of the
  *                             frame (host/null/pipes.c), while the worker records the next; 0 keeps it on the worker
+ *       latewait=N            session 145: 0 (the default) skips the vblank wait when a vblank has already begun
+ *                             since the last one ended (the frame is late: waiting would only lose time); 1 always
+ *                             waits for the next vblank, as before
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -90,6 +93,7 @@ static int use_gpu = 1; /* session 136: config.txt's gpu= */
 static int gpu_on;      /* the GPU renderer runs (gxm.c) */
 static int use_gsq = 1; /* session 141: config.txt's gsq= */
 static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
+static int late_wait;    /* session 145: config.txt's latewait= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
  * out) of each 2 s */
@@ -199,10 +203,12 @@ static void gpu_frame(int copied) {
 }
 
 /* session 141: with the GS side on its worker the frame's commands are its last op of the frame, so the game
- * goes on with the next frame while the worker builds, submits and shows this one; the vblank waits only for
- * the frame before (one frame in flight).  Every GPU call is then the worker's (gxm.c, vita2d) */
+ * goes on with the next frame while the worker builds, submits and shows this one.  Every GPU call is then the
+ * worker's (gxm.c, vita2d).  Session 145: the vblank waits for the frame op before the last one, not the last:
+ * the Dive draws every other frame, and waiting for the last op at the empty frame after a drawn one made the
+ * game wait for the worker's whole frame, so the game's next frame and the worker never overlapped */
 static void w_gpu_frame(const u32 *a, const u32 *d, u32 n) { gpu_frame((int)a[0]); }
-static u32 frame_end; /* the queue's position after the last frame's op */
+static u32 frame_end[2]; /* the queue's position after the last frame's op [0] and the one before [1] */
 
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
@@ -217,17 +223,26 @@ void kh1_host_vblank(void) {
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     if (gpu_on && kh1_gsq_on) { /* session 141: on the worker after the frame's sends */
         u32 copied = (u32)kh1_vita_frame_copied();
-        kh1_gsq_wait(frame_end);
+        kh1_gsq_wait(frame_end[1]);
         kh1_gsq_put(w_gpu_frame, &copied, 1, 0, 0);
-        frame_end = kh1_gsq_pos();
+        frame_end[1] = frame_end[0];
+        frame_end[0] = kh1_gsq_pos();
         kh1_gsq_flush();
     } else if (gpu_on) /* session 136: the frame's GS draws on the GPU */
         gpu_frame(kh1_vita_frame_copied());
     kh1_vita_status(frames, kh1_host_cd_reads);
     {
+        /* session 145: a frame that ends after the next vblank has begun goes on at once (one frame a vblank at
+         * most: the next one waits unless another vblank begins first) */
+        static int vcount;
         SceUInt64 t0 = sceKernelGetProcessTimeWide();
+        int vc = sceDisplayGetVcount();
         if (woke && (u32)(t0 - woke) > us_worst) us_worst = (u32)(t0 - woke);
-        sceDisplayWaitVblankStart();
+        if (late_wait || !woke || vc == vcount) {
+            sceDisplayWaitVblankStart();
+            vc = sceDisplayGetVcount();
+        }
+        vcount = vc;
         woke = sceKernelGetProcessTimeWide();
         kh1_vita_us_wait += (u32)(woke - t0);
     }
@@ -412,6 +427,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
         else if (strcmp(line, "gsq") == 0) use_gsq = atoi(v);
         else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
+        else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
     }
     fclose(f);
 }

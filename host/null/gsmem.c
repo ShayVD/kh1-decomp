@@ -998,6 +998,15 @@ int kh1_gsmem_snap_take(void) {
     return (int)n;
 }
 
+/* session 145: 1 when a take now would copy nothing new (no page stored to, no stamp moved since the last) */
+int kh1_gsmem_snap_same(void) {
+    u32 p;
+    if (!snap_vm) return 0;
+    for (p = 0; p < 512; p++)
+        if (dirty_pg[p]) return 0;
+    return memcmp(snap_seq, page_seq, sizeof snap_seq) == 0;
+}
+
 void kh1_gsmem_snap_read_block(u32 b, u32 *out) {
     memcpy(out, snap_vm + (b & 0x3FFF) * 256, 256);
 }

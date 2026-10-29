@@ -746,6 +746,40 @@ kh1_pipes_prim 107M (73M of it prim_sig's FNV a byte), gs_kick 95M, gif_qword 73
 
 The worker: 1,199M -> 1,002M (-16%; kh1_gsmem_image 355M -> 210M, kh1_pipes_prim 107M -> 56M).
 
+## The frame pacing: the game, the worker and the GPU thread (session 145)
+
+A Vita log of 3d-zd (the Dive, ~15 vblank calls a second, the game drawing on every other one) per 2 s: the
+GS worker busy ~1.7 s (~0.28 s of it waiting for the GPU thread, in ~15 waits), the game waiting ~0.6 s for the
+worker, the walks ~0.76 s, the vblank wait ~0.33 s. Those numbers hid a serialization, not a slow function: on
+the host (`KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=..`, frames 5000-5060) each drawn frame puts ~390,000 words in the
+queue and the vblank call after it none (`0 cmds 0 passes`). host/vita/main.c's vblank waited for the last frame
+op, so at that empty call the game waited for the worker to finish the whole drawn frame; and the worker, at that
+empty frame's op, waited for the GPU thread to finish the drawn frame's job before it could copy the (empty)
+frame. The game's next frame and the worker hardly overlapped. Three changes, the GS side's output the same:
+
+- **The vblank waits for the frame op before the last** (host/vita/main.c `frame_end[2]`; the host's
+  `KH1_HOST_GSQ_CHECK` order in host/null/main.c the same): at the empty call the game goes straight on, and at
+  the drawn one it waits for the drawn frame before (two frame ops in flight, ~3 MB of the 8 MB ring in the Dive).
+- **An empty frame's job is posted without waiting** (host/null/pipes.c `empty_frame`, `w_hook_empty`): a frame op
+  with no commands, no passes, nothing in either ring, no frame copy and GS memory as the last copy has it
+  (gsmem.c `kh1_gsmem_snap_same`: no page stored to, no stamp moved) is copied into a small KH1CmdRec of its own
+  and posted behind the drawn frame's job, which may still run. That job reads nothing the worker changes after
+  it: no commands means no texels or palettes, the GS memory copy is not retaken until the next op, which waits
+  for both jobs; and the rings now move to their other slot only after a frame that wrote them
+  (host/port/ring.c `kh1_ring_frame`), so the next drawn frame writes the slot the empty frame names (empty), not
+  the one the drawn frame's job reads. gsqueue.c's `kh1_gpuq` holds two jobs (`kh1_gpuq_put` waits only when two
+  are posted and not ended; `kh1_gpuq_wait` for all).
+- **A late frame skips the vblank wait** (host/vita/main.c): when a vblank has begun since the last wait ended
+  (`sceDisplayGetVcount`), the frame goes on at once; at most one frame a vblank still. config.txt `latewait=1`
+  waits for the next vblank always, as before.
+
+Checked on the English disc to frame 6500 (dive_en.txt), against #170's head: the worker-order run with the GPU
+thread (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1`,
+the gxmcheck binary) gives the same 130 GS digests and the same GPU target hashes; empty frames take the new path
+(~1,000 of them by frame 5100); the gxmcheck log at trace 5 is the same but for host pointers (`node draw ... arg`)
+and its 4,758 shots byte-identical; tests/host/ring_test.c checks the kept slot. **Not yet measured on a Vita**
+(3d-ze): the `split` line's wait for the GS worker and the `gpu thread` line's waits should fall.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

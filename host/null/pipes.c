@@ -326,6 +326,26 @@ static void w_hook(const u32 *a, const u32 *d, u32 n) {
     kh1_pipes_frame_hook(snap);
 }
 
+/* Session 145: the game draws every other frame in the Dive, so every other frame op finds nothing recorded,
+ * nothing written to the rings and GS memory as the last copy has it.  Such a frame's job reads nothing the
+ * worker changes (no commands, so no texels or palettes; the rings' slots it names hold nothing and are kept,
+ * ring.c; GS memory is the copy the job before reads too), so it is posted behind that job without waiting for
+ * it, from a copy of its own.  The next frame's op waits for both as before. */
+static KH1CmdRec *snap_empty;
+static int empty_posted; /* the last job posted is an empty frame's (snap_empty is its) */
+
+static int empty_frame(void) {
+    return !kh1_pipes_frame_arg && !rec->ncmd && !rec->npass && !rec->vring.head && !rec->uring.head &&
+           kh1_gsmem_snap_same();
+}
+
+static void w_hook_empty(const u32 *a, const u32 *d, u32 n) {
+    (void)d;
+    (void)n;
+    kh1_pipes_job_arg = a[0];
+    kh1_pipes_frame_hook(snap_empty);
+}
+
 /* the texels of texture cache entry `slot` the frame's upload reads (the copy's when the frame was copied) */
 const u32 *kh1_pipes_frame_texels(s32 slot) {
     if (slot < 0 || slot >= KH1_TEXCACHE_SLOTS) return 0;
@@ -344,7 +364,20 @@ void kh1_pipes_frame(void) {
     frame_begin();
     if (kh1_pipes_frame_hook && kh1_pipes_snap) {
         u32 a = kh1_pipes_frame_arg;
+        if (kh1_pipes_gpu_put && empty_frame() && (snap_empty || (snap_empty = (KH1CmdRec *)calloc(1, sizeof *snap_empty)))) {
+            if (empty_posted && kh1_pipes_gpu_wait) kh1_pipes_gpu_wait(); /* its copy is about to change */
+            empty_posted = 1;
+            snap_empty->vring = rec->vring;
+            snap_empty->uring = rec->uring;
+            snap_empty->ncmd = snap_empty->npass = 0;
+            snap_empty->ntgt = rec->ntgt;
+            memcpy(snap_empty->tgt, rec->tgt, sizeof rec->tgt);
+            kh1_pipes_gpu_put(w_hook_empty, &a, 1);
+            frame_end();
+            return;
+        }
         if (kh1_pipes_gpu_wait) kh1_pipes_gpu_wait(); /* the last frame's hook is done with the copies */
+        empty_posted = 0;
         if (snap_frame()) {
             printf("kh1-host: pipes: the frame's copy failed (no memory): the GPU frame on this thread from now\n");
             kh1_pipes_snap = 0;

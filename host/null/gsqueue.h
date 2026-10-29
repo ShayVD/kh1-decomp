@@ -37,8 +37,8 @@ void kh1_gsq_sync(void);
 extern volatile u32 kh1_gsq_us_busy, kh1_gsq_us_wait, kh1_gsq_waits;
 
 /* Session 142 (docs/vita-build.md "The GPU frame on the third core"): one more thread, for the frame's GPU
- * work.  kh1_gpuq_put runs fn(args, 0, 0) on it once the job before has ended (one job at a time: the caller
- * waits for the last one first), kh1_gpuq_wait returns once the last job has ended.  Off (kh1_gpuq_on 0) fn
+ * work.  kh1_gpuq_put runs fn(args, 0, 0) on it after the jobs before (session 145: up to two posted and not
+ * yet ended; a third put waits for the first), kh1_gpuq_wait returns once every job posted has ended.  Off (kh1_gpuq_on 0) fn
  * runs at once on the caller's thread.  The Vita's runs on the third core (the GS worker on the second) */
 #define KH1_GPUQ_ARGS 4
 extern int kh1_gpuq_on;
