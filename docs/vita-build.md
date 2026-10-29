@@ -927,7 +927,7 @@ which the 147c profile at 2,050 had already measured: it was this screen).
   uploads:` ~0.64 s per 2 s (from ~1.0 s: ~280 MB/s for the two halves together, the worker's half ~0.7 s of its
   time). The New Game pages at 60 fps (126-131 frames per 2.1 s, ~1 s of vblank wait), but for the first ~4-6 s
   after the choice (51-58 fps: ~26,000 w_block a window against ~18,000 once the pages settle, the worker busy
-  ~2 s per 2 s). The watchdog's new `gpu waits:` line (gxm.c's sceGxmFinish by where) puts all of the pages'
+  ~2 s per 2 s; Shay notes that stretch may have been the Load Game screen). The watchdog's new `gpu waits:` line (gxm.c's sceGxmFinish by where) puts all of the pages'
   GPU waits at the frame's start, none at target uploads, CLUT readbacks or blits.
 
 ## The recording on the third core (session 146)
