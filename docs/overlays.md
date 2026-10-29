@@ -185,6 +185,23 @@ and gb func_00f25a68 is wm func_00f35800 with gb's own literal (0.17453292f).
   (`f(o++, ...)`) give the `addiu s7,sp,N` before each `jal`.
 - **The permuter's base.c can lose `do {} while (0)`** and some casts (pycparser): check
   that base.c still holds what you gave it.
+- **Batch 4 patterns (session 141, workers' notes in nonmatchings/session141/wm/NOTES-wwm*.md):**
+  - An unfolded `addiu aN,aM,8` shared by two branches is an index kept in its own local
+    (gb func_00f30d80 / func_00f29c40: `k = q * 4 + 8; x = T[k]; z = T[q * 4 + 10];`).
+  - `(f >> 8) & 0xF` tests, and `ld; dsrl32; andi 0xffff; andi 0xf` reads, are u16 bitfields
+    (`lo:8, kind:4, hi:4`); a u64 member gives the struct the 8-byte alignment for the `ld`.
+  - An `lhu` + `andi 1` + `andi 0xffff` flag test is a plain u16 field read as
+    `(u16)(flags & 1)`; an `ldl/lwl` struct copy is a 2-byte-aligned (all-u16) struct.
+  - Extra register copies that "can't be produced" came from reusing an index variable for
+    the next lookup (`j = i; i = g->c[j].t;`, wm func_00f4b1e8 family and its gb twins).
+  - A constant kept in its own local before a loop (`u32 ff = 0xFFFFFF;` in wm func_00f68ec0,
+    gb func_00f41dc8, wm func_00f792c8) moves its `lui` to where the original has it.
+  - Indexing an output array (`D[n]`, `n++`) instead of advancing a pointer reverses which
+    `lui` gets the higher pseudo (wm func_00f355a8 / func_00f5e178).
+  - Writing a store twice (`xf.pos[3] = 1.0f;` first and last) lets dead-store elimination
+    keep the late copy while the scheduler hoists it (wm func_00f606a0).
+  - A stray `move a0,...` before a call often means the callee takes fewer arguments than
+    m2c guessed (gb func_00f299c8's func_00f291f0, wm func_00f21600's func_00f66240).
 
 ## decomp-permuter on an overlay function (session 135)
 
