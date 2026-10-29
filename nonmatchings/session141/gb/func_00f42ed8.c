@@ -1,4 +1,4 @@
-/* 143 words / score 182 (720 vs 736). Logic complete (init of ~30 globals, D_00F707CC vtable calls, PlatBreak bounds check). The 30-store block is a scheduling puzzle: a hill-climb over its order reached score 146 after 10+ min. Also left: &D_00F702D8/&D_00F702DC are materialised in s0/s1 before the func_001be278 call, and 1/128 constants sit in s8/s3 */
+/* 142 words / score 144 (720 vs 736). Logic complete (init of ~30 globals, D_00F707CC vtable calls, PlatBreak bounds check). Store order is the hill-climb result (15 min, from score 182). Also left: &D_00F702D8/&D_00F702DC are materialised in s0/s1 before the func_001be278 call, and 1/128 constants sit in s8/s3; 16 bytes short */
 typedef struct { u8 pad0[8]; void (*add)(void *, s32, s32); } GbSys;
 typedef struct { u8 pad0[0xC]; s32 f0c; u8 pad10[4]; s32 base; s32 size; } GbMem;
 extern s32 D_00F829F4, D_00F702D4;
@@ -36,18 +36,17 @@ void func_00f42ed8(s32 mode) {
     D_003F34B0[0] = 0xB4B4B4;
     D_003F34B0[1] = 0xB4B4B4;
     sceGsSyncPath(0, 0);
-    D_00F82A14 = D_00F705CC;
-    D_00F829D8 = -80;
-    D_00F82A44 = 1;
     D_00F829FC = 0;
+    D_00F82A44 = 1;
     D_00F82A00 = 0;
-    D_00F82A28 = 128.0f;
-    D_00F82A08 = D_00F705B8;
     D_00F829D4 = -80;
     D_00F82A30 = 128.0f;
-    D_00F82A1C = 128;
-    D_00F82A0C = D_00F705B4;
+    D_00F82A28 = 128.0f;
     D_00F82A10 = D_00F705B8;
+    D_00F82A0C = D_00F705B4;
+    D_00F82A14 = D_00F705CC;
+    D_00F829D8 = -80;
+    D_00F82A1C = 128;
     D_00F702E0 = D_00F7032C;
     D_00F82A24 = 128.0f;
     D_00F82A2C = 128.0f;
@@ -56,6 +55,7 @@ void func_00f42ed8(s32 mode) {
     D_00F82A98 = 0;
     D_00F829F8 = 0;
     D_00F829E0 = 0;
+    D_00F82A08 = D_00F705B8;
     D_00F829DC = 0;
     D_00F82A34 = 0;
     D_00F829D0 = 0;
