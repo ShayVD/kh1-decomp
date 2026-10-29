@@ -329,6 +329,14 @@ gets, try assignments in different orders instead of initializers.
 For drafts with a size difference, run sclimb.py with `OBJ=score` (hand.py's score). The raw
 word count often goes down while the alignment gets worse.
 
+`tools/ovl/i2a.py OVL DRAFT [N]` does the initializer-to-assignment change. It takes the constant
+initializers of the declarations at the top of the function body, removes them, and puts
+plain assignments after the last declaration. It then runs hand.py try on the source order and
+on N random orders (default 40), and writes the best version to `$I2A_DIR/best_OVL_FUNC.c`
+(default out/ovl/i2a/). It needs at least two constant initializers, and it reports raw word
+counts, so check the best file's hand.py score before you keep it. Starting from the 4-word
+f4b878 draft it finds the match.
+
 ## decomp-permuter on an overlay function (session 135)
 
 tools/permuter.py works in overlay mode as it is (KH1_OVL points kh1tool at the overlay's layout,
