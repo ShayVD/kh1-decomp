@@ -1,3 +1,4 @@
+/* Round 42 wwm2: score 41 -> 37. The lod tail is lod = 1; if (!(z < rad * 1.5f)) lod = 0; (the target has bc1t with li s0,1 in the delay slot). For that, the outer lod = 1 has to sit only in an else arm of D_00F8C23C != 0, or cse drops the second lod = 1. Left: FP register numbering in the cull block. */
 /* 23 words differ, score 41 (1052 vs 1056 bytes; round 30 wgb: CONTEXT_ONLY func_00f29658 (ctx2) and parameters in the callers' order (..., f32 al, f32 sc, s32 flags), was 24/43); logic complete (frustum cull + lod switch, case 1/default shared). Left: FPU register choice in the cull block (orig rad f9, z f11, 1.0f f10, ry f8), the final lod select (orig bc1t with li 1 in delay slot, then move 0), beqz vs beqzl in the switch tree. Tried: reciprocal temps, rx/ry order, 5 lod forms, case order, store placement; 10 min permuter found the new_var cx->x8 temp (49 -> 43) */
 typedef struct 
 {
@@ -49,8 +50,11 @@ void func_00f29dc0(s32 id, f32 (*w)[4], f32 (*b)[4], u8 *obj, f32 al, f32 sc, s3
   lod = 2;
   if (!(flags & 1))
   {
-    lod = 1;
-    if (D_00F8C23C == 0)
+    if (D_00F8C23C != 0)
+    {
+      lod = 1;
+    }
+    else
     {
       rad = *((f32 *) (obj + 200));
       z = t[3][2];
@@ -84,10 +88,10 @@ void func_00f29dc0(s32 id, f32 (*w)[4], f32 (*b)[4], u8 *obj, f32 al, f32 sc, s3
           return;
         }
       }
-      lod = 0;
-      if (z < (rad * 1.5f))
+      lod = 1;
+      if (!(z < (rad * 1.5f)))
       {
-        lod = 1;
+        lod = 0;
       }
     }
   }
