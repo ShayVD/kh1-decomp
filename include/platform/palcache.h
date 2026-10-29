@@ -19,6 +19,7 @@ typedef struct {
     u32 n;        /* 16 or 256 */
     u32 frame;    /* the frame that last used it */
     u32 use;      /* the use count when last used: least recent first */
+    u32 gen;      /* session 147d: new at each fill (never reused, across inits too): the entries are the same while it is */
     u32 col[256]; /* RGBA8, R in bits 0-7 */
 } KH1PalSlot;
 
@@ -38,6 +39,9 @@ int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill);
 /* session 141: a draw of this frame binds slot again without a lookup (its entries are the bound slot's):
  * marked used, so no later miss of the frame refills it while the GPU still has to read it */
 void kh1_palcache_use(KH1PalCache *c, int slot);
+/* session 147d: the hit kh1_palcache_get would answer, for a slot the caller knows holds the entries (it got the
+ * slot for the same entries while the slot's gen was the same) */
+void kh1_palcache_hit(KH1PalCache *c, int slot);
 #endif
 
 #endif

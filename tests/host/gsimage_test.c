@@ -129,6 +129,42 @@ int main(void) {
     n = store(KH1_PSMCT24, 0x1A00, 8, 0, 0, 512, 384);
     CHECK("target under 4:3: 0x90000 bytes", n == 0x90000);
 
+    /* session 147d: the large uploads on the worker (gsimage.c load_big): with the queue on, 12 CT32 rectangles of
+     * 128 x 128 (64 KiB, LOAD_HERE) loaded again and again, each time its bytes the same, one byte changed, or back
+     * again, with pixel writes into the rectangles between (the kept bytes no longer GS memory's), more rectangles
+     * than load_big keeps; GS memory after each against the bytes loaded */
+    {
+        static u8 src[12][0x10000];
+        u32 it, r, rs = 147, bad = 0;
+        CHECK("the queue starts", kh1_gsq_start(1u << 20) == 0);
+        for (r = 0; r < 12; r++)
+            for (x = 0; x < 0x10000; x++) src[r][x] = (u8)(pat(x, r, 0x147) >> 3);
+        for (it = 0; it < 400; it++) {
+            u32 k, bp;
+            rs = rs * 1103515245u + 12345u;
+            r = it < 24 ? it % 12 : (rs >> 16) % (it & 64 ? 12 : 4);
+            bp = 0x1000 + r * 0x100; /* 128 x 128 CT32 = 0x100 blocks */
+            k = rs >> 8 & 7;
+            if (k == 0) src[r][(rs >> 4) & 0xFFFF] ^= 0x40; /* a byte changed */
+            if (k == 1) kh1_gsmem_write_pixel(KH1_PSMCT32, bp, 2, rs >> 5 & 127, rs >> 12 & 127, rs);
+            PlatGsSetDefLoadImage(lpk, (short)bp, 2, KH1_PSMCT32, 0, 0, 128, 128);
+            PlatGsExecLoadImage(lpk, src[r]);
+            if (k == 2) src[r][(rs >> 4) & 0xFFFF] ^= 0x10; /* changed after the call: the copy was taken */
+            if (it % 7 == 0 || k == 2) {
+                kh1_gsq_sync();
+                for (y = 0; y < 128; y += 3)
+                    for (x = 0; x < 128; x += 1) {
+                        u32 o = (y * 128 + x) * 4, v = src[r][o] | src[r][o + 1] << 8 | src[r][o + 2] << 16 | (u32)src[r][o + 3] << 24;
+                        if (k == 2 && o <= ((rs >> 4) & 0xFFFF) && ((rs >> 4) & 0xFFFF) < o + 4) v ^= 0x10u << ((rs >> 4) & 3) * 8;
+                        bad += kh1_gsmem_read_pixel(KH1_PSMCT32, bp, 2, x, y) != v;
+                    }
+                if (k == 2) src[r][(rs >> 4) & 0xFFFF] ^= 0x10;
+            }
+        }
+        kh1_gsq_sync();
+        CHECK("the large uploads on the worker: GS memory as the bytes loaded", bad == 0);
+    }
+
     /* without KH1_HOST_TRACE >= 2 the model is not fed: a load does nothing */
     kh1_host_trace = 0;
     memset(buf, 0, 768);

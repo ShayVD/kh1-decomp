@@ -901,6 +901,52 @@ instructions per 60 frames.
   checks the results and the cache state stay the same.
 - Checked on the English disc (dive_en.txt to frame 6500, the worker-order run above): all 130 GS digests and
   260 GPU target hashes are the same as main's.
+
+### The New Game pages (session 147d)
+
+**On a Vita (s147d)**: the title menu at 60 fps (126-129 frames per 2.1 s, ~0.9 s of vblank wait per 2 s, the
+worker ~0.34 s busy). After a choice, the New Game pages (still dktitle.x, nothing loaded until the opening at
+~frame 2,500) at 32-53 fps: the worker busy ~1.0-1.3 s per 2 s, ~0.7-0.9 s of it in w_block, and the game waiting
+~0.8-1.1 s for it; the game thread's `large uploads:` ~0.65-0.93 s per 2 s, all unchanged. The send dump: ~220
+sends a frame, ~140 of them glyph sprites with a CLUT load each (dive_en.txt's frames 2,002-2,400 on the host,
+which the 147c profile at 2,050 had already measured: it was this screen).
+
+- **gsmem.c**: each kept CLUT also keeps kh1_gsmem_clut's converted answer (by how it was asked and TEXA), named
+  by an id that is never reused (kh1_gsmem_clut_id); the glyphs' alternating palettes each convert once.
+- **pipes.c / palcache.c**: the palette slot each id was got in, with the slot's gen (new at each fill, never
+  reused): while the gen holds the slot holds those entries, so the lookup is `kh1_palcache_hit`, the state update
+  the get's hit makes, without the hash, the 256 slots' scan or a compare; the per-draw check against the bound
+  slot likewise.
+- **cmdbuf.c cover_cmd**: a rectangle's covered cells by rows (the columns found once), not cell by cell.
+- texcache.c's raw and texel compares and pipes.c's palette compare through kh1_bytes_same (NEON on the Vita).
+- Host worker on those pages: 232M -> 158M instructions per 60 frames.
+- **gsimage.c** (s147f): a large upload's compare (after the sync, the worker idle) shared: its first half on
+  the worker, the rest on the game thread, then a sync for the answer. Replaced in s147h (below).
+- Tests: gsfast_test checks that every id kh1_gsmem_clut_id gives back comes with the same entries (6,000 loads);
+  palcache_test runs a third cache as pipes.c uses it (known slot and gen, kh1_palcache_hit) and checks its answers
+  and slot states against the plain gets over 200,000 gets.
+- **On a Vita (s147f / s147g)**: the menu at 60 fps with ~1.3 s of vblank wait per 2 s; the game thread's `large
+  uploads:` ~0.64 s per 2 s (from ~1.0 s: ~280 MB/s for the two halves together, the worker's half ~0.7 s of its
+  time). The New Game pages at 60 fps (126-131 frames per 2.1 s, ~1 s of vblank wait), but for the first ~4-6 s
+  after the choice (51-58 fps: ~26,000 w_block a window against ~18,000 once the pages settle, the worker busy
+  ~2 s per 2 s; Shay notes that stretch may have been the Load Game screen). The watchdog's new `gpu waits:` line (gxm.c's sceGxmFinish by where) puts all of the pages'
+  GPU waits at the frame's start, none at target uploads, CLUT readbacks or blits.
+- **The syncs before the large uploads (s147h)**: each of the ~5 a frame waited for the worker to empty its queue,
+  so the game and the worker took turns (the game waited ~1 s per 2 s in them on the first New Game page).
+  gsimage.c `load_big` now keeps each large upload's bytes on the game thread (8 kept, by BITBLTBUF, TRXPOS, TRXREG
+  and size) with a generation. The same bytes again (compared there, no sync) go to the worker as an op naming
+  the generation and the kept copy; kh1_gsmem_image_same matches the generation the rectangle's kept bytes came
+  with (gsmem.c `kh1_gsmem_image_gen`, kept by kh1_gsmem_image_kept) instead of comparing. New bytes are copied in
+  after a sync (no op reads a copy then), with a new generation, and the worker uploads them from the copy.
+  gsimage_test loads 12 rectangles 400 times with the queue on (bytes the same, changed, changed after the call,
+  pixels written into the rectangles between) and checks GS memory against the bytes loaded; matching any
+  generation is caught.
+- **On a Vita (s147h)**: the title, the menu and the New Game pages all at 60 fps (128-129 frames per 2.1 s), the
+  first New Game page included (the worker busy ~2.0 s per 2 s there, the game waiting ~0.25-0.55 s, still 60).
+  The one slow window was s147b's send dump itself (~1.6 s of log writes); s147i takes the dump out.
+- Checked on the English disc (dive_en.txt to frame 6500, the worker-order run above), at s147e, s147f and s147h:
+  all 130 GS digests and 260 GPU target hashes the same as main's each time.
+
 ## The recording on the third core (session 146)
 
 A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;

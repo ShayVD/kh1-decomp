@@ -48,6 +48,11 @@ void kh1_gsmem_image(const u32 *w, u32 n);
  * kh1_gsmem_image_kept keeps them for the next */
 int kh1_gsmem_image_same(const void *src, u32 bytes);
 void kh1_gsmem_image_kept(const void *src, u32 bytes);
+/* session 147d: nonzero around an upload whose bytes the caller names by this generation (gsimage.c's large
+ * uploads: the game thread compares them with its own copy, and the same bytes keep the generation):
+ * kh1_gsmem_image_same then matches the generation the rectangle's kept bytes came with instead of comparing the
+ * bytes, and kh1_gsmem_image_kept keeps it */
+extern u32 kh1_gsmem_image_gen;
 /* a TEX0 (or the TEX0 a TEX2 write leaves) written: loads the CLUT buffer as its CLD says */
 void kh1_gsmem_tex0(u32 lo, u32 hi);
 
@@ -80,6 +85,9 @@ int kh1_gsmem_read_tex(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *
 /* session 116: the palette the TEX0 reads from the CLUT buffer (256 entries for T8 / T8H, CSA's 16 for
  * the 4-bit PSMs) as RGBA8 words; returns the count, 0 for one the model does not have */
 int kh1_gsmem_clut(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *out);
+/* session 147d: nonzero when the last kh1_gsmem_clut answer is a kept one: the same id, the same entries (ids are
+ * never reused) */
+u32 kh1_gsmem_clut_id(void);
 /* session 117 (the palette cache in the present, renderer-spec 4.13 "Session 117"): called after each
  * CLUT buffer load with the TEX0 that loaded it; and, when set, the textured flat sprite's indexed
  * decode (kh1_gsmem_flat_sprite) asks it for the TEX0's palette (as kh1_gsmem_clut gives: 256 entries,

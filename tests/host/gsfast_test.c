@@ -23,6 +23,22 @@ static u32 R(void) { rs = rs * 1103515245u + 12345u; return rs >> 8 ^ rs << 13; 
 /* the present's caches as host/null/present.c keeps them: the texels as GS memory holds them at the
  * draw (the index for an indexed PSM), the palette as kh1_gsmem_clut gives it */
 static u32 tex_buf[1024 * 1024], pal_buf[256];
+/* session 147d: an answer kh1_gsmem_clut_id names is the same entries whenever that id comes back */
+static struct { u32 id, n, e[256]; } ids[256];
+static u32 id_seen, id_again, id_bad;
+static void id_note(u32 n, const u32 *e) {
+    u32 id = kh1_gsmem_clut_id(), k = id & 255;
+    if (!id || !n) return;
+    id_seen++;
+    if (ids[k].id == id) {
+        id_again++;
+        if (ids[k].n != n || memcmp(ids[k].e, e, n * 4)) id_bad++;
+        return;
+    }
+    ids[k].id = id;
+    ids[k].n = n;
+    memcpy(ids[k].e, e, n * 4);
+}
 static const u32 *texels(u32 lo, u32 hi) {
     u32 w = 1u << (lo >> 26 & 15), h = 1u << ((lo >> 30 | hi << 2) & 15), x, y;
     (void)hi;
@@ -411,9 +427,11 @@ int main(void) {
             kh1_gsmem_tex0(lo, hi);
             if (R() & 1) kh1_gsmem_tex0(lo, hi); /* again: the buffer holds it already */
             nb = (u32)kh1_gsmem_clut(lo, hi, 0x80, 0x80, pb);
+            id_note(nb, pb);
             /* kh1_gsmem_clut's kept answer: the same question again, then another TEXA (CT16's alpha) */
             if (kh1_gsmem_clut(lo, hi, 0x80, 0x80, pc) != (int)nb || memcmp(pc, pb, nb * 4)) fails++;
-            kh1_gsmem_clut(lo, hi, 0x8040, 0x10, pc);
+            id_note(nb, pc);
+            id_note((u32)kh1_gsmem_clut(lo, hi, 0x8040, 0x10, pc), pc);
             kh1_gsmem_fast(0);
             kh1_gsmem_tex0(lo, hi);
             kh1_gsmem_clut(lo, hi, 0x8040, 0x10, pd);
@@ -427,6 +445,8 @@ int main(void) {
             }
         }
         CHECK("the CLUT loads compared", hitsame == loads);
+        CHECK("an id's entries are the same each time it comes back", id_bad == 0);
+        CHECK("ids come back", id_seen > 3000 && id_again > 1000);
     }
     CHECK("read_rect refuses a PSM the model has not", kh1_gsmem_read_rect(0x3B, 0, 1, 0, 0, 4, 4, rect, 256) == -1);
     printf("gsfast_test: %s (600 sprites both ways, %u drawn; 150 upload runs; 200 rectangles, 200 from the copy; 400 texture scans, %u on a target)\n", fails ? "FAIL" : "PASS", drawn, hits);

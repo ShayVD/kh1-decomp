@@ -743,11 +743,18 @@ volatile u32 kh1_vita_us_gpu; /* microseconds in kh1_vita_gxm_frame (the watchdo
  * begin / end, 3 the draws (programs, textures, sceGxmDraw), 4 the transfers (texture, palette, target uploads) */
 volatile u32 kh1_vita_us_part[5];
 volatile u32 kh1_vita_us_finish, kh1_vita_finishes; /* of it, waiting in sceGxmFinish, and how many */
-static void finish(void) {
+/* session 147d: by where (the title's New Game pages wait ~1.3 s per 2 s in ~2 finishes a frame): 0 the frame's start,
+ * 1 the uploads into targets, 2 a CLUT pass's readback, 3 a blit */
+volatile u32 kh1_vita_us_finish_at[4], kh1_vita_finishes_at[4];
+static void finish_at(int at) {
     SceUInt64 t0 = sceKernelGetProcessTimeWide();
+    u32 us;
     sceGxmFinish(ctx);
-    kh1_vita_us_finish += (u32)(sceKernelGetProcessTimeWide() - t0);
+    us = (u32)(sceKernelGetProcessTimeWide() - t0);
+    kh1_vita_us_finish += us;
     kh1_vita_finishes++;
+    kh1_vita_us_finish_at[at] += us;
+    kh1_vita_finishes_at[at]++;
 }
 
 static void stencil(u32 mode) {
@@ -830,7 +837,7 @@ static void pend_flush(Target *only) {
     for (i = 0; i < pend_n; i++) {
         u32 b = pend_list[i], own = pend_own[b] & sel, j;
         if (own) {
-            if (!any) finish();
+            if (!any) finish_at(1);
             any = 1;
             for (j = 0; j < KH1_CMD_TARGETS; j++)
                 if (own >> j & 1) pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
@@ -886,7 +893,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     t0 = sceKernelGetProcessTimeWide();
     kh1_gxm_frame(&rec, r);
     kh1_vita_us_part[0] += (u32)(sceKernelGetProcessTimeWide() - t0);
-    finish(); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
+    finish_at(0); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
     pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
     if (r->vring.head > vbuf_bytes) {
         char d[64];
@@ -1006,7 +1013,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             u32 e, *o = (u32 *)pal_rb;
             if (!s || !s->mem) break;
             pend_flush(s);
-            finish();
+            finish_at(2);
             for (e = 0; e < 256; e++) {
                 u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g;
                 g = (p >> 4) < s->h && (p & 15) < s->w ? ((u32 *)s->mem)[(p >> 4) * s->stride + (p & 15)] : 0;
@@ -1028,7 +1035,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             if (!d || !d->mem || !k) break;
             if (!s || !s->mem) { pend_add(d, r->tgt[c->tgt - 1], &k->x, c->dx, c->dy, c->w, c->h); break; }
             pend_flush(0);
-            finish();
+            finish_at(3);
             sx = k->x.sx;
             sy = k->x.sy;
             for (y = 0; y < c->h; y++) {

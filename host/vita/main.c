@@ -230,8 +230,6 @@ static void gpu_frame(int copied) {
 static void w_gpu_frame(const u32 *a, const u32 *d, u32 n) { gpu_frame((int)a[0]); }
 static u32 frame_end[2]; /* the queue's position after the last frame's op [0] and the one before [1] */
 
-extern volatile u32 kh1_vita_sends; /* display.c */
-
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
     static int in_vblank;
@@ -240,23 +238,6 @@ void kh1_host_vblank(void) {
     in_vblank = 1;
     frames++;
     if (frames % 60 == 0) vlog("kh1-vita: frame %lu, %u disc reads\n", frames, kh1_host_cd_reads);
-    { /* session 147b: the title's menu sends ~100-200 a frame on the Vita against ~7 on the host; the first frame
-       * with over 50 (and one more at least 600 frames later) has its send lines printed, as the host's would be */
-        static u32 sends0, dumps;
-        static unsigned long dump_at, dumped_at;
-        if (dump_at && frames > dump_at) {
-            kh1_dma_quiet = 1;
-            dump_at = 0;
-            vlog("kh1-vita: frame %lu: the send lines end\n", frames);
-        } else if (dumps < 2 && kh1_dma_quiet && kh1_vita_sends - sends0 > 50 && (!dumps || frames >= dumped_at + 600)) {
-            vlog("kh1-vita: frame %lu: %u sends in the last frame; the next frame's send lines follow\n", frames,
-                 kh1_vita_sends - sends0);
-            kh1_dma_quiet = 0;
-            dump_at = dumped_at = frames;
-            dumps++;
-        }
-        sends0 = kh1_vita_sends;
-    }
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
@@ -327,11 +308,13 @@ extern u8 D_004E4528[], D_002B75A0[];
 extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
+extern volatile u32 kh1_vita_us_finish_at[4], kh1_vita_finishes_at[4]; /* host/vita/gxm.c, session 147d */
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
     u32 rbusy0 = 0, rwait0 = 0, rwaits0 = 0, ld0[4] = { 0 };
     u32 gbusy0 = 0, gwait0 = 0, gwaits0 = 0, qbusy0 = 0, qwait0 = 0, qwaits0 = 0, qpages0 = 0, log0 = 0, logn0 = 0, bad0 = 0;
+    u32 fat0[4] = { 0 }, nfat0[4] = { 0 };
     u32 part0[5] = { 0 }, wait0 = 0, present0 = 0, gpu0 = 0, fin0 = 0, nfin0 = 0, rec0 = 0, frame0 = 0, draw0 = 0, vu0 = 0, kick0 = 0;
     (void)args;
     (void)argp;
@@ -389,6 +372,12 @@ static int watchdog(SceSize args, void *argp) {
                  "%u transfers\n", (kh1_vita_us_part[0] - part0[0]) / 1000, (kh1_vita_us_part[1] - part0[1]) / 1000,
                  (kh1_vita_us_part[2] - part0[2]) / 1000, (kh1_vita_us_part[3] - part0[3]) / 1000,
                  (kh1_vita_us_part[4] - part0[4]) / 1000);
+            vlog("kh1-vita: gpu waits: %u ms at the frame's start (%u), %u for uploads into targets (%u), %u for CLUT "
+                 "readbacks (%u), %u for blits (%u)\n", (kh1_vita_us_finish_at[0] - fat0[0]) / 1000,
+                 kh1_vita_finishes_at[0] - nfat0[0], (kh1_vita_us_finish_at[1] - fat0[1]) / 1000,
+                 kh1_vita_finishes_at[1] - nfat0[1], (kh1_vita_us_finish_at[2] - fat0[2]) / 1000,
+                 kh1_vita_finishes_at[2] - nfat0[2], (kh1_vita_us_finish_at[3] - fat0[3]) / 1000,
+                 kh1_vita_finishes_at[3] - nfat0[3]);
             /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
             vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
                  "slowest frame %u.%u ms\n", (us_record - rec0) / 1000, (us_frame - frame0) / 1000,
@@ -485,6 +474,8 @@ static int watchdog(SceSize args, void *argp) {
         fin0 = kh1_vita_us_finish;
         memcpy(part0, (const u32 *)kh1_vita_us_part, sizeof part0);
         nfin0 = kh1_vita_finishes;
+        memcpy(fat0, (const u32 *)kh1_vita_us_finish_at, sizeof fat0);
+        memcpy(nfat0, (const u32 *)kh1_vita_finishes_at, sizeof nfat0);
         wait0 = kh1_vita_us_wait;
         present0 = kh1_vita_us_present;
         last = frames;

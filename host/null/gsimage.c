@@ -27,6 +27,11 @@
 #include "gsmem.h"
 #include "gsqueue.h"
 #include "platform/vu1.h"
+#include "bytesame.h"
+
+void *malloc(__SIZE_TYPE__);
+void free(void *);
+void *memcpy(void *, const void *, __SIZE_TYPE__);
 
 extern int kh1_host_trace;
 
@@ -114,6 +119,56 @@ static void w_load(const u32 *a, const u32 *d, u32 nqw) {
  * (the sync before each not in it), how many, how many of them unchanged, their bytes */
 u32 kh1_gs_load_us, kh1_gs_loads, kh1_gs_loads_same, kh1_gs_load_bytes;
 
+/* Session 147d (the title's New Game pages on a Vita: the game waited ~1 s per 2 s in the syncs before the ~5 large
+ * uploads a frame, game and worker taking turns): a large upload's bytes are kept here, on the game thread, by its
+ * BITBLTBUF, TRXPOS, TRXREG and size with a generation.  The same bytes again (compared here, no sync) go to the
+ * worker as an op naming the generation and the kept copy, which kh1_gsmem_image_same matches without a compare
+ * (gsmem.c kh1_gsmem_image_gen); new bytes are copied in after a sync (no op still reads the copy), with a new
+ * generation, and the worker uploads them from the copy.  The worker's work is in order with the sends as before. */
+#define BIG_KEPT 8
+static struct { u32 k[5], bytes, gen, use; u8 *copy; } big[BIG_KEPT];
+static u32 big_gen, big_use;
+
+static void w_load_big(const u32 *a, const u32 *d, u32 nqw) {
+    (void)d;
+    (void)nqw;
+    kh1_gsmem_image_gen = a[6];
+    (void)load_image(a[0], a[1], a[2], a[3], a[4], big[a[7]].copy, a[5]);
+    kh1_gsmem_image_gen = 0;
+}
+
+/* 1 when the upload went to the worker that way (0: the caller uploads it here) */
+static int load_big(const u32 *a, const void *src) {
+    u32 i, k = BIG_KEPT, b[8];
+    for (i = 0; i < BIG_KEPT; i++)
+        if (big[i].copy && big[i].bytes == a[5] && big[i].k[0] == a[0] && big[i].k[1] == a[1] && big[i].k[2] == a[2] &&
+            big[i].k[3] == a[3] && big[i].k[4] == a[4]) k = i;
+    if (k < BIG_KEPT && kh1_bytes_same(big[k].copy, src, a[5])) {
+        kh1_gs_loads_same++;
+    } else {
+        kh1_gsq_sync(); /* no op reads a copy now */
+        if (k == BIG_KEPT) {
+            for (i = k = 0; i < BIG_KEPT; i++)
+                if (!big[i].copy || big[i].use < big[k].use) k = i;
+            if (!big[k].copy || big[k].bytes < a[5]) {
+                free(big[k].copy);
+                big[k].copy = (u8 *)malloc(a[5]);
+                if (!big[k].copy) return 0;
+            }
+            for (i = 0; i < 5; i++) big[k].k[i] = a[i];
+            big[k].bytes = a[5];
+        }
+        memcpy(big[k].copy, src, a[5]);
+        big[k].gen = ++big_gen;
+    }
+    big[k].use = ++big_use;
+    for (i = 0; i < 6; i++) b[i] = a[i];
+    b[6] = big[k].gen;
+    b[7] = k;
+    kh1_gsq_put(w_load_big, b, 8, 0, 0);
+    return 1;
+}
+
 int PlatGsExecLoadImage(void *lp, void *src) {
     const u32 *q = (const u32 *)lp;
     u32 bb = q[5], w = q[12] & 0xFFF, h = q[13] & 0xFFF, n = psm_size(bb >> 24 & 63), a[6];
@@ -129,9 +184,14 @@ int PlatGsExecLoadImage(void *lp, void *src) {
      * before the worker took the uploads: copied into the ring, its compare and pixels were the worker's on
      * top of the frame's GPU work, and on the Vita the worker became the busier side (3d-w's menus) */
     if (a[5] >= LOAD_HERE) {
-        u32 t0;
+        u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
+        if (kh1_gsq_on && load_big(a, src)) {
+            if (kh1_vu1_clock) kh1_gs_load_us += kh1_vu1_clock() - t0;
+            kh1_gs_loads++;
+            kh1_gs_load_bytes += a[5];
+            return 0;
+        }
         kh1_gsq_sync();
-        t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
         kh1_gs_loads_same += load_image(a[0], a[1], a[2], a[3], a[4], (const u8 *)src, a[5]);
         if (kh1_vu1_clock) kh1_gs_load_us += kh1_vu1_clock() - t0;
         kh1_gs_loads++;

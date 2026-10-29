@@ -78,7 +78,7 @@ static struct {
 static u32 at_pool[AT_POOL], at_used, at_n;
 /* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
  * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
-static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16]; } at_key[AT_KEYS];
+static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16], gen; } at_key[AT_KEYS];
 /* session 146: pg, the pages the rectangle's pixels lie in (bit p of pg[p >> 5]) */
 #define SAME_POOL (4u << 20)
 static u8 same_pool[SAME_POOL] __attribute__((aligned(16))); /* session 147: each run at 16 (bytesame.h) */
@@ -564,13 +564,17 @@ static u32 psm_bits(u32 psm);
  * page as the pixels' stores would clear them (mark: the upload's bits, the stamp kept).
  * 1 when that is so, the counts and the position then as the pixels would leave them; 0 to send the
  * pixels through kh1_gsmem_image, then kh1_gsmem_image_kept */
+u32 kh1_gsmem_image_gen;
+
 int kh1_gsmem_image_same(const void *src, u32 bytes) {
     u32 p, bits;
     if (!trx.active || trx.key < 0 || trx.ai || trx.nacc || flat_raw) return 0;
     if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
         if (wr_pg[p] > at_key[trx.key].stamp) return 0;
-    if (!kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
+    if (kh1_gsmem_image_gen ? at_key[trx.key].gen != kh1_gsmem_image_gen
+                            : !kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes))
+        return 0;
     bits = psm_bits(trx.psm);
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
         if (at_key[trx.key].pg[p >> 5] >> (p & 31) & 1 && page_drawn[p] & bits) {
@@ -600,6 +604,7 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes) {
         same_used += (bytes + 15) & ~15u;
     }
     memcpy(same_pool + at_key[trx.key].doff, src, bytes);
+    at_key[trx.key].gen = kh1_gsmem_image_gen;
     at_key[trx.key].stamp = seq;
     seq++; /* session 146: a later store's wr_pg is newer than the stamp, whatever op makes it */
     trx.key = -1;
@@ -830,8 +835,14 @@ const u32 *(*kh1_gsmem_texels)(u32 lo, u32 hi);
  * a 16 x 16 CT32 / CT16 CLUT is 2 x 2 / 1 x 2 blocks, a 4-bit one's 8 x 2 one block); a load whose blocks hold the
  * same words takes the kept entries.  Exact: the entries are a function of those words alone. */
 #define CLUT_KEPT 64
-static struct { u32 key, nb, b[4], raw[4][64], v[256]; } clut_k[CLUT_KEPT];
+static struct ClutKept { u32 key, nb, b[4], raw[4][64], v[256], conv[256], conv_how, conv_ta, conv_tb, conv_ok, conv_id; } clut_k[CLUT_KEPT];
 static int clut_k_at = -1;
+/* session 147d: the slot the buffer's last load came from (kh1_gsmem_clut asked as that load stored, at the same
+ * clut_ver, reads that slot's entries: its converted answer is kept with the slot, so the glyphs' alternating
+ * palettes each convert once) */
+static int clut_src = -1;
+static u32 clut_src_ver, clut_src_how, conv_seq, conv_last;
+u32 kh1_gsmem_clut_id(void) { return conv_last; }
 static void clut_blocks(u32 cpsm, u32 cbp, int b8, u32 *b, u32 *nb) {
     u32 w = b8 ? 16 : 8, h = b8 ? 16 : 2, i, j, a, blk, shift = cpsm == KH1_PSMCT32 ? 2 : 1;
     *nb = 0;
@@ -858,6 +869,7 @@ static const u32 *clut_kept(u32 cpsm, u32 cbp, int b8) {
             clut_k[i].b[j] = b[j];
             kh1_gsmem_read_block(b[j], clut_k[i].raw[j]);
         }
+        clut_k[i].conv_ok = 0;
         return 0;
     }
     for (j = 0; j < nb; j++)
@@ -867,11 +879,13 @@ static const u32 *clut_kept(u32 cpsm, u32 cbp, int b8) {
         clut_k[i].b[j] = b[j];
         kh1_gsmem_read_block(b[j], clut_k[i].raw[j]);
     }
+    clut_k[i].conv_ok = 0;
     return 0;
 }
 static const u32 *clut_keep(const u32 *v, u32 n) {
     if (clut_k_at < 0) return v;
     memcpy(clut_k[clut_k_at].v, v, n * 4);
+    clut_k[clut_k_at].conv_ok = 0;
     return clut_k[clut_k_at].v;
 }
 
@@ -903,6 +917,9 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
         }
         clut_done = clut_k_at < 0 ? 0 : c;
         clut_ver++;
+        clut_src = clut_k_at;
+        clut_src_ver = clut_ver;
+        clut_src_how = cpsm | 256u << 8;
         for (e = 0; e < 256; e++) {
             p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1; /* entries 8-15 / 16-23 of each 32 swapped */
             v = c[p];
@@ -919,6 +936,9 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
         }
         clut_done = clut_k_at < 0 ? 0 : c;
         clut_ver++;
+        clut_src = clut_k_at;
+        clut_src_ver = clut_ver;
+        clut_src_how = cpsm | 16u << 8 | csa << 20;
         for (e = 0; e < 16; e++) {
             v = c[e];
             if (cpsm == KH1_PSMCT32) {
@@ -968,8 +988,9 @@ static u32 texel_rgba(u32 psm, u32 tbp, u32 tbw, u32 cpsm, u32 csa, u32 x, u32 y
 int kh1_gsmem_clut(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     /* session 147c: the last answer kept, with the CLUT buffer's version (clut_ver: a load that stored) and how it
      * was asked (CT32 ignores TEXA): the title menu's glyphs ask for the same palette ~60 times a frame */
-    static u32 memo[256], memo_how = ~0u, memo_ver, memo_ta, memo_tb;
+    static u32 memo[256], memo_how = ~0u, memo_ver, memo_ta, memo_tb, memo_id;
     u32 psm = lo >> 20 & 63, cpsm = cpsm_of(hi), csa = hi >> 24 & 31, n, e, i, how;
+    conv_last = 0;
     if (!indexed(psm) || hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa)) return 0;
     n = bits8(psm) ? 256 : 16;
     how = cpsm | n << 8 | csa << 20;
@@ -977,17 +998,36 @@ int kh1_gsmem_clut(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     else texa_lo = texa_hi = 0;
     if (how == memo_how && memo_ver == clut_ver && memo_ta == texa_lo && memo_tb == texa_hi) {
         memcpy(out, memo, n * 4);
+        conv_last = memo_id;
         return (int)n;
+    }
+    if (clut_src >= 0 && clut_src_ver == clut_ver && how == clut_src_how) {
+        struct ClutKept *k = &clut_k[clut_src];
+        if (k->conv_ok && k->conv_how == how && k->conv_ta == texa_lo && k->conv_tb == texa_hi) {
+            memcpy(out, k->conv, n * 4);
+            conv_last = k->conv_id;
+            return (int)n;
+        }
     }
     for (i = 0; i < n; i++) {
         e = n == 256 ? i : (cpsm == KH1_PSMCT32 ? csa & 15 : csa) * 16 + i;
         out[i] = cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
+    }
+    if (clut_src >= 0 && clut_src_ver == clut_ver && how == clut_src_how) {
+        struct ClutKept *k = &clut_k[clut_src];
+        memcpy(k->conv, out, n * 4);
+        k->conv_how = how;
+        k->conv_ta = texa_lo;
+        k->conv_tb = texa_hi;
+        k->conv_ok = 1;
+        k->conv_id = conv_last = ++conv_seq;
     }
     memcpy(memo, out, n * 4);
     memo_how = how;
     memo_ver = clut_ver;
     memo_ta = texa_lo;
     memo_tb = texa_hi;
+    memo_id = conv_last;
     return (int)n;
 }
 

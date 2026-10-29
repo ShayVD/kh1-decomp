@@ -40,6 +40,17 @@ static void recent(KH1PalCache *c, u32 k) {
     c->recent[0] = k;
 }
 
+static u32 gen_seq; /* session 147d: the slots' gens, not reset by kh1_palcache_init */
+
+void kh1_palcache_hit(KH1PalCache *c, int slot) {
+    KH1PalSlot *s = &c->slot[slot];
+    c->use++;
+    s->frame = c->frame;
+    s->use = c->use;
+    c->hits++;
+    recent(c, (u32)slot);
+}
+
 int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill) {
     u32 h, i;
     int best = -1;
@@ -50,13 +61,8 @@ int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill) {
      * hold the same entries: a fill comes only when no slot matched), without the hash and the 256 slots' scan */
     for (i = 0; i < 4; i++)
         if (c->recent[i] < KH1_PALCACHE_SLOTS && same(&c->slot[c->recent[i]], col, n)) {
-            KH1PalSlot *s = &c->slot[c->recent[i]];
             int k = (int)c->recent[i];
-            c->use++;
-            s->frame = c->frame;
-            s->use = c->use;
-            c->hits++;
-            recent(c, (u32)k);
+            kh1_palcache_hit(c, k);
             return k;
         }
     h = fnv(col, n);
@@ -84,6 +90,7 @@ int kh1_palcache_get(KH1PalCache *c, const u32 *col, u32 n, int *fill) {
         s->n = n;
         s->frame = c->frame;
         s->use = c->use;
+        s->gen = ++gen_seq;
         for (i = 0; i < n; i++) s->col[i] = col[i];
     }
     c->misses++;

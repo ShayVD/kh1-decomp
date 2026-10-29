@@ -4,6 +4,7 @@
  * PS2 build (it lives outside src/). */
 #include "common.h"
 #include "platform/texcache.h"
+#include "../null/bytesame.h" /* session 147d: the raw and texel compares (newlib's memcmp is a C loop on the Vita) */
 
 void *memset(void *, int, __SIZE_TYPE__);
 int memcmp(const void *, const void *, __SIZE_TYPE__);
@@ -119,7 +120,7 @@ const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 targe
         nraw = c->raw(lo, hi, c->rawbuf, KH1_TEXCACHE_RAW);
     for (i = 0; nraw && i < KH1_TEXCACHE_SLOTS; i++) {
         s = &c->slot[i];
-        if (s->n && s->lo == lo && s->hi == hi && s->nraw == nraw && memcmp(s->raw, c->rawbuf, nraw * 4) == 0) {
+        if (s->n && s->lo == lo && s->hi == hi && s->nraw == nraw && kh1_bytes_same(s->raw, c->rawbuf, nraw * 4)) {
             s->stamp = stamp;
             s->frame = c->frame;
             s->use = c->use;
@@ -133,7 +134,7 @@ const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 targe
     c->hashed += n;
     for (i = 0; i < KH1_TEXCACHE_SLOTS; i++) {
         s = &c->slot[i];
-        if (s->n && s->lo == lo && s->hi == hi && s->hash == h && memcmp(s->tex, c->scratch, n * 4) == 0) {
+        if (s->n && s->lo == lo && s->hi == hi && s->hash == h && kh1_bytes_same(s->tex, c->scratch, n * 4)) {
             s->stamp = stamp; /* the bytes are back: the new stamp is this entry's */
             s->frame = c->frame;
             s->use = c->use;
