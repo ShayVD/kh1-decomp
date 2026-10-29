@@ -1,4 +1,6 @@
+/* Round 41 wwm2: score 251 -> 221, port.py of the wm twin func_00f6ae68 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f43d70 near miss: 428 words differ, score 251 (ours 1852 bytes, original 1864). Port of wm func_00f6ae68 (score 245 there) via tools/ovl/port.py; see that file for the findings and what is left (movz vs movn for the 68/72 alpha selects, s-register assignment). */
+/* score 245 (1852 vs 1864). The endless draw loop was read from the asm. It draws a 6x8 grid of 64x64 tiles with func_00f422e8, then an optional func_00f425a8 sprite (when D_00F829FC == 0 and D_00F82A44 and D_00F82A94 are set), four func_00f42cf8 gradient quads from the Fx block at D_0108F208, and four fixed func_00f422e8 images. Last comes the jump-table image picked by D_00F702D0 (1..10; default, 1 and 7 share one entry; table read from wm.elf at 0x00FBA0A0). Left: the 68/72 alpha selects come out as movz where the original uses movn with 68 and 72 kept in s1/s4; the s-register assignment around &D_00F707D0 and &D_00F704B0 differs; the size is 12 bytes short. */
 typedef struct { u8 r, g, b, a; } Rgba;
 typedef struct { u8 pad[28]; u8 *base; } Res;
 typedef struct {
@@ -56,11 +58,11 @@ void func_00f43d70(void)
 
 loop:
     {
+        al = 68;
         c[0].r = D_00F70304;
         c[0].g = D_00F70308;
         c[0].b = D_00F7030C;
         c[0].a = D_00F70310;
-        al = 68;
         if (D_00F70314) al = 72;
         for (i = 0; i < 6; i++) {
             for (j = 0; j < 8; j++) {
@@ -68,11 +70,11 @@ loop:
             }
         }
         if (D_00F829FC == 0 && D_00F82A44 && D_00F82A94) {
-            h = (s32)(D_00F702E0 * 128.0f) / 2;
             c[0].r = D_00F7031C;
             c[0].g = D_00F70320;
             c[0].b = D_00F70324;
             c[0].a = (s32)(D_00F70328 * D_00F82A24 * 0.0078125f);
+            h = (s32)(D_00F702E0 * 128.0f) / 2;
             func_00f425a8(D_00F707D0.base + 0x14800, D_00F707D0.base + 0x1BC00, D_00F82A04 - h, D_00F82A08 - h, 128, 128, 8, c, D_00F702E0, 0, D_00F70318 ? 72 : 68, 0, 0x5001D);
         }
         f = &D_0108F208;
@@ -97,14 +99,14 @@ loop:
         c[2].a = c[3].a = f->c2[3];
         x[0] = 0; x[1] = 512; x[2] = 0; x[3] = 512;
         y[0] = f->y3C; y[1] = f->y3C; y[2] = 384; y[3] = 384;
+        a2 = 68;
         func_00f42cf8(c, x, y, f->f24 == 0 ? 68 : 72);
         c[0].r = c[1].r = c[2].r = c[3].r = f->c0[0];
+        y[0] = f->y38 - 2; y[1] = f->y38 - 2; y[2] = f->y38; y[3] = f->y38;
         c[0].g = c[1].g = c[2].g = c[3].g = f->c0[1];
         c[0].b = c[1].b = c[2].b = c[3].b = f->c0[2];
         c[0].a = c[1].a = c[2].a = c[3].a = f->c0[3];
         x[0] = 0; x[1] = 512; x[2] = 0; x[3] = 512;
-        y[0] = f->y38 - 2; y[1] = f->y38 - 2; y[2] = f->y38; y[3] = f->y38;
-        a2 = 68;
         if (f->f10 == 0) a2 = 68; else a2 = 72;
         func_00f42cf8(c, x, y, a2);
         y[0] = f->y3C; y[1] = f->y3C; y[2] = f->y3C + 2; y[3] = f->y3C + 2;
