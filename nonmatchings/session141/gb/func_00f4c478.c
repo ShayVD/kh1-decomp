@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 327 -> 325, port.py of the wm twin func_00f73570 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* score 327 (2372 vs 2368). Port of the wm func_00f73570 near miss via portmap2.py (all symbols mapped); same remaining issues as wm, see that header. */
 typedef struct { u8 pad[176]; s32 xB0; s32 xB4; } Obj;
 typedef struct { u8 b0; u8 pad1[3]; u32 x4; } Item;
@@ -39,17 +40,17 @@ void func_001bb558(void);
 Item *func_001bc4f0(void);
 s32 func_001bc520(void);
 void func_001efb18(s32, s32);
-void func_001f3840(Obj *);
+s32 func_001f3840(Obj *);
 s32 func_001f42b8(Obj *);
 s32 func_001f4390(Obj *);
 void func_001f8ee0(Obj *);
 void func_001f8f30(void);
-void func_001f9438(Obj *, s32, s32, s32, s32, s32, s32);
+s32 func_001f9438(Obj *, s32, s32, s32, s32, s32, s32);
 s32 func_001fd548(Obj *);
 s32 func_001fd590(Obj *);
 s32 func_001fd618(Obj *);
 void func_001fd858(Obj *);
-void func_002014a0(Obj *, s32, s32, s32, s32, s32, s32, s32 *, s32, s32);
+s32 func_002014a0(Obj *, s32, s32, s32, s32, s32, s32, s32 *, s32, s32);
 void func_00202fc0(Obj *);
 void func_00206370(Obj *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_002078f0(Obj *, s32, s32, s32, s32, s32, s32, s32, s32);
