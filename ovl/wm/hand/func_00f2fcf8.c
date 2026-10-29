@@ -1,5 +1,7 @@
-/* 3 words left (328 vs 328): address-CSE copy order of D[idx] base. Tried inline helpers, CONTEXT_ONLY callees, callee return types, permuter (-j1, 10 min). */
-typedef struct { u8 p[6]; u16 f; u16 h; u16 pad; } N2fcf8;
+/* wm.x func_00f2fcf8: matched by hand. */
+#include "ovl.h"
+
+typedef struct { u8 p[6]; u16 lo : 8; u16 kind : 4; u16 hi : 4; u16 h; u16 pad; } N2fcf8;
 typedef struct { s32 n; u8 pad[0x2C]; N2fcf8 ent[1]; } D2fcf8;
 extern D2fcf8 D_00F85240;
 extern s32 D_00F8C1F0;
@@ -17,7 +19,7 @@ void func_00f2fcf8(void) {
     for (i = 0; i < D_00F85240.n; i++) {
         h = D_00F85240.ent[i].h;
         t = h - 1;
-        if (((D_00F85240.ent[i].f >> 8) & 0xF) == 4) {
+        if (D_00F85240.ent[i].kind == 4) {
             r = -1;
             switch (h) {
             case 5:
