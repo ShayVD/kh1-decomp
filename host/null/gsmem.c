@@ -25,6 +25,7 @@
  * Fed, like gsregs.c, only while KH1_HOST_TRACE >= 2 walks the chains. */
 #include "common.h"
 #include "gsmem.h"
+#include "bytesame.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
@@ -75,7 +76,7 @@ static u32 at_pool[AT_POOL], at_used, at_n;
 static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16]; } at_key[AT_KEYS];
 /* session 146: pg, the pages the rectangle's pixels lie in (bit p of pg[p >> 5]) */
 #define SAME_POOL (4u << 20)
-static u8 same_pool[SAME_POOL];
+static u8 same_pool[SAME_POOL] __attribute__((aligned(16))); /* session 147: each run at 16 (bytesame.h) */
 static u32 same_used;
 static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 h);
 
@@ -562,7 +563,7 @@ int kh1_gsmem_image_same(const void *src, u32 bytes) {
     if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
         if (wr_pg[p] > at_key[trx.key].stamp) return 0;
-    if (memcmp(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
+    if (!kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
     bits = psm_bits(trx.psm);
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
         if (at_key[trx.key].pg[p >> 5] >> (p & 31) & 1 && page_drawn[p] & bits) {
@@ -589,7 +590,7 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes) {
         }
         at_key[trx.key].doff = same_used;
         at_key[trx.key].dlen = bytes;
-        same_used += bytes;
+        same_used += (bytes + 15) & ~15u;
     }
     memcpy(same_pool + at_key[trx.key].doff, src, bytes);
     at_key[trx.key].stamp = seq;
