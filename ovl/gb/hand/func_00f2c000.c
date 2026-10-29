@@ -1,4 +1,6 @@
-/* 3 words / score 6 (768 = 768). Ported from the wm twin near miss func_00f530f8 (tools/ovl/port.py wm -> gb); same single diff: the x74 & 2 test loads lhu into v1 where the original uses v0. Round 10 tried: (u16)(x74 & 2), != 0, return ret, s16 cast, shift form, bitfield b1, a World *w local, computing e before the test, else-return form; all stay at 6 or worse. */
+/* gb.x func_00f2c000: matched by hand. */
+#include "ovl.h"
+
 typedef struct {
     u16 x0;
     u16 x2;
@@ -67,19 +69,20 @@ s32 func_00f2c000(s32 pri, Ctx *c) {
     s32 k;
 
     if (o == NULL) {
-        if (D_00F56DC0->x74 & 2) {
+        if (!(D_00F56DC0->x74 & 2)) {
+            e = &D_00F56DC0->x48;
+            id = e->x4 - 1;
+            if (D_00F61370 == 0 && func_00f23ec0(id) <= 0) {
+                return 0;
+            }
+            D_00F806BC = func_00f25918(id);
+            D_00F806C0 = func_00f25978(id);
+            if (D_00F80580) {
+                func_00f29038(e);
+                ret = 1;
+            }
+        } else {
             return 0;
-        }
-        e = &D_00F56DC0->x48;
-        id = e->x4 - 1;
-        if (D_00F61370 == 0 && func_00f23ec0(id) <= 0) {
-            return 0;
-        }
-        D_00F806BC = func_00f25918(id);
-        D_00F806C0 = func_00f25978(id);
-        if (D_00F80580) {
-            func_00f29038(e);
-            ret = 1;
         }
     } else {
         e = o;
