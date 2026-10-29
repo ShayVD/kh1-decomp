@@ -1,3 +1,4 @@
+/* Round 36 (wwm2): wm.x func_00f47b60 near miss: score 223 -> 211 (138 -> 136 words, 932 vs 992); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* 138 words, score 223 (was 146/232). Round 33 wwm2: hill2 over the D_00F9B540 stores; ctx2 and interleave give nothing. Earlier header: 146 words left (round 12): bitfield set-up of D_00F9B540. The struct must be 8-aligned (ld/sd on GbPos u16 bitfields at 74/92/94/96). Left: the target masks copied fields twice (andi 0xffff, andi 0xf, and 15) and computes nx and nz separately; the expression forms tried (36 combinations) all give the same code. */
 typedef struct { u8 b[16]; } B16;
 typedef struct { u16 x : 4; u16 y : 4; u16 z : 4; u16 r : 4; } GbPos;
@@ -57,8 +58,8 @@ void func_00f47b60(void) {
     u16 v;
     u16 w;
 
-    D_00F9B540->h132 = 1;
     D_00F9B540->h130 = 0;
+    D_00F9B540->h132 = 1;
     D_00F9B540->hdr = *func_001ba980();
     D_00F9B540->h128 = 0;
     i = D_00F9B540->hdr.b[0];
@@ -79,17 +80,17 @@ void func_00f47b60(void) {
     D_00F9B540->b80 = D_00F9B540->h126;
     w = func_001bb6d0(D_00F9B540->h76 - 1);
     D_00F9B540->h84 = w;
-    D_00F9B540->h116 = 0;
     D_00F9B540->h98 = w;
+    D_00F9B540->h116 = 0;
     D_00F9B540->w88 = 0;
     D_00F9B540->b240 = 0;
     v = func_001bb678();
-    D_00F9B540->h170 = v;
-    D_00F9B540->h166 = v;
     D_00F9B540->h168 = v;
-    D_00F9B540->n.x = (v >> 1) - 1;
-    D_00F9B540->n.y = v >> 1;
     D_00F9B540->n.z = (v >> 1) - 1;
+    D_00F9B540->n.x = (v >> 1) - 1;
+    D_00F9B540->h166 = v;
+    D_00F9B540->n.y = v >> 1;
+    D_00F9B540->h170 = v;
     D_00F9B540->m.x = D_00F9B540->n.x;
     D_00F9B540->m.y = D_00F9B540->n.y;
     D_00F9B540->m.z = D_00F9B540->n.z;

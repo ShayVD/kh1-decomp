@@ -1,3 +1,4 @@
+/* Round 36 (wwm2): wm.x func_00f6d810 near miss: score 236 -> 234 (357 -> 358 words, 1992 = 1992); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* score 236 (1992 vs 1992). The pad-search section matches exactly: the up path does goto win into the down path tail, and the window calc is (n - 8) << 4 / (i - n + 8) << 4. Left: in the 10-entry draw loop the original keeps the counter in s0 and spills n (sp144), while this draft hoists &D_00FB4C48 into s7 and spills the counter instead, which shifts every register after that point. Tried volatile D_00FB4C48, do-while and goto loops, and a register asm counter. None fixed it. The tail ordering of D_0108F1C0 and p->b5 also differs a little. */
 typedef struct { u8 pad[176]; s32 x; s32 y; u8 pad2[6]; s16 hbe; s16 pad3; s16 hc2; u8 pad4[12]; s16 hd0; s16 hd2; } Obj;
 typedef struct { u8 b0; u8 pad1[4]; u8 b5; u8 b6; u8 b7; u8 pad8[8]; } Ent;
@@ -129,8 +130,8 @@ win:
                     D_0108F198 = (o->y >> 4) + y - 1856;
                 }
             } else {
-                spr.col = 0x40404040;
                 col1 = D_00FB4C50 | (D_00FB4C54 << 8) | (D_00FB4C58 << 16) | (D_00FB4C5C << 24);
+                spr.col = 0x40404040;
                 col2 = D_00FB4C70 | (D_00FB4C74 << 8) | (D_00FB4C78 << 16) | (D_00FB4C7C << 24);
             }
             func_002016b0(o, D_00FB4C48 + 6, y + 2, col1);
@@ -145,19 +146,19 @@ win:
         }
         i++;
     }
-    D_0108F288 = sel;
     p = &e[sel];
+    D_0108F288 = sel;
     if (D_0108F188 == 0) {
         D_0108F254 = 0;
         D_0108F1BC = 0;
         D_0108F1E8 = 0;
     }
     if (p->b5) {
+        rot[0] = 0.43633226f;
         D_0108F28C = -1;
+        rot[2] = 0;
         rot[1] = 0.43633226f;
         rot[3] = 1.0f;
-        rot[0] = 0.43633226f;
-        rot[2] = 0;
         if (D_0108F1EC != D_0108F1F0) {
             if (D_0108F1F0 < D_0108F1EC) {
                 D_0108F1EC = D_0108F1EC - 128.0f / D_00FB4A70;

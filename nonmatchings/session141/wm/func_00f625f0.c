@@ -1,3 +1,4 @@
+/* Round 36 (wwm2): wm.x func_00f625f0 near miss: score 217 -> 215 (324 -> 324 words, 1372 vs 1352); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* score 217 (1372 vs 1352). First draft from asm; the control flow is right. func_00f47158 takes no arguments and func_001c00e8 takes a kh1_u128 0 (por a2). Left: the frame. The original keeps h = func_001c00e8(...) on the stack at sp+16, with save[] at sp+0 and s0 at sp+32, because all of s0-s8 are taken by hoisted 0xfa/0x109 bases (s7 is a copy of s6). This draft keeps h in s8 and hoists 360.0f into f22, which the original reloads each time. The colour loop loads r/g/b through three copies of one pointer (a2 -> a0 -> v0); a struct array, locals and an inline helper did not reproduce that. */
 typedef struct { u8 b[0x50]; u8 x50; u8 pad51[0x7e - 0x51]; s16 x7e; s16 x80; } World;
 typedef struct { s32 r, g, b, a; } Col;
@@ -42,12 +43,12 @@ s32 func_00f625f0(void)
     for (i = 0; i < 8; i++) {
         p = &D_00F9B540->b[i];
         rgb = &D_00379F28[*p * 4];
-        c->a = 128;
         c->r = rgb[0] >> 1;
         c->g = rgb[1] >> 1;
+        c->a = 128;
         c->b = rgb[2] >> 1;
-        c++;
         save[i] = *p;
+        c++;
     }
     for (i = 0; i < 3; i++) {
         D_0108EE80[i].r = 0;
@@ -55,8 +56,8 @@ s32 func_00f625f0(void)
         D_0108EE80[i].b = 0;
         D_0108EE80[i].a = 0;
     }
-    D_0108EEB0 = 0;
     D_0108EEB4 = 0;
+    D_0108EEB0 = 0;
     D_00FA5FBC = D_00F9B540->x80;
     D_00FA5FB8 = D_00FA5FBC * 45.0f;
     func_0011d768(21);

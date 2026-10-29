@@ -1,3 +1,4 @@
+/* Round 36 (wwm2): wm.x func_00f6cfa0 near miss: score 216 -> 188 (307 -> 427 words, 2168 vs 2160); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00FB58C8/D_00FB58D0 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00FB4A70) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct Win {
@@ -84,29 +85,29 @@ s32 func_00f6cfa0(void)
         D_00FB58E0.v[0] = 2;
     }
     pl = lst;
-    lst[0] = 1;
     sel = 0;
+    lst[0] = 1;
     if (D_00FB4EB4 >= 0) sel = D_00FB4EB4;
-    codes[0] = 1;
+    lst[2] = 9;
+    lst[5] = 13;
     lst[1] = 3;
+    codes[5] = 9;
+    D_0108F158.v[0] = D_00FB58E0.v[0];
+    pw = w;
     codes[1] = 2;
     codes[2] = 5;
+    codes[0] = 1;
     lst[3] = 11;
-    codes[3] = 6;
     lst[4] = 213;
-    codes[4] = 8;
-    lst[5] = 13;
-    codes[5] = 9;
-    lst[2] = 9;
-    D_0108F158.v[0] = D_00FB58E0.v[0];
+    codes[3] = 6;
     D_0108F158.v[1] = D_00FB58E0.v[1];
     D_0108F158.v[2] = D_00FB58E0.v[2];
     D_0108F158.v[3] = D_00FB58E0.v[3];
+    codes[4] = 8;
     D_0108F158.v[4] = D_00FB58E0.v[4];
     D_0108F158.v[5] = D_00FB58E0.v[5];
-    D_00FB4A50 = codes[sel];
     y = D_00FB4B68;
-    pw = w;
+    D_00FB4A50 = codes[sel];
     for (i = 0; i < 6; i++) {
         *pw = func_00f6a480();
         (*pw)->b0 = 1;
@@ -194,8 +195,8 @@ top:
         if (sel != old) func_0011d768(1);
         func_0024e468(1);
     }
-    D_00FB4EB4 = sel;
     r = codes[sel];
+    D_00FB4EB4 = sel;
     switch (r) {
     case 1:
     case 2:
@@ -258,8 +259,8 @@ top:
         func_0024e468(2);
     } else {
         func_00f6b5d0(1, 0, D_00FB4A70);
-        D_0108F1E8 = 0;
         pw = &w[5];
+        D_0108F1E8 = 0;
         for (k = 5; k >= 0; k--) {
             func_00f6b5b0(*pw--, 0.0f, D_00FB4A70);
             func_0024e468(2);

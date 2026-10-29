@@ -1,3 +1,4 @@
+/* Round 36 (wwm2): wm.x func_00f59b30 near miss: score 273 -> 259 (460 -> 456 words, 2364 vs 2376); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* NEAR MISS 460 words, score 273 (2364 vs 2376 bytes). Port of gb func_00f32a38 (same score); tables mapped by hand: D_0108CED0/D_0108CF50 = gb D_00F80710/D_00F80790. See the gb file for what was tried. */
 extern u8 *D_00F9B540;
 extern s32 D_0108CED0[];
@@ -54,8 +55,8 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
             id = D_0108CF10[k];
             break;
         case 3:
-            tex = D_0108CF50[4];
             id = D_0108CF10[4];
+            tex = D_0108CF50[4];
             break;
         default:
             id = 0;
@@ -74,8 +75,8 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
             *pp = q;
         }
     }
-    tex = D_0108CF50[2];
     oy = 0x8540;
+    tex = D_0108CF50[2];
     *pp = func_00f66ac8(*pp);
     *pp = func_00f4e0b0(*pp, 1792, 1856);
     u0 = (D_00FA6000.x2C0 + 1) * 16;
@@ -92,13 +93,13 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
         v[3 - i][3] = 1.0f;
     }
     v[0][0] = -1376.0f;
+    v[3][0] = -1376.0f;
     v[0][1] = 1376.0f;
     v[1][0] = 0.0f;
     v[1][1] = 1376.0f;
     v[2][0] = 1376.0f;
-    v[2][1] = 1376.0f;
-    v[3][0] = -1376.0f;
     v[3][1] = 0.0f;
+    v[2][1] = 1376.0f;
     sceVu0MulMatrix(v, m, v);
     for (i = 0; i < 4; i++) {
         X[i] = 0x8130 + (s32)v[i][0];
@@ -106,11 +107,11 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
     }
     v[0][0] = 1376.0f;
     v[0][1] = 0.0f;
+    v[3][0] = 1376.0f;
     v[1][0] = -1376.0f;
     v[1][1] = -1376.0f;
     v[2][0] = 0.0f;
     v[2][1] = -1376.0f;
-    v[3][0] = 1376.0f;
     v[3][1] = -1376.0f;
     sceVu0MulMatrix(v, m, v);
     for (i = 0; i < 4; i++) {
@@ -121,20 +122,20 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[4], Y[4], X[1], Y[1], X[2], Y[2], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[3], Y[3], X[6], Y[6], X[5], Y[5], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[4], Y[4], X[6], Y[6], X[7], Y[7], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
+    cx[1] = 31840;
     u0 = (D_00FA6000.x2D4 + 1) * 16;
     v0 = (D_00FA6000.x2D8 + 1) * 16;
     u1 = u0 + (D_00FA6000.x2DC - 2) * 16;
-    v1 = v0 + (D_00FA6000.x2E0 - 2) * 16;
-    cx[0] = 0x85F0;
-    cx[1] = 31840;
-    cy[1] = 32448;
     cy[0] = 32448;
+    v1 = v0 + (D_00FA6000.x2E0 - 2) * 16;
+    cy[1] = 32448;
+    cx[0] = 0x85F0;
     a = (f32)(t % 2700) * 360.0f / 2700.0f - 180.0f;
     ang[0] = a * 3.1415926f / 180.0f;
     a -= 28.0f;
     if (a < -180.0f) a += 360.0f;
-    ang[1] = a * 3.1415926f / 180.0f;
     sz = 108;
+    ang[1] = a * 3.1415926f / 180.0f;
     for (j = 0; j < 2; j++) {
         sceVu0UnitMatrix(m);
         sceVu0RotMatrixZ(m, m, ang[j]);
@@ -142,13 +143,13 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
             v[3 - i][2] = 0.0f;
             v[3 - i][3] = 1.0f;
         }
-        v[0][0] = D_00FB7860 * 8.0f;
         v[0][1] = sz * 8.0f;
+        v[0][0] = D_00FB7860 * 8.0f;
         v[1][0] = sz * 8.0f;
         v[1][1] = sz * 8.0f;
         v[2][0] = D_00FB7860 * 8.0f;
-        v[2][1] = D_00FB7860 * 8.0f;
         v[3][0] = sz * 8.0f;
+        v[2][1] = D_00FB7860 * 8.0f;
         v[3][1] = D_00FB7860 * 8.0f;
         sceVu0MulMatrix(v, m, v);
         for (i = 0; i < 4; i++) {
