@@ -1,4 +1,4 @@
-/* 13 words. Menu loop; left: prologue sd ra order and bnezl/slti duplication of the clamp. Tried clamp spellings, 6 min permuter. */
+/* 13 words. Menu loop; left: prologue sd ra order and bnezl/slti duplication of the clamp. Tried clamp spellings, 6 min permuter.. Round 6: if-clamp forms (>=, <=, > n-1) and decl/for(;;) variants did not help; the target writes s0 directly in the bnezl path. */
 typedef struct { u8 pad[8]; s32 x8; u8 pad2[4]; s32 x10; } Pad5d498;
 void func_001bfac8(void);
 Pad5d498 *func_001ba488(s32);

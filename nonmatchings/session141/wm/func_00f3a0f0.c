@@ -1,4 +1,4 @@
-/* 6 words left; tried 7 variants (a-g) */
+/* 6 words left; tried 7 variants (a-g). Round 6: m[3][1]/m[3][3] locals in both orders and 5 expression shapes; FP regs f0/f1/f3 still permuted. */
 typedef struct { OvlMtx m; u8 pad[0xE4 - 0x40]; u16 xe4; u8 pad2[0x108 - 0xE6]; s32 x108; } E3a0f0;
 extern OvlMtx D_00F85200;
 extern OvlMtx D_00F85180;

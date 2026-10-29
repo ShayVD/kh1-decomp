@@ -230,3 +230,29 @@ f24738/f24900 family.
   scheduled. Unsolved.
 - f355a8/f5e178: only the order of two lui differs; worth a fresh idea since
   fixing one fixes both.
+
+## Round 6 (base 32439a0)
+
+Matched (13): f355a8, f5e178, f24738, f24900, f24ac8, f24c80, f4b1e8,
+f4b258, f4b7d8, f23fe8, f241b0, f24548, f23df0.
+Near misses: f24380 (24, new file), f5e540 (79, new file); headers updated
+for f5d498, f3a030, f3a0f0.
+
+### Round 6 tips
+
+- **Index instead of pointer to change pseudo order** (f355a8/f5e178): the
+  output pointer `p++` became `D[n]` with `n++`. Strength reduction then
+  creates the pointer giv after loop-invariant hoisting, so the two `lui`
+  swap. Found by reading the `-dl` lreg dump (pseudo 93 vs 108).
+- **Reuse the index variable for the next lookup** (f4b1e8 grid family):
+  `j = i; i = g->c[j].t; ty[i]...` (or `i = c->t;` with `c = &g->c[i]`).
+  Fixed f4b1e8, f4b258 and f4b7d8, which were 11-31 words off. A
+  10-minute permuter run on f4b1e8 found the same thing.
+- **Sprite family (D_00FBAA60/64):** use `tw`/`th` locals for the table's
+  w/h, write coordinate offsets in place (`x = x + 1792; x0 = x - w / 2;`),
+  then try random dependency-respecting statement orders (gen24380.py,
+  run.py). Each match came within 1-300 orders. Read the packet order
+  from the asm: f241b0 swaps the XYZ vertices, and f24900/f24c80 swap the
+  UVs.
+- f24380 stays at 24 words: the same s-reg permutation (idx/h) shows up in
+  every order, declaration order and form I tried.

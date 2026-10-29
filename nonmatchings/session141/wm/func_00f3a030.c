@@ -1,4 +1,4 @@
-/* 3 words left; tried ~10 statement/temp variants (A-I) and the permuter */
+/* 3 words left; tried ~10 statement/temp variants (A-I) and the permuter. Round 6: struct pointer &e->s, (S*) byte-offset and array-of-S index forms; target keeps +224 in the index giv and loads buf with lw 4(s2). */
 typedef struct { s32 on; u8 *buf; } S3a030;
 typedef struct { u8 pad[224]; S3a030 s; u8 pad2[40]; } E3a030;
 extern E3a030 D_00FCE390[256];
