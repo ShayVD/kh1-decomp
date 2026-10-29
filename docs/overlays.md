@@ -202,6 +202,21 @@ and gb func_00f25a68 is wm func_00f35800 with gb's own literal (0.17453292f).
     keep the late copy while the scheduler hoists it (wm func_00f606a0).
   - A stray `move a0,...` before a call often means the callee takes fewer arguments than
     m2c guessed (gb func_00f299c8's func_00f291f0, wm func_00f21600's func_00f66240).
+- **Batch 5 patterns (session 141):**
+  - Hill-climbing statement order (randomly swap or move lines inside chosen blocks, keep a
+    change when the differing-word count does not grow) beats plain random orders for
+    scheduling-only diffs (wm func_00f43ae0 from 20 words to a match).
+  - Runs of independent stores are reordered by the scheduler in no simple pattern; generating
+    every order of the block (24 to 144 files) matched wm func_00f21c48 / func_00f5d6b0.
+  - Packets whose entry addresses are all computed from the base first (`addiu tN,v0,16k`) come
+    from an indexed inline `put(p + 2k, a, b)`; chaining `p += 2` gives stepwise addresses
+    (wm func_00f2a4c0). A second packet wants its own pointer local (wm func_00f206f0).
+  - `x + -100.0f` loads a stored -100.0f constant where `x - 100.0f` does not (wm func_00f5d6b0);
+    a bare `sqrt.s` is `PlatSqrtf` from platform/math.h, not `sqrtf`.
+  - A loop written `for (; a = f(), b = g, !(cond);) {...}` gets the bottom test and initial
+    jump of a goto loop but keeps the loop notes, so invariants are hoisted (wm func_00f70828).
+  - `if (a == at) v = a * 0.5f; else {...; v = a * 0.5f;}` merges into one multiply
+    (wm func_00f6a530).
 
 ## decomp-permuter on an overlay function (session 135)
 
