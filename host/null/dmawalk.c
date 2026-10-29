@@ -212,8 +212,20 @@ static GifStream ws[2];
 static u32 path1_packets, block_seq;
 static void w_block(const u32 *a, const u32 *d, u32 n) { gif_block(&ws[0], d, n); } /* a[0]: never joined */
 static void w_qwords(const u32 *a, const u32 *d, u32 n) { /* PATH2 qwords: joined, one stream either way */
-    u32 i;
-    for (i = 0; i < n; i++) gif_qword(&ws[0], d + i * 4);
+    GifStream *g = &ws[0];
+    u32 i, k;
+    for (i = 0; i < n; i++) {
+        /* session 146: an IMAGE packet's qwords here in one piece, as gif_block takes them (the Dive's texture
+         * streams come this way: a call a qword was ~a tenth of the GS worker on a Vita) */
+        if (g->left && g->flg >= 2) {
+            k = n - i < g->left ? n - i : g->left;
+            kh1_gsmem_image(d + i * 4, k * 4);
+            g->left -= k;
+            i += k - 1;
+            continue;
+        }
+        gif_qword(g, d + i * 4);
+    }
 }
 static void w_kick(const u32 *a, const u32 *d, u32 n) {
     memset(&ws[1], 0, sizeof ws[1]);

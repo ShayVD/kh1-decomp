@@ -395,6 +395,9 @@ int main(int argc, char **argv) {
                 } else {
                     kh1_pipes_gpu_wait = kh1_gpuq_wait;
                     kh1_pipes_gpu_put = kh1_gpuq_put;
+                    /* session 146: KH1_HOST_RECQ=1, the recorder's work on that thread too (the Vita's recq=1) */
+                    if (getenv("KH1_HOST_RECQ") && atoi(getenv("KH1_HOST_RECQ")) && kh1_recq_start(2u << 20))
+                        printf("kh1-host: KH1_HOST_RECQ: no queue\n");
                 }
             }
         }

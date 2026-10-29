@@ -51,6 +51,11 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    - `frames=N` exit after N frames (0, the default: never);
    - `mc=ux0:...` memory card 1's folder (default `ux0:data/kh1/mc0`);
    - `vu1=0` skips the VIF1 / VU1 path (session 137v, "The 3D path" below; 1, the default, runs it).
+   - `rcam=1` (the default): the right stick's left / right turns the camera. The game itself, Final Mix
+     included, turns the camera with L2 / R2 only and gives the right stick the d-pad's command-menu
+     cursor, so host/vita/pad.c sends the stick's x past half way as R2 (right) or L2 (left), held while
+     pushed (never pulsed: each L2 / R2 press also steps the lock-on target), and centres the x; the y is
+     unchanged. `rcam=-1` turns the other way, `rcam=0` sends the stick as the PS2 did.
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
@@ -829,8 +834,54 @@ a draw's mark moved page_seq, which the check also read).
 - Measured: the game thread 416M -> 40M over those 60 frames (left: libc's memcmp, the skip's byte
   compare of ~2.5 MB a frame). The worker-order run (`KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50
   KH1_HOST_GXM_HASH=1`, dive_en.txt) gives the same GS digests and GPU target hashes as main's.
-- **Open**: on the Vita the GS worker was busy ~30 ms a title frame, while its host profile is ~0.3M
-  instructions a frame: not yet explained (memory traffic shared with the game thread's uploads is a guess).
+- **On a Vita (s146b)**: the title with its art up at ~43 fps (~88 frames per 2 s, from ~15): the GS worker
+  ~335 ms busy per 2 s (from ~880; its ~30 ms a frame before was not its own instructions, whose host profile is
+  ~0.3M a frame, so most likely the game thread's uploads' memory traffic and the LoadImage syncs), the game
+  waiting ~285 ms for it in ~175 waits, the GPU thread ~130 ms, no vblank wait: the game thread is still the
+  limit (~1.75 s of "the rest" per 2 s, ~20 ms a frame; the skip's ~2.5 MB memcmp a frame is in it).
+
+## The recording on the third core (session 146)
+
+A Vita log of 3d-ze (the Dive) per 2 s: ~18 drawn frames; the GS worker busy ~1.7 s, the game waiting ~0.6 s for it;
+the GPU thread busy only ~0.45 s, so the third core sat idle ~75% of the time. An ARM profile of the worker (the qemu
+instruction counter of session 143, `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=1000 KH1_HOST_GPUQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, en.iso, dive_en.txt, frames 5000-5060 as the difference of two runs): 999M
+instructions, of them the command recorder ~300M (kh1_pipes_prim and what it calls: the port draw state, the
+primitive's GPU vertices, the batcher and the commands, ~3,100 kicks a drawn frame), kh1_gsmem_image 205M, the GIF
+decode and register file ~260M, libc's memcmp / memcpy / memset ~190M. Three changes:
+
+- **The recording on the GPU frame's thread** (host/null/gsqueue.h `kh1_recq`, host/null/pipes.c): a second ordered
+  queue of the gsq's kind whose ops run on the GPU frame's thread between its jobs (a posted job first, so the frame
+  before's GPU work is not held up). The worker's side of a kick (kh1_pipes_prim) builds the draw's registers and
+  compares them with the last kick's as before; a change puts a state op (the registers, SCISSOR and XYOFFSET), then
+  the kick puts a primitive op (PRIM, the vertex count and the queued vertices; the next kicks of the same PRIM and
+  count join it). The recorder's side (r_state, r_prim) does what kh1_pipes_prim did after the compare: the port draw
+  state and pass, primitive assembly, the GPU vertices, kh1_cmd_prim. What reads GS memory stays on the worker and
+  hands the op its answer: the texture cache lookup (r_texture: the slot, decoded, the texel count), the palette cache
+  (r_palette, r_clut, with the bound palette slot kept on the worker's side, `a_pslot`), the transfers (r_upload).
+  The ops read only their arguments and the recorder. kh1_pipes_frame (and kh1_pipes_recorder / _batcher / _report)
+  first waits for the queue (kh1_recq_sync), so the frame op, its copy and the reset see the recorder as before;
+  the GPU frame's job runs on the same thread, so the rings' slots and the commands it reads are never written while
+  it runs. gsqueue.c's ring is now a struct (KH1Q) both queues use; the GPU frame's thread sleeps on one semaphore
+  for either work, the recording queue's producer on a third. config.txt `recq=0` keeps the recording on the worker;
+  with the queue on, the kicks are not timed one by one any more (two clock reads a kick) and the watchdog prints
+  `recording: N ms on the gpu thread; the GS worker waited M ms for it (K waits)` (the `cpu:` line's recording is
+  then 0). Host: `KH1_HOST_RECQ=1` with `KH1_HOST_GPUQ=1`.
+- **PATH2's IMAGE data in one piece** (host/null/dmawalk.c `w_qwords`): the Dive's texture streams come through VIF1
+  DIRECT, whose qwords went through gif_qword one at a time, a kh1_gsmem_image call a qword (~285,000 calls a second
+  of game); now a packet's IMAGE qwords in the op go in one call, as gif_block already did for the GIF channel.
+- **The palette cache's hash a word at a time** (host/port/palcache.c): FNV a byte (1,024 multiplies for a 256-entry
+  CLUT, ~22M); the hash only picks which slots `same()` compares.
+
+The worker on that profile: 999M -> ~680M (its idle spin aside: it now waits for the game thread under qemu), the
+GPU frame's thread +~270M. tests/host/gsqueue_test.c puts ops of random sizes through both queues (joined runs,
+ops past half the ring, wraps, jobs between) and checks their order and data. Checked on the English disc
+(dive_en.txt) against #171's head: the worker-order run with the GPU thread (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1
+KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1`, the gxmcheck binary) to frame 6500 gives
+the same 130 GS digests and GPU target hashes with `KH1_HOST_RECQ=1` and without, and the same run with
+`KH1_HOST_VU1=1 KH1_HOST_VU1TR=1` (the Dive's 3D, where most kicks are) to frame 5600 the same with the queue as
+main's without. **Not yet measured on a Vita** (3d-zf): the `gs worker` line's busy time and the `split` line's
+wait for it should fall; the game thread (the VU1 programs, clipw, its LoadImages) is likely the limit next.
 
 ## The flashing floor: one-byte enums (2026-10-28)
 
