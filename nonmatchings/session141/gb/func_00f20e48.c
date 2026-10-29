@@ -1,3 +1,4 @@
+/* Round 41 wwm2: score 337 -> 249, port.py of the wm twin func_00f47f40 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f20e48 near miss: 236 words differ, score 337 (ours 1420 bytes, original 1480). World init: view-screen matrix and two light matrices at World+4112, misc World fields, the 16-byte header from func_001ba980, palette bytes from D_00379F28 / D_0037A028, and GbPos bitfields at 72/92/94/96 from func_001bb678. Logic is complete. Findings: the float constants are truncated, so write 0.577f, 0.8f, 0.3f, 0.4f and 0.1f as is, since this gcc truncates; the u16 bitfields are accessed with ld/sd because World is 16-aligned (declare them as u16 bitfields, not u64); hold World->m in a local OvlMtx *mm and index mm[1], mm[2] directly; load b0 once into a local. Left: (1) the order of the matrix constant stores (the original first stores the last use of each constant); (2) the GbPos block after func_001bb678. The original computes v / 2 - 1 as u16 arithmetic (+0xffff) and re-extracts each field for the 94/96 copies, while ours CSEs them (60 bytes shorter). All orders of the six bitfield lines were tried (no match). wm twin: func_00f47f40 (same score). */
 typedef struct { u8 b[16]; } Blk16;
 typedef struct {
@@ -72,11 +73,11 @@ void sceVu0ViewScreenMatrix(OvlMtx, f32, f32, f32, f32, f32, f32, f32, f32, f32)
 void sceVu0CopyMatrix(OvlMtx, OvlMtx);
 void func_00f3f858(OvlMtx);
 s32 sceDmaGetChan(s32);
-Blk16 *func_001ba980(void);
-s32 func_00f23bd0(void);
+Blk16 *func_001ba980(void); CONTEXT_ONLY Blk16 * func_001ba980() { return 0; }
+s32 func_00f23bd0(void); CONTEXT_ONLY s32 func_00f23bd0() { return 0; }
 s32 func_001bb6d0(s32);
-u16 func_001bb678(void);
-void func_00f23ed8(void);
+u16 func_001bb678(void); CONTEXT_ONLY u16 func_001bb678() { return 0; }
+void func_00f23ed8(void); CONTEXT_ONLY void func_00f23ed8() {}
 void func_001be820(void *, s32);
 void func_00f326b8(void);
 void func_00f24780(void *);
@@ -84,9 +85,9 @@ void func_00f24240(void *, s32);
 s32 func_001ba3f0(s32);
 
 void func_00f20e48(void) {
-    OvlMtx *mm;
     s32 i;
     u16 v;
+    OvlMtx *mm;
     s32 n;
     mm = D_00F56DC0->m;
     sceVu0ViewScreenMatrix(mm[0], 512.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 16777000.0f, 1.0f, 65536.0f);
@@ -107,8 +108,8 @@ void func_00f20e48(void) {
     mm[1][3][0] = 0.0f;
     mm[1][3][1] = 0.0f;
     mm[1][3][2] = 0.0f;
-    mm[1][3][3] = 1.0f;
     mm[2][0][0] = 0.8f;
+    mm[1][3][3] = 1.0f;
     mm[2][0][1] = 0.8f;
     mm[2][0][2] = 0.8f;
     mm[2][0][3] = 0.0f;
@@ -122,20 +123,20 @@ void func_00f20e48(void) {
     mm[2][2][3] = 0.0f;
     mm[2][3][0] = 0.1f;
     mm[2][3][1] = 0.1f;
+    D_00F56DC0->x7C = 0;
     mm[2][3][2] = 0.3f;
     mm[2][3][3] = 1.0f;
-    D_00F56DC0->x88 = -2944.0f;
-    D_00F56DC0->x76 = 3;
-    D_00F56DC0->x90 = 0;
     D_00F56DC0->x78 = 1;
-    D_00F56DC0->x7C = 0;
     D_00F56DC0->x8C = 0;
+    D_00F56DC0->x76 = 3;
+    D_00F56DC0->x88 = -2944.0f;
+    D_00F56DC0->x90 = 0;
     D_00F56DC0->dma = sceDmaGetChan(2);
-    D_00F56DC0->x84 = 1;
     D_00F56DC0->x82 = 0;
+    D_00F56DC0->x84 = 1;
     *(Blk16 *)D_00F56DC0 = *func_001ba980();
-    n = D_00F56DC0->b0;
     D_00F56DC0->x80 = 0;
+    n = D_00F56DC0->b0;
     D_00F56DC0->x7E = n;
     D_00F56DC0->c40[0] = D_00379F28[n * 4 + 0];
     D_00F56DC0->c40[1] = D_00379F28[n * 4 + 1];
@@ -146,39 +147,39 @@ void func_00f20e48(void) {
     D_00F56DC0->c44[2] = D_0037A028[n * 4 + 2];
     D_00F56DC0->c44[3] = D_0037A028[n * 4 + 3];
     D_00F56DC0->x4C = func_00f23bd0() + 1;
-    D_00F56DC0->b50 = D_00F56DC0->x7E;
     D_00F56DC0->x4A = 0;
     D_00F56DC0->y4A = 2;
     D_00F56DC0->z4A = 4;
+    D_00F56DC0->b50 = D_00F56DC0->x7E;
     D_00F56DC0->x62 = D_00F56DC0->x54 = func_001bb6d0(D_00F56DC0->x4C - 1);
-    D_00F56DC0->x74 = 0;
     D_00F56DC0->x58 = 0;
+    D_00F56DC0->x74 = 0;
     for (i = 0; i < 16; i++) {
         D_00F56DC0->b64[i] = 0;
     }
     D_00F56DC0->x10D4 = 256;
-    D_00F56DC0->b9C = 0;
     D_00F56DC0->x10D8 = 0;
     D_00F56DC0->x10DC = 0;
     D_00F56DC0->x98 = 0;
+    D_00F56DC0->b9C = 0;
     D_00F56DC0->b9E = 0;
     D_00F56DC0->x7A = 128;
     D_00F56DC0->bF0 = 0;
     v = func_001bb678();
-    D_00F56DC0->xA6 = v;
-    D_00F56DC0->xAA = v;
-    D_00F56DC0->xA8 = v;
-    D_00F56DC0->x5C = v / 2 - 1;
     D_00F56DC0->y5C = v / 2;
+    D_00F56DC0->xAA = v;
     D_00F56DC0->z5C = v / 2 - 1;
-    D_00F56DC0->x5E = D_00F56DC0->x5C;
-    D_00F56DC0->y5E = D_00F56DC0->y5C;
-    D_00F56DC0->z5E = D_00F56DC0->z5C;
-    D_00F56DC0->x88 = -2944.0f - (v * 420 - 2520);
-    D_00F56DC0->x60 = D_00F56DC0->x5C;
-    D_00F56DC0->y60 = D_00F56DC0->y5C;
+    D_00F56DC0->xA6 = v;
     D_00F56DC0->z60 = D_00F56DC0->z5C;
+    D_00F56DC0->xA8 = v;
+    D_00F56DC0->y60 = D_00F56DC0->y5C;
+    D_00F56DC0->y5E = D_00F56DC0->y5C;
+    D_00F56DC0->x88 = -2944.0f - (v * 420 - 2520);
+    D_00F56DC0->x5C = v / 2 - 1;
+    D_00F56DC0->x60 = D_00F56DC0->x5C;
     D_00F56DC0->xA4 = 0;
+    D_00F56DC0->x5E = D_00F56DC0->x5C;
+    D_00F56DC0->z5E = D_00F56DC0->z5C;
     func_00f23ed8();
     func_001be820(D_00F56DC4, 0x13008);
     func_00f326b8();
