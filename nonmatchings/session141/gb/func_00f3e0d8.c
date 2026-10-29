@@ -1,4 +1,4 @@
-/* near miss: 119 words, score 66 (plain). Left: loop1 zero-trip guard is jump-threaded past loop2 (original isn't, +2 insns), i/r regs s4/s5 swapped, arg3 spill-store order. */
+/* near miss: 108 words, score 24. Left: the stage-1 bound must load into v0 with a v1 copy (as in func_00f3e388), so the zero-trip exit isn't threaded past loop 2; entry spill order. */
 typedef struct { f32 rot[4]; f32 pos[4]; u8 pad20[16]; s32 parent; u8 pad34[12]; } MdlBone;
 typedef struct { s32 count; s32 off; u8 pad8[32]; } MdlPart;
 typedef struct { s32 off; s32 bone; u8 pad8[32]; } MdlEnt;
@@ -41,9 +41,9 @@ MdlWork *func_00f3e0d8(s32 *out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, s32 *
             t = arg3[j];
         }
         e = (MdlEnt *)((u8 *)h + pt->off);
-        for (k = 0; k < pt->count; k++) {
-            if (D_00F6C9C4 & (1 << k)) {
-                out[j] = func_00f3f548(out[j], a1, &w[e[k].bone], t, (u8 *)h + e[k].off, arg5[j]);
+        for (i = 0; i < pt->count; i++, e++) {
+            if (D_00F6C9C4 & (1 << i)) {
+                out[j] = func_00f3f548(out[j], a1, &w[e->bone], t, (u8 *)h + e->off, arg5[j]);
             }
         }
     }
