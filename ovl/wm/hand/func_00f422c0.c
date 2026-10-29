@@ -1,4 +1,8 @@
-/* score 26 (1368 bytes, same size). World-map cutscene: effect 21 at the player, fade out 20 frames, camera flight pos[2] += 200 for 60 frames under func_001c0310(func_00f421d8), then reset and effect 22 with fade in. Floats need 1.59999996f/0.59999997f/-0.54999997f (gcc 2.96 truncates shorter literals). Keys: an early b = (u8 *)D_00F86500 and off = k * 0x590 with e = off + 0x540 + b and b += 0x80 for the matrix (32); hill2 on the init stores took it to 26. Left: off/b get s1/s2 swapped and the 1.0/1.6 store schedule. Round 27 wwm2. */
+/* wm.x func_00f422c0: matched by hand. */
+#include "ovl.h"
+
+/* wm.x func_00f422c0: matched by hand. b = (u8 *)D_00F86500 just before off is computed, so local-alloc gives b s1 ahead of off (s2); o2 = off + 0x540 keeps the original add order for e; the init-store order came from a dependency-safe hill climb. */
+#include "ovl.h"
 typedef struct { s32 a; s32 b; s32 c; } Sub;
 typedef struct { u8 pad[0x80]; OvlMtx m; u8 b[0x400]; u8 c[0x80]; Sub s; u8 pad2[0x590 - 0x54C]; } Ent;
 extern Ent D_00F86500[];
@@ -53,25 +57,25 @@ void func_00f422c0(void)
     Sub *e;
     u8 *b;
     s32 off;
+    s32 o2;
     s32 k;
     s32 h;
     s32 t;
     s32 i;
 
-    b = (u8 *)D_00F86500;
-    pos[0] = 0;
-    D_010807E4 = 0;
     pos[3] = 1.0f;
     rot[3] = 1.0f;
-    scl[0] = 1.59999996f;
+    D_010807E4 = 0;
+    scl[3] = 1.0f;
+    pos[0] = 0;
     pos[1] = 0;
-    scl[1] = 1.59999996f;
+    scl[0] = 1.59999996f;
     pos[2] = 0;
     rot[0] = 0;
     rot[1] = 0;
-    rot[2] = 0;
-    scl[3] = 1.0f;
+    scl[1] = 1.59999996f;
     scl[2] = 1.59999996f;
+    rot[2] = 0;
     func_00f309d0(1);
     func_00f344e0(1);
     func_00f32318(pos, rot, 0.0f);
@@ -79,11 +83,13 @@ void func_00f422c0(void)
     func_00f404c8(D_00F850E0, 0);
     func_00f3e3a0();
     func_00f3a4c8();
-    D_00F9B1C4 = 0;
-    off = (D_00F850E0 ^ 1) * 0x590;
-    D_00F9B1CC = 0;
     D_00F9B1C8 = 1;
-    e = (Sub *)(off + 0x540 + b);
+    b = (u8 *)D_00F86500;
+    off = (D_00F850E0 ^ 1) * 0x590;
+    D_00F9B1C4 = 0;
+    D_00F9B1CC = 0;
+    o2 = off + 0x540;
+    e = (Sub *)(o2 + b);
     func_001bb7c8(D_00FB7260, e->b);
     func_00f64b88(e->b);
     func_001bb7c8(D_00FB7278, e->c);
@@ -91,9 +97,9 @@ void func_00f422c0(void)
     b += 0x80;
     sceVu0UnitMatrix((void *)(off + b));
     v[0] = pos[0];
+    v[2] = pos[2] - D_00F85268 * 0.59999997f;
     v[1] = pos[1];
     v[3] = pos[3];
-    v[2] = pos[2] - D_00F85268 * 0.59999997f;
     h = func_00f68508(21, 1, v, rot, scl, D_00F87048);
     for (i = 0; i < 25; i++) {
         func_001bfac8();
