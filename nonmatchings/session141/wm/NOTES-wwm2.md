@@ -359,3 +359,19 @@ Rebased onto origin/claude/project-thread-rl45wv.
 - func_00f6ae68: m2c fails (jump table); not drafted. Its gb twin is f43d70 (same shape).
 - func_00f74f30 (gb twin f4de38, same shape), func_00f6d810 and func_00f6a530: not drafted (m2c and asm dumped
   only).
+
+## Round 21
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f6a530: MATCH. Its gb twin func_00f43438 (same size, 2048 bytes) also matches after portmap plus three
+  raw-address symbols (D_00F829C0/C4 for D_0108F180/184, D_00F70684 for D_00FB4E04). The alpha fade is
+  `if (a == at) alpha = a * 0.5f; else { ...; alpha = a * 0.5f; }`, which gcc cross-jumps into one mul. Two fixes
+  that look unrelated also changed the float register allocation there, so retry the alpha forms after fixing them:
+  - case 6 must be `if (x10 != 1) tbl = &D_00FB49F0; else tbl = &D_00FB4A20;`.
+  - after the fn3C() call the order must be `x = e->x; o->x90 = alpha; y = e->y;`.
+- func_00f6d810: score 322 -> 236 (saved). The up path does `goto win` into the down path's window code, written as
+  `(n - 8) << 4` / `(i - n + 8) << 4`, and the whole cursor-search section now matches. Left: in the draw loop,
+  &D_00FB4C48 is hoisted into s7 and the loop counter spills, where the original spills n instead. gb f46718 has
+  the same size (1992 bytes) and is probably its twin.
+- func_00f74f30: first draft, score 290 (saved). Both count loops match, including the empty loop that ee-gcc pads
+  with nops. The window calc becomes movn here, while the original uses a branch-likely; see the header.
