@@ -1,4 +1,4 @@
-/* gb.x func_00f4d348 near miss (nofill mode): 4 words differ, score 4 (1208 = 1208 bytes). Port of wm func_00f74440's near miss (port.py). Only the a0/a1 move order before __cmpdf2 in the two inner if (d < 0) blocks differs: the original sets a1 before a0. Round 15 tried 24 compare/subtract spellings (d < 0.0, 0.0 > d, d < z, z > d, d < 0, !(d >= 0.0) crossed with 0.0 - d, z - d, -d, 0 - d); all stay at 4. */
+/* gb.x func_00f4d348 near miss (nofill mode): 4 words differ, score 4 (1208 = 1208 bytes). Port of wm func_00f74440's near miss (port.py). Only the a0/a1 move order before __cmpdf2 in the two inner if (d < 0) blocks differs: the original sets a1 before a0. Round 15 tried 24 compare/subtract spellings (d < 0.0, 0.0 > d, d < z, z > d, d < 0, !(d >= 0.0) crossed with 0.0 - d, z - d, -d, 0 - d); all stay at 4. Round 33 (wgb), worse: ABS macros ((x) < 0.0 ? 0.0 - (x) : (x), and the < 0 ? -(x) form) and if (m < DABS(E)) m = DABS(E) (1216-1300 bytes). */
 extern s32 D_00F702D4;
 extern s32 D_00F702D8;
 extern s32 D_00F702F0;

@@ -1,4 +1,4 @@
-/* Round 32 (wgb): wm.x func_00f56780 near miss: 89 -> 34 words, score 49 (ours 1372 bytes, original 1376; the last word is the alignment nop). The wm port had used the gb addresses D_00F614C0 / D_00F61510 for the func_001befc8 tables; the wm ones are D_00FA5C40 / D_00FA5C90 (6 words). Changes: callee arguments in the target's setup order (round 31); the loop-2 scale gets its own variable q2, computed after the sc block (searched: split r = fi * 0.5f; r /= 180.0f or not, before or after the sc block, per loop); a float n90 = 90.0f set in loop 2 just before q2, used in (n90 - fi) and fi = fi + n90 (permuter find, -14 words); r2 = t; just before the first func_00f285e0-type call of loop 1, with r2 / 180.0f in the second call (permuter find, -4 words). Left: loop-1 r and t swap f20/f22 (original r=f20, fi=f21, t=f22), the loop-1 pre-header 1.0f/0.5f order in f2eee8, loop 2 (f32)j converted straight into r2 (original: f0, with the constant in f1), and li a3,192 / mov.s $f12 order. Tried without gain: the f2fe38 fix (constant in a twice-set temp q, c = (f32)j), t computed late / inline / first, r = -(fi*k), fi = (f32)i, merging loop-2 floats into loop-1 names, moving each callee parameter to every other position, declaration-order sweeps, two 10-minute permuter runs. Twin of gb func_00f2f688. */
+/* Round 33 (wgb): wm.x func_00f56780 near miss: 34 -> 25 words, score 31 (ours 1372 bytes, original 1376; the last word is the alignment nop). FP allocation is now the original's (r=f20, fi=f21, t=f22 in loop 1): -fdump-rtl (ee-gcc -dl -dg) showed local-alloc only takes pseudos that live in one block and die once, so the original's fi, r and t must all be global. Changes: loop 2 reuses fi and r (no fi2/r2/q2); loop 2 sets t = 0.0f at its top and passes t for every 0.0f; loop 1 does fi = t; between the two func_00f285e0-type calls and passes fi / 180.0f to the second (replaces round 32's r2 = t copy); n90 = 90.0f from round 32 is kept. Left: scheduling only. Around the first func_00f285e0-type call of loop 1 the original issues div.s $f13 (fi / 180) right after the two nops, ours issues li a2,180 / lwc1 / sub.s first. In every func_00f285e0-type call the original sets li a3,192 before mov.s $f12. Tried without gain: every int/float interleaving of the func_00f285e0 parameters, unused labels as block boundaries, zero held in s for loop 1, the loop-2 m statement at every position, and a 10-minute permuter run (26 words). The inline-helper idea for the calls grew the frame (272 bytes). Twin of gb func_00f2f688. */
 typedef struct { u8 pad[0x82]; s16 id; } World;
 extern World *D_00F9B540;
 extern u8 D_00F9B548[];
@@ -22,9 +22,6 @@ void func_00f56780(s32 arg) {
     s32 i, k, id, n;
     f32 fi, r, s, t;
     s32 j, m;
-    f32 fi2;
-    f32 r2;
-    f32 q2;
     f32 n90;
     ids[2][0] = 12;
     func_00f47340(11);
@@ -53,19 +50,20 @@ void func_00f56780(s32 arg) {
         sc[1] = (sc[1] - 1.0f) * 0.5f + 1.0f;
         r = fi * 0.5f;
         r /= 180.0f;
-        r2 = t;
         id = func_00f4f6d8(10720, D_00F9B548, 0.0f, fi / 180.0f, r + 0.5f, 68 - (180 - i) / 2, 192, ids[1][2], D_00FA5CEC, sc, 0);
-        func_00f4f6d8(id, D_00F9B548, 0.0f, r2 / 180.0f, 1.0f - r, i / 2 + 68, 192, ids[0][2], D_00FA5CEC, sc, 1);
+        fi = t;
+        func_00f4f6d8(id, D_00F9B548, 0.0f, fi / 180.0f, 1.0f - r, i / 2 + 68, 192, ids[0][2], D_00FA5CEC, sc, 1);
     }
     for (i = 0; i < 90; i += 15) {
+        t = 0.0f;
         func_001bfac8();
         j = 90 - i;
-        r2 = (f32)j * 0.017453292f;
-        fi2 = i;
-        id = func_00f4f188(11200, D_00F9B548, 41, 347, 0.0f, 0.0f, D_00FA5CEC, ids[0][1], 58);
-        id = func_00f4f188(id, D_00F9B548, 41, 347, 0.0f, r2, D_00FA5CEC, ids[1][1], 58);
-        id = func_00f4f188(id, D_00F9B548, 41, 76, 0.0f, 0.0f, D_00FA5CEC, ids[0][0], 58);
-        func_00f4f188(id, D_00F9B548, 41, 76, 0.0f, r2, D_00FA5CEC, ids[1][0], 58);
+        r = (f32)j * 0.017453292f;
+        fi = i;
+        id = func_00f4f188(11200, D_00F9B548, 41, 347, t, t, D_00FA5CEC, ids[0][1], 58);
+        id = func_00f4f188(id, D_00F9B548, 41, 347, t, r, D_00FA5CEC, ids[1][1], 58);
+        id = func_00f4f188(id, D_00F9B548, 41, 76, t, t, D_00FA5CEC, ids[0][0], 58);
+        func_00f4f188(id, D_00F9B548, 41, 76, t, r, D_00FA5CEC, ids[1][0], 58);
         k = i / 15 * 4 + 24;
         m = i + 90;
         sc[1] = func_001befc8(k, D_00FA5C40);
@@ -73,11 +71,11 @@ void func_00f56780(s32 arg) {
         sc[2] = sc[0] = (sc[0] - 1.0f) * 0.5f + 1.0f;
         sc[1] = (sc[1] - 1.0f) * 0.5f + 1.0f;
         n90 = 90.0f;
-        q2 = fi2 * 0.5f;
-        q2 /= 180.0f;
-        id = func_00f4f6d8(10720, D_00F9B548, 0.0f, (n90 - fi2) / 180.0f, 0.75f - q2, m / 2 + 68, 192, ids[0][2], D_00FA5CEC, sc, 1);
-        fi2 = fi2 + n90;
-        func_00f4f6d8(id, D_00F9B548, 0.0f, fi2 / 180.0f, q2 + 0.75f, 68 - j / 2, 192, ids[1][2], D_00FA5CEC, sc, 0);
+        r = fi * 0.5f;
+        r /= 180.0f;
+        id = func_00f4f6d8(10720, D_00F9B548, t, (n90 - fi) / 180.0f, 0.75f - r, m / 2 + 68, 192, ids[0][2], D_00FA5CEC, sc, 1);
+        fi = fi + n90;
+        func_00f4f6d8(id, D_00F9B548, t, fi / 180.0f, r + 0.75f, 68 - j / 2, 192, ids[1][2], D_00FA5CEC, sc, 0);
     }
     func_00f47388(11);
 }

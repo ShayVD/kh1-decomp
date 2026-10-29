@@ -1,4 +1,4 @@
-/* gb.x func_00f3c8c8 near miss: 5 words differ, score 5 (ours 852 bytes, original 856). This is wm func_00f639c0's near miss ported with tools/ovl/port.py; the same 5 words are left. One: the second sprite qword's addiu a0,a0,2072 should be scheduled before the two dsll. Two: move s4,s6 / lui s5,0xf6 swap before the inner loop. Already tried: incrementing x and y, separate x+2072 / y+1976 terms, a pre-shifted y, and swapping the x/y order (all 5 or worse). */
+/* gb.x func_00f3c8c8 near miss: 5 words differ, score 5 (ours 852 bytes, original 856). This is wm func_00f639c0's near miss ported with tools/ovl/port.py; the same 5 words are left. One: the second sprite qword's addiu a0,a0,2072 should be scheduled before the two dsll. Two: move s4,s6 / lui s5,0xf6 swap before the inner loop. Already tried: incrementing x and y, separate x+2072 / y+1976 terms, a pre-shifted y, and swapping the x/y order (all 5 or worse). Round 33 (wgb), no gain: the second sprite as r * 24 + 2072 / q * 24 + 1976 / (y << 4) + 384 in every term order (24 forms, all 5). */
 extern u64 **D_00F61F58;
 extern s32 D_00F61F5C;
 u64 *func_00f3f9d0(u64 *);
