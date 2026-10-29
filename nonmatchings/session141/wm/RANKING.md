@@ -14,6 +14,8 @@ Round 14 results: f326a0, f3dbf8, f2c910, f2bfb8 and f25660 matched and are remo
 
 Round 17: f5cb78, f31118, f3ff98, f3be50 and f5bba0 matched with CONTEXT_ONLY callee definitions (docs/overlays.md, "Branch-likely vs plain branch"); f3d978 and f43430 moved up. f3cdd0 dropped from 24 to 17 raw words (its aligned count is not rechecked here).
 
+Round 17: f5c1c8 matched as the port of gb func_00f350d0.
+
 | Aligned | Raw | Function | Mode | Hill/permuter | File |
 |---|---|---|---|---|---|
 | 2 | 2 | func_00f21260 |  | yes | func_00f21260.c |
@@ -44,7 +46,6 @@ Round 17: f5cb78, f31118, f3ff98, f3be50 and f5bba0 matched with CONTEXT_ONLY ca
 | 13 | 5 | func_00f74a28 |  | yes | func_00f74a28.c |
 | 13 | 10 | func_00f296d8 |  |  | func_00f296d8.c |
 | 13 | 13 | func_00f30d48 |  | yes | func_00f30d48.c |
-| 13 | 13 | func_00f5c1c8 |  | yes | func_00f5c1c8.c |
 | 13 | 14 | func_00f37770 |  |  | func_00f37770.c |
 | 14 | 12 | func_00f33270 |  | yes | func_00f33270.c |
 | 14 | 14 | func_00f651d0 |  |  | func_00f651d0.c |
