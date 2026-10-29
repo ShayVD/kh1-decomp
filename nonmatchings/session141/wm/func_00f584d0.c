@@ -1,3 +1,4 @@
+/* Round 42 wwm2: score 99 -> 74. r42/msdscan.py (instruction multiset diff) showed addiu 2272 against our addiu 142: the original adds 142 << 4 after the shift, so y1 is D.h and the XY word uses (y1 << 4) + 2272. Then r42/hill3o.py reordered the setup lines (y0 = 142 last). Earlier header below. */
 /* 67 words (628 vs 632). Sprite packet over D_00FA6000[n+22] (idx*20 table) with RGBAQ(r,g,b,0x80), 14 GIF entries; direct D[idx].field expressions already give the target element-address copies (t1/a0/v1/t0). Left: the target computes u+w, w<<4 and h<<4 before the calls but +1/<<4/+2272 and v+h after them; hill-climbed the 8 coordinate lines (105 -> 67); an explicit-locals variant scored worse. */
 typedef struct { s32 a; s32 u; s32 v; s32 w; s32 h; } T584d0;
 typedef struct { u8 pad[0x2200]; u64 tex[1]; } W584d0;
@@ -17,14 +18,14 @@ void func_00f584d0(s32 n, s32 r, s32 g, s32 b) {
     s32 idx = n + 22;
     u64 *p;
 
-    u0 = D_00FA6000[idx].u;
-    u1 = u0 + D_00FA6000[idx].w + 1;
-    v0 = D_00FA6000[idx].v;
-    y0 = 142;
     x0 = 0;
+    y0 = 142;
     x1 = x0 + D_00FA6000[idx].w;
-    y1 = y0 + D_00FA6000[idx].h;
+    v0 = D_00FA6000[idx].v;
+    y1 = D_00FA6000[idx].h;
+    u0 = D_00FA6000[idx].u;
     v1 = v0 + D_00FA6000[idx].h + 1;
+    u1 = u0 + D_00FA6000[idx].w + 1;
     p = func_00f66b78(func_00f66ac8(D_00F9B548));
     p[0] = 0x30003;
     p[1] = 71;
@@ -56,7 +57,7 @@ void func_00f584d0(s32 n, s32 r, s32 g, s32 b) {
     p[0] = (s64)(u1 << 4) | ((s64)(v1 << 4) << 16);
     p[1] = 3;
     p += 2;
-    p[0] = (s64)(x1 << 4) | ((s64)(y1 << 4) << 16) | ((s64)0x8000 << 17);
+    p[0] = (s64)(x1 << 4) | ((s64)((y1 << 4) + 2272) << 16) | ((s64)0x8000 << 17);
     p[1] = 5;
     p += 2;
     p[0] = 96;
