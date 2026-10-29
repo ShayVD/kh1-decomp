@@ -371,6 +371,28 @@ static int watchdog(SceSize args, void *argp) {
             /* session 137v: of the rest, the VU1 programs (the kicks they hand on included, then alone) */
             vlog("kh1-vita: vu1: %u ms in programs, %u ms of it passing their kicks on\n", (kh1_vu1_us - vu0) / 1000,
                  (kh1_vu1_kick_us - kick0) / 1000);
+            { /* session 147: the programs that took the most of it, and their time per instruction pair */
+                static u32 p_us[KH1_VU1_PROGS], p_runs[KH1_VU1_PROGS], p_pairs[KH1_VU1_PROGS];
+                u32 d[KH1_VU1_PROGS], us, runs, pairs, k;
+                int i, num, best;
+                char line[512];
+                int len = snprintf(line, sizeof line, "kh1-vita: vu1 programs:");
+                for (i = 0; i < KH1_VU1_PROGS; i++) d[i] = kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs) ? us - p_us[i] : 0;
+                for (k = 0; k < 4; k++) {
+                    best = -1;
+                    for (i = 0; i < KH1_VU1_PROGS; i++)
+                        if (d[i] && (best < 0 || d[i] > d[best])) best = i;
+                    if (best < 0 || d[best] < 1000) break;
+                    kh1_vu1_prog_stats(best, &num, &us, &runs, &pairs);
+                    len += snprintf(line + len, sizeof line - len, "%s P%d %u ms (%u runs, %u K pairs, %u ns a pair)",
+                                    k ? "," : "", num, d[best] / 1000, runs - p_runs[best], (pairs - p_pairs[best]) >> 10,
+                                    pairs - p_pairs[best] ? (u32)((u64)d[best] * 1000 / (pairs - p_pairs[best])) : 0);
+                    d[best] = 0;
+                }
+                vlog("%s\n", line);
+                for (i = 0; i < KH1_VU1_PROGS; i++)
+                    if (kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs)) { p_us[i] = us; p_runs[i] = runs; p_pairs[i] = pairs; }
+            }
             if (kh1_gsq_on) /* session 141: the GS side's worker (the recording above is its time now) */
                 vlog("kh1-vita: gs worker: %u ms busy; the game waited %u ms for it (%u waits)\n",
                      (kh1_gsq_us_busy - gbusy0) / 1000, (kh1_gsq_us_wait - gwait0) / 1000, kh1_gsq_waits - gwaits0);
@@ -512,6 +534,9 @@ int main(int argc, char **argv) {
         if (sceKernelGetThreadInfo(sceKernelGetThreadId(), &ti) >= 0 && ti.stack &&
             (u8 *)&here - (u8 *)ti.stack > MAIN_OWN)
             kh1_costack_pool(ti.stack, costack_bytes = (u32)((u8 *)&here - (u8 *)ti.stack) - MAIN_OWN);
+        /* session 147: the DMA walk owns all of it (3d-zk: a chain's data at 0x846a3c30, the main thread's own
+         * part, refused) */
+        if (ti.stack && ti.stackSize > 0) kh1_costack_stack(ti.stack, (u32)ti.stackSize);
     }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);

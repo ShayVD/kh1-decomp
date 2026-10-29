@@ -7,13 +7,20 @@ void *malloc(__SIZE_TYPE__);
 
 static u8 *pool_lo, *pool_hi; /* the pool's unused part */
 static u8 *pool_base;         /* the whole pool: pool_base to pool_hi */
+static unsigned long own_lo, own_hi; /* the whole stack it came from (kh1_costack_stack) */
 
 void kh1_costack_pool(void *base, u32 size) {
     pool_base = pool_lo = (u8 *)(((__SIZE_TYPE__)base + 15) & ~(__SIZE_TYPE__)15);
     pool_hi = (u8 *)base + size;
 }
 
+void kh1_costack_stack(void *base, u32 size) {
+    own_lo = (unsigned long)base;
+    own_hi = own_lo + size;
+}
+
 int kh1_costack_owns(unsigned long a, u32 n) {
+    if (own_hi && a >= own_lo && a + n <= own_hi) return 1;
     return pool_base && a >= (unsigned long)pool_base && a + n <= (unsigned long)pool_hi;
 }
 
