@@ -776,3 +776,23 @@ No gain (findings for whoever picks these up next):
 - **f44158:** in the dump, arg4 (pseudo 88: 4 refs over 11 insns) outranks arg0 (84: 4 refs over 19 insns) and takes s0. Duplicate stores and void uses of arg0 do not change the ref counts.
 - **f38630:** chained 200.0f stores, a 200.0f temp, and moving or duplicating `k->x00 = arg0`: no gain.
 
+## Round 38 (wwm2)
+
+**Match: f22e60 (norlo mode).**
+- `u64 **q = D_00F85160; if (D_00FBB338 == 0) a -= 12; *q = p;` matched.
+- Storing through `*D_00F85160` first meant D_00FBB338 had to be loaded after the store, because the store may alias it. That swapped the movz registers.
+
+**Better: f32770, score 8 -> 2.** Copying fx and fy into locals inside the if helped. Of the 1374 copy/store orders tried, the best is `x = fx; id; y = fy; c.x = x; c.o = o; c.y = y`. One swap is left: the original stores x before it loads fy.
+
+**Bulk struct test:** I rewrote 9 gb/wm drafts that index tables as `D[n * 4 + c]` or `D[row * 2 + 1]` into 2-D arrays (r38/to2d.py), and wm f58748 and gb f31ad8/f31650 as `[idx][c]` colour tables (r38/col2d.py).
+- The `D[n * 4 + c]` rewrites gave identical scores. The f58748/f31ad8/f31650 rewrites failed to compile (scores 331-377 before).
+- 2-D arrays of scalars fold to the same RTL. The f7c078 struct only made a difference because a shared offset was involved.
+
+`portall.py wm gb` found no new gb twins ("ported 0").
+
+No gain:
+- **f21260:** a non-void func_001655e0 makes the register allocator avoid v0 (11 words).
+- **f74440:** DABS / ternary / per-branch forms of the inner `if (d < 0.0)`.
+- **f74a28, f639c0, f3ba08, f36bc0:** looked at, no new idea.
+- **f22e60-style pointer local:** tried the idea on f28ed8 and f46070. Neither reads a global after the packet-pointer store, so the pattern does not apply to them.
+
