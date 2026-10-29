@@ -332,3 +332,17 @@ same-shape functions f4d930 (f74a28), f4be48 (f72f40), f49730 (f70828) and f4e6c
   - Left: global-store scheduling in the prologue and epilogue.
 - func_00f757b8: m2c looked at (same family as f74a28, with an extra D_0108F558 mode); not drafted.
 - func_00f72f40, func_00f70828: not started.
+
+## Round 19
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f757b8: MATCH, adapted from the f74a28 draft. Its gb twin func_00f4e6c0 also matches after renaming the
+  symbols. Keys: declare `e` before `skip` so they get the right stack slots, write the double store as
+  `D_00FB4A58 = D_00FB4A5C = ...`, and use `if (cur == i) {7} else {0}`.
+- func_00f70828: MATCH. Its gb twin func_00f49730 also matches; /tmp portmap.py maps the symbols by zipping the m2c token
+  lists. Key: the inner pad loop is a gcc 2.96 `for (; n = f(), old = cur, !(pad & 0x4000);)`. A for loop whose
+  condition is in the header gets its test at the bottom with an initial jump, and it keeps the loop notes, so
+  invariants such as `lui s5,0x2c` get hoisted. This differs from a goto loop, which hoists nothing. The `r == -1`
+  exit code lives inside the loop (and runs the function epilogue code before `break`).
+- func_00f72f40: score 11 (saved). See its header. It wants goto loops, not for loops.
+- func_00f73eb0: the for-loop form made it worse (262 vs 152); still 152.
