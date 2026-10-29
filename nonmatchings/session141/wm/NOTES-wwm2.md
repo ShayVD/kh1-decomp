@@ -752,3 +752,27 @@ No change: f56780, f55fe0, f53758, f77648, f4bdf8 (one word fewer, same score), 
 - The original puts `li a3,192` before `mov.s $f12`, and `mov.s $f12` before t1/t2. That fits no single parameter order, so the call scheduling comes from something else.
 
 **f55fe0, loop 2 s0/s1 swap:** in the dump, j (90 - i, 8 refs over 94 insns) gets s0 ahead of m (i + 90, 6 refs over 45 insns); the original has them the other way round. Single edits did not move it: j /= 2 in place, m /= 2 in place, m computed late as (i + 90) / 2, `68 + j / 2`, and j folded into its uses.
+
+## Round 37 (wwm2, manual work on drafts scoring 30 or less)
+
+Two matches:
+- **f7c078:** the table D_00FB6168 is an array of `struct { s8 n[8]; s8 x[8]; s8 y[8]; }` read as `D[a].x[k]`. The flat `D[k + a * 24 + 8]` form gives o + base; the struct gives the original's base + o for the first address.
+- **f3fd60:** subtract the 1 in each branch (`v = D_00F87300 - 1;` / `v = D_00F87E88[arg1].kind - 1;`), then index `D_00F87E60[v]`. With `[v - 1]` after the join, gcc folds the -4 into the table offset, and the loaded value also lands in a different register.
+
+`portall.py wm gb` found no gb twin for either.
+
+No gain (findings for whoever picks these up next):
+- **f78458:** sched1 (-dS) hoists every %hi/constant set to the top of the block and sinks the stores. So the live lengths, and with them the t4/t5/t6 choice, come from the order of the sources (the %hi/constant sets) against the sched1 store order.
+  - I placed the dead and the live `D_0108F1A0 = 8` at every pair of positions (dup78.py). The best result is still 3 / 2 words.
+  - The order dead store at the top, live store before D_0108F568 gives the original's store order, but the registers rotate: arg goes to t4, 8 to t5, %hi(568) to t6. The original has %hi(568) in t4, arg in t5 and 8 in t6.
+- **f7cb60:** arms `{ p[0] = 0; p[1] = 0; D_00FB5EC0 = 0; } else { D_00FB5EC0 = 1; p[0] = 0; }` fix the &2 arm (3 -> 2 words, same score 4; not committed).
+  - Left: in the else arm, sched2 puts p[0] = 0 before the D_00FB5EC0 store whatever the source order. %hi(D_00FB5EC0) is set inside that block, which lets the p[0] store go first.
+  - In the original, the %hi sits in the beqz slot and serves both arms, and the two stores keep source order.
+  - Neither reassigning p nor making p volatile helped.
+- **f28448:** `i = z + i` becomes (plus i z), because expand_binop swaps a commutative add whose second operand is the target. `i = z + D.b` keeps z first but loads into a temp register, not s0 (6 words).
+- **f3a030:** `(&D[i].s)->buf` gives the original's lw 4(s2), but with base + 224 invariant and a 272i giv (score 10). The original has base and 272i + 224. Every flat, array, cast and offset-variable form folds to one of the two.
+- **f47610:** the 243 named-field union views score at best 8 (the w[] draft is 4).
+- **f66b38:** n first, then stores [0], [1], [2], [3] gives the original's instruction order. Every register is off by one (a1/a2/a3 against the original's a2/a3/a1) and the score is 30 against 28, so I did not commit it.
+- **f44158:** in the dump, arg4 (pseudo 88: 4 refs over 11 insns) outranks arg0 (84: 4 refs over 19 insns) and takes s0. Duplicate stores and void uses of arg0 do not change the ref counts.
+- **f38630:** chained 200.0f stores, a 200.0f temp, and moving or duplicating `k->x00 = arg0`: no gain.
+
