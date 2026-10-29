@@ -726,6 +726,26 @@ equal magnitudes (a deliberate break of each change is caught). Left on the game
 (their FMACs' operands go through memory: `u32 u[4]` then a field copied out, a NEON store and a core load the
 A9 pays for), the large LoadImages, and the ring copy of the kicks.
 
+### The GS worker after the enum fix (session 143)
+
+3d-zc on a Vita (the enum fix and the walk above): the Dive at ~11.4 fps, up from ~7.8; the game thread's walks
+~0.71 s per 2 s, and the GS worker now the limit, busy ~1.8 s of every 2 s (~0.4 s of that waiting for the GPU
+thread), the game waiting ~0.8 s for it. Each log write took ~6 ms (`log:` line, ~90 ms per 2 s, mostly the
+watchdog's own lines on the GPU thread's core). The worker under the qemu instruction counter (as above, its
+thread's file): 1,199M over frames 5000-5060 (its idle spin aside): kh1_gsmem_image 355M, ~266M of it the T8 loop
+of trx_bulk (~425,000 T8 pixels a frame in ~28 uploads, 88% of them changed bytes: the streamed textures land in
+pages the targets draw into, so kh1_gsmem_image_same never holds), libc's memcmp / memset / memcpy ~190M,
+kh1_pipes_prim 107M (73M of it prim_sig's FNV a byte), gs_kick 95M, gif_qword 73M. Two changes:
+
+- **T8 uploads a run at a time** (gsmem.c trx_bulk): a row's pixels inside one 16-wide block column are one block,
+  so one page; each pixel is stored without a test (an equal byte stored again changes nothing) and the page's
+  stamp, dirty bit and marks are set once a run, as the per-pixel tests left them. 8 ARM instructions a pixel.
+  tests/host/gsfast_test.c's uploads (every PSM, random pieces, over drawn pages) are the same with the fast
+  paths off; dropping the run's stamp is caught.
+- **prim_sig a word at a time** (pipes.c): only equal signatures matter to batch.h's column groups.
+
+The worker: 1,199M -> 1,002M (-16%; kh1_gsmem_image 355M -> 210M, kh1_pipes_prim 107M -> 56M).
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

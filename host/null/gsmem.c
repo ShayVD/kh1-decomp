@@ -580,24 +580,44 @@ static int trx_bulk(const u32 *w, u32 n) {
     /* session 141 (the Dive's T8 texture streams, a tenth of its frame): mark's work inline, marks moved
      * once a piece (tex_scan's memo only asks whether it moved) */
     case KH1_PSMT8: {
+        /* session 143 (the Dive's ~425,000 T8 pixels a frame on the GS worker): a row's run inside one 16-wide
+         * block column is one block, so one page; its pixels stored with no test each (an equal byte stored
+         * again changes nothing), and the page's stamp and marks once a run, as the test a pixel left them */
         int moved = 0;
+        u32 x = trx.ai % trx.w, run, pg, d, i;
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        const u8 *b = (const u8 *)w;
+#define T8_BYTE(i) b[i]
+#else
+#define T8_BYTE(i) (w[(i) >> 2] >> ((i) & 3) * 8 & 0xFF)
+#endif
         k = n * 4 < left ? n * 4 : left;
-        for (j = 0; j < k; j++) {
-            u32 pg;
-            a = at[j];
-            v = w[j >> 2] >> (j & 3) * 8 & 0xFF;
-            o = vm[a];
-            pg = a >> 13;
-            if (o != v) {
+        for (j = 0; j < k; j += run) {
+            run = 16 - (trx.x0 + x) % 16;
+            if (run > trx.w - x) run = trx.w - x;
+            if (run > k - j) run = k - j;
+            pg = at[j] >> 13;
+            if (at[j + run - 1] >> 13 != pg) run = 1; /* never for the block layout: a pixel alone */
+            d = 0;
+            for (i = j; i < j + run; i++) {
+                a = at[i];
+                v = T8_BYTE(i);
+                d |= vm[a] ^ v;
                 vm[a] = (u8)v;
+            }
+            if (d) {
                 page_seq[pg] = seq;
                 dirty_pg[pg & 511] = 1;
-            } else if (!page_drawn[pg]) {
-                continue;
+                page_drawn[pg] = 0;
+                moved = 1;
+            } else if (page_drawn[pg]) {
+                page_drawn[pg] = 0;
+                moved = 1;
             }
-            page_drawn[pg] = 0;
-            moved = 1;
+            x += run;
+            if (x == trx.w) x = 0;
         }
+#undef T8_BYTE
         marks += moved;
         break;
     }
