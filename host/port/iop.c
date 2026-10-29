@@ -222,6 +222,63 @@ static void native_mask(IopCtx *c, u32 off) {
 static void native_00434(IopCtx *c) { native_mask(c, 0xF488); }
 static void native_004f0(IopCtx *c) { native_mask(c, 0xF520); }
 
+/* an import called from a native function: the stub at the module's base + off (its library and
+ * number checked by patch_natives), with two arguments; its v0 */
+static u32 native_import(IopCtx *c, u32 off, u32 a0, u32 a1) {
+    IopCtx t = *c;
+    int i;
+    for (i = 0; i < iop_nstubs; i++)
+        if (iop_stub[i].addr == KH1_IOP_BASE + off) {
+            t.r[4] = a0;
+            t.r[5] = a1;
+            t.pc = iop_stub[i].addr;
+            t.npc = t.pc + 4;
+            hle(&t, &iop_stub[i]);
+            return t.r[2];
+        }
+    return 0;
+}
+
+/* func_0d8dc(kind, id, sub, size, x, y): the driver's table of bank chunks in its pool (1536 entries of
+ * 24 bytes at +0xCADF0: s16 kind, s16 id, sub, address, size, x, y).  An entry with the same kind, id
+ * and sub and the same size is the answer; one with another size is freed (FreeVpl, the stub at
+ * +0xE59C) and its entry cleared.  Without an answer, the first free entry (kind -1) gets a new block
+ * (pAllocateVpl, +0xE594) of the size; 0 when there is none.  The pool's id is at +0xF460, the count
+ * of entries in use at +0xF5B4.  The scan of the whole table for every chunk is about half of the
+ * driver's work while the game loads banks. */
+static void native_0d8dc(IopCtx *c) {
+    s32 kind = (s32)c->r[4], id = (s32)c->r[5];
+    u32 sub = c->r[6], size = c->r[7], i;
+    u8 *e;
+    for (i = 0, e = RAM(KH1_IOP_BASE + 0xCADF0); i < 1536; i++, e += 24) {
+        if (*(s16 *)e != kind || *(s16 *)(e + 2) != id || *(u32 *)(e + 4) != sub) continue;
+        if (*(u32 *)(e + 12) == size) { c->r[2] = *(u32 *)(e + 8); return; }
+        if (native_import(c, 0xE59C, MOD_U32(0xF460), *(u32 *)(e + 8)) == 0) {
+            *(s16 *)e = -1;
+            *(s16 *)(e + 2) = -1;
+            *(u32 *)(e + 4) = *(u32 *)(e + 8) = *(u32 *)(e + 12) = *(u32 *)(e + 16) = *(u32 *)(e + 20) = 0xFFFFFFFFu;
+            MOD_U32(0xF5B4) -= 1;
+        }
+    }
+    c->r[2] = 0;
+    for (i = 0, e = RAM(KH1_IOP_BASE + 0xCADF0); i < 1536; i++, e += 24) {
+        u32 at;
+        if (*(s16 *)e != -1) continue;
+        at = native_import(c, 0xE594, MOD_U32(0xF460), size);
+        if ((s32)at <= 0) return;
+        *(s16 *)e = (s16)kind;
+        *(u32 *)(e + 8) = at;
+        *(s16 *)(e + 2) = (s16)id;
+        *(u32 *)(e + 4) = sub;
+        *(u32 *)(e + 12) = size;
+        *(u32 *)(e + 16) = rd32(c->r[29] + 16, 0);
+        *(u32 *)(e + 20) = rd32(c->r[29] + 20, 0);
+        MOD_U32(0xF5B4) += 1;
+        c->r[2] = at;
+        return;
+    }
+}
+
 typedef struct {
     u32 off, size, hash; /* in the module's text; the hash of its words once relocated */
     void (*fn)(IopCtx *c);
@@ -230,6 +287,7 @@ static const IopNative natives[] = {
     { 0x150, 0x2E4, 0x381F6730u, native_00150 },
     { 0x434, 0x0BC, 0x58CDFB82u, native_00434 },
     { 0x4F0, 0x0BC, 0x289775EDu, native_004f0 },
+    { 0xD8DC, 0x1BC, 0x5424A589u, native_0d8dc },
 };
 #define N_NATIVES ((int)(sizeof natives / sizeof natives[0]))
 
@@ -239,6 +297,13 @@ static u32 fnv1a(const u8 *p, u32 n) {
     return h;
 }
 
+static int stub_is(u32 off, const char *lib, int fn) {
+    int i;
+    for (i = 0; i < iop_nstubs; i++)
+        if (iop_stub[i].addr == KH1_IOP_BASE + off) return !strcmp(iop_stub[i].lib, lib) && iop_stub[i].fn == fn;
+    return 0;
+}
+
 static int patch_natives(void) {
     int i, k = 0;
     for (i = 0; i < N_NATIVES; i++) {
@@ -246,6 +311,7 @@ static int patch_natives(void) {
         u32 h = fnv1a(RAM(KH1_IOP_BASE + nv->off), nv->size);
         if (iop_log()) printf("kh1-iop: function +0x%x hash 0x%08x\n", nv->off, h);
         if (h != nv->hash || !iop_natives_on) continue;
+        if (nv->fn == native_0d8dc && !(stub_is(0xE59C, "thvpool", 9) && stub_is(0xE594, "thvpool", 7))) continue;
         *(u32 *)RAM(KH1_IOP_BASE + nv->off) = OP_NATIVE | (u32)i;
         k++;
     }

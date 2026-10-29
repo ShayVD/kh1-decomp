@@ -300,7 +300,7 @@ Nothing here was compared against a console recording.
 - Second Vita run (the two threads): no lag; the title's music (19-26 voices, about 5.4 million IOP
   instructions a second) kept the mixer busy the whole time and it fell short in a few 2 s windows
   (4-24 of about 400 buffers), heard as small breaks. In Dive (3 voices) none fell short. Since then
-  three of the driver's functions run as C (iop.c `natives[]`): func_00150, func_00434 and func_004f0,
+  three of the driver's functions run as C (iop.c `natives[]`, a fourth since): func_00150, func_00434 and func_004f0,
   the leaf functions the per-tick voice loop calls for every voice to set or clear the voice's bit in
   the masks of registers to send. They were about 28% of the instructions with 18 voices playing.
   Each one is patched only when an FNV-1a of its relocated words matches the known LIBSSL.IRX, so
@@ -314,7 +314,9 @@ Nothing here was compared against a console recording.
   and 1.2 s mixing per 2 s, on two cores) or in Dive. The New Game load into Dive still fell short for
   about 10 s (14-51 buffers in 400 per 2 s). There the driver does about twice its usual work: 45% of
   its instructions in that load are func_0d8dc, a linear search of its table of loaded banks, run for
-  each bank chunk it takes in. A native func_0d8dc, or a longer ring while loading, would cover it.
+  each bank chunk it takes in. func_0d8dc now runs as C too (iop.c `native_0d8dc`: the same scan, with
+  the pool's FreeVpl / pAllocateVpl answered by the same import code, patched only when its hash
+  matches and its two stubs are thvpool 9 and 7). The Dive run's log and WAV stay byte-identical.
 - Cost on the host: about 2.5 million IOP instructions a second of sound over the Dive run (3.7 G in
   25 minutes), plus the mix. **Not measured on a Vita yet** after these changes; the watchdog's sound
   line (vita-build.md "Sound") prints the mixer's milliseconds per 2 s.
