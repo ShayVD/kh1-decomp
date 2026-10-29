@@ -329,7 +329,7 @@ s32 func_001fd848(void) {
     return D_00640DE0;
 }
 
-/* func_001fd858 (the cursor input) is not matched yet. */
+/* func_001fd858 (the cursor input) is in winmenu_cursor.nostrict.c. */
 
 /* Left / right on the column cursor +0xda, wrapping. */
 void func_001fdfd0(TextWin *w) {

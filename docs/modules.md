@@ -859,8 +859,8 @@ their data and calls.  No Mac: static checks only.
 | rows in the colour sets D_003F2C40, tabs, titles, the "n pages" and icon helpers | src/text/winrow.c (32) | 0x00207428-0x00208458 | 32 |
 | the lists: the visible cells of a window's list, the list frame | src/text/winlist.c (9), winlist.nostrict.c (1) | 0x00208458-0x00209d48 | 10 |
 
-func_001fd858 (cursor input) and func_00200e28 (unmatched) sit inside these
-ranges; winmenu.c has a comment at func_001fd858's place.
+func_001fd858 (cursor input, matched in session 145 in winmenu_cursor.nostrict.c) and func_00200e28
+(unmatched) sit inside these ranges; winmenu.c has a comment at func_001fd858's place.
 
 | chunk | commit | deleted |
 |---|---|---|
