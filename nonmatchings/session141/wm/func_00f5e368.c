@@ -1,4 +1,4 @@
-/* 65 words left (464 vs 472): target copies obj ptr into a separate pseudo (t3); not reproduced. Twin f5e540 same issue (80). */
+/* Round 31 (wgb): 65 -> 62 words with func_00f65480 declared and called in the order (f32, s32, Obj5e368 *, void *, void *, s32, s32, void *): same EE EABI registers, but the target sets the arguments up in this order (cf. wm func_00f3a860). 65 words left (464 vs 472): target copies obj ptr into a separate pseudo (t3); not reproduced. Twin f5e540 same issue (80). */
 typedef struct { f32 u, v, p0, p1; } UV5e368;
 typedef struct { s32 x[4]; f32 c0[4]; f32 c1[4]; } Col5e368;
 typedef struct {
@@ -13,7 +13,7 @@ typedef struct { s32 hdr[2]; f32 uv[4][2]; } Src5e368;
 typedef struct { s32 a, b, c, d; } Blk5e368;
 CONTEXT_ONLY s32 func_00f4a958(s32 p0) { return 0; }
 CONTEXT_ONLY s32 func_00f4aa00(s32 p0) { return 0; }
-void func_00f65480(s32, Obj5e368 *, void *, void *, s32, s32, void *, f32);
+void func_00f65480(f32, s32, Obj5e368 *, void *, void *, s32, s32, void *);
 extern u8 D_00379F28[];
 extern u8 D_0037A028[];
 extern Src5e368 *D_0108DB8C[];
@@ -69,5 +69,5 @@ void func_00f5e368(s32 arg0, Obj5e368 *obj, s32 arg2, s32 arg3, s32 arg4, f32 f)
     b0.a = 5;
     b0.c = 1;
     b0.b = 1;
-    func_00f65480(arg0, obj, a6, &b1, r0, r1, &b0, f);
+    func_00f65480(f, arg0, obj, a6, &b1, r0, r1, &b0);
 }

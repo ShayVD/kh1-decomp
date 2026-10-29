@@ -1,4 +1,4 @@
-/* score 180 (1368 bytes, same size). Port of gb func_00f2eee8's draft (gb score 168) via portmap3; logic complete, f56780 is its mirror. Left: FP/s-reg numbering, as in gb. Round 27 wwm2. */
+/* Round 31 (wgb): 114 -> 100 words with func_00f4f188 declared and called in the order (s32 id, void *pp, s32 x, s32 y, f32 ry0, f32 ry1, f32 f, s32 a4, s32 size): same EE EABI registers, but the target sets the arguments up in this order (cf. wm func_00f3a860). score 180 (1368 bytes, same size). Port of gb func_00f2eee8's draft (gb score 168) via portmap3; logic complete, f56780 is its mirror. Left: FP/s-reg numbering, as in gb. Round 27 wwm2. */
 typedef struct { u8 pad[0x82]; s16 id; } World;
 extern World *D_00F9B540;
 extern u8 D_00F9B548[];
@@ -14,7 +14,7 @@ s32 func_00f4ae48(s32);
 s32 func_00f4ad68(s32);
 void func_001bfac8(void);
 f32 func_001befc8(s32, void *);
-s32 func_00f4f188(s32 id, void *pp, s32 x, s32 y, s32 a4, s32 size, f32 ry0, f32 ry1, f32 f);
+s32 func_00f4f188(s32 id, void *pp, s32 x, s32 y, f32 ry0, f32 ry1, f32 f, s32 a4, s32 size);
 s32 func_00f4f6d8(s32 id, void *pp, s32 x, s32 y, s32 a4, f32 *scl, s32 flag, f32 ry, f32 f1, f32 s, f32 f3);
 
 void func_00f55fe0(s32 arg) {
@@ -38,10 +38,10 @@ void func_00f55fe0(s32 arg) {
         fi = i;
         r = fi * 0.017453292f;
         t = 180.0f - fi;
-        id = func_00f4f188(11200, D_00F9B548, 41, 76, ids[1][0], 58, 0.0f, 0.0f, D_00FA5CEC);
-        id = func_00f4f188(id, D_00F9B548, 41, 76, ids[0][0], 58, 0.0f, r, D_00FA5CEC);
-        id = func_00f4f188(id, D_00F9B548, 41, 347, ids[1][1], 58, 0.0f, 0.0f, D_00FA5CEC);
-        func_00f4f188(id, D_00F9B548, 41, 347, ids[0][1], 58, 0.0f, r, D_00FA5CEC);
+        id = func_00f4f188(11200, D_00F9B548, 41, 76, 0.0f, 0.0f, D_00FA5CEC, ids[1][0], 58);
+        id = func_00f4f188(id, D_00F9B548, 41, 76, 0.0f, r, D_00FA5CEC, ids[0][0], 58);
+        id = func_00f4f188(id, D_00F9B548, 41, 347, 0.0f, 0.0f, D_00FA5CEC, ids[1][1], 58);
+        func_00f4f188(id, D_00F9B548, 41, 347, 0.0f, r, D_00FA5CEC, ids[0][1], 58);
         k = i / 15 * 4;
         r = fi * 0.5f / 180.0f;
         sc[1] = func_001befc8(k, D_00F614C0);
@@ -57,11 +57,11 @@ void func_00f55fe0(s32 arg) {
         r = (f32)j * 0.017453292f;
         fi = i;
         m = i + 90;
-        id = func_00f4f188(11200, D_00F9B548, 41, 76, ids[0][0], 58, 0.0f, 0.0f, D_00FA5CEC);
+        id = func_00f4f188(11200, D_00F9B548, 41, 76, 0.0f, 0.0f, D_00FA5CEC, ids[0][0], 58);
         r = -r;
-        id = func_00f4f188(id, D_00F9B548, 41, 76, ids[1][0], 58, r, 0.0f, D_00FA5CEC);
-        id = func_00f4f188(id, D_00F9B548, 41, 347, ids[0][1], 58, 0.0f, 0.0f, D_00FA5CEC);
-        func_00f4f188(id, D_00F9B548, 41, 347, ids[1][1], 58, r, 0.0f, D_00FA5CEC);
+        id = func_00f4f188(id, D_00F9B548, 41, 76, r, 0.0f, D_00FA5CEC, ids[1][0], 58);
+        id = func_00f4f188(id, D_00F9B548, 41, 347, 0.0f, 0.0f, D_00FA5CEC, ids[0][1], 58);
+        func_00f4f188(id, D_00F9B548, 41, 347, r, 0.0f, D_00FA5CEC, ids[1][1], 58);
         k = i / 15 * 4 + 24;
         r = fi * 0.5f / 180.0f;
         sc[1] = func_001befc8(k, D_00F614C0);

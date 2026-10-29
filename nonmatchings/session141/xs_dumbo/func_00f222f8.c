@@ -1,9 +1,9 @@
-/* score 93 (1548 vs 1560). Round 29 wwm2, first draft: builds the 9 x 10 strip of triangle pairs from the D_00F2C410 grid (row pointers r0/r1/r2), alpha per row clamped by func_00249950, UV scroll + wrap (func_00f21ca8), the partial last row lerped by frac (func_00249988), then the top row's alpha cleared. Key: the row loop must not be a loop.c loop (127/0/128 are reloaded each row, nothing strength-reduced): a goto into a for(;;) (or a plain goto loop) with r2 += 10 at its top; a structured for/while hoists them (288-346). Left: the original's start label is 8-aligned (one nop), its r2 and gcse copies get later stack slots (r2 72, copies 76-96 in another order), and the end-of-row increments are scheduled differently. */
+/* Round 31 (wgb): 346 -> 343 words with func_00249988 declared and called in the order (f32, f32 *, f32 *, f32 *): same EE EABI registers, but the target sets the arguments up in this order (cf. wm func_00f3a860). score 93 (1548 vs 1560). Round 29 wwm2, first draft: builds the 9 x 10 strip of triangle pairs from the D_00F2C410 grid (row pointers r0/r1/r2), alpha per row clamped by func_00249950, UV scroll + wrap (func_00f21ca8), the partial last row lerped by frac (func_00249988), then the top row's alpha cleared. Key: the row loop must not be a loop.c loop (127/0/128 are reloaded each row, nothing strength-reduced): a goto into a for(;;) (or a plain goto loop) with r2 += 10 at its top; a structured for/while hoists them (288-346). Left: the original's start label is 8-aligned (one nop), its r2 and gcse copies get later stack slots (r2 72, copies 76-96 in another order), and the end-of-row increments are scheduled differently. */
 #include "ovl.h"
 typedef struct { u8 h[0x10]; OvlVec pos[3]; OvlVec col[3]; OvlVec pad70; OvlVec uv[3]; } Tri;
 extern OvlVec D_00F2C410[10][10];
 void func_00249950(f32 *, f32, f32);
-void func_00249988(f32 *, f32 *, f32 *, f32);
+void func_00249988(f32, f32 *, f32 *, f32 *);
 void func_00f21ca8(OvlVec *, s32);
 
 void func_00f222f8(Tri *t, s32 rows, f32 du, f32 dv, f32 alpha, f32 frac) {
@@ -88,22 +88,22 @@ start:
                     OvlVec v;
                     sceVu0CopyVector(p[0].pos[0], r0[j]);
                     sceVu0CopyVector(p[0].pos[1], r0[j + 1]);
-                    func_00249988(v, r0[j], r1[j], frac);
+                    func_00249988(frac, v, r0[j], r1[j]);
                     sceVu0CopyVector(p[0].pos[2], v);
-                    func_00249988(v, r0[j + 1], r1[j + 1], frac);
+                    func_00249988(frac, v, r0[j + 1], r1[j + 1]);
                     sceVu0CopyVector(p[1].pos[0], v);
-                    func_00249988(v, r0[j], r1[j], frac);
+                    func_00249988(frac, v, r0[j], r1[j]);
                     sceVu0CopyVector(p[1].pos[1], v);
                     sceVu0CopyVector(p[1].pos[2], r0[j + 1]);
                 } else {
                     OvlVec v;
                     sceVu0CopyVector(p[0].pos[0], r0[j]);
                     sceVu0CopyVector(p[0].pos[1], r0[0]);
-                    func_00249988(v, r0[j], r1[j], frac);
+                    func_00249988(frac, v, r0[j], r1[j]);
                     sceVu0CopyVector(p[0].pos[2], v);
-                    func_00249988(v, r0[0], r1[0], frac);
+                    func_00249988(frac, v, r0[0], r1[0]);
                     sceVu0CopyVector(p[1].pos[0], v);
-                    func_00249988(v, r0[j], r1[j], frac);
+                    func_00249988(frac, v, r0[j], r1[j]);
                     sceVu0CopyVector(p[1].pos[1], v);
                     sceVu0CopyVector(p[1].pos[2], r0[0]);
                 }
