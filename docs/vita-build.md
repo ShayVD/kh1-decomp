@@ -820,7 +820,13 @@ decode and register file ~260M, libc's memcmp / memcpy / memset ~190M. Three cha
 
 The worker on that profile: 999M -> ~680M (its idle spin aside: it now waits for the game thread under qemu), the
 GPU frame's thread +~270M. tests/host/gsqueue_test.c puts ops of random sizes through both queues (joined runs,
-ops past half the ring, wraps, jobs between) and checks their order and data.
+ops past half the ring, wraps, jobs between) and checks their order and data. Checked on the English disc
+(dive_en.txt) against #171's head: the worker-order run with the GPU thread (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1
+KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1`, the gxmcheck binary) to frame 6500 gives
+the same 130 GS digests and GPU target hashes with `KH1_HOST_RECQ=1` and without, and the same run with
+`KH1_HOST_VU1=1 KH1_HOST_VU1TR=1` (the Dive's 3D, where most kicks are) to frame 5600 the same with the queue as
+main's without. **Not yet measured on a Vita** (3d-zf): the `gs worker` line's busy time and the `split` line's
+wait for it should fall; the game thread (the VU1 programs, clipw, its LoadImages) is likely the limit next.
 
 ## The flashing floor: one-byte enums (2026-10-28)
 
