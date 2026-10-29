@@ -539,3 +539,23 @@ tries each change on its own.
   top rows are f350d0 (1), f2c000 and f35a80 (3), f4d348.nofill and
   f3c8c8 (4), and f34aa8 (5 aligned, 65 raw). f350d0 and f34aa8 differ
   on branch-likely use (bltz vs bltzl, beql), not on statement shape.
+
+## Round 16
+
+The top of the gb ranking: no matches, so nothing to port to wm twins.
+
+- f350d0 (1 word): the bltz vs bltzl delay slot. A 10 min permuter run
+  found nothing.
+- f363a0: `if (sel >= func_001bb720())` reproduces the target's
+  `slt s0,v0` / `bnezl`. Aligned went from 6 to 4; raw went from 15 to 28,
+  because the target has an extra nop that shifts addresses. Left: the
+  sd ra position in the prologue and two nops the target has (one after
+  the join's slti, one after the loop's b). The prologue problem is not a
+  prototype problem: every callee matches its definition.
+- f34aa8 (5 aligned): reorg predicts the case-44 beq differently (the
+  target uses beql and steals from the case body). Switch shape variants
+  did not change it.
+- f51360 (6): more hill seeds and 72 chained-assignment variants made no
+  gain. The target store order is now in the header.
+- f20518 and f36ee0 (11 to 12 aligned): giv / register-copy problems.
+  I looked at them and did not change them.

@@ -1,4 +1,4 @@
-/* 81 words / score 18 (408 vs 416 bytes): frame fixed by an extra OvlVec pad in GbArgs; rest is register copies v0=w, v1=col, a1=w that inline col_of/buf_of/draw_quad helpers did not reproduce. */
+/* 81 words / score 18 (408 vs 416 bytes): frame fixed by an extra OvlVec pad in GbArgs; rest is register copies v0=w, v1=col, a1=w that inline col_of/buf_of/draw_quad helpers did not reproduce. Round 16 (wwm1): looked at, not changed (12 aligned). */
 typedef struct { u16 a, b, c, flags, d, e; } GbEnt;
 typedef struct {
     u8 pad0[4];

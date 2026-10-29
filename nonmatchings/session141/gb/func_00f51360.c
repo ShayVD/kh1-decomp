@@ -1,4 +1,4 @@
-/* 6 words / score 11: store order of the ten globals (li 8 vs lui order); hill-climbed over the store order. */
+/* 6 words / score 11: store order of the ten globals (li 8 vs lui order); hill-climbed over the store order. Round 16 (wwm1): target store order is DB8, 9F0, 9E0, DA8, DAC, A98, 9E8, DB4, DB0, 9EC (t6 = 8). Two more hill seeds stayed at 6. 72 chained-assignment variants (arg, 1 and 0 chains, six orders) were all 11 or worse. */
 s32 func_001f31a8(void *, s32);
 void func_0024e468(s32);
 extern u8 D_00F713B0[];

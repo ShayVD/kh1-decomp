@@ -1,4 +1,4 @@
-/* 1 word / score 2. Everything matches except one delay slot. The original fills the k < 0 branch as bltz with 'lw v1,D_00F56DC0' in the slot; ours uses bltzl. Tried nested ifs, two continues, && (worse), and a 0..3 switch (same). */
+/* 1 word / score 2. Everything matches except one delay slot. The original fills the k < 0 branch as bltz with 'lw v1,D_00F56DC0' in the slot; ours uses bltzl. Tried nested ifs, two continues, && (worse), and a 0..3 switch (same). Round 16 (wwm1): 10 min permuter (-j1), no gain. */
 #include "ovl.h"
 
 typedef struct { u16 a, b, c, flags, d, e; } GbEnt;

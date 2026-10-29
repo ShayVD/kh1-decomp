@@ -1,4 +1,4 @@
-/* 72 words / score 13 (492 vs 496 bytes). An inline alloc(&global, size, align) helper gives the original's precomputed global addresses in s-registers; the loop fields stay plain assignments. Left: loop address givs. The original forms buf[i].d as s2+base+28 and buf[i].e as base+(s2+24)+8, then does move s2,a0. Tried do-while, buf[i++].e, x[] array fields, a 2D array, and pointer arithmetic. */
+/* 72 words / score 13 (492 vs 496 bytes). An inline alloc(&global, size, align) helper gives the original's precomputed global addresses in s-registers; the loop fields stay plain assignments. Left: loop address givs. The original forms buf[i].d as s2+base+28 and buf[i].e as base+(s2+24)+8, then does move s2,a0. Tried do-while, buf[i++].e, x[] array fields, a 2D array, and pointer arithmetic. Round 16 (wwm1): looked at, not changed. The target forms .d as s2 + 28 (not s0 + 12) and .e through the incremented biv (s2 + 24, then move s2,a0), so d and e are reached through different expressions from a, b and c. */
 #include "ovl.h"
 
 typedef struct { void *a, *b, *c, *d, *e, *f; } GbBuf;
