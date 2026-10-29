@@ -1,4 +1,6 @@
-/* 4 words left (norlo mode took it from 86 to 4): movz operand register order; tried variants e-m Round 14: no new variants; left for the permuter. */
+/* wm.x func_00f22e60: matched by hand. */
+#include "ovl.h"
+
 s32 func_00f66ac8(s32);
 s32 func_00f66ae0(u64 *);
 u64 *func_00f66b78(s32);
@@ -42,9 +44,10 @@ void func_00f22e60(void) {
         p += 2;
         func_00f66b90(p);
         func_00f66fe8(0, func_00f66ae0(p));
-        *D_00F85160 = p;
-        if (D_00FBB338 == 0) {
-            a -= 12;
+        {
+            u64 **q = D_00F85160;
+            if (D_00FBB338 == 0) a -= 12;
+            *q = p;
         }
         func_001bfac8();
     } while (D_00FBB338 != 0 || a > 0);
