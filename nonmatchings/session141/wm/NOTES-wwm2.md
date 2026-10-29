@@ -405,3 +405,18 @@ headers have the details.
   neighbour func_00f792c8 is .nostrict, but this function compiles worse in nostrict mode.
 - No gb twins for f7d0a8 or f7a350. The gb functions of similar size (f2cf58, f32a38, f377b0) call different
   routines.
+
+## Round 24
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f7a350: hill2 took it from 58 to 31 words (score 55, saved). /tmp/.../wwm3/hill2b.py is a local copy of
+  wwm1's hill2.py that points at this worktree. Two lessons:
+  - Choice slots must be on a single line, because the {{a@@b}} regex is not dotall.
+  - Block permutation can move statements across a `r = p + N;` re-point and silently change semantics; the first
+    run swapped the 0x47 and 0x42 packet constants. Group each re-point with its stores on one line, and only use
+    blocks of independent statements.
+- func_00f6e278: first draft, score 268 (saved). Two hill2 passes took it from 410 to 268. Its gb twin f47180
+  (2824 bytes, with the same 672-byte func_00f46ee0 before it) was ported with portmap2, score 268.
+- func_00f7ad38: first draft, score 524 (saved). It is f7a350's sibling. The colour bytes need (s32) truncation,
+  and id must be u32. hill2 does not help here, because the 24 extra bytes misalign the word count. No gb twin by
+  size.
