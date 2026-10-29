@@ -867,6 +867,12 @@ frame, most of the ~20 ms.
   (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1
   KH1_HOST_RECQ=1`, the gxmcheck binary) gives the same GS digests and GPU target hashes as main's. On x86 that
   checks only the pool's alignment (the compare is memcmp there); the NEON form rests on the unit test.
+- **On a Vita (s147a)**: the title with its art up, before the menu, at ~58-60 fps (~126 frames per 2.1 s, from
+  ~88), with 0.4-1.1 s of vblank wait per 2 s left. The `large uploads:` line: ~470-640 a window, all unchanged,
+  ~1.1-1.5 s per 2 s, so the NEON compare still runs at only ~125 MB/s (~2.3 ms per 288 KiB): memory-bound on the
+  game's source bytes and the kept copy, still the game thread's largest item. With the menu fading in and up
+  (frames ~1400-2000): 27-47 fps (from ~25-28), the GS worker busy ~0.9-1.3 s per 2 s and the game waiting
+  ~0.6-1.2 s for it: the worker is the limit there.
 
 ## The recording on the third core (session 146)
 
