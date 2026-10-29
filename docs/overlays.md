@@ -440,6 +440,19 @@ constant stays in the loop. The functions also needed:
 
 The wm twins also needed the wm table addresses (D_00FA5C40 / D_00FA5C90), not the gb ones.
 
+### Session 141 rounds 37-38 (wwm2)
+
+- **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
+  - The draft read `D[k + a * 24 + 8]` from an `s8 D[]` table. That built the first address as o + base; the original has base + o.
+  - Declaring the table as `struct { s8 n[8]; s8 x[8]; s8 y[8]; } D[]` and reading `D[a].x[k]` matched.
+  - Plain 2-D arrays (`D[][24]`, `D[][3][8]`) did not help. Neither did rewriting the 9 gb/wm drafts that index colour tables as `D[n * 4 + c]` into `[n][c]`: no score changed.
+- **Arithmetic moved into each branch before a shared use (wm func_00f3fd60):**
+  - The draft set `v` in an if/else and then read `tbl[v - 1]`. gcc folds the -4 into the table offset; the original keeps a separate `addiu -1`.
+  - Writing `v = a - 1;` in one branch and `v = b - 1;` in the other, then reading `tbl[v]`, matched. The register of the loaded value changed with it.
+- **Load a global pointer into a local before a read it may alias (wm func_00f22e60, norlo mode):**
+  - The draft did `*D_00F85160 = p; if (D_00FBB338 == 0) a -= 12;`. A store through `*D_00F85160` may alias D_00FBB338, so the load of D_00FBB338 has to wait for the store.
+  - The original loads the pointer, then D_00FBB338, then stores. `u64 **q = D_00F85160; if (D_00FBB338 == 0) a -= 12; *q = p;` matched, including the movz operand registers.
+
 ## Results
 
 Kept up to date by the session that changes them (`make ovl-progress`).
