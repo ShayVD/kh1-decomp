@@ -1,3 +1,4 @@
+/* Round 36 (wwm2): wm.x func_00f73eb0 near miss: score 150 -> 136 (99 -> 101 words, 1424 = 1424); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 362). Earlier header below. */
 /* Round 35 (wgb): wm.x func_00f73eb0 near miss: 105 -> 99 words, score 152 -> 150. port.py of gb func_00f4cdb8's round 35 draft. Earlier header below. */
 /* score 152 (1424 vs 1424, was 358). func_001bc520 takes no arguments and func_001f31a8 takes 2; m2c invents the rest. The pad loop is a goto loop with its test at the bottom. Icons are reached through `pp = ic`. The selection is `sel++; sel &= 1;` with a byte offset `idx = sel * 4` (with `(sel+1)&1` gcc uses xori). Left: the scheduling and order of the global stores in the prologue and the epilogue (120 orders of the end block tried, best kept), and the temp register numbering in the icon loop. */
 typedef struct { s16 v[2]; } S2;
@@ -72,20 +73,20 @@ void func_00f73eb0(void)
     Ic **pp;
 
     a = D_00FBA1E8;
+    pa = a.v;
     b = D_00FBA1F0;
-    D_0108F1AC = 0;
+    D_0108F530 = 0;
+    D_00FB5A64 = 0;
+    D_0108F1E8 = 128.0f;
     D_0108F528 = 0;
     D_0108F1CC = D_00FB4D3C;
     D_0108F1D0 = D_00FB4D40;
+    D_0108F1AC = 0;
     sel = 0;
-    D_00FB4A60 = D_00FB4AB0;
-    mode = D_00FB4A70;
-    D_0108F1D4 = D_00FB4D50;
-    pa = a.v;
-    D_00FB5A64 = 0;
-    D_0108F530 = 0;
     D_0108F52C = 0;
-    D_0108F1E8 = 128.0f;
+    D_00FB4A60 = D_00FB4AB0;
+    D_0108F1D4 = D_00FB4D50;
+    mode = D_00FB4A70;
     t = func_001bc520();
     D_00FB5A70.xc = D_00FB4B0C;
     D_00FB5A70.xe = D_00FB4B30;
@@ -102,15 +103,15 @@ void func_00f73eb0(void)
         ptr += D_00FB4B6C;
     }
     pp[0]->on = 1;
-    pp[1]->on = 0;
     idx = 0;
+    pp[1]->on = 0;
     func_00f74978(pp[0], 8);
     for (i = 0; i < 2; i++) {
         func_00f6b5b0(pp[i], 256.0f, D_00FB4A70);
         func_0024e468(2);
     }
-    tbl[0] = 0;
     tbl[1] = 1;
+    tbl[0] = 0;
     goto test;
 loop:
     {
@@ -152,10 +153,10 @@ test:
     func_0011d768(3);
     D_00FB4A60 = D_00FB4AB0;
     D_0108F528 = 1;
-    D_0108F1CC = D_00FB4D3C;
+    D_0108F1E8 = 128.0f;
     D_0108F1D0 = D_00FB4D40;
     D_0108F1D4 = D_00FB4D50;
-    D_0108F1E8 = 128.0f;
+    D_0108F1CC = D_00FB4D3C;
     func_00f6b5d0(13, 0, D_00FB4A70);
     func_0024e468(D_00FB4A70);
     func_00f6ade8(13);

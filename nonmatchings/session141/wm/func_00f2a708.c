@@ -1,3 +1,4 @@
+/* Round 36 (wwm2): wm.x func_00f2a708 near miss: score 179 -> 151 (107 -> 93 words, 1012 vs 1016); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 362). Earlier header below. */
 /* wm f2a708 near miss: 107 words differ, score 179 (1012 vs 1016 bytes). Draws a wireframe box: 8 RotTransPers corners, then 12 edge pairs through an index table. The two local tables (24-byte edge list at D_00FB6788, a dead 18-byte table at D_00FB67A0) are written as extern struct copies, which gives the same ldl/ldr code with the original relocs. Real initializers put the rodata at the right place but cannot be scored until the code matches. Left: the original keeps one more callee-saved reg (s8 = idx base from the prologue; q = *cx in s2 before the RTP calls), plus init store scheduling. Tried: an op++ pointer and an ob base (big gains) and placements of the q/ob/op statements. */
 typedef struct { u8 b[24]; } I24;
 typedef struct { s8 b[18]; } I18;
@@ -46,19 +47,19 @@ void func_00f2a708(s32 id, f32 *sz, kh1_u128 *src, OvlMtx m) {
     *cx = func_00f66ac8(*cx);
     sceVu0MulMatrix(m, D_00F85180, m);
     a[0] = sz[0] * 0.5f;
+    q = (kh1_u128 *)*cx;
     a[1] = sz[1] * 0.5f;
-    a[2] = sz[2] * 0.5f;
-    b[1] = -sz[1] * 0.5f;
-    b[2] = -sz[2] * 0.5f;
-    b[0] = -sz[0] * 0.5f;
     a[3] = 1.0f;
     b[3] = 1.0f;
-    c[3] = 1.0f;
+    a[2] = sz[2] * 0.5f;
+    b[1] = -sz[1] * 0.5f;
     c[0] = a[0];
+    b[0] = -sz[0] * 0.5f;
+    ob = o;
+    b[2] = -sz[2] * 0.5f;
+    c[3] = 1.0f;
     c[1] = a[1];
     c[2] = a[2];
-    q = (kh1_u128 *)*cx;
-    ob = o;
     op = ob;
     sceVu0RotTransPers(*op++, m, c, 0);
     c[0] = b[0];
@@ -70,9 +71,9 @@ void func_00f2a708(s32 id, f32 *sz, kh1_u128 *src, OvlMtx m) {
     c[0] = b[0];
     c[2] = b[2];
     sceVu0RotTransPers(*op++, m, c, 0);
+    c[0] = a[0];
     c[1] = b[1];
     c[2] = a[2];
-    c[0] = a[0];
     sceVu0RotTransPers(*op++, m, c, 0);
     c[0] = b[0];
     c[2] = a[2];
@@ -84,20 +85,20 @@ void func_00f2a708(s32 id, f32 *sz, kh1_u128 *src, OvlMtx m) {
     c[2] = b[2];
     sceVu0RotTransPers(*op++, m, c, 0);
     q[0] = KH1_Q(0);
-    ((u32 *)q)[0] = 0x800C;
-    ((u32 *)q)[3] = 0;
     ((u32 *)q)[2] = 0x441;
+    ((u32 *)q)[3] = 0;
     ((u32 *)q)[1] = 0x3020C000;
-    q++;
+    ((u32 *)q)[0] = 0x800C;
     ip = idx.b;
+    q++;
     for (i = 22; i >= 0; i -= 2) {
         q[0] = *src;
         q[1] = *(kh1_u128 *)ob[ip[0]];
         ((u32 *)q)[7] = 16;
         q[2] = *(kh1_u128 *)ob[ip[1]];
         ((u32 *)q)[11] = 16;
-        ip += 2;
         q += 3;
+        ip += 2;
     }
     *cx = (u64 *)q;
     func_00f66f78(id, func_00f66ae0((u64 *)q));
