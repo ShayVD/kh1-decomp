@@ -942,6 +942,8 @@ which the 147c profile at 2,050 had already measured: it was this screen).
 - **On a Vita (s147h)**: the title, the menu and the New Game pages all at 60 fps (128-129 frames per 2.1 s), the
   first New Game page included (the worker busy ~2.0 s per 2 s there, the game waiting ~0.25-0.55 s, still 60).
   The one slow window was s147b's send dump itself (~1.6 s of log writes); s147i takes the dump out.
+- Checked on the English disc (dive_en.txt to frame 6500, the worker-order run above), at s147e, s147f and s147h:
+  all 130 GS digests and 260 GPU target hashes the same as main's each time.
 
 ## The recording on the third core (session 146)
 
