@@ -939,6 +939,9 @@ which the 147c profile at 2,050 had already measured: it was this screen).
   gsimage_test loads 12 rectangles 400 times with the queue on (bytes the same, changed, changed after the call,
   pixels written into the rectangles between) and checks GS memory against the bytes loaded; matching any
   generation is caught.
+- **On a Vita (s147h)**: the title, the menu and the New Game pages all at 60 fps (128-129 frames per 2.1 s), the
+  first New Game page included (the worker busy ~2.0 s per 2 s there, the game waiting ~0.25-0.55 s, still 60).
+  The one slow window was s147b's send dump itself (~1.6 s of log writes); s147i takes the dump out.
 
 ## The recording on the third core (session 146)
 
