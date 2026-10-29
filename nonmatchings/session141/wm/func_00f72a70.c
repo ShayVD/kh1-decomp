@@ -1,4 +1,4 @@
-/* score 139 (same 1232 size; w[8] gives the 224 frame, so the window array or another local is bigger than w[2]). Two option windows, a box and a title via func_00f6b6a0, then a nested pad loop (0x2000 enters selection, 0x4000 leaves) with a 10-entry jump-table switch on Itm.b0. Left: 256 is li-loaded fresh (s2) for the 2nd/3rd calls while the first loop keeps it in s6; k/ps/y registers are rotated (target s3/s1/s2). */
+/* score 128 (1240 vs 1232). The main pad loop has its test at the bottom (`goto test; loop: ... test: a = pad; if (!(a & 0x4000)) goto loop;`), and the window-clear loop must be a goto loop with its own pointer (a do/for loop is fully unrolled). w[8] gives the 224 frame. Left: register rotation of k/ps/y (target s3/s1/s2; declaration order makes no difference), `D_0108F52C = 2` goes through s3 in the original, and 8 bytes too many. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct { u8 pad[4]; u8 b4; u8 pad5[2]; u8 b7; } Win;
 typedef struct { u8 pad[16]; s32 x10; } Hdl;
@@ -31,6 +31,7 @@ void func_00f72a70(s32 arg0, Hdl *h)
 {
     Win *w[8];
     Win **pw;
+    Win **pw2;
     s16 *ps;
     s32 t, y, k, sel, n;
     u32 a, b;
@@ -50,9 +51,8 @@ void func_00f72a70(s32 arg0, Hdl *h)
     } while (--k >= 0);
     func_00f6b6a0(14, 3, 0, 2, 0, 0, 0, 0, 0, D_00FB4B3C + 12, 0, D_00FB4B38, 2, D_00FB4CB8, D_00FB4CBC, D_00FB4CC0, D_00FB4CC4, 256, t);
     func_00f6b6a0(14, 0, 2, 1, 0, 15, 86, 7, D_00FB4B38, D_00FB4B3C, 0, D_00FB4B70, 0, 0, 0, 0, 0, 256, t);
-    for (;;) {
-        a = D_002C5AD0.x8;
-        if (a & 0x4000) break;
+    goto test;
+loop: {
         if (a & 0x2000) {
             func_0011d768(2);
             D_0108F52C = 0;
@@ -139,14 +139,19 @@ void func_00f72a70(s32 arg0, Hdl *h)
                 func_00f74978(w[sel], 8);
                 func_0024e468(1);
             }
-            pw = w;
-            for (k = 1; k >= 0; k--)
-                (*pw++)->b4 = 0;
+            k = 1;
+            pw2 = w;
+        clr:
+            (*pw2++)->b4 = 0;
+            if (--k >= 0) goto clr;
             D_0108F52C = 2;
             func_001f3dc0(arg0);
         }
         func_0024e468(1);
     }
+test:
+    a = D_002C5AD0.x8;
+    if (!(a & 0x4000)) goto loop;
     func_0011d768(3);
     func_00f6b5d0(14, 0, D_00FB4A70);
     func_0024e468(D_00FB4A70);

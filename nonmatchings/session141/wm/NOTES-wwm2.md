@@ -306,3 +306,17 @@ Matched:
     order.
 
 Near miss saved: func_00f696a0 (182, see the header).
+
+## Round 17
+
+Rebased onto origin/claude/project-thread-rl45wv; the build is byte-identical. No new matches.
+- func_00f69278: score 101 -> 41 (saved). Separate s64 locals per qword value stopped gcc copying the shared `v`
+  into t8, and p[0] now goes before p[8]. The 4-byte size gap is only the trailing alignment nop. Left: the DMA
+  ref tag OR order and width (see the header). A 20-minute -j1 permuter run found nothing.
+- func_00f72a70: score 139 -> 128 (saved).
+  - The main pad loop needs its test at the bottom, written as a goto.
+  - The two-entry clear loop needs to be a goto loop with its own pointer; as a do or for loop it is fully
+    unrolled.
+  - Left: the k/ps/y register rotation, and 8 bytes too many.
+- func_00f696a0: not reworked this round (still 182).
+- The only f6/f7 function under 1300 bytes left with no hand or near-miss file is f74a28 (1288). Not started.
