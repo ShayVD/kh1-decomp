@@ -151,3 +151,19 @@ Near misses saved:
 - func_00f66bd0 (score 102).
 
 Not reached: f606a0, f60af0, f663a8, f651d0, f64d48, f639c0, f63d18, f70418, f69aa8.
+
+## Round 8
+
+Matched: func_00f606a0, a sibling of func_00f60898 that skips the flag and index checks and always uses
+func_001ba060(&D_0108DE90, idx - 71).
+- Store order brute-forced, plus a `v[1], v[0], v[2]` vector order.
+- The last fix came from a permuter hint: write `xf.pos[3] = 1.0f;` both as the first statement and again at the
+  end. Dead-store elimination keeps the last copy, and the scheduler hoists the last independent 1.0f store to the
+  top. So when one constant store sits at the wrong end of a run of stores, duplicating it at the other end is
+  worth a try.
+
+Near misses saved:
+- func_00f60af0 (94): bitfields.
+- func_00f663a8 (73, nostrict): VU memory writes. The original reloads every global after each VU store.
+
+Not reached: f651d0 (a large matrix loop; looked at only), f64d48, f639c0, f63d18, f70418, f69aa8.
