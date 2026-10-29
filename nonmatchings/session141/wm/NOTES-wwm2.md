@@ -320,3 +320,15 @@ Rebased onto origin/claude/project-thread-rl45wv; the build is byte-identical. N
   - Left: the k/ps/y register rotation, and 8 bytes too many.
 - func_00f696a0: not reworked this round (still 182).
 - The only f6/f7 function under 1300 bytes left with no hand or near-miss file is f74a28 (1288). Not started.
+
+## Round 18
+
+Rebased onto origin/claude/project-thread-rl45wv. No matches this round. No gb twin drafts exist; gb has
+same-shape functions f4d930 (f74a28), f4be48 (f72f40), f49730 (f70828) and f4e6c0 (f757b8).
+- func_00f74a28: score 12 (saved). Only the 21/1 colour-constant registers are swapped; see the header.
+- func_00f73eb0: score 358 -> 152 (saved).
+  - m2c invents arguments for func_001bc520 (it takes none) and for func_001f31a8 (it takes 2).
+  - The pad loop is a goto loop with its test at the bottom.
+  - Left: global-store scheduling in the prologue and epilogue.
+- func_00f757b8: m2c looked at (same family as f74a28, with an extra D_0108F558 mode); not drafted.
+- func_00f72f40, func_00f70828: not started.
