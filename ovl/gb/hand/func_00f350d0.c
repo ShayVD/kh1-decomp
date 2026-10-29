@@ -1,4 +1,4 @@
-/* 1 word / score 2. Everything matches except one delay slot. The original fills the k < 0 branch as bltz with 'lw v1,D_00F56DC0' in the slot; ours uses bltzl. Tried nested ifs, two continues, && (worse), and a 0..3 switch (same). Round 16 (wwm1): 10 min permuter (-j1), no gain. */
+/* gb.x func_00f350d0: matched by hand (session 141, wwm1 round 17): a CONTEXT_ONLY func_00f33d18 above it turns bltzl into bltz. A call to a function defined earlier in the file cannot throw (REG_EH_REGION 0), so reorg sees v1 die at that call on the fallthrough and puts the stolen lw in a plain slot (docs/overlays.md). */
 #include "ovl.h"
 
 typedef struct { u16 a, b, c, flags, d, e; } GbEnt;
@@ -17,7 +17,7 @@ typedef struct {
 } GbMap;
 extern GbMap *D_00F56DC0;
 extern s32 D_00F56DE8;
-void func_00f33d18(OvlMtx, s32);
+CONTEXT_ONLY void func_00f33d18(OvlMtx a0, s32 a1) {}
 void func_00f33da0(s32, s32);
 s32 func_00f41678(s32, s32, OvlMtx, s32, s32);
 void sceVu0UnitMatrix(OvlMtx);
