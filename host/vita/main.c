@@ -218,6 +218,8 @@ static void gpu_frame(int copied) {
 static void w_gpu_frame(const u32 *a, const u32 *d, u32 n) { gpu_frame((int)a[0]); }
 static u32 frame_end[2]; /* the queue's position after the last frame's op [0] and the one before [1] */
 
+extern volatile u32 kh1_vita_sends; /* display.c */
+
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
     static int in_vblank;
@@ -226,6 +228,23 @@ void kh1_host_vblank(void) {
     in_vblank = 1;
     frames++;
     if (frames % 60 == 0) vlog("kh1-vita: frame %lu, %u disc reads\n", frames, kh1_host_cd_reads);
+    { /* session 147b: the title's menu sends ~100-200 a frame on the Vita against ~7 on the host; the first frame
+       * with over 50 (and one more at least 600 frames later) has its send lines printed, as the host's would be */
+        static u32 sends0, dumps;
+        static unsigned long dump_at, dumped_at;
+        if (dump_at && frames > dump_at) {
+            kh1_dma_quiet = 1;
+            dump_at = 0;
+            vlog("kh1-vita: frame %lu: the send lines end\n", frames);
+        } else if (dumps < 2 && kh1_dma_quiet && kh1_vita_sends - sends0 > 50 && (!dumps || frames >= dumped_at + 600)) {
+            vlog("kh1-vita: frame %lu: %u sends in the last frame; the next frame's send lines follow\n", frames,
+                 kh1_vita_sends - sends0);
+            kh1_dma_quiet = 0;
+            dump_at = dumped_at = frames;
+            dumps++;
+        }
+        sends0 = kh1_vita_sends;
+    }
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
