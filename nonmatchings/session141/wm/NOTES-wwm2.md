@@ -827,3 +827,28 @@ No gain:
 **f2dc50, f387a8:** reread, nothing new to try.
 
 portall wm gb: ported 0 (the gb twin was found by peel.py).
+
+## Round 40 (wwm2)
+
+**Peel by hand on the `continue` loops: does not apply.**
+- f6b7c8 (score 1280) and f6f2a8 (713), and their gb twins f446d0 and f481b0, start their loops with an item allocation or a table read, not a wait call.
+- f6b7c8 inner loop, peeling `t = func_001bc4e0() + ...` with the continue sending it to the end of the pass: 1430/1436. Outer loop, peeling `it = func_00f6a480()`: 1328. Both worse than 1280.
+- These drafts are 60-90 bytes short, so their structure is off well beyond the loop shape.
+
+**Pad scan (r40/padscan.py, r40/padscan2.py):**
+- It finds nops that are not in a delay slot and sit right before an 8-aligned branch target, in the target and in our build, using the fd.py columns.
+- Counting every such pad (padscan.py) gives 96 hits, mostly layout noise: a loop or after-jump label can land on an 8-aligned address without needing a pad.
+- With ODD=1, padscan2.py keeps only odd pads: no backward branch to the label and no unconditional jump before it, which means a loop note with no back edge. The old f5d498 draft shows up as a hit.
+- Over all 139 wm and 70 gb drafts, the only odd-pad hit is wm f2dc50.
+
+**f2dc50: score 10 -> 8.** The original's padded label sits just before the loop's `b test`, so the loop note follows the ok: inits directly. `ok: done = 0; sm = s->m; cnt = 0;` gives 8, and so does `for (cnt = 0; ...)` with done and sm before it. What is left: the original computes s+32 inside the loop. With sm set only in the loop, the s2/s3 swap comes back (30).
+
+**f72f40 (still 11):** b38/two/c temps and a pointer to D_00FB4B38 leave the v0/v1 swap in the second func_00f6b6a0 call unchanged.
+
+**f42ce0 (still 16):** scheduling only, untouched.
+
+**f7ecd8 (still 17):**
+- The body matches. What differs is the back branch: the original has beqzl with the next pass's `lw v0,16(v1)` stolen into its delay slot, and then `jal func_0011d768; li a0,2; sw s1,52(s2)`, so the call comes before `m->x34 = sel`.
+- Swapping those two statements alone gives 19.
+- The goto/do-while form has no VTOP note, so reorg predicts the EQ branch not taken. Every rotated while/for form (w, f, wb, fw) gets the VTOP note, but loop opt then hoists the full D_002C5AD0 address into s0, and the loop top can no longer be stolen (45-49).
+- So the original needs a rotated loop in which only the %hi is hoisted. I found no such form.
