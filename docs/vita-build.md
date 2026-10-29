@@ -985,6 +985,12 @@ clipw (2M cases each, ties of w with a field among them); the worker-order run w
 same 130 digests and VU1 counts as main's on x86 and on the ARM build under qemu. **Not yet measured on a Vita**
 (3d-zk): the `vu1 programs:` line's ns a pair for P0.
 
+On a Vita (3d-zk): P0 at 64-70 ns a pair, from ~73 (-10%); the Dive at ~17-20 fps as before (the scenes vary;
+later in the run P13 takes most, ~740 ms per 2 s at 53 ns a pair). That run also had ~80 bad DMA sends late in
+the Dive: `ref` data at 0x846a3c30, in the main thread's stack above the coroutines' pool (its own MAIN_OWN part).
+The Vita now hands the whole stack to `kh1_costack_stack` and the walk owns all of it. **Not yet checked on a
+Vita** (3d-zl).
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

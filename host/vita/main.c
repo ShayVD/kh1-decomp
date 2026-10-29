@@ -507,6 +507,9 @@ int main(int argc, char **argv) {
         if (sceKernelGetThreadInfo(sceKernelGetThreadId(), &ti) >= 0 && ti.stack &&
             (u8 *)&here - (u8 *)ti.stack > MAIN_OWN)
             kh1_costack_pool(ti.stack, costack_bytes = (u32)((u8 *)&here - (u8 *)ti.stack) - MAIN_OWN);
+        /* session 147: the DMA walk owns all of it (3d-zk: a chain's data at 0x846a3c30, the main thread's own
+         * part, refused) */
+        if (ti.stack && ti.stackSize > 0) kh1_costack_stack(ti.stack, (u32)ti.stackSize);
     }
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
