@@ -387,6 +387,47 @@ int main(void) {
         }
     }
     CHECK("some textures read a target", hits > 40);
+    /* session 147c: the CLUT loads' kept entries (gsmem.c clut_kept): a few CBPs loaded again and again, 8-bit and
+     * 4-bit, CT32 / CT16 / CT16S, with pixel writes between that land in the CLUTs' blocks or beside them (often the
+     * same value again), each load's palette against a load with the fast paths off */
+    {
+        static const u32 cps[] = { KH1_PSMCT32, KH1_PSMCT16, KH1_PSMCT16S };
+        u32 cbps[4], pa[256], pb[256], pc[256], pd[256], na, nb, hitsame = 0, loads = 0;
+        kh1_gsmem_reset();
+        rs = 147;
+        for (it = 0; it < 4; it++) cbps[it] = R() % 0x3FF0;
+        for (it = 0; it < 6000; it++) {
+            u32 cbp = cbps[R() % 4], cpsm = cps[R() % 3], b8 = R() & 1, csa = b8 ? 0 : R() % 16, lo, hi, k;
+            lo = (b8 ? KH1_PSMT8 : KH1_PSMT4) << 20 | 1u << 14;
+            hi = cpsm << 19 | cbp << 5 | csa << 24 | 1u << 29;
+            for (k = 0; k < R() % 3; k++) { /* writes into a CLUT's area (its 16 x 16) or near it */
+                u32 v = R() % 3 ? kh1_gsmem_read_pixel(cps[R() % 3], cbps[R() % 4], 1, R() % 16, R() % 16) : R();
+                kh1_gsmem_write_pixel(cps[R() % 3], cbps[R() % 4] + (R() % 4 ? 0 : R() % 8), 1, R() % 16, R() % 24, v);
+            }
+            kh1_gsmem_fast(1);
+            for (k = 0; k < R() % 3; k++) /* other loads first: another CBP, CPSM, size or CSA, or this one */
+                kh1_gsmem_tex0((R() & 1 ? KH1_PSMT8 : KH1_PSMT4) << 20 | 1u << 14,
+                               cps[R() % 3] << 19 | (R() % 2 ? cbp : cbps[R() % 4]) << 5 | (R() % 2 ? csa : R() % 16) << 24 | 1u << 29);
+            kh1_gsmem_tex0(lo, hi);
+            if (R() & 1) kh1_gsmem_tex0(lo, hi); /* again: the buffer holds it already */
+            nb = (u32)kh1_gsmem_clut(lo, hi, 0x80, 0x80, pb);
+            /* kh1_gsmem_clut's kept answer: the same question again, then another TEXA (CT16's alpha) */
+            if (kh1_gsmem_clut(lo, hi, 0x80, 0x80, pc) != (int)nb || memcmp(pc, pb, nb * 4)) fails++;
+            kh1_gsmem_clut(lo, hi, 0x8040, 0x10, pc);
+            kh1_gsmem_fast(0);
+            kh1_gsmem_tex0(lo, hi);
+            kh1_gsmem_clut(lo, hi, 0x8040, 0x10, pd);
+            if (memcmp(pc, pd, nb * 4)) fails++;
+            na = (u32)kh1_gsmem_clut(lo, hi, 0x80, 0x80, pa);
+            loads++;
+            hitsame += na == nb && na && memcmp(pa, pb, na * 4) == 0;
+            if (na != nb || memcmp(pa, pb, na * 4)) {
+                if (fails < 20) printf("gsfast_test: CLUT load %u cpsm %u cbp %04x %s: the kept entries differ\n", it, cpsm, cbp, b8 ? "8-bit" : "4-bit");
+                fails++;
+            }
+        }
+        CHECK("the CLUT loads compared", hitsame == loads);
+    }
     CHECK("read_rect refuses a PSM the model has not", kh1_gsmem_read_rect(0x3B, 0, 1, 0, 0, 4, 4, rect, 256) == -1);
     printf("gsfast_test: %s (600 sprites both ways, %u drawn; 150 upload runs; 200 rectangles, 200 from the copy; 400 texture scans, %u on a target)\n", fails ? "FAIL" : "PASS", drawn, hits);
     return fails != 0;

@@ -140,15 +140,38 @@ static void q_wake_producer(KH1Q *q) {
     }
 }
 
-/* the consumer: runs the ops from *t up to h, moving tail after each */
-static void q_run(KH1Q *q, u32 *t, u32 h) {
+/* session 147b: the GS worker's time by op function, for the Vita's watchdog (kh1_gsq_ops_take); the watchdog's
+ * take races the worker's adds, so a window's numbers can be a few ops off */
+static struct { u32 fn, us, n; } ops[KH1_GSQ_OPS];
+static void op_add(u32 fn, u32 us) {
+    u32 i;
+    for (i = 0; i < KH1_GSQ_OPS && ops[i].fn && ops[i].fn != fn; i++) ;
+    if (i == KH1_GSQ_OPS) i = KH1_GSQ_OPS - 1; /* full: the last slot takes the rest */
+    if (!ops[i].fn) ops[i].fn = fn;
+    ops[i].us += us;
+    ops[i].n++;
+}
+int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n) {
+    int i, k = 0;
+    for (i = 0; i < KH1_GSQ_OPS && ops[i].fn; i++, k++) {
+        fn[i] = ops[i].fn;
+        us[i] = ops[i].us;
+        n[i] = ops[i].n;
+        ops[i].us = ops[i].n = 0;
+    }
+    return k;
+}
+
+/* the consumer: runs the ops from *t up to h, moving tail after each (prof: each op timed, op_add) */
+static void q_run(KH1Q *q, u32 *t, u32 h, int prof) {
     while (*t != h) {
         const u32 *op = q->ring + (*t & q->mask);
         if (!op[0]) { /* the rest of the ring is unused: the next op is at its start */
             *t += q->mask + 1 - (*t & q->mask);
         } else {
-            u32 nqw = op[1], na = op[2], pa = (na + 3) & ~3u;
+            u32 nqw = op[1], na = op[2], pa = (na + 3) & ~3u, t0 = prof ? clock_us() : 0;
             ((KH1GsqFn)(unsigned long)op[0])(op + 4, op + 4 + pa, nqw);
+            if (prof) op_add(op[0], clock_us() - t0);
             *t += 4 + pa + nqw * 4;
         }
         STORE(q->tail, *t);
@@ -259,7 +282,7 @@ static void worker(void) {
             }
         }
         t0 = clock_us();
-        q_run(&gsq, &t, h);
+        q_run(&gsq, &t, h, kh1_vu1_clock != 0);
         kh1_gsq_us_busy += clock_us() - t0;
     }
 }
@@ -338,7 +361,7 @@ static void gq_worker(void) {
         }
         if (LOAD(kh1_recq_on) && (h = LOAD(recq.head)) != rt) {
             t0 = clock_us();
-            q_run(&recq, &rt, h);
+            q_run(&recq, &rt, h, 0);
             kh1_recq_us_busy += clock_us() - t0;
             continue;
         }
