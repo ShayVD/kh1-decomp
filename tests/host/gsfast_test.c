@@ -11,6 +11,8 @@
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
 int memcmp(const void *, const void *, __SIZE_TYPE__);
+void *memcpy(void *, const void *, __SIZE_TYPE__);
+void *memset(void *, int, __SIZE_TYPE__);
 
 static int fails;
 #define CHECK(name, cond) do { if (!(cond)) { printf("gsfast_test: %s\n", name); fails++; } } while (0)
@@ -171,6 +173,45 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
     return stamps;
 }
 
+/* session 146: an upload as gsimage.c's load_image sends it, with kh1_gsmem_image_same (same 1) or always whole */
+static int up(int same, u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 w, u32 h, const u8 *b, u32 bytes) {
+    u32 done = 0, buf[64];
+    kh1_gsmem_trxdir(0, 0, psm << 24 | bw << 16 | bp, 0, x | y << 16, w, h);
+    if (same && kh1_gsmem_image_same(b, bytes)) return 1;
+    while (done < bytes) {
+        u32 k = bytes - done < sizeof buf ? bytes - done : sizeof buf, i;
+        for (i = 0; i < (k + 3) / 4; i++) buf[i] = 0;
+        memcpy(buf, b + done, k);
+        kh1_gsmem_image(buf, (k + 3) / 4);
+        done += k;
+    }
+    kh1_gsmem_image_kept(b, bytes);
+    return 0;
+}
+
+/* the state a reader can see: every pixel's bits (CT32 view), each page's drawn bits for each PSM, a few
+ * textures' targets and whether their stamps moved since the last call (stamps are seq values, which the
+ * skip's own bookkeeping moves differently) */
+static u32 stamp_was[64];
+static u32 state_hash(void) {
+    static const u32 ps[] = { KH1_PSMCT32, KH1_PSMCT24, KH1_PSMT8H, KH1_PSMT4HL, KH1_PSMT4HH, KH1_PSMT8 };
+    static u32 all[1024 * 1024];
+    u32 h = 2166136261u, p, i;
+    kh1_gsmem_read_rect(KH1_PSMCT32, 0, 16, 0, 0, 1024, 1024, all, 1024);
+    for (i = 0; i < 1024 * 1024; i++) h = (h ^ all[i]) * 16777619u;
+    for (p = 0; p < 512; p++)
+        for (i = 0; i < 6; i++)
+            h = (h ^ (u32)kh1_gsmem_drawn(ps[i], p * 32, 1, 0, 0)) * 16777619u;
+    for (i = 0; i < 64; i++) {
+        u32 lo = (i * 256) | 4u << 14 | ps[i % 6] << 20 | 8u << 26 | 2u << 30, hi = 1;
+        u32 st0 = kh1_gsmem_tex_stamp(lo, hi);
+        h = (h ^ (st0 != stamp_was[i])) * 16777619u;
+        stamp_was[i] = st0;
+        h = (h ^ kh1_gsmem_tex_target(lo, hi)) * 16777619u;
+    }
+    return h;
+}
+
 int main(void) {
     u32 it, h0, h1, drawn = 0, x, y, hits = 0;
     KH1GsMemStats s0, s1;
@@ -251,6 +292,58 @@ int main(void) {
         kh1_gsmem_snap_take();
         CHECK("a write elsewhere keeps it", kh1_gsmem_snap_tex_ver(lo, hi) == v1);
         CHECK("200 copy rectangles", n == 200);
+    }
+    /* session 146: uploads of the bytes a rectangle already holds, over pages draws marked, skipped
+     * (kh1_gsmem_image_same) or sent whole: the same pixels, marks, stamps and targets after every op */
+    {
+        static const u32 ups[] = { KH1_PSMCT24, KH1_PSMCT32, KH1_PSMT8, KH1_PSMT4, KH1_PSMT8H, KH1_PSMCT16 };
+        static u8 bytes[6][128 * 64 * 4];
+        u32 run, op, skips = 0, marked = 0;
+        for (run = 0; run < 8; run++) {
+            u32 ha[120], hb[120], k, rect[6][5];
+            for (k = 0; k < 6; k++) {
+                rect[k][0] = (R() % 0x3000) & ~31u; rect[k][1] = 2 + R() % 3;
+                rect[k][2] = R() % 64; rect[k][3] = 1 + R() % 128; rect[k][4] = 1 + R() % 64;
+            }
+            for (k = 0; k < 2; k++) {
+                u32 j, ss = run * 7919u + 1;
+                rs = ss;
+                kh1_gsmem_reset();
+                kh1_gsmem_fast(1);
+                memset(stamp_was, 0, sizeof stamp_was);
+                state_hash();
+                for (j = 0; j < 6; j++) {
+                    u32 n;
+                    for (n = 0; n < sizeof bytes[j]; n++) bytes[j][n] = (u8)R();
+                }
+                for (op = 0; op < 120; op++) {
+                    u32 c = R() % 10, j = R() % 6, psm = ups[j], *q = rect[j];
+                    u32 n = psm == KH1_PSMT4 ? (q[3] * q[4] + 1) / 2 : q[3] * q[4] * (psm == KH1_PSMCT32 ? 4 : psm == KH1_PSMCT24 ? 3 : psm == KH1_PSMCT16 ? 2 : 1);
+                    if (c < 6) {
+                        int was = kh1_gsmem_drawn(psm, q[0], q[1], q[2], 0);
+                        if (up(k == 0, psm, q[0], q[1], q[2], 0, q[3], q[4], bytes[j], n)) {
+                            skips++;
+                            marked += was;
+                        }
+                    }
+                    else if (c < 8) /* a draw (and its Z) over some pages */
+                        kh1_gsmem_draw((q[0] >> 5) | q[1] << 16 | (R() % 2 ? 1u : 0) << 24, 0, (rect[R() % 6][0] >> 5) | 1u << 24, 0,
+                                       (R() % 256) << 16, (R() % 128) << 16, R() % 2 ? 0x10000 : 0);
+                    else if (c < 9) kh1_gsmem_write_pixel(psm, q[0], q[1], q[2] + R() % q[3], R() % q[4], R());
+                    else bytes[j][R() % n] ^= 1 + R() % 255; /* new bytes for the next upload */
+                    (k ? hb : ha)[op] = op % 8 == 7 || op == 119 ? state_hash() : 0; /* stamps compared hash to hash */
+                }
+            }
+            for (op = 0; op < 120; op++)
+                if (ha[op] != hb[op]) {
+                    printf("gsfast_test: same-skip run %u differs after op %u\n", run, op);
+                    fails++;
+                    break;
+                }
+        }
+        CHECK("uploads were skipped", skips > 100);
+        CHECK("some of them over a draw's marks", marked > 20);
+        printf("gsfast_test: %u uploads skipped, %u of them over a draw's marks\n", skips, marked);
     }
     /* tex_scan's memo: a write into the texture's pages, or a draw into them, is seen at once */
     kh1_gsmem_reset();

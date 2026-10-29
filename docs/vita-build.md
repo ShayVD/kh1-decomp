@@ -803,7 +803,34 @@ tex_loose read the live model through read_rect's fast path.
   0x4000 wrap), and the version: a draw's mark keeps it, a write moves it only at the next take, a write
   elsewhere keeps it.
 
-**Not measured on a Vita yet** (build s146a): the art stage's `gpu parts` draws column should fall from ~1,700 ms.
+On a Vita (s146a): the GPU thread ~100 ms busy per 2 s (from ~2,230) and the draws column ~43 ms (from ~1,705),
+but the title only ~15 fps (from ~13): the game thread now the limit, ~1.2-1.5 s per 2 s of "the rest" and
+~0.8 s waiting for the GS worker (busy ~0.88 s; LoadImage syncs, two a frame).
+
+### The CT24 backdrops' uploads (session 146)
+
+A callgrind profile of the game thread (en.iso, the Vita's order `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GPUQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, `KH1_HOST_PROF=1260:60`, the gxmcheck binary, `--separate-threads=yes`): 416M
+instructions over the 60 frames, 80% kh1_gsmem_image and 12% gsimage.c's load_image: the two 512 x 192 CT24
+backdrops through trx_bulk24 every frame (~200,000 pixels). They are the same bytes each frame, but
+kh1_gsmem_image_same refused them: their pages are the Z buffer's, which the frame's Z target marks drawn (and
+a draw's mark moved page_seq, which the check also read).
+
+- `kh1_gsmem_image_same` now checks `wr_pg` (gsmem.c: seq at each page's last store, set wherever dirty_pg
+  is; a draw's mark is not a store) instead of page_seq, and allows a draw's marks: on a skip it clears the
+  upload's bits (psm_bits) on each page the rectangle's pixels lie in (`at_key.pg`, a page bitmap made with
+  the addresses), with marks moved, as the pixels' stores would (mark with the bytes unchanged: the stamp
+  stays). `kh1_gsmem_image_kept` moves seq after it stamps, so any later store is newer.
+- tests/host/gsfast_test.c: random uploads (CT24 / CT32 / T8 / T4 / T8H / CT16) of kept bytes or changed
+  ones, interleaved with draws over their pages and pixel writes, run with the skip and with every upload
+  whole: the same pixels, drawn bits per page and PSM, textures' targets and stamp moves after every 8 ops
+  (364 skipped, 92 over a draw's marks). Refusing marked pages (the old rule) or not clearing the marks is
+  caught.
+- Measured: the game thread 416M -> 40M over those 60 frames (left: libc's memcmp, the skip's byte
+  compare of ~2.5 MB a frame). The worker-order run (`KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50
+  KH1_HOST_GXM_HASH=1`, dive_en.txt) gives the same GS digests and GPU target hashes as main's.
+- **Open**: on the Vita the GS worker was busy ~30 ms a title frame, while its host profile is ~0.3M
+  instructions a frame: not yet explained (memory traffic shared with the game thread's uploads is a guess).
 
 ## The flashing floor: one-byte enums (2026-10-28)
 

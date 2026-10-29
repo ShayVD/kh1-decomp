@@ -38,6 +38,9 @@ static u8 vm[VM_BYTES];
 /* session 142: the pages any store reached since the last kh1_gsmem_snap_take (stored bits changed or not,
  * the drawn sprites' pixels too), so the snapshot copies only those */
 static u8 dirty_pg[512];
+/* session 146: seq at the last store into each page (bytes changed or not; a draw's mark alone is not one) */
+static u32 wr_pg[512];
+#define STORED(pg) (dirty_pg[(pg) & 511] = 1, wr_pg[(pg) & 511] = seq)
 static u16 clut[512];
 static u32 cbp0, cbp1;
 static u32 seq, page_seq[512], clut_seq;
@@ -69,7 +72,8 @@ static struct {
 static u32 at_pool[AT_POOL], at_used, at_n;
 /* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
  * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
-static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi; } at_key[AT_KEYS];
+static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16]; } at_key[AT_KEYS];
+/* session 146: pg, the pages the rectangle's pixels lie in (bit p of pg[p >> 5]) */
 #define SAME_POOL (4u << 20)
 static u8 same_pool[SAME_POOL];
 static u32 same_used;
@@ -79,6 +83,7 @@ void kh1_gsmem_reset(void) {
     u32 i;
     memset(vm, 0, sizeof vm);
     memset(dirty_pg, 1, sizeof dirty_pg);
+    memset(wr_pg, 0, sizeof wr_pg);
     memset(clut, 0, sizeof clut);
     memset(page_seq, 0, sizeof page_seq);
     memset(&st, 0, sizeof st);
@@ -166,7 +171,7 @@ static u32 ld32(u32 w) {
 #endif
 }
 static void st32(u32 w, u32 v) {
-    dirty_pg[w >> 11 & 511] = 1;
+    STORED(w >> 11);
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     __builtin_memcpy(vm + w * 4, &v, 4);
 #else
@@ -232,21 +237,21 @@ static void put_at(u32 psm, u32 a, u32 v) {
     case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: {
         u32 o = vm[a * 2] | vm[a * 2 + 1] << 8;
         vm[a * 2] = v; vm[a * 2 + 1] = v >> 8;
-        dirty_pg[a >> 12 & 511] = 1;
+        STORED(a >> 12);
         if (!flat_raw) mark(a >> 12, o != (v & 0xFFFF), ~0u);
         return;
     }
     case KH1_PSMT8: {
         u32 o = vm[a];
         vm[a] = v;
-        dirty_pg[a >> 13 & 511] = 1;
+        STORED(a >> 13);
         mark(a >> 13, o != (v & 0xFF), ~0u);
         return;
     }
     case KH1_PSMT4: {
         u32 o = vm[a >> 1];
         vm[a >> 1] = (o & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
-        dirty_pg[a >> 14 & 511] = 1;
+        STORED(a >> 14);
         mark(a >> 14, o != vm[a >> 1], ~0u);
         return;
     }
@@ -512,8 +517,11 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
         }
     if (at_n == AT_KEYS || at_used + w * h > AT_POOL) at_n = at_used = same_used = 0;
     a = at_pool + at_used;
+    memset(at_key[at_n].pg, 0, sizeof at_key[at_n].pg);
     if (addr_rect(psm, bp, bw, x0, y0, w, h, a)) {
         for (i = 0; i < w * h; i++) {
+            u32 p = page_of(psm, a[i]);
+            at_key[at_n].pg[p >> 5] |= 1u << (p & 31);
             if (a[i] < lo) lo = a[i];
             if (a[i] > hi) hi = a[i];
         }
@@ -521,6 +529,7 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
         for (y = 0; y < h; y++)
             for (x = 0; x < w; x++) {
                 *a = kh1_gsmem_addr(psm, bp, bw, x0 + x, y0 + y);
+                at_key[at_n].pg[page_of(psm, *a) >> 5] |= 1u << (page_of(psm, *a) & 31);
                 if (*a < lo) lo = *a;
                 if (*a > hi) hi = *a;
                 a++;
@@ -535,19 +544,31 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
     return at_pool + at_key[at_n++].off;
 }
 
+/* the word bits an upload of psm stores (put_at's, trx_bulk's): a draw's marks it clears */
+static u32 psm_bits(u32 psm);
+
 /* Session 137 (the title's menus on the Vita, docs/vita-build.md "Speed"): the menus upload the same
  * ~840,000 pixels every frame, the bytes the memory already holds.  A whole upload of the bytes the
- * same rectangle's last one brought, none of its pages written since (no stamp after that upload's)
- * nor drawn (no draw's bits for it to clear), stores nothing: put_at would find each pixel the same.
+ * same rectangle's last one brought, none of its pages stored to since, stores nothing: put_at would find
+ * each pixel the same.  Session 146: a draw's marks on its pages no longer refuse it (the title's two
+ * 512 x 192 CT24 backdrops lie in the Z buffer's pages, which the frame's Z target marks every frame: ~200,000
+ * pixels a frame through trx_bulk24, most of the Vita title's game thread); the marks are cleared page by
+ * page as the pixels' stores would clear them (mark: the upload's bits, the stamp kept).
  * 1 when that is so, the counts and the position then as the pixels would leave them; 0 to send the
  * pixels through kh1_gsmem_image, then kh1_gsmem_image_kept */
 int kh1_gsmem_image_same(const void *src, u32 bytes) {
-    u32 p;
+    u32 p, bits;
     if (!trx.active || trx.key < 0 || trx.ai || trx.nacc || flat_raw) return 0;
     if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
-        if (page_seq[p] > at_key[trx.key].stamp || page_drawn[p]) return 0;
+        if (wr_pg[p] > at_key[trx.key].stamp) return 0;
     if (memcmp(same_pool + at_key[trx.key].doff, src, bytes)) return 0;
+    bits = psm_bits(trx.psm);
+    for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
+        if (at_key[trx.key].pg[p >> 5] >> (p & 31) & 1 && page_drawn[p] & bits) {
+            page_drawn[p] &= ~bits;
+            marks++;
+        }
     st.pixels += trx.w * trx.h;
     if (trx.log) trx.log->pixels += trx.w * trx.h;
     trx.ai = trx.w * trx.h;
@@ -572,6 +593,7 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes) {
     }
     memcpy(same_pool + at_key[trx.key].doff, src, bytes);
     at_key[trx.key].stamp = seq;
+    seq++; /* session 146: a later store's wr_pg is newer than the stamp, whatever op makes it */
     trx.key = -1;
 }
 
@@ -639,7 +661,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             }
             if (d) {
                 page_seq[pg] = seq;
-                dirty_pg[pg & 511] = 1;
+                STORED(pg);
                 page_drawn[pg] = 0;
                 moved = 1;
             } else if (page_drawn[pg]) {
@@ -666,7 +688,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (o != nv) {
                 vm[a >> 1] = (u8)nv;
                 page_seq[pg] = seq;
-                dirty_pg[pg & 511] = 1;
+                STORED(pg);
             } else if (!page_drawn[pg]) {
                 continue;
             }
