@@ -327,6 +327,84 @@ check first) matched it. dkmovie func_00f20140: the best output (13 words) only 
 stores in `do { } while (0)`; not kept. A draft that includes a header of its own (xs_dh_break's
 shard.h) must have it pasted in before `import` (the permuter's copy is compiled elsewhere).
 
+## Batch 7 patterns
+
+### Early return written as an inverted if/else (gb func_00f2c000, wm func_00f530f8)
+
+With `if (D_00F56DC0->x74 & 2) return 0;`, gcc puts the flag load into v1 and the original
+puts it into v0. The cause: sched1 hoists the return path's `v0 = 0` above the flag
+test, so v0 is busy when local-alloc picks a register for the flag temp, and the temp
+goes to v1. Writing the test the other way round keeps the early `v0 = 0` out of the
+block:
+
+```c
+if (!(D_00F56DC0->x74 & 2)) {
+    ... rest of the block ...
+} else {
+    return 0;
+}
+```
+
+That one change matched both functions (3 words -> 0).
+
+Round 34 swept every overlay's drafts with this rewrite: each early `if (C) return K;`
+(one-line, braced, or a braced block ending in a return, with no else) became
+`if (!(C)) { rest of the enclosing block } else { block }`, first each site alone and then
+all sites together. The sweeper reproduced the f2c000 match from the old draft. Results:
+
+- 53 drafts had a site and 72 candidates were built. There were no new matches.
+- Most candidates compile to exactly the same code as the original draft.
+- gb func_00f2c9f8, wm func_00f53af0 and wm func_00f3a640 lose a few words, but they get
+  a worse score and a size further from the target.
+
+So this is not a common fix. Try it when a near miss differs only in v0/v1 around an early
+`return 0`, or when the return value's `move v0,zero` lands above a load that should use v0.
+
+### Local vs global FP allocation (card-flip family: gb func_00f2eee8, func_00f2f688; wm func_00f55fe0, func_00f56780)
+
+Use gcc's own allocation dumps when callee-saved FP numbering (f20/f21/f22) is wrong:
+
+```sh
+tools/toolchain/ee-gcc2.96/bin/ee-gcc -c -x c -O2 -G0 -Iinclude -dl -dg draft.c
+```
+
+The command writes `draft.c.19.lreg` (local-alloc) and `draft.c.20.greg` (global). Each
+file has a "Register dispositions" table; hard register 32 is f0. What the dumps showed:
+
+- **Local-alloc goes first.** It takes only pseudos that live in one basic block
+  (REG_BASIC_BLOCK >= 0) and die exactly once (REG_N_DEATHS == 1). It gives each one the
+  lowest free register, so f20 comes first among the callee-saved ones.
+- **Global allocation takes everything else.** That is any pseudo that crosses blocks or
+  dies twice. It allocates by priority floor_log2(refs) * refs / live_length.
+- **sched1 can move FP work across a call** when the result is held in a callee-saved
+  pseudo.
+
+In the card-flip loops, the original's fi, r and t all behave as global pseudos. A draft
+with a fresh float per loop (fi2, r2, q2) let local-alloc grab f20 first, which gave the
+wrong numbering. The fix:
+
+- loop 2 reuses fi and r;
+- loop 2 sets `t = 0.0f;` at its top and passes t for its 0.0f arguments;
+- loop 1 does `fi = t;` between the two func_00f285e0-type calls.
+
+This gave the original's r=f20, fi=f21, t=f22 (36 -> 33 and 34 -> 25 words); only
+scheduling is left. When you see an allocation mismatch, check in the .lreg dump whether
+the variable was allocated locally. If it should not be, make it live across blocks or set
+it twice.
+
+### Constant kept in the loop by a twice-set temp (gb func_00f2fe38, func_00f30640; wm func_00f56f30, func_00f57738)
+
+loop.c hoists a loop-invariant constant such as 0.017453292f out of the loop unless the
+register holding it is set more than once. The original reloads it inside the loop. To
+match that, write `q = 0.017453292f; r = c * q; q = r;` so that q is set twice and the
+constant stays in the loop. The functions also needed:
+
+- the init order ten / a / ninety / i;
+- one accumulator per loop;
+- `a4 = 58` at the top of loop 1 (found by the permuter).
+
+The wm twins also needed the wm table addresses (D_00FA5C40 / D_00FA5C90), not the gb ones.
+
 ## Results
 
 Kept up to date by the session that changes them (`make ovl-progress`).
