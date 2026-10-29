@@ -1,4 +1,6 @@
+/* Round 41 wwm2: score 220 -> 196, port.py of the wm twin func_00f5a4f0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f333f8 near miss: 280 words differ, score 220 (ours 1360 bytes, original 1392). Camera fly-in/out over 30 frames: the GbXf D_00F80960 (v[4], pos, rot) is copied to a local xf, start vectors are built from World fields (s32 at 4308/4312 * PI / 2048, u16 166/170 * 200 * 0.5, the p5C.y nibble at 88, f32 at 136) and the D_00F56DC4 box, then func_001be988 interpolates rot/pos/v[0] each frame (in reverse when arg != 2), followed by func_001bebd0 and func_00f36020. Logic is complete. PI must be written 3.1415926f to get 0x40490fda. Left: (1) the original keeps a dead division-by-30 trap (li v1,30; beqzl v1; break) next to the i / 2 shift in both branches (ours, written i * 15 / 30, folds cleanly; a variable n = 30 gives a real div, 368); (2) the setup store order and the 1.0f register (f4 in the original). A 300 s hill climb over the setup block cut words differ to 263 but raised the score to 256. wm twin: func_00f5a4f0 (same score). */
+/* wm.x func_00f333f8 near miss: 280 words differ, score 220 (ours 1360 bytes, original 1392). Port of gb func_00f333f8 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. */
 typedef struct { OvlVec v[4]; OvlVec pos; OvlVec rot; } GbXf;
 typedef struct { u8 pad[4]; u32 ax : 4; u32 ay : 4; u32 az : 4; u32 ar : 4; u32 bx : 4; u32 by : 4; u32 bz : 4; u32 br : 4; } Box;
 extern u8 *D_00F56DC0;
@@ -42,36 +44,36 @@ void func_00f333f8(s32 arg) {
         D_00F80960.v[0][2] += *(u16 *)(D_00F56DC0 + 166) * 100;
     }
     xf = D_00F80960;
-    v[0][0] = (s32)D_00F56DC4->ax;
-    v[0][1] = (s32)D_00F56DC4->ay;
-    v[0][2] = (s32)D_00F56DC4->az;
-    v[1][0] = (s32)D_00F56DC4->bx;
-    v[1][1] = (s32)D_00F56DC4->by;
     v[1][2] = (s32)D_00F56DC4->bz;
-    v[2][0] = *(s32 *)(D_00F56DC0 + 4308) * 3.1415926f * 0.00048828125f;
-    v[2][1] = *(s32 *)(D_00F56DC0 + 4312) * 3.1415926f * 0.00048828125f;
-    v[2][2] = 0.0f;
+    v[0][0] = (s32)D_00F56DC4->ax;
     v[2][3] = 0.0f;
-    v[3][0] = -(*(u16 *)(D_00F56DC0 + 166) * 200.0f) * 0.5f;
-    v[3][1] = ((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) * 200.0f;
-    v[3][2] = -(*(u16 *)(D_00F56DC0 + 170) * 200.0f) * 0.5f;
-    v[3][3] = 0.0f;
-    v[4][0] = 0.0f;
     v[4][1] = 0.0f;
+    v[0][1] = (s32)D_00F56DC4->ay;
+    v[1][0] = (s32)D_00F56DC4->bx;
+    v[3][3] = 0.0f;
+    v[1][1] = (s32)D_00F56DC4->by;
+    v[3][1] = ((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) * 200.0f;
+    v[2][2] = 0.0f;
+    v[2][1] = *(s32 *)(D_00F56DC0 + 4312) * 3.1415926f * 0.00048828125f;
+    v[4][0] = 0.0f;
+    v[2][0] = *(s32 *)(D_00F56DC0 + 4308) * 3.1415926f * 0.00048828125f;
+    v[3][0] = -(*(u16 *)(D_00F56DC0 + 166) * 200.0f) * 0.5f;
+    v[0][2] = (s32)D_00F56DC4->az;
     v[4][2] = *(f32 *)(D_00F56DC0 + 136);
     v[4][3] = 0.0f;
-    D_00F80960.v[1][0] = 0.0f;
-    D_00F80960.v[1][1] = 0.0f;
+    v[3][2] = -(*(u16 *)(D_00F56DC0 + 170) * 200.0f) * 0.5f;
     D_00F80960.v[1][2] = 1.0f;
-    D_00F80960.v[1][3] = 1.0f;
-    D_00F80960.v[2][0] = 0.0f;
     D_00F80960.v[2][1] = 1.0f;
-    D_00F80960.v[2][2] = 0.0f;
     D_00F80960.v[2][3] = 1.0f;
-    D_00F80960.v[3][0] = 0.0f;
+    D_00F80960.v[1][0] = 0.0f;
+    D_00F80960.v[1][3] = 1.0f;
+    D_00F80960.v[1][1] = 0.0f;
+    D_00F80960.v[2][2] = 0.0f;
+    D_00F80960.v[2][0] = 0.0f;
     D_00F80960.v[3][1] = 0.0f;
-    D_00F80960.v[3][2] = 0.0f;
     D_00F80960.v[3][3] = 0.0f;
+    D_00F80960.v[3][0] = 0.0f;
+    D_00F80960.v[3][2] = 0.0f;
     for (i = 0; i < 3; i++) {
         ra[i] = 0.0f;
         rb[i] = 0.0f;
