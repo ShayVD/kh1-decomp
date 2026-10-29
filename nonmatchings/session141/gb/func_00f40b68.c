@@ -1,3 +1,4 @@
+/* Round 35 (wgb): no change (30 words). The target has cur += 6 in the delay slot of the merged func_00f3c8c8 call at the loop head, so in the original it sits right after that call in the same block. A loop with func_00f3c8c8(buf, cur, sel); cur += 6; at the top puts it there (27 words, score 28) but loses the cross-jumped pre-loop (buf, 0, 0) call. Tried: cur += 6 after each call (both paths), goto into the loop, k = cur % 6 temporaries. */
 /* 30 words / score 26 (size right). An explicit pre-loop func_00f3c8c8(buf, 0, 0) plus the call at the loop end reproduces the original's cross-jumped loop head. Left: the original does cur += 6 in the delay slot of that merged call; ours schedules it after func_001ba488, which shifts everything after it by one slot. Tried cur += 6 at the top of the loop, a t = cur + 6 temporary, a separate k = cur % 6, and the norlo/fmam/nosi modes. */
 #include "ovl.h"
 

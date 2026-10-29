@@ -1,3 +1,4 @@
+/* Round 35 (wgb): gb.x func_00f3c1f0 near miss: 55 words, score 37 -> 35. The RGBAQ word is 0x3F80000080202020 (Q = 1.0f, as in func_00f28aa8), not 0x3F8080202020: the target builds it with lui 0x3f80. Left: tx/ty in s2/s3 the wrong way round (-dg: both refs 2, but the registers come from the (bw - h) and (bh - h) temporaries, so swapping the two lines does not help), h << 5 scheduled after the first call. Tried: ty/tx in every order, the f28aa8 split-|= XYZ form (worse, 61-64 words), ctx2. Earlier header below. */
 /* 55 words / score 37: logic matches; reusing the x/y params for the GS coords was the big step. Left: tx/ty regs swapped (s2/s3) and the target computes bw<<4 early but h<<5 late (after the first packet call). Tried all orders of the four position lines, bw/bh order, in-place x += bw<<4. */
 #include "ovl.h"
 
@@ -35,7 +36,7 @@ void func_00f3c1f0(s32 x, s32 y, void *str) {
     q[0] = 0x46;
     q[1] = 0;
     q += 2;
-    q[0] = 0x3F8080202020;
+    q[0] = 0x3F80000080202020;
     q[1] = 1;
     q += 2;
     q[0] = x | ((u64)y << 16) | 0x100000000;

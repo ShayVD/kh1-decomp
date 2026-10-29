@@ -1,3 +1,4 @@
+/* Round 35 (wgb): gb.x func_00f429b0 near miss: 50 -> 3 words, score 95 -> 5 (836 vs 840 bytes; the 4 bytes are the trailing nop). Statement order from a dependency-safe statement-order hill climb (round 35 hill3.py: only orders that keep every read/write conflict in place): rgba[3] = 0 after tbl, D_00F82AB4 = -1 last of the inits, D_00F82AAC = 1 after D_00F82AA8, and the x/addr clip loads after w/h. Left: the func_00f42928 address for func_001c01b0 (lui/addiu a1) is built in v0 after the tbl[cur].off load; the target builds it in v1 before that load. -dS: loop.c hoists high(func_00f42928) into the pre-header, the pseudo gets no register and reload rematerialises it at the a1 set, which sched1 issues last in its block (lowest priority, after insn 205, the .off load), so v0 is free. Tried: a cb variable at every position in the block, &func / cast / prototype forms, every buf toggle form, operand order of D_00F82AA4, for/while/goto loops (goto changes everything), ctx2, 3 more hill runs, a 10-minute permuter run (its best only moved buf &= 1 out of the block, which is not equivalent). Earlier header below. */
 /* 50 words / score 95: control flow and calls match. buf++; buf &= 1 keeps buf in s8 (the & 1 form gives xori and spills it). Left: our temporaries land in t0 where the target uses a2 throughout, and the x/w/h loads of the clip are in a different order. Hill-climbed the prologue order. */
 #include "ovl.h"
 
@@ -37,13 +38,13 @@ void func_00f429b0(GbMovie *m) {
     rgba[0] = 0;
     rgba[1] = 0;
     rgba[2] = 0;
-    rgba[3] = 0;
     tbl = D_00F707B0[m->idx];
+    rgba[3] = 0;
     max = D_00F707C0[m->idx];
     D_00F82AB8 = -1;
-    D_00F82AB4 = -1;
     D_00F82AB0 = 0;
     D_00F82AAC = 0;
+    D_00F82AB4 = -1;
     do {
         if (D_00F82AAC == 0 && state != 2) {
             if (D_002C5AD0.press & 0x20) {
@@ -64,8 +65,8 @@ void func_00f429b0(GbMovie *m) {
                     func_0011d768(1);
                 D_00F82AB8 = m->cur;
                 D_00F82AA4 = m->base + tbl[m->cur].off;
-                D_00F82AAC = 1;
                 D_00F82AA8 = m->bufs[buf];
+                D_00F82AAC = 1;
                 buf++;
                 buf &= 1;
                 func_001c01b0(-1, func_00f42928);
@@ -90,10 +91,10 @@ void func_00f429b0(GbMovie *m) {
             if (D_00F82AAC == 2)
                 D_00F82AAC = 0;
             D_00F82A9C = m->a14;
-            x = tbl[D_00F82AB4].x;
-            addr = m->base + tbl[D_00F82AB4].data;
             w = tbl[D_00F82AB4].w;
             h = tbl[D_00F82AB4].h;
+            x = tbl[D_00F82AB4].x;
+            addr = m->base + tbl[D_00F82AB4].data;
             gs = func_00f200a8();
             D_00F82A88 = gs;
             func_00f422e8(D_00F82AB0, addr, 0, 0, w, h, x, rgba, 0, 0x44, 0, 0x5001D);

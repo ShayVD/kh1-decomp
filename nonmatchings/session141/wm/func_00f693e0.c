@@ -1,6 +1,5 @@
+/* Round 35 (wgb): wm.x func_00f693e0 near miss: 71 -> 65 words, score 89 -> 77. port.py of gb func_00f422e8's round 35 draft (statement order from the dependency-safe hill climb). Earlier header below. */
 /* score 89 (71 words; 708 vs 704 bytes). Same function as func_00f799e0, minus the last stack argument (4) to func_00f68ec0, so one fix gives both. The 15-minute -j1 permuter found `unsigned long nv; ... if ((nv = bpp) == 8)`, which stops cw's 8 from being reused and fixes the whole bpp branch block (was 111). Left: y and h swap s3/s4, and img lands in t5 instead of t1; then the xs/ys/qs/us/vs store order and one extra `move t1,s3` before the draw call. Tried x/y update orders, switch form, decl orders, all modes. */
-#include "ovl.h"
-
 extern void *D_0108F248;
 extern s32 D_0108F25C;
 void *func_00f69278(void *, void *, s32, s32, s32, s32, s32, s32, s32, s32);
@@ -21,24 +20,24 @@ void func_00f693e0(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     s32 x1, y1;
     f32 v;
 
-    t = w * h;
-    t /= 128;
-    size = t;
     psm = 20;
     cw = 8;
     ch = 2;
+    t = w * h;
+    t /= 128;
+    size = t;
     if (bpp != 4) {
         if ((nv = bpp) == 8) {
-            psm = 19;
             cw = 16;
-            ch = 16;
             t = w * h;
             t /= 64;
+            ch = 16;
+            psm = 19;
             size = t;
         } else {
-            psm = 0;
             ch = 0;
             cw = 0;
+            psm = 0;
             size = 0;
         }
     }
@@ -50,38 +49,38 @@ void func_00f693e0(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     }
     x += 1792;
     y += 1856;
-    x <<= 4;
     y <<= 4;
+    x <<= 4;
     if (flip == 0) {
-        xs[3] = x;
-        xs[2] = x;
         xs[0] = x + w * 16;
+        xs[2] = x;
+        xs[3] = x;
         xs[1] = x + w * 16;
     } else {
-        xs[3] = x;
         xs[2] = x;
         xs[0] = x - w * 16;
         xs[1] = x - w * 16;
+        xs[3] = x;
     }
     y1 = y + h * 16;
-    ys[2] = y1;
     ys[3] = y;
-    qs[0] = 1;
     ys[0] = y1;
+    qs[2] = 1;
+    ys[2] = y1;
     ys[1] = y;
     qs[3] = 1;
-    qs[2] = 1;
     qs[1] = 1;
+    qs[0] = 1;
     for (p = 2; p < h; p <<= 1) {
     }
-    v = (f32)(h - 1) / (f32)p;
-    us[0] = 1.0f;
-    vs[0] = v;
-    us[3] = 0.0f;
     vs[3] = 0.0f;
     us[2] = 0.0f;
+    v = (f32)(h - 1) / (f32)p;
     vs[2] = v;
+    us[3] = 0.0f;
     us[1] = 1.0f;
+    vs[0] = v;
+    us[0] = 1.0f;
     vs[1] = 0.0f;
     func_00f68ec0(xs, ys, zs, qs, w, h, us, vs, psm, size, a7, a9, a10, a11);
 }

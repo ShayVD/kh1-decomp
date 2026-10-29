@@ -1,3 +1,4 @@
+/* Round 35 (wgb): wm.x func_00f71748 near miss: 35 -> 21 words, score 62 -> 38 (1040 = 1040). port.py of gb func_00f4a650's round 35 draft (statement order from the dependency-safe hill climb); left: FP temporary numbering in the panel blocks. Earlier header below. */
 /* score 62 (35 words; 1040 vs 1040 bytes). Startup and layout: resets the tables, pairs linked entries (96-byte records, link at +9), then lays out six panels. Fixes: write the 0x100 clear loop as an ascending `for (i = 0; i < 256; i++)` (gcc reverses it to match the original); D_0108F3B0 updated with ++ in place, not through a local k; a brute-forced statement order in the first panel block. Left: float scheduling and register choice in the two panel blocks (512-x sub.s placement, the halfword -10 stores), and two lui/sd swaps in the prologue and pair block. */
 typedef struct { u8 pad[5]; s8 b5; u8 pad2[2]; s16 h8; u8 pad3[10]; f32 f20; f32 f24; } Obj;
 typedef struct { u8 b0; u8 b1; u8 b2; u8 b3; u8 b4[4]; u8 b8; u8 b9; u8 pad[86]; } Ent;
@@ -34,11 +35,11 @@ void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
     s8 *p;
 
     D_0108F418 = -1;
-    D_0108F420 = -1;
     D_0108F41C = 0;
+    D_0108F420 = -1;
     for (i = 0; i < 10; i++) {
-        D_0108F338[i] = 0;
         D_0108F310[i] = 0;
+        D_0108F338[i] = 0;
         D_0108F3B8[i] = 0;
         D_0108F3F0[i] = 0;
     }
@@ -63,23 +64,23 @@ void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
             j = e->b9 - 1;
             f = &base[j];
             if (f->b0 != 0 && f->b8 == 0 && f->b3 != 0 && f->b9 == i + 1) {
-                D_0108F428[i] = 1;
-                found = 1;
                 D_0108F3C8[D_0108F3B0] = e;
                 D_0108F360[D_0108F3B0] = i;
+                D_0108F428[i] = 1;
+                D_0108F428[j] = 1;
                 D_0108F3B0++;
                 D_0108F3C8[D_0108F3B0] = f;
+                found = 1;
                 D_0108F360[D_0108F3B0] = j;
                 D_0108F3B0++;
-                D_0108F428[j] = 1;
             }
         }
         if (!found) {
-            k = D_0108F308;
             D_0108F428[i] = 1;
-            D_0108F388[k] = i;
+            k = D_0108F308;
             D_0108F310[k] = e;
             D_0108F308 = k + 1;
+            D_0108F388[k] = i;
         }
     }
     func_00f70f40();
@@ -90,24 +91,24 @@ void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
     func_00f6a448();
     v = func_001f0118(83, o1->b5);
     o1->f20 = D_00FB4DD0;
-    x = D_00FB4DD0 + v + 10;
     w = D_00FB4DC0 - 20;
     o1->f24 = w;
-    o4->h8 = 512.0f - x;
+    o3->f24 = w + 8.0f;
+    x = D_00FB4DD0 + v + 10;
     o3->h8 = D_00FB4DD0 - 10;
     o4->f24 = w + 8.0f;
-    o3->f24 = w + 8.0f;
+    o4->h8 = 512.0f - x;
     o3->f20 = 0.0f;
     o4->f20 = x;
     v = func_001f0118(84, o2->b5);
     o2->f20 = D_00FB4DD4;
-    w = D_00FB4DC4 - D_0108F3B0 / 2 * 28 + 8;
     x = D_00FB4DD0 + v + 10;
-    o5->h8 = D_00FB4DD4 - 10;
+    w = D_00FB4DC4 - D_0108F3B0 / 2 * 28 + 8;
     o2->f24 = w;
-    o6->h8 = 512.0f - x;
     o6->f24 = w + 8.0f;
     o5->f24 = w + 8.0f;
     o5->f20 = 0.0f;
+    o5->h8 = D_00FB4DD4 - 10;
+    o6->h8 = 512.0f - x;
     o6->f20 = x;
 }
