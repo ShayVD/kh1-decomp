@@ -48,9 +48,11 @@ void kh1_gsmem_image(const u32 *w, u32 n);
  * kh1_gsmem_image_kept keeps them for the next */
 int kh1_gsmem_image_same(const void *src, u32 bytes);
 void kh1_gsmem_image_kept(const void *src, u32 bytes);
-/* session 147d: when set, kh1_gsmem_image_same's compare (gsimage.c sets it around a large upload on the game
- * thread, which shares the compare with the idle worker) */
-extern int (*kh1_gsmem_same_fn)(const void *a, const void *b, u32 n);
+/* session 147d: nonzero around an upload whose bytes the caller names by this generation (gsimage.c's large
+ * uploads: the game thread compares them with its own copy, and the same bytes keep the generation):
+ * kh1_gsmem_image_same then matches the generation the rectangle's kept bytes came with instead of comparing the
+ * bytes, and kh1_gsmem_image_kept keeps it */
+extern u32 kh1_gsmem_image_gen;
 /* a TEX0 (or the TEX0 a TEX2 write leaves) written: loads the CLUT buffer as its CLD says */
 void kh1_gsmem_tex0(u32 lo, u32 hi);
 

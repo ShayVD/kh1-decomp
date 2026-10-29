@@ -78,7 +78,7 @@ static struct {
 static u32 at_pool[AT_POOL], at_used, at_n;
 /* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
  * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
-static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16]; } at_key[AT_KEYS];
+static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16], gen; } at_key[AT_KEYS];
 /* session 146: pg, the pages the rectangle's pixels lie in (bit p of pg[p >> 5]) */
 #define SAME_POOL (4u << 20)
 static u8 same_pool[SAME_POOL] __attribute__((aligned(16))); /* session 147: each run at 16 (bytesame.h) */
@@ -564,7 +564,7 @@ static u32 psm_bits(u32 psm);
  * page as the pixels' stores would clear them (mark: the upload's bits, the stamp kept).
  * 1 when that is so, the counts and the position then as the pixels would leave them; 0 to send the
  * pixels through kh1_gsmem_image, then kh1_gsmem_image_kept */
-int (*kh1_gsmem_same_fn)(const void *a, const void *b, u32 n);
+u32 kh1_gsmem_image_gen;
 
 int kh1_gsmem_image_same(const void *src, u32 bytes) {
     u32 p, bits;
@@ -572,8 +572,8 @@ int kh1_gsmem_image_same(const void *src, u32 bytes) {
     if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
         if (wr_pg[p] > at_key[trx.key].stamp) return 0;
-    if (kh1_gsmem_same_fn ? !kh1_gsmem_same_fn(same_pool + at_key[trx.key].doff, src, bytes)
-                          : !kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes))
+    if (kh1_gsmem_image_gen ? at_key[trx.key].gen != kh1_gsmem_image_gen
+                            : !kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes))
         return 0;
     bits = psm_bits(trx.psm);
     for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
@@ -604,6 +604,7 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes) {
         same_used += (bytes + 15) & ~15u;
     }
     memcpy(same_pool + at_key[trx.key].doff, src, bytes);
+    at_key[trx.key].gen = kh1_gsmem_image_gen;
     at_key[trx.key].stamp = seq;
     seq++; /* session 146: a later store's wr_pg is newer than the stamp, whatever op makes it */
     trx.key = -1;
