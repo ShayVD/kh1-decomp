@@ -1,4 +1,4 @@
-/* func_00f7c880: score 64, 111 words differ. case 2: c[0] address not taken from the giv Round 30 (wgb, no gain): *D_0108FAA0[i] or ((u8 *)D_0108FAA0)[i * 4] for the case-2 [0] store, a chained store (56 words), D_0108FA98[i] = 0 after a = 0, a = [i][3] read before the switch (loses the s2 giv, worse), CONTEXT_ONLY callees (ctx2). */
+/* func_00f7c880: score 64, 111 words differ. case 2: c[0] address not taken from the giv Round 30 (wgb, no gain): *D_0108FAA0[i] or ((u8 *)D_0108FAA0)[i * 4] for the case-2 [0] store, a chained store (56 words), D_0108FA98[i] = 0 after a = 0, a = [i][3] read before the switch (loses the s2 giv, worse), CONTEXT_ONLY callees (ctx2). Round 20 (wwm1): tools/ovl/i2a.py, the two constant initializers as ordered assignments: 111 -> 107 words, score 64 -> 50. */
 extern s32 D_0108FA60[2];
 extern s32 D_0108FA98[2];
 extern u8 D_0108FAA0[2][4];
@@ -13,10 +13,12 @@ void func_00f7c880(s32 *arg) {
     s32 ys[4];
     u8 col[4][4];
     s32 i;
-    s32 a = 0;
-    s32 done = 0;
+    s32 a;
+    s32 done;
     s32 v;
 
+    done = 0;
+    a = 0;
     for (i = 0; i < 2; i++) {
         D_0108FA60[i] = arg[i];
     }

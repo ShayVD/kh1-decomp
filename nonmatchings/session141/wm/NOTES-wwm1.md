@@ -639,3 +639,13 @@ hit the stub callee sits at a lower address than the function.
 - No change: dkmovie f20b48, f25180, f22d28, f275e0, f23750; xs_genie f218f8 (2), f22078;
   xs_tink f20818; xs_dumbo f20570, f222f8; xl_limit f225b0. Reserved (not climbed): dkmovie
   f207a0, f212c0; dktitle f26710, f241c8.
+
+## Round 20 (i2a.py everywhere, sclimb OBJ=score on wm rows 130+)
+
+- tools/ovl/i2a.py (moved from scratch; docs/overlays.md has a paragraph on it) over every near-miss draft in gb, wm,
+  dkmovie, dktitle, xs_* (xs_dh_break with shard.h pasted) and xl_limit, skipping wwm2's functions. Only 12 drafts have
+  two or more constant initializers at the top of the body. One gain: wm f7c880 111 -> 107 words, score 64 -> 50
+  (saved). No change: gb f24240, f363a0, f40b68, f429b0, f50550; wm f4b338, f5d498, f69aa8, f77648, f7f628;
+  xs_genie f218f8.
+- sclimb.py OBJ=score, seed 5, 300 s each on wm rows 130+: wm f58748 352 -> 331, f7de08 855 -> 807 (saved). The rest
+  moved by 4 or less or not at all. No match.

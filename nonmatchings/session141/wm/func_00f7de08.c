@@ -1,4 +1,4 @@
-/* score 897 (3868 vs 3792 bytes): menu panel draw: backdrop f799e0, three gradient quads, title GIF packet (f07d8) + 6 corner icons, name packet with sel==5 brightness + 6 icons, optional caption (f0868) and option list (f0ea8, null-terminated arg->list), selected-row highlight quads. Logic complete; remaining diffs are register allocation/spills (original caches a*4, a*5, a*2, a<<8 in stack slots) and statement scheduling. No gb twin (no 3792-byte gb function). Round 25 wwm2. Round 19 (wwm1): score 897 -> 855 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
+/* score 897 (3868 vs 3792 bytes): menu panel draw: backdrop f799e0, three gradient quads, title GIF packet (f07d8) + 6 corner icons, name packet with sel==5 brightness + 6 icons, optional caption (f0868) and option list (f0ea8, null-terminated arg->list), selected-row highlight quads. Logic complete; remaining diffs are register allocation/spills (original caches a*4, a*5, a*2, a<<8 in stack slots) and statement scheduling. No gb twin (no 3792-byte gb function). Round 25 wwm2. Round 19 (wwm1): score 897 -> 855 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 855 -> 807 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef union {
     kh1_u128 q;
     u64 d[2];
@@ -12,7 +12,7 @@ void func_00f21ea0(Qw *);
 void func_00f66fb0(s32, Qw *);
 void func_00f799e0(u8 *, u8 *, s32, s32, s32, s32, s32, u8 *, s32, u64, s32, u64);
 void func_00f7a1a8(u8 (*)[4], s32 *, s32 *, u64);
-void func_00f7b9a0(void);
+void func_00f7b9a0(void); CONTEXT_ONLY void func_00f7b9a0() {}
 void func_001efb18(u8 *, u8 *);
 Qw *func_001f07d8(Qw *, s32, s32, u32, s32, s32, s32, s32);
 Qw *func_001f0868(Qw *, s32, s32, u32, s32, s32, s32, s32);
@@ -26,14 +26,14 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     s32 xs[4];
     s32 ys[4];
     u8 cols[4][4];
-    u8 *tex;
+    u8 b;
     Qw *p;
     s32 y;
     s32 flag;
     s32 i;
-    Qw *top;
     Qw *buf;
-    u8 b;
+    Qw *top;
+    u8 *tex;
 
     D_00FB64A4 = arg->x0;
     tex = arg->x28;
@@ -57,10 +57,10 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     cols[3][1] = 0;
     cols[1][2] = 0;
     cols[3][2] = 0;
-    xs[1] = 311;
     cols[2][3] = cols[0][3] = a * 30 / 100;
-    ys[1] = 39;
     xs[3] = 311;
+    xs[1] = 311;
+    ys[1] = 39;
     cols[1][3] = a * 80 / 100;
     ys[0] = 39;
     cols[3][3] = a * 80 / 100;
@@ -81,18 +81,18 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     cols[0][2] = 0;
     cols[1][2] = 0;
     cols[2][2] = 0;
+    xs[1] = 512;
     cols[3][2] = 0;
     xs[3] = 512;
     ys[3] = 39;
+    xs[2] = 311;
     xs[0] = 311;
     cols[0][3] = a * 10240 / 12800;
-    xs[1] = 512;
-    xs[2] = 311;
     ys[2] = 39;
     cols[1][3] = a * 10240 / 12800;
     cols[2][3] = a * 10240 / 12800;
-    cols[3][3] = a * 10240 / 12800;
     ys[0] = 0;
+    cols[3][3] = a * 10240 / 12800;
     ys[1] = 0;
     func_00f7a1a8(cols, xs, ys, 68);
 
@@ -101,19 +101,19 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     cols[1][2] = 0x4C;
     cols[2][0] = 0xFF;
     cols[0][0] = 0xFF;
-    cols[2][1] = 0xC4;
     cols[3][0] = 0xFF;
+    cols[2][1] = 0xC4;
     cols[0][1] = 0xC4;
     cols[2][2] = 0x4C;
-    cols[3][1] = 0xC4;
     cols[0][2] = 0x4C;
+    cols[3][1] = 0xC4;
     cols[3][2] = 0x4C;
-    ys[1] = 39;
-    ys[0] = 39;
-    xs[3] = 512;
     ys[2] = 41;
+    ys[1] = 39;
+    xs[3] = 512;
     ys[3] = 41;
     cols[2][3] = a * 80 / 100;
+    ys[0] = 39;
     xs[1] = 512;
     cols[0][3] = a * 80 / 100;
     cols[3][3] = a * 80 / 100;
@@ -124,29 +124,29 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
 
     top = D_0108FA60;
     p = top + 1;
-    p->d[1] = 14;
     top->q = 0;
     p->d[0] = 0x1000000000000002;
+    p->d[1] = 14;
     p++;
-    p->d[1] = 71;
     p->d[0] = 27;
+    p->d[1] = 71;
     p++;
-    p->d[1] = 66;
     p->d[0] = 68;
-    col[2] = a * 20 / 128;
-    p++;
+    p->d[1] = 66;
+    col[0] = a * 255 / 128;
     col[1] = a * 150 / 128;
     col[3] = a * 80 / 100;
-    col[0] = a * 255 / 128;
+    col[2] = a * 20 / 128;
+    p++;
     func_001efb18(tex + 0x21000, tex + 0x21020);
     p = func_001f07d8(p, 1, 0, RGBA(col), 336, 12, 1, 16);
     top->w[0] = ((p - top) - 1) | 0x10000000;
     col[1] = a * 150 / 128;
     col[2] = a * 20 / 128;
-    D_0108FA60 = p;
     col[0] = a * 255 / 128;
     col[3] = a * 77 / 128;
     flag = 1;
+    D_0108FA60 = p;
     func_00f799e0(tex + 0x20000, tex + 0x20800, 301, 10, 32, 32, 4, col, flag, 72, 0, 0x5001D);
     col[3] = a * 102 / 128;
     func_00f799e0(tex + 0x20000, tex + 0x20800, 313, 10, 32, 32, 4, col, flag, 72, 0, 0x5001D);
@@ -165,12 +165,12 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     p->d[1] = 14;
     p->d[0] = 0x1000000000000002;
     p++;
-    p->d[0] = 27;
     p->d[1] = 71;
+    p->d[0] = 27;
     p++;
+    p->d[0] = 68;
     p->d[1] = 66;
     col[1] = a * 255 / 128;
-    p->d[0] = 68;
     col[0] = a * 111 / 128;
     col[2] = a * 100 / 128;
     p++;
@@ -178,8 +178,8 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
         b = 102;
         col[3] = a * 10240 / 12800;
     } else {
-        b = 51;
         col[3] = a * 5120 / 12800;
+        b = 51;
     }
     func_001efb18(tex + 0x21000, tex + 0x21020);
     p = func_001f07d8(p, 1, 2, RGBA(col), 118, 279, 2, 15);
@@ -202,8 +202,8 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
         top = D_0108FA60;
         p = top + 1;
         top->q = 0;
-        p->d[1] = 14;
         p->d[0] = 0x1000000000000002;
+        p->d[1] = 14;
         p++;
         p->d[0] = 27;
         p->d[1] = 71;
@@ -213,8 +213,8 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
         p++;
         if (arg->x4 != 0) {
             col[2] = 230;
-            col[3] = a;
             col[1] = 230;
+            col[3] = a;
             col[0] = 230;
             p = func_001f0868(p, arg->list[0] == 0, 2, RGBA(col), 116, 83, arg->x4, 16);
         }
@@ -230,8 +230,8 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
                 col[2] = a * 76 / 128;
                 col[3] = a * 10240 / 12800;
             } else {
-                col[2] = 0;
                 col[1] = a * 127 / 128;
+                col[2] = 0;
                 col[0] = a * 255 / 128;
                 col[3] = a * 5120 / 12800;
             }
@@ -249,8 +249,8 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
                 cols[0][0] = 0xFF;
                 cols[2][1] = 0xC4;
                 cols[2][2] = 0x4C;
-                cols[0][2] = 0x4C;
                 cols[0][1] = 0xC4;
+                cols[0][2] = 0x4C;
                 cols[3][0] = 0xFF;
                 cols[1][0] = 0xFF;
                 cols[3][1] = 0xC4;
@@ -264,10 +264,10 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
                 ys[1] = y + 1;
                 cols[1][3] = a * 80 / 100;
                 xs[0] = 0;
-                xs[1] = 200;
                 xs[2] = 0;
                 ys[2] = y + 3;
                 xs[3] = 200;
+                xs[1] = 200;
                 ys[3] = y + 3;
                 func_00f7a1a8(cols, xs, ys, 72);
                 xs[0] = 0;
@@ -285,9 +285,9 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
                 cols[0][1] = 0xC4;
                 cols[0][3] = a * 80 / 100;
                 cols[2][2] = 0x4C;
-                ys[3] = y + 3;
                 ys[1] = y + 1;
                 cols[0][2] = 0x4C;
+                ys[3] = y + 3;
                 cols[2][3] = a * 80 / 100;
                 cols[3][0] = 0;
                 cols[1][0] = 0;
@@ -306,8 +306,8 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
                 func_00f7a1a8(cols, xs, ys, 72);
                 ys[3] = y + 2;
                 xs[0] = 200;
-                ys[0] = y + 2;
                 xs[1] = 280;
+                ys[0] = y + 2;
                 ys[1] = y + 2;
                 xs[2] = 200;
                 ys[2] = y + 2;
