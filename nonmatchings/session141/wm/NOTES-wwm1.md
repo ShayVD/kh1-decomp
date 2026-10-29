@@ -169,3 +169,39 @@ f296d8 (10), f491e0 (7), f5e368 (65), f502e8 (73), f58300 (89), f56538 (115).
   address-CSE copies (f2cfd8 partly; f2fcf8/f2fa68 still 3 words off).
 - Unsolved: globals held in s-regs across calls (f204d8, f47610), obj copy into
   a separate pseudo (f5e368/f5e540), word-wise struct copy (f491e0).
+
+## Round 4
+
+Matched (10): f2fcf8, f2fa68, f2d480, f491e0, f21600, f29810, f46a58,
+f4e480, f35c08 (nostrict mode), f38bf8.
+
+Near misses added/updated: f42ce0 (15), f387a8 (102), f23628 (128),
+f55d78 (120). f2cfd8 unchanged at 6.
+
+### Round 4 tips
+
+- **`(x >> 8) & 0xF` on a u16 is a bitfield.** Declaring
+  `u16 lo:8; u16 kind:4; u16 hi:4;` and testing `.kind == 4` removed the
+  "address-CSE copy" 3-word diff in f2fcf8, f2fa68 and f2d480 (the bitfield
+  read expands its own address, so the two field reads are not CSE'd).
+- **A pointer-typed struct field changes alias sets.** f491e0's word copy
+  order matched once field `b` was `void *` (s32 fields all alias each other
+  and the arg0 stores; a pointer field has its own alias set).
+- **m2c invents call args from leftover a2/a3.** func_00f66240 in f21600 is
+  2-arg; check whether "args" are just %hi registers before trusting them.
+- **Float temps: load matrix elements into locals in target load order**
+  (f21600) to fix FP register choice.
+- **Pointer increment vs index** for per-iteration buffers (f29810: `buf += 8`
+  at the end of the loop gave the pointer giv).
+- **One variable for value and packet pointer** (f46a58: `p = *D; ...; p =
+  func_00f66b78(...)` keeps it in the same s-reg).
+- **Check GS constants by reading the lui/ori/dsll chain**, m2c's expression
+  can be wrong (f46a58 SCISSOR = 0x017F000001FF0000).
+- **`arg0++` placed where the target does the addiu** (f4e480), then
+  CONTEXT_ONLY on the callee fixed the last bnez/bnezl.
+- **Run modes.sh on every near miss**: f35c08 matched in nostrict mode without
+  `volatile` (int stores must alias the u16 flags field).
+- **ctx.py on every close near miss**: f38bf8 needed CONTEXT_ONLY
+  func_00f387a8 (an unmatched neighbour).
+- Lerp loops (f55d78/f56538) need the m[4] array (gcc 2.96 keeps arrays in
+  memory); the remaining gap is spilled induction variables.
