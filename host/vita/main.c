@@ -23,6 +23,8 @@
  *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
  *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
  *                             interpreter only; 2 both, compared (slow; differences go to the log)
+ *       vu1nat=N              session 150: 1 (the default) runs the programs written by hand as C
+ *                             (host/port/vu1_nat.h, P18 so far) in place of their translation; 0 the translation
  *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
  *                             ("kh1-gxm: shadertest" lines; gxm.c)
  *       shacc_restart=1       session 137v: restart the shader compiler when a shader fails (off: hangs Vita3K)
@@ -516,6 +518,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
         else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
         else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
+        else if (strcmp(line, "vu1nat") == 0) kh1_vu1_native = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -626,7 +629,7 @@ int main(int argc, char **argv) {
         else
             vlog("kh1-vita: disc image %s\n", iso);
     }
-    vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
+    vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), vu1nat=%d, pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vu1_native, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
      * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */
     if (kh1_host_trace < 2) {

@@ -1207,6 +1207,45 @@ give the same state and kicks as the interpreter; vu1neon_test now makes a third
 c = +-a*b, some a bit off) and catches the Z weights reversed or an "exact" claimed for every ADD or MUL.
 **Not yet measured on a Vita** (3d-zr): the `vu1 programs:` line's P13 / P18 ns a pair (~49 / ~51).
 
+## P18 as hand-written C (session 150)
+
+The first step of running the VU1's vertex work natively: P18 (the 3D renderer's main vertex program, about a
+third of the game thread's VU1 time in the Dive) written by hand as C, `host/port/vu1_nat.h`, included by
+vu1.c after the FMAC helpers. It runs in place of the translation when the micro memory holds P18 and the run
+starts at 007 (`vu1nat=0` on the Vita / `KH1_HOST_VU1NAT=0` on the host goes back to the translation; vu1tr=2
+compares it with the interpreter as it does the translation).
+
+What P18 does, from 007: it reads a record stream at TOP. Op 0 loads a matrix into one of three slots (vf05-08,
+vf12-15, vf19-22). Op 1 is a GIF tag and z vertices, each a qword whose w picks the slot, the position and the
+STQ. Anything else ends the stream. Each vertex: the slot's matrix times the position, Q = 1 / w, xyz and STQ
+times Q, the screen edge from the last vertex, the z of its cross product with the edge before (the operands
+swapped on alternate vertices) whose sign is the ADC bit, and XYZ to 12.4. Out at TOP + 0x1E0: the tag, then
+STQ, RGBA (vf01) and XYZF2 per vertex; at the end the EOP word and the kick.
+
+It is **bit-exact**, not an approximation: every FMAC is the same NEON operation with the same fin() / fout()
+clamps as the translation's helper, Q is qop()'s, and the MAC flag is vu_ek()'s with the scalar form where that
+answers 0. What it saves:
+
+- The registers stay in NEON registers across a vertex instead of being stored and reloaded at every
+  instruction (on the A9 a load of what NEON just stored waits for the store).
+- Values the loop makes are already fout()'s (finite, no denormal), so fin() is applied only to what comes from
+  VU memory or the registers the run starts with.
+- The cross product's MSUB is needed in full only for the run's last vertex (its MAC flag and vf30 are what the
+  run leaves behind). Every other vertex needs only z's sign, which NEON gives exactly unless z or its product is
+  0; those go through vu_ek() as before. The last vertex is redone in full at the end.
+- The VU's branches that pick the matrix, the per-instruction counting (the run's pair and cycle counts are
+  added up per record instead, the same totals), and qop()'s call.
+
+Checked offline with the session 149 replayer: all 3,397 dumped P18 runs (two dump sets) give the same
+registers, VU memory, Q / MAC / I, pair and cycle counts and kicks as the translation. ARM instructions over the
+2,790 runs of the denser set: translation ~50.7M, native ~31.4M (-38%). The bigger saving on the Vita should be
+the memory round trips, which an instruction count does not show; the `vu1 programs:` line's P18 time per run
+measures it (**not yet measured on a Vita**).
+
+A full ARM build of the host runner (vitasdk-independent, `make vita-armcheck`) over 6,500 frames of
+dive_en.txt under qemu-arm gives the same 130 frame digests as main, and the same VU1 run, pair, cycle, kick
+and translated counts in every `vu1 frame` line. P18 runs from 000 (its setup) still go to the translation.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
