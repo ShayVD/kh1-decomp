@@ -1,3 +1,4 @@
+/* Round 43 wwm2: score 86 -> 78. The msdscan hit was srl where we had sra: the qword count is unsigned, ((((u32)p - (u32)top) >> 4) - 1) | 0x10000000. The per-arm X = x; Y = y; copies come back with y4 = Y + 4 computed before the second flag test. Left: the Y copy is still coalesced into the load register (s0 instead of a3 -> s3), and x0 lands in a2 instead of the x temp t0. Earlier header below. */
 /* score 86 (149 words; 696 vs 720 bytes). Draws a panel through func_00f799e0, then a GIF packet with func_001f07d8. Logic is complete. Left: in the original each arm of the flag `if` copies x and y into new registers (s2/s3) before the x-378/x-314 (x-6/x+170) arithmetic, and y+4 / y+48 are computed before the second flag test. Per-arm `X = x; Y = y;` copies give the x copy (score 94) but the y copy is still propagated away. Tried separate x0/x1/y0/y1 locals, all modes. */
 #include "ovl.h"
 
@@ -38,6 +39,7 @@ void func_00f7c510(s32 idx) {
     s32 save;
     s32 x;
     s32 y;
+    s32 X, Y, y4;
     s32 x0;
     s32 n;
     Qw *top;
@@ -48,18 +50,23 @@ void func_00f7c510(s32 idx) {
     x = D_00FB6408.x[idx];
     y = D_00FB6408.y[idx];
     if (D_00FB6408.flag[idx] != 0) {
-        x0 = x - 378;
-        x -= 314;
+        X = x;
+        Y = y;
+        x0 = X - 378;
+        X -= 314;
     } else {
-        x0 = x - 6;
-        x += 170;
+        X = x;
+        Y = y;
+        x0 = X - 6;
+        X += 170;
     }
+    y4 = Y + 4;
     if (D_00FB6408.flag[idx] == 0) {
-        func_00f799e0(D_00FB6408.base + 0x19000, D_00FB6408.base + 0x29000, x0, y + 4, 512, 120, 8, D_0108FAA0[idx], 0, 68, 0, 0x5001D);
+        func_00f799e0(D_00FB6408.base + 0x19000, D_00FB6408.base + 0x29000, x0, y4, 512, 120, 8, D_0108FAA0[idx], 0, 68, 0, 0x5001D);
     } else {
-        func_00f799e0(D_00FB6408.base + 0xA000, D_00FB6408.base + 0x28C00, x0, y + 4, 512, 120, 8, D_0108FAA0[idx], 0, 68, 0, 0x5001D);
+        func_00f799e0(D_00FB6408.base + 0xA000, D_00FB6408.base + 0x28C00, x0, y4, 512, 120, 8, D_0108FAA0[idx], 0, 68, 0, 0x5001D);
     }
-    y += 48;
+    Y += 48;
     top = D_0108FA60;
     top->q = 0;
     n = D_00FB6408.n[idx];
@@ -82,9 +89,9 @@ void func_00f7c510(s32 idx) {
         p = func_001f07d8(p, 1, 0,
                           RGBA(D_0108FAA0[idx][0] * 230 >> 7, D_0108FAA0[idx][1] * 230 >> 7, D_0108FAA0[idx][2] * 230 >> 7,
                                D_0108FAA0[idx][3]),
-                          x, y, n, 15);
+                          X, Y, n, 15);
     }
-    top->w[0] = ((p - top) - 1) | 0x10000000;
+    top->w[0] = ((((u32)p - (u32)top) >> 4) - 1) | 0x10000000;
     D_0108FA60 = p;
     D_00FB6498.v = save;
 }
