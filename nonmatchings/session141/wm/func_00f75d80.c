@@ -103,9 +103,8 @@ void func_00f75d80(void) {
     n = func_001bc510();
     cnt = 0;
     rec = base + 96;
-    for (i = n - 1, k = 0; i > 0; i--) {
-        if (base[104 + k] == 0) cnt++;
-        k += 96;
+    for (i = 0; i < n - 1; i++) {
+        if (base[i * 96 + 104] == 0) cnt++;
     }
     D_0108F1CC = D_00FB4D44;
     D_0108F1D0 = D_00FB4D48;
