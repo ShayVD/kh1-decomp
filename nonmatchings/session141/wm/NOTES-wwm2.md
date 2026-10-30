@@ -1365,3 +1365,16 @@ None of the drafts below changed.
 - **dktitle f24b60**: in the original, the first func_00f26648 result is stored through `addiu s0` (address first) and D_00F2C8BC is then reloaded. A `(u8 *)(void *)` cast on the call reproduces that block, but the function as a whole gets worse (281 -> 361, 482 -> 439 kept insns). Not kept.
 - **No progress** on xs_tink f20818 (tail-variant and gcse/sibcall flag sweeps all 35 or worse), xl_limit f225b0 (rp giv forms and second-loop forms are 41 or worse), xs_genie f218f8, dktitle f241c8, f26710 (sched ties), f23aa8 (registers) or xs_dumbo f222f8 (stack slots).
 - **dktitle f21808**: a 15-minute hill3 run (4,927 tries) stays at 31.
+
+## Round 68 (wwm2): permuter batch, stopped at wrap-up
+
+- The batch used wgb's batch.py and evalout.py with my paths (/tmp/claude-0/s141/r68/). Each run was 35 min at -j1, three at a time. Two of five waves finished before wrap-up stopped it (6 of 13 drafts run, 3 cut short). Rescored with hand.py:
+  - xs_genie f218f8 and dktitle f241c8: no outputs.
+  - dktitle f26710: best 5, no change.
+  - dktitle f21808: best 31, no change.
+  - xs_tink f20818: no output both compiled and improved. Most outputs call the permuter's `inline_fn` helper, which isn't in the output.
+  - xl_limit f225b0: two outputs scored better, both rejected as unnatural.
+    - output-1185-1 scores 37 by adding an unused `int pad;`.
+    - output-1290-1 scores 38 at the exact size by moving `return 4;` dead after `return 0` and dropping the second path's return.
+- Never run: xs_genie f22078, xs_dumbo f222f8, xs_dh_break f20288, dkmovie f275e0, f25658, f25978, f26d90.
+- xs_genie f22078: 39 -> 37 by hand, with the element address from an inline helper `{ GG *g = D_00FC1DE0; g += i; return g; }`. A plain `return &D_00FC1DE0[i];` helper or a macro is 101-111. The i*416 step is still strength-reduced.
