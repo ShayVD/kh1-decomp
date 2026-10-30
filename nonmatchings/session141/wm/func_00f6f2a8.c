@@ -1,6 +1,6 @@
 /* Round 46 wwm2: score 713 -> 709, func_0020be10 declared s32. Earlier header below. */
 /* score 835 (4396 vs 4464 bytes): full structure (item count, 3+1 icon build, help window, pad loop with wrap nav, kind-3 guard dialog, 4-way switch, exit). Tried icon pointer var/ip base, chained-store order, s16 tables; remaining: 0.0f/128.0f not hoisted to f20/f21 at entry, icons base not in s8, sel*2 PRE slot sp7C. Round 25 wwm2. Round 19 (wwm1): score 835 -> 713 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
-typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
+typedef struct { u8 pad[8]; u32 x8; u32 xc; u32 x10; } Pad;
 typedef struct { u8 pad[16]; s32 x10; } Win;
 typedef struct { u8 pad[12]; s16 xc; s16 xe; u8 pad10[14]; s16 x1e; } Lay;
 typedef struct { u8 x0; u8 x1; u8 x2; u8 x3; u8 x4; u8 pad5[3]; s16 x8; u8 padA[2]; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; } Ic;
