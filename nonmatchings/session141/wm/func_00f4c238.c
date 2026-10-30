@@ -1,3 +1,4 @@
+/* drafttwins.py: score 120 -> 108, port.py of the gb twin func_00f25140 draft. Earlier header below. */
 /* 67 words, score 120 (was 70/126). Round 32 wwm2: hill2 moved the `D_00F9B540->h = h` store down two lines; ctx2 gives nothing. Earlier header: 70 words, score 126. Direct port of the gb twin near miss (nonmatchings/session141/gb/func_00f25140.c); wm gives exactly the same diff, so both should fall together. The wm target shows the cursor clamp reusing the ox/oz registers (t6/t7) and no zero variable in the loop; rewriting it that way (ox = px + tx, no y update) made it worse (166+ words) because the y nibble rewrite in the loop disappears. */
 typedef struct {
     u16 x : 4;
@@ -87,8 +88,8 @@ s32 func_00f4c238(s32 w, s32 d, s32 h)
     {
       oz = h - ez;
     }
-    tx = ox - D_00F9B544->box.x0;
     tz = oz - D_00F9B544->box.z0;
+    tx = ox - D_00F9B544->box.x0;
     for (i = 0; i < wd->count; i++)
     {
       wd->ents[i].x = wd->ents[i].x + tx;
@@ -111,16 +112,16 @@ s32 func_00f4c238(s32 w, s32 d, s32 h)
     {
       y = d - 1;
     }
-    if (z < oz)
+    if (z < 0)
     {
-      z = oz;
+      z = 0;
     }
     if (z > (h - 1))
     {
       z = h - 1;
     }
-    D_00F9B540->px = x;
     D_00F9B540->py = y;
+    D_00F9B540->px = x;
     D_00F9B540->pz = z;
   }
   D_00F9B540->w = w;
