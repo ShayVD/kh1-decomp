@@ -267,8 +267,9 @@ void func_00f51d18(void) {
                 D_00F9B540->x78 = 1;
                 func_00f50598(1);
                 if (D_00F9B540->x7C == 0) {
-                    for (i = 0; i < 5; i++) {
-                        D_00FA5AFC = 128 - i * 38 / 5;
+                    s32 j;
+                    for (j = 0; j < 5; j++) {
+                        D_00FA5AFC = 128 - j * 38 / 5;
                         func_001bfac8();
                     }
                     D_00FA5AFC = 90;
