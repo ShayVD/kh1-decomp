@@ -999,3 +999,12 @@ Scored every draft without a mode suffix under nofill, norlo and nostrict. 11 dr
 wm f3a640 94->86 nostrict, f3e988 776->770 nostrict, f42f20 104->84 norlo, f51d18 460->430 norlo, f5e8a8 901->891 norlo,
 f625f0 215->183 nostrict, f7ad38 628->616 nofill, f7de08 807->805 nostrict; gb f2ac20 460->430 norlo, f377b0 901->891 norlo,
 f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f625f0, so the mode follows the function. drafttwins --apply afterwards found no new ports.
+
+## Round 45
+
+- **wm func_00f78d50 matched (nofill).** In the .greg dispositions, the lui pseudo for the last store (193) was in 3 (v1). It is born on the insn right after the second vtable call, which sets v0 with REG_UNUSED, and local-alloc appears to keep v0 busy through that next insn. `t = arg + k; D_0108F6B4 = t;` puts the add first, so the lui gets v0. Note in docs/overlays.md.
+- **hill3o (200 iters) after the round 44 mode changes:** wm f3a640 86->78, f625f0 183->181, f51d18 430->426, f3e988 770->750, f5e8a8 891->879, f7ad38 616->600, f7de08 805->799; gb f3b4f8 185->179, f2ac20 430->426, f377b0 891->879. f42f20 did not move.
+- **modescan over dkmovie, dktitle, xs_*, xl_limit:** dkmovie f23750 132->130, f23ae8 629->624, f245c0 538->524, f25288 103->97, f26d90 200->193, f270c8 30->22 (all nofill); dktitle f21808 45->39 (nostrict -> nofill); xs_dh_break f20288 57->55 (nofill; scored with shard.h pasted in). The session136 xs_dh_break f20288 draft (in drafts.tsv) also gains under nofill (173->171), but the session141 copy is better, so I left the drafts.tsv file alone. Nothing for xs_dumbo, xs_genie, xs_tink or xl_limit.
+- **hill3o on those:** dkmovie f23750 130->84, f23ae8 624->596. The others did not move.
+- **Tools:** tools/ovl/msd.py and tools/ovl/modescan.py are committed, with a line each in docs/overlays.md.
+- **drafttwins --apply:** no new ports.
