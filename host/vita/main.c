@@ -52,7 +52,7 @@
  *                             default) a 16:9 view, hor+ (the 3D sees more at the sides, host/port/view.c), the HUD's
  *                             gauges and command menu at the screen's edges, menus and text in the centred 4:3
  *                             canvas; needs the GPU picture (else 2); 2 the 4:3 picture stretched to the whole
- *                             screen; 0 the 4:3 picture in black bars, as before
+ *                             screen; 0 the 4:3 picture in black bars, as before (widescreen=N: the same)
  *       strip=1               keeps the status strip (the alive square, the read / frame bars) over a full-screen
  *                             picture; by default it shows there only while no picture is
  *   ux0:data/kh1/kh1.log      stdout and stderr
@@ -543,7 +543,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
         else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
         else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
-        else if (strcmp(line, "wide") == 0) wide = atoi(v);
+        else if (strcmp(line, "wide") == 0 || strcmp(line, "widescreen") == 0) wide = atoi(v);
         else if (strcmp(line, "strip") == 0) strip_always = atoi(v);
     }
     fclose(f);

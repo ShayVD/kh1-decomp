@@ -60,7 +60,7 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
      own driver ("Sound" below). `sndcore=N` pins the sound threads to core N (default -1: any core).
    - `wide=1` (the default since 2026-10-30): the picture fills the 960 x 544 screen as a true 16:9 view ("Wide
      screen" below); `wide=2` stretches the 4:3 picture to fill the screen; `wide=0` keeps the 4:3 picture in black
-     bars, as before. `strip=1` keeps the status strip over a full-screen picture.
+     bars, as before (`widescreen=` is read the same). `strip=1` keeps the status strip over a full-screen picture.
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
