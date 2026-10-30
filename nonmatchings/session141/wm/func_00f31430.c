@@ -1,3 +1,4 @@
+/* Round 35 wwm1: score 262 -> 232 (3824 -> 3832 vs 3816 bytes), cfdiff 7 -> 2. The D_00FBEBB8 offset is a switch on D_00F8C1E8: `case 0: default:` first (the drift back to 0), then case 1 (-40 to -1000) and cases 2/3 (+40 to 1000), which gives the target compare tree (beq 1, slti 2, slti 4). Left: one b too many after the switch and the missing b closing the first D_00FBB808 item case. Earlier header below. */
 /* Round 34 wwm1 (3): score 266 -> 264, `mask = 0;` next to `snd = -1;` before the D_00FBB808 decrements. Left: control flow and callee sequence now match the target; gcse puts the %hi of D_00FBBA58 in the delay slot of the b3D test (target: after it, and again on the false path, with a `b` closing the first item case), the D_00F8C1EC/D_002BBDEC addresses are cached in s-regs in ours (target: lui + %lo per use), the c.lt.s 0.3f block is scheduled differently. */
 /* Round 34 wwm1 (2): score 348 -> 266, an unused `f32 xx[4];` declared after `OvlMtx m;` gives the target frame (288) and every stack offset of the target; it stands in for a 16-byte local of the original that is not identified. */
 /* Round 34 wwm1: score 368 -> 348 (3832 -> 3824 vs 3816 bytes). The target has one jal func_00f31118 for both paths after func_00f3a860, with the f3d4d8 arm laid out first and `b` reloaded from the stack at the shared call: written as one call reached by falling out of `if (D_00F8C130 == 0) { ...f3d4d8...; b = 0; if (D_00F8C130 == 0) goto skip; }` (two calls let cse propagate b = 0 into a1). Left: frame 16 bytes smaller than the target (a/b at sp+176/180, target 192/196). Earlier header below. */
@@ -224,27 +225,33 @@ void func_00f31430(void)
                 D_00FBBA58 -= 10;
             }
         }
-        if (D_00F8C1E8 == 1) {
-            if (-1000.0f < D_00FBEBB8) {
-                D_00FBEBB8 -= 40.0f;
-                if (D_00FBEBB8 < -1000.0f) D_00FBEBB8 = -1000.0f;
-            }
-        } else if (D_00F8C1E8 < 2 || D_00F8C1E8 >= 4) {
-            if (D_00FBEBB8 != 0.0f) {
-                if (D_00FBEBB8 < 0.0f) {
-                    D_00FBEBB8 += 40.0f;
-                    if (0.0f < D_00FBEBB8) D_00FBEBB8 = 0.0f;
+        switch (D_00F8C1E8) {
+        case 0:
+        default:
+                if (D_00FBEBB8 != 0.0f) {
+                    if (D_00FBEBB8 < 0.0f) {
+                        D_00FBEBB8 += 40.0f;
+                        if (0.0f < D_00FBEBB8) D_00FBEBB8 = 0.0f;
+                    }
+                    if (0.0f < D_00FBEBB8) {
+                        D_00FBEBB8 -= 40.0f;
+                        if (D_00FBEBB8 < 0.0f) D_00FBEBB8 = 0.0f;
+                    }
                 }
-                if (0.0f < D_00FBEBB8) {
+            break;
+        case 1:
+                if (-1000.0f < D_00FBEBB8) {
                     D_00FBEBB8 -= 40.0f;
-                    if (D_00FBEBB8 < 0.0f) D_00FBEBB8 = 0.0f;
+                    if (D_00FBEBB8 < -1000.0f) D_00FBEBB8 = -1000.0f;
                 }
-            }
-        } else {
-            if (D_00FBEBB8 < 1000.0f) {
-                D_00FBEBB8 += 40.0f;
-                if (1000.0f < D_00FBEBB8) D_00FBEBB8 = 1000.0f;
-            }
+            break;
+        case 2:
+        case 3:
+                if (D_00FBEBB8 < 1000.0f) {
+                    D_00FBEBB8 += 40.0f;
+                    if (1000.0f < D_00FBEBB8) D_00FBEBB8 = 1000.0f;
+                }
+            break;
         }
         if (D_00F8C1EC == 0 && D_00F8C284 != 0 && D_00FBBA64 < 1.0f) {
             D_00FBBA64 += D_002BBDEC * 0.005f;
