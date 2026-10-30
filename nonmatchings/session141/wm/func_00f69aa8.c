@@ -1,3 +1,4 @@
+/* Round 37 (wgb): no change; same reload analysis and tries as gb func_00f429b0. */
 /* Round 36 (wgb): no change (3 words, score 5). Same note as gb func_00f429b0: the round 35 order has D_0108F26C = 1 below D_0108F268 = m->bufs[buf], which hill3.py accepts only with --noalias. */
 /* Round 35 (wgb): wm.x func_00f69aa8 near miss: 4 -> 3 words, score 7 -> 5 (836 vs 840 bytes). port.py of gb func_00f429b0's round 35 draft; the prologue move now matches. Left: the func_00f69a20 address (lui/addiu a1) in v0 after the lw instead of v1 before it, the same as gb (see func_00f429b0 there for the -dS analysis and what was tried). Earlier header below. */
 /* score 7 (4 words) after a permuter run on the score-43 draft (session 141). Left: `move s8,zero` vs `move s8,s7` in the prologue, and the D_00F69A20 address (lui/addiu) scheduled before the lw instead of after. Earlier header: */
