@@ -1008,3 +1008,16 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
 - **hill3o on those:** dkmovie f23750 130->84, f23ae8 624->596. The others did not move.
 - **Tools:** tools/ovl/msd.py and tools/ovl/modescan.py are committed, with a line each in docs/overlays.md.
 - **drafttwins --apply** after the rebase: gb f37618 81->69 (from wm f5e710) and wm f62440 98->96 (from gb f3b348), both coming from wgb's round 36 changes.
+
+## Round 46
+
+- **v0/v1 sweep (r46/v01scan.py).** I scanned every wm/gb draft for a differing line that is a pure v0<->v1 swap within 4 insns after a jal/jalr. No draft has that as its only difference. The real cases were the reverse of f78d50: the target avoids v0 after a call because the callee returns a value the caller ignores.
+- **Return-type flips (r46/retflip.py).** Flipping each statement-called prototype void <-> s32, greedily, improved 21 drafts:
+  - wm: f28ed8 75->67, f69fd0 127->107, f58f98 176->168, f6cfa0 180->178, f3ac48 56->52, f6dfd8 77->71, f3a640 78->76, f23018 91->89, f47b60 211->207, f47f40 249->245, f34998 318->316 (a void flip), f51d18 408->400, f6f2a8 713->709.
+  - gb: f42ed8 127->107, f31ea0 176->168, f45ea8 180->178, f46ee0 77->71, f20a68 211->207, f20e48 249->245, f2ac20 408->400, f481b0 713->709.
+  - func_00f4b338 / gb func_00f24240, the xori-0 helper from round 44, returns a value.
+- **hill3o on those:** f28ed8 ->65, f58f98 ->152, f31ea0 ->158, f6cfa0/f45ea8 ->170, f3a640 ->70, f23018 ->85, f47f40/f20e48 ->215, f34998 ->310, f51d18/f2ac20 ->396.
+- **wm f28448 matched.** `i = D.b; w = z + i;` (a fresh result variable) keeps z first in the addu. `i = z + i` gets swapped by expand_binop because the target is the second operand. Note in docs/overlays.md.
+- **Swapped-commutative-operand scan (r46/swapscan.py):** wm f71748 / gb f4a650 38->36 (`(Ent *)(j * sizeof(Ent) + (u32)base)`), then 34 with hill3o. gb f367e8 100->92 (`*(f32 *)((u32)b + (i << 2))`), then 84 with hill3o. wm f632e8: no OR operand order helps.
+- **wm f72a70 / gb f4b978 39->37:** the outer goto loop written as `while (!((a = D_002C5AD0.x8) & 0x4000))`. That is 8 bytes bigger, but scores lower.
+- **hill3o (300 iters) on the untouched drafts at score 40 or less:** f42ce0 16->14 and f28448 7->5 (then matched). No change for f38630, f47610, f74440, f639c0, f36bc0, f72f40, f74a28, f7f628, f69278, f3a860, f72a70, gb f4b978.
