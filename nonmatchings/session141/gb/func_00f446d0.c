@@ -1,3 +1,4 @@
+/* Round 54 wgb: score 1280 -> 1278, CONTEXT_ONLY definition of func_0024e468 after its prototype (wwm2 tools/ovl/nothrow.py). Earlier header below. */
 /* Round 42 wwm2: score 1324 -> 1280, port.py of the wm twin func_00f6b7c8 draft, with wm D_00FB4AFC mapped by hand to gb D_00F7037C. Earlier header below. */
 /* NEAR MISS 1405 words, score 1324 (5984 vs 6064 bytes). Structurally complete draft, not polished (time-boxed). Settings/option panel: builds a header item, D_00F7041C/2 row items, then 7 label+box item pairs via func_00f43388/func_00f444b8 (LABEL/BOX/POS/COL macros), then the cursor item; the inner loop refreshes box values from the func_001bc4e0() record (stride 96) and colours per D_00F82A34 until D_00F82AC0 or pad 0x6000. The call sequence matches the original call for call. Left: the original keeps depth in f21 and 0.0f in f20 (ours swaps them), different stack slots for the item arrays (orig: lab[14] at sp+0, box at sp+64.., rows at sp+96, flag at 128, wait at 132, head at 136), and lbu/lui addressing of the colour globals. */
 typedef struct {
@@ -32,7 +33,7 @@ Item *func_00f43388(void); CONTEXT_ONLY Item * func_00f43388() { return 0; }
 void func_00f444b8(Item *, f32, f32);
 u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 void func_0011d768(s32);
-void func_0024e468(s32);
+void func_0024e468(s32); CONTEXT_ONLY void func_0024e468(s32 a0) {}
 void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
 void func_00f444d8(s32, s32);
 void func_00f43cf0(s32);
