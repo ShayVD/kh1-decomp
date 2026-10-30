@@ -1112,3 +1112,31 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
   - Guarded hill3, 200 s each: no gain on f67c60, f79868, f5e368, f55d78, f696a0, f632e8, f71748. f651d0 has no movable statements.
   - Not changed after a look: f56780, f69278, f72a70, f79700 (headers list what is left; all were climbed in rounds 41-46).
 - **docs/overlays.md:** new entry "Field type as a store-order lever".
+
+## Round 54 (small overlays; no matches)
+
+Unmatched functions, from the layout minus the hand and auto files:
+- xs_dumbo: f20570, f222f8
+- xs_genie: f218f8, f22078
+- xs_tink: f20818
+- xl_limit: f225b0
+- xs_dh_break: f20288
+- dktitle: f21808, f21ca0, f228c8, f23aa8, f241c8, f24b60, f26710
+
+None of the drafts below changed.
+
+- **xs_genie f218f8 (3).**
+  - In our RTL, gcse PRE inserts %hi(D_00FC1DD0) at the end of the preheader, after `p = a`; the target has the lui first. With -fno-gcse the lui moves into the loop.
+  - Tried, no change: the asm alias (20), a local base (9/13), a label or block before `p = a`, for/while forms (9), n/m init placement (11-13), and every build mode.
+- **dktitle f241c8 (3).** Seven spellings of pos/reg (u64 dy, operand order, s64 reg/pos, pos placement) stay at 3 or get worse. No matched twin exists (no other 0x10000004 packet builder).
+- **dktitle f26710 (5).**
+  - Declaring func_0011ef10 void moves li v0,-1 early; s32 gives lui v1 after the call.
+  - Tried: f32/f64/u64/u8/s16/void * returns, a (void) cast, assigning the result, a function pointer, all 15 positions of the -1 store, D_00F2C894 as u32, and hill3 on the s32 draft. All stay at 5.
+- **dktitle f21808 (31):** a 25-store order puzzle, already climbed by wwm1 (w3/w4).
+- **xs_tink f20818 (35).**
+  - The target reads D_00F20E90 directly for the tail null check, puts that load in each arm's branch delay slot, and threads the success path past it.
+  - The asm alias, direct reads, and an early `return 0` tail all score 41-67. No build mode helps.
+- **xl_limit f225b0 (41):** hill3 for 200 s found nothing.
+- **xs_dumbo f20570 (47).**
+  - Only the s1/s2 choice of two %hi pseudos differs. The -dl dump shows %hi(D_00F23214) as reg 165 (13 refs, priority 3*13/100352) beating %hi(D_00F2320C) as reg 166 (14 refs, 3*14/131072). Each is set once per path by gcse PRE (11 and 12 sets).
+  - Tried: all 720 case orders (best is the current order, 47), asm aliases (86-88), a tail temp, a case-3 pointer.
