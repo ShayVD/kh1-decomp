@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 259 -> 245, hill3o statement order. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f59b30 near miss: score 273 -> 259 (460 -> 456 words, 2364 vs 2376); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* NEAR MISS 460 words, score 273 (2364 vs 2376 bytes). Port of gb func_00f32a38 (same score); tables mapped by hand: D_0108CED0/D_0108CF50 = gb D_00F80710/D_00F80790. See the gb file for what was tried. */
 extern u8 *D_00F9B540;
@@ -26,17 +27,17 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
     OvlMtx m;
     s32 X[8];
     s32 Y[8];
+    u64 *q;
     f32 ang[4];
     s32 cx[4];
     s32 cy[4];
-    s32 xy[4];
+    f32 a;
     u64 tex;
     s32 n, i, j, k, id;
     s32 u0, v0, u1, v1;
-    f32 a;
-    u64 *q;
-    s32 sz;
     s32 oy;
+    s32 xy[4];
+    s32 sz;
 
     n = func_00f645e8(tbl);
     for (i = 0; i < n; i++) {
@@ -47,11 +48,10 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
         if (D_00FA5DA4 == 0 && k == 7) continue;
         tex = D_0108CF50[k];
         switch (k) {
-        case 0:
-            continue;
-        case 4:
-        case 5:
         case 7:
+        case 0:
+        case 5:
+        case 4:
             id = D_0108CF10[k];
             break;
         case 3:
@@ -61,6 +61,7 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
         default:
             id = 0;
             break;
+            continue;
         }
         q = func_00f646c0(*pp, xy[0], xy[1], id, i, 12800, 512, 512, 19, 13824, tex, tbl);
         if (q != 0) {
@@ -121,20 +122,20 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[3], Y[3], X[1], Y[1], X[0], Y[0], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[4], Y[4], X[1], Y[1], X[2], Y[2], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[3], Y[3], X[6], Y[6], X[5], Y[5], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
+    cx[0] = 0x85F0;
+    sz = 108;
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[4], Y[4], X[6], Y[6], X[7], Y[7], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
-    cx[1] = 31840;
     u0 = (D_00FA6000.x2D4 + 1) * 16;
+    cy[0] = 32448;
     v0 = (D_00FA6000.x2D8 + 1) * 16;
     u1 = u0 + (D_00FA6000.x2DC - 2) * 16;
-    cy[0] = 32448;
+    cx[1] = 31840;
     v1 = v0 + (D_00FA6000.x2E0 - 2) * 16;
     cy[1] = 32448;
-    cx[0] = 0x85F0;
     a = (f32)(t % 2700) * 360.0f / 2700.0f - 180.0f;
     ang[0] = a * 3.1415926f / 180.0f;
     a -= 28.0f;
     if (a < -180.0f) a += 360.0f;
-    sz = 108;
     ang[1] = a * 3.1415926f / 180.0f;
     for (j = 0; j < 2; j++) {
         sceVu0UnitMatrix(m);
