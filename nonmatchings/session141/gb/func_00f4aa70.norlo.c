@@ -1,3 +1,4 @@
+/* Round 54 wgb: score 595 -> 592, CONTEXT_ONLY definitions of func_00f4a048 and func_00f444d8 after their prototypes (wwm2 tools/ovl/nothrow.py). Earlier header below. */
 /* drafttwins.py: score 619 -> 595, port.py of the wm twin func_00f71b68 draft. Earlier header below. */
 /* Round 48 wwm2: score 660 -> 619 under the norlo build mode (tools/ovl/modescan.py). Earlier header below. */
 typedef struct { s16 v[2]; } S2;
@@ -50,10 +51,10 @@ void func_0020be10(s32);
 void func_0024e468(s32);
 s32 func_00f20018(void);
 void func_00f43cf0(s32);
-void func_00f444d8(s32, s32, s32);
+void func_00f444d8(s32, s32, s32); CONTEXT_ONLY void func_00f444d8(s32 a0, s32 a1, s32 a2) {}
 Win *func_00f445a8(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00f49ff8(s32, s32);
-void func_00f4a048(s32, s32);
+void func_00f4a048(s32, s32); CONTEXT_ONLY void func_00f4a048(s32 a0, s32 a1) {}
 void func_00f4a1c0(s32, s32);
 s32 func_00f4aa60(void); CONTEXT_ONLY s32 func_00f4aa60() { return 0; }
 void func_00f4a650(Win *, Win *, Win *, Win *, Win *, Win *);
