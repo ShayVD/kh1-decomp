@@ -1040,3 +1040,16 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
 - **Size rule:** reject a candidate whose built size moves further from the target's. Under it, the nogcse renames of f26e80, f75d80 and gb f4ec88 were reverted. gb f4aa70 keeps norlo (660->619). My nogcse renames of f5e540 and gb f37448 (55->49) were dropped at rebase in favour of wgb's round 43 rewrites, which reach 49 in the default mode. In wgb's size trace, the remaining gaps (gb f20a68, f20e48/f47f40, f39eb0/f60fa8, f3cc20/f63d18, f5f940/f38848) come from constant folding and register or stack differences. msd shows no dropped calls or stores.
 - **tools/ovl/hill3.py, seed 3, 90 s, over 72 drafts:** f387a8 12->6, f22358 188->186. The f5e540 words gain, 77->71, was dropped at rebase because it was made on the old draft. No change for the others, including f7c880, f4b338, f53758, gb f24240 and gb f2c660.
 - **drafttwins --apply:** gb f4aa70 619->595, f4de38 290->190 and f4ec88 2430->2412 now take the valid wm orders.
+
+## Round 49 (hand work on the wm drafts at score 12 or less; no matches)
+
+- **f32770 (2 words).** The sched2 dump (`-dS -dR -fsched-verbose=4`) shows that the fy load has alias set 0, because fy is address-taken. So it depends on the int store `c[cnt].id` as well as on the f32 stores, while fx is loaded ahead of everything.
+  - Reading fy after `c[cnt].x` gives the target's load order, but fy then gets $f0, where the original has $f1, and the id/x stores swap (8). That held for all 24 store orders × {x copy or not} × {cnt++ before or after}, and for fx/fy as a `f32[2]` or a struct.
+  - The original's $f1 means x and y overlapped at local-alloc (after sched1), and that sched2 then put the y load after the x store. I have not found a source form that does both.
+- **f387a8 (6) and f38630 (4).** hill3 runs (400 s seed 5, 300 s seed 7) found no score gain. A static inline helper for the k-> init block gives identical code.
+- **f465a8 (10).** The target loads D_00F9B2E0 twice through one shared lui with %lo each.
+  - Any volatile access (`*(volatile s32 *)&D_00F9B2E0`, or an `extern volatile` declaration) puts the full address in a register, so you get lui/addiu, then 0(a0).
+  - Mixing D_00F9B2E0 with D_00F9B2D0.x10 gives two luis (16).
+- **f36bc0 (6).** Putting the trunc expression in the loop condition, with or without n, is much worse (78-115), because the calls in the loop make it non-invariant.
+- **f7cb60 (4).** Duplicated per-arm tails, a goto tail, or a ternary EC0 all come out at 14-24.
+- **Already worked heavily:** f43430, f78458 and f30d48. Their headers list what has been tried.
