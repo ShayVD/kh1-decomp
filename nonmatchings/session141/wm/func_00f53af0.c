@@ -1,3 +1,4 @@
+/* Round 36 (wgb): wm.x func_00f53af0 near miss: 332 -> 332 words, score 204 -> 194 (aligned diff 108 -> 104). port.py of gb func_00f2c9f8's round 36 draft, the round 36 order from tools/ovl/hill3.py (score-ranked, strict dependency rules). See the gb file for what is left. Earlier header below. */
 /* wm.x func_00f53af0 near miss: 332 words differ, score 204 (ours 1400 bytes, original 1376). Port of gb func_00f2c9f8 (nonmatchings/session141/gb), which has the same diff and notes. Symbols mapped: D_00FA5B34/5B04/5AF0 = gb D_00F613B4/61384/61370, D_0108CE10 = D_00F80650, D_00F9B540 = D_00F56DC0. */
 typedef struct { u16 x : 4; u16 y : 4; u16 z : 4; u16 r : 4; } GbPos;
 typedef struct { u8 pad[0x5C]; GbPos p5C; u8 pad2[2]; GbPos p60; GbPos p62; u8 pad3[0x10]; u16 x74; } World;
@@ -30,8 +31,8 @@ s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
     }
     *pp = func_00f66ac8(*pp);
     p = func_00f66b78(*pp);
-    p[0] = 0x720000006F00;
     p[1] = 24;
+    p[0] = 0x720000006F00;
     *pp = p + 2;
     func_00f66b90(p + 2);
     if (D_00FA5B34 == 1) {
@@ -73,27 +74,27 @@ s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
             *pp = p + 4;
             func_00f66b90(p + 4);
             if (D_00FA5AF0 != 0) {
-                type = 18;
                 col = (D_00FA5B04 << 24) | 0xC6C4;
+                type = 18;
             } else {
                 switch (mode) {
                 case 6:
-                    type = 16;
                     col = (D_00FA5B04 << 24) | 0x2747B8;
+                    type = 16;
                     break;
                 case 5:
-                    type = 18;
                     col = (D_00FA5B04 << 24) | 0xC6C4;
+                    type = 18;
                     break;
                 case 4:
-                    type = 17;
                     col = (D_00FA5B04 << 24) | 0xC6C4;
+                    type = 17;
                     break;
                 }
             }
             p = func_00f66b78(*pp);
-            p[0] = 0x30000;
             p[1] = 71;
+            p[0] = 0x30000;
             *pp = p + 2;
             func_00f66b90(p + 2);
             if (D_00FA5B04 == 128) {
@@ -121,8 +122,8 @@ s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
             p[1] = 66;
             q = p + 2;
             q[0] = 0x30000;
-            q[1] = 71;
             *pp = p + 4;
+            q[1] = 71;
             func_00f66b90(p + 4);
             if (D_00FA5B04 == 128) {
                 *pp = func_00f533f8(*(GbPos *)&b->pad[4], size, D_0108CE10, col2, *pp, 1);
@@ -144,8 +145,8 @@ s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
     p[0] = 68;
     p[1] = 66;
     q = p + 2;
-    q[0] = 0x5000D;
     q[1] = 71;
+    q[0] = 0x5000D;
     *pp = p + 4;
     func_00f66b90(p + 4);
     func_00f66f78(arg0, func_00f66ae0(*pp));

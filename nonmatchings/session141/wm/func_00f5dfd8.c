@@ -1,7 +1,7 @@
+/* Round 36 (wgb): wm.x func_00f5dfd8 near miss: 34 -> 34 words, score 30 -> 26 (aligned diff 22 -> 18). port.py of gb func_00f36ee0's round 36 draft, the round 36 order from tools/ovl/hill3.py (score-ranked, strict dependency rules); the gb draft is itself a port of this function (wwm2 round 41), so this keeps the twins in step. See the gb file for what is left. Earlier header below. */
 /* Round 41 wwm2: score 38 -> 30 (408 vs 416). Uses the copy family of gb func_00f37270: tex = base; o = tex; tex = o + 208; f = (f32 *)tex; s.p0 = tex; tex = o + 480; with the call taking (o, tex). This gives the original's base copy and the v1 = a2 colour pointer copy. The 255.0f chain is written f[6] = f[5] = f[4]. Left: the copy lands in a2 instead of v0, so +208, +480 and the a1 argument are ordered differently. The original's c2 else-arm also reloads s.p0 from the stack (lw v0,16(sp)), which neither f = s.p0 in the else, a g local, nor ((f32 *)s.p0)[k] chains in all 24 orders reproduce. */
 /* score 38: one of a family (func_00f5e368, func_00f5e540, func_00f67530, func_00f676b8 call func_00f65480 / func_00f651d0 the same way). The original copies `base` into a fresh pseudo (move v0,s3) and computes base+480 / base before the colour branch, like an inlined helper whose parameters are copied; an inline helper did not reproduce it. OvlVec pad gives the 112 frame. */
 #include "ovl.h"
-
 typedef struct {
     u8 *p0;
     s32 n;
@@ -60,7 +60,7 @@ void func_00f5dfd8(s32 arg0, u8 *base, s32 a, s32 b, u8 *c1, u8 *c2) {
         f[11] = f[8] = f[9] = f[10] = 128.0f;
     }
     t.a = 5;
-    t.c = 1;
     t.b = 1;
+    t.c = 1;
     func_00f65480(arg0, o, tex, &s, h1, h2, &t, 0.0f);
 }

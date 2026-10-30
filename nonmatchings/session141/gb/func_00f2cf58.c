@@ -1,3 +1,4 @@
+/* Round 36 (wgb): gb.x func_00f2cf58 near miss: 387 -> 372 words, score 294 -> 258 (aligned diff 230 -> 202). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* Round 41 wwm2: score 306 -> 294, port.py of the wm twin func_00f54050 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* NEAR MISS 389 words, score 306 (2392 vs 2432 bytes). 9-point projection + 4 textured quads. Tried: union vs aligned st[2] (aligned better), i=8 hoisted rounding loop, float temps for x0/y0, p[0]/p[1]/p+=2 packet form, 232+8704 address spellings, modes. Left: packet loop reg/const assignment (orig s8=2,s7=1,s6=4, li a2,232 + ld 8704) and 40 bytes short. */
 typedef struct { u8 b[16]; } Blk16;
@@ -45,8 +46,8 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
     idx = D_00F71770;
     h = *(u16 *)(D_00F56DC0 + 166) * 200.0f * 0.5f;
     one = 1.0f;
-    i = 8;
     nh = -h;
+    i = 8;
     t[3] = one;
     t[0] = h;
     t[2] = h;
@@ -54,9 +55,9 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
     sceVu0UnitMatrix(m);
     sceVu0TransMatrix(m, m, t);
     sceVu0MulMatrix(m, base, m);
-    v[2] = 0.0f;
     v[0] = 0.0f;
     v[1] = h - (((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) + 1) * 200.0f;
+    v[2] = 0.0f;
     v[3] = one;
     sceVu0ApplyMatrix(out, m, v);
     q[0] = one / out[3];
@@ -116,18 +117,18 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
     {
         f32 w = D_00F61880.x250;
         f32 s166 = *(u16 *)(D_00F56DC0 + 166);
+        x0 = D_00F61880.x248 + w * s166 * 0.25f;
         du = w * 0.5f;
         y0 = D_00F61880.x24C + (f32)D_00F61880.x254 * s166 * 0.25f;
-        x0 = D_00F61880.x248 + w * s166 * 0.25f;
     }
-    va[0] = va[1] = D_00F61880.x24C / (f32)tx->h;
     a = D_00F61384 * 90 / 128;
     col[0] = col[1] = (a << 24) | 0x808080;
-    ua[0] = D_00F61880.x248 / (f32)tx->w;
-    vd[0] = vd[1] = y0 / tx->h;
-    uc[1] = (x0 + du) / tx->w;
-    ua[1] = (D_00F61880.x248 + du) / tx->w;
     uc[0] = x0 / tx->w;
+    uc[1] = (x0 + du) / tx->w;
+    ua[0] = D_00F61880.x248 / (f32)tx->w;
+    ua[1] = (D_00F61880.x248 + du) / tx->w;
+    va[0] = va[1] = D_00F61880.x24C / (f32)tx->h;
+    vd[0] = vd[1] = y0 / tx->h;
     p = func_00f3fa80(p);
     p[0] = 0x3F0003FF;
     p[1] = 8;
@@ -147,8 +148,8 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
         st[0] = ua[k] * q[*ix];
         st[1] = va[k] * q[*ix];
         p += 2;
-        p[0] = *(u64 *)st;
         p[1] = 2;
+        p[0] = *(u64 *)st;
         p += 2;
         p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;

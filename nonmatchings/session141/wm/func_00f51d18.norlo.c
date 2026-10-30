@@ -1,3 +1,4 @@
+/* Round 36 (wgb): wm.x func_00f51d18 near miss (norlo mode): 547 -> 550 words, score 430 -> 408 (aligned diff 240 -> 235). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules; 85 s, seed 1) over the round 44 norlo draft; the order passes hill3.py --check against it. Earlier header below. */
 /* Round 44 wwm2: score 460 -> 430 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* NEAR MISS 567 words, score 544 (3008 vs 3040 bytes). Port of gb func_00f2ac20 (same score); ease tables mapped by hand: D_00FA5B38 / D_00FA5B60 = gb D_00F613B8 / D_00F613E0. See the gb file for what was tried. Round 19 (wwm1): 567 -> 547 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 484 -> 460 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct {
@@ -92,8 +93,8 @@ void func_00f51d18(void) {
     s32 sel;
     u32 b;
 
-    D_00FA5AF0 = 0;
     sel = 0;
+    D_00FA5AF0 = 0;
     mode = 0;
     id = D_00F9B540->x4C - 1;
     D_00F9B540->x78 = 1;
@@ -142,8 +143,8 @@ void func_00f51d18(void) {
             return;
         }
         if (dir & 0xF000) {
-            rx = D_00F9B540->x10D4;
             ax = 0;
+            rx = D_00F9B540->x10D4;
             ry = D_00F9B540->x10D8;
             if (rx < 1024) {
                 ax = (dir & 0x4000) ? 256 : 0;
@@ -199,9 +200,9 @@ void func_00f51d18(void) {
             }
             if (pad->x4 & 0x2000) {
                 func_00f50968();
+                dz = 0;
                 dy = 0;
                 dx = 0;
-                dz = 0;
             } else if (b & 0x4000) {
                 if (D_00F9B540->x74 & 2) {
                     func_0011d768(3);
@@ -211,10 +212,10 @@ void func_00f51d18(void) {
                         s32 c2 = D_00F9B540->f2;
                         s32 c0 = D_00F9B540->f0;
                         D_00F9B540->h0 = c0;
-                        D_00F9B540->g0 = 1;
+                        D_00F9B540->g2 = 1;
                         D_00F9B540->h2 = c2;
                         D_00F9B540->g1 = 1;
-                        D_00F9B540->g2 = 1;
+                        D_00F9B540->g0 = 1;
                     }
                     func_00f4b878(D_00F9B544);
                     func_00f4b338(D_00F9B544, 0);
@@ -237,8 +238,8 @@ void func_00f51d18(void) {
         move:
             if (dx | dz | dy) {
                 ox = D_00F9B540->h0;
-                nx = ox + dx;
                 oy = D_00F9B540->h1;
+                nx = ox + dx;
                 if (nx < 0) nx = 0;
                 if (nx > *(u16 *)(sub + 6) - 1) nx = *(u16 *)(sub + 6) - 1;
                 ny = oy + dz;
@@ -316,8 +317,8 @@ void func_00f51d18(void) {
                 dx = 0;
                 q = D_00F9B540->x10D8 / 1024;
                 if (dir & 0x10) {
-                    dx = D_00F9B528[q * 4 + 8];
                     dy = D_00F9B528[q * 4 + 10];
+                    dx = D_00F9B528[q * 4 + 8];
                 }
                 if (dir & 0x40) {
                     dy = -D_00F9B528[q * 4 + 10];
@@ -333,12 +334,12 @@ void func_00f51d18(void) {
                     sel = 2;
                 }
                 if (dir & 0x20) {
-                    k = 1;
                     sel = 1;
+                    k = 1;
                 }
                 if (dir & 0x80) {
-                    sel = 1;
                     k = -1;
+                    sel = 1;
                 }
                 if (k == 0) goto tail;
                 func_00f4bdf8(sel, k);

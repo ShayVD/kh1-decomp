@@ -1,3 +1,4 @@
+/* Round 36 (wgb): wm.x func_00f46cb8 near miss: 216 -> 210 words, score 109 -> 83 (aligned diff 77 -> 57). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* score 109 (1100 vs 1088). Event/scene runner: init D_00FB6408 and call its fn, wait while D_0037A378.b1, free D_01080828[2], dispatch D_00F9B304, restore D_002C5958.b3. Unused s32 buf[24] reproduces the 192-byte frame (143 -> 109). Left: the D_00FB6408.fn args are loaded into t-regs and moved (orig loads straight into a2/a3/t0, 12 bytes), and a few lui placements. Tried field reads as args, assignment-in-args, locals, unprototyped fn. Round 26 wwm2. */
 typedef struct { u32 b0 : 1; u32 b1 : 1; } WmFlags;
 typedef struct { u32 b0 : 3; u32 b3 : 1; } Cfg;
@@ -56,10 +57,10 @@ void func_00f46cb8(s32 id, s32 how)
     s32 once;
     s32 buf[24];
 
-    once = 0;
     save = D_002C5958.b3;
-    D_010809B0 = 0;
     D_010807F8 = 0;
+    D_010809B0 = 0;
+    once = 0;
     h = func_00f43e30();
     if (h == 0) {
         return;
@@ -70,19 +71,19 @@ void func_00f46cb8(s32 id, s32 how)
         func_001bfac8();
     }
     D_00F9B2F4 = 0;
-    D_00F9B2EC = 1;
     D_00F9B304 = 0;
+    D_00F9B2EC = 1;
     for (i = 0; i < 2; i++) {
         D_01080830[i] = 0;
         D_01080828[i] = 0;
     }
     D_00F9B328 = 0;
     D_00FB6408.x0 = 0x2E00;
-    D_00FB6408.x4 = 0x2F00;
     D_00FB6408.xc = D_00F9B320;
+    D_00FB6408.x4 = 0x2F00;
     D_00FB6408.x10 = D_00F9B324;
-    D_00FB6408.x8 = D_01080904;
     D_00FB6408.x14 = 0x3600;
+    D_00FB6408.x8 = D_01080904;
     D_00FB6408.fn(0x2F00, 0x3600, D_01080904, D_00F9B320, D_00F9B324);
     if (D_00F864C0 != NULL) {
         func_00f2abe8(26, D_01080558);
@@ -141,8 +142,8 @@ void func_00f46cb8(s32 id, s32 how)
     } else {
         D_002C5958.b3 = save;
     }
-    D_00F85094 = 0;
     D_00F9B2EC = 0;
+    D_00F85094 = 0;
     func_001ba708(0);
     if (how != 1 || id != 64) {
         if (D_00F9B2F0 != 0) {

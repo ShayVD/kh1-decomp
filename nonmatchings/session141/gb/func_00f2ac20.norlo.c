@@ -1,3 +1,4 @@
+/* Round 36 (wgb): gb.x func_00f2ac20 near miss (norlo mode): 547 -> 550 words, score 430 -> 408 (aligned diff 240 -> 235). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules; 85 s, seed 1) over the round 44 norlo draft; the order passes hill3.py --check against it. Earlier header below. */
 /* Round 44 wwm2: score 460 -> 430 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* Round 42 wwm2: score 544 -> 460, port.py of the wm twin func_00f51d18 draft, with its ease tables mapped by hand (wm D_00FA5B38 / D_00FA5B60 = gb D_00F613B8 / D_00F613E0). Earlier header below. */
 /* NEAR MISS 567 words, score 544 (3008 vs 3040 bytes). Grid-cursor edit loop (sibling of func_00f31ea0): camera rotation on dir&0xF000, mode 0 = move cursor (x5C nibble bitfields clamped to sub xA6/xA8/xAA) / reset from x60 nibbles, mode 1 = menu actions (func_00f51258 confirm, func_00f24d00 layer step, fade D_00F6137C). Tried: World 8-aligned (u64 pad, gives the ld/sd bitfields), buf[20]+s16 sv[8] for the 256 frame, switch vs if on mode, dz and bitfield-order spellings. Left: dz comes out sra/andi instead of andi/sltu, D_00F56DC0 address-reg choices, and the mode-1 movement block ordering. */
@@ -93,8 +94,8 @@ void func_00f2ac20(void) {
     s32 sel;
     u32 b;
 
-    D_00F61370 = 0;
     sel = 0;
+    D_00F61370 = 0;
     mode = 0;
     id = D_00F56DC0->x4C - 1;
     D_00F56DC0->x78 = 1;
@@ -143,8 +144,8 @@ void func_00f2ac20(void) {
             return;
         }
         if (dir & 0xF000) {
-            rx = D_00F56DC0->x10D4;
             ax = 0;
+            rx = D_00F56DC0->x10D4;
             ry = D_00F56DC0->x10D8;
             if (rx < 1024) {
                 ax = (dir & 0x4000) ? 256 : 0;
@@ -200,9 +201,9 @@ void func_00f2ac20(void) {
             }
             if (pad->x4 & 0x2000) {
                 func_00f29870();
+                dz = 0;
                 dy = 0;
                 dx = 0;
-                dz = 0;
             } else if (b & 0x4000) {
                 if (D_00F56DC0->x74 & 2) {
                     func_0011d768(3);
@@ -212,10 +213,10 @@ void func_00f2ac20(void) {
                         s32 c2 = D_00F56DC0->f2;
                         s32 c0 = D_00F56DC0->f0;
                         D_00F56DC0->h0 = c0;
-                        D_00F56DC0->g0 = 1;
+                        D_00F56DC0->g2 = 1;
                         D_00F56DC0->h2 = c2;
                         D_00F56DC0->g1 = 1;
-                        D_00F56DC0->g2 = 1;
+                        D_00F56DC0->g0 = 1;
                     }
                     func_00f24780(D_00F56DC4);
                     func_00f24240(D_00F56DC4, 0);
@@ -238,8 +239,8 @@ void func_00f2ac20(void) {
         move:
             if (dx | dz | dy) {
                 ox = D_00F56DC0->h0;
-                nx = ox + dx;
                 oy = D_00F56DC0->h1;
+                nx = ox + dx;
                 if (nx < 0) nx = 0;
                 if (nx > *(u16 *)(sub + 6) - 1) nx = *(u16 *)(sub + 6) - 1;
                 ny = oy + dz;
@@ -317,8 +318,8 @@ void func_00f2ac20(void) {
                 dx = 0;
                 q = D_00F56DC0->x10D8 / 1024;
                 if (dir & 0x10) {
-                    dx = D_00F56DA8[q * 4 + 8];
                     dy = D_00F56DA8[q * 4 + 10];
+                    dx = D_00F56DA8[q * 4 + 8];
                 }
                 if (dir & 0x40) {
                     dy = -D_00F56DA8[q * 4 + 10];
@@ -334,12 +335,12 @@ void func_00f2ac20(void) {
                     sel = 2;
                 }
                 if (dir & 0x20) {
-                    k = 1;
                     sel = 1;
+                    k = 1;
                 }
                 if (dir & 0x80) {
-                    sel = 1;
                     k = -1;
+                    sel = 1;
                 }
                 if (k == 0) goto tail;
                 func_00f24d00(sel, k);

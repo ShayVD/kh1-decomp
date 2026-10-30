@@ -1,3 +1,4 @@
+/* Round 36 (wgb): wm.x func_00f23018 near miss: 251 -> 251 words, score 99 -> 91 (aligned diff 73 -> 66). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* score 99 (1308 vs 1336). World-map main: heap/texture setup, D_00FB6498 callbacks (init/draw/done), handler registration, then the frame loop with two GIF end packets. D_00FBAA78..8C as one array (149 -> 99). Left: orig keeps &D_00FBAA78/&D_00FBAA7C in s1/s0 and stores the rest by %lo, scheduling of the D_00FB6498 field stores, 28 bytes. Round 26 wwm2. */
 typedef struct {
     void (*init)(s32, s32);
@@ -81,8 +82,8 @@ s32 func_00f23018(s32 id, s32 arg)
 
     D_00FBAA70 = 0;
     D_00FBAA74 = 0;
-    D_00F873F4 = 0;
     D_00FBB334 = 0;
+    D_00F873F4 = 0;
     heap = func_001bb500(0x200000, 128);
     func_00f67fd0(125, heap);
     func_00f68008(125, heap);
@@ -115,17 +116,17 @@ s32 func_00f23018(s32 id, s32 arg)
     D_00FBAA78[5] = func_001bb500(0x20000, 128);
     D_00FB6498.init(heap, 0x200000);
     p = *D_00F85160;
+    lim[0] = p;
     D_00F873F0 = 1;
     lim[1] = p;
-    lim[0] = p;
     func_001c06c0(-1, func_00f23008);
     func_00f23878();
     func_00f21ef0(0.0f);
     D_00FBB32C = 0;
     D_00F878F0.d = 0;
-    D_00F878F0.a = 0;
     D_00F878F0.b = 0;
     D_00F878F0.c = 0;
+    D_00F878F0.a = 0;
     func_0011ef10(0x249F0, func_00f22240);
     func_0011ef10(0x249F1, func_00f222a0);
     func_0011ef10(0x270FE, func_00f25420);

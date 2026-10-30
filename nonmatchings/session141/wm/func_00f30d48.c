@@ -1,3 +1,4 @@
+/* Round 36 (wgb): wm.x func_00f30d48 near miss: 13 -> 8 words, score 18 -> 10 (aligned diff 13 -> 7). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* 13 words (696 bytes). Camera slerp from m1 (D_00F85200 copy) to m2 over 60 frames; pi needs the 3.141592503f literal (0x40490FDA) and t = fi / 60.0f before UnitMatrix gives the f20 temp. Left: the 11 opening global stores (register/lui order); hill-climbed them 3x5 min from different seeds, stuck at 13. Round 10: 500 random orders of the 11 stores (best 14), hill2 with chained-assignment slots (13), and a struct for the globals (worse, one base) also failed. */
 extern s32 D_002BC080[4];
 extern s32 D_002BC090, D_002BC094, D_002BC098, D_002BC09C, D_002BC0A0, D_002BC0A4, D_002BBE04;
@@ -36,15 +37,15 @@ void func_00f30d48(void) {
     f32 fi;
     f32 t;
 
-    D_002BC094 = 192;
-    D_002BC098 = 0;
-    D_002BC090 = 256;
-    D_002BC09C = 1;
-    D_002BC080[3] = 64;
-    D_002BC0A0 = 0;
     D_002BC080[0] = 128;
     D_002BC080[1] = 128;
     D_002BC080[2] = 128;
+    D_002BC080[3] = 64;
+    D_002BC090 = 256;
+    D_002BC098 = 0;
+    D_002BC094 = 192;
+    D_002BC09C = 1;
+    D_002BC0A0 = 0;
     D_002BC0A4 = 0;
     D_002BBE04 = 1;
     func_00f2c818(m0);
@@ -54,10 +55,10 @@ void func_00f30d48(void) {
     rot[0] = 0.0f;
     rot[2] = 0.0f;
     rot[3] = 1.0f;
-    tr[0] = 0.0f;
     tr[3] = 1.0f;
-    rot[1] = 3.141592503f;
+    tr[0] = 0.0f;
     tr[1] = 0.0f;
+    rot[1] = 3.141592503f;
     tr[2] = 1600.0f;
     sceVu0UnitMatrix(m2);
     sceVu0RotMatrix(m2, m2, rot);

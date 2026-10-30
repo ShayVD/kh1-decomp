@@ -1,3 +1,4 @@
+/* Round 36 (wgb): gb.x func_00f4cdb8 near miss: 102 -> 100 words, score 134 -> 130 (aligned diff 99 -> 95). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* Round 41 wwm2: score 150 -> 134, port.py of the wm twin func_00f73eb0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* Round 35 (wgb): gb.x func_00f4cdb8 near miss: 105 -> 99 words, score 152 -> 150. Order of the global initialisations from a dependency-safe statement-order hill climb (round 35 hill3.py: only orders that keep every read/write conflict in place). Earlier header below. */
 /* Round 35 (wgb): wm.x func_00f4cdb8 near miss: 105 -> 99 words, score 152 -> 150. port.py of gb func_00f4cdb8's round 35 draft. Earlier header below. */
@@ -76,43 +77,43 @@ void func_00f4cdb8(void)
     a = D_00F74138;
     b = D_00F74140;
     D_00F82D70 = 0;
-    D_00F82D6C = 0;
     D_00F702E0 = D_00F70330;
     D_00F82A28 = 128.0f;
     D_00F82A0C = D_00F705BC;
-    D_00F712E4 = 0;
-    mode = D_00F702F0;
     pa = a.v;
+    mode = D_00F702F0;
+    D_00F712E4 = 0;
     D_00F82A10 = D_00F705C0;
-    D_00F829EC = 0;
     D_00F82A14 = D_00F705D0;
+    D_00F829EC = 0;
     sel = 0;
+    D_00F82D6C = 0;
     D_00F82D68 = 0;
     t = func_001bc520();
+    D_00F712F0.x1e = t;
     D_00F712F0.xc = D_00F7038C;
     D_00F712F0.xe = D_00F703B0;
     D_00F829C8 = 0;
-    D_00F712F0.x1e = t;
     r = func_001f31a8(&D_00F712F0, 1);
     func_001f3dc0(D_00F829CC);
     w = func_00f445a8(13, 2, 0, 2, 0, D_00F70518, b.v[0], 0, D_00F7051C, D_00F70520, 0, 0, 0, D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, func_00f20018() == 0 ? mode : 1);
     func_00f445a8(13, 0, 2, 1, 0, 15, 5, 4, D_00F704A4, D_00F704A8, 0, D_00F704AC, 0, 0, 0, 0, 0, 256, mode);
-    pp = ic;
     ptr = D_00F703BC;
+    pp = ic;
     for (i = 0; i < 2; i++) {
         pp[i] = func_00f445a8(13, 0, 2, 1, 0, 15, *pa++, 1, D_00F703B8, ptr, 0, D_00F703F0, 0, 0, 0, 0, 0, 0, mode);
         ptr += D_00F703EC;
     }
+    idx = 0;
     pp[0]->on = 1;
     pp[1]->on = 0;
-    idx = 0;
     func_00f4d880(pp[0], 8);
     for (i = 0; i < 2; i++) {
         func_00f444b8(pp[i], 256.0f, D_00F702F0);
         func_0024e468(2);
     }
-    tbl[0] = 0;
     tbl[1] = 1;
+    tbl[0] = 0;
     goto test;
 loop:
     {
