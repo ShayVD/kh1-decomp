@@ -1,3 +1,4 @@
+/* Round 27 wwm1: score 624 -> 620, storeperm on the valid order (f3DD9C, f3DD94, f3DD98 stores off one m, distinct fields). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from d6d14605 (dkmovie func_00f23ae8 near miss, score 624 -> 596, hill3o order under the new bu) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 596 was not valid. Restored the last valid statement order: score 624. Earlier header below. */
 /* Round 45 wwm2: score 629 -> 624 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f23ae8: draft (session 141, round 28), structurally complete, not polished, 2652 vs 2776 bytes, 592 words differ, score 675 (m2c output unusable). The decode task: waits for ready slots, lays out the IPU buffers after f3DF08 (a guard word 0x12345678 at f3DD14), then walks each ready slot's packets: type 4 audio goes to func_00f21910 / func_00f21a20, type 3 pictures are fed through the IPU (BDEC/IDEC commands on 0x10002000, output via func_00f23aa8 in chunks of up to 0x3FF macroblocks) and shown (func_00f22df8). Stops on flag 8 or after f3DF1C frames, then idles setting 0x40000. Labels follow the m2c control flow. Round 19 (wwm1): score 675 -> 629 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
@@ -61,9 +62,9 @@ void func_00f23ae8(void) {
         }
     }
     m = D_00F28460;
-    m->f3DD98 = (s32)m->pic[1];
-    m->f3DD94 = (s32)m->pic[0];
     m->f3DD9C = (s32)m->f1E900;
+    m->f3DD94 = (s32)m->pic[0];
+    m->f3DD98 = (s32)m->pic[1];
     m->f3DF68 = 0;
     m->f3DDA0 = (s32)m->f24D00;
     D_00F28460->f3DF69 = 0;
