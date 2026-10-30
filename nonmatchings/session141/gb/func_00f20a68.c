@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 211 -> 207, func_00f24240 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 257 -> 211, port.py of the wm twin func_00f47b60 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* 235 words / score 257 (972 vs 992). Logic complete (world init: header copy, palette, bitfields at 0x48/0x5C/0x5E/0x60, camera f88 = -2944 - (n-6)*420). 0x5E holds a second 4-bit pos copied from 0x5C. Orig stores lo (0x58) with a plain sw, and its px/pz expressions are not CSEd ((n>>1)+0xffff, pz with an extra andi 0xffff); bf0 store does not force a reload of D_00F56DC0 in orig. Also orig shares li a0,1 between h84 = 1 and the func_001ba980 arg. */
 /* 138 words, score 223 (was 146/232). Round 33 wwm2: hill2 over the D_00F56DC0 stores; ctx2 and interleave give nothing. Earlier header: 146 words left (round 12): bitfield set-up of D_00F56DC0. The struct must be 8-aligned (ld/sd on GbPos u16 bitfields at 74/92/94/96). Left: the target masks copied fields twice (andi 0xffff, andi 0xf, and 15) and computes nx and nz separately; the expression forms tried (36 combinations) all give the same code. */
@@ -50,7 +51,7 @@ u16 func_001bb678(void);
 void func_00f23ed8(void);
 void func_001be820(s32, s32);
 void func_00f24780(s32);
-void func_00f24240(s32, s32);
+s32 func_00f24240(s32, s32);
 s32 func_001ba3f0(s32);
 void func_00f27300(s32);
 
