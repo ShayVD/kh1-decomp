@@ -268,6 +268,8 @@ mode2:
             D_0108F424 = -1;
             func_0011d768(3);
             if (!func_00f71b58()) goto end;
+        back1:
+            func_00f712b8(-1, -1);
             break;
         }
         if (held & 0x2000) {
@@ -333,7 +335,7 @@ mode2:
                 row = 0;
                 if (func_00f71b58() && half >= 0) {
                     func_0011d768(1);
-                    break;
+                    goto back1;
                 }
             }
             trig = 0;
@@ -347,8 +349,6 @@ mode2:
         func_00f712b8(col, row);
         func_0024e468(1);
     }
-back1:
-    func_00f712b8(-1, -1);
 back:
     row = 0;
     D_0108F424 = -1;
