@@ -1,4 +1,3 @@
-/* Round 48 wwm2: score 2412 -> 2375 under the nogcse build mode (tools/ovl/modescan.py). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 53001ba1 (wm func_00f75d80 near miss, score 2412 -> 1758, hill3o statement order (wwm2 rou) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 1758 was not valid. Restored the last valid statement order: score 2412. Earlier header below. */
 /* NEAR MISS 1531 words, score 2430 (6200 vs 6344 bytes). Port of gb func_00f4ec88 (same score; port.py mapped every symbol). Structurally complete draft, not polished; see the gb file for notes. Round 19 (wwm1): score 2430 -> 2412 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct {
