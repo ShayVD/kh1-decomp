@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 180 -> 178, func_00f4a000 declared s32. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f6cfa0 near miss: score 216 -> 180 (307 -> 427 words, 2168 vs 2160); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
 /* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00FB58C8/D_00FB58D0 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00FB4A70) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
@@ -51,7 +52,7 @@ void func_0024e468(s32);
 s32 func_00f47110(void);
 void func_00f48f40(void);
 s32 func_00f49fe0(void);
-void func_00f4a000(void);
+s32 func_00f4a000(void);
 void func_00f4d528(s32);
 Win *func_00f6a480(void);
 void func_00f6ade8(s32);
