@@ -1,3 +1,4 @@
+/* Round 28 wwm1: score 19 -> 13. func_0011ef10 declared s32 (it returns a value; declared void, gcc scheduled the D_00F878F0 clear and the D_00FBB338 lui differently; the permuter found it as a non-void return, the same callee fix as dktitle f20258). The 4-byte size gap is the alignment nop after jr ra (the next function is 16-aligned), not code. Left: the 15001 call's li a0/move t0 order and v0/v1 in the draw call. Earlier header below. */
 /* Round 27 wwm1: score 85 -> 19 (1332 vs 1336). valaudit: the target stores D_00FBAA78 and D_00FBAA7C through two address registers (sw 0(s1), sw 0(s0)) and D_00FBAA80..8C by %lo, so they are scalars, the first two written through pointer locals; pa is set before the second func_001bb7c8 call and pb just before the stores (that gives the target's s1/s0; together: 47). The target stores xac = arg after the second func_00f2b298 call (sw s2,172 follows that jal), id = 2 comes after the xc/x10 stores, D_00F873F0 = 1 after p = *D_00F85160, and D_00F878F0 is cleared a, b, c, d. Left: v0/v1 in the draw call, the 15001 call's a0/t0 order, and the lui register of D_00FBB338. Earlier header below. */
 /* Round 46 wwm2: score 89 -> 85, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 91 -> 89, func_00f294a0 declared s32. Earlier header below. */
@@ -36,7 +37,7 @@ extern s32 D_00FBAA94;
 extern s32 D_00FBB32C;
 extern s32 D_00FBB334;
 extern s32 D_00FBB338;
-void func_0011ef10(s32, void (*)(void));
+s32 func_0011ef10(s32, void (*)(void));
 void func_001ba708(s32);
 s32 func_001bb500(s32, s32);
 void func_001bb7c8(char *, s32);
