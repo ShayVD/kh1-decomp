@@ -1,9 +1,7 @@
-/* Round 62e (wwm2): score 23 -> 3. func_00111830 is declared s32 (as in src/game/gamestate.c; probably an implicit int declaration in the original), which fixes case 31's register. func_00f21068 goes back to void: wwm1's s32 helped the older layout, but here it costs case 27's v0/v1. Left: one switch-dispatch `beqz v0; li v0,2` that we fill as beqzl. Tried: default: break, case 0 moved last, func_001117e0 / func_0020d748 return types. */
-/* Round 62d (wwm2): score 113 -> 23, 3556 vs 3560 bytes (the 4 bytes are the trailing alignment nop). D_00F2C708 = 18/23 written `if (!D_00F26E10) 23; else 18`, b = 2 set before a = 1 in the 364 arm, and case 18 ends `if (S[0] == 4 || S[1] == 4) {19/20} } D_00F2C708 = 23;` so the 23 store is shared. Left: case 27's v0/v1 swap, one beqz that we fill as beqzl, and case 31's lui register. */
-/* Round 62c (wwm2): score 177 -> 113: cases 19, 20 and 21 are three full copies of the menu (func_001efc10(11/12/13)) instead of one copy reached by goto with msg; cross-jumping merges them back as in the target, with the D_002C5AD0 high part set in each case. */
-/* Round 62b (wwm2): score 259 -> 177, 3564 vs 3560 bytes; the callee sequence now matches. case 4/9/14 moved between cases 13 and 15 (the target's block order). case 18 tests `S[0] == 2 || S[1] == 2` first and only then the both-2 case, and the 19/20 arms are swapped. func_00111600 takes three arguments (as in src/game/progress.c), so no & args are computed. case 31 reads D_003F720C once into a local. case 27 decrements D_00F2C6FC before the D_002BC07C == 128 test. Left: the case 18 jump threading (the target reuses the loaded S[0] and S[1]) and the placement of the D_002C5AD0 high part (s3). */
-/* Round 62 (wwm2): score 374 -> 259, size 3464 -> 3604 vs 3560 bytes (the gap goes from 96 to 44). (1) func_00f21068 returns s32, from wwm1's rettype.py: 374 -> 370. (2) The trig test is `(trig & 0x20000020) ? 1 : (trig & 0x80000080) != 0`, so fold does not merge the two masks into one 0xA00000A0 test. Gives the target's two tests. (3) In both menu copies, a and b are set before the func_0020bc48 call (they live across it in s0/s1, as in the target). Cross-jumping then stops at the D_00F26E10 test, and case 22 keeps its own func_001f1ed8 / trig / xor copy, so the callee sequence matches the target's. Left: the extra bytes are in small hunks across the function. */
-/* dktitle.x func_00f228c8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 408 -> 398 with sclimb.py. Round 22 (wwm1): the if/else at line(s) 149,357 with the arms swapped and the test negated (ifswap.py): score 398 -> 378. Round 23 (wwm1): score 378 -> 374 with w4.py (dependency-checked statement order plus if/else polarity flips). */
+/* dktitle.x func_00f228c8: matched by hand. */
+#include "ovl.h"
+
+/* dktitle.x func_00f228c8: matched by hand (session 141, wwm1 rounds 21-23 and wwm2 round 62-63). From the session 132 draft. Cases 19-21 are written-out copies of the menu that cross-jumping merges. case 4/9/14 sits between 13 and 15. func_00111600 takes 3 arguments, func_00111830 returns s32, and func_00f21ca0 has a CONTEXT_ONLY definition so the case 27 switch dispatch gets a plain beqz (the nothrow rule, docs/overlays.md). */
 
 typedef struct { s32 x0; s32 x4; u64 x8; } Pad;
 typedef struct { void (*f0)(s32, s32); s32 (*f1)(void); } Cb;
@@ -53,7 +51,7 @@ void func_00f21068(void); CONTEXT_ONLY void func_00f21068() {}
 void func_00f213a8(void); CONTEXT_ONLY void func_00f213a8() {}
 void func_00f21808(void); CONTEXT_ONLY void func_00f21808() {}
 void func_00f21928(void);
-void func_00f21ca0(void);
+void func_00f21ca0(void); CONTEXT_ONLY void func_00f21ca0() {}
 void func_00f22238(void); CONTEXT_ONLY void func_00f22238() {}
 void func_00f227b0(void);
 void func_00f227e0(void);
