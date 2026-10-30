@@ -891,3 +891,24 @@ hit the stub callee sits at a lower address than the function.
   - f46070 (51): the target copies D_00FB74B0 (c, to sp+16) before D_00FB74C0 (bits, sp+32); ours copies
     bits first in every order of the copy statements (sched1 reorders them). Changing the declaration
     order moves the stack slots (169-177).
+
+## Round 31
+
+- wm f436d0 56 -> 4: the second table loop writes through its own pointer (o2). With one o shared by both
+  loops, o (14 refs over 72 insns) outranked i (23 refs over 192) in global-alloc and took s2; with o split,
+  i is allocated first and gets s2, and &dir/o share s3, as in the target. Left: the addiu of &D_00F9B2CC
+  is scheduled one slot before li v0,1. A pointer to the flag, a local for D_00F87048, the flag set
+  before func_001bb7c8, do-while and `!= 0` waits, rettype and 10 minutes of permuter: nothing better.
+- wm f46070 51 -> 15: memcpy(&c, &D_00FB74B0, 16) (gcc's inline block move) before the bits struct copy
+  gives the target's copy order; with two struct assignments sched1 always ran the 32-byte copy first.
+  Copying through a destination or source pointer, a cast source, and field-by-field copies don't change it.
+  Left: a0/a1/a2 numbering in the `105 - r*35` else branch (six expression forms tried).
+- wm f2ac98 62 -> 50: `if (v & 1) f[n] = v & 1;` for the four bit-0 tests gives the target's bnezl with
+  the store in the delay slot (1344 against 1360 bytes; the aligned diff goes from 22 to 18 words). The
+  target still loads 1 into a register for both the and and the store; == 1, != 0, % 2, << 31, 1 & v,
+  !!, a ternary and a u8 cast do not give that.
+- wm f3f998 (52): the target copies e out of v0 into a1 after func_00f64c38; ours keeps it in v0. Loading
+  xa0 into a local early (two placements), a count-down inner loop and an empty statement before the
+  first use: 52-54.
+- wm f28ed8 (67): the "(0x700 - x) << 4 into x" hint as x = ..., x and y reassigned, or the subtraction
+  alone: 81-189. wm f27ff0 (90): the target frame is 16 bytes larger (a sq spill); not tried further.
