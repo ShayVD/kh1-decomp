@@ -1,5 +1,5 @@
+/* drafttwins.py: score 2430 -> 2412, port.py of the wm twin func_00f75d80 draft. Earlier header below. */
 /* Round 48 wwm2: the hill3o order from b1f42fe2 (gb func_00f4ec88 near miss, score 2430 -> 2412, port of wm func_00f75d80 (wwm2 r) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 1758 was not valid. Restored the last valid statement order: score 2430. Earlier header below. */
-/* NEAR MISS 1531 words, score 2430 (6200 vs 6344 bytes). Structurally complete draft, not polished (time-boxed). Save/load slot screen state machine: setup (record count from func_001bc4e0/func_001bc510, D_00F71350 config, func_001f31a8), a two-item menu (sel 0/1 with pad x8/x10 edge bits, items[] via func_00f43388/func_00f4d880), then the state loop on D_00F82D90/D_00F82D94 with yes/no dialogs (func_00f445a8 ids 225/42/226/238/232/43, D_00F829E4 toggle, func_00f4d8c0 cursor), the load path (func_0024d1c8/func_0024d408/func_0024cf80/func_0024cf90) and the exit paths (main/next/state/close/end labels). Every call target and argument list is transcribed from the asm. Left: block placement differs (the original puts the cancel blocks right after the item loop and shares the confirm tails), the frame is 320 vs 272 because ours spills more locals, and the original reads pad x8 with ld in the D_00F82D90==2 wait loop. */
 typedef struct {
     u8 x0, x1, x2, x3, x4, x5;
     u8 pad6[2];
@@ -73,27 +73,27 @@ s32 func_0024cf90(void);
 void func_00f4ec88(void) {
     Item *items[4];
     P2 t0;
-    s32 pad0[2];
+    u8 *rec;
+    s32 pad2[2];
     P2 t1;
     s32 pad1[2];
-    P2 t2;
-    s32 pad2[2];
     s32 wait;
-    s32 old;
-    s32 sel;
-    u8 *rec;
-    Item *r;
-    s32 idx;
-    u8 *base;
-    s32 n, i, cnt, k, v;
-    Snd *snd;
     Item *s0;
     s32 y;
+    s32 idx;
+    u8 *base;
     u32 b;
+    Item *r;
+    s32 n, i, cnt, k, v;
+    Snd *snd;
+    s32 old;
+    P2 t2;
+    s32 pad0[2];
+    s32 sel;
     s32 s2;
 
-    t0 = D_00F74150;
     sel = 0;
+    t0 = D_00F74150;
     t1 = D_00F74158;
     t2 = D_00F74160;
     wait = D_00F702F0;
@@ -107,28 +107,28 @@ void func_00f4ec88(void) {
         if (base[104 + k] == 0) cnt++;
         k += 96;
     }
-    D_00F82A10 = D_00F705C8;
     D_00F82A0C = D_00F705C4;
+    D_00F82A10 = D_00F705C8;
     D_00F82A14 = D_00F705D4;
-    D_00F82D94 = -999;
-    D_00F702E0 = D_00F70334;
-    D_00F71350.xC = D_00F705A8;
     D_00F71350.x1E = cnt;
-    idx = 0;
-    D_00F71350.xE = D_00F705AC;
-    D_00F82DA0 = 0;
-    D_00F82DA4 = 0;
     D_00F82D9C = 0;
-    D_00F82D90 = 0;
+    D_00F702E0 = D_00F70334;
+    D_00F82D94 = -999;
+    D_00F82DA0 = 0;
+    D_00F71350.xC = D_00F705A8;
+    idx = 0;
     D_00F82D98 = 0;
+    D_00F82D90 = 0;
+    D_00F71350.xE = D_00F705AC;
+    D_00F82DA4 = 0;
     snd = func_001f31a8(&D_00F71350);
     func_001f3dc0(D_00F829CC);
     func_00f445a8(18, 0, 2, 1, 0, 15, 1, 4, D_00F704A4, D_00F704A8, 0, D_00F704AC, 0, 0, 0, 0, 0, 256, wait);
 main:
-    D_00F702D4 = 0;
-    D_00F702D8 = 0;
     D_00F702DC = 0;
+    D_00F702D4 = 0;
     v = 1;
+    D_00F702D8 = 0;
     if (func_00f20018() == 0) v = wait;
     r = func_00f445a8(17, 2, 0, 1, 0, D_00F70518, t0.v[idx / 2], 0, D_00F7051C, D_00F70520, 0, 0, 0,
                       D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, v);
@@ -140,13 +140,13 @@ main:
     items[0]->x3 = 0;
     items[0]->x10 = 33;
     items[0]->xC = 1;
+    items[0]->x14 = D_00F705A0;
     items[0]->x20 = y;
     items[0]->x18 = y;
-    items[0]->x2C = 0.0f;
     items[0]->x30 = 0.0f;
-    items[0]->x14 = D_00F705A0;
-    items[0]->x1C = D_00F705A0;
     items[0]->x8 = D_00F703F0;
+    items[0]->x2C = 0.0f;
+    items[0]->x1C = D_00F705A0;
     if (sel == 0) {
         items[0]->x4 = 1;
         func_00f4d880(items[0], 8);
@@ -160,13 +160,13 @@ main:
     items[1]->x2 = 2;
     items[1]->x3 = 0;
     items[1]->x10 = 37;
-    items[1]->xC = 1;
-    items[1]->x20 = y;
     items[1]->x18 = y;
-    items[1]->x2C = 0.0f;
-    items[1]->x30 = 0.0f;
-    items[1]->x14 = D_00F705A0;
     items[1]->x1C = D_00F705A0;
+    items[1]->x20 = y;
+    items[1]->xC = 1;
+    items[1]->x30 = 0.0f;
+    items[1]->x2C = 0.0f;
+    items[1]->x14 = D_00F705A0;
     items[1]->x8 = D_00F703F0;
     if (sel == 1) {
         items[1]->x4 = 1;
@@ -265,9 +265,9 @@ leave:
     func_00f43cf0(18);
     if (D_00F829F8 > 0) D_00F829F8 = -1;
     v = func_001be278() + 1;
+    D_00F702DC = v;
     D_00F702D4 = 0;
     D_00F702D8 = v;
-    D_00F702DC = v;
     return;
 next:
     func_0024e468(1);
@@ -277,8 +277,8 @@ next:
     func_00f444d8(17, 0, D_00F702F0);
     func_0024e468(D_00F702F0);
     func_00f43cf0(17);
-    if (D_00F829F8 > 0) D_00F829F8 = -1;
     v = 1;
+    if (D_00F829F8 > 0) D_00F829F8 = -1;
     if (func_00f20018() == 0) v = D_00F702F0;
     func_00f445a8(17, 2, 0, 1, 0, D_00F70518, t1.v[idx / 2], 0, D_00F7051C, D_00F70520, 0, 0, 0,
                   D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, v);
@@ -289,9 +289,9 @@ state:
     while (D_00F82D94 < -1) {
         func_0024e468(1);
     }
-    snd->xD0 = D_00F82DA0;
-    snd->xD2 = D_00F82DA4;
     D_00F82D98 = 0;
+    snd->xD2 = D_00F82DA4;
+    snd->xD0 = D_00F82DA0;
     if (sel != 0) {
         if (D_00F82D90 == 0) goto end;
         func_001f3dc0(D_00F829CC);
@@ -312,8 +312,8 @@ state:
             D_00F82D90 = 0;
             func_001f3dc0((s32)snd);
             func_0020bda8(16);
-            D_00F82D94 = -999;
             D_00F82D98 = 1;
+            D_00F82D94 = -999;
             goto state;
         }
         if (func_001be278() == D_00F82D94) {
@@ -336,9 +336,9 @@ state:
             func_00f444b8(s0, 0.0f, D_00F702F0);
             func_0024e468(D_00F702F0);
             func_00f43d68(s0);
+            D_00F82D98 = 1;
             D_00F82D90 = 0;
             D_00F82D94 = -999;
-            D_00F82D98 = 1;
             func_001f3dc0((s32)snd);
             goto state;
         }
