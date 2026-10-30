@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 78 -> 76, func_001c0310 declared s32. Earlier header below. */
 /* Round 45 wwm2: score 86 -> 78, hill3o statement order under this build mode. Earlier header below. */
 /* Round 44 wwm2: score 94 -> 86 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* 127 words (528 vs 544). Structure and calls right (entry of 272 bytes, S/T/U sub-structs at 224/240/256). Left: the target adds each sub-struct offset to id*272 before adding the base (s4 = (id*272+224)+D, s0 = (id*272+240)+D, U computed lazily), keeps id and id*16 in s7/s8, and recomputes &D[id] after the loop. Tried direct D[id] fields (136), sub-struct pointers (127), a single E pointer (96 words but 396 bytes) and a base-pointer local (this one, best score). */
@@ -31,7 +32,7 @@ void sceVu0CopyVector(f32 *, f32 *);
 void func_00f39b10(E3a640 *, Q3a640 *, s32);
 void func_00f39de8(E3a640 *);
 s32 func_00f3a1d8(f32 *);
-void func_001c0310(s32, void *, void *);
+s32 func_001c0310(s32, void *, void *);
 void func_00f3a268(void);
 
 s32 func_00f3a640(s32 id, f32 *pos, D3a640 *desc, s32 val) {
