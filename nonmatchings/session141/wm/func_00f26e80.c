@@ -1,4 +1,4 @@
-/* Round 47 wwm2: score 722 -> 472, hill3o statement order. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 47650907 (wm func_00f26e80 near miss, score 722 -> 472, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 472 was not valid. Restored the last valid statement order: score 722. Earlier header below. */
 /* score 722 (2872 vs 2944). Item carousel (x, y, list, flag, t): off = t*96/100, centre icon with glow (func_00f24548) and func_00f23df0, size/alpha/glow from double maths on |t| written as a = d; if (d < 0) a = 0.0 - d; (gives the __cmpdf2/__subdf3(0,d) calls without code duplication); with cnt >= 2 the neighbours at off+0x60/0x120, the fading extras at off/off+0x180 and the up/down arrows (func_00f23a58/func_00f24380) at x + 0x60 - w/2; then func_00f23a58(x+0x90, y+0x2A), 3 func_00f24fe0 rows with ys = D_00FB6778 (aggregate initializer in the original, struct copy here), footer and func_00f66fe8(1). Call sequence lines up. Left: the original spills x, list and flag to the stack and recomputes |t| differently in places; 72 bytes short. Round 28 wwm2. */
 typedef struct { s16 a; s16 b; s32 u; s32 v; s32 w; s32 h; } Tex;
 typedef struct { s32 v[3]; } Y3;
@@ -23,18 +23,19 @@ u64 *func_00f24fe0(s32, s32, s32, s32, s32, u64 *);
 
 void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
 {
-    double d, a;
-    s32 i;
-    s32 n;
+    Y3 ys;
+    u64 *p;
     s32 cnt;
-    s32 icon;
     s32 off;
+    s32 icon;
     s32 sz, al, gl;
     s32 k;
-    Y3 ys;
-    s32 id;
-    u64 *p;
     s32 xx, yy;
+    s32 id;
+    s32 n;
+    s32 i;
+    double d, a;
+
     p = func_00f66b78(func_00f66ac8(*D_00F85160));
     p[0] = 0x131000070LL;
     p[1] = 78;
@@ -45,11 +46,9 @@ void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
     p[0] = 0x50003;
     p[1] = 71;
     p += 2;
-
     p[0] = 0x0000740000007000LL;
     p[1] = 24;
     p += 2;
-    d = t;
     p[0] = 68;
     p[1] = 66;
     p += 2;
@@ -57,17 +56,18 @@ void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
     off = (s32)(t * 96.0f / 100.0f);
     cnt = func_00f26e48(list);
     icon = func_00f24f50(list[D_00FBB550 % cnt]);
+    d = t;
     a = d;
     if (d < 0) a = 0.0 - d;
     sz = (s32)(((100.0 - a) * 0.5 + 50.0) / 100.0 * 128.0);
     a = d;
-    al = (s32)(((100.0 - a) * 0.75 + 25.0) / 100.0 * 128.0);
     if (d < 0) a = 0.0 - d;
+    al = (s32)(((100.0 - a) * 0.75 + 25.0) / 100.0 * 128.0);
     a = d;
-    yy = y + (off + 0xC0);
-    xx = x + 0x60;
     if (d < 0) a = 0.0 - d;
     gl = (s32)((100.0 - a) / 100.0 * 128.0);
+    yy = y + (off + 0xC0);
+    xx = x + 0x60;
     if (gl != 0) {
         p = func_00f24548(xx, yy, sz, sz, 32, (gl << 24) | 0x800000, p);
     }
@@ -88,18 +88,18 @@ void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
             al = 64;
             gl = 0;
         }
-        yy = y + (off + 0x60);
         k = cnt * 2;
         icon = func_00f24f50(list[(D_00FBB550 + k - 1) % cnt]);
+        yy = y + (off + 0x60);
         if (gl != 0) {
             p = func_00f24548(xx, yy, sz, sz, 32, (gl << 24) | 0x800000, p);
         }
         p = func_00f23df0(xx, yy, sz, sz, icon, al, p);
         if (off > 0) {
             d = t;
+            if (d < 0) d = 0.0 - d;
             al = (s32)(d * 0.5 / 100.0 * 128.0);
             p = func_00f23df0(xx, y + off, 64, 64, func_00f24f50(list[(D_00FBB550 + k - 2) % cnt]), al, p);
-            if (d < 0) d = 0.0 - d;
         }
         p = func_00f23a58(x + (0x60 - D_00F874F8[15].w / 2), y + 0x70, 15, 0xE0 - D_00FBB340, p);
         if (off < 0) {
