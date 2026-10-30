@@ -1053,3 +1053,13 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
 - **f36bc0 (6).** Putting the trunc expression in the loop condition, with or without n, is much worse (78-115), because the calls in the loop make it non-invariant.
 - **f7cb60 (4).** Duplicated per-arm tails, a goto tail, or a ternary EC0 all come out at 14-24.
 - **Already worked heavily:** f43430, f78458 and f30d48. Their headers list what has been tried.
+
+## Round 50 (latescan leads; no matches)
+
+- **latescan wm** gives the same hits as wgb's r44 list, except f4b338 and f77648, which round 48 reverted.
+- **f344f0 89 -> 87.** The MORE `lbu 9` is a reload of md->x9 for the func_00f200c8 argument. Only a volatile view reproduces it: a u8 pointer read, ternary/else forms and callee prototypes u8/s8/u16/s16/u32 do not.
+- **f78978 (13).** The MORE loads are a dead `if (D_00FB5ED0 && D_00FB5EC4 == 0 && D_0108FA74 == 66) x = 1;`. The target keeps its loads, the `li a0,66` and the branch over the empty block, but not the compare branch. So the body only became empty after reload (jump2), probably a move that turned into a no-op once registers were allocated. In our build the RTL dumps show life1 (flow) deleting the whole if when x is reused, and cse deleting it when the flag is a separate unused variable. I have not found the body yet.
+- **f7f628 (21).** The extra `lw 128` loads are delay-slot fills (bgezl/beqzl stealing the next pad read), not a missing alias barrier.
+- **f45e68 (36).** The target forms &D_00F9B330[idx] twice (base+off and off+base) and loads w/u/v through copies of the first, h through the second. Every mix of e-> and D_00F9B330[idx]. reads for w/h/u/v, in four orders, plus inline accessors, scores 36 or worse.
+- **f3a860 (39).** hill3, strict and --noalias, 400 s: no gain. The `*a`/`*b` stores are pointer stores, so strict mode cannot move them past the global f loads.
+- **f24380 (48) and f28258 (85):** register allocation or a size difference comes first. Not worked further.
