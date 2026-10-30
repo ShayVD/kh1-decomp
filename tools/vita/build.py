@@ -40,11 +40,26 @@ VERSION = "00.01"
 # census.py's host flags for ARM: gnu89 and the gcc 2.96 leniencies, char signed as on the EE
 # (ARM's is unsigned), no fused multiply-add (portability rule 7)
 CFLAGS = [
-    "-std=gnu89", "-O2", "-g", "-w", "-fsigned-char", "-fno-strict-aliasing", "-ffp-contract=off",
+    "-std=gnu89", "-g", "-w", "-fsigned-char", "-fno-strict-aliasing", "-ffp-contract=off",
     "-Iinclude", "-Isrc", "-Ihost/vita/include", "-Ihost/null", "-Ihost/vita",
     "-Wno-error=implicit-function-declaration", "-Wno-error=int-conversion",
     "-Wno-error=incompatible-pointer-types", "-Wno-error=implicit-int",
 ]
+# The optimisation (`--opt`, or KH1_VITA_OPT): the game's flags, the platform's (host/null, host/port, host/vita:
+# the VU1 programs, the GS worker, the GPU thread) and the link's.  vitasdk's gcc already targets the Vita's A9
+# by default (armv7-a, -mtune=cortex-a9, -mfpu=neon, hard float, Thumb-2: `arm-vita-eabi-gcc -v`), so -mcpu /
+# -mfpu add nothing.  None changes a float result: -ffp-contract=off stays, no -ffast-math.  LTO is for the
+# platform only: the game's files declare a function as a variable where they take its address (`extern u8
+# func_x[]`, legal one file at a time), which LTO's merge refuses.  Fat objects: census.py's nm reads them.
+LTO = ["-flto=auto", "-ffat-lto-objects"]
+OPTS = {
+    "o2": (["-O2"], [], []),
+    "o3": (["-O3"], [], []),
+    "lto": (["-O2"], LTO, ["-O2", "-flto=auto"]),
+    "o3lto": (["-O3"], LTO, ["-O3", "-flto=auto"]),
+}
+DEFAULT_OPT = "o2"  # o3lto measured no faster on a Vita (docs/vita-build.md "Clocks and compiler flags")
+
 # gcc 14 and later refuse these by default (vitasdk's gcc is 15; the Linux cross gcc may be older)
 CFLAGS_GCC14 = ["-Wno-error=return-mismatch", "-Wno-error=declaration-missing-parameter-type"]
 
@@ -55,8 +70,15 @@ CFLAGS_GCC14 = ["-Wno-error=return-mismatch", "-Wno-error=declaration-missing-pa
 # "The flashing floor").  The game's files take int enums (-fno-short-enums); host/vita's own files keep
 # the SDK's one-byte enums, which its structs (SceGxm's, vita2d's) are laid out for.
 census_platform_flags = census.platform_flags
+PLATFORM_OPT = []
+# memmap.c defines its names in top-level asm (`.set`), which LTO's symbol table does not see
+NO_LTO = {("port", "memmap.c")}
+def platform_opt(d, f):
+    return [x for x in PLATFORM_OPT if x not in LTO] if (d, f) in NO_LTO else PLATFORM_OPT
 def vita_platform_flags(d, f):
-    return census_platform_flags(d, f) + (["-fshort-enums"] if d == "vita" else [])
+    return census_platform_flags(d, f) + platform_opt(d, f) + (["-fshort-enums"] if d == "vita" else [])
+def armlinux_platform_flags(d, f):
+    return census_platform_flags(d, f) + platform_opt(d, f)
 
 # the two targets: the Vita, and 32-bit ARM Linux for qemu-arm (the host's null runner as it is,
 # with host/vita's context switch and host/armlinux's overlay answer)
@@ -231,7 +253,11 @@ def package(b, out, elf):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--linux-arm", action="store_true", help="build out/armlinux/kh1-arm for qemu-arm instead")
+    ap.add_argument("--opt", choices=sorted(OPTS), default=os.environ.get("KH1_VITA_OPT", DEFAULT_OPT),
+                    help="the optimisation (default %s; KH1_VITA_OPT sets it too)" % DEFAULT_OPT)
     a = ap.parse_args()
+    global PLATFORM_OPT
+    opt_c, PLATFORM_OPT, opt_link = OPTS[a.opt]
     name = "linux-arm" if a.linux_arm else "vita"
     t = TARGETS[name]
     b = tool_prefix(name)
@@ -241,12 +267,11 @@ def main():
         sys.exit("vita: run the PS2 `make` first (out/gen/symbols.ld, out/data/pieces/)")
 
     census.OUT = out
-    census.CFLAGS = CFLAGS + t["defines"] + (CFLAGS_GCC14 if gcc_major(cc) >= 14 else [])
+    census.CFLAGS = CFLAGS + opt_c + t["defines"] + (CFLAGS_GCC14 if gcc_major(cc) >= 14 else [])
     census.NM = b + t["prefix"] + "nm"
     census.TYPE_PREFIX = "%"
     census.PLATFORM_DIRS = t["dirs"]
-    if name == "vita":
-        census.platform_flags = vita_platform_flags
+    census.platform_flags = vita_platform_flags if name == "vita" else armlinux_platform_flags
     census.assemble_data = lambda: assemble_data(b + t["prefix"] + "as", out)
     os.makedirs(out, exist_ok=True)
 
@@ -265,6 +290,7 @@ def main():
     objs = census.link_census.objs
     extra = [census.link_census.script] if census.link_census.script else []
     elf = os.path.join(out, "kh1.elf" if name == "vita" else "kh1-arm")
+    t["link"] = opt_link + t["link"]
     p = subprocess.run([cc] + t["link"] + ["-o", elf] + objs + extra + t["libs"], cwd=ROOT,
                        capture_output=True, text=True)
     if p.returncode:
@@ -286,7 +312,15 @@ def main():
             run([b + "arm-vita-eabi-as", "-o", pad, asm], "the segment pad")
             run([cc] + t["link"] + ["-o", elf] + objs + [pad] + extra + t["libs"], "the padded link")
             print("vita: the code segment padded by %d bytes (%d were left before the data's page)" % (gap + 512, gap))
-    print("%s: %s linked (%d objects)" % (name, os.path.relpath(elf, ROOT), len(objs)))
+    if name == "vita":
+        # the SDK reads these by name (the process parameters, newlib's heap); LTO drops a variable
+        # nothing references, and the app then starts with the default 256 KiB stack and stops at once
+        syms = subprocess.run([census.NM, elf], capture_output=True, text=True).stdout.split()
+        lost = [s for s in ("sceUserMainThreadStackSize", "_newlib_heap_size_user") if s not in syms]
+        if lost:
+            print("vita: %s missing from the link (dropped by LTO?)" % " ".join(lost))
+            return 1
+    print("%s: %s linked (%d objects, --opt %s)" % (name, os.path.relpath(elf, ROOT), len(objs), a.opt))
     if name == "linux-arm":
         print("linux-arm: run it as the host runner: KH1_HOST_ISO=... QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf "
               "qemu-arm %s" % os.path.relpath(elf, ROOT))
