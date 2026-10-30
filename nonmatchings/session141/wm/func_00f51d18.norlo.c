@@ -291,11 +291,7 @@ void func_00f51d18(void) {
                 D_00F9B540->x58 = 1;
                 func_00f50598(3);
                 func_0011d768(2);
-                if (func_00f78350(30, 1)) {
-                cancel:
-                    func_00f50598(2);
-                    goto tail;
-                }
+                if (func_00f78350(30, 1)) goto cancel;
                 func_00f4afd0();
                 mode = 0;
                 func_00f4b878(D_00F9B544);
@@ -311,6 +307,9 @@ void func_00f51d18(void) {
                 }
                 func_001bfac8();
                 func_001bfac8();
+                goto tail;
+            cancel:
+                func_00f50598(2);
                 goto tail;
             }
             if (dir & 0xF0) {
