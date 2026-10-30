@@ -1,6 +1,7 @@
-/* Round 48 wwm2: the hill3o order from f6e14256 (wm func_00f58f98 near miss, score 168 -> 152, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 150 was not valid. Restored the last valid statement order: score 168. Earlier header below. */
+/* Round 50 wwm2: score 168 -> 108 (2032 -> 1984 bytes, target 1992). Hand port of wgb's round 45 gb func_00f31ea0. The three loop-top reads go through (*(World **)0x00F9B540) so loop.c does not hoist &D_00F9B540. Symbols mapped by port.py; D_00FA5D50/D_00FA5D78 and the fixed address mapped by hand. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 6bd50b7b (gb func_00f58f98 near miss, score 168 -> 158, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 158 was not valid. Restored the last valid statement order: score 168. Earlier header below. */
 /* Round 46 wwm2: score 176 -> 168, func_00f55190 and func_00f4e3f8 declared s32. Earlier header below. */
-/* wm.x func_00f58f98 near miss: 463 words differ, score 176 (ours 2032 bytes, original 1992). Port of gb func_00f31ea0 (nonmatchings/session141/gb) via tools/ovl/port.py, with the ease tables mapped by hand (D_00FA5D50 / D_00FA5D78 = gb D_00F615D0 / D_00F615F8); same diff, see the gb file for notes. */
+/* gb.x func_00f58f98 near miss: 464 words differ, score 176 (ours 2032 bytes, original 1992). Free-camera / map-view input loop: pad direction rotates the World x10D4/x10D8 angles over 15 eased frames (func_001befc8 on D_00FA5D50 / D_00FA5D78, / 22.5 and / 90, with +-4096 wrap); buttons drive func_00f47268 / func_00f48aa8 / func_00f58300 / func_00f625f0 and the D_00FA5CE0 sub-mode; palette refresh into D_0108CE90 (RGBAQ(r/2, g/2, b/2, 102), as in func_00f58300); then the func_00f57cf0 / func_00f57e78 shortcuts and the World x4C change handler. Logic is complete. An unused s32[4] local gives the 160-byte frame. Left: every D_00F9B540 access comes out as lui/addiu + lw 0 (the outer for (;;) loop hoists &D_00F9B540, and reload rematerializes it), where the original uses lw %lo directly; that is the 40-byte excess. A goto loop gets the size close (1984, 366 words) but GCSE then keeps &D_00F9B540 and &D_00FA5CE0 in s-registers (score 196). Modes nogcse/nosi/nofill/nostrict/norlo/faddr/fmam/nosib and nostrict_norcse do not help. */
 typedef struct {
     u8 pad0[72];
     u16 x48;
@@ -86,10 +87,10 @@ void func_00f58f98(void) {
         flag = 0;
         pad = func_001ba488(0);
         dir = func_00f4c510(pad);
-        prev = D_00F9B540->x4C;
+        prev = (*(World **)0x00F9B540)->x4C;
         if (dir != 0) {
-            rx = D_00F9B540->x10D4;
-            ry = D_00F9B540->x10D8;
+            rx = (*(World **)0x00F9B540)->x10D4;
+            ry = (*(World **)0x00F9B540)->x10D8;
             dx = 0;
             if (rx < 1024) {
                 dx = (dir & 0x4000) ? 256 : 0;
