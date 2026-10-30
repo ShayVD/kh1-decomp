@@ -1,5 +1,11 @@
+/* drafttwins.py: score 149 -> 144, port.py of the gb twin func_00f2b9b8 draft. Earlier header below. */
 /* drafttwins.py: score 175 -> 149, port.py of the gb twin func_00f2b9b8 draft. Earlier header below. */
-/* Round 36 (wwm2): wm.x func_00f52ab0 near miss: score 185 -> 175 (123 -> 122 words, 1564 vs 1568); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 362). Earlier header below. */
+typedef struct {
+    u8 pad0[136];
+    f32 f136;
+    u8 pad140[28];
+    u16 x8 : 16;
+} Wdim;
 typedef struct {
     u8 pad0[88];
     u64 lo : 32;
@@ -70,8 +76,8 @@ void func_00f52ab0(Ctx *c, void *box, s32 flag) {
     }
     D_00F9B648 = 1;
     sceVu0ViewScreenMatrix(vs, 512.0f, 1.0f, 1.0f, 2064.0f, 2080.0f, 1.0f, 16777000.0f, 1.0f, 65536.0f);
-    px = &xf;
     g = D_00F9B540 + 160;
+    px = &xf;
     sceVu0CopyMatrix(D_00F9B580, vs);
     cam = (f32 *)D_0108CD50;
     sceVu0UnitMatrix(D_00F9B600);
@@ -115,9 +121,9 @@ void func_00f52ab0(Ctx *c, void *box, s32 flag) {
     if (flag) {
         func_00f4a328(10081, c, D_0108CD50, D_00FA5AFC, (u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF, 0);
     }
+    v[2] = 0.0f;
     v[0] = (((GbDims *)g)->x6 >> 1) * 200.0f;
     v[1] = ((u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF) * 200.0f - 50.0f;
-    v[2] = 0.0f;
     sceVu0UnitMatrix(m);
     sceVu0TransMatrix(m, m, v);
     sceVu0RotMatrixX(m, m, 3.1415926f);
@@ -141,10 +147,10 @@ void func_00f52ab0(Ctx *c, void *box, s32 flag) {
     func_00f66f78(10361, func_00f66ae0(c->x0));
     if (*(s16 *)(D_00F9B540 + 122) != 0) {
         c->x0 = func_00f66ac8(c->x0);
-        v[2] = 0.0f;
         v[3] = 1.0f;
         v[0] = 0.0f;
-        v[1] = -(((GbDims *)g)->x8 * 200.0f);
+        v[2] = 0.0f;
+        v[1] = -(((Wdim *)D_00F9B540)->x8 * 200.0f);
         sceVu0UnitMatrix(m);
         sceVu0TransMatrix(m, m, v);
         sceVu0MulMatrix(m, D_0108CE10, m);
