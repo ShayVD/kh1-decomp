@@ -1,4 +1,4 @@
-/* Round 47 wwm2: score 112 -> 84, hill3o statement order. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from a672e810 (wm func_00f4b338 near miss, score 112 -> 84, hill3o statement order (wwm2 round ) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 84 was not valid. Restored the last valid statement order: score 112. Earlier header below. */
 /* wm f4b338 near miss (port of gb twin f24240 near miss): 182 words differ, score 112 (800 vs 816 bytes). Same shape and leftovers as the gb twin: id and own live in 0/4(sp) and the pos copy in 8(sp) in the original, flags=0 hoisted to s5, register numbering. Tried flags/own init placement and pos/cur load order (no change). */
 typedef struct { u16 h0; u16 h2; u16 h4; u16 h6; u8 b8; u8 b9; u16 h10; } T12;
 typedef struct { T12 t; u16 h12; } T14;
@@ -30,24 +30,24 @@ s32 func_00f4b060(GbPos, GbPos, s32);
 s32 func_00f4afb8(s32);
 
 s32 func_00f4b338(s32 id, T14 *loc) {
-    GbPos c;
-    GbPos pos;
     s32 own = 0;
-    s32 ret;
+    GbPos pos;
+    GbPos c;
+    GbPos t;
+    T14 *hit;
     GbPos s;
     s32 flags = 0;
-    T14 *hit;
-    GbPos t;
+    s32 ret;
     if (loc == NULL) {
-        loc = &D_00F9B540->home;
         own = 1;
+        loc = &D_00F9B540->home;
     }
     pos = D_00F9B540->pos;
     c = D_00F9B540->cur;
-    hit = func_00f4b258(*(u16 *)&D_00F9B540->pos, id);
     c.y = pos.y;
-    t = c;
+    hit = func_00f4b258(*(u16 *)&D_00F9B540->pos, id);
     s = func_001bbdf0(loc);
+    t = c;
     if (t.x + s.x >= D_00F9B540->w)
         t.x = D_00F9B540->w - s.x;
     if (t.y + s.y >= D_00F9B540->d)
@@ -67,10 +67,10 @@ s32 func_00f4b338(s32 id, T14 *loc) {
     if (pos.z >= t.z + s.z)
         t.z = pos.z - s.z + 1;
     if (own && hit != NULL) {
-        flags = 3;
-        D_00F9B540->cur = *(GbPos *)&hit->t.h0;
-        D_00F9B540->h62 = func_001bbdf0(hit);
         ret = 1;
+        D_00F9B540->cur = *(GbPos *)&hit->t.h0;
+        flags = 3;
+        D_00F9B540->h62 = func_001bbdf0(hit);
     } else {
         ret = 0;
         if (func_00f4b060(t, s, id))
@@ -80,6 +80,6 @@ s32 func_00f4b338(s32 id, T14 *loc) {
     }
     if (!func_00f4afb8(loc->t.h4 - 1))
         flags |= 0x11;
-    return ret;
     D_00F9B540->flags = flags;
+    return ret;
 }
