@@ -4,7 +4,8 @@
  * answers 1, every field of dest and the MAC bits must equal the scalar form's; where it answers 0, the
  * caller runs the scalar form.  Session 147: also vu_op / vu_opb (the FMACs' usual form) against their
  * session 141 form, kept here verbatim (old_*), bit for bit on every lane (their fin() / fout() clamps
- * changed; vu_opbl takes the broadcast field from the vector), and vu_put against the field copy it replaced.  Meaningful on ARM with NEON (tests/selftest.sh: arm-linux-gnueabihf-gcc
+ * changed; vu_opbl takes the broadcast field from the vector), and vu_put against the field copy it replaced.  Session 149:
+ * a third of the cases with fields that cancel (b = +-a, c = +-a*b, some one bit off), the exact 0's Z.  Meaningful on ARM with NEON (tests/selftest.sh: arm-linux-gnueabihf-gcc
  * -mfpu=neon under qemu-arm, when both are there); elsewhere vu_ope always answers 0. */
 #include "common.h"
 #include "../../host/port/vu1.c"
@@ -141,6 +142,16 @@ int main(int argc, char **argv) {
         u32 a[4], b[4], c[4], bb[4], te[4], tv[4], me = 0, mv = 0, dest = 1 + rnd() % 15, f, ok;
         int k = ks[rnd() % 5], withmac = rnd() & 1, bcast = rnd() % 3 == 0;
         for (f = 0; f < 4; f++) { a[f] = val(); b[f] = val(); c[f] = val(); }
+        if (rnd() % 3 == 0) /* session 149: results that cancel to 0 (or a denormal NEON flushes): b = +-a, c = +-a*b */
+            for (f = 0; f < 4; f++) {
+                Fu x;
+                if (rnd() & 1) continue;
+                if (k == K_MADD || k == K_MSUB) {
+                    x.f = fin(a[f]) * fin(bcast ? b[0] : b[f]);
+                    c[f] = (x.u & 0x7F800000u ? x.u : x.u & 0x80000000u) ^ (k == K_MADD ? 0x80000000u : 0) ^ (rnd() % 4 ? 0 : 1);
+                } else if (!bcast)
+                    b[f] = a[f] ^ (k == K_ADD ? 0x80000000u : 0) ^ (rnd() % 4 ? 0 : 1);
+            }
         for (f = 0; f < 4; f++) bb[f] = bcast ? b[0] : b[f];
         scalar(te, k, a, bb, c, dest, withmac ? &me : 0);
         ok = bcast ? vu_opbe(tv, k, a, b, c, dest, withmac ? &mv : 0) : vu_ope(tv, k, a, b, c, dest, withmac ? &mv : 0);
