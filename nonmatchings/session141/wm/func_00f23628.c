@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 73 -> 71, hill3o statement order. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f23628 near miss: 128 -> 127 words, score 81 -> 73 (aligned diff 57 -> 53). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* 128 words left (596 vs 568): globals D_00F850BC/C0/C4/D_00F8C23C must stay as %hi in s-regs with %lo uses (target) instead of full addresses; frame 80 vs 64. func_00f66240-style m2c extra args not the issue here. Tried call/ternary shapes and all modes. Round 22 (wwm1): the if/else at line(s) 87 with the arms swapped and the test negated (ifswap.py): score 83 -> 81. */
 typedef struct { s16 a; s16 b; } P23628;
@@ -30,22 +31,22 @@ extern s32 D_00FBB320;
 extern s32 D_00FBB324;
 
 void func_00f23628(void) {
-    f32 v[4];
-    s32 r;
     s32 a, b;
     P23628 *p;
-
+    s32 r;
+    f32 v[4];
     D_00F850A8 = 1;
     func_001ba708(1);
+
+    D_00FBB320 = 0;
     D_00FBAA90 = 0;
-    D_00FBAA94 = 1;
-    v[0] = 0;
     D_00F9B2EC = 0;
     v[3] = 1.0f;
-    D_00FBB320 = 0;
+    D_00FBAA94 = 1;
+    v[0] = 0;
+    D_00FBB324 = 0;
     v[2] = 1600.0f;
     v[1] = 0;
-    D_00FBB324 = 0;
     sceVu0UnitMatrix(D_00F85200);
     sceVu0TransMatrix(D_00F85200, D_00F85200, v);
     func_001bb480();
