@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 7 -> 5, hill3o statement order. Earlier header below. */
 /* 4 words differ, score 7 (1564 vs 1568 incl. trailing nop). Left: in both D_00FBB558 blocks orig does lw s0,4(s4); addu s0,s8,s0 (z first), ours addu s0,s0,s8, plus one move t0/addiu a1 swap that follows. Key finds: xx/yy reused for the GS offsets, list[i] index loop, literal % 24, i reused for z + D_00FBB558.b. Tried z + i / i + z / i += z, 10 min permuter (no gain) */
 typedef struct { s32 a, b, c, d; } T28;
 extern u64 **D_00F85160;
@@ -29,22 +30,22 @@ s32 func_00f22ac8(void);
 f32 cosf(f32);
 
 void func_00f28448(s32 x, s32 y, s32 z, s32 *list) {
-    u64 *p;
     s32 *q;
+    u64 *p;
     s32 cnt, n, sum, i, xx, yy, h, a, b, w, k;
     f32 c;
-
     p = func_00f66b78(func_00f66ac8(*D_00F85160));
-    p[1] = 20;
     p[0] = 0;
-    p += 2;
+    p[1] = 20;
     yy = (0x740 - y) << 4;
     xx = (0x700 - x) << 4;
+    p += 2;
     p[0] = 0x30003;
     p[1] = 71;
     p += 2;
-    p[0] = (u64)xx | ((u64)yy << 32);
     p[1] = 24;
+    p[0] = (u64)xx | ((u64)yy << 32);
+
     p += 2;
     p[0] = 68;
     p[1] = 66;
@@ -54,8 +55,8 @@ void func_00f28448(s32 x, s32 y, s32 z, s32 *list) {
     p = func_00f23fe8(0, 344, 512, 50, 8, 128, p);
     p = func_00f23a58(16, 8, 2, 128, p);
     if (list != 0) {
-        cnt = func_00f26e48(list);
         n = 0;
+        cnt = func_00f26e48(list);
         sum = 0;
         for (i = 0; list[i] != 0; i++) {
             if (func_001bb2e0(list[i]) >= 4) n++;
@@ -81,8 +82,8 @@ void func_00f28448(s32 x, s32 y, s32 z, s32 *list) {
         c = cosf((f32)(D_00FBB33C % 24) * 6.28318505f / 24.0f);
         b = c * 4.0f * 16.0f + 0.5f;
         a = c * 16.0f + 16.0f;
-        D_00FBB340 = 128 - a;
         yy = (z + 348) << 4;
+        D_00FBB340 = 128 - a;
         p = func_00f24ac8(b + 256, yy, 4, D_00FBB340, p);
         p = func_00f24c80(((496 - D_00F874F8[0x17]) << 4) - b, yy, 4, D_00FBB340, p);
         p = func_00f66b78(p);
@@ -91,13 +92,13 @@ void func_00f28448(s32 x, s32 y, s32 z, s32 *list) {
         p += 2;
         func_00f66b90(p);
         if (D_00FBB558.a) {
-            xx = (512 - D_00F874F8[0x1C]) / 2;
             i = D_00FBB558.b;
             i = z + i;
+            xx = (512 - D_00F874F8[0x1C]) / 2;
             p = func_00f23a58(xx, i + 352, 5, 128, p);
-            yy = i + 356;
             p = func_00f23a58(xx + 12, i + 357, 16, 128, p);
             xx = (D_00F874F8[0x53] + 12) / 2 + 256;
+            yy = i + 356;
             p = func_001f0868(p, 1, 2, -128, xx, yy, func_00f2b8f0(func_002193f0() + 13), 16);
         }
         if (D_00FBB558.c) {
