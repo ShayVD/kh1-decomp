@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 91 -> 89, func_00f294a0 declared s32. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f23018 near miss: 251 -> 251 words, score 99 -> 91 (aligned diff 73 -> 66). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* score 99 (1308 vs 1336). World-map main: heap/texture setup, D_00FB6498 callbacks (init/draw/done), handler registration, then the frame loop with two GIF end packets. D_00FBAA78..8C as one array (149 -> 99). Left: orig keeps &D_00FBAA78/&D_00FBAA7C in s1/s0 and stores the rest by %lo, scheduling of the D_00FB6498 field stores, 28 bytes. Round 26 wwm2. */
 typedef struct {
@@ -49,7 +50,7 @@ void func_00f23008(void);
 void func_00f23878(void);
 void func_00f25420(void);
 void func_00f254f8(void);
-void func_00f294a0(s32, s32, s32);
+s32 func_00f294a0(s32, s32, s32);
 void func_00f29810(s32, u8 *, u8 *);
 void func_00f29aa0(s32, u64 **, s32, u8 *, u8 *, f32 (*)[4], f32);
 void func_00f2ac98(u8 *);
