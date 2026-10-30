@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 77 -> 71, func_001f9438 and func_001fbcd8 declared s32. Earlier header below. */
 /* score 77 (132 words; 676 vs 672 bytes). UI draw. One extra `move a1,v1` (shared %hi for D_00FB4CEC/CE8) and scheduling around the first func_001fc308; dropping the w local gives score 50 but loads D_00FB4CE0 twice (680 bytes). The RGBA tree in the original is (r | a<<24) | (b<<16 | g<<8). Tried RGBA operand orders, statement orders, decl orders/types, all modes. */
 #include "ovl.h"
 
@@ -28,8 +29,8 @@ extern s16 D_00FB5918[];
 s32 func_001bc500(void);
 u8 *func_001bc4d0(void);
 void func_001fc308(void *, s32, s32, s32, s32, s32, s32, u32, u32);
-void func_001f9438(void *, s32, s32, s32, s32, s32, u32);
-void func_001fbcd8(void *, s32, s32, s32, s32, s32, s32, s32, u32);
+s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
+s32 func_001fbcd8(void *, s32, s32, s32, s32, s32, s32, s32, u32);
 
 #define RGBA(r, g, b, a) ((r) | ((g) << 8) | ((b) << 16) | ((a) << 24))
 
