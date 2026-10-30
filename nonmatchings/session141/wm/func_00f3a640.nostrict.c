@@ -1,3 +1,4 @@
+/* Round 45 wwm2: score 86 -> 78, hill3o statement order under this build mode. Earlier header below. */
 /* Round 44 wwm2: score 94 -> 86 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* 127 words (528 vs 544). Structure and calls right (entry of 272 bytes, S/T/U sub-structs at 224/240/256). Left: the target adds each sub-struct offset to id*272 before adding the base (s4 = (id*272+224)+D, s0 = (id*272+240)+D, U computed lazily), keeps id and id*16 in s7/s8, and recomputes &D[id] after the loop. Tried direct D[id] fields (136), sub-struct pointers (127), a single E pointer (96 words but 396 bytes) and a base-pointer local (this one, best score). */
 typedef struct { s32 type; u8 pad[44]; } Q3a640;
@@ -34,15 +35,15 @@ void func_001c0310(s32, void *, void *);
 void func_00f3a268(void);
 
 s32 func_00f3a640(s32 id, f32 *pos, D3a640 *desc, s32 val) {
-    Q3a640 *q;
+
     E3a640 *bs = D_00FCE390; S3a640 *sp = &bs[id].s;
     T3a640 *tp = &bs[id].t;
+    Q3a640 *q;
     E3a640 *e = &D_00FCE390[id];
-
     sp->x4 = val;
     sp->desc = desc;
-    sp->f8 = pos[0];
     tp->t0 = func_00f64c38(desc->b0, D_00F87020);
+    sp->f8 = pos[0];
     tp->t1 = func_00f650f0(1, tp->t0);
     D_00FCE390[id].u.list = (Q3a640 *)func_00f64c38(desc->h4, D_00F8704C);
     func_00f37028(e, pos);
@@ -65,8 +66,8 @@ s32 func_00f3a640(s32 id, f32 *pos, D3a640 *desc, s32 val) {
     }
     func_00f39de8(&D_00FCE390[id]);
     if (!func_00f3a1d8(D_00FCE390[id].v48)) {
-        D_00FCE390[id].s.on = 0;
         return 0;
+        D_00FCE390[id].s.on = 0;
     }
     D_00FCE390[id].s.on = 1;
     func_001c0310(11, func_00f3a268, &D_00FCE390[id]);
