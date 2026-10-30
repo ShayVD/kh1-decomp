@@ -1,4 +1,4 @@
-/* 14 words / score 28; instruction order right, registers shifted by one (orig addr a2, const a3, result a1; ours a1/a2/a0); tried void*/u64* param, extra param, all flag modes, statement perms; 5 min permuter no gain */
+/* 14 words / score 28; instruction order right, registers shifted by one (orig addr a2, const a3, result a1; ours a1/a2/a0); tried void * and u64 * params, extra param, all flag modes, statement perms; 5 min permuter no gain */
 extern u32 *D_00F82874;
 
 void func_00f3fa40(u32 p) {
