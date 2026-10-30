@@ -69,7 +69,9 @@ from m2c. Two kh1.toml flag modes are used by a few overlay functions (session 1
 - `nofill` (delay slots not filled): dkmovie's DMA register writers, gb func_00f4d880, the
   xs_dh_break random float (the main ELF's rand.nofill.c).
 - `nosib` (`-fno-optimize-sibling-calls`, new): wm's sound helpers func_00f2fe40,
-  func_00f2fe88, func_00f454b0 end in `jal` + return where -O2 would tail-call.
+  func_00f2fe88, func_00f454b0 end in `jal` + return where -O2 would tail-call. It also
+  changes cross-jumping of calls in if/else arms (wm func_00f23628, func_00f37770); see
+  "Two calls merged into one jal: a nosib signal".
 
 A hand file named `func_X.<mode>.c` is compiled with that mode (`KH1_MODE=<mode>` for
 autodecomp; hand.py and twins.py pass it on from the draft's or the source's name).
@@ -874,6 +876,47 @@ including chained assignments, labels and multi-line statements since round 48. 
 `--check` on the result of any other reorderer. The r35 hill3.py copies (wwm2 r35, wwm1 w3/w4) keep
 control lines and labels in place but miss chained assignments, `x++` inside an expression, `L: stmt;`,
 multi-line statements, calls to names other than `func_`/`sce`/`Plat`, and pointer-against-global aliasing.
+
+### Two calls merged into one jal: a nosib signal (wwm1, rounds 34-35)
+
+**The signal.** The original has one `jal` where the draft has two, in this shape:
+- Both arms of an if/else call the same function and keep the result in an s register.
+- The arm laid out first ends with `b` into the other arm, just before that arm's call
+  (`li a1,1` in the `b`'s delay slot, often followed by a `.p2align` nop).
+- Each arm still has its own copies of the insns before the shared tail (wm func_00f23628 has `lui s1`
+  twice).
+
+This is jump2 cross-jumping two per-arm calls. In plain -O2, gcc does not do this when the arm that falls
+through ends with a call. Try the draft in nosib mode (`func_X.nosib.c`, or `nostrict_nosib`/`nogcse_nosib`)
+before you rewrite anything.
+
+Examples:
+- wm func_00f23628: 71 -> 69. Its two calls now merge as in the target.
+- wm func_00f37770: matched unchanged as `.nosib.c`. Its draft had scored 24 in plain -O2.
+
+**Why (traced with `-da` dumps of f23628):**
+1. With sibling-call optimisation on, gcc 2.96 expands every call that is not inside a loop as a
+   CALL_PLACEHOLDER: the normal sequence plus a sibcall alternative.
+2. The `.01.sibling` pass (optimize_sibling_and_tail_recursive_calls) picks the normal sequence for
+   calls that are not in tail position. When the placeholder is the last thing in a basic block, so a
+   label follows the call and its result move, the pass emits an `(insn (use (const_int 0)))` there.
+   f23628 has 3 of these in `.01.sibling`. With `-fno-optimize-sibling-calls`, the `.02.jump` dump has
+   only 1, and it is not at the end of an arm.
+3. Nothing deletes these USEs before jump2.
+4. jump2's find_cross_jump compares the insns before the first arm's `b` with the insns before the join
+   label, which belong to the arm that falls through. That arm's last insn is the USE, it does not
+   match the other arm's result move, and the cross-jump stops.
+
+**Small tests** (/tmp/claude-0/s141/wwm1/r35/t/a.c, one function per shape):
+- `if (g) r = f(h, 1); else r = f(h, 0); f2(0, 0); g = r;` has two `jal f` at -O2 and one in nosib mode.
+- The same if/else inside a `for` loop merges in both modes, because calls in loops get no placeholder.
+- When the arms share only `lw a0` and the call (no result kept in an s register), nothing merges in
+  either mode. So a single shared call in the target does not always mean nosib.
+
+**Sweep, round 35.** All 218 overlay drafts were tried in their own mode plus nosib (nonmatchings/session141/*
+and the drafts.tsv drafts). Temporary modes were added for the combinations: nofill_nosib,
+nostrict_nofill_nosib, norlo_nosib. f37770 was the only match, and no other draft improved.
+Use the signal per function. It is not a per-file mode.
 
 ## Results
 
