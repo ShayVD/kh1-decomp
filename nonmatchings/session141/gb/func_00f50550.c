@@ -1,3 +1,4 @@
+/* Round 54 wgb: score 166 -> 164, CONTEXT_ONLY definition of func_0011d768 after its prototype (wwm2 tools/ovl/nothrow.py). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 7c941450 (gb func_00f50550 near miss, score 166 -> 158, port of wm func_00f77648 (wwm2 rou) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 158 was not valid. Restored the last valid statement order: score 166. Earlier header below. */
 /* 253 words / score 168 (1184 vs 1192); round 30 wgb: 228 words, score 166, 1192 vs 1192 bytes with func_00f444b8 declared (Win *, f32, f32) and called (*pw++, 256.0f, ...) like its matched callers, plus a CONTEXT_ONLY definition so the call is nothrow; was 253/168). Ported unchanged from the wm twin near miss func_00f77648 (port.py wm -> gb). Same open issue: gcc CSEs the 256 constant into an s-reg across calls where the original reloads it with li each time. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
@@ -19,7 +20,7 @@ s32 func_00f20018(void);
 void func_00f4d880(Win *, s32);
 CONTEXT_ONLY void func_00f444b8(Win *a0, f32 a1, f32 a2) {}
 void func_0024e468(s32);
-void func_0011d768(s32);
+void func_0011d768(s32); CONTEXT_ONLY void func_0011d768(s32 a0) {}
 void func_00f43cf0(s32);
 void func_00106880(s32);
 void func_00f26430(s32);
