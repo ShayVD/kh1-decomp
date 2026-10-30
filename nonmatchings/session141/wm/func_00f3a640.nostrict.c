@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 94 -> 86 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* 127 words (528 vs 544). Structure and calls right (entry of 272 bytes, S/T/U sub-structs at 224/240/256). Left: the target adds each sub-struct offset to id*272 before adding the base (s4 = (id*272+224)+D, s0 = (id*272+240)+D, U computed lazily), keeps id and id*16 in s7/s8, and recomputes &D[id] after the loop. Tried direct D[id] fields (136), sub-struct pointers (127), a single E pointer (96 words but 396 bytes) and a base-pointer local (this one, best score). */
 typedef struct { s32 type; u8 pad[44]; } Q3a640;
 typedef struct { u8 b0; u8 pad[3]; u16 h4; } D3a640;
