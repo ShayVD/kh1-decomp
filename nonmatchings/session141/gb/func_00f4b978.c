@@ -1,3 +1,4 @@
+/* Round 54 wgb: score 37 -> 35, CONTEXT_ONLY definition of func_0024e468 after its prototype (wwm2 tools/ovl/nothrow.py). Earlier header below. */
 /* Round 46 wwm2: score 39 -> 37, port.py of the wm twin func_00f72a70 draft. Earlier header below. */
 /* gb.x func_00f4b978 near miss: 218 words differ, score 39 (ours 1244 bytes, original 1232). Port of wm func_00f72a70's near miss (port.py), not worked further. See the wm notes: lui s2,0x2c should go into the delay slot of the jump to the outer test, but ours schedules it before the second func_00f445a8 call (in s6). */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
@@ -22,7 +23,7 @@ Itm *func_001bc4f0(void);
 s32 func_001bc520(void);
 void func_001bdb58(void);
 void func_001f3dc0(s32);
-void func_0024e468(s32);
+void func_0024e468(s32); CONTEXT_ONLY void func_0024e468(s32 a0) {}
 void func_00f43cf0(s32);
 void func_00f444d8(s32, s32, s32);
 void *func_00f445a8(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
