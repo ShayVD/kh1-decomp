@@ -336,7 +336,7 @@ state:
                 func_00f6b5b0(s0, 0.0f, D_00FB4A70);
                 func_0024e468(D_00FB4A70);
                 func_00f6ae60(s0);
-                goto end;
+                break;
             }
             b = D_002C5AD0.x8;
             TOGGLE();
@@ -352,6 +352,7 @@ state:
             }
             HILITE(s0);
         }
+        goto end;
     }
     if (D_0108F554 < 0) goto end;
     D_0108F1E8 = 0;
