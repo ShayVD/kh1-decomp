@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 76 -> 70, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 78 -> 76, func_001c0310 declared s32. Earlier header below. */
 /* Round 45 wwm2: score 86 -> 78, hill3o statement order under this build mode. Earlier header below. */
 /* Round 44 wwm2: score 94 -> 86 under the nostrict build mode (r44/modescan.py). Earlier header below. */
@@ -67,8 +68,8 @@ s32 func_00f3a640(s32 id, f32 *pos, D3a640 *desc, s32 val) {
     }
     func_00f39de8(&D_00FCE390[id]);
     if (!func_00f3a1d8(D_00FCE390[id].v48)) {
-        return 0;
         D_00FCE390[id].s.on = 0;
+        return 0;
     }
     D_00FCE390[id].s.on = 1;
     func_001c0310(11, func_00f3a268, &D_00FCE390[id]);
