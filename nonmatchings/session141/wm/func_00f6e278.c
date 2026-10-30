@@ -1,5 +1,5 @@
+/* drafttwins.py: score 186 -> 133, port.py of the gb twin func_00f47180 draft. Earlier header below. */
 /* drafttwins.py: score 200 -> 186, port.py of the gb twin func_00f47180 draft. Earlier header below. */
-/* Round 47 wwm2: score 202 -> 200, e = (It *)(D_0108F288 * sizeof(It) + (u32)items) puts the scaled index first in the addu (swapscan). Earlier header below. */
 typedef struct { u8 x0; u8 x1; u8 pad2; u8 x3; u8 pad4; u8 x5; u8 pad6[2]; s16 x8; s16 xa; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; u8 pad34[4]; u8 x38; u8 x39; u8 x3a; u8 x3b; } Ic;
 typedef struct { u8 pad[16]; s32 x10; u8 pad2[44]; void *x40; } Win;
 typedef struct { u8 pad[2]; u8 x2; u8 x3; u8 x4; u8 x5; u8 x6; u8 pad7[9]; } It;
@@ -90,19 +90,19 @@ void func_00f6e278(void)
     u8 col[4];
     s32 mode, i, x, n, t;
     s32 fmt;
-    mode = D_00FB4A70;
-    D_0108F1E8 = 0;
     D_0108F1BC = 4;
-    D_0108F1D4 = 400;
-    D_0108F1C0 = 0;
-    i = 0;
-    D_0108F1FC = 430;
+    mode = D_00FB4A70;
     D_0108F204 = 0;
+    D_0108F1E8 = 0;
+    D_0108F1D4 = 400;
+    i = 0;
+    D_0108F1C0 = 0;
+    D_0108F1FC = 430;
     D_0108F1F8 = 0;
     D_0108F200 = 190;
 
-    D_0108F288 = 0;
     D_0108F254 = 0;
+    D_0108F288 = 0;
     save = D_00FB4A58;
     func_00f6b6a0(3, 6, 0, 1, 0, 15, 0, 0, D_00FB4B90, D_00FB4B94, 0, D_00FB4B98, (D_00FB4BAC + 1) * D_00FB4BB0, 10, 10, 10, 100, 256, mode);
     x = D_00FB4B88 + D_00FB4BB0 + D_00FB4BB0;
@@ -115,16 +115,15 @@ void func_00f6e278(void)
         ic->x3 = 0;
         ic->x5 = 15;
         ic->x1c = D_00FB4B84 + 2;
-        ic->x2c = 0.0f;
-        ic->x14 = D_00FB4B84 + 2;
-        ic->xa = D_00FB4BB0 - 1;
         ic->x20 = x;
-        ic->x8 = D_00FB4B8C - 4;
+        ic->x14 = D_00FB4B84 + 2;
+        ic->x18 = x;
+        ic->x8 = (s16)D_00FB4B8C - 4;
+        ic->xa = D_00FB4BB0 - 1;
         ic->x38 = D_00FB4BBC;
         ic->x39 = D_00FB4BC0;
         ic->x3a = D_00FB4BC4;
-        ic->x18 = x;
-        ic->x30 = 0.0f;
+        ic->x2c = ic->x30 = 0.0f;
         ic->x3b = D_00FB4BC8;
         func_00f6b5b0(ic, 256.0f, mode);
         x += D_00FB4BB0 * 2;
@@ -138,8 +137,8 @@ void func_00f6e278(void)
     D_0108F1EC = 128.0f;
     D_0108F28C = 0;
     D_00FB58F0.xc = D_00FB4C40;
-    D_0108F188 = 0;
     D_00FB58F0.xe = D_00FB4C44;
+    D_0108F188 = 0;
     func_001f31a8(&D_00FB58F0, 1);
     D_003E8E08 = D_00FB8928;
     func_00f6b6a0(3, 2, 0, 1, 0, D_00FB4C98, 82, 0, D_00FB4C9C, D_00FB4CA0, 0, 0, 0, D_00FB4CA4, D_00FB4CA8, D_00FB4CAC, D_00FB4CB0, 256, func_00f47110() == 0 ? mode : 1);
@@ -175,8 +174,8 @@ void func_00f6e278(void)
             fmt = 0;
             break;
         case 0x40:
-            ch = 64;
             cw = 64;
+            ch = 64;
             a = 0x20000;
             b = 0x21000;
             fmt = 8;
@@ -224,8 +223,8 @@ void func_00f6e278(void)
     func_0024e468(D_00FB4A70 + 1);
     D_0108F254 = 1;
     D_00FB4A58 = save;
-    D_0108F1BC = 0;
     D_0108F204 = 1;
+    D_0108F1BC = 0;
     func_00f6ade8(3);
     if (D_0108F1B8 > 0) D_0108F1B8 = -1;
 }
