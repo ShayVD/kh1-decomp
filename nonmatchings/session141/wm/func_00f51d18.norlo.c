@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 408 -> 400, func_00f4b338 declared s32. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f51d18 near miss (norlo mode): 547 -> 550 words, score 430 -> 408 (aligned diff 240 -> 235). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules; 85 s, seed 1) over the round 44 norlo draft; the order passes hill3.py --check against it. Earlier header below. */
 /* Round 44 wwm2: score 460 -> 430 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* NEAR MISS 567 words, score 544 (3008 vs 3040 bytes). Port of gb func_00f2ac20 (same score); ease tables mapped by hand: D_00FA5B38 / D_00FA5B60 = gb D_00F613B8 / D_00F613E0. See the gb file for what was tried. Round 19 (wwm1): 567 -> 547 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 484 -> 460 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
@@ -63,7 +64,7 @@ void func_00f48aa8(s32);
 f32 func_001befc8(s32, void *);
 void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
 void func_0011d768(s32);
-void func_00f4b338(void *, s32);
+s32 func_00f4b338(void *, s32);
 void func_00f50968(void); CONTEXT_ONLY void func_00f50968() {}
 void func_00f4b668(s32, void *);
 void func_00f4b878(void *);
