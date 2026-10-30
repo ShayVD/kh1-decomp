@@ -1,4 +1,4 @@
-/* ~90 words (score 60): norlo; count-up loop and in-loop float constants match, but the original also keeps a copy of the res slot pointer (s3) and hoists three %hi luis (s5-s7, frame 112 vs 96); looks like it wants -fno-rerun-loop-opt plus -fmove-all-movables (no such mode). */
+/* ~61 words (score 41, 436 vs 432; was 60): norlo. Round 29 wwm2: testing and storing the slot as c->res[i] and reading the final (*rp)->pos through rp = &c->res[i] gives the original's second slot register (s3) and the three hoisted %hi luis (s5-s7, frame 112). Left: ours makes rp its own giv (addiu s3,s3,4) where the original copies it from the c->res[i] giv each pass (move s3,s1), and the schedule around the create calls; plain/nostrict/nogcse modes are worse (49-96). */
 #include "ovl.h"
 
 typedef struct { f32 *pos; } Res;
@@ -27,9 +27,9 @@ s32 func_00f225b0(Ctl *c) {
         for (; i < 2; i++) {
             rp = &c->res[i];
             m = D_00F23FA0;
-            if (*rp == NULL) {
+            if (c->res[i] == NULL) {
                 func_00147ed8(D_00F23208, 16, 20000, c->v[i]);
-                *rp = func_00147c98(D_00F23208, 17, 20000);
+                c->res[i] = func_00147c98(D_00F23208, 17, 20000);
                 c->v[i][3] = 1.0f;
                 sceVu0ApplyMatrix(c->v[i], m, c->v[i]);
             }

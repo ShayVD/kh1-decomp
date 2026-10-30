@@ -1,0 +1,197 @@
+/* Round 46 wwm2: score 245 -> 215, hill3o statement order. Earlier header below. */
+/* Round 46 wwm2: score 249 -> 245, func_00f24240 declared s32. Earlier header below. */
+/* Round 41 wwm2: score 337 -> 249, port.py of the wm twin func_00f47f40 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
+/* gb.x func_00f20e48 near miss: 236 words differ, score 337 (ours 1420 bytes, original 1480). World init: view-screen matrix and two light matrices at World+4112, misc World fields, the 16-byte header from func_001ba980, palette bytes from D_00379F28 / D_0037A028, and GbPos bitfields at 72/92/94/96 from func_001bb678. Logic is complete. Findings: the float constants are truncated, so write 0.577f, 0.8f, 0.3f, 0.4f and 0.1f as is, since this gcc truncates; the u16 bitfields are accessed with ld/sd because World is 16-aligned (declare them as u16 bitfields, not u64); hold World->m in a local OvlMtx *mm and index mm[1], mm[2] directly; load b0 once into a local. Left: (1) the order of the matrix constant stores (the original first stores the last use of each constant); (2) the GbPos block after func_001bb678. The original computes v / 2 - 1 as u16 arithmetic (+0xffff) and re-extracts each field for the 94/96 copies, while ours CSEs them (60 bytes shorter). All orders of the six bitfield lines were tried (no match). wm twin: func_00f47f40 (same score). */
+typedef struct { u8 b[16]; } Blk16;
+typedef struct {
+    u8 b0;
+    u8 pad1[63];
+    u8 c40[4];
+    u8 c44[4];
+    u16 x48;
+    u16 x4A : 4;
+    u16 y4A : 4;
+    u16 z4A : 4;
+    u16 r4A : 4;
+    u16 x4C;
+    u16 x4E;
+    u8 b50;
+    u8 pad51[3];
+    u16 x54;
+    u16 pad56;
+    s32 x58;
+    u16 x5C : 4;
+    u16 y5C : 4;
+    u16 z5C : 4;
+    u16 r5C : 4;
+    u16 x5E : 4;
+    u16 y5E : 4;
+    u16 z5E : 4;
+    u16 r5E : 4;
+    u16 x60 : 4;
+    u16 y60 : 4;
+    u16 z60 : 4;
+    u16 r60 : 4;
+    u16 x62;
+    u8 b64[16];
+    u16 x74;
+    s16 x76;
+    u16 x78;
+    u16 x7A;
+    u16 x7C;
+    u16 x7E;
+    u16 x80;
+    u16 x82;
+    u16 x84;
+    u16 pad86;
+    f32 x88;
+    s32 x8C;
+    s32 x90;
+    s32 x94;
+    s32 x98;
+    u8 b9C;
+    u8 pad9D;
+    u8 b9E;
+    u8 pad9F[5];
+    u16 xA4;
+    u16 xA6;
+    u16 xA8;
+    u16 xAA;
+    u8 padAC[0xF0 - 0xAC];
+    u8 bF0;
+    u8 padF1[0x1010 - 0xF1];
+    OvlMtx m[3];
+    s32 dma;
+    s32 x10D4;
+    s32 x10D8;
+    s32 x10DC;
+} World;
+extern World *D_00F56DC0;
+extern void *D_00F56DC4;
+extern OvlMtx D_00F56E00;
+extern u8 D_00379F28[];
+extern u8 D_0037A028[];
+void sceVu0ViewScreenMatrix(OvlMtx, f32, f32, f32, f32, f32, f32, f32, f32, f32);
+void sceVu0CopyMatrix(OvlMtx, OvlMtx);
+void func_00f3f858(OvlMtx);
+s32 sceDmaGetChan(s32);
+Blk16 *func_001ba980(void); CONTEXT_ONLY Blk16 * func_001ba980() { return 0; }
+s32 func_00f23bd0(void); CONTEXT_ONLY s32 func_00f23bd0() { return 0; }
+s32 func_001bb6d0(s32);
+u16 func_001bb678(void); CONTEXT_ONLY u16 func_001bb678() { return 0; }
+void func_00f23ed8(void); CONTEXT_ONLY void func_00f23ed8() {}
+void func_001be820(void *, s32);
+void func_00f326b8(void);
+void func_00f24780(void *);
+s32 func_00f24240(void *, s32);
+s32 func_001ba3f0(s32);
+
+void func_00f20e48(void) {
+    OvlMtx *mm;
+    s32 n;
+    u16 v;
+    s32 i;
+    mm = D_00F56DC0->m;
+    sceVu0ViewScreenMatrix(mm[0], 512.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 16777000.0f, 1.0f, 65536.0f);
+    sceVu0CopyMatrix(D_00F56E00, mm[0]);
+    func_00f3f858(mm[0]);
+    mm[1][0][0] = -0.577f;
+    mm[1][0][1] = 0.577f;
+    mm[1][0][2] = 0.577f;
+    mm[1][0][3] = 0.0f;
+    mm[1][1][0] = -0.577f;
+    mm[1][1][1] = 0.577f;
+    D_00F56DC0->x7C = 0;
+    mm[1][1][2] = -0.577f;
+    mm[1][1][3] = 0.0f;
+    mm[1][2][0] = -0.577f;
+    mm[1][2][1] = 0.577f;
+    mm[1][2][2] = -0.577f;
+    mm[1][2][3] = 0.0f;
+    mm[1][3][0] = 0.0f;
+    mm[1][3][1] = 0.0f;
+    mm[1][3][2] = 0.0f;
+    mm[2][0][0] = 0.8f;
+    mm[1][3][3] = 1.0f;
+    mm[2][0][1] = 0.8f;
+    mm[2][0][2] = 0.8f;
+    mm[2][0][3] = 0.0f;
+    mm[2][1][0] = 0.3f;
+    mm[2][1][1] = 0.3f;
+    mm[2][1][2] = 0.5f;
+    mm[2][1][3] = 0.0f;
+    mm[2][2][0] = 0.4f;
+    mm[2][2][1] = 0.4f;
+    mm[2][2][2] = 0.4f;
+    mm[2][2][3] = 0.0f;
+    mm[2][3][0] = 0.1f;
+    mm[2][3][1] = 0.1f;
+    mm[2][3][2] = 0.3f;
+    mm[2][3][3] = 1.0f;
+    D_00F56DC0->x78 = 1;
+    D_00F56DC0->x8C = 0;
+    D_00F56DC0->x76 = 3;
+    D_00F56DC0->x88 = -2944.0f;
+    D_00F56DC0->x90 = 0;
+    D_00F56DC0->dma = sceDmaGetChan(2);
+    D_00F56DC0->x82 = 0;
+    D_00F56DC0->x84 = 1;
+    *(Blk16 *)D_00F56DC0 = *func_001ba980();
+    D_00F56DC0->x80 = 0;
+    n = D_00F56DC0->b0;
+    D_00F56DC0->x7E = n;
+    D_00F56DC0->c40[0] = D_00379F28[n * 4 + 0];
+    D_00F56DC0->c40[1] = D_00379F28[n * 4 + 1];
+    D_00F56DC0->c40[2] = D_00379F28[n * 4 + 2];
+    D_00F56DC0->c40[3] = D_00379F28[n * 4 + 3];
+    D_00F56DC0->c44[0] = D_0037A028[n * 4 + 0];
+    D_00F56DC0->c44[1] = D_0037A028[n * 4 + 1];
+    D_00F56DC0->c44[2] = D_0037A028[n * 4 + 2];
+    D_00F56DC0->c44[3] = D_0037A028[n * 4 + 3];
+    D_00F56DC0->x4C = func_00f23bd0() + 1;
+    D_00F56DC0->x4A = 0;
+    D_00F56DC0->y4A = 2;
+    D_00F56DC0->z4A = 4;
+    D_00F56DC0->b50 = D_00F56DC0->x7E;
+    D_00F56DC0->x62 = D_00F56DC0->x54 = func_001bb6d0(D_00F56DC0->x4C - 1);
+    D_00F56DC0->x58 = 0;
+    D_00F56DC0->x74 = 0;
+    for (i = 0; i < 16; i++) {
+        D_00F56DC0->b64[i] = 0;
+    }
+    D_00F56DC0->x10D4 = 256;
+    D_00F56DC0->x10D8 = 0;
+    D_00F56DC0->x10DC = 0;
+    D_00F56DC0->x98 = 0;
+    D_00F56DC0->b9C = 0;
+    D_00F56DC0->b9E = 0;
+    D_00F56DC0->x7A = 128;
+    D_00F56DC0->bF0 = 0;
+    v = func_001bb678();
+    D_00F56DC0->y5C = v / 2;
+    D_00F56DC0->xAA = v;
+    D_00F56DC0->z5C = v / 2 - 1;
+    D_00F56DC0->xA6 = v;
+    D_00F56DC0->z60 = D_00F56DC0->z5C;
+    D_00F56DC0->xA8 = v;
+    D_00F56DC0->y60 = D_00F56DC0->y5C;
+    D_00F56DC0->y5E = D_00F56DC0->y5C;
+    D_00F56DC0->x88 = -2944.0f - (v * 420 - 2520);
+    D_00F56DC0->x5C = v / 2 - 1;
+    D_00F56DC0->x60 = D_00F56DC0->x5C;
+    D_00F56DC0->xA4 = 0;
+    D_00F56DC0->x5E = D_00F56DC0->x5C;
+    D_00F56DC0->z5E = D_00F56DC0->z5C;
+    func_00f23ed8();
+    func_001be820(D_00F56DC4, 0x13008);
+    func_00f326b8();
+    func_00f24780(D_00F56DC4);
+    func_00f24240(D_00F56DC4, 0);
+    D_00F56DC0->x94 = 0;
+    if (func_001ba3f0(64) > 0) {
+        D_00F56DC0->x94 = 1;
+        if (func_001ba3f0(65) > 0) {
+            D_00F56DC0->x94 = 2;
+        }
+    }
+}
