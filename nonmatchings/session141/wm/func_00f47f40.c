@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 245 -> 215, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 249 -> 245, func_00f4b338 declared s32. Earlier header below. */
 /* wm.x func_00f47f40 near miss: 236 words differ, score 337 (ours 1420 bytes, original 1480). Port of gb func_00f20e48 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. Round 19 (wwm1): 236 -> 200 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 285 -> 249 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 b[16]; } Blk16;
@@ -85,10 +86,10 @@ s32 func_00f4b338(void *, s32);
 s32 func_001ba3f0(s32);
 
 void func_00f47f40(void) {
-    s32 i;
-    u16 v;
     OvlMtx *mm;
     s32 n;
+    u16 v;
+    s32 i;
     mm = D_00F9B540->m;
     sceVu0ViewScreenMatrix(mm[0], 512.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 16777000.0f, 1.0f, 65536.0f);
     sceVu0CopyMatrix(D_00F9B580, mm[0]);
@@ -99,6 +100,7 @@ void func_00f47f40(void) {
     mm[1][0][3] = 0.0f;
     mm[1][1][0] = -0.577f;
     mm[1][1][1] = 0.577f;
+    D_00F9B540->x7C = 0;
     mm[1][1][2] = -0.577f;
     mm[1][1][3] = 0.0f;
     mm[1][2][0] = -0.577f;
@@ -123,7 +125,6 @@ void func_00f47f40(void) {
     mm[2][2][3] = 0.0f;
     mm[2][3][0] = 0.1f;
     mm[2][3][1] = 0.1f;
-    D_00F9B540->x7C = 0;
     mm[2][3][2] = 0.3f;
     mm[2][3][3] = 1.0f;
     D_00F9B540->x78 = 1;
