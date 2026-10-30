@@ -128,14 +128,14 @@ void func_00f6edd8(Obj *o)
                 D_0108F198 = sely;
                 if (D_002C5AD8 & 0x2000) {
                     switch (D_0108F2AC) {
+                    case 3:
+                        break;
                     case 0:
-                        if (base[sel].a2 == 0) {
-                            func_0011d768(4);
-                            return;
-                        }
+                        if (base[sel].a2 == 0) goto bad;
                     case 1:
                     case 2:
                         if (base[sel].a0 == 0) {
+                        bad:
                             func_0011d768(4);
                             return;
                         }
