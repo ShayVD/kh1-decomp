@@ -1,3 +1,4 @@
+/* Round 58 (wwm2): score 93 -> 89 (300 vs 304 bytes): c1 is read before c0, as the target loads 4(c) first. Left: the target copies the coefficient pointer (move v1,v0) and reads c0 through the copy, which costs the missing word; tried a[k].c0 / a[k].c1 forms (312 bytes), a struct copy, an s32 * and a second pointer. Earlier header below. */
 /* dkmovie.x func_00f212c0: near miss (session 141), 51 words: ADPCM block decoder (16 blocks of 8 bytes, 2 samples a byte); the coefficient pair is read through a copied pointer in the original and the loop registers differ. */
 #include "ovl.h"
 typedef struct { s32 c0, c1; } AdpcmCoef;
@@ -10,8 +11,8 @@ void func_00f212c0(u8 *src, s16 *dst, s32 *hist) {
         u8 h = *src++;
         s32 shift = h & 0xF;
         AdpcmCoef *c = &D_00F283A0[(s8)h >> 4];
-        s32 c0 = c->c0;
         s32 c1 = c->c1;
+        s32 c0 = c->c0;
         for (j = 0; j < 8; j++) {
             s8 b = *src++;
             s32 n;
