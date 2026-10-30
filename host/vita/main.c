@@ -33,7 +33,8 @@
  *                             the latch, the present) on a thread of its own on the third core, from a copy of the
  *                             frame (host/null/pipes.c), while the worker records the next; 0 keeps it on the worker
  *       latewait=N            session 145: 0 (the default) skips the vblank wait when a vblank has already begun
- *                             since the last one ended (the frame is late: waiting would only lose time); 1 always
+ *                             since the last one ended (the frame is late: waiting would only lose time; session
+ *                             149: and the frames after it, until they have made up up to 4 lost vblanks); 1 always
  *                             waits for the next vblank, as before
  *       recq=N                session 146: 1 (the default, with gpuq=1) runs the command recorder's work (the draw
  *                             states, the primitives' GPU vertices, the batches and commands) on the GPU frame's
@@ -113,6 +114,7 @@ static int gpu_on;      /* the GPU renderer runs (gxm.c) */
 static int use_gsq = 1; /* session 141: config.txt's gsq= */
 static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
 static int late_wait;    /* session 145: config.txt's latewait= */
+#define CATCH_UP 4 /* session 149: the vblanks late frames may still make up (kh1_host_vblank) */
 static int use_recq = 1; /* session 146: config.txt's recq= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
@@ -252,17 +254,20 @@ void kh1_host_vblank(void) {
         gpu_frame(kh1_vita_frame_copied());
     kh1_vita_status(frames, kh1_host_cd_reads);
     {
-        /* session 145: a frame that ends after the next vblank has begun goes on at once (one frame a vblank at
-         * most: the next one waits unless another vblank begins first) */
-        static int vcount;
+        /* session 145: a frame that ends after the next vblank has begun goes on at once.  Session 149: and so do
+         * the frames after it until they have caught up with the vblanks they fell behind (at most CATCH_UP of
+         * them): the game's frame is one vblank of its time, so a frame that took four vblanks owes three.  Before,
+         * one frame a vblank at most: in the Dive a drawn frame takes ~4 vblanks and the empty frame after it then
+         * waited for the next one, ~330 ms per 2 s the game stood still (3d-zp's log) */
+        static int vcount; /* the vblank the frames have used up to */
         SceUInt64 t0 = sceKernelGetProcessTimeWide();
         int vc = sceDisplayGetVcount();
         if (woke && (u32)(t0 - woke) > us_worst) us_worst = (u32)(t0 - woke);
-        if (late_wait || !woke || vc == vcount) {
+        if (late_wait || !woke || vc - vcount <= 0) {
             sceDisplayWaitVblankStart();
-            vc = sceDisplayGetVcount();
-        }
-        vcount = vc;
+            vcount = sceDisplayGetVcount();
+        } else if (vc - ++vcount > CATCH_UP) /* the rest of a long stall (a load) is not made up */
+            vcount = vc - CATCH_UP;
         woke = sceKernelGetProcessTimeWide();
         kh1_vita_us_wait += (u32)(woke - t0);
     }

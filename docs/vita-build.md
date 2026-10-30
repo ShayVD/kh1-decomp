@@ -1161,6 +1161,24 @@ the session 141 form (kept verbatim) and still finds them equal (dropping the cl
 (`vf` / `acc` in memory, ~19%): keeping them in NEON registers would need the translator to emit value-based
 code (locals per VF), a larger change.
 
+## Late frames make up the vblanks they lost (session 149)
+
+Shay's 3d-zp log (the Dive, per 2 s): the game waited 0 ms for the GS worker, so the game thread is the whole
+limit now. ~24 vblank calls a second in most of the Dive (the game draws on every other one), ~15 in the
+heaviest scenes, with ~330 ms of vblank wait per 2 s in the 24-a-second stretches. A drawn frame takes ~4
+vblanks; session 145 let it go on without waiting, but the empty frame after it (a few ms) then waited for the
+next vblank, since only one frame a vblank could skip. Each game frame is one vblank of the game's time
+(host/null/threads.c calls kh1_host_vblank once a frame, the game's vblank handler counts it), so that wait
+only slowed the game.
+
+host/vita/main.c now counts the vblanks the frames have used (`vcount`): a frame goes on without waiting while
+the display's count is ahead of it, using up one vblank, and waits for the next vblank once it has caught up,
+as before. At most `CATCH_UP` (4) lost vblanks are made up, so a long stall (a disc load) does not run the game
+fast afterwards. A game faster than the display is paced as before (it is never ahead of the vblanks), and
+`latewait=1` still always waits. **Not yet measured on a Vita** (3d-zq): the watchdog's `vblank wait` should
+fall to near 0 in the Dive and the vblank calls a second rise by about as much (~24 to ~27-28 in the 24-a-second
+stretches, a guess from the wait alone).
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
