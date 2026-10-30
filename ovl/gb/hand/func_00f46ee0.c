@@ -1,6 +1,3 @@
-/* gb.x func_00f46ee0: matched by hand. */
-#include "ovl.h"
-
 /* gb.x func_00f46ee0: matched. Each colour read is a block of s32 locals (r, a, b, g), and w + 8 goes into its own local before the func_001fc308 calls (found by decomp-permuter, wgb round 54). */
 #include "ovl.h"
 
