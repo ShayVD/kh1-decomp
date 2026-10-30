@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 228 -> 220, hill3o statement order. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f6d810 near miss: score 236 -> 234 (357 -> 358 words, 1992 = 1992); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. Round 22 (wwm1): the if/else at line(s) 170 with the arms swapped and the test negated (ifswap.py): score 234 -> 228. */
 /* score 236 (1992 vs 1992). The pad-search section matches exactly: the up path does goto win into the down path tail, and the window calc is (n - 8) << 4 / (i - n + 8) << 4. Left: in the 10-entry draw loop the original keeps the counter in s0 and spills n (sp144), while this draft hoists &D_00FB4C48 into s7 and spills the counter instead, which shifts every register after that point. Tried volatile D_00FB4C48, do-while and goto loops, and a register asm counter. None fixed it. The tail ordering of D_0108F1C0 and p->b5 also differs a little. */
 typedef struct { u8 pad[176]; s32 x; s32 y; u8 pad2[6]; s16 hbe; s16 pad3; s16 hc2; u8 pad4[12]; s16 hd0; s16 hd2; } Obj;
@@ -54,23 +55,23 @@ void sceVu0UnitMatrix(OvlMtx);
 
 void func_00f6d810(Obj *o)
 {
+    u32 b;
     Pair c;
+    Ent *e;
+
     Spr spr;
     OvlMtx m;
-    OvlVec rot;
     s32 n, i, cur, k, moved, y, sel, col1, col2;
-    u32 b;
-    s32 v;
-    Ent *e;
     Ent *p;
-
+    s32 v;
+    OvlVec rot;
     c = D_00FBA0F8;
     func_001bc4d0();
     for (i = 0, n = 0; i < func_001bc500(); i++) n++;
     e = func_001bc4d0();
     if (func_001f42b8(o)) {
-        b = D_002C5AE0 | D_002C5AE0 >> 24;
         moved = 0;
+        b = D_002C5AE0 | D_002C5AE0 >> 24;
         if (b & 0x20) {
             cur = func_001fd548(o);
             v = e[cur].b5;
@@ -95,8 +96,8 @@ void func_00f6d810(Obj *o)
                     }
                 }
             }
-            if (i < 0) i = 0;
 win:
+            if (i < 0) i = 0;
             if (n - i < 8) {
                 o->hd0 = (n - 8) << 4;
                 o->hd2 = (i - n + 8) << 4;
@@ -130,8 +131,8 @@ win:
                     D_0108F198 = (o->y >> 4) + y - 1856;
                 }
             } else {
-                col1 = D_00FB4C50 | (D_00FB4C54 << 8) | (D_00FB4C58 << 16) | (D_00FB4C5C << 24);
                 spr.col = 0x40404040;
+                col1 = D_00FB4C50 | (D_00FB4C54 << 8) | (D_00FB4C58 << 16) | (D_00FB4C5C << 24);
                 col2 = D_00FB4C70 | (D_00FB4C74 << 8) | (D_00FB4C78 << 16) | (D_00FB4C7C << 24);
             }
             func_002016b0(o, D_00FB4C48 + 6, y + 2, col1);
@@ -155,9 +156,9 @@ win:
     }
     if (p->b5) {
         rot[0] = 0.43633226f;
-        D_0108F28C = -1;
-        rot[2] = 0;
         rot[1] = 0.43633226f;
+        rot[2] = 0;
+        D_0108F28C = -1;
         rot[3] = 1.0f;
         if (D_0108F1EC != D_0108F1F0) {
             if (D_0108F1F0 < D_0108F1EC) {
