@@ -1,4 +1,4 @@
-/* Round 56 (wwm2): score 360 -> 207 (1108 vs 1152 bytes). The target is one switch over every type with case 0 in it, and the case bodies laid out 0x40, 0x50/0x51 (sltiu 82 / 80 in the decision tree), 0x1C30, 0x3860, 0x6400, 0xC800, 0x8000/0x8700, 0x3830/0x3F30. After the switch, `if (t == 0) { present } else f3DF34++`, so an unknown type also advances the clock (the old draft returned early). Left: the 0x40/0x50 bodies reload D_00F28460 and f3DD90 after computing p, and test f3DED8 as == 0 and then != 1 (ours folds that to one bne). Hoisting `p = 0` above the switch scores 193 but is 16 bytes further from the target's size. Earlier header below. */
+/* Round 56 (wwm2), second step: 207 -> 89 (1156 vs 1152 bytes). f3DED8 is tested as nested ifs (`!= 0`, then `== 1`), which keeps the target's beqz + bne pair and its reloads of D_00F28460 / f3DD90, and `p = 0` is hoisted above the switch. Left: p stays in its own register (v1, copied to a3 at the call), f3DF38[1] lives in s0 with `slti; sltiu 1` for `>= 0`, and the present path takes plain branches into three epilogue entries where ours takes likely branches. Early returns and an inner switch score the same or worse. First step: score 360 -> 207 (1108 vs 1152 bytes). The target is one switch over every type with case 0 in it, and the case bodies laid out 0x40, 0x50/0x51 (sltiu 82 / 80 in the decision tree), 0x1C30, 0x3860, 0x6400, 0xC800, 0x8000/0x8700, 0x3830/0x3F30. After the switch, `if (t == 0) { present } else f3DF34++`, so an unknown type also advances the clock (the old draft returned early). Left: the 0x40/0x50 bodies reload D_00F28460 and f3DD90 after computing p, and test f3DED8 as == 0 and then != 1 (ours folds that to one bne). Hoisting `p = 0` above the switch scores 193 but is 16 bytes further from the target's size. Earlier header below. */
 /* dkmovie.x func_00f260c0: draft (session 141, round 28), structurally complete, not polished, 1104 vs 1152 bytes, 262 words differ, score 360 (m2c draft did not compile). Packet dispatcher: by the packet type word, hands audio blocks to the ADPCM/PCM converters, a type-0 packet presents the due picture (func_00f209d0), every other packet advances the clock f3DF34. */
 #include "ovl.h"
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
@@ -22,21 +22,24 @@ void func_00f260c0(void) {
     s32 i;
     s32 aux;
 
+    p = 0;
     switch (t) {
     case 0:
         break;
     case 0x40:
-        p = 0;
-        if (D_00F28460->f3DED8 != 0 && D_00F28460->f3DED8 == 1) {
-            p = (u8 *)h + (h[1] + 15) / 16 * 16 + 0x10;
+        if (D_00F28460->f3DED8 != 0) {
+            if (D_00F28460->f3DED8 == 1) {
+                p = (u8 *)h + (h[1] + 15) / 16 * 16 + 0x10;
+            }
         }
         func_00f21478((u8 *)D_00F28460->f3DD90 + 0x10, D_00F28460->f1E900, h[1], p, D_00F28460);
         break;
     case 0x50:
     case 0x51:
-        p = 0;
-        if (D_00F28460->f3DED8 != 0 && D_00F28460->f3DED8 == 1) {
-            p = (u8 *)h + h[2] - h[3] + 0x10;
+        if (D_00F28460->f3DED8 != 0) {
+            if (D_00F28460->f3DED8 == 1) {
+                p = (u8 *)h + h[2] - h[3] + 0x10;
+            }
         }
         func_00f21500((u8 *)D_00F28460->f3DD90 + 0x10, D_00F28460->f1E900, h[1], p, D_00F28460);
         break;
