@@ -1,3 +1,4 @@
+/* Round 34 wwm1 (2): score 348 -> 266, an unused `f32 xx[4];` declared after `OvlMtx m;` gives the target frame (288) and every stack offset of the target; it stands in for a 16-byte local of the original that is not identified. */
 /* Round 34 wwm1: score 368 -> 348 (3832 -> 3824 vs 3816 bytes). The target has one jal func_00f31118 for both paths after func_00f3a860, with the f3d4d8 arm laid out first and `b` reloaded from the stack at the shared call: written as one call reached by falling out of `if (D_00F8C130 == 0) { ...f3d4d8...; b = 0; if (D_00F8C130 == 0) goto skip; }` (two calls let cse propagate b = 0 into a1). Left: frame 16 bytes smaller than the target (a/b at sp+176/180, target 192/196). Earlier header below. */
 /* Round 64 wwm2: score 368 -> 366 with CONTEXT_ONLY definitions of func_00f2f400 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 47 wwm2: score 384 -> 368, hill3o statement order. Earlier header below. */
@@ -104,6 +105,7 @@ void func_00f31430(void)
     OvlMtx m2;
     f32 *sz;
     OvlMtx m;
+    f32 xx[4];
     Pad *pad;
     f32 v[4];
     s32 a, b;
