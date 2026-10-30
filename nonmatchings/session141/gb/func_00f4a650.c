@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 36 -> 34, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 38 -> 36, port.py of the wm twin func_00f71748 draft. Earlier header below. */
 /* Round 36 (wgb): no change (21 words, score 38). Note: the round 35 order moves the o3->f24 / o3->h8 stores above the o4->f24 / o4->h8 stores (o3 and o4 are parameters), which is only safe if the caller passes distinct objects; hill3.py rejects it even with --noalias. A strict score-ranked run from the pre-round-35 draft gets 19 words, score 32, but a worse aligned diff (26 vs 20), so the committed order stays. */
 typedef struct { u8 pad[5]; s8 b5; u8 pad2[2]; s16 h8; u8 pad3[10]; f32 f20; f32 f24; } Obj;
@@ -29,14 +30,14 @@ s32 func_001f0118(s32, s32);
 
 void func_00f4a650(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
 {
-    s32 i, j, k, n, v, found;
-    Ent *base, *e, *f;
-    f32 x, w;
-    s8 *p;
 
+    s32 i, j, k, n, v, found;
+    f32 x, w;
+    Ent *base, *e, *f;
+    s8 *p;
     D_00F82C58 = -1;
-    D_00F82C5C = 0;
     D_00F82C60 = -1;
+    D_00F82C5C = 0;
     for (i = 0; i < 10; i++) {
         D_00F82B50[i] = 0;
         D_00F82B78[i] = 0;
@@ -65,8 +66,8 @@ void func_00f4a650(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
             f = (Ent *)(j * sizeof(Ent) + (u32)base);
             if (f->b0 != 0 && f->b8 == 0 && f->b3 != 0 && f->b9 == i + 1) {
                 D_00F82C08[D_00F82BF0] = e;
-                D_00F82BA0[D_00F82BF0] = i;
                 D_00F82C68[i] = 1;
+                D_00F82BA0[D_00F82BF0] = i;
                 D_00F82C68[j] = 1;
                 D_00F82BF0++;
                 D_00F82C08[D_00F82BF0] = f;
@@ -92,19 +93,19 @@ void func_00f4a650(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
     v = func_001f0118(83, o1->b5);
     o1->f20 = D_00F70650;
     w = D_00F70640 - 20;
-    o1->f24 = w;
-    o3->f24 = w + 8.0f;
     x = D_00F70650 + v + 10;
-    o3->h8 = D_00F70650 - 10;
+    o3->f24 = w + 8.0f;
+    o1->f24 = w;
     o4->f24 = w + 8.0f;
     o4->h8 = 512.0f - x;
+    o3->h8 = D_00F70650 - 10;
     o3->f20 = 0.0f;
     o4->f20 = x;
     v = func_001f0118(84, o2->b5);
     o2->f20 = D_00F70654;
-    x = D_00F70650 + v + 10;
     w = D_00F70644 - D_00F82BF0 / 2 * 28 + 8;
     o2->f24 = w;
+    x = D_00F70650 + v + 10;
     o6->f24 = w + 8.0f;
     o5->f24 = w + 8.0f;
     o5->f20 = 0.0f;
