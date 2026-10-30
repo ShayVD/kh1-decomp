@@ -1,3 +1,4 @@
+/* Round 29 wwm1 (tools/ovl/rettype.py): score 504 -> 502 with func_00f23480 declared s32 (it is a tail call of func_0024e468 with a0 = 1). Earlier header below. */
 /* Round 28 wwm1: score 508 -> 504, func_001eda90 declared s32 as defined in the main ELF source. Earlier header below. */
 /* Round 27 wwm1: score 538 -> 508, storeperm rerun on the 538 version (f3DD9C after f3DD98 past f3DDA0/f3DF68, and the 0x12345678 guard word stored before f3DD14). Earlier header below. */
 /* Round 27 wwm1: score 620 -> 538. valaudit showed 7 more D_00F28460 loads in the target (lw -31648): the second, third and fourth `m = D_00F28460` copies are gone and those blocks read D_00F28460 directly (wwm2's round 57 lever from f26d90/f245c0). Keeping the first copy (the f3DD9C..f3DDA0 stores) is best (removing it too: 548). Earlier header below. */
@@ -23,7 +24,7 @@ void func_00f21a20(u8 *, MovieWork *);
 void func_00f22df8(s32);
 void func_00f22e28(s32, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00f230c0(s32, s32, s32);
-void func_00f23480(void);
+s32 func_00f23480(void);
 void func_00f23a78(s32);
 void func_00f23aa8(s32, s32);
 void func_00f23ae0(void); CONTEXT_ONLY void func_00f23ae0() {}
