@@ -1,3 +1,4 @@
+/* Round 59 (wwm2): score 130 -> 110 (816 vs 808 bytes). The inner search keeps a pointer p = &tbl[k], and the done block reads p[-1]: the target loads tbl[k - 1] as -4 off the loop's tbl[k] address (valaudit's lw -4(r)). Left: the target spills tbl to 0(sp) where ours spills cur. In the greg dump cur is 7 uses over 258 insns and tbl 9 over 100, so cur loses; declaration order makes no difference. */
 /* Round 48 wwm2: the hill3o order from 30871a17 (dkmovie func_00f23750 near miss, score 130 -> 84, hill3o order under the new bui) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 84 was not valid. Restored the last valid statement order: score 130. Earlier header below. */
 /* Round 45 wwm2: score 132 -> 130 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f23750: near miss (session 141, wwm1), 824 vs 808 bytes (175 words shown, mostly shift): structure complete; the inner tbl[] search is a goto loop (no alignment nop in the original); left: tbl local is spilled to sp[0] in the original while ours spills cur, and the inner loop computes idx*4 once before its label. */
@@ -42,6 +43,7 @@ void func_00f23750(void) {
     s32 cur, len, rem, idx, size;
     u8 *off;
     s32 *tbl;
+    s32 *p;
     D_00F28460->f3DF52 = 0;
     n = D_00F28460->f3DF50;
     len = 0;
@@ -72,13 +74,14 @@ void func_00f23750(void) {
         }
         k = idx;
     again:
-        size = tbl[k] - (tbl[idx] + rem);
+        p = &tbl[k];
+        size = *p - (tbl[idx] + rem);
         if (size > lim) goto done;
         if (D_00F28460->f3DF1C < k) goto done;
         k++;
         goto again;
     done:
-        size = tbl[k - 1] - (tbl[idx] + rem);
+        size = p[-1] - (tbl[idx] + rem);
         off = D_00F28460->buf[cur];
         idx = k - 2;
         if (rem == 0) {
