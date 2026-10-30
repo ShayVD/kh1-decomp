@@ -376,10 +376,92 @@ void kh1_gs_packed(u32 desc, const u32 *q) {
     gs.unknown++; /* 0xB: reserved */
 }
 
+/* session 151: a TRISTRIP's vertices with the draw state found (each packet's first too) as one strip (kh1_gs_strip_hook): the same register
+ * file, queue, extent, counts and GS memory marks as gs_kick a vertex, and the strip's triangles handed on at once.
+ * Takes up to n vertices, returns how many */
+void (*kh1_gs_strip_hook)(u32 prim, const u32 *d, u32 n, u32 nq);
+static u32 strip_buf[KH1_GS_STRIP_MASK + KH1_GS_STRIP_MAX * 8];
+
+static u32 gs_strip(const u32 *q, u32 n, u32 p) {
+    KH1GsDraw *k = &draws[cur];
+    KH1GsContext *c = &gs.ctx[p >> 9 & 1];
+    KH1GsVert *v = (KH1GsVert *)(strip_buf + KH1_GS_STRIP_MASK);
+    u32 *mask = strip_buf, nq = gs.nvert, nv = gs.nvert, m, i, t, nd = 0, quad = 0, rgba = 0;
+    s32 ox = (s32)(c->xyoffset.lo & 0xFFFF), oy = (s32)(c->xyoffset.hi & 0xFFFF), x, y;
+    s32 x0 = k->x0, x1 = k->x1, y0 = k->y0, y1 = k->y1;
+    int stretch = gs_sw && gs_swhat & (KH1_FS_X | KH1_FS_XS); /* gs_xs's test, once */
+    if (n > KH1_GS_STRIP_MAX - nq) n = KH1_GS_STRIP_MAX - nq;
+    if (relook) { /* gs_kick's: a state write of the value it held (each packet's PRE PRIM) */
+        relook = 0;
+        if (p >> 4 & 1 && !k->target) k->target = kh1_gsmem_tex_target(k->ctx.tex0.lo, k->ctx.tex0.hi);
+    }
+    for (i = 0; i < KH1_GS_STRIP_MASK; i++) mask[i] = 0;
+    for (i = 0; i < nq; i++) v[i] = vq[i];
+    for (m = 0; m < n; m++, q += 12) {
+        KH1GsVert *o = &v[t = nq + m];
+        u32 xy = (q[8] & 0xFFFF) | (q[9] & 0xFFFF) << 16;
+        xy = stretch ? gs_xs(xy) : (xy & 0xFFFF0000u) | ((xy + (u32)gs_xshift) & 0xFFFF);
+        x = (s32)(xy & 0xFFFF) - ox;
+        y = (s32)(xy >> 16) - oy;
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+        rgba = (q[4] & 0xFF) | (q[5] & 0xFF) << 8 | (q[6] & 0xFF) << 16 | (q[7] & 0xFF) << 24;
+        o->xy = xy;
+        o->z = q[10] >> 4 & 0xFFFFFF;
+        o->f = q[11] >> 4 & 0xFF;
+        o->uv = gs.uv.lo;
+        o->rgba = rgba;
+        o->s = q[0];
+        o->t = q[1];
+        o->q = q[2];
+        if (nv < 3) nv++;
+        if (nsv < 4) {
+            sv[nsv++] = *o;
+            if (nsv == 4 && nv == 3 && !(q[11] >> 15 & 1)) quad = t;
+        }
+        if (nv == 3 && !(q[11] >> 15 & 1)) { /* XYZF2 with a full queue draws; XYZF3 (ADC) only queues */
+            mask[t >> 5] |= 1u << (t & 31);
+            nd++;
+        }
+    }
+    q -= 12;
+    k->x0 = x0, k->x1 = x1, k->y0 = y0, k->y1 = y1;
+    k->kicks += n;
+    gs_q = q[2];
+    gs.st.lo = q[0];
+    gs.st.hi = q[1];
+    gs.rgbaq.lo = rgba;
+    gs.rgbaq.hi = q[2];
+    for (i = 0; i < nv; i++) vq[i] = v[nq + n - nv + i];
+    gs.nvert = nv;
+    if (nd) {
+        kh1_gs_strip_hook(p, strip_buf, nq + n, nq);
+        k->draws += nd;
+        if (quad) { /* the strip's fourth vertex drew: gs_kick's gs_quad after that draw */
+            for (i = t = 0; i <= quad; i++) t += mask[i >> 5] >> (i & 31) & 1;
+            kh1_gsmem_draw_n(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo, t);
+            gs_quad(p, c);
+            nd -= t;
+        }
+        kh1_gsmem_draw_n(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo, nd);
+    }
+    return n;
+}
+
 void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {
     u32 xy, p;
     int draw;
-    for (; n; n--, q += 12) {
+    while (n) {
+        p = gs_prim();
+        if (kh1_gs_strip_hook && cur < DRAWS && (p & 7) == 4) {
+            u32 m = gs_strip(q, n, p);
+            n -= m;
+            q += m * 12;
+            continue;
+        }
+        n--;
         gs_q = q[2];
         gs.st.lo = q[0];
         gs.st.hi = q[1];
@@ -388,7 +470,6 @@ void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {
         /* XYZF2, or XYZF3 with ADC (no drawing): kh1_gs_write's 0x04 / 0x0C */
         draw = !(q[11] >> 15 & 1);
         xy = gs_xs((q[8] & 0xFFFF) | (q[9] & 0xFFFF) << 16);
-        p = gs_prim();
         if (cur < DRAWS && !relook && gs.nvert == 3 && (p & 7) == 4 && nsv == 4) {
             /* session 150: a TRISTRIP's vertex past its first four with the state found (most of the VU1 kicks):
              * gs_kick's steps for that case only */
@@ -416,9 +497,11 @@ void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {
                 k->draws++;
                 kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
             }
+            q += 12;
             continue;
         }
         gs_kick(draw, xy, q[10] >> 4 & 0xFFFFFF, q[11] >> 4 & 0xFF);
+        q += 12;
     }
 }
 

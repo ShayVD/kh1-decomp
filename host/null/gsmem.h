@@ -154,6 +154,9 @@ typedef struct {
  * ZMSK 0; FRAME unless FBMSK masks every bit) */
 void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 scissor_lo, u32 scissor_hi,
                     u32 test_lo);
+/* session 151: n of them at once (the same as n calls of kh1_gsmem_draw) */
+void kh1_gsmem_draw_n(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 scissor_lo, u32 scissor_hi,
+                      u32 test_lo, u32 n);
 /* 0, or 1 + the target that last drew into a page the texture TEX0 names reads, in bits it reads
  * (the CLUT's own source is not checked) */
 u32 kh1_gsmem_tex_target(u32 tex0_lo, u32 tex0_hi);

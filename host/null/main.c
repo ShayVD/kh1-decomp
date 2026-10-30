@@ -138,6 +138,7 @@ extern void (*kh1_dma_draw_state)(); /* host/null/dmawalk.c (a const KH1GsDraw *
 void kh1_pipes_draw();
 /* session 124: the GPU batches a frame takes (host/null/pipes.c, KH1_HOST_TRACE=5) */
 void kh1_pipes_prim();
+void kh1_pipes_strip(u32 prim, const u32 *d, u32 n, u32 nq); /* session 151 */
 void kh1_pipes_start(void);
 void kh1_pipes_frame(void);
 const KH1CmdRec *kh1_pipes_recorder(void);
@@ -206,6 +207,7 @@ static void prof_frame(void) {
 /* session 141: KH1_HOST_GSQ_CHECK=N, the Vita's frame order (host/vita/main.c): the frame's commands end at
  * each vblank once the GS side's worker is done, and every N frames a digest of what the GS side holds */
 static unsigned long gsq_check;
+static int gs_strip = 1; /* session 151: KH1_HOST_GSSTRIP */
 static u32 gsq_mem[1024 * 1024];
 static u32 fnv(u32 h, const void *p, u32 n) {
     const u8 *b = (const u8 *)p;
@@ -392,11 +394,15 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_VU1_SNAPK")) kh1_vu1_snap_kicks = strtoul(getenv("KH1_HOST_VU1_SNAPK"), 0, 0);
         if (kh1_host_trace >= 5) kh1_dma_draw_state = kh1_pipes_draw; /* session 123: the GPU pipelines */
         if (kh1_host_trace >= 5) kh1_gs_prim_hook = kh1_pipes_prim; /* session 124: the batches */
+        /* session 151: the VU1 strips handed on whole (KH1_HOST_GSSTRIP=0: a triangle a call, as before) */
+        if (getenv("KH1_HOST_GSSTRIP")) gs_strip = atoi(getenv("KH1_HOST_GSSTRIP"));
+        if (kh1_host_trace >= 5 && gs_strip) kh1_gs_strip_hook = kh1_pipes_strip;
         if (kh1_host_trace >= 5) kh1_pipes_start(); /* session 127: the recorder sees the first transfers */
         if (getenv("KH1_HOST_GSQ_CHECK") && kh1_host_trace >= 2 && kh1_host_trace < 5) {
             gsq_check = strtoul(getenv("KH1_HOST_GSQ_CHECK"), 0, 0);
             if (gsq_check) {
                 kh1_gs_prim_hook = kh1_pipes_prim;
+                if (gs_strip) kh1_gs_strip_hook = kh1_pipes_strip;
                 kh1_pipes_start();
             }
         }
