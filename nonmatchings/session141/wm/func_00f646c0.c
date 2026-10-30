@@ -1,5 +1,5 @@
+/* drafttwins.py: score 426 -> 410, port.py of the gb twin func_00f3d5c8 draft. Earlier header below. */
 /* Round 47 wwm2: score 428 -> 426, hill3o statement order. Earlier header below. */
-/* score 428 (1176 vs 1224). GS texture-upload packet builder: func_00f66bd0 image chunks, an A+D header block, then one 4-reg sprite per set bit of in->x10/x14 bitmap. Structure and stores are right; left: the original keeps p in a3 (not a saved reg) and rebuilds the 0x10AB4000_00000004 tag inside the inner loop, while my build hoists it (t8) and keeps p in s1, so the registers shift and it is 48 bytes short. Return value is `in` (NULL when func_00f64658 fails), so the end does `in = (Info *)p`. */
 typedef struct { u8 pad[16]; s32 x10; } Ent;
 typedef struct { u8 pad[16]; Ent *x10; } Tbl;
 typedef struct { s16 x0; s16 x2; u16 x4; u16 x6; u16 x8; u16 pada; s32 xC; u32 x10; u32 x14[1]; } Info;
@@ -68,9 +68,9 @@ u64 *func_00f646c0(u64 *p, s32 x0, s32 y0, s32 id, s32 idx, s32 dbp, s32 w, s32 
                 *p++ = 3;
                 *p++ = (xx * 16) | ((u64)(yy * 16) << 16) | ((u64)1 << 32);
                 *p++ = 5;
-                *p++ = ((v + 32) * 16) | ((u64)((u + 32) * 16) << 16);
+                *p++ = ((v + 32) << 4) | ((u64)((u + 32) << 4) << 16);
                 *p++ = 3;
-                *p++ = ((xx + 32) * 16) | ((u64)((yy + 32) * 16) << 16) | ((u64)1 << 32);
+                *p++ = ((xx + 32) << 4) | ((u64)((yy + 32) << 4) << 16) | ((u64)1 << 32);
                 u += 32;
                 *p++ = 5;
                 if (u >= tw) {
