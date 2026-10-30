@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 460 -> 430 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* NEAR MISS 567 words, score 544 (3008 vs 3040 bytes). Port of gb func_00f2ac20 (same score); ease tables mapped by hand: D_00FA5B38 / D_00FA5B60 = gb D_00F613B8 / D_00F613E0. See the gb file for what was tried. Round 19 (wwm1): 567 -> 547 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 484 -> 460 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct {
     u64 pad0[9];
