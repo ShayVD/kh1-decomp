@@ -1,3 +1,4 @@
+/* Round 41 (wgb): score 200 -> 186, statement order from hill3 (300 s, seed 41, default mode). Earlier header below. */
 /* drafttwins.py: score 202 -> 200, port.py of the wm twin func_00f6e278 draft. Earlier header below. */
 /* Round 41 wwm2: score 268 -> 202, port.py of the wm twin func_00f6e278 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 typedef struct { u8 x0; u8 x1; u8 pad2; u8 x3; u8 pad4; u8 x5; u8 pad6[2]; s16 x8; s16 xa; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; u8 pad34[4]; u8 x38; u8 x39; u8 x3a; u8 x3b; } Ic;
@@ -90,29 +91,29 @@ void func_00f47180(void)
     u8 col[4];
     s32 mode, i, x, n, t;
     s32 fmt;
+    mode = D_00F702F0;
     D_00F82A28 = 0;
     D_00F829FC = 4;
-    D_00F82A44 = 0;
     D_00F82A14 = 400;
     D_00F82A00 = 0;
     i = 0;
-    mode = D_00F702F0;
-    D_00F82A40 = 190;
-    D_00F82A38 = 0;
     D_00F82A3C = 430;
+    D_00F82A44 = 0;
+    D_00F82A38 = 0;
+    D_00F82A40 = 190;
 
-    save = D_00F702D8;
     D_00F82AC8 = 0;
     D_00F82A94 = 0;
+    save = D_00F702D8;
     func_00f445a8(3, 6, 0, 1, 0, 15, 0, 0, D_00F70410, D_00F70414, 0, D_00F70418, (D_00F7042C + 1) * D_00F70430, 10, 10, 10, 100, 256, mode);
     x = D_00F70408 + D_00F70430 + D_00F70430;
     for (; i < D_00F7042C / 2; i++) {
         ic = func_00f43388();
         ic->x0 = 3;
-        ic->xc = 2;
-        ic->x3 = 0;
-        ic->x10 = 0;
         ic->x1 = 3;
+        ic->xc = 2;
+        ic->x10 = 0;
+        ic->x3 = 0;
         ic->x5 = 15;
         ic->x1c = D_00F70404 + 2;
         ic->x2c = 0.0f;
@@ -121,11 +122,11 @@ void func_00f47180(void)
         ic->x20 = x;
         ic->x8 = D_00F7040C - 4;
         ic->x38 = D_00F7043C;
-        ic->x3a = D_00F70444;
         ic->x39 = D_00F70440;
+        ic->x3a = D_00F70444;
         ic->x18 = x;
-        ic->x3b = D_00F70448;
         ic->x30 = 0.0f;
+        ic->x3b = D_00F70448;
         func_00f444b8(ic, 256.0f, mode);
         x += D_00F70430 * 2;
     }
@@ -134,8 +135,8 @@ void func_00f47180(void)
     n = 0;
     for (i = 0; i < func_001bc500(); i++) n++;
     D_00F82A30 = 128.0f;
-    D_00F82A2C = 128.0f;
     D_00F71170.x1e = n;
+    D_00F82A2C = 128.0f;
     D_00F82ACC = 0;
     D_00F71170.xc = D_00F704C0;
     D_00F829C8 = 0;
@@ -211,8 +212,8 @@ void func_00f47180(void)
             col[1] = 0x80;
             t = D_00F82A88.x0;
             col[0] = 0x80;
-            D_00F82A88.x0 = D_00F82A88.x8;
             col[3] = 0x80;
+            D_00F82A88.x0 = D_00F82A88.x8;
             func_00f422e8(D_00F707EC + a, D_00F707EC + b, D_00F70510 - (cw >> 1), D_00F70514 - (ch >> 1), cw, ch, fmt, col, 0, 68, 0, 0x5001D);
             D_00F82A88.x8 = D_00F82A88.x0;
             D_00F82A88.x0 = t;
