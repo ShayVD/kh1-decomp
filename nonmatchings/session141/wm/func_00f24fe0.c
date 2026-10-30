@@ -1,3 +1,4 @@
+/* Round 35 wwm1: score 39 -> 35, `if (it == NULL || func_00f2b9e8(it) == 0) n = 0; else n = it->n;`. The target sets n = 0 in both branch delay slots (beqz it, beqzl v0); the exact branch sequence comes from `if (it != NULL && func_00f2b9e8(it) != 0) n = it->n; else n = 0;` (cfdiff 0), but that rotates it/n/cy over s3-s5 and scores 49. Earlier header below. */
 /* score 39 (1084 vs 1088). Status row: level pips via func_00f23c20, item slots, colour text via func_001f0758, optional name/value. Reusing cx/cy for x+10/y+32 and y+46/x+158 took it 218 -> 39; u16 n. Left: the original keeps a copy of y+6 in s5 for the second pip loop (s3 is reused for n); copies/literal y+6 get propagated away. Round 26 wwm2. */
 typedef struct { u8 v[4]; } C4;
 typedef struct { u16 x0; u16 n; u16 name; u16 val; } It;
@@ -57,13 +58,10 @@ u64 *func_00f24fe0(s32 x, s32 y, s32 kind, s32 lv, s32 info, s32 pk)
         p = func_00f23c20(cx, cy, 64, 0, 16, 16, 30, 128, p);
     }
     it = func_00f2b9a0(kind, lv);
-    n = 0;
-    if (it != NULL) {
-        if (func_00f2b9e8(it) == 0) {
-            n = 0;
-        } else {
-            n = it->n;
-        }
+    if (it == NULL || func_00f2b9e8(it) == 0) {
+        n = 0;
+    } else {
+        n = it->n;
     }
     cx = x + 180;
     for (i = 0; i < n; i++) {
