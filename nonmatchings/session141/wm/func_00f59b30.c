@@ -1,3 +1,4 @@
+/* Round 47 (wgb): score 259 -> 209. The u/v bounds are written (x + 1) << 4 and u0 + ((x - 3) << 4), as in gb func_00f32a38. The * 16 form folds to x*16 + 16, where the target does addiu 1 / -3 / -2 before the sll 4. */
 /* Round 48 wwm2: the hill3o order from 4b27f0e7 (wm func_00f59b30 near miss, score 259 -> 245, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 245 was not valid. Restored the last valid statement order: score 259. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f59b30 near miss: score 273 -> 259 (460 -> 456 words, 2364 vs 2376); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* NEAR MISS 460 words, score 273 (2364 vs 2376 bytes). Port of gb func_00f32a38 (same score); tables mapped by hand: D_0108CED0/D_0108CF50 = gb D_00F80710/D_00F80790. See the gb file for what was tried. */
@@ -80,10 +81,10 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
     tex = D_0108CF50[2];
     *pp = func_00f66ac8(*pp);
     *pp = func_00f4e0b0(*pp, 1792, 1856);
-    u0 = (D_00FA6000.x2C0 + 1) * 16;
-    v0 = (D_00FA6000.x2C4 + 1) * 16;
-    u1 = u0 + (D_00FA6000.x2C8 - 3) * 16;
-    v1 = v0 + (D_00FA6000.x2CC - 3) * 16;
+    u0 = (D_00FA6000.x2C0 + 1) << 4;
+    v0 = (D_00FA6000.x2C4 + 1) << 4;
+    u1 = u0 + ((D_00FA6000.x2C8 - 3) << 4);
+    v1 = v0 + ((D_00FA6000.x2CC - 3) << 4);
     a = -(f32)(t % 4320) * 360.0f / 4320.0f + 180.0f + 31.2f;
     if (a > 180.0f) a -= 360.0f;
     ang[0] = a * 3.1415926f / 180.0f;
@@ -124,11 +125,11 @@ void func_00f59b30(u64 **pp, s32 t, void *tbl) {
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[3], Y[3], X[6], Y[6], X[5], Y[5], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
     *pp = func_00f4e1b8(*pp, 0x8130, 0x8540, X[4], Y[4], X[6], Y[6], X[7], Y[7], 0, u1, v1, u0, v1, u1, v0, u0, v0, tex, *(u64 *)(D_00F9B540 + 8984));
     cx[1] = 31840;
-    u0 = (D_00FA6000.x2D4 + 1) * 16;
-    v0 = (D_00FA6000.x2D8 + 1) * 16;
-    u1 = u0 + (D_00FA6000.x2DC - 2) * 16;
+    u0 = (D_00FA6000.x2D4 + 1) << 4;
+    v0 = (D_00FA6000.x2D8 + 1) << 4;
+    u1 = u0 + ((D_00FA6000.x2DC - 2) << 4);
     cy[0] = 32448;
-    v1 = v0 + (D_00FA6000.x2E0 - 2) * 16;
+    v1 = v0 + ((D_00FA6000.x2E0 - 2) << 4);
     cy[1] = 32448;
     cx[0] = 0x85F0;
     a = (f32)(t % 2700) * 360.0f / 2700.0f - 180.0f;
