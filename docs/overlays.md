@@ -494,6 +494,11 @@ value is unused. The call still sets v0 (with a REG_UNUSED note), and local-allo
 count v0 as busy through the next insn. In wm func_00f78d50, `D_0108F6B4 = arg + k;` after a vtable call put the `lui` for the
 store in v1 (pseudo 193 in 3 in the .greg dispositions), where the original has v0. Writing
 `t = arg + k; D_0108F6B4 = t;` puts the add before the `high` insn, which gives v0 and the match.
+The same rule runs the other way. If the target avoids v0 right after a call whose result is unused,
+declare the callee as returning s32. A void callee leaves v0 free. In round 46, flipping each
+statement-called prototype between void and s32, and keeping the flips that lower the score,
+improved 21 wm/gb drafts. For example, wm func_00f28ed8 went from 75 to 67 and func_00f69fd0 from
+127 to 107 (`sceGsSyncPath` returns int). func_00f4b338 / gb func_00f24240 also return a value.
 
 ### Constant kept in the loop by a twice-set temp (gb func_00f2fe38, func_00f30640; wm func_00f56f30, func_00f57738)
 
