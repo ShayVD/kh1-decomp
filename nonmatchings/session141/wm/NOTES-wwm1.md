@@ -912,3 +912,18 @@ hit the stub callee sits at a lower address than the function.
   first use: 52-54.
 - wm f28ed8 (67): the "(0x700 - x) << 4 into x" hint as x = ..., x and y reassigned, or the subtraction
   alone: 81-189. wm f27ff0 (90): the target frame is 16 bytes larger (a sq spill); not tried further.
+
+## Round 32
+
+- wm f46070 (15, memcpy kept). Initializers give the same order as assignments: `A4 c = D_00FB74B0;` (alone,
+  with bits, or with all three tables), and real aggregate initializers for c alone, all score 59 (bits
+  copied first). With constant initializers for all three tables, hand.py cannot place the rodata, but the
+  -S output (/tmp/claude-0/s141/wwm1/r32/cc.py, j2.s) also copies bits ($LC1) before c ($LC0), so
+  initializers do not explain the target's c-first order either. memcpy stays as the stand-in.
+- wm f436d0 (4): gcsebucket gives 143 buckets with D_00F9B2CC's lo_sum in buckets 18 and 31. The
+  addiu-before-li order is sched1's, and no form moved it (round 31 forms). The near gb loader
+  f20718 (matched, ratio 0.50) writes the same `flag = 1; func_0011cdf0(...); while (flag)` in plain C
+  but schedules it inside a different sequence (its addiu sits in a jal delay slot), so it gives no port.
+- gb twins: none for f46070 (best 0.29) or f2ac98 (0.17); f436d0's closest is gb f20718 above.
+- wm f2ba68 (91): the loop sum lives in a2 in the target and t0 in ours, and the target hoists the
+  base/index setup differently; not pursued.
