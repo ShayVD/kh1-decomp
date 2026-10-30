@@ -1,3 +1,4 @@
+/* Round 26 (wwm1): score 799 -> 765 with tools/ovl/storeperm.py (store-order sweep). */
 /* Round 45 wwm2: score 805 -> 799, hill3o statement order under this build mode. Earlier header below. */
 /* Round 44 wwm2: score 807 -> 805 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* score 897 (3868 vs 3792 bytes): menu panel draw: backdrop f799e0, three gradient quads, title GIF packet (f07d8) + 6 corner icons, name packet with sel==5 brightness + 6 icons, optional caption (f0868) and option list (f0ea8, null-terminated arg->list), selected-row highlight quads. Logic complete; remaining diffs are register allocation/spills (original caches a*4, a*5, a*2, a<<8 in stack slots) and statement scheduling. No gb twin (no 3792-byte gb function). Round 25 wwm2. Round 19 (wwm1): score 897 -> 855 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 855 -> 807 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
@@ -86,13 +87,13 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     cols[1][2] = 0;
     cols[2][2] = 0;
 
-    xs[1] = 512;
     cols[3][2] = 0;
-    xs[3] = 512;
-    xs[2] = 311;
-    xs[0] = 311;
     cols[0][3] = a * 10240 / 12800;
+    xs[0] = 311;
+    xs[1] = 512;
+    xs[2] = 311;
     ys[2] = 39;
+    xs[3] = 512;
     cols[1][3] = a * 10240 / 12800;
     cols[2][3] = a * 10240 / 12800;
     ys[0] = 0;
@@ -136,17 +137,17 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     p->d[1] = 71;
     p++;
     p->d[0] = 68;
-    p->d[1] = 66;
     col[0] = a * 255 / 128;
     col[1] = a * 150 / 128;
-    col[3] = a * 80 / 100;
     col[2] = a * 20 / 128;
+    col[3] = a * 80 / 100;
+    p->d[1] = 66;
     p++;
     func_001efb18(tex + 0x21000, tex + 0x21020);
     p = func_001f07d8(p, 1, 0, RGBA(col), 336, 12, 1, 16);
-    top->w[0] = ((p - top) - 1) | 0x10000000;
     col[1] = a * 150 / 128;
     col[2] = a * 20 / 128;
+    top->w[0] = ((p - top) - 1) | 0x10000000;
     col[0] = a * 255 / 128;
     col[3] = a * 77 / 128;
     D_0108FA60 = p;
@@ -172,8 +173,8 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     p++;
     p->d[0] = 68;
     p->d[1] = 66;
-    col[1] = a * 255 / 128;
     col[0] = a * 111 / 128;
+    col[1] = a * 255 / 128;
     col[2] = a * 100 / 128;
     p++;
     if (sel == 5) {
@@ -254,13 +255,13 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
                 cols[0][1] = 0xC4;
                 ys[3] = y + 3;
                 cols[0][2] = 0x4C;
+                cols[3][2] = 0x4C;
+                cols[1][2] = 0x4C;
+                cols[2][3] = a * 80 / 100;
                 cols[3][0] = 0xFF;
                 cols[1][0] = 0xFF;
                 cols[3][1] = 0xC4;
                 cols[1][1] = 0xC4;
-                cols[3][2] = 0x4C;
-                cols[1][2] = 0x4C;
-                cols[2][3] = a * 80 / 100;
                 cols[0][3] = a * 80 / 100;
                 cols[3][3] = a * 80 / 100;
                 ys[0] = y + 1;
@@ -306,13 +307,13 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
                 ys[2] = y + 3;
                 xs[3] = 280;
                 func_00f7a1a8(cols, xs, ys, 72);
-                ys[3] = y + 2;
                 xs[0] = 200;
                 xs[1] = 280;
                 ys[0] = y + 2;
                 ys[1] = y + 2;
                 xs[2] = 200;
                 ys[2] = y + 2;
+                ys[3] = y + 2;
                 xs[3] = 280;
                 func_00f7a1a8(cols, xs, ys, 72);
             }

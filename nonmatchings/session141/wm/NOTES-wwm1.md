@@ -752,3 +752,20 @@ hit the stub callee sits at a lower address than the function.
   - wwm2's hill3o saves did move break, case, default and a label. dkmovie f23ae8 (d6d14605) moved `next_packet:`
     past `D_00F283C8 = 0;` and moved case/default/break lines. wm f7ad38 (6ff9b223) moved case/break lines and
     one-line `if (...) goto/continue` lines. Both are wwm2's saves, so I left them for wwm2.
+
+## Round 26
+
+- tools/ovl/ordcheck.py is committed with a docs/overlays.md paragraph. It audits each git version step of a draft
+  and flags pairs of lines that changed order across control flow, a label, an embedded ++/--, or a plain-variable
+  dependency. Lines in opposite arms of an if/else are never flagged, so ifswap's arm swaps pass. Duplicate lines
+  whose count changed are left out, and steps with more than 6 added or dropped lines count as rewrites and are
+  skipped. A flip is reported only while the current file still differs from the first version that had both lines.
+  Run on origin at b93d9837 over every session141 gb, wm, dkmovie, dktitle and xs draft, it flags 33 drafts. All
+  33 come from wwm2's hill3o and its ports (rounds 45-47); none come from wgb or from me. The list went to the
+  coordinator.
+- storeperm reruns. wm f60fa8 1054->1042, f6b7c8 1272->1226, f5e8a8 871->860 and f7de08 799->765 are saved and
+  checked by hand (only distinct fields or elements are reordered, and a, b and c in f5e8a8 are a rotation of 0, 1
+  and 2). wm f6f2a8 had no gain. Two drafts are not saved because they are on the audit list and wwm2 is repairing
+  them: dkmovie f23ae8 (596->592 by swapping `m->f3DD94` / `m->f3DD98` at line 64) and wm f75d80 (skipped). f7de08
+  ran in three parts: runs before line 257 in one process, [250, 284) and [284, end) in two more, then combined.
+  storeperm now takes TO=line as well as FROM=line for that.
