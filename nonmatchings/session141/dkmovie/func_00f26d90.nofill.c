@@ -1,3 +1,4 @@
+/* Round 57 (wwm2): score 192 -> 103 (788 vs 824 bytes). valaudit flagged func_00f23598's a2 as a reload of D_00F28460 in the target, where ours reused the cached m. Every statement after the first func_00f234e8 now reads D_00F28460 directly, including the slot step written as `f3DD40++; f3DD40 = f3DD40 % f3DF50;`. Left: the target saves s2 for arg0, keeps &D_00F28460 in s0/s1, and reloads D_00F28460 and f3DD48 after the store `f3DD48 = n` (ours tests n). The nostrict modes are worse (151/156). Earlier header below. */
 /* Round 25 (wwm1): score 193 -> 192 with tools/ovl/storeperm.py (store-order sweep). */
 /* Round 45 wwm2: score 200 -> 193 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f26d90: draft (session 141, round 28), structurally complete, not polished, 788 vs 824 bytes, 188 words differ, score 211 (m2c draft did not compile). Opens the stream (from the disc table or by name), copies the two 64-byte tables out, then primes slot f3DD40 and starts reading slot f3DD44. Round 19 (wwm1): score 211 -> 206 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 22 (wwm1): the if/else at line(s) 22 with the arms swapped and the test negated (ifswap.py): score 206 -> 200. */
@@ -46,22 +47,17 @@ void func_00f26d90(s32 arg0, s32 arg1) {
             func_00f23480();
         }
     }
-    m = D_00F28460;
-    func_00f234e8(m->f3DD48, func_00f275e0(D_00F28460->f3DD40), m->f3DD5C[m->f3DD40], &m->f3DD68[m->f3DD40], m);
-    m = D_00F28460;
-    func_00f23598(m->f3DD48, 0, m);
-    m = D_00F28460;
-    n = m->f3DD40;
-    m->f3DD74[m->f3DD40] = 2;
-    m->f3DD90 = m->f3DD5C[n];
-    m->f3DD40 = n + 1;
-    m->f3DD40 = (n + 1) % m->f3DF50;
-    m->f3DD74[m->f3DD40] = 1;
+    func_00f234e8(D_00F28460->f3DD48, func_00f275e0(D_00F28460->f3DD40), D_00F28460->f3DD5C[D_00F28460->f3DD40], &D_00F28460->f3DD68[D_00F28460->f3DD40], D_00F28460);
+    func_00f23598(D_00F28460->f3DD48, 0, D_00F28460);
+    D_00F28460->f3DD74[D_00F28460->f3DD40] = 2;
+    D_00F28460->f3DD90 = D_00F28460->f3DD5C[D_00F28460->f3DD40];
+    D_00F28460->f3DD40++;
+    D_00F28460->f3DD40 = D_00F28460->f3DD40 % D_00F28460->f3DF50;
+    D_00F28460->f3DD74[D_00F28460->f3DD40] = 1;
     FlushCache(0);
-    m = D_00F28460;
     n = func_00f275e0(D_00F28460->f3DD40);
-    if (m->f3DD50[m->f3DD40] != m->f3DD4C) {
-        func_00f234e8(m->f3DD48, n, m->f3DD5C[m->f3DD40], &m->f3DD68[m->f3DD40], m);
+    if (D_00F28460->f3DD50[D_00F28460->f3DD40] != D_00F28460->f3DD4C) {
+        func_00f234e8(D_00F28460->f3DD48, n, D_00F28460->f3DD5C[D_00F28460->f3DD40], &D_00F28460->f3DD68[D_00F28460->f3DD40], D_00F28460);
     }
     D_00F28460->f3DD44 = D_00F28460->f3DD40;
 }
