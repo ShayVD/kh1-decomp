@@ -705,3 +705,24 @@ hit the stub callee sits at a lower address than the function.
 - f78978 "real but redundant" dead test: tried x = 1 before the test, no initializer, testing D_00FB5EC4 first, a
   flag variable, the same value on both paths, nested ifs, goto, and an empty if body. None beat 13. The best was
   `|| flag`, which gives the right size but scores 24.
+
+## Round 24
+
+- dkmovie f270c8 MATCH (nofill), commit "Overlays: dkmovie func_00f270c8". The tail stores were the only problem. I
+  tried every order of the last six stores (scratch /tmp/claude-0/s141/wwm1/tperm.py). The one that matches is
+  f3DF0C, f3DF10, f3DD5C[0], [1], [2], then f3DF08. With the nofill mode, the empty `jal; nop` slot already matched.
+- dktitle f21808 (session141 copy, nofill): 39 -> 31 with three w4 runs.
+- dkmovie f25180 (16): the lreg dump shows a priority tie. ht (pseudo 89) and ht*16 (pseudo 94) both have 3 refs
+  over 4 insns, so ht is allocated first and takes a1, and h falls to a2. In the target, ht*16 must win the tie. None
+  of these changed the tie: statement orders, h removed, u8 pointer, shifts, a separate ht16 variable, and inline
+  helpers with constant arguments (setdim(bw, bh) and others; the forms that take arguments break the schedule, 28).
+  Every mode gives 16 or worse. w4 also found nothing.
+- dkmovie f20b48 (14): temps for the else-branch call arguments, a pointer or temp for the join store, a return
+  variable and an early return all gave no gain. Every mode gives 14, and w4 found nothing.
+- xs_genie f218f8 (3): an address local before or after p = a, inline helpers for the fetch/put/data/check (the
+  orphaned-check form), goto or nested entry, and moving the init statements all gave no gain. The lui s4 hoist always
+  lands after move s0,sp.
+- xs_dh_break f20288: hand.py needs the shard.h include rewritten to ../nonmatchings/session136/xs_dh_break/shard.h.
+  It then scores 55, and a 10-minute w4 run found nothing.
+- The v0-after-call fix did not apply to any of these: none of the differing spots follows a call whose result is
+  ignored.
