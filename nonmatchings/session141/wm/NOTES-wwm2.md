@@ -1248,3 +1248,21 @@ None of the drafts below changed.
   - gcse cannot remove the reload in the plain goto form. Each D_00F28460 read is high/lo_sum/mem on fresh pseudos, and the single gcse pass PREs only the high part.
 - **f25288 (97):** loop.c hoists `b.f14 = 16`'s constant into s7, which pushes started to 48(sp). The target materialises `li v1,16` in the block and keeps started in s8. A goto loop scores 123, and no build mode changes it.
 - **f207a0 (14):** all 24 orders of the four -1 stores, a chain assignment and spreading them out give 14 every time; sched2 normalises the store order. In lreg, the -1 (5 refs over 22 insns) outranks both %hi pseudos and takes v0. The target gives it a1.
+
+## Round 60
+
+- **f20b48: 14 -> 4.**
+  - The two-buffer path ends in its own `return 1;`. Its `f3DF38[i] = f3DF34` store no longer shares a tail with the plain-call path, and its registers now match.
+  - Left: in the plain func_00f209d0 call, the target sets `a0 = pic` before loading `a3 = f3DF34`. These are tied for scheduling.
+  - No change from: no else, `a` as a variable, either ternary order, a void * prototype. hill3 has no movable statements.
+- **f22d28: 21 -> 17** with the default value grouped as `(dbw<<48 | psm<<56) | (psm<<24 | dbp<<32)`.
+  - The target's `move t4,t1` is a gcse copy of dbw<<48 for the flag branch, which means cse did not merge the two dbw<<48. Ours merges them through cse.
+- **f207a0:** a local `n = -1` for the four stores (also shared with func_001ed8c8(-1)), in four placements, stays at 14.
+- **f25288:** setting f14 = 16 earlier or through `Blk *bp = &b` gives 97-103. The 16 stays hoisted.
+- **f23750:** `cur++; cur %= n;` in place of `cur = (cur + 1) % n` fixes the spill. tbl goes to 0(sp) and cur to a register, as in the target: score 110 -> 84.
+  - It builds 816 vs 808 bytes, so it is not committed (/tmp/claude-0/s141/r58/f23750_cm_84.nofill.c).
+  - Cause of the 8 bytes: sched1 puts `idx = k - 2` and the D_00F28460 reload first in the done block. The search loop's last test then becomes `bnez done` with that reload in the delay slot plus `b again`, where the target has `beqzl again; k++` and falls into done.
+  - Moving cur = 0 or tbl = ..., or rewriting the test as `if (f3DF1C >= k) { k++; goto again; }`, gives 112-118. hill3 on the 84 version finds nothing.
+- **f26d90 (32):**
+  - The lreg dump gives D_00F28460 (9 uses over 50 insns) priority over the constant 2 (2 uses over 20 insns). So D gets a1 and 2 gets a2. The target's order needs sched1 to put `li 2` next to its store.
+  - Swapping the f3DD74/f3DD90 statements, a `two` variable, an (s16) cast and an index local all score 32-69.
