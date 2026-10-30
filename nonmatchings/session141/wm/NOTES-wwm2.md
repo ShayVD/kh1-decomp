@@ -901,3 +901,50 @@ portall wm gb: ported 0 (the gb twin was found by peel.py).
   - The original keeps `lw D_0108FA74; li a0,66` but not the compare, so the 66 test went dead only after reload, when jump2 dropped the branch.
   - I tried a switch with one case, an if/else with identical arms, goto-to-next, a col/x self-assignment, `x = 66; ... == x`, and the test as an expression. Each one either deletes the loads or makes no change.
 - wm f55d78 and wm f696a0 after their ports: what remains is register swaps (s3/s4, s6/s7) and scheduling.
+
+## Round 42 (wwm2)
+
+**Matches: wm f60cf0 and its gb twin f39bf8.**
+- The diff showed no `addiu a2,a2,16` in the target's flip branch.
+- The flip UV word is `(u1 << 4) | ((u64)((v1 << 4) + 16) << 16)`: u1 has no +16, and the u half comes first.
+- The port of the wm match onto gb f39bf8 matched as it was.
+
+**Instruction multiset scan (r42/msd.py, r42/msdscan.py):**
+- For each draft, it lists the instructions that only the target has and the ones that only our build has, as mnemonic plus immediate, with nops ignored.
+- Output: r42/msd_wm.txt and r42/msd_gb.txt.
+- A small difference that is not a move points at an expression to change; a list of only moves means register allocation.
+- Hits followed up:
+  - f584d0 (wm) and its gb twin f313d8: score 99 -> 74. The target has addiu 2272 where we had addiu 142. 2272 is 142 << 4, so the original shifts h first and adds 142 << 4 afterwards: `y1 = D.h; ... ((y1 << 4) + 2272)`. Then hill3o reordered the setup lines.
+  - f29dc0: score 41 -> 37. The target has bc1t where we had bc1f. The tail is `lod = 1; if (!(z < rad * 1.5f)) lod = 0;`, and the outer `lod = 1` has to sit only in the else arm of `D_00F8C23C != 0`. Otherwise cse drops the second `lod = 1`. What is left is FP register numbering (rad, z and 1.0f each one register off). A separate temp for z - rad and inlining 1/z did not change it.
+  - f2ba68: case 43 needs sltiu where we get xori. `== 0`, `? 0 : 1`, if/else, `^ 1`, `(u32)... < 1` and every type for ok all stay at xori (91).
+  - f3a030, f3ba08, f7cb60, f3f998: the differences are known ones already described in their headers.
+
+**hill3o (r42/hill3o.py):**
+- It hill-climbs statement order and accepts moves that keep the same score.
+- Dependencies are kept; distinct array elements, such as `xs[1]` and `ys[0]`, may swap.
+- Results:
+  - f696a0: score 35 -> 31, also ported to gb f425a8.
+  - f79700 (SETQ expanded into plain statements): score 41 -> 37, also ported to gb f42180.
+
+**No gain:**
+- gb f51360 (3):
+  - Neither hill3o over the ten stores nor every position of one or two `D_00F829E0 = 8` stores helped.
+  - With a single `= 8` store the score is 13. The dead first store only helps when it also stores 8, so it shares the constant pseudo for 8.
+  - Other values for the dead store score 17-39.
+- gb f20518 (4): the target forms the second loop store's address from s2 (base + 20), not from the s0 = s2 + 16 giv. `v16.e[i].w[1]` and `v8.e[i].w[3]` give the same code as `v0.e[i].w[5]`.
+- wm f55d78 (27):
+  - x1 and x3 swap s3/s4, and x2 and y3 swap s6/s7. The lreg dump shows x1's tied pseudos ranked above x3's.
+  - Swapping any two declarations, using x1 forms, using x3 forms with or without t, and inlining x3/y3 into the call made no difference or were worse.
+- f60cf0's packet-word orders in the flip branch: nothing beyond the match.
+
+**drafttwins (tools/ovl/drafttwins.py):**
+- This is r41/twins.py plus applytw.py, now in the repo with a note in docs/overlays.md. tools/ovl/twins.py already exists for matched code, so the new tool has its own name.
+- The rerun improved gb f3cc20 (102 -> 100).
+- I then fixed some unmapped symbols by hand, using the mappings recorded in the draft headers:
+
+  | Overlay | Function | Score | Mapping |
+  |---|---|---|---|
+  | gb | f2ac20 | 544 -> 460 | D_00FA5B38/5B60 = D_00F613B8/13E0 |
+  | gb | f446d0 | 1324 -> 1280 | D_00FB4AFC = D_00F7037C |
+  | gb | f46718 | 230 -> 228 | D_00FB4C7C = D_00F704FC |
+  | wm | f66bd0 | 102 -> 96 | the gb declaration of D_00F56DC0 was unused and is dropped |
