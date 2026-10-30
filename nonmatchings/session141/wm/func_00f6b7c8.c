@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 1280 -> 1272, hill3o statement order. Earlier header below. */
 /* NEAR MISS 1405 words, score 1324 (5984 vs 6064 bytes). Port of gb func_00f446d0 (same score); D_00FB4AFC mapped by hand = gb D_00F7037C. See the gb file for notes. Round 19 (wwm1): score 1324 -> 1280 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct {
     u8 x0, x1, x2, x3, x4, x5;
@@ -78,19 +79,19 @@ void func_00f6ade8(s32);
     func_00f6b5b0(it, 256.0f, depth);
 
 void func_00f6b7c8(void) {
-    Item *lab[16];
     Item *cur;
-    s32 i, y, n;
-    Item *box[8];
-    Item *rows[8];
-    f32 depth;
-    Item *s15;
-    u8 *t;
     Item *it;
+    Item *lab[16];
+    Item *box[8];
     s32 flag;
+    Item *s15;
     s32 wait;
+    f32 depth;
+    u8 *t;
+    Item *rows[8];
     Item *head;
 
+    s32 i, y, n;
     wait = D_00FB4A70;
     depth = D_00FB4A70;
     for (;;) {
@@ -135,47 +136,47 @@ void func_00f6b7c8(void) {
         it->x3 = 1;
         it->xC = 3;
         it->x10 = 0;
+        lab[7] = it;
         POS(it, D_00FB4C10 + 2, y);
         lab[1] = it;
         COL(it, D_00FB4AEC, D_00FB4AF0, D_00FB4AF4, D_00FB4AF8);
         func_00f6b5b0(it, 256.0f, depth);
         y += D_00FB4BA0;
+        lab[8] = it;
         LABEL(it, 15);
         s15 = it;
-        lab[2] = it;
         BOX(it, 1, D_00FB4C10);
         y += D_00FB4BA0;
-        box[3] = it;
-        lab[3] = it;
-        LABEL(it, 16);
-        lab[4] = it;
-        BOX(it, 1, D_00FB4C10);
-        y += D_00FB4BA0;
-        box[4] = it;
-        lab[5] = it;
-        LABEL(it, 17);
-        lab[6] = it;
-        BOX(it, 1, D_00FB4C10);
-        y += D_00FB4BA0;
+        lab[13] = it;
         box[5] = it;
-        lab[7] = it;
-        LABEL(it, 20);
-        lab[8] = it;
+        LABEL(it, 16);
         BOX(it, 1, D_00FB4C10);
-        box[6] = it;
-        lab[9] = it;
+        lab[12] = it;
+        y += D_00FB4BA0;
+        lab[6] = it;
+        LABEL(it, 17);
+        lab[3] = it;
+        BOX(it, 1, D_00FB4C10);
+        y += D_00FB4BA0;
+        lab[5] = it;
+        lab[4] = it;
+        LABEL(it, 20);
+        box[3] = it;
+        BOX(it, 1, D_00FB4C10);
+        lab[11] = it;
+        box[2] = it;
         y += D_00FB4BA0;
         LABEL(it, 18);
-        lab[10] = it;
-        BOX(it, 5, D_00FB4C10);
         box[1] = it;
-        y += D_00FB4BA0;
-        lab[11] = it;
-        LABEL(it, 19);
-        lab[12] = it;
         BOX(it, 5, D_00FB4C10);
-        lab[13] = it;
-        box[2] = it;
+        y += D_00FB4BA0;
+        lab[2] = it;
+        box[4] = it;
+        LABEL(it, 19);
+        box[6] = it;
+        BOX(it, 5, D_00FB4C10);
+        lab[9] = it;
+        lab[10] = it;
         cur = func_00f6a480();
         cur->x3 = 0;
         cur->xC = 3;
@@ -191,8 +192,8 @@ void func_00f6b7c8(void) {
             cur->x1C = D_00FB4BDC + D_00FB4BA4;
             cur->x20 = D_00FB4B88 + D_00FB4BA8 + 4;
         }
-        flag = 0;
         cur->x14 = cur->x1C;
+        flag = 0;
         cur->x2C = 0.0f;
         cur->x18 = cur->x20;
         cur->x30 = 0.0f;
