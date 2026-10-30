@@ -1,5 +1,4 @@
-/* Round 47 wwm2: score 310 -> 308, hill3o statement order. Earlier header below. */
-/* Round 46 wwm2: score 316 -> 310, hill3o statement order. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from a90bb89a (wm func_00f34998 near miss, score 316 -> 310, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 308 was not valid. Restored the last valid statement order: score 316. Earlier header below. */
 /* Round 46 wwm2: score 318 -> 316, func_00f68770 declared void. Earlier header below. */
 /* 387 words by address, 173 after alignment (round 13). Logic believed complete (3 loops: D_00FBE3B8 list, D_00FBE7B8 flags with 0x4000/0x8000/else, D_00FCC570 sound points with a 6-way switch). The ApplyMatrix output is m[3] of the unit matrix. Left: we hoist sp+80 into an s-reg and spill i to the stack; the target recomputes addiu sp,80 at each use and keeps i in s8 for all three loops (frame 192 vs our 208). */
 typedef struct { u8 pad0[6]; s16 h6; u8 pad8[10]; u16 h18; u8 pad20[12]; f32 m[4][4]; u8 pad96[48]; } S34998;
@@ -18,16 +17,16 @@ s32 func_00f3dbf8(s32, u8 *, s32);
 void func_00f68770(s32, s32, void *, s32, s32);
 
 void func_00f34998(void) {
-    s32 j;
-
-    O34998 *o;
     f32 v[4];
-    s32 i;
-    s32 fl;
     f32 d[4];
     f32 m[4][4];
-    s32 sel;
+    s32 i;
+    s32 j;
     s32 idx;
+    s32 fl;
+    s32 sel;
+    O34998 *o;
+
     v[3] = 1.0f;
     v[0] = 0;
     v[1] = 0;
@@ -44,8 +43,8 @@ void func_00f34998(void) {
             if (o == NULL) continue;
             D_00FBEBC0[idx].h18 |= 1;
             if ((u32)(o->w0 - 2) < 2 && (u32)(func_00f3dbf8(o->w4, o->b32, D_00FBEBC0[idx].h6) - 1) < 2 && !(o->w20 & 1)) {
-                o->w20 |= 1;
                 func_00f68770(75, 1, m, 0, D_00F87048);
+                o->w20 |= 1;
             }
             break;
         }
@@ -96,31 +95,31 @@ void func_00f34998(void) {
             d[1] = -100.0f;
             sel = 0;
             break;
-        case 5:
-            sel = 0;
-            d[0] = -200.0f;
-        case 3:
+        case 1:
             d[0] = -200.0f;
             d[1] = 100.0f;
+            sel = 0;
+            break;
+        case 2:
+            d[0] = -200.0f;
             d[1] = 100.0f;
             sel = 1;
             break;
-        case 1:
-        case 2:
+        case 3:
             d[0] = 200.0f;
             d[1] = -100.0f;
             sel = 1;
             break;
+        case 5:
+            d[0] = -200.0f;
+            d[1] = 100.0f;
+            sel = 2;
             break;
         default:
-            d[0] = -200.0f;
-            sel = 2;
-            d[1] = 100.0f;
-            break;
-            break;
             d[0] = 200.0f;
-            sel = 2;
             d[1] = -100.0f;
+            sel = 2;
+            break;
         }
         for (j = 0; j < 1; j++) {
             v[0] = D_00FCC570[i][0];
