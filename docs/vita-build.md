@@ -1267,6 +1267,29 @@ full only for the run's last vertex), plus the slot matrices fin()'d once until 
 dumped P13 runs (both sets) give the same registers, VU memory, Q / MAC / I / clip flags, pair and cycle counts
 and kicks as the translation. ARM instructions over the 1,657 runs of the denser set: 41.8M -> 24.2M (-42%).
 
+## P0 as hand-written C (session 150)
+
+3d-zu (P13 native too) on the Vita: P13 37.3 -> 21.9 ns a pair (-41%); the Dive 15.7 pictures a second over frames
+1,500-13,000 (zt 14.2, zr 14.9 over the same stretch). P0 is now ~25% of the game thread on its own.
+
+P0 (`nat_0`, from 00c and from 04e, its branch there) is the map renderer: a strip of vertices (the position with
+its flags in w, the colour as integers, ST in 20.12). It is software-pipelined: each pass takes one vertex into view
+space (vf13-16), the one before into clip space (vf01-04), projects the one before that, and tests the triangle of
+the last three view-space vertices. CLIPW of each against its w (each vertex's six bits are worked out once here
+and shifted in, where the program does three CLIPWs a pass); the vertex's flags ANDed with the MAC flags of the
+cross product's z times the flags word as a float; the ADC (XYZF2's w to vi12) for a back face, a vertex flagged 0,
+or a triangle wholly outside one plane (the FCOR chain). It is written pass for pass in the translation's order.
+
+A triangle that crosses a plane goes to the program's clipper (05e on: the triangle clipped against the six
+planes into a packet of its own, kicked there). nat_0 does not do that: it gives up before its kick, and the
+translation runs the run again from the start. Its writes so far are the translation's own, to the same places,
+and the output is after the input, so nothing the translation reads was changed; clip_last is put back. About
+14% of P0 runs clip a triangle (1.5% of triangles).
+
+All 4,467 dumped P0 runs match the translation (registers, VU memory, flags, counts, kicks); a 6,500-frame
+qemu-arm run gives main's 130 digests and vu1 lines. ARM instructions over the 3,665 runs of the denser set,
+the reruns included: 108.2M -> 79.1M (-27%); the reruns are ~22M of it, so a native clipper is the next step.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

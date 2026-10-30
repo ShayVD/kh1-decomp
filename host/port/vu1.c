@@ -1089,7 +1089,7 @@ static const TrProg tr_progs[1] = { { 0, 0, 0, 0 } };
 #define TR_PROGS 0
 #endif
 #include "vu1_nat.h"
-/* the program's C: the hand-written one (vu1_nat.h) where there is one for this entry, else the translation */
+/* the program's C: the hand-written one (vu1_nat.h) where there is one for this entry and case, else the translation */
 static int tr_go(int prog, u32 pc) {
     int (*f)(u32) = nat_run(tr_progs[prog].num);
     if (f && f(pc)) return 1;
