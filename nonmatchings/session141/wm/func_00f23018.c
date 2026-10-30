@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 89 -> 85, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 91 -> 89, func_00f294a0 declared s32. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f23018 near miss: 251 -> 251 words, score 99 -> 91 (aligned diff 73 -> 66). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* score 99 (1308 vs 1336). World-map main: heap/texture setup, D_00FB6498 callbacks (init/draw/done), handler registration, then the frame loop with two GIF end packets. D_00FBAA78..8C as one array (149 -> 99). Left: orig keeps &D_00FBAA78/&D_00FBAA7C in s1/s0 and stores the rest by %lo, scheduling of the D_00FB6498 field stores, 28 bytes. Round 26 wwm2. */
@@ -72,15 +73,14 @@ void sceVu0UnitMatrix(f32 (*)[4]);
 s32 func_00f23018(s32 id, s32 arg)
 {
     u64 *lim[2];
+    s32 i;
     s32 tex[2];
     s32 pal[2];
     u8 work[2048];
-    f32 m[4][4];
-    u8 cam[128];
-    s32 heap;
-    s32 i;
     u64 *p;
-
+    f32 m[4][4];
+    s32 heap;
+    u8 cam[128];
     D_00FBAA70 = 0;
     D_00FBAA74 = 0;
     D_00FBB334 = 0;
@@ -90,6 +90,7 @@ s32 func_00f23018(s32 id, s32 arg)
     func_00f68008(125, heap);
     func_00f68070();
     func_00f206d8(0, 0, 0);
+
     if (id == 0) {
         id = 2;
     }
@@ -116,9 +117,9 @@ s32 func_00f23018(s32 id, s32 arg)
     D_00FBAA78[4] = func_001bb500(0x67000, 128);
     D_00FBAA78[5] = func_001bb500(0x20000, 128);
     D_00FB6498.init(heap, 0x200000);
+    D_00F873F0 = 1;
     p = *D_00F85160;
     lim[0] = p;
-    D_00F873F0 = 1;
     lim[1] = p;
     func_001c06c0(-1, func_00f23008);
     func_00f23878();
