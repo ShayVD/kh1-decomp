@@ -95,6 +95,14 @@ render-target switches, overdraw from the full-screen passes, readbacks) has to 
 native path's own part is to keep its draws few (stage 5's batching, moved ahead of the other programs if
 draw count shows up) and its vertex work small.
 
+**On a Vita (native1, 2026-10-30)**: the native variants compiled (SceShaccCg took the indexed `u_m`), the log said
+`renderer: native`, and ~3,700 P18 runs per 2 s were drawn by the GPU's transform in the Dive. P18's CPU time per 2 s
+fell from ~216 ms (GS path, an earlier log) to ~59 ms (the parse, still counted as P18's runs). The Dive's steady
+stretch (frames ~5,100-6,550) ran at 31.4 frames/s (~15.7 pictures/s, against 16.09 for s151b on the GS path): no
+gain, as expected while the GPU is the limit (the start-of-frame wait ~540 ms per 2 s, the same as before). The GS
+worker was busy ~2.27 s of 2.4 s there and waited 627 ms on the recording (the GPU thread). The picture (the cull's
+winding) is not yet confirmed by eye.
+
 ## The stages after
 
 2. **P13 (skinned, flat, cull)**: the same flow with the bone palette: op 0 with w = 1 marks the palette record,
