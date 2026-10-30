@@ -1,3 +1,4 @@
+/* Round 26 (wwm1): score 1272 -> 1226 with tools/ovl/storeperm.py (store-order sweep). */
 /* Round 47 wwm2: score 1280 -> 1272, hill3o statement order. Earlier header below. */
 /* NEAR MISS 1405 words, score 1324 (5984 vs 6064 bytes). Port of gb func_00f446d0 (same score); D_00FB4AFC mapped by hand = gb D_00F7037C. See the gb file for notes. Round 19 (wwm1): score 1324 -> 1280 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct {
@@ -96,12 +97,12 @@ void func_00f6b7c8(void) {
     depth = D_00FB4A70;
     for (;;) {
         it = func_00f6a480();
-        it->x5 = 15;
         it->x1 = 6;
+        it->x0 = 2;
         it->xC = 1;
         it->x3 = 0;
+        it->x5 = 15;
         it->x10 = 0;
-        it->x0 = 2;
         head = it;
         POS(it, D_00FB4B84, D_00FB4B88);
         it->xA = (D_00FB4B9C + 1) * D_00FB4BA0;
@@ -111,11 +112,11 @@ void func_00f6b7c8(void) {
         y = D_00FB4B88 + D_00FB4BA0 + D_00FB4BA0;
         for (i = 0; i < D_00FB4B9C / 2; i++) {
             it = func_00f6a480();
-            it->xC = 2;
             it->x1 = 3;
             it->x0 = 2;
-            it->x5 = 15;
+            it->xC = 2;
             it->x3 = 0;
+            it->x5 = 15;
             it->x10 = 0;
             POS(it, D_00FB4B84 + 2, y);
             it->xA = *(u16 *)&D_00FB4BA0 - 1;
@@ -129,11 +130,11 @@ void func_00f6b7c8(void) {
         LABEL(it, 21);
         lab[0] = it;
         it = func_00f6a480();
-        box[0] = it;
-        it->x0 = 2;
         it->x1 = 4;
-        it->x5 = 4;
         it->x3 = 1;
+        it->x0 = 2;
+        box[0] = it;
+        it->x5 = 4;
         it->xC = 3;
         it->x10 = 0;
         lab[7] = it;
@@ -179,11 +180,11 @@ void func_00f6b7c8(void) {
         lab[10] = it;
         cur = func_00f6a480();
         cur->x3 = 0;
-        cur->xC = 3;
         cur->x5 = 15;
-        cur->x1 = 14;
-        n = D_00FB4A5C;
         cur->x0 = 2;
+        cur->xC = 3;
+        n = D_00FB4A5C;
+        cur->x1 = 14;
         cur->x10 = (s32)(func_001bc4e0() + n * 96 + 52);
         if (D_0108F27C == 0) {
             cur->x1C = D_00FB4BDC;
