@@ -1266,3 +1266,21 @@ None of the drafts below changed.
 - **f26d90 (32):**
   - The lreg dump gives D_00F28460 (9 uses over 50 insns) priority over the constant 2 (2 uses over 20 insns). So D gets a1 and 2 gets a2. The target's order needs sched1 to put `li 2` next to its store.
   - Swapping the f3DD74/f3DD90 statements, a `two` variable, an (s16) cast and an index local all score 32-69.
+
+## Round 61 (wwm2)
+
+- **Policy (from the coordinator, standing):** a better-scoring draft that is off by size only because of branch layout or delay-slot filling (no missing or extra statements) is landed. The header records the cause, and the size-exact version is kept alongside as NAME.exact.<mode>.c.
+- **f23750: landed at 84** (816 vs 808 bytes) as func_00f23750.nofill.c, with the 110 size-exact version as func_00f23750.exact.nofill.c. The cause is in the header: the branch layout of the search loop's last test.
+- **f25658: 52 -> 40, and f25978: 65 -> 51.**
+  - Both IPU_CTRL `(IPU_CTRL | 0x40000000) + base` updates go through a spare local: `c = IPU_CTRL | 0x40000000; IPU_CTRL = c + base;`. This fixes the closing update's registers in both functions.
+  - In f25978 the temp is needed at both sites; one site alone does nothing. Making the temp the sum (`m = (...) + base; IPU_CTRL = m;`) or holding only the load (`m = IPU_CTRL`) does nothing or is worse.
+  - Left in both: the prologue registers. The target has h in a0, bE/b9 in a2 and the IPU_CTRL address in a1, one register off from ours.
+  - These are unchanged by: reading the header through D_00F28460->f3DD90 directly, a MovieWork *w local, the header read order (six orders), k = 0 / n = -1 placement, and hill3 (360 s, 1990 tries).
+- **f20b48 stays at 4.**
+  - These score 4: the 4th argument computed into a local first, pic into a local first, and prototype parameter types u8 * for arg0 or arg1, s32 for the MovieWork * argument, or u32 for arg3.
+  - These are worse: s16 arg3 gives 8, s8 sync gives 22.
+  - The callee types do not change the a0/a3 order.
+- **f22d28 stays at 17.**
+  - These score 17: a named `u64 hw = (u64)dbw << 48` read by both branches (u64 or s64, any OR position), a second copy `hx = hw` for the flag branch, `v = hw; v |= ...` in the branch, and a shared zero-extended psm local.
+  - These are worse (19-26): `hw |= psm << 56` in the branch and an if/else form.
+  - None produces the `move t4,t1` copy. The remaining difference is mostly which pairs of ORs combine: the target gives (psm<<24 | dbp<<32) and (dbw<<48 | psm<<56), and ours gives (psm<<56 | dbp<<32) and (dbw<<48 | psm<<24).
