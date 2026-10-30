@@ -1089,6 +1089,7 @@ static const TrProg tr_progs[1] = { { 0, 0, 0, 0 } };
 #define TR_PROGS 0
 #endif
 #include "vu1_nat.h"
+#include "vu1_draw.h"
 /* the program's C: the hand-written one (vu1_nat.h) where there is one for this entry and case, else the translation */
 static int tr_go(int prog, u32 pc) {
     int (*f)(u32) = nat_run(tr_progs[prog].num);
@@ -1238,7 +1239,9 @@ static void start_run(u32 pc) {
         u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, n0 = st.insns;
         int ran;
         tr_lost = 0;
-        ran = tr_go(prog, pc);
+        /* the native renderer (vu1_draw.h): the run's records handed to the GPU instead */
+        ran = kh1_vu1_draw && tr_progs[prog].num == 18 && nd_18(pc);
+        if (!ran) ran = tr_go(prog, pc);
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
             tr_us[prog] += kh1_vu1_clock() - t0;
             tr_runs[prog]++;

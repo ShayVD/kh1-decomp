@@ -25,6 +25,11 @@ void kh1_vif1_data_n(const u32 *w, u32 n); /* n data words at once */
 
 /* XGKICK: nqw qwords of whole GIF packets (the last one with EOP) copied out of VU1 memory */
 extern void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
+/* the native renderer (include/platform/natdraw.h, docs/native-renderer.md): when set, a run of a program the port
+ * draws itself (P18) is not run but handed here as natdraw.h's payload (nqw qwords, valid during the call);
+ * kh1_vu1_drawn counts them */
+extern void (*kh1_vu1_draw)(const u32 *q, u32 nqw);
+extern u32 kh1_vu1_drawn;
 /* 1: a line per program run */
 extern int kh1_vu1_verbose;
 /* with kh1_vu1_verbose: the program run (from 1) whose start state is written to vu1_snap.bin */

@@ -59,9 +59,14 @@ typedef struct {
 void kh1_vertex_ctx(KH1VertCtx *c, const KH1RenderPass *pass, u32 zbuf_lo, u32 prim, u32 tex0_lo, u32 tex0_hi);
 /* n of primasm.h's vertices to GPU vertices */
 void kh1_vertex_of(const KH1VertCtx *c, const KH1PaVert *in, u32 n, KH1GpuVert *out);
+/* the native renderer's variants (natdraw.h): KH1_VERT_NAT + the index, the same inputs and outputs plus the matrix
+ * index (pad[0] as UNORM8, "mi"), the position through the matrix u_m[mi] instead of u_xf */
+#define KH1_VERT_NAT 7
+#define KH1_VERT_VARIANTS 14
+#define KH1_VTX_ATTRS 5
 /* the vertex shader a pipeline's draws use */
 void kh1_vertkey_of(const KH1PipeKey *p, KH1VertKey *out);
-/* the variant's number, 0 .. 6 (0 the set-up's), and its name ("pos", "pos col uv fog", ...) */
+/* the variant's number, 0 .. 6 (0 the set-up's), and its name ("pos", "pos col uv fog", ..., "native pos ...") */
 u32 kh1_vertkey_index(const KH1VertKey *k);
 const char *kh1_vertkey_str(u32 index);
 /* the distinct vertex shaders a pipeline set's pipelines use: the count, and a bit per index in *mask */
@@ -88,8 +93,8 @@ typedef struct {
     u8 count;         /* components */
 } KH1VtxAttr;
 
-/* variant `index`'s attributes into out[0 ..] (at most 4): the count, 0 for an unknown index */
-u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[4]);
+/* variant `index`'s attributes into out[0 ..] (at most KH1_VTX_ATTRS): the count, 0 for an unknown index */
+u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[KH1_VTX_ATTRS]);
 const char *kh1_vfmt_str(u32 format);
 
 /* The same table as a port hands it to sceGxmShaderPatcherCreateVertexProgram (vita-port-plan 5.1br, session 130):
@@ -114,7 +119,7 @@ typedef struct {
 typedef s32 (*KH1GxmRegOf)(void *prog, const char *name);
 /* variant `index`'s attributes and its one stream: the attribute count, 0 for an unknown index or an input
  * the program lacks (a port must not create a vertex program from a partial table) */
-u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAttr out[4], KH1GxmVtxStream *stream);
+u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAttr out[KH1_VTX_ATTRS], KH1GxmVtxStream *stream);
 #endif
 
 #endif

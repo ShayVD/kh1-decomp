@@ -7,6 +7,7 @@
 #include "common.h"
 
 void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
+void (*kh1_vu1_draw)(const u32 *q, u32 nqw);
 u32 (*kh1_vu1_clock)(void);
 
 static void none(const char *what) {

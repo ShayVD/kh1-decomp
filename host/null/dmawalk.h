@@ -64,5 +64,7 @@ extern u32 kh1_dma_bad_sends;
  * their XGKICK output as GIF packets, so renderer A / B's meshes reach the register file, the GS model and the GPU
  * recorder; 0 (the default) only counts the program starts (kh1_gs_path1).  KH1_HOST_VU1=1, the Vita's vu1=1. */
 extern int kh1_dma_vu1;
+/* the native renderer (include/platform/natdraw.h): 1 hands P18's runs to the GPU's transform (host/port/vu1_draw.h) */
+extern int kh1_dma_native;
 
 #endif

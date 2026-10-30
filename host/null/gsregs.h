@@ -107,5 +107,15 @@ extern void (*kh1_gs_prim_hook)(u32 prim, const KH1GsVert *v, u32 n, u32 state);
 #define KH1_GS_STRIP_MAX 128
 #define KH1_GS_STRIP_MASK (KH1_GS_STRIP_MAX / 32)
 extern void (*kh1_gs_strip_hook)(u32 prim, const u32 *d, u32 n, u32 nq);
+/* the native renderer (include/platform/natdraw.h): a strip of nv vertices drawn by the GPU's transform, counted in
+ * the draw record of the state in force with the scissor as its extent, GS memory's pages marked; the PRIM in force */
+u32 kh1_gs_native(u32 nv);
+/* kh1_gs_xshift's value */
+s32 kh1_gs_xshift_of(void);
+/* a native run's payload (natdraw.h; host/null/dmawalk.c's op): each record's GIF tag (PRE PRIM) applied and its strip
+ * counted (kh1_gs_native), handed to the hook (host/null/pipes.c's recorder side): what 0 the payload starts (a its
+ * header, b its matrices), 1 a record (prim the PRIM in force, a the record), 2 it ends.  Its record count */
+extern void (*kh1_gs_native_hook)(u32 what, u32 prim, const u32 *a, const u32 *b);
+u32 kh1_gs_native_run(const u32 *d);
 
 #endif

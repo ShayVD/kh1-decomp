@@ -32,7 +32,8 @@
  *   SET_UNIFORMS    the fragment program's 16 floats at `uoff` in the frame's uniform ring slot (and the
  *                   pass's vertex uniform at the scene's uoff)
  *   DRAW            sceGxmDraw: triangles / lines / points (`cls`) of nv vertices from v0 of the frame's vertex
- *                   ring slot (32-byte vertex.h vertices, no index buffer: 0 .. nv - 1)
+ *                   ring slot (32-byte vertex.h vertices, no index buffer: 0 .. nv - 1); a native draw (natdraw.h)
+ *                   also sets its nmat matrices (the vertex uniform u_m) and its cull mode
  *
  * A draw command with DATE first draws its clear (stencil 0 over its primitives: `stencil` 3) and its set-up
  * pipeline (stencil 1 where the target's alpha is DATM: 2), both with the command's own vertices, then each of
@@ -75,6 +76,9 @@ typedef struct {
     u32 v0, nv;       /* DRAW */
     u32 uoff;         /* SET_UNIFORMS, BEGIN_SCENE (the pass's vertex uniform) */
     u32 cmd;          /* the command it comes from */
+    u8 nmat, cull;    /* DRAW: a native draw's matrices and cull mode (cmdbuf.h, natdraw.h; SET_PROGRAMS gives its native
+                       * vertex variant), the matrices at moff in the frame's uniform slot */
+    u32 moff;
 } KH1GxmCall;
 
 typedef struct {

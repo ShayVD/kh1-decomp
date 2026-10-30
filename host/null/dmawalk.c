@@ -253,6 +253,19 @@ static void w_send(const u32 *a, const u32 *d, u32 n) { /* a send starts: its ow
     kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
     memset(&ws[0], 0, sizeof ws[0]);
 }
+/* the native renderer (include/platform/natdraw.h): one or more VU1 runs' payloads (host/port/vu1_draw.h; ops put one
+ * after another join), each record's GIF tag (PRE PRIM) applied and its strip counted in the model, then recorded
+ * (host/null/pipes.c) */
+static void w_native(const u32 *a, const u32 *d, u32 n) {
+    (void)a;
+    while (n >= 2) {
+        u32 len = 2 + d[3] + d[2] * 4;
+        if (len > n) break;
+        path1_packets += kh1_gs_native_run(d);
+        d += len * 4;
+        n -= len;
+    }
+}
 static void w_xshift(const u32 *a, const u32 *d, u32 n) { kh1_gs_xshift((s32)a[0]); }
 static void w_xstretch(const u32 *a, const u32 *d, u32 n) { kh1_gs_xstretch((s32)a[0], (s32)a[1], a[2]); }
 static void w_path1(const u32 *a, const u32 *d, u32 n) { kh1_gs_path1(); }
@@ -329,6 +342,12 @@ static void gif_regs(const GifStream *g, char *out) {
 static void path1_kick(const u32 *q, u32 nqw) {
     kh1_gsq_put(w_kick, 0, 0, q, nqw);
 }
+/* the native renderer: a run's payload in place of its kicks (kh1_dma_native: config.txt renderer=native,
+ * KH1_HOST_NATIVE=1) */
+int kh1_dma_native;
+static void path1_draw(const u32 *q, u32 nqw) {
+    kh1_gsq_put(w_native, 0, 0, q, nqw);
+}
 
 /* the words an UNPACK reads: num vectors written, CL of each WL read when WL > CL */
 static u32 vif_unpack_words(VifStream *v, u32 cmd, u32 num) {
@@ -373,6 +392,7 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     v->codes++;
     if (kh1_dma_vu1 && !v->vif0) {
         if (!kh1_vu1_kick) kh1_vu1_kick = path1_kick;
+        if (kh1_dma_native && !kh1_vu1_draw) kh1_vu1_draw = path1_draw;
         if (cmd == 0x14 || cmd == 0x15 || cmd == 0x17) kh1_gsq_put(w_path1, 0, 0, 0, 0);
         kh1_vif1_code(w);
     }
