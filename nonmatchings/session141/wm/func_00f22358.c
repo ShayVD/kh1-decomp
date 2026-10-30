@@ -1,4 +1,4 @@
-/* Round 47 wwm2: score 188 -> 123, hill3o statement order. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 4826d095 (wm func_00f22358 near miss, score 188 -> 123, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 123 was not valid. Restored the last valid statement order: score 188. Earlier header below. */
 /* score 188 (1064 vs 1056 bytes); structure right, register allocation off: original hoists 71 into s8 alongside 68/66 (ours runs out of s-regs, so 71 is rematerialized), p shares s3 with &c->x8 and col shares s5 with &D_00F878F0, x/y negu regs swapped; tried statement orders, local pointer for D_00F878F0, s32 col, x/y order, c->x0 placement */
 typedef struct { s32 x0; u8 *x4; s32 x8, xC, x10; } Ctx22;
 extern Ctx22 **D_00F85160;
@@ -27,12 +27,12 @@ u8 *func_00f296d8(s32 *, u8 *, s32, s32);
 void func_00f22358(s32 a0, s32 a1, s32 a2, u32 col, OvlMtx m, s32 tex) {
     OvlMtx b;
     OvlMtx r;
-    s32 sv[3];
     Ctx22 *c;
-
-    s32 x, y, k, s;
-    u64 *q;
     u64 *p;
+    u64 *q;
+    s32 x, y, k, s;
+    s32 sv[3];
+
     x = -D_00FBAA70;
     y = -D_00FBAA74;
     if (D_00FBB330 == 13) {
@@ -56,34 +56,34 @@ void func_00f22358(s32 a0, s32 a1, s32 a2, u32 col, OvlMtx m, s32 tex) {
     p[0] = 0x30000;
     p[1] = 71;
     p += 2;
-    p[0] = 0x0000740000007000;
     p[1] = 24;
+    p[0] = 0x0000740000007000;
     p += 2;
-    p[1] = 0;
     p[0] = 70;
+    p[1] = 0;
     p += 2;
     p[0] = (u64)col | 0x3F80000000000000;
     p[1] = 1;
     p += 2;
+    p[1] = 5;
     p[0] = 0x174007000;
-    p[1] = 5;
     p += 2;
+    p[1] = 5;
     p[0] = 0x18C009000;
-    p[1] = 5;
     p += 2;
-    p[0] = 0x31000070;
     p[1] = 78;
+    p[0] = 0x31000070;
     p += 2;
-    q = p;
     func_00f66b90(p);
     D_00F878F0[0] = func_00f66ae0(p);
     if (tex == 0) return;
+    q = p;
     p = func_00f66b78(func_00f66b20(q));
-    p[1] = 66;
     p[0] = 68;
+    p[1] = 66;
     p += 2;
-    p[1] = 71;
     p[0] = 0x5010D;
+    p[1] = 71;
     p += 2;
     p[0] = (u64)x | ((u64)y << 32);
     p[1] = 24;
@@ -91,13 +91,16 @@ void func_00f22358(s32 a0, s32 a1, s32 a2, u32 col, OvlMtx m, s32 tex) {
     p[0] = 96;
     p[1] = 20;
     p += 2;
-    p[1] = 8;
     p[0] = 0;
+    p[1] = 8;
     p += 2;
     func_00f66b90(p);
     s = func_00f66b38(p);
     c = *D_00F85160;
+    sv[0] = c->x8;
+    sv[1] = c->xC;
     sv[2] = c->x10;
+    c->x0 = (s32)p;
     b[3][3] = 1.0f;
     b[0][0] = 0.0f;
     b[0][1] = 0.0f;
@@ -107,15 +110,12 @@ void func_00f22358(s32 a0, s32 a1, s32 a2, u32 col, OvlMtx m, s32 tex) {
     b[1][1] = 0.0f;
     b[1][2] = 0.0f;
     b[1][3] = 0.0f;
-    sv[1] = c->xC;
     b[2][0] = 0.0f;
     b[2][1] = 0.0f;
     b[2][2] = 0.0f;
     b[2][3] = 0.0f;
     b[3][0] = 1.0f;
-    sv[0] = c->x8;
     b[3][1] = 1.0f;
-    c->x0 = (s32)p;
     b[3][2] = 1.0f;
     c->x8 = func_00f667b8(c->x8, q, s);
     c->xC = func_00f667b8(c->xC, q, s);
@@ -128,8 +128,8 @@ void func_00f22358(s32 a0, s32 a1, s32 a2, u32 col, OvlMtx m, s32 tex) {
     c->x8 += 80;
     c->xC += 80;
     c->x10 += 80;
+    D_00F878F0[3] = sv[2];
     D_00F878F0[1] = sv[0];
     D_00F878F0[2] = sv[1];
-    D_00F878F0[3] = sv[2];
     func_00f651c0(-1);
 }
