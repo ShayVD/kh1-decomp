@@ -1,3 +1,4 @@
+/* Round 34 wwm1: score 770 -> 721 (2224 -> 2204 vs 2264 bytes): branch sequence now the same as the target. In both blip loops px = dx * 64 / r * 16 comes before the mode test, and the test is written `if (mode == 0) zz = dz * 128; else zz = dz * 64;` (target bnezl with the 64 product in the slot, 128 path falling through). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 010a77bf (wm func_00f3e988 near miss, score 770 -> 750, hill3o order under the new build m) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 750 was not valid. Restored the last valid statement order: score 770. Earlier header below. */
 /* Round 44 wwm2: score 776 -> 770 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* score 776 (2224 vs 2264). Minimap blips: mode = func_00f2c300(D_00F9B2EC) - 1, header packets from D_00F9B330 sprite UVs and D_00F87070 tex regs, h = 340/300 (spilled), zmin -10000 or -57599.996f, r = *func_00f3f2c0() * 0.5f * 5.0f; loop 1 over func_00f3b480() objects (func_00f3b460/func_00f3e910) coloured col.v[k-1], loop 2 over the 64 D_00F9A5C0 marks (flag & 4 = raw pos, else sceVu0ApplyMatrix by D_00F864C0) coloured col.v[3]; footer then func_00f66fb0(9). The colour table is an aggregate initializer in the original (D_00FB7150 = {0x73008cff, 0x73f4a800, 0x73f400f4, 0x7300ec9d}); drafted as a struct copy so hand.py scores it. Left: we hoist one extra FP constant (f24), mode in s5 not s8, 40 bytes short. Round 28 wwm2. */
@@ -142,12 +143,12 @@ void func_00f3e988(void)
         dx = o->x - pl[0];
         dz = o->z - pl[2];
         if (dx <= r && -r <= dx && dz <= lim && zmin <= dz) {
-            if (mode != 0) {
-                zz = dz * 64.0f;
-            } else {
-                zz = dz * 128.0f;
-            }
             px = (s32)(dx * 64.0f / r * 16.0f);
+            if (mode == 0) {
+                zz = dz * 128.0f;
+            } else {
+                zz = dz * 64.0f;
+            }
             py = h * 16 - (s32)(zz / lim * 16.0f);
             p = func_00f66b78(p);
             p[0] = 0x156;
@@ -187,12 +188,12 @@ void func_00f3e988(void)
         dx = v[0] - pl[0];
         dz = v[2] - pl[2];
         if (dx <= r && -r <= dx && dz <= lim && zmin <= dz) {
-            if (mode != 0) {
-                zz = dz * 64.0f;
-            } else {
-                zz = dz * 128.0f;
-            }
             px = (s32)(dx * 64.0f / r * 16.0f);
+            if (mode == 0) {
+                zz = dz * 128.0f;
+            } else {
+                zz = dz * 64.0f;
+            }
             py = h * 16 - (s32)(zz / lim * 16.0f);
             p = func_00f66b78(p);
             p[0] = 0x156;
