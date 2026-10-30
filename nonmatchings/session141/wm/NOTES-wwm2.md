@@ -992,3 +992,10 @@ Each hit below names the instruction difference the scan showed, then what came 
 - **wm f78d50:** score 59 -> 5. Once the jump tables were masked, the scan showed a single `li a0,1`, so the call is `func_001fd720(1)`. The nops after the soft-double libcalls mean nofill mode. hill3o reordered both global-store blocks, and Mode.f8 returns s32. Left: the lui for D_0108F6B4 is in v1, where the original has v0. Casting the second call to void fixes it, but the function pointer then lands in a3.
 
 **msd.py now masks jump-table loads.** It drops the lw/addu/sll/addiu/lui chain that feeds a `jr` other than `jr ra`. The f72a70 and f6ae68 false positives are gone, and f78d50's real difference (the `li 1`) showed up.
+
+### Round 44: build-mode scan (r44/modescan.py)
+
+Scored every draft without a mode suffix under nofill, norlo and nostrict. 11 drafts improved and were renamed to the mode suffix:
+wm f3a640 94->86 nostrict, f3e988 776->770 nostrict, f42f20 104->84 norlo, f51d18 460->430 norlo, f5e8a8 901->891 norlo,
+f625f0 215->183 nostrict, f7ad38 628->616 nofill, f7de08 807->805 nostrict; gb f2ac20 460->430 norlo, f377b0 901->891 norlo,
+f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f625f0, so the mode follows the function. drafttwins --apply afterwards found no new ports.
