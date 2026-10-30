@@ -111,6 +111,14 @@ the expression to rewrite.
 modescan.py (`python3 tools/ovl/modescan.py OVL [DIR...] [--modes a,b]`) scores each draft under other
 build modes and lists those another mode improves; rename the draft to `func_X.<mode>.c` to apply it.
 
+retflip.py (`python3 tools/ovl/retflip.py OVL draft.c... [--out DIR]`) flips each statement-called
+callee's prototype between void and s32 and keeps the flips that lower the score (see "v0 after a call"
+below); with --out it writes the improved drafts to DIR.
+
+swapscan.py (`python3 tools/ovl/swapscan.py OVL [DIR]`) lists drafts whose differing lines include a
+commutative instruction with its two sources swapped, which a fresh result variable or an
+integer-address rewrite usually fixes (see below).
+
 autodecomp's variants (tools/permute.py) added for the overlays: `callee_stubs` (overlay
 callees at lower addresses as empty `CONTEXT_ONLY` definitions: callee defined above
 changes gcc's branch-likely and slot choices), `data_defs` (overlay data as `CONTEXT_ONLY`
