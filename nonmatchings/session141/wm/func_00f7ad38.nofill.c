@@ -127,7 +127,7 @@ void func_00f7ad38(s32 sel)
                     }
                     if (id >= 72 && id < 98) {
                         if (!(D_00FB649C.f[id - 70] & 2)) continue;
-                        if (k == 2 && id >= 30 && id < 65) {
+                        if (k == 2 && (id >= 30 && id < 65)) {
                             if (!(D_00FB649C.f[id] & 1)) continue;
                         }
                     }
