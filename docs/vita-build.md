@@ -1343,7 +1343,9 @@ assembling and converting all three vertices again (so each strip vertex went to
 Under qemu-arm (en.iso, dive_en.txt, frames 5,000-5,060, the Vita's thread order, spin-waits and the host's digest
 left out): the GS worker 285M -> 229M instructions (-20%), the GPU thread 266M -> 230M (-14%); the game thread is
 unchanged. Checked: the ARM build's 151 GS digest and vu1 lines to frame 6,500 identical to the base; on x86 the
-worker-order run's GPU target hashes and GS digests, and the trace-5 gxmcheck log and shots, the same as the base.
+worker-order run's GPU target hashes and GS digests every 50th frame the same as the base to frame 5,550 (110 of
+each; the runs were stopped there), and the trace-5 gxmcheck log to frame 6,500 the same but for host pointers
+(`node draw ... arg`) with its 4,758 shots byte-identical.
 `make test` PASS, kh1.elf byte-identical. **Not yet measured on a Vita.** Left on the worker: the upload stores
 (kh1_gsmem_image ~37M), the library copies (~30M: the rings), the GIF decode of the other paths; on the GPU thread
 the batcher's per-triangle key and compares (kh1_batch_key, memcmp: ~25M with their library share), which a
