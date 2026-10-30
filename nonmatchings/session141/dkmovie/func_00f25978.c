@@ -1,3 +1,4 @@
+/* Round 56 (wwm2): score 256 -> 226 (1568 vs 1576 bytes; valaudit's callee sequence now matches). After func_00f26848 in the type 1 and type 2 paths, the target tests IPU_CTRL bit 14 and on a clear bit reads IPU_CTRL once more, discarding the value. With that test in both cases they cross-jump into one func_00f26848 call, as in the target (the old draft had one call too many). Left: register choice (s2-s6 for n, mx, my and the IPU pointers) and the prologue schedule. Earlier header below. */
 /* dkmovie.x func_00f25978: draft (session 141, round 28), structurally complete, not polished, 1552 vs 1576 bytes, 323 words differ, score 262 (m2c draft scored 549). IPU decode task for MPEG-style packets (the func_00f25658 sibling): per picture it reads the picture type from the IPU, for P/B pictures the motion vector pair, then runs the intra (type 2), predicted (type 1) or skipped (type 3) path through func_00f26540 / func_00f26848; type 4 ends the packet. Round 19 (wwm1): score 262 -> 256 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
 
@@ -83,6 +84,9 @@ void func_00f25978(void) {
             while ((D1_CHCR >> 8) & 1) {
             }
             func_00f26848(n, mx, my, type);
+            if (!((IPU_CTRL >> 14) & 1)) {
+                (void)IPU_CTRL;
+            }
             break;
         case 2:
             func_00f26a20((s32)D_00F28464 + 0x70, 0x300);
@@ -99,6 +103,9 @@ void func_00f25978(void) {
             while ((D1_CHCR >> 8) & 1) {
             }
             func_00f26848(n, 0, 0, type);
+            if (!((IPU_CTRL >> 14) & 1)) {
+                (void)IPU_CTRL;
+            }
             break;
         case 3:
             func_00f26540(n, mx, my);
