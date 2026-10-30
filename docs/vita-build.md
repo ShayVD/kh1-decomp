@@ -9,7 +9,8 @@ Vita3K"). What it is, how to build it, what it does and does not do.
 the Vita's Cortex-A9 with vitasdk and packs `out/vita/kh1-decomp.vpk`:
 
 - all 519 game C files and the 7 drafts of the unmatched functions, unchanged (`-DKH1_VITA`,
-  `-fsigned-char` as on the EE, `-ffp-contract=off`, gnu89, `-O2`);
+  `-fsigned-char` as on the EE, `-ffp-contract=off`, gnu89, `-O3` since 2026-10-30, the platform code with LTO:
+  "Clocks and compiler flags" below);
 - src/data/*.s's pieces (the user's ELF bytes, cut by the PS2 `make`), assembled for ARM;
 - the null platform's GS memory model, register file and DMA chain walk (host/null/ but main.c and
   pad.c), the shared port code (host/port/), and the Vita platform (host/vita/):
@@ -1458,6 +1459,62 @@ each; the runs were stopped there), and the trace-5 gxmcheck log to frame 6,500 
 (kh1_gsmem_image ~37M), the library copies (~30M: the rings), the GIF decode of the other paths; on the GPU thread
 the batcher's per-triangle key and compares (kh1_batch_key, memcmp: ~25M with their library share), which a
 strip-level batch call could cut next.
+
+## Clocks and compiler flags (2026-10-30)
+
+**Clocks: already at their highest.** host/vita/main.c has set them since session 137v, before the display
+starts: ARM 444 MHz (an application starts at 333), bus 222, GPU 222, GPU crossbar 166. The log's
+`kh1-vita: clocks: ARM 444 MHz (was 333), bus 222, GPU 222, GPU crossbar 166` line says what the Vita
+accepted. Nothing more to get here.
+
+**-mcpu / -mfpu: already the A9's.** vitasdk's gcc 15.2 is configured `--with-arch=armv7-a --with-tune=cortex-a9
+--with-fpu=neon --with-float=hard --with-mode=thumb` (`arm-vita-eabi-gcc -v`; `-Q --help=target` shows
+`armv7-a+simd`, NEON, hard float, Thumb-2), so `-mcpu=cortex-a9 -mfpu=neon` change no instruction.
+
+**`--opt` (tools/vita/build.py, or `KH1_VITA_OPT=`)** picks the optimisation; the default is now `o3lto`:
+
+| `--opt` | game files (src/, ovl/) | platform (host/null, host/port, host/vita) | link |
+|---|---|---|---|
+| `o2` (main before this) | -O2 | -O2 | |
+| `o3` | -O3 | -O3 | |
+| `lto` | -O2 | -O2, LTO | -O2 -flto |
+| `o3lto` (the default) | -O3 | -O3, LTO | -O3 -flto |
+
+- **LTO is for the platform only.** The game's files declare a function as a variable where they take its
+  address (`extern u8 func_x[]`, as the matching code needs), which is legal one file at a time but LTO's
+  merge refuses ("function redeclared as variable", 10 of them in src/ and ovl/). The platform is where the
+  hot code is anyway (the VU1 programs, the GS worker, the recorder): LTO lets gcc inline across its files
+  (gs_kick into kh1_gs_write and the like).
+- **host/port/memmap.c stays out of LTO**: it defines the fixed memory map's names in top-level asm
+  (`.set`), which LTO's symbol table does not see (the link then misses D_00720000 / D_009A0000).
+- **Fat LTO objects** (`-ffat-lto-objects`): census.py's nm reads each object's symbols before the link.
+- No flag that changes a float result: `-ffp-contract=off` stays, no `-ffast-math`. The pictures must stay
+  bit-identical.
+
+Cost: the Vita build takes ~9 minutes on 4 cores (from ~5.5; the platform's files compile one at a time),
+the code ~2.19 MB (from ~1.83 MB), and LTO dropped ~4 MB of unused platform .bss.
+
+Checked: the ARM Linux build (`make vita-armcheck`, gcc 13, the same `--opt o3lto`) under qemu-arm over 6,500
+frames of dive_en.txt (`KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GPUQ=1 KH1_HOST_VU1=1
+KH1_HOST_VU1TR=1`, en.iso) gives the same 130 GS digests and the same `vu1 frame` lines as `--opt o2`, and the
+same log but for host addresses. The ARM profile (qemu-arm 8.2 built with `--enable-plugins`, a per-TB
+instruction count plugin, frames 5,000-5,060 as the difference of two runs, `KH1_HOST_GSQ_CHECK=1000
+KH1_HOST_RECQ=1` added): the work without the queue waits' spin (q_wait_tail) ~1,327M -> ~1,256M ARM
+instructions (-5%); the spin itself 570M -> 162M (the threads wait less, or wait faster: qemu's timing is not
+the Vita's). An instruction count does not show what -O3 is mostly for (scheduling, unrolled loops on the
+A9's dual issue) nor the cost of the larger code in the A9's 32 KiB I-cache, so **the Vita decides**: compare a
+Vita log of the Dive (pictures a second, the `vu1 programs:` and `gs worker ops:` lines) against main's
+9c32dca (15.7 a second). If o3lto is slower, `--opt o3` or `lto` alone are the next to try.
+
+Where the instructions go in those frames (o2, the spin left out), for the hand-written NEON question:
+P0 native (nat_0) ~11%, the translated tr_12 ~7%, the GS worker's kicks and GIF decode (gs_kick,
+gif_qword, gif_value, gif_block, kh1_gs_packed, kh1_gs_write) ~21%, the recorder's vertices (r_prim,
+kh1_vertex_of, kh1_pa_vertex, kh1_batch_*) ~8%, unpack 3.5%, kh1_gsmem_image (the uploads, already NEON)
+under 3%; the libc (memcpy and the like, glibc's here, newlib's on the Vita) ~15%. The vertex transforms that
+cost the most are the VU1 programs, already NEON (P0, P10, P11, P13, P18 native); tr_12 is the largest one
+still translated, and a native form of it is the next NEON step of that kind (bit-exact, as the others). The texture and palette conversions
+are not where the time goes in the Dive. The GS worker and the recorder are being reworked elsewhere (the GS
+worker's speed, and a native renderer that would draw from the game's draw lists without them).
 
 ## The flashing floor: one-byte enums (2026-10-28)
 
