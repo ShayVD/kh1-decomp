@@ -1,7 +1,8 @@
+/* Round 55 wgb: Pad.x10 now at offset 0x10 (an xc field before it; was 0xc), as wwm1 fixed in wm func_00f71b68 / func_00f6f2a8. Score unchanged (709). Earlier header below. */
 /* Round 46 wwm2: score 713 -> 709, func_0020be10 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 837 -> 713, port.py of the wm twin func_00f6f2a8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* score 837: gb port of wm f6f2a8 via portmap2; same remaining diffs. Round 25 wwm2. */
-typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
+typedef struct { u8 pad[8]; u32 x8; u32 xc; u32 x10; } Pad;
 typedef struct { u8 pad[16]; s32 x10; } Win;
 typedef struct { u8 pad[12]; s16 xc; s16 xe; u8 pad10[14]; s16 x1e; } Lay;
 typedef struct { u8 x0; u8 x1; u8 x2; u8 x3; u8 x4; u8 pad5[3]; s16 x8; u8 padA[2]; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; } Ic;
