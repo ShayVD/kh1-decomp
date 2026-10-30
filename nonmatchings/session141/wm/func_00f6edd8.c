@@ -1,4 +1,4 @@
-/* score 186 (1280 vs 1232). Menu list: skips leading entries with a8 set, counts free slots into num, draws rows with func_002078f0/func_00207938/func_00208280, then pad handling with a 3-case switch on D_0108F2AC. The skip-loop shape matches; left: n is spilled to sp+60 (target keeps n in s8 and p in sp+60), so registers shift through the whole body. Tried indexed base[i] instead of p (246) and a 15-minute permuter (nothing useful). Round 22 (wwm1): the if/else at line(s) 85,123 with the arms swapped and the test negated (ifswap.py): score 186 -> 167. */
+/* score 115 (1252 vs 1232; round 36-37 wwm1: shared bad-slot tail with an empty case 3, and the cur == i arm before the c = 0 arm, branch sequence now identical, was 186). Menu list: skips leading entries with a8 set, counts free slots into num, draws rows with func_002078f0/func_00207938/func_00208280, then pad handling with a 3-case switch on D_0108F2AC. The skip-loop shape matches; left: n is spilled to sp+60 (target keeps n in s8 and p in sp+60), so registers shift through the whole body. Tried indexed base[i] instead of p (246) and a 15-minute permuter (nothing useful). Round 22 (wwm1): the if/else at line(s) 85,123 with the arms swapped and the test negated (ifswap.py): score 186 -> 167. */
 typedef struct { u8 pad[176]; s32 x; s32 y; u8 pad2[6]; s16 hbe; s16 pad3; s16 hc2; } Obj;
 typedef struct { u8 a0; u8 pad1; u8 a2; u8 pad3[5]; u8 a8; u8 pad9[43]; u8 s34[44]; } Ent;
 extern s32 D_002C5AD8;
@@ -91,14 +91,14 @@ void func_00f6edd8(Obj *o)
                     c[1] = 1;
                     hl = 1;
                 }
-            } else if (cur != i) {
-                c[0] = 0;
-                c[1] = 0;
-            } else {
+            } else if (cur == i) {
             seven:
                 c[0] = 7;
                 hl = 1;
                 c[1] = 7;
+            } else {
+                c[0] = 0;
+                c[1] = 0;
             }
             if (p->a0 == 0 && p->a8 == 0) {
                 func_001efb18(func_00f60428(), func_00f60438());
