@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 178 -> 170, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 180 -> 178, func_00f4a000 declared s32. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f6cfa0 near miss: score 216 -> 180 (307 -> 427 words, 2168 vs 2160); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
 /* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00FB58C8/D_00FB58D0 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00FB4A70) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
@@ -71,11 +72,11 @@ s32 func_00f6cfa0(void)
     s8 codes[6];
     Win *w2;
     s32 t;
-    Win **pw;
-    Win *w3;
     s16 *pl;
-    s8 *pc;
+    Win *w3;
     Ent *p;
+    Win **pw;
+    s8 *pc;
     s32 i, k, sel, old, r;
     s32 y;
 
@@ -98,12 +99,12 @@ s32 func_00f6cfa0(void)
     lst[2] = 9;
     D_0108F158.v[0] = D_00FB58E0.v[0];
     lst[3] = 11;
-    D_0108F158.v[1] = D_00FB58E0.v[1];
-    y = D_00FB4B68;
+    codes[5] = 9;
     lst[4] = 213;
     codes[3] = 6;
+    D_0108F158.v[1] = D_00FB58E0.v[1];
     D_0108F158.v[2] = D_00FB58E0.v[2];
-    codes[5] = 9;
+    y = D_00FB4B68;
     D_0108F158.v[3] = D_00FB58E0.v[3];
     D_0108F158.v[4] = D_00FB58E0.v[4];
     D_0108F158.v[5] = D_00FB58E0.v[5];
@@ -117,9 +118,9 @@ s32 func_00f6cfa0(void)
         (*pw)->b3 = 0;
         (*pw)->hC = 1;
         (*pw)->x10 = *pl;
-        (*pw)->y = (*pw)->ty = y;
-        (*pw)->a = (*pw)->at = 0;
         (*pw)->tx = (*pw)->x = D_00FB4B64;
+        (*pw)->a = (*pw)->at = 0;
+        (*pw)->y = (*pw)->ty = y;
         (*pw)->h8 = D_00FB4B70;
         if (i == sel) {
             (*pw)->b4 = 1;
@@ -200,16 +201,16 @@ top:
     D_00FB4EB4 = sel;
     switch (r) {
     case 1:
-    case 2:
     case 7:
     case 8:
-        break;
-    case 3:
-    case 4:
     case 5:
+        break;
+    case 4:
+    case 3:
     case 6:
         D_0108F280 = 1;
         break;
+    case 2:
     case 9:
         p = func_001bc4e0();
         p = &p[func_001be278() + 1];
