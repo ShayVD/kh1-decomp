@@ -1,4 +1,4 @@
-/* Round 46 wwm2: score 400 -> 396, hill3o statement order. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 9b5f11c1 (gb func_00f2ac20 near miss, score 400 -> 396, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 396 was not valid. Restored the last valid statement order: score 400. Earlier header below. */
 /* Round 46 wwm2: score 408 -> 400, func_00f24240 declared s32. Earlier header below. */
 /* Round 36 (wgb): gb.x func_00f2ac20 near miss (norlo mode): 547 -> 550 words, score 430 -> 408 (aligned diff 240 -> 235). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules; 85 s, seed 1) over the round 44 norlo draft; the order passes hill3.py --check against it. Earlier header below. */
 /* Round 44 wwm2: score 460 -> 430 under the norlo build mode (r44/modescan.py). Earlier header below. */
@@ -79,22 +79,22 @@ void func_00f24d00(s32, s32);
 s32 func_00f24bb0(s32, s32, s32, void *);
 
 void func_00f2ac20(void) {
-    s32 i, k;
     Pad *pad;
-    s32 id;
+    s32 dx;
+    s32 a0, a1;
     s32 nx, ny, nz, ox, oy, oz;
     s32 dir;
-    s32 dx;
-    u32 b;
-    s32 a0, a1;
+    s32 rx, ry, ax, ay;
+    s32 id;
     s32 dz;
     s32 mode;
+    s32 i, k;
     s32 dy;
-    s32 rx, ry, ax, ay;
+    u8 *sub;
     s32 buf[20];
     s16 sv[8];
     s32 sel;
-    u8 *sub;
+    u32 b;
 
     sel = 0;
     D_00F61370 = 0;
@@ -116,10 +116,10 @@ void func_00f2ac20(void) {
             func_00f20170(0, 0);
             D_00F80580 = 1;
         }
-        dz = 0;
         dy = 0;
         dx = 0;
         func_00f2a470(&dx, &dy);
+        dz = 0;
         b = pad->x8;
         if (b & 0x400) dz = 1;
         if (b & 0x100) dz = -1;
@@ -250,8 +250,8 @@ void func_00f2ac20(void) {
                 oz = D_00F56DC0->h2;
                 if (ny > *(u16 *)(sub + 8) - 1) ny = *(u16 *)(sub + 8) - 1;
                 nz = oz + dy;
-                if (nz > *(u16 *)(sub + 10) - 1) nz = *(u16 *)(sub + 10) - 1;
                 if (nz < 0) nz = 0;
+                if (nz > *(u16 *)(sub + 10) - 1) nz = *(u16 *)(sub + 10) - 1;
                 D_00F56DC0->h0 = nx;
                 D_00F56DC0->h1 = ny;
                 D_00F56DC0->h2 = nz;
