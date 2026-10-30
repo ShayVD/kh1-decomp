@@ -1,3 +1,4 @@
+/* Round 29 wwm1 (tools/ovl/rettype.py): score 1226 -> 1086 with func_00f6b5b0 declared s32. Earlier header below. */
 /* Round 26 (wwm1): score 1272 -> 1226 with tools/ovl/storeperm.py (store-order sweep). */
 /* Round 47 wwm2: score 1280 -> 1272, hill3o statement order. Earlier header below. */
 /* NEAR MISS 1405 words, score 1324 (5984 vs 6064 bytes). Port of gb func_00f446d0 (same score); D_00FB4AFC mapped by hand = gb D_00F7037C. See the gb file for notes. Round 19 (wwm1): score 1324 -> 1280 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
@@ -30,7 +31,7 @@ extern s32 D_00FB4BCC, D_00FB4BD0, D_00FB4BD4, D_00FB4BD8;
 extern s32 D_00FB4BE0, D_00FB4BE4, D_00FB4BE8, D_00FB4BEC;
 extern s32 D_00FB4BF0, D_00FB4BF4, D_00FB4BF8, D_00FB4BFC;
 Item *func_00f6a480(void); CONTEXT_ONLY Item * func_00f6a480() { return 0; }
-void func_00f6b5b0(Item *, f32, f32);
+s32 func_00f6b5b0(Item *, f32, f32);
 u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 void func_0011d768(s32);
 void func_0024e468(s32);
