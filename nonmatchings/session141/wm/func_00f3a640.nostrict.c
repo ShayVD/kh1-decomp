@@ -1,3 +1,4 @@
+/* Round 51 wwm2: score 70 -> 42, now at exact size 544 (was 528). The q walk is an index loop `for (i = 0; q[i].type != 1; i++)` as in wm f3ac48 (fresh q giv and li 1); tp = &D_00FCE390[id].t straight off the symbol; t = func_00f64c38(..) kept in a local so func_00f650f0 gets v0, and sp->f8 stored before that call. Left: the target forms each sub-struct base as (id*272 + 224/240/256) + D (ours: &D[id] + 224, (D + 240) + id*272, &D[id] + 268), which shifts the s regs. Tried int-address forms, asm-label aliases and fully direct fields (all worse). */
 /* Round 46 wwm2: score 76 -> 70, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 78 -> 76, func_001c0310 declared s32. Earlier header below. */
 /* Round 45 wwm2: score 86 -> 78, hill3o statement order under this build mode. Earlier header below. */
@@ -39,14 +40,17 @@ void func_00f3a268(void);
 s32 func_00f3a640(s32 id, f32 *pos, D3a640 *desc, s32 val) {
 
     E3a640 *bs = D_00FCE390; S3a640 *sp = &bs[id].s;
-    T3a640 *tp = &bs[id].t;
+    T3a640 *tp = &D_00FCE390[id].t;
     Q3a640 *q;
+    s32 i;
+    s32 t;
     E3a640 *e = &D_00FCE390[id];
     sp->x4 = val;
     sp->desc = desc;
-    tp->t0 = func_00f64c38(desc->b0, D_00F87020);
     sp->f8 = pos[0];
-    tp->t1 = func_00f650f0(1, tp->t0);
+    t = func_00f64c38(desc->b0, D_00F87020);
+    tp->t0 = t;
+    tp->t1 = func_00f650f0(1, t);
     D_00FCE390[id].u.list = (Q3a640 *)func_00f64c38(desc->h4, D_00F8704C);
     func_00f37028(e, pos);
     sp->on = 0;
@@ -61,9 +65,10 @@ s32 func_00f3a640(s32 id, f32 *pos, D3a640 *desc, s32 val) {
     D_00FCE390[id].v64[3] = 1.0f;
     D_00FCE390[id].v80[3] = 1.0f;
     sceVu0UnitMatrix(D_00FCE390[id].m160);
-    for (q = D_00FCE390[id].u.list; q->type != 1; q++) {
-        if (q->type == 8) {
-            func_00f39b10(&D_00FCE390[id], q, 0);
+    q = D_00FCE390[id].u.list;
+    for (i = 0; q[i].type != 1; i++) {
+        if (q[i].type == 8) {
+            func_00f39b10(&D_00FCE390[id], &q[i], 0);
         }
     }
     func_00f39de8(&D_00FCE390[id]);
