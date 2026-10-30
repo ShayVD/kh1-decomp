@@ -1,5 +1,13 @@
+/* drafttwins.py: score 175 -> 149, port.py of the gb twin func_00f2b9b8 draft. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f52ab0 near miss: score 185 -> 175 (123 -> 122 words, 1564 vs 1568); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 362). Earlier header below. */
-/* wm.x func_00f52ab0 near miss: 123 words differ, score 185 (ours 1564 bytes, original 1568). Port of gb func_00f2b9b8 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. */
+typedef struct {
+    u8 pad0[88];
+    u64 lo : 32;
+    u64 fa : 4;
+    u64 fb : 28;
+    u8 pad96[40];
+    f32 f136;
+} Wm333;
 typedef struct { OvlVec v[4]; OvlVec pos; OvlVec rot; } GbXf;
 typedef struct {
     void *x0;
@@ -73,14 +81,14 @@ void func_00f52ab0(Ctx *c, void *box, s32 flag) {
     sceVu0RotMatrix(D_00F9B600, D_00F9B600, rot);
     D_00F9B600[3][2] -= px->v[0][2];
     pos[0] = -(((GbDims *)g)->x6 * 200.0f) * 0.5f;
-    rot[1] = *(s32 *)(D_00F9B540 + 4312) * 3.1415926f * 0.00048828125f;
-    rot[3] = 0.0f;
     rot[2] = 0.0f;
-    pos[1] = ((u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF) * 200.0f;
+    rot[3] = 0.0f;
+    rot[1] = *(s32 *)(D_00F9B540 + 4312) * 3.1415926f * 0.00048828125f;
+    pos[1] = ((u16)((Wm333 *)D_00F9B540)->fb & 0xF) * 200.0f;
     xf.v[0][0] = 0.0f;
     rot[0] = *(s32 *)(D_00F9B540 + 4308) * 3.1415926f * 0.00048828125f;
-    pos[2] = -(((GbDims *)g)->xA * 200.0f) * 0.5f;
     pos[3] = 0.0f;
+    pos[2] = -(((GbDims *)g)->xA * 200.0f) * 0.5f;
     xf.v[0][1] = 0.0f;
     px->v[0][2] = *(f32 *)(D_00F9B540 + 136);
     xf.v[0][3] = 0.0f;
@@ -90,8 +98,8 @@ void func_00f52ab0(Ctx *c, void *box, s32 flag) {
     xf.v[1][3] = 1.0f;
     xf.v[2][0] = 0.0f;
     xf.v[2][1] = 1.0f;
-    xf.v[2][2] = 0.0f;
     xf.v[2][3] = 1.0f;
+    xf.v[2][2] = 0.0f;
     xf.v[3][0] = 0.0f;
     xf.v[3][1] = 0.0f;
     xf.v[3][2] = 0.0f;
@@ -107,21 +115,21 @@ void func_00f52ab0(Ctx *c, void *box, s32 flag) {
     if (flag) {
         func_00f4a328(10081, c, D_0108CD50, D_00FA5AFC, (u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF, 0);
     }
-    v[2] = 0.0f;
-    v[1] = ((u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF) * 200.0f - 50.0f;
     v[0] = (((GbDims *)g)->x6 >> 1) * 200.0f;
+    v[1] = ((u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF) * 200.0f - 50.0f;
+    v[2] = 0.0f;
     sceVu0UnitMatrix(m);
     sceVu0TransMatrix(m, m, v);
     sceVu0RotMatrixX(m, m, 3.1415926f);
     sceVu0MulMatrix(m, D_0108CE10, m);
     c->x0 = func_00f66ac8(c->x0);
     p = func_00f66b78(c->x0);
+    p[1] = 66;
     p[3] = 71;
     p[2] = 0x5000D;
     p[5] = 24;
-    p[0] = 0x8000000048;
-    p[1] = 66;
     p[4] = 0x720000006F00;
+    p[0] = 0x8000000048;
     c->x0 = p + 6;
     func_00f66b90(p + 6);
     c->x0 = func_00f528f8(m, c->x0);
@@ -133,10 +141,10 @@ void func_00f52ab0(Ctx *c, void *box, s32 flag) {
     func_00f66f78(10361, func_00f66ae0(c->x0));
     if (*(s16 *)(D_00F9B540 + 122) != 0) {
         c->x0 = func_00f66ac8(c->x0);
-        v[3] = 1.0f;
         v[2] = 0.0f;
-        v[1] = -(((GbDims *)g)->x8 * 200.0f);
+        v[3] = 1.0f;
         v[0] = 0.0f;
+        v[1] = -(((GbDims *)g)->x8 * 200.0f);
         sceVu0UnitMatrix(m);
         sceVu0TransMatrix(m, m, v);
         sceVu0MulMatrix(m, D_0108CE10, m);
