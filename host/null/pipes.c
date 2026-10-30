@@ -255,15 +255,24 @@ static u32 prim_sig(u32 prim, const KH1GsVert *v, u32 n) {
     return h | 1;
 }
 
+/* wide screen: the view's margin in canvas sixteenths (kh1_view_side16), set with the HUD's anchors (plat_null.c
+ * kh1_null_hud_wide); 0 keeps the PS2's 512-wide targets */
+static s32 view_side16;
+void kh1_pipes_view(s32 side16) { view_side16 = side16; }
+
 /* session 146: the recorder's side of a kick.  The state op: data the draw's registers (KH1DrawRegs), then SCISSOR's
  * and XYOFFSET's lo / hi words (the pass reads them; as before, only a change of the registers or SCISSOR makes a
  * new state), 6 qwords an op (ops put one after another join, the last one then holds) */
 #define STATE_QW 6
 static void r_state(const u32 *a, const u32 *d, u32 nqw) {
-    static const KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
+    /* the targets at the PS2's scale; under a wide view (kh1_view_init: the Vita's wide=1, the host's KH1_HOST_WIDE)
+     * the 3D, display and Z-colour targets take the view's width, canvas x -side .. 512 + side */
+    KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
     const u32 *w;
     (void)a;
     if (nqw < STATE_QW) return;
+    c43.vx0 = -view_side16;
+    c43.vw = 8192 + 2 * view_side16;
     d += (nqw - STATE_QW) * 4;
     w = d + sizeof rec_r / 4;
     memcpy(&rec_r, d, sizeof rec_r);

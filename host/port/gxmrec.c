@@ -53,7 +53,7 @@ typedef struct {
     u32 pipe;            /* ~0u: nothing set */
     int tex;             /* SET_TEXTURE given */
     s16 tslot, pslot;
-    u8 src;
+    u8 src, wtex;
     u32 tex0_lo, tex0_hi;
     int region;
     s16 sx0, sy0, sx1, sy1;
@@ -120,13 +120,14 @@ static void draw(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 ci) {
     if (!n || !k->nv) return;
     /* the texture: the cache's entry or a target's own (the same for every GPU draw of the command) */
     if (d->pipe[0].shader.tex &&
-        (!b->tex || b->tslot != k->tslot || b->pslot != k->pslot || b->src != k->samples || b->tex0_lo != d->tex0_lo ||
+        (!b->tex || b->tslot != k->tslot || b->pslot != k->pslot || b->src != k->samples || b->wtex != k->wtex || b->tex0_lo != d->tex0_lo ||
          b->tex0_hi != d->tex0_hi)) {
         c = emit(g, KH1_GXM_SET_TEXTURE, ci);
         if (c) {
             c->slot = k->samples ? -1 : k->tslot;
             c->pslot = d->pipe[0].shader.tex >= KH1_TEXFMT_P8 ? k->pslot : -1; /* an indexed texture's palette */
             c->src = k->samples;
+            c->wtex = k->wtex;
             c->tex0_lo = d->tex0_lo;
             c->tex0_hi = d->tex0_hi;
         }
@@ -134,6 +135,7 @@ static void draw(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 ci) {
         b->tslot = k->tslot;
         b->pslot = k->pslot;
         b->src = k->samples;
+        b->wtex = k->wtex;
         b->tex0_lo = d->tex0_lo;
         b->tex0_hi = d->tex0_hi;
         g->frame.textures++;

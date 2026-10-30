@@ -89,6 +89,7 @@ static void new_pass(KH1CmdRec *r, const KH1BatchKey *k, const KH1RenderPass *rp
     p->cmd0 = r->ncmd;
     t = tgt_find(r, tgt_key(k->rt, k->fbp, k->fbw), 1);
     p->tgt = t == ~0u ? 0xFF : (u8)t;
+    if (t != ~0u) r->tsw[t] = rp->ox != 0.0f && rp->scale > 0.0f ? (f32)rp->w / rp->scale : 0.0f;
     if (t != ~0u) { /* the GS pages it spans: FBW by its rows (the pass's height unscaled) */
         u32 rows = (u32)(rp->scale > 0.0f ? rp->h / rp->scale + 0.5f : (f32)rp->h), n = (k->fbw ? k->fbw : 1) * ((rows + 31) / 32);
         if (n > r->tpages[t]) r->tpages[t] = n;
@@ -150,8 +151,10 @@ static void new_cmd(KH1CmdRec *r, const KH1BatchKey *k, const KH1DrawState *d, c
             t = tgt_find(r, tgt_key(kh1_target_id(tbp / 32, tbw, psm), tbp / 32, tbw), 0);
             if (t != ~0u) { /* the texture's rows inside the target (a 512-row binding of a 384-row target) */
                 u32 th = 1u << ((d->tex0_lo >> 30 | d->tex0_hi << 2) & 15), rows = r->tpages[t] / (tbw ? tbw : 1) * 32;
-                if (!cpu_pages(r, tbp, tbw, psm, 0, 0, 1u << (d->tex0_lo >> 26 & 15), th < rows || !rows ? th : rows, 2))
+                if (!cpu_pages(r, tbp, tbw, psm, 0, 0, 1u << (d->tex0_lo >> 26 & 15), th < rows || !rows ? th : rows, 2)) {
                     c->samples = (u8)(t + 1);
+                    c->wtex = r->tsw[t] > 0.0f;
+                }
             }
         }
     }
@@ -288,6 +291,12 @@ static void prim(KH1CmdRec *r, const KH1BatchKey *k, u32 src) {
         c->lost = 1;
     } else {
         if (v) memcpy(at, v, n * sizeof *v);
+        if (v && c->wtex) { /* wide screen: s (over TW's 2^n texels) over the target's whole width, the same texels: a
+                             * full-screen pass's u, stretched to the view, runs past 512 (the frame copy's 0 .. 678) */
+            u32 lw = d->tex0_lo >> 26 & 15, i;
+            f32 kk = (f32)(1u << (lw > 10 ? 10 : lw)) / r->tsw[c->samples - 1];
+            for (i = 0; i < n; i++) ((KH1GpuVert *)at)[i].s *= kk;
+        }
         if (!c->prims) c->hasv = v != 0;
         else if (!v) c->hasv = 0;
         if (!c->nv) c->v0 = (u32)(at - (r->vring.base + r->vring.cur * r->vring.slot)) / (u32)sizeof(KH1GpuVert);

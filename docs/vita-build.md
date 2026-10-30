@@ -16,7 +16,7 @@ the Vita's Cortex-A9 with vitasdk and packs `out/vita/kh1-decomp.vpk`:
   - `main.c`: the entry, the data directory, the log, the frame pacing on the Vita's vblank, the
     overlay stub (below);
   - `display.c`: the GS model's display buffer after each frame copy (the host's `KH1_HOST_SHOT`
-    present, 4:3 pillarboxed), plus a status strip; since session 135 drawn by the GPU through
+    present, 4:3 pillarboxed; since 2026-10-30 16:9 by default, "Wide screen" below), plus a status strip; since session 135 drawn by the GPU through
     vita2d (one bilinear textured quad, "Speed" below);
   - `pad.c`: sceCtrl in libpad2's layout (Vita L / R are L1 / R1; L2 / R2 / L3 / R3 are the rear touch
     pad's quarters: upper left, upper right, lower left, lower right; circle confirms);
@@ -58,6 +58,9 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
      unchanged. `rcam=-1` turns the other way, `rcam=0` sends the stick as the PS2 did.
    - `snd=0` keeps the game silent (the null server); 1, the default, plays the sound through the disc's
      own driver ("Sound" below). `sndcore=N` pins the sound threads to core N (default -1: any core).
+   - `wide=1` (the default since 2026-10-30): the picture fills the 960 x 544 screen as a true 16:9 view ("Wide
+     screen" below); `wide=2` stretches the 4:3 picture to fill the screen; `wide=0` keeps the 4:3 picture in black
+     bars, as before. `strip=1` keeps the status strip over a full-screen picture.
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
@@ -111,6 +114,52 @@ What a run can show, at best:
   `ux0:data/kh1/mc0` when it exists ("Memory card" below); card 2 is always empty.
 - gumisave.c's func_001b9c60 keeps the overlay entry as a pointer and calls it later: on the Vita
   that jumps into data (the Gummi ship editor; not reachable before the world map anyway).
+
+## Wide screen (2026-10-30)
+
+config.txt's `wide=` picks how the picture covers the Vita's 960 x 544 (16:9) screen; the log says which
+(`kh1-vita: screen: ...`).
+
+- **`wide=1`, the default: a 16:9 view.** The renderer-spec 5.3 step 2 / 5.4 design (sessions 90-100), written and
+  checked for the host's null model as `KH1_HOST_WIDE` but never turned on for the Vita, now runs there. main.c calls
+  `kh1_view_init(960 / 544)` (host/port/view.c: the culls' frustum and the markers' bounds widen by 1.3235, hor+: the
+  vertical view stays) and `kh1_null_hud_wide` (host/null/plat_null.c: the HUD's anchors, the full-screen packets'
+  stretch, the scissor rule, and now the GPU recorder's view, `kh1_pipes_view`), and display.c draws the GPU's
+  display target over the whole screen. The 3D sees more at the sides; the command menu, the gauges and the other
+  parts of renderer-spec 5.3.1's table sit at the screen's edges; menus, text windows and the title's art stay in
+  the centred 4:3 canvas (the title's white backdrop and the menus' bands are full-screen passes, so they fill the
+  sides). Needs the GPU picture: with the software picture (`gpu=0`, or no shader compiler) it falls back to 2.
+- **`wide=2`: the 4:3 picture stretched** to the whole screen (everything 1.33 x wider). Works with either picture.
+- **`wide=0`: the 4:3 picture pillarboxed**, as before; the GPU's output is bit-identical to before the change
+  (gxmcheck's `KH1_HOST_GXM_HASH` over 7,000 frames of dive_en.txt on the English disc: all 56 hashes equal).
+- In 1 and 2 the status strip (the alive square, the read and frame bars) is drawn only while no picture is shown
+  (the boot), or always with `strip=1`.
+
+What the GPU path needed beyond the host's design (host/null/pipes.c, host/port/cmdbuf.c, host/port/target.c,
+host/vita/gxm.c):
+
+- **The targets take the view's width.** pipes.c's recorder made every pass with the PS2's 4:3 canvas; under the
+  wide view the 3D, display and Z-colour targets are the view's 678 x 384 (448), canvas x -82.8 .. 594.8, and a
+  capture slot half of that (target.h's `wide`), drawn with the existing `ox` margin.
+- **A wide target is sampled its whole width.** A texture read from a target was a TW-wide (512) window of it, so
+  the frame copy, whose u the full-screen stretch carries to 0 .. 678, clamped at 512 and smeared the right sixth
+  of the screen. Now a draw that samples a target whose last pass had the margin (cmdbuf.c `tsw`, `KH1Cmd.wtex`,
+  gxmrec's SET_TEXTURE `wtex`) has its s taken over the target's width and gxm.c binds the target that wide.
+  Target texels keep the convention of platform/view.h (a copy of the target is addressed from the view's left
+  edge), and GS uploads into a target keep their pixel x, so the title's layers (uploaded into the Z-colour target,
+  drawn back at u 0 .. 512) land centred.
+- **A slot draw away from the canvas's origin is not a capture.** The shadow copies its 256 x 256 window into the
+  0x3600 slot with XYOFFSET 0x7800 (shadow.c func_00128738); taking the view's margin there moved Sora's shadow
+  off his feet and smeared the floor. target.c gives the slot the margin only at XYOFFSET 0x7000 (the menu and depth
+  blur captures).
+
+**Checked** (host, `KH1_HOST_WIDE=1` with tools/vita/gxmcheck.sh's binary, gxm.c on the mock sceGxm, the English
+disc, dive_en.txt, `KH1_HOST_VU1=1`): the title, the new-game menus, Dive to the Heart's stations and the first
+battle to frame 24,000 draw 16:9 with the 3D wider at both sides, Sora's shadow under him, the command menu at the
+left edge and the HP / MP gauge at the right; `KH1_HOST_GXM_PPM` writes the whole wide target now (gxm_mock.c
+`gpu_wide_*`). The ARM build under qemu-arm gives the x86 log exactly with `KH1_HOST_WIDE=1` (2,500 frames at trace
+5). **Not checked**: a real Vita or Vita3K; the pause menu's blur and the depth blur under the GPU path (no run
+reached them); a target sampled with a shader REGION_CLAMP under the wide view (the clamp's texels are still TW's).
 
 ## Memory card (session 140)
 
