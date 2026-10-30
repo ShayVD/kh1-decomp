@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 396 -> 382, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 400 -> 396, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 408 -> 400, func_00f4b338 declared s32. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f51d18 near miss (norlo mode): 547 -> 550 words, score 430 -> 408 (aligned diff 240 -> 235). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules; 85 s, seed 1) over the round 44 norlo draft; the order passes hill3.py --check against it. Earlier header below. */
@@ -78,22 +79,22 @@ void func_00f4bdf8(s32, s32);
 s32 func_00f4bca8(s32, s32, s32, void *);
 
 void func_00f51d18(void) {
+    s32 buf[20];
     s32 i, k;
     Pad *pad;
     s32 id;
     s32 nx, ny, nz, ox, oy, oz;
+    s32 dz;
     s32 dir;
-    s32 dx;
+    s32 rx, ry, ax, ay;
     u32 b;
     s32 a0, a1;
-    s32 dz;
-    s32 mode;
     s32 dy;
-    s32 rx, ry, ax, ay;
-    s32 buf[20];
+    s32 mode;
+    s32 dx;
     s16 sv[8];
-    s32 sel;
     u8 *sub;
+    s32 sel;
 
     sel = 0;
     D_00FA5AF0 = 0;
@@ -202,8 +203,8 @@ void func_00f51d18(void) {
             }
             if (pad->x4 & 0x2000) {
                 func_00f50968();
-                dz = 0;
                 dy = 0;
+                dz = 0;
                 dx = 0;
             } else if (b & 0x4000) {
                 if (D_00F9B540->x74 & 2) {
@@ -357,9 +358,9 @@ void func_00f51d18(void) {
                 if (func_00f4bca8(dx, dz, dy, D_00F9B544)) {
                     func_0011d768(20);
                     ny = D_00F9B540->h1 + dz;
-                    if (ny < 0) ny = 0;
                     if (ny > *(u16 *)(sub + 8) - 1) ny = *(u16 *)(sub + 8) - 1;
                     D_00F9B540->h1 = ny;
+                    if (ny < 0) ny = 0;
                     func_00f4b878(D_00F9B544);
                     func_00f4b338(D_00F9B544, 0);
                 }
