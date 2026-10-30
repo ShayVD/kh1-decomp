@@ -850,7 +850,17 @@ static void pend_flush(Target *only) {
         if (sel >> i & 1) tgt[i].pend = 0;
 }
 
-/* an upload's (BITBLTBUF's destination) w x h at (dx, dy), or a copy's from GS memory: the words it wrote */
+/* session 150: a block whose page lies outside the target's pixels (pend_write would write none of it) */
+static int pend_outside(const Target *t, u32 b) {
+    u32 pg = ((b & 0x3FFF) - t->fbp * 32) >> 5 & 511;
+    return !t->fbw || pg % t->fbw * 64 >= t->w || pg / t->fbw * 32 >= t->h;
+}
+/* session 150 (the watchdog's): blocks of uploads into targets kept for a target's pixels, and left as outside them */
+volatile u32 kh1_vita_pend_in, kh1_vita_pend_out;
+
+/* an upload's (BITBLTBUF's destination) w x h at (dx, dy), or a copy's from GS memory: the words it wrote.
+ * Session 150: only the blocks that land in the target's pixels, and the target pending only when one does:
+ * a wait for the GPU for words pend_write would drop was the Dive's ~7 ms a frame there */
 static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u32 w, u32 h) {
     u32 psm = x->bb_hi >> 24 & 63, bp = x->bb_hi & 0x3FFF, bw = x->bb_hi >> 16 & 63, ti = (u32)(t - tgt);
     u32 bwid, bhgt, sh, bx, by, xx, yy;
@@ -858,7 +868,6 @@ static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u3
     if (kh1_gsmem_addr(psm, 0, 1, 0, 0) == ~0u || !w || !h) return;
     t->fbp = key >> 8 & 0xFFF;
     t->fbw = key >> 20 & 63;
-    t->pend = 1;
     bwid = psm == KH1_PSMT4 ? 32 : psm == KH1_PSMT8 || (psm & 0xF) == 2 || (psm & 0xF) == 0xA ? 16 : 8;
     bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
     sh = psm == KH1_PSMT4 ? 3 : psm == KH1_PSMT8 ? 2 : bwid == 16 ? 1 : 0; /* kh1_gsmem_addr's units to words */
@@ -866,6 +875,12 @@ static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u3
         for (bx = dx / bwid; bx <= (dx + w - 1) / bwid; bx++) {
             u32 x0 = bx * bwid, y0 = by * bhgt, b = kh1_gsmem_addr(psm, bp, bw, x0, y0) >> sh >> 6;
             u64 m = 0;
+            if (pend_outside(t, b)) {
+                kh1_vita_pend_out++;
+                continue;
+            }
+            kh1_vita_pend_in++;
+            t->pend = 1;
             if (x0 >= dx && y0 >= dy && x0 + bwid <= dx + w && y0 + bhgt <= dy + h) { /* a whole block */
                 pend_block(ti, b, ~0ull, ct24);
                 continue;

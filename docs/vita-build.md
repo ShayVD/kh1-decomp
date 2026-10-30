@@ -1312,6 +1312,12 @@ Cuts, each giving main's 130 digests and vu1 lines over 6,500 frames:
 - kh1_gs_packed_stq_xyzf: a TRISTRIP's vertex past its first four, with the draw state found, does gs_kick's
   steps for that case only.
 
+zx on the Vita: still 15.7 pictures a second; VU1 12.3 ms and the worker 26.9 ms a frame, but the three cores
+are each ~27 ms busy now: the worker waits 5 ms a frame for the recording on the GPU thread, which waits ~7.5
+ms a frame in sceGxmFinish before writing uploads into targets (pend_flush, one a frame in the Dive).
+3d-zy: pend_add keeps only the blocks that land in the target's pixels (pend_write dropped the rest after the
+wait), and marks the target pending only when one does; the log's `uploads into targets:` line counts both.
+
 The worker's instructions in those frames: 336M -> 257M (-23%). A word-at-a-time copy for small ring ops was
 tried and dropped: more instructions than the library's NEON memcpy.
 
