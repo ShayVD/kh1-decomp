@@ -1,3 +1,7 @@
+/* wm.x func_00f3bc48: matched by hand. */
+#include "ovl.h"
+
+/* wm.x func_00f3bc48: matched by hand (session 141, wwm2 rounds 50-51 and 64, wwm1 round 28). The last 6 points were loop 1's bne (ours bnel): a CONTEXT_ONLY definition of func_00f3bbf8, the call next to that branch, makes the call nothrow so reorg uses the plain branch (found by tools/ovl/nothrow.py). Earlier notes below. */
 /* Round 28 wwm1: score 8 -> 6, func_00f3bb68 declared s32 as defined (ovl/wm/hand/func_00f3bb68.c). Earlier header below. */
 /* Round 51 wwm2: score 30 -> 8 at exact size 416. Loop 2 goes through D_01067FE0b, an asm-label second declaration of D_01067FE0 (extern ... __asm__("D_01067FE0")), so the reloc is the real symbol but loop.c/CSE do not reuse loop 1's base; b2 = D_01067FE0b feeds the return. Caveat: gcc treats the two names as non-aliasing (harmless here, the array is only written in loop 2 via one name). Left: loop 1 bne vs our bnel at the id test (and the beqzl slot), and loop 2 emits sw conds before swc1 v80[3] (target reverse); condtmp/maskfirst/v3first/if-split variants and hill3 200s gave nothing. */
 /* Round 50 wwm2: score 89 -> 30 (latescan MORE lw 0 x5/3). The target walks the flags words with their own pointer giv (base + 160, step 192) next to an i*192 offset giv. Loop 1 reads flags through `p = &D_01067FE0[i].flags` but id through D_01067FE0[i].id, and returns i * sizeof + (u32)b. Loop 2 reaches flags/mask/id/conds/cnt through an H3bc48 view of &D_01067FE0[i].flags. Left: loop 1 base CSE (the target recomputes the base for loop 2), bne vs bnel at the id test, and one store pair. Earlier header below. */
@@ -11,7 +15,7 @@ extern E3bc48 D_01067FE0b[256] __asm__("D_01067FE0");
 typedef struct { s32 flags; u32 mask; s32 id; void *conds; s32 cnt; } H3bc48;
 extern G3bc48 *D_00F864C0;
 extern s32 D_00F8704C;
-void func_00f3bbf8(E3bc48 *);
+void func_00f3bbf8(E3bc48 *); CONTEXT_ONLY void func_00f3bbf8(E3bc48 * a0) {}
 R3bc48 *func_00f3f260(s32, s32);
 Q3bc48 *func_00f62c78(s32, s32);
 void *func_00f64c38(s32, s32);
