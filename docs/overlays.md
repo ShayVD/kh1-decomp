@@ -496,6 +496,41 @@ The wm twins also needed the wm table addresses (D_00FA5C40 / D_00FA5C90), not t
   - `func_001bfac8(); while (1) { ...; func_001bfac8(); }` matched both menu loops. `while (1) { func_001bfac8(); ... }` did not.
   - A likely reason, not checked in the dumps: the first jal sits in the prologue block, so sched2 keeps sd ra next to it, and the call at the loop end is later folded into the one before the loop.
 
+### Statement order: tools/ovl/hill3.py (wgb, rounds 35-36)
+
+Many near misses differ only in statement order: sched1 breaks ties by the original insn order, and
+global alloc breaks ties by pseudo number. hand.py `perms` tries only one marked block. hill3
+hill-climbs every run of simple statements in the function and keeps only orders that preserve
+the program's meaning:
+
+```sh
+python3 tools/ovl/hill3.py gb func_00f2cf58 nonmatchings/session141/gb/func_00f2cf58.c 90 1 --out=/tmp/best.c
+python3 tools/ovl/hill3.py --check func_00f2cf58 nonmatchings/session141/gb/func_00f2cf58.c /tmp/best.c
+```
+
+- **Ranking:** by hand.py score first, then words differ (`--rank=words` for the reverse). wwm2 found
+  that ranking by words could make the score worse (wm func_00f4c610).
+- **What never moves:** two statements never swap when one writes a name the other reads or writes.
+  Calls, `asm`, `++`/`--` inside an expression, and lines with more than one statement are barriers.
+- **Memory (default, strict):** a store through a pointer (`->`, unary `*`, or a subscript of a
+  pointer) never crosses any memory access. A store to a global object (file-scope arrays and
+  structs, `D_` names, address-taken locals) never crosses a pointer access. Stores to the same base
+  with constant paths (`p[1]` and `p[0]`, `x->a` and `x->b`) may swap. Local arrays and structs whose
+  address is not taken cannot alias.
+- **`--noalias`:** keeps only the rule that a pointer store does not cross a pointer access. Use
+  it only after reading the result. gb func_00f429b0's 3-word order moves `D_00F82AAC = 1` below
+  `D_00F82AA8 = m->bufs[buf]`, which holds only while m does not point at D_00F82AAC.
+- **`--check DRAFT CAND`:** says whether CAND is a dependency-safe reordering of DRAFT and names each
+  move that is not. Run it on anything taken from another tool. The plain hill climb (r32 hill2.py)
+  deleted dependent stores and once reordered struct bitfields.
+
+Round 36 swept every gb RANKING row and wm RANKING rows 1-100 (159 jobs, 85-90 s each), then ported
+gb gains to the wm twins with port.py. 31 drafts improved (12 gb, 19 wm) and none matched. The biggest gains were
+gb func_00f2cf58 (score 294 -> 258) and its twin wm func_00f54050, gb func_00f2d8d8 (519 -> 421) and its twin wm
+func_00f549d0, wm func_00f46cb8 (109 -> 83), and wm func_00f30d48 (13 -> 8 words). Reverse ports also gave large gb
+gains (wm draft to gb with `port.py wm FUNC gb FUNC`, for example gb func_00f20518 72 -> 2 words). wwm2's
+drafttwins.py had already applied most of those before this round was committed.
+
 ## Results
 
 Kept up to date by the session that changes them (`make ovl-progress`).
