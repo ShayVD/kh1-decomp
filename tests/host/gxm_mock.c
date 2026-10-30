@@ -98,6 +98,7 @@ static void parse_params(MockProg *p) {
         for (n = strlen(buf); n && (buf[n - 1] == ' ' || buf[n - 1] == '\n'); n--) buf[n - 1] = 0;
         q = strrchr(buf, ' ');
         snprintf(pp->name, sizeof pp->name, "%s", q ? q + 1 : buf);
+        if (strchr(pp->name, '[')) *strchr(pp->name, '[') = 0; /* an array (a native shader's u_m[128]) */
         if (strstr(buf, "sampler2D")) pp->kind = P_SAMPLER, pp->index = ns++;
         else if (strstr(buf, "uniform")) pp->kind = P_UNIFORM, pp->index = nu++;
         else if (!strncmp(buf + strspn(buf, " \n"), "out ", 4)) pp->kind = P_OUT, pp->index = no++;
@@ -269,7 +270,8 @@ static struct {
     SceGxmStencilFunc sfunc;
     SceGxmStencilOp sfail, zfail, zpass;
     u32 smask, swmask, sref;
-    f32 vub[64], fub[64];
+    f32 vub[64 + 512], fub[64]; /* the vertex buffer has room for a native shader's u_m (natdraw.h) */
+    SceGxmCullMode cull;
     u32 draws, tris, pixels, lost;
     u32 n_in, n_disc, n_zfail; /* KH1_HOST_GXM_CALLS: a draw's covered, discarded and depth-failed pixels */
 } g;
@@ -377,7 +379,8 @@ void sceGxmSetViewport(SceGxmContext *c, float xo, float xs, float yo, float ys,
     (void)c;
     g.vx[0] = xo; g.vx[1] = xs; g.vy[0] = yo; g.vy[1] = ys; g.vz[0] = zo; g.vz[1] = zs;
 }
-void sceGxmSetCullMode(SceGxmContext *c, SceGxmCullMode m) { (void)c; if (m != SCE_GXM_CULL_NONE) g.lost++; }
+/* natdraw.h's reading: window coordinates are y down, and a triangle is clockwise when cross(b - a, c - a) > 0 there */
+void sceGxmSetCullMode(SceGxmContext *c, SceGxmCullMode m) { (void)c; g.cull = m; }
 void sceGxmSetTwoSidedEnable(SceGxmContext *c, SceGxmTwoSidedMode m) { (void)c; (void)m; }
 void sceGxmSetFrontPointLineWidth(SceGxmContext *c, unsigned int w) { (void)c; (void)w; }
 void sceGxmSetRegionClip(SceGxmContext *c, SceGxmRegionClipMode m, unsigned x0, unsigned y0, unsigned x1, unsigned y1) {
@@ -397,7 +400,7 @@ void sceGxmSetFrontStencilRef(SceGxmContext *c, unsigned int r) { (void)c; g.sre
 int sceGxmReserveVertexDefaultUniformBuffer(SceGxmContext *c, void **b) { (void)c; memset(g.vub, 0, sizeof g.vub); *b = g.vub; return 0; }
 int sceGxmReserveFragmentDefaultUniformBuffer(SceGxmContext *c, void **b) { (void)c; memset(g.fub, 0, sizeof g.fub); *b = g.fub; return 0; }
 int sceGxmSetUniformDataF(void *b, const SceGxmProgramParameter *p, unsigned int off, unsigned int n, const float *d) {
-    if (p->kind != P_UNIFORM || p->index * 4 + off + n > 64) return -1;
+    if (p->kind != P_UNIFORM || p->index * 4 + off + n > ((f32 *)b == g.vub ? 64u + 512u : 64u)) return -1;
     memcpy((f32 *)b + p->index * 4 + off, d, n * sizeof *d);
     return 0;
 }
@@ -450,11 +453,15 @@ static void sample(void *ctx, f32 s, f32 t, f32 out[4]) {
 }
 
 /* ---- the rasteriser ---- */
-typedef struct { f32 x, y, z; f32 col[4], tc[4], fog; } Vary;
+typedef struct {
+    f32 x, y, z; f32 col[4], tc[4], fog;
+    f32 c[4];   /* the clip-space position as the shader wrote it */
+    f32 iw;     /* 1 / w for perspective-correct attributes (0: w was 1 for the whole triangle: linear, as before) */
+} Vary;
 
 static int sv_of(const char *name) {
     return !strcmp(name, "pos") ? KH1_SV_POS : !strcmp(name, "col") ? KH1_SV_COL : !strcmp(name, "tc") ? KH1_SV_TC
-           : !strcmp(name, "fog") ? KH1_SV_FOG : -1;
+           : !strcmp(name, "fog") ? KH1_SV_FOG : !strcmp(name, "mi") ? KH1_SV_MI : -1;
 }
 
 static const struct SceGxmProgramParameter *param(const MockProg *p, int kind, int index) {
@@ -490,8 +497,15 @@ static void vertex(u32 idx, Vary *o) {
         }
     }
     uniforms(g.vp->p, g.vub, &r);
+    for (i = 0; i < g.vp->p->nparam; i++) /* a native shader's matrices (natdraw.h) */
+        if (g.vp->p->param[i].kind == P_UNIFORM && !strcmp(g.vp->p->param[i].name, "u_m")) {
+            r.um = g.vub + g.vp->p->param[i].index * 4;
+            r.um_rows = 128;
+        }
     kh1_shader_run(g.vp->p->text, &r);
     if (r.bad) g.lost++;
+    memcpy(o->c, r.v[KH1_SV_OPOS], 16);
+    o->iw = 0;
     /* window coordinates snapped to a sub-pixel grid (1/256 here), as a rasteriser's fixed point does */
     o->x = (f32)(s32)((r.v[KH1_SV_OPOS][0] * g.vx[1] + g.vx[0]) * 256.0f + 0.5f + 65536.0f * 256.0f) / 256.0f - 65536.0f;
     o->y = (f32)(s32)((r.v[KH1_SV_OPOS][1] * g.vy[1] + g.vy[0]) * 256.0f + 0.5f + 65536.0f * 256.0f) / 256.0f - 65536.0f;
@@ -604,6 +618,7 @@ static void triangle(const Vary *a, const Vary *b, const Vary *c) {
     s32 x0, y0, x1, y1, x, y;
     const Vary *p[3] = { a, b, c };
     if (area == 0) return;
+    if ((g.cull == SCE_GXM_CULL_CCW && area < 0) || (g.cull == SCE_GXM_CULL_CW && area > 0)) return;
     if (area < 0) { p[1] = c; p[2] = b; area = -area; }
     x0 = (s32)(a->x < b->x ? (a->x < c->x ? a->x : c->x) : (b->x < c->x ? b->x : c->x)) - 1;
     x1 = (s32)(a->x > b->x ? (a->x > c->x ? a->x : c->x) : (b->x > c->x ? b->x : c->x)) + 1;
@@ -641,6 +656,10 @@ static void triangle(const Vary *a, const Vary *b, const Vary *c) {
             if (!in) continue;
             v.x = px; v.y = py;
             v.z = w[0] * p[0]->z + w[1] * p[1]->z + w[2] * p[2]->z;
+            if (p[0]->iw != 0) { /* perspective-correct: the screen weights by 1 / w, normalised (z stays linear) */
+                f32 s0 = w[0] * p[0]->iw, s1 = w[1] * p[1]->iw, s2 = w[2] * p[2]->iw, t = s0 + s1 + s2;
+                w[0] = s0 / t; w[1] = s1 / t; w[2] = s2 / t;
+            }
             for (k = 0; k < 4; k++) {
                 v.col[k] = w[0] * p[0]->col[k] + w[1] * p[1]->col[k] + w[2] * p[2]->col[k];
                 v.tc[k] = w[0] * p[0]->tc[k] + w[1] * p[1]->tc[k] + w[2] * p[2]->tc[k];
@@ -659,6 +678,45 @@ int sceGxmDraw(SceGxmContext *c, SceGxmPrimitiveType t, SceGxmIndexFormat f, con
     memcpy(q->st, &g, sizeof g);
     return 0;
 }
+/* a vertex at clip position c to the window (vertex()'s snap), with 1 / w */
+static void window(Vary *o) {
+    f32 iw = 1.0f / o->c[3], x = o->c[0] * iw, y = o->c[1] * iw;
+    o->x = (f32)(s32)((x * g.vx[1] + g.vx[0]) * 256.0f + 0.5f + 65536.0f * 256.0f) / 256.0f - 65536.0f;
+    o->y = (f32)(s32)((y * g.vy[1] + g.vy[0]) * 256.0f + 0.5f + 65536.0f * 256.0f) / 256.0f - 65536.0f;
+    o->z = o->c[2] * iw * g.vz[1] + g.vz[0];
+    o->iw = iw;
+}
+static void lerp_vary(const Vary *a, const Vary *b, f32 t, Vary *o) {
+    int k;
+    for (k = 0; k < 4; k++) {
+        o->c[k] = a->c[k] + (b->c[k] - a->c[k]) * t;
+        o->col[k] = a->col[k] + (b->col[k] - a->col[k]) * t;
+        o->tc[k] = a->tc[k] + (b->tc[k] - a->tc[k]) * t;
+    }
+    o->fog = a->fog + (b->fog - a->fog) * t;
+}
+/* a triangle whose w is not 1: clipped to w >= a small epsilon and z >= 0 (GXM's near plane), divided, drawn as a
+ * fan with perspective-correct attributes */
+static void persp(const Vary *v) {
+    Vary a[9], b[9], *in = a, *out = b, *t;
+    int n = 3, m, i, pl;
+    memcpy(a, v, 3 * sizeof *v);
+    for (pl = 0; pl < 2; pl++) {
+        m = 0;
+        for (i = 0; i < n; i++) {
+            const Vary *p = &in[i], *q = &in[(i + 1) % n];
+            f32 dp = pl ? p->c[2] : p->c[3] - 1e-5f, dq = pl ? q->c[2] : q->c[3] - 1e-5f;
+            if (dp >= 0) out[m++] = *p;
+            if ((dp >= 0) != (dq >= 0) && m < 9) lerp_vary(p, q, dp / (dp - dq), &out[m++]);
+        }
+        n = m;
+        t = in; in = out; out = t;
+        if (n < 3) return;
+    }
+    for (i = 0; i < n; i++) window(&in[i]);
+    for (i = 1; i + 1 < n; i++) triangle(&in[0], &in[i], &in[i + 1]);
+}
+
 static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
     const u16 *idx = (const u16 *)ix;
     unsigned i;
@@ -674,7 +732,8 @@ static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
         if (getenv("KH1_HOST_GXM_VERTS") && g.raster && i < 6)
             printf("kh1-gxm-mock:   tri (%.2f, %.2f, %.4f) (%.2f, %.2f) (%.2f, %.2f) col %.3f %.3f %.3f %.3f clip %u %u..%u %u\n", v[0].x, v[0].y,
                    v[0].z, v[1].x, v[1].y, v[2].x, v[2].y, v[0].col[0], v[0].col[1], v[0].col[2], v[0].col[3], g.cx0, g.cy0, g.cx1, g.cy1);
-        triangle(&v[0], &v[1], &v[2]);
+        if (v[0].c[3] != 1.0f || v[1].c[3] != 1.0f || v[2].c[3] != 1.0f) persp(v);
+        else triangle(&v[0], &v[1], &v[2]);
     }
     if (g.raster && getenv("KH1_HOST_GXM_CALLS")) {
         printf("kh1-gxm-mock:     %u pixels covered, %u discarded, %u failed depth\n", g.n_in, g.n_disc, g.n_zfail);

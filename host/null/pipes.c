@@ -33,6 +33,7 @@
 #include "platform/palcache.h"
 #include "platform/texcache.h"
 #include "platform/shadergen.h"
+#include "platform/natdraw.h"
 #include "gsqueue.h"
 
 int printf(const char *, ...);
@@ -197,6 +198,7 @@ static void tex_lookup(u32 lo, u32 hi) {
 
 /* session 126: the recorder and its two rings, made at the first use (only KH1_HOST_TRACE=5 runs use them);
  * session 127: with its caches, and gsmem.c's transfer hooks set */
+static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b);
 static KH1CmdRec *recorder(void) {
     if (!rec) {
         /* calloc: kh1_texcache_init frees what a used cache holds, so a block that is not zeroed
@@ -213,6 +215,7 @@ static KH1CmdRec *recorder(void) {
         tex->raw = kh1_gsmem_tex_raw; /* session 142: a stamp miss on the same pages' words reads no texel */
         kh1_gsmem_xfer_hook = on_xfer;
         kh1_gsmem_clut_hook = on_clut;
+        kh1_gs_native_hook = nat_hook;
     }
     return rec;
 }
@@ -402,6 +405,85 @@ void kh1_pipes_strip(u32 prim, const u32 *d, u32 n, u32 nq) {
     a[0] = prim;
     a[1] = n;
     kh1_recq_put(r_strip, a, 2, d, KH1_GS_STRIP_MASK / 4 + n * (u32)(sizeof(KH1GsVert) / 16));
+}
+
+/* The native renderer (include/platform/natdraw.h, docs/native-renderer.md): a VU1 run's payload (host/port/vu1_draw.h)
+ * reaches the GS worker in place of its kicks (host/null/dmawalk.c w_native).  For each record the worker applies the
+ * GIF tag's PRE PRIM and counts the strip in the model (gsregs.c kh1_gs_native), then hands it here: the records of a
+ * run drawn in one state go to the recorder as one op (the state op before it, as for a kick), whose side lists the
+ * triangles, folds the matrices with the pass's mapping and records one draw command (cmdbuf.h kh1_cmd_native).
+ * kh1_pipes_nat_cull is the cull mode a back-face-culled run gets (config.txt natcull= / KH1_HOST_NATCULL) */
+u32 kh1_pipes_nat_cull = KH1_NAT_CULL_CCW;
+u32 kh1_pipes_nat_draws, kh1_pipes_nat_tris; /* the recorder's native commands and triangles so far */
+#define NAT_QW 4096
+static u32 nat_op[NAT_QW][4];
+static const u32 *nat_hdr, *nat_mats;
+static u32 nat_rq, nat_nrec, nat_prim, nat_gen;
+static int nat_open;
+static KH1GpuVert nat_v[KH1_NAT_VERTS];
+static f32 nat_m[KH1_NAT_MATS * 16];
+
+/* the recorder's side: argument the GS's X shift, data one or more payloads (ops put one after another join) */
+static void r_native(const u32 *a, const u32 *d, u32 nqw) {
+    while (nqw >= 2) {
+        u32 nrec = d[1], nmat = d[2], rq = d[3], len = 2 + rq + nmat * 4, n, lost;
+        if (len > nqw || nmat > KH1_NAT_MATS) break;
+        if (!d[6]) { /* not every vertex ADC */
+            n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
+            kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE);
+            kh1_pipes_nat_draws++;
+            kh1_pipes_nat_tris += n / 3;
+        }
+        d += len * 4;
+        nqw -= len;
+    }
+}
+
+static void nat_flush(void) {
+    u32 a;
+    if (!nat_open) return;
+    nat_open = 0;
+    if (!nat_nrec) return;
+    nat_op[0][0] = nat_hdr[0];
+    nat_op[0][1] = nat_nrec;
+    nat_op[0][2] = nat_hdr[2];
+    nat_op[0][3] = nat_rq - 2;
+    memcpy(nat_op[1], nat_hdr + 4, 16);
+    memcpy(nat_op[nat_rq], nat_mats, nat_hdr[2] * 64);
+    a = (u32)kh1_gs_xshift_of();
+    kh1_recq_put(r_native, &a, 1, nat_op[0], nat_rq + nat_hdr[2] * 4);
+}
+
+/* the GS worker's side (gsregs.h's kh1_gs_native_hook): a payload starts (its header, its matrices), each record with
+ * the PRIM in force, the end */
+static void nat_rec(u32 prim, const u32 *r) {
+    u32 nq = 1 + r[2] * 2;
+    if (nat_open && (prim != nat_prim || kh1_gs_gen != nat_gen || nat_rq + nq + nat_hdr[2] * 4 > NAT_QW)) nat_flush();
+    if (nat_rq + nq + nat_hdr[2] * 4 > NAT_QW && !nat_open && 2 + nq + nat_hdr[2] * 4 > NAT_QW) return; /* cannot fit */
+    if (!nat_open) {
+        prim_state(prim);
+        nat_open = 1;
+        nat_prim = prim;
+        nat_gen = kh1_gs_gen;
+        nat_rq = 2;
+        nat_nrec = 0;
+    }
+    memcpy(nat_op[nat_rq], r, nq * 16);
+    nat_rq += nq;
+    nat_nrec++;
+}
+
+static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
+    if (what == 0) {
+        nat_hdr = a;
+        nat_mats = b;
+        nat_open = 0;
+    } else if (what == 1) {
+        nat_rec(prim, a);
+    } else {
+        nat_flush();
+    }
 }
 
 /* session 126: called with the frame's commands before they are cleared (tests/host/cmdbuf_test.c) */

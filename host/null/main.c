@@ -117,6 +117,8 @@ int kh1_host_trace;
 extern const char *kh1_host_texdump; /* host/null/dmawalk.c */
 extern int kh1_dma_quiet;                 /* host/null/dmawalk.c (session 135) */
 extern int kh1_dma_vu1;                   /* host/null/dmawalk.c (session 137v): VIF1 / VU1 run */
+extern int kh1_dma_native;                /* host/null/dmawalk.c: the native renderer */
+extern unsigned kh1_pipes_nat_cull;       /* host/null/pipes.c */
 unsigned int kh1_host_cd_reads, kh1_host_cd_sectors;
 static unsigned long frames, max_frames = 600;
 static int ovl_stub;
@@ -398,6 +400,10 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_GSSTRIP")) gs_strip = atoi(getenv("KH1_HOST_GSSTRIP"));
         if (kh1_host_trace >= 5 && gs_strip) kh1_gs_strip_hook = kh1_pipes_strip;
         if (kh1_host_trace >= 5) kh1_pipes_start(); /* session 127: the recorder sees the first transfers */
+        /* the native renderer (docs/native-renderer.md): P18's runs drawn by the GPU's transform, not the VU1 program
+         * (the recorder's, so trace 5; KH1_HOST_NATCULL=0 / 1 / 2 the cull mode: none, CCW, CW) */
+        if (kh1_host_trace >= 5 && getenv("KH1_HOST_NATIVE")) kh1_dma_native = atoi(getenv("KH1_HOST_NATIVE"));
+        if (getenv("KH1_HOST_NATCULL")) kh1_pipes_nat_cull = (u32)atoi(getenv("KH1_HOST_NATCULL"));
         if (getenv("KH1_HOST_GSQ_CHECK") && kh1_host_trace >= 2 && kh1_host_trace < 5) {
             gsq_check = strtoul(getenv("KH1_HOST_GSQ_CHECK"), 0, 0);
             if (gsq_check) {

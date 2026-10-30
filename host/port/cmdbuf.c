@@ -242,7 +242,7 @@ static void clears(const KH1CmdRec *r, KH1CmdPass *p) {
         const KH1PipeKey *k = &c->d.pipe[0];
         if (c->kind != KH1_CMD_DRAW) continue;
         if (reads_dst(&c->d, p->psm) || (c->samples && c->samples - 1 == p->tgt)) break;
-        if (c->d.n == 1 && !k->shader.discard && k->ztest == KH1_ZTST_ALWAYS && cover_cmd(r, p, c)) p->cleared = all_cells(p);
+        if (c->d.n == 1 && !k->shader.discard && k->ztest == KH1_ZTST_ALWAYS && !c->nmat && cover_cmd(r, p, c)) p->cleared = all_cells(p);
     }
     if (p->depth == KH1_DS_NONE) return;
     memset(cell, 0, sizeof cell);
@@ -251,7 +251,7 @@ static void clears(const KH1CmdRec *r, KH1CmdPass *p) {
         const KH1PipeKey *k = &c->d.pipe[0];
         if (c->kind != KH1_CMD_DRAW) continue;
         if (k->ztest != KH1_ZTST_ALWAYS) break;
-        if (k->zwrite && c->d.n == 1 && !k->shader.discard && !c->d.setup && cover_cmd(r, p, c)) p->zcleared = all_cells(p);
+        if (k->zwrite && c->d.n == 1 && !k->shader.discard && !c->d.setup && !c->nmat && cover_cmd(r, p, c)) p->zcleared = all_cells(p);
     }
 }
 
@@ -357,6 +357,34 @@ void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, c
     r->in_v = v;
     r->in_n = n;
     kh1_batch_prim_sig(&r->b, d, p, n, sig);
+}
+
+void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
+                    u32 nmat, u32 cull) {
+    KH1Cmd *c;
+    u8 *u;
+    u32 bytes = nmat * 64;
+    if (!n || !nmat || nmat > 255) return;
+    kh1_batch_break(&r->b); /* nothing before joins it */
+    r->in_d = d;
+    r->in_p = p;
+    r->in_v = v;
+    r->in_n = n;
+    if (!kh1_batch_prim_sig(&r->b, d, p, n, 0) || r->cur < 0 || r->dropped) { /* a state that draws nothing, or no room */
+        kh1_batch_break(&r->b);
+        return;
+    }
+    c = &r->cmd[r->cur];
+    c->nmat = (u8)nmat;
+    c->cull = (u8)cull;
+    u = (u8 *)kh1_ring_alloc(&r->uring, bytes, KH1_RING_UNIFORM_SLOT);
+    if (u) {
+        memcpy(u, mats, bytes);
+        c->moff = (u32)(u - (r->uring.base + r->uring.cur * r->uring.slot));
+    } else {
+        c->lost = 1;
+    }
+    kh1_batch_break(&r->b); /* nor anything after */
 }
 
 void kh1_cmd_break(KH1CmdRec *r) { kh1_batch_break(&r->b); }

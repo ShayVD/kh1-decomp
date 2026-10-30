@@ -179,10 +179,10 @@ static int gs_quad(u32 p, const KH1GsContext *c) {
     return kh1_gsmem_flat_sprite(&t);
 }
 
-static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
-    u32 p = gs_prim(), need = kh1_gs_prim_verts(p), i;
-    int fourth = 0;
-    KH1GsDraw d, *k;
+/* the draw record for the state in force (cur), found or made when a state write moved it */
+static void gs_find(u32 p) {
+    u32 i;
+    KH1GsDraw d;
     if (cur == ~0u) {
         memset(&d, 0, sizeof d);
         d.prim = p;
@@ -226,6 +226,13 @@ static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
         if (cur < DRAWS && p >> 4 & 1 && !draws[cur].target)
             draws[cur].target = kh1_gsmem_tex_target(draws[cur].ctx.tex0.lo, draws[cur].ctx.tex0.hi);
     }
+}
+
+static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
+    u32 p = gs_prim(), need = kh1_gs_prim_verts(p), i;
+    int fourth = 0;
+    KH1GsDraw *k;
+    gs_find(p);
     k = cur < DRAWS ? &draws[cur] : 0;
     if (k) k->kicks++;
     else gs.lost++;
@@ -448,6 +455,53 @@ static u32 gs_strip(const u32 *q, u32 n, u32 p) {
         kh1_gsmem_draw_n(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo, nd);
     }
     return n;
+}
+
+/* the native renderer (include/platform/natdraw.h): a strip of nv vertices the GPU transforms, so the model sees no
+ * vertex.  The draw record is found as gs_kick finds it, counted, and given the scissor as its extent; GS memory marks
+ * the target's (and Z's) pages drawn (kh1_gsmem_draw_n, as gs_strip does for its triangles); the vertex queue is left
+ * empty (the next packet's PRE PRIM starts a new strip).  The PRIM in force, for the recorder */
+u32 kh1_gs_native(u32 nv) {
+    u32 p = gs_prim(), nd = nv > 2 ? nv - 2 : 0;
+    KH1GsContext *c = &gs.ctx[p >> 9 & 1];
+    KH1GsDraw *k;
+    gs_find(p);
+    k = cur < DRAWS ? &draws[cur] : 0;
+    if (k) {
+        s32 x0 = (s32)(c->scissor.lo & 0x7FF) * 16, x1 = (s32)(c->scissor.lo >> 16 & 0x7FF) * 16 + 15;
+        s32 y0 = (s32)(c->scissor.hi & 0x7FF) * 16, y1 = (s32)(c->scissor.hi >> 16 & 0x7FF) * 16 + 15;
+        k->kicks += nv;
+        k->draws += nd;
+        if (x0 < k->x0) k->x0 = x0;
+        if (x1 > k->x1) k->x1 = x1;
+        if (y0 < k->y0) k->y0 = y0;
+        if (y1 > k->y1) k->y1 = y1;
+    } else {
+        gs.lost++;
+    }
+    gs.nvert = 0;
+    nsv = 0;
+    if (nd) kh1_gsmem_draw_n(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo, nd);
+    return p;
+}
+
+s32 kh1_gs_xshift_of(void) { return gs_xshift; }
+
+void (*kh1_gs_native_hook)(u32 what, u32 prim, const u32 *a, const u32 *b);
+
+u32 kh1_gs_native_run(const u32 *d) {
+    u32 nrec = d[1], r;
+    const u32 *rec = d + 8;
+    if (kh1_gs_native_hook) kh1_gs_native_hook(0, 0, d, d + (2 + d[3]) * 4);
+    for (r = 0; r < nrec; r++) {
+        u32 p;
+        if (rec[1] >> 14 & 1) kh1_gs_write(0x00, rec[1] >> 15 & 0x7FF, 0); /* the GIF tag's PRE */
+        p = kh1_gs_native(rec[2]);
+        if (kh1_gs_native_hook) kh1_gs_native_hook(1, p, rec, 0);
+        rec += 4 + rec[2] * 8;
+    }
+    if (kh1_gs_native_hook) kh1_gs_native_hook(2, 0, 0, 0);
+    return nrec;
 }
 
 void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {

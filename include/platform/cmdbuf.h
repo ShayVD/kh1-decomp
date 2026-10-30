@@ -107,6 +107,10 @@ typedef struct {
     u8 kind;           /* session 127: KH1_CMD_* (the fields above are a draw's) */
     s16 tslot, pslot;  /* a draw's texture cache entry and palette slot (-1 none) */
     KH1CmdXfer x;      /* a transfer's */
+    u8 nmat;           /* the native renderer (natdraw.h): the draw's matrices (0 an ordinary draw), at moff in the
+                        * frame's uniform slot (4 rows of 4 floats each, the native vertex shader's u_m) */
+    u8 cull;           /* and its cull mode (natdraw.h's KH1_NAT_CULL_*) */
+    u32 moff;
 } KH1Cmd;
 
 typedef struct {
@@ -185,6 +189,11 @@ typedef struct {
 void kh1_cmd_init(KH1CmdRec *r, void *vmem, u32 vslot, void *umem, u32 uslot);
 /* a primitive drawn in d / p: its n GPU vertices (v 0: counted, not written), sig as batch.h's */
 void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, u32 sig);
+/* the native renderer (natdraw.h): a run's n GPU vertices (triangles; position, the matrix index in pad[0]) and its
+ * nmat matrices (4 x 4 floats each, already folded with the screen mapping) as one draw command of its own (nothing
+ * batched with it), culled by `cull` (KH1_NAT_CULL_*) */
+void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
+                    u32 nmat, u32 cull);
 /* a transfer or CLUT load, not recorded (batch.h's break only) */
 void kh1_cmd_break(KH1CmdRec *r);
 /* session 127: TRXDIR dir (0 an upload, 2 a copy) with BITBLTBUF, TRXPOS and TRXREG: an UPLOAD or COPY command

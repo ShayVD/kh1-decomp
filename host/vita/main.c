@@ -45,6 +45,11 @@
  *       gsstrip=N             session 151: 1 (the default, with recq=1) hands the VU1 programs' strips to the recorder
  *                             whole (host/null/gsregs.c's kh1_gs_strip_hook): one op a strip, each vertex turned
  *                             into the GPU's form once; 0 one op a triangle, as before
+ *       renderer=native       the native renderer (docs/native-renderer.md): P18's runs (Sora) are not run on the CPU
+ *                             but drawn by the GPU's vertex shader from the game's own matrices; anything else (the
+ *                             default) keeps the GS path
+ *       natcull=N             with renderer=native, the cull mode of P18's back-face-culled runs: 1 (the default)
+ *                             CCW in the window, 2 CW, 0 none (if Sora shows his inside, try 2)
  *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
  *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
  *                             the command menu's cursor)
@@ -134,6 +139,9 @@ static int late_wait;    /* session 145: config.txt's latewait= */
 #define CATCH_UP 4 /* session 149: the vblanks late frames may still make up (kh1_host_vblank) */
 static int use_recq = 1; /* session 146: config.txt's recq= */
 static int use_gsstrip = 1; /* session 151: config.txt's gsstrip= */
+static int use_native;      /* config.txt's renderer=native (docs/native-renderer.md) */
+extern int kh1_dma_native, kh1_vita_gxm_native_ok;
+extern u32 kh1_pipes_nat_cull, kh1_pipes_nat_draws, kh1_pipes_nat_tris;
 static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
 static int strip_always;  /* config.txt's strip= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
@@ -450,6 +458,14 @@ static int watchdog(SceSize args, void *argp) {
                 for (i = 0; i < KH1_VU1_PROGS; i++)
                     if (kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs)) { p_us[i] = us; p_runs[i] = runs; p_pairs[i] = pairs; }
             }
+            if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
+                static u32 n0, d0, t0;
+                vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles\n", kh1_vu1_drawn - n0,
+                     kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0);
+                n0 = kh1_vu1_drawn;
+                d0 = kh1_pipes_nat_draws;
+                t0 = kh1_pipes_nat_tris;
+            }
             if (kh1_gsq_on) /* session 141: the GS side's worker (the recording above is its time now) */
                 vlog("kh1-vita: gs worker: %u ms busy; the game waited %u ms for it (%u waits)\n",
                      (kh1_gsq_us_busy - gbusy0) / 1000, (kh1_gsq_us_wait - gwait0) / 1000, kh1_gsq_waits - gwaits0);
@@ -550,6 +566,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
         else if (strcmp(line, "vu1nat") == 0) kh1_vu1_native = atoi(v);
         else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
+        else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
+        else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -712,6 +730,11 @@ int main(int argc, char **argv) {
                      kh1_gs_strip_hook ? ", the VU1 strips whole" : "");
             }
         }
+        /* the native renderer: P18's runs transformed by the GPU (its vertex variants compiled in gxm.c) */
+        kh1_dma_native = use_native && kh1_vita_gxm_native_ok;
+        vlog("kh1-vita: renderer: %s\n", kh1_dma_native ? "native (P18 drawn by the GPU's transform)"
+                                         : use_native ? "the GS path (renderer=native asked, its vertex shaders unavailable)"
+                                         : "the GS path");
     } else {
         kh1_gsmem_flat(1);  /* the clears, fades and letterbox filled into the model */
         kh1_present_pal(1); /* the indexed decodes through the port's palette cache */

@@ -51,6 +51,7 @@ static u32 frag_index(KH1GxmRec *g, const KH1ShaderKey *k) {
 typedef struct {
     int open;            /* a scene is open: the pass index + 1 */
     u32 pipe;            /* ~0u: nothing set */
+    u32 vert;            /* the vertex variant set with it (a native draw's differs, natdraw.h) */
     int tex;             /* SET_TEXTURE given */
     s16 tslot, pslot;
     u8 src, wtex;
@@ -159,17 +160,19 @@ static void draw(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 ci) {
     if (c) c->uoff = k->uoff;
     g->frame.uniforms++;
     for (i = 0; i < n; i++) {
-        u32 pi = pipe_index(g, ps[i]);
-        if (pi != b->pipe) {
-            KH1VertKey vk;
+        u32 pi = pipe_index(g, ps[i]), vi;
+        KH1VertKey vk;
+        kh1_vertkey_of(ps[i], &vk);
+        vi = kh1_vertkey_index(&vk) + (k->nmat ? KH1_VERT_NAT : 0);
+        if (pi != b->pipe || vi != b->vert) {
             c = emit(g, KH1_GXM_SET_PROGRAMS, ci);
-            kh1_vertkey_of(ps[i], &vk);
             if (c) {
                 c->pipe = pi;
                 c->frag = frag_index(g, &ps[i]->shader);
-                c->vert = kh1_vertkey_index(&vk);
+                c->vert = vi;
             }
             b->pipe = pi;
+            b->vert = vi;
             g->frame.programs++;
         }
         c = emit(g, KH1_GXM_DRAW, ci);
@@ -178,6 +181,9 @@ static void draw(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 ci) {
             c->stencil = ps[i]->stencil;
             c->v0 = k->v0;
             c->nv = k->nv;
+            c->nmat = k->nmat;
+            c->cull = k->cull;
+            c->moff = k->moff;
         }
         g->frame.draws++;
     }
@@ -310,6 +316,7 @@ const char *kh1_gxm_call_str(const KH1GxmCall *c) {
     case KH1_GXM_DRAW:
         sprintf(p, " %s %u from %u%s", cls[c->cls & 3], c->nv, c->v0, c->stencil == 3 ? " (stencil clear)" : c->stencil == 2 ? " (stencil set-up)" :
                 c->stencil ? " (stencil test)" : "");
+        if (c->nmat) sprintf(b + strlen(b), " native %u matrices at %u cull %u", c->nmat, c->moff, c->cull);
         break;
     }
     return b;

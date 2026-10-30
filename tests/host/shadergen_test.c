@@ -150,14 +150,17 @@ static void parse(void) {
     k.su = KH1_SHADER_TAPS;
     CHECK("parse: a TAPS key is generated (session 137v)", frag(&k) && find_str(text, "u_c.z"));
     CHECK("parse: the TAPS key declares u_c (session 137v: Vita3K's compiler refused it undeclared)", find_str(text, "uniform float4 u_c"));
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < KH1_VERT_VARIANTS; i++) {
+        static const f32 um[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
         u32 len = kh1_shader_vert_cg(i, text, sizeof text);
         memset(&run, 0, sizeof run);
+        run.um = um;
+        run.um_rows = 4;
         exec(text);
         if (!len || run.bad) ok = 0;
     }
-    printf("shadergen_test: parse: %u fragment variants generated (%u not), at most %u bytes; 7 vertex variants\n", n, nnot,
-           maxlen);
+    printf("shadergen_test: parse: %u fragment variants generated (%u not), at most %u bytes; %u vertex variants\n", n, nnot,
+           maxlen, KH1_VERT_VARIANTS);
     CHECK("parse: every generated line is one of the forms", ok && !bad_texts);
     nf = kh1_shader_forms(&forms, &uses);
     for (f = 0; f < nf; f++)
@@ -668,10 +671,15 @@ static void sampler(void) {
 /* ---- vertex shaders ---- */
 static void vertex(void) {
     u32 i, bad = 0;
-    for (i = 0; i < 7; i++) {
+    /* the native variants' u_m: matrix 0 junk, matrix 1 a perspective-ish F (natdraw.h) */
+    static const f32 um[32] = {9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                               0.5f, 0.25f, 0.0f, -0.125f, 0.0f, -0.75f, 0.125f, 0.5f,
+                               0.0f, 0.0f, 2.0f, 0.25f, 0.0f, 0.0f, 0.5f, 1.5f};
+    for (i = 0; i < KH1_VERT_VARIANTS; i++) {
         KH1GpuVert g;
         f32 w = 512.0f, h = 384.0f;
-        u32 tex = i >= 5 ? 2 : i >= 3 ? 1 : 0, fog = i && !(i & 1);
+        u32 b = i % KH1_VERT_NAT, nat = i >= KH1_VERT_NAT;
+        u32 tex = b >= 5 ? 2 : b >= 3 ? 1 : 0, fog = b && !(b & 1);
         memset(&g, 0, sizeof g);
         g.x = 100.5f;
         g.y = 300.25f;
@@ -691,12 +699,25 @@ static void vertex(void) {
         set4(run.v[KH1_SV_TC], g.s, g.t, g.q, 0.0f);
         run.v[KH1_SV_FOG][0] = g.f / 255.0f;
         set4(run.v[KH1_SV_UXF], 2.0f / w, 2.0f / h, -1.0f, -1.0f); /* cmdbuf.c's per-pass slot */
+        run.v[KH1_SV_MI][0] = 1.0f / 255.0f; /* pad[0] = 1 as U8N */
+        run.um = um;
+        run.um_rows = 8;
         exec(text);
-        {
+        if (nat) { /* clip = F x (x, y, z, 1), z clamped to 0 .. w */
+            const f32 *o = run.v[KH1_SV_OPOS], *m = um + 16;
+            f32 e[4];
+            u32 k;
+            for (k = 0; k < 4; k++) e[k] = m[k * 4] * g.x + m[k * 4 + 1] * g.y + m[k * 4 + 2] * g.z + m[k * 4 + 3];
+            e[2] = e[2] < 0.0f ? 0.0f : e[2] > e[3] ? e[3] : e[2];
+            for (k = 0; k < 4; k++)
+                if (o[k] - e[k] < -1e-3f || o[k] - e[k] > 1e-3f) bad++;
+        } else {
             const f32 *o = run.v[KH1_SV_OPOS];
             f32 px = (o[0] + 1.0f) * 0.5f * w, py = (o[1] + 1.0f) * 0.5f * h, dx = px - g.x, dy = py - g.y;
             if (dx < -1e-3f || dx > 1e-3f || dy < -1e-3f || dy > 1e-3f || o[2] != g.z || o[3] != 1.0f) bad++;
-            if (i && run.v[KH1_SV_OCOL][3] != g.rgba[3] / 255.0f) bad++;
+        }
+        {
+            if (b && run.v[KH1_SV_OCOL][3] != g.rgba[3] / 255.0f) bad++;
             if (tex && (run.v[KH1_SV_OTC][0] != g.s || run.v[KH1_SV_OTC][1] != g.t ||
                         run.v[KH1_SV_OTC][2] != (tex == 2 ? g.q : 1.0f)))
                 bad++;
@@ -704,7 +725,7 @@ static void vertex(void) {
             if (run.bad) bad++;
         }
     }
-    CHECK("vertex: the 7 vertex shaders map target pixels to clip space and pass the attributes on", !bad);
+    CHECK("vertex: the 14 vertex shaders (7 native: F x position, z clamped) map to clip space and pass the attributes on", !bad);
 }
 
 /* ---- the GXM vertex stream (vertex.h kh1_vertex_attrs) ---- */
@@ -718,6 +739,7 @@ static u32 field_off(const char *name) { /* where vertex.h's comment puts each i
     if (name[0] == 'p') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->x;
     if (name[0] == 'c') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->rgba;
     if (name[0] == 't') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->s;
+    if (name[0] == 'm') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->pad;
     return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->f;
 }
 /* the shader text's inputs (the lines "    floatN name : SEMANTIC," before the uniforms) against a table:
@@ -752,9 +774,9 @@ static u32 layout_diff(const char *cg, const KH1VtxAttr *a, u32 na) {
 }
 static void layout(void) {
     u32 i, bad = 0, caught = 0;
-    KH1VtxAttr a[4];
+    KH1VtxAttr a[KH1_VTX_ATTRS];
     CHECK("layout: KH1GpuVert is the stream's 32-byte stride", sizeof(KH1GpuVert) == KH1_VTX_STRIDE);
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < KH1_VERT_VARIANTS; i++) {
         u32 n = kh1_vertex_attrs(i, a);
         kh1_shader_vert_cg(i, text, sizeof text);
         if (!n || layout_diff(text, a, n)) bad++, printf("shadergen_test: layout: variant %u (%s)\n", i, kh1_vertkey_str(i));
@@ -769,7 +791,7 @@ static void layout(void) {
     a[2].count = 2;
     caught += layout_diff(text, a, 4) != 0;
     CHECK("layout: two deliberate table breaks caught", caught == 2);
-    CHECK("layout: no variant past 6", kh1_vertex_attrs(7, a) == 0);
+    CHECK("layout: no variant past 13", kh1_vertex_attrs(KH1_VERT_VARIANTS, a) == 0);
 }
 
 /* ---- the GXM attribute arrays a port builds (vertex.h kh1_vertex_gxm_attrs) ---- */
@@ -806,12 +828,12 @@ static s32 fake_reg_of(void *prog, const char *name) {
 }
 static void gxmattr(void) {
     u32 i, j, bad = 0;
-    KH1VtxAttr a[4];
-    KH1GxmVtxAttr g[4];
+    KH1VtxAttr a[KH1_VTX_ATTRS];
+    KH1GxmVtxAttr g[KH1_VTX_ATTRS];
     KH1GxmVtxStream st;
     FakeProg f;
     CHECK("gxmattr: SceGxmVertexAttribute is 8 bytes, SceGxmVertexStream 4", sizeof(KH1GxmVtxAttr) == 8 && sizeof(KH1GxmVtxStream) == 4);
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < KH1_VERT_VARIANTS; i++) {
         u32 n = kh1_vertex_attrs(i, a), used = 0;
         kh1_shader_vert_cg(i, text, sizeof text);
         fake_prog(&f, text);
@@ -836,7 +858,7 @@ static void gxmattr(void) {
     fake_prog(&f, text);
     f.n--; /* drop "fog" */
     CHECK("gxmattr: a program missing an input gives 0", kh1_vertex_gxm_attrs(6, fake_reg_of, &f, g, &st) == 0);
-    CHECK("gxmattr: no variant past 6", kh1_vertex_gxm_attrs(7, fake_reg_of, &f, g, &st) == 0);
+    CHECK("gxmattr: no variant past 13", kh1_vertex_gxm_attrs(KH1_VERT_VARIANTS, fake_reg_of, &f, g, &st) == 0);
 }
 
 int main(void) {

@@ -50,7 +50,7 @@
 
 /* the fragment shader for a key into buf; its length, 0 when the key is not generated (or buf too small) */
 u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap);
-/* the vertex shader variant `index` (vertex.h kh1_vertkey_index) */
+/* the vertex shader variant `index` (vertex.h kh1_vertkey_index; KH1_VERT_NAT + it the native renderer's, natdraw.h) */
 u32 kh1_shader_vert_cg(u32 index, char *buf, u32 cap);
 /* the uniforms a draw's shader reads */
 void kh1_shader_uniforms(const KH1DrawState *d, f32 out[16]);
@@ -62,6 +62,7 @@ enum {
     KH1_SV_UA, KH1_SV_UB, KH1_SV_UR, KH1_SV_UC, KH1_SV_UXF, /* uniforms */
     KH1_SV_R0, KH1_SV_R1, KH1_SV_R2, KH1_SV_R3, KH1_SV_R4, KH1_SV_R5, KH1_SV_R6, KH1_SV_R7, /* registers */
     KH1_SV_OCOLOR, KH1_SV_OPOS, KH1_SV_OCOL, KH1_SV_OTC, KH1_SV_OFOG, /* outputs */
+    KH1_SV_MI,                                           /* a native vertex shader's matrix index input (natdraw.h) */
     KH1_SV_COUNT
 };
 typedef struct {
@@ -69,6 +70,9 @@ typedef struct {
     /* tex2D(tex, c): the GPU's filtered sample at the normalised coordinate, as UNORM floats */
     void (*tex)(void *ctx, f32 s, f32 t, f32 out[4]);
     void *ctx;
+    /* a native vertex shader's u_m: um_rows rows of 4 floats (dot(u_m[(int)i], v) reads row i) */
+    const f32 *um;
+    u32 um_rows;
     int discarded;   /* a clip() fired */
     u32 lines;       /* statements run */
     u32 bad;         /* body lines no form matches (the first one's number in bad_line) */

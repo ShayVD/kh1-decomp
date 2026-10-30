@@ -60,8 +60,9 @@ u32 kh1_vertkey_index(const KH1VertKey *k) { return k->setup ? 0 : 1 + k->tex * 
 
 const char *kh1_vertkey_str(u32 index) {
     static const char *names[] = { "pos", "pos col", "pos col fog", "pos col uv", "pos col uv fog", "pos col stq",
-                                   "pos col stq fog" };
-    return index < 7 ? names[index] : "?";
+                                   "pos col stq fog", "native pos", "native pos col", "native pos col fog", "native pos col uv",
+                                   "native pos col uv fog", "native pos col stq", "native pos col stq fog" };
+    return index < KH1_VERT_VARIANTS ? names[index] : "?";
 }
 
 u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask) {
@@ -76,21 +77,25 @@ u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask) {
     return n;
 }
 
-u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[4]) {
-    u32 tex = index >= 5 ? KH1_VTX_STQ : index >= 3 ? KH1_VTX_UV : KH1_VTX_NONE, fog = index && !(index & 1), n = 0;
-    if (index > 6) return 0;
-    /* the order is shadergen.c's kh1_shader_vert_cg: pos, col, tc, fog */
+u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[KH1_VTX_ATTRS]) {
+    u32 nat = index >= KH1_VERT_NAT, tex, fog, n = 0;
+    if (index >= KH1_VERT_VARIANTS) return 0;
+    if (nat) index -= KH1_VERT_NAT;
+    tex = index >= 5 ? KH1_VTX_STQ : index >= 3 ? KH1_VTX_UV : KH1_VTX_NONE;
+    fog = index && !(index & 1);
+    /* the order is shadergen.c's kh1_shader_vert_cg: pos, col, tc, fog (and a native variant's matrix index) */
     out[n].name = "pos", out[n].offset = 0, out[n].format = KH1_VFMT_F32, out[n++].count = 3;
     if (index) out[n].name = "col", out[n].offset = 24, out[n].format = KH1_VFMT_U8N, out[n++].count = 4;
     if (tex) out[n].name = "tc", out[n].offset = 12, out[n].format = KH1_VFMT_F32, out[n++].count = tex == KH1_VTX_STQ ? 3 : 2;
     if (fog) out[n].name = "fog", out[n].offset = 28, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
+    if (nat) out[n].name = "mi", out[n].offset = 29, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
     return n;
 }
 
 const char *kh1_vfmt_str(u32 format) { return format == KH1_VFMT_F32 ? "F32" : format == KH1_VFMT_U8N ? "U8N" : "?"; }
 
-u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAttr out[4], KH1GxmVtxStream *stream) {
-    KH1VtxAttr a[4];
+u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAttr out[KH1_VTX_ATTRS], KH1GxmVtxStream *stream) {
+    KH1VtxAttr a[KH1_VTX_ATTRS];
     u32 i, n = kh1_vertex_attrs(index, a);
     for (i = 0; i < n; i++) {
         s32 reg = reg_of(prog, a[i].name);

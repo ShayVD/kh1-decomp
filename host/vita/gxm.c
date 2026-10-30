@@ -42,6 +42,7 @@
 #include "platform/cmdbuf.h"
 #include "platform/depth.h"
 #include "platform/gxmrec.h"
+#include "platform/natdraw.h"
 #include "platform/palcache.h"
 #include "platform/primasm.h"
 #include "platform/shadergen.h"
@@ -269,8 +270,12 @@ typedef struct {
     SceGxmShaderPatcherId id;
     SceGxmVertexProgram *vp;
     const SceGxmProgramParameter *u_xf;
+    const SceGxmProgramParameter *u_m; /* a native variant's matrices (natdraw.h) */
 } VertProg;
-static VertProg vert[7];
+static VertProg vert[KH1_VERT_VARIANTS];
+/* the native renderer (docs/native-renderer.md): 1 once its vertex variants compiled (host/vita/main.c turns
+ * renderer=native off without them) */
+int kh1_vita_gxm_native_ok;
 
 static s32 reg_of(void *prog, const char *name) {
     const SceGxmProgramParameter *p = sceGxmProgramFindParameterByName((const SceGxmProgram *)prog, name);
@@ -279,7 +284,7 @@ static s32 reg_of(void *prog, const char *name) {
 
 static int vert_load(u32 i) {
     VertProg *v = &vert[i];
-    KH1GxmVtxAttr a[4];
+    KH1GxmVtxAttr a[KH1_VTX_ATTRS];
     KH1GxmVtxStream s;
     u32 n, len = kh1_shader_vert_cg(i, text, sizeof text);
     if (!len || !(v->prog = program_of(text, len, 0))) return -1;
@@ -289,7 +294,8 @@ static int vert_load(u32 i) {
                                                      (const SceGxmVertexStream *)&s, 1, &v->vp) < 0)
         return -1;
     v->u_xf = sceGxmProgramFindParameterByName(v->prog, "u_xf");
-    return 0;
+    v->u_m = sceGxmProgramFindParameterByName(v->prog, "u_m");
+    return i >= KH1_VERT_NAT && !v->u_m ? -1 : 0;
 }
 
 /* a fragment shader variant: compiled once per KH1ShaderKey */
@@ -1125,7 +1131,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         case KH1_GXM_SET_PROGRAMS:
             pk = c->pipe < rec.npipe ? &rec.pipe[c->pipe] : 0;
             vi = c->vert;
-            fp = pk && vi < 7 ? prog_of(pk, vi, &fs) : 0;
+            fp = pk && vi < KH1_VERT_VARIANTS ? prog_of(pk, vi, &fs) : 0;
             bad_pipe = !fp;
             if (fp) {
                 sceGxmSetVertexProgram(ctx, vert[vi].vp);
@@ -1206,12 +1212,17 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             if (pk->shader.tex && pk->shader.setup != 2 && !have_tex) { skip(W_TEX, tex_why); break; }
             if ((u64)(v0 + left) * 32 > r->vring.head) { skip(W_RANGE, 0); break; }
             if (!u || !xf || c->cls == KH1_PA_NONE) { skip(W_STATE, 0); break; }
+            if ((c->nmat != 0) != (vi >= KH1_VERT_NAT) || (c->nmat && !vert[vi].u_m)) { skip(W_STATE, 0); break; }
             if (pk->shader.tex && fs->tex >= 0) sceGxmSetFragmentTexture(ctx, (u32)fs->tex, &t);
             stencil(c->stencil);
+            if (c->nmat) /* natdraw.h: the GS's screen is the window's (y down), so CCW in it is CCW here */
+                sceGxmSetCullMode(ctx, c->cull == KH1_NAT_CULL_CCW ? SCE_GXM_CULL_CCW : c->cull == KH1_NAT_CULL_CW ? SCE_GXM_CULL_CW
+                                       : SCE_GXM_CULL_NONE);
             while (left) {
                 u32 n = left > MAX_INDEX ? MAX_INDEX / per * per : left;
                 sceGxmReserveVertexDefaultUniformBuffer(ctx, &vb);
                 if (vert[vi].u_xf) sceGxmSetUniformDataF(vb, vert[vi].u_xf, 0, 4, xf);
+                if (c->nmat) sceGxmSetUniformDataF(vb, vert[vi].u_m, 0, c->nmat * 16u, (const f32 *)(ub + c->moff));
                 sceGxmReserveFragmentDefaultUniformBuffer(ctx, &fb);
                 {
                     u32 q;
@@ -1224,6 +1235,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 v0 += n;
                 left -= n;
             }
+            if (c->nmat) sceGxmSetCullMode(ctx, SCE_GXM_CULL_NONE);
             draws++;
             break;
         }
@@ -1466,6 +1478,13 @@ int kh1_vita_gxm_init(void) {
             return -1;
         }
     vert_load(0); /* DATE's set-up variant: its draws are skipped without it */
+    /* the native renderer's variants (natdraw.h): all or none */
+    kh1_vita_gxm_native_ok = 1;
+    for (i = KH1_VERT_NAT; i < KH1_VERT_VARIANTS && kh1_vita_gxm_native_ok; i++)
+        if (vert_load(i)) {
+            kh1_vita_log("kh1-gxm: native vertex shader %u (%s) unavailable: renderer=native is off\n", i, kh1_vertkey_str(i));
+            kh1_vita_gxm_native_ok = 0;
+        }
     if (present_load()) {
         kh1_vita_log("kh1-gxm: the present's shaders unavailable: the software picture stays\n");
         return -1;
