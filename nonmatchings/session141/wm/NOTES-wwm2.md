@@ -1175,3 +1175,22 @@ None of the drafts below changed.
   - Types 1 and 2 test IPU_CTRL bit 14 after func_00f26848 and, on a clear bit, read IPU_CTRL again and discard it. With that test, both paths cross-jump into one call, and valaudit's callee sequence matches. hill3 (360 s) gave 2 more points.
   - Left: the s-register choice for n/mx/my and the IPU pointers.
 - **xs_dumbo f222f8 (47):** do-while, while, label-loop and inner-loop forms of the row loop score 47-55. Moving the r2 step to the end of the row is a loop.c loop (271). The start label's alignment and r2's slot are unchanged.
+
+## Round 57 (dkmovie f260c0 matched)
+
+- **dkmovie f260c0: matched** (ovl/dkmovie/hand/func_00f260c0.c; dkmovie 108, byte-identical). After round 56 (89):
+  - CONTEXT_ONLY definitions of every callee changed nothing.
+  - The likely branches came from &D_00F28460 being held in s0 from the start of the present path. `if (n < 2) sync = n & 1; else sync = func_001ed920();` fixed that (57).
+  - Using one pointer p for both the 0x40/0x50 buffer and the aux argument gave the target's v1 copy into a3/a1 (39).
+  - `if (x >= 0) i = 1;` in place of `i = x >= 0` (35).
+  - `len = h[1]` read before the f3DED8 test, in its own local, not shared with n (21).
+  - `p = 0` at the top of each arm instead of above the switch (0).
+- **valaudit --scan dkmovie** (f23ae8 skipped):
+  - f26d90: 192 -> 103. Read D_00F28460 directly in place of the cached m (a2 of func_00f23598).
+  - f245c0: 524 -> 380. Same change: all `m = D_00F28460` copies removed (the a0 of func_00f23620 is the freshly loaded pointer). The call 15 flag is still open.
+  - f275e0, f23750, f25288: no callee or argument-source flags.
+- **dkmovie f25978: 224 -> 112.** The motion vectors are `mx = IPU_CMD << 4; my = IPU_CMD << 4; mx += IPU_CMD; my += IPU_CMD;` on s16 (sll 20/sra 16, then sll 16/sra 16). The extra refs move mx/my/n into the target's s3/s2/s5.
+  - A second hill3 run (110) swapped the volatile IPU_CMD/IPU_CTRL writes in case 2. I rejected it: that order is hardware-visible. Restored, it scores 116.
+  - Left: the prologue order (h, first, base, size, qs, fcode).
+- **xs_genie f218f8:** `&a[0]`, a switch, if/else forms, an inner-block declaration of p, and a volatile read of D_00FC0E48 all stay at 3 or get worse. No natural plain-C barrier found.
+- **wm f3a640 audit (1bd518ad):** func_00f64c38 is a 5-insn leaf, `return ((s32 *)tbl->f14)[i * 2];`, so it does not read sp->f8 and the f8 move is safe. The same commit moved `D_00FCE390[id].s.on = 0;` after a `return 0;`, which was a real behaviour change (dead store). Round 51's version already has it back before the return, so nothing to revert now.
