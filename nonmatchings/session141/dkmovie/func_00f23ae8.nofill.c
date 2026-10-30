@@ -1,3 +1,4 @@
+/* Round 27 wwm1: score 620 -> 538. valaudit showed 7 more D_00F28460 loads in the target (lw -31648): the second, third and fourth `m = D_00F28460` copies are gone and those blocks read D_00F28460 directly (wwm2's round 57 lever from f26d90/f245c0). Keeping the first copy (the f3DD9C..f3DDA0 stores) is best (removing it too: 548). Earlier header below. */
 /* Round 27 wwm1: score 624 -> 620, storeperm on the valid order (f3DD9C, f3DD94, f3DD98 stores off one m, distinct fields). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from d6d14605 (dkmovie func_00f23ae8 near miss, score 624 -> 596, hill3o order under the new bu) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 596 was not valid. Restored the last valid statement order: score 624. Earlier header below. */
 /* Round 45 wwm2: score 629 -> 624 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
@@ -70,21 +71,20 @@ void func_00f23ae8(void) {
     D_00F28460->f3DF69 = 0;
     D_00F28460->f3DF6A = 0;
     D_00F28460->f3DF6B = 0;
-    m = D_00F28460;
-    w = m->f3DD20;
-    ht = m->f3DD24;
-    m->f3DDA4 = 0;
-    buf0 = (m->f3DF08 + 0x3F) & ~0x3F;
-    m->f3DDAC = (s32)m->aux[0];
+    w = D_00F28460->f3DD20;
+    ht = D_00F28460->f3DD24;
+    D_00F28460->f3DDA4 = 0;
+    buf0 = (D_00F28460->f3DF08 + 0x3F) & ~0x3F;
+    D_00F28460->f3DDAC = (s32)D_00F28460->aux[0];
     mbw = w / 16;
     cw = w;
     ch = ht;
     sz = mbw * (ht / 16) * 24 + 0x28;
     buf1 = (buf0 + (sz + 0x3F) / 64 * 256 + 0x3F) & ~0x3F;
     buf2 = (buf1 + mbw * ((ht + 15) / 16) * 1024 + 0x3F) & ~0x3F;
-    m->f3DDA8 = 0;
+    D_00F28460->f3DDA8 = 0;
     *(s32 *)(buf2 + 0x40) = 0x12345678;
-    m->f3DD14 = buf2 + 0x40;
+    D_00F28460->f3DD14 = buf2 + 0x40;
     if ((u32)(D_00F28460->f3DD14 + 4) >= (u32)((s32)D_00F28460 + D_00F28460->f3DF48)) {
         __asm__ volatile("break");
     }
@@ -185,21 +185,19 @@ next_packet:
     func_00f22df8(buf0);
     sceGsSyncPath(0, 0);
     func_00f216d0(D_00F28460);
-    m = D_00F28460;
-    m->f3DD2C = frame;
-    if (m->f3DF67 == 0 && frame == m->f3DF1C - 30) {
+    D_00F28460->f3DD2C = frame;
+    if (D_00F28460->f3DF67 == 0 && frame == D_00F28460->f3DF1C - 30) {
         func_001eda90(0, 0xEF);
         D_00F28460->f3DF67 = 1;
     }
     frame++;
     D_00F28460->f3DDD0 |= 4;
     func_00f23480();
-    m = D_00F28460;
-    if (m->f3DD50[slot] < frame) {
-        m->f3DD74[slot] = 0;
+    if (D_00F28460->f3DD50[slot] < frame) {
+        D_00F28460->f3DD74[slot] = 0;
     } else {
-        if (m->f3DDD0 & 0x40) {
-            func_00f208b8(m);
+        if (D_00F28460->f3DDD0 & 0x40) {
+            func_00f208b8(D_00F28460);
             D_00F28460->f3DF34 = 0;
             D_00F28460->f3DF40 = 0;
             f = D_00F28460->f3DDD0;
@@ -213,7 +211,7 @@ next_packet:
                 goto done_slot;
             }
         }
-        if (!(m->f3DDD0 & 8)) {
+        if (!(D_00F28460->f3DDD0 & 8)) {
             goto next_packet;
         }
     }
