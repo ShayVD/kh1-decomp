@@ -390,6 +390,14 @@ together, and `OUT=path` saves that version. In round 22 it took wm f78978 from 
 dkmovie f270c8 from 52 to 38, dktitle f228c8 from 398 to 378 and wm f6edd8 from 186 to 167. Keep a
 result only if hand.py's score goes down.
 
+`tools/ovl/storeperm.py OVL DRAFT` sweeps store order. It finds each run of up to 7 consecutive
+one-line stores with no dependency between them: no call, no `++`, no declaration, and no store reads
+or rewrites what another one writes. It tries every order of one run at a time, from the top, and
+keeps an order only if hand.py's score goes down. dkmovie f270c8 matched this way in round 24. A run
+of 7 is 5040 compiles, about 17 minutes. `MAXN`, `TLIM` (seconds), `DRY=1` (list the runs only) and
+`OUT=path` control it. It does not check aliasing through different pointers, so read a kept order
+before you trust the draft's behaviour.
+
 **Orphan divide-by-zero check.** Sometimes the target has a `li vN,C; beqzl vN; break 7` with
 no `div` that uses vN, often next to a shift that does the real division. gcc 2.96 emits
 this when it divides by a value that is a register at expand time and the quotient is never
