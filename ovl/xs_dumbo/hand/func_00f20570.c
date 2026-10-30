@@ -1,4 +1,7 @@
-/* score 49 (508 vs 512). xs_dumbo state task (cases 0-3, 100, 101, then the effect update). Logic complete. Left: %hi(D_00F2320C) and %hi(D_00F23214) take s2/s1 the other way round from the original, and case 1's branch has one instruction less. Round 29 wwm2: extern/decl order, a struct of the four globals (106), default: cases, case order, temps for the effect pointer, inverted case 0 and every flag mode do not fix it. Round 18 (wwm1): 26 words with a CONTEXT_ONLY definition of func_00f20408 (ctx2.py). */
+/* xs_dumbo.x func_00f20570: matched by hand. */
+#include "ovl.h"
+
+/* xs_dumbo state task (cases 0-3, 100, 101, then the effect update). The zero locals set after the early return and used only in the closing block are the match: gcse's constant propagation folds them away, but they add three insns to its count, which moves the expression hash table from 53 to 55 buckets, so %hi(D_00F2320C) is visited before %hi(D_00F23214), gets the lower pseudo and takes s1 as in the original (wwm2 round 55). */
 s32 func_0013aa60(void);
 void func_00f20150(s32);
 void func_00f203c8(void);
@@ -19,8 +22,15 @@ extern void *D_00F2320C;
 extern f32 D_00F23210;
 extern s32 D_00F23214;
 s32 func_00f20570(void) {
+    s32 ret;
+    s32 clr;
+    void *none;
+
     if (D_002C5960 & 1)
         return 0;
+    ret = 0;
+    clr = 0;
+    none = 0;
     D_00304B7C -= D_00304B70[1] * D_002BBDFC;
     switch (D_00F3C9D8) {
     case 0:
@@ -52,8 +62,8 @@ s32 func_00f20570(void) {
         D_00F3CA80 = 0;
         return 4;
     }
-    if (D_00F2320C)
+    if (D_00F2320C != none)
         func_0014a0f0(D_00F2320C);
-    D_00F23214 = 0;
-    return 0;
+    D_00F23214 = clr;
+    return ret;
 }
