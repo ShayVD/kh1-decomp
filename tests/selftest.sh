@@ -185,6 +185,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
         -I"$ROOT/include" -o "$W/bytesame_arm" "$ROOT/tests/host/bytesame_test.c"
     qemu-arm "$W/bytesame_arm" > "$W/bytesame_arm.log" || { cat "$W/bytesame_arm.log"; exit 1; }
     tail -n 1 "$W/bytesame_arm.log"
+    # session 148: the T8 / CT32 block uploads' NEON forms (host/null/gsmem.c band_*) against the model's slow path
+    arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -static -DKH1_HOST \
+        -I"$ROOT/include" -o "$W/gsfast_arm" "$ROOT/tests/host/gsfast_test.c" "$ROOT/host/null/gsmem.c"
+    qemu-arm "$W/gsfast_arm" up > "$W/gsfast_arm.log" || { cat "$W/gsfast_arm.log"; exit 1; }
+    tail -n 1 "$W/gsfast_arm.log"
   fi
   # the GS register file it feeds (host/null/gsregs.c, session 79)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsregs_test" \

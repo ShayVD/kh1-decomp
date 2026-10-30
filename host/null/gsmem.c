@@ -621,6 +621,180 @@ static void trx_pixel(u32 v) {
     }
 }
 
+/* Session 148 (3d-zo's Dive on a Vita: the GS worker's upload stores ~half its instructions, ~8 a pixel through
+ * the kept address table): whole blocks of a CT32 / Z32 or T8 upload stored a block at a time.  A block is 256
+ * bytes in one page; CT32's (8 x 8 pixels) is four 16-word columns of two rows each, T8's (16 x 16) four 64-byte
+ * columns of four rows each, each column a fixed permutation of its rows' pixels (T8's two kinds, by the
+ * column's parity).  The permutations come from kh1_gsmem_addr itself, once (band_init); if they are not of the
+ * shape the NEON forms take, those are not used.  A block's stored bits, the page's stamp, its drawn bits and
+ * the marks end as the pixel loops below leave them (marks moved once, which is all tex_scan's memo asks) */
+static u8 t8_src[2][64];            /* T8: a column's byte o from row t8_src >> 4, x t8_src & 15 of its 4 x 16 */
+static u8 c32_src[16];              /* CT32: a column's word o from row c32_src >> 3, x c32_src & 7 of its 2 x 8 */
+static int band_ok = -1;            /* the layouts as above (0: the pixel loops only) */
+#if defined(__ARM_NEON)
+static u8 t8_idx[2][8][8];          /* T8 on NEON: column D d of parity p from rows d & 1 and (d & 1) + 2 */
+static int t8_neon, c32_neon;
+#endif
+
+static void band_init(void) {
+    u32 x, y, a, o, g, p;
+    int ok = 1;
+    for (y = 0; y < 16; y++)
+        for (x = 0; x < 16; x++) {
+            a = kh1_gsmem_addr(KH1_PSMT8, 0, 2, x, y); /* block 0 */
+            g = y >> 2;
+            if (a >= 256 || a >> 6 != g) { ok = 0; continue; }
+            o = a & 63;
+            if (g < 2) t8_src[g][o] = (u8)((y & 3) << 4 | x);
+            else if (t8_src[g & 1][o] != ((y & 3) << 4 | x)) ok = 0;
+        }
+    for (y = 0; y < 8; y++)
+        for (x = 0; x < 8; x++) {
+            u32 z = kh1_gsmem_addr(KH1_PSMZ32, 0, 1, x, y) - kh1_gsmem_addr(KH1_PSMZ32, 0, 1, 0, 0);
+            a = kh1_gsmem_addr(KH1_PSMCT32, 0, 1, x, y);
+            if (a >= 64 || a >> 4 != y >> 1 || z != a) { ok = 0; continue; }
+            c32_src[a & 15] = (u8)((y & 1) << 3 | x);
+        }
+#if !defined(__BYTE_ORDER__) || __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
+    ok = 0; /* T8's source bytes read in memory order */
+#endif
+    band_ok = ok;
+#if defined(__ARM_NEON)
+    t8_neon = ok;
+    for (p = 0; p < 2; p++)
+        for (o = 0; o < 64; o++) {
+            u32 d = o >> 3, r = t8_src[p][o] >> 4;
+            if (r != (d & 1) && r != (d & 1) + 2) t8_neon = 0;
+            t8_idx[p][d][o & 7] = (u8)((r >> 1) << 4 | (t8_src[p][o] & 15));
+        }
+    c32_neon = ok;
+    for (o = 0; o < 16; o++) /* the words [r0 x0, r0 x1, r1 x0, r1 x1, r0 x2, ...] */
+        if (c32_src[o] != ((o >> 1 & 1) << 3 | (o >> 2) << 1 | (o & 1))) c32_neon = 0;
+#else
+    (void)p;
+#endif
+}
+
+/* the block whose top left pixel is at src (row stride `stride` bytes) into the block at vm + base:
+ * nonzero when any stored byte changed */
+static u32 band_t8(u32 base, const u8 *src, u32 stride) {
+    u8 *d = vm + base;
+    u32 g;
+#if defined(__ARM_NEON)
+    if (t8_neon) {
+        uint8x16_t diff = vdupq_n_u8(0);
+        uint32x2_t m;
+        for (g = 0; g < 4; g++, d += 64, src += 4 * stride) {
+            uint8x16_t r0 = vld1q_u8(src), r1 = vld1q_u8(src + stride), r2 = vld1q_u8(src + 2 * stride),
+                       r3 = vld1q_u8(src + 3 * stride);
+            uint8x8x4_t ta, tb;
+            const u8(*ix)[8] = t8_idx[g & 1];
+            uint8x16_t o0, o1, o2, o3;
+            ta.val[0] = vget_low_u8(r0); ta.val[1] = vget_high_u8(r0);
+            ta.val[2] = vget_low_u8(r2); ta.val[3] = vget_high_u8(r2);
+            tb.val[0] = vget_low_u8(r1); tb.val[1] = vget_high_u8(r1);
+            tb.val[2] = vget_low_u8(r3); tb.val[3] = vget_high_u8(r3);
+            o0 = vcombine_u8(vtbl4_u8(ta, vld1_u8(ix[0])), vtbl4_u8(tb, vld1_u8(ix[1])));
+            o1 = vcombine_u8(vtbl4_u8(ta, vld1_u8(ix[2])), vtbl4_u8(tb, vld1_u8(ix[3])));
+            o2 = vcombine_u8(vtbl4_u8(ta, vld1_u8(ix[4])), vtbl4_u8(tb, vld1_u8(ix[5])));
+            o3 = vcombine_u8(vtbl4_u8(ta, vld1_u8(ix[6])), vtbl4_u8(tb, vld1_u8(ix[7])));
+            diff = vorrq_u8(diff, veorq_u8(vld1q_u8(d), o0));
+            diff = vorrq_u8(diff, veorq_u8(vld1q_u8(d + 16), o1));
+            diff = vorrq_u8(diff, veorq_u8(vld1q_u8(d + 32), o2));
+            diff = vorrq_u8(diff, veorq_u8(vld1q_u8(d + 48), o3));
+            vst1q_u8(d, o0);
+            vst1q_u8(d + 16, o1);
+            vst1q_u8(d + 32, o2);
+            vst1q_u8(d + 48, o3);
+        }
+        m = vorr_u32(vget_low_u32(vreinterpretq_u32_u8(diff)), vget_high_u32(vreinterpretq_u32_u8(diff)));
+        m = vpmax_u32(m, m);
+        return vget_lane_u32(m, 0);
+    }
+#endif
+    {
+        u32 o, v, ch = 0;
+        for (g = 0; g < 4; g++, d += 64, src += 4 * stride)
+            for (o = 0; o < 64; o++) {
+                v = src[(t8_src[g & 1][o] >> 4) * stride + (t8_src[g & 1][o] & 15)];
+                ch |= d[o] ^ v;
+                d[o] = (u8)v;
+            }
+        return ch;
+    }
+}
+
+/* the same for CT32 / Z32 (base in words, stride in words) */
+static u32 band_c32(u32 base, const u32 *src, u32 stride) {
+    u32 c;
+    u8 *d = vm + base * 4;
+#if defined(__ARM_NEON)
+    if (c32_neon) {
+        uint32x4_t diff = vdupq_n_u32(0);
+        uint32x2_t m;
+        for (c = 0; c < 4; c++, d += 64, src += 2 * stride) {
+            uint32x4_t a0 = vld1q_u32(src), a1 = vld1q_u32(src + 4), b0 = vld1q_u32(src + stride),
+                       b1 = vld1q_u32(src + stride + 4);
+            uint32x4_t o0 = vcombine_u32(vget_low_u32(a0), vget_low_u32(b0));
+            uint32x4_t o1 = vcombine_u32(vget_high_u32(a0), vget_high_u32(b0));
+            uint32x4_t o2 = vcombine_u32(vget_low_u32(a1), vget_low_u32(b1));
+            uint32x4_t o3 = vcombine_u32(vget_high_u32(a1), vget_high_u32(b1));
+            u32 *dw = (u32 *)(void *)d;
+            diff = vorrq_u32(diff, veorq_u32(vld1q_u32(dw), o0));
+            diff = vorrq_u32(diff, veorq_u32(vld1q_u32(dw + 4), o1));
+            diff = vorrq_u32(diff, veorq_u32(vld1q_u32(dw + 8), o2));
+            diff = vorrq_u32(diff, veorq_u32(vld1q_u32(dw + 12), o3));
+            vst1q_u32(dw, o0);
+            vst1q_u32(dw + 4, o1);
+            vst1q_u32(dw + 8, o2);
+            vst1q_u32(dw + 12, o3);
+        }
+        m = vorr_u32(vget_low_u32(diff), vget_high_u32(diff));
+        m = vpmax_u32(m, m);
+        return vget_lane_u32(m, 0);
+    }
+#endif
+    {
+        u32 o, v, w0, ch = 0;
+        for (c = 0; c < 4; c++, d += 64, src += 2 * stride)
+            for (o = 0; o < 16; o++) {
+                v = src[(c32_src[o] >> 3) * stride + (c32_src[o] & 7)];
+                __builtin_memcpy(&w0, d + o * 4, 4);
+                ch |= w0 ^ v;
+                __builtin_memcpy(d + o * 4, &v, 4);
+            }
+        return ch;
+    }
+}
+
+/* the page's stamp and marks after a block of stores, as the pixel loops leave them (changed: any stored bit) */
+static int band_mark(u32 pg, u32 changed) {
+    if (changed) {
+        page_seq[pg] = seq;
+        STORED(pg);
+    } else if (!page_drawn[pg]) {
+        return 0;
+    }
+    page_drawn[pg] = 0;
+    return 1;
+}
+
+/* each block of the band from at on starts a block (2^lg units) and ends in it (b x b pixels a block) */
+static int band_blocks(const u32 *at, u32 b, u32 lg) {
+    u32 bx;
+    for (bx = 0; bx < trx.w; bx += b)
+        if (at[bx] & ((1u << lg) - 1) || at[bx + (b - 1) * trx.w + b - 1] >> lg != at[bx] >> lg) return 0;
+    return 1;
+}
+
+/* whether the band of rows from pixel ai on (its first row's y, a row start) can go a block at a time: the
+ * rectangle's x and width whole blocks, y a block's top row, bh rows of pixels in the piece from there */
+static int band_here(u32 ai, u32 left_in_piece, u32 bw, u32 bh) {
+    if (band_ok < 0) band_init();
+    return band_ok && fast_on && trx.x0 % bw == 0 && trx.w % bw == 0 && (trx.y0 + ai / trx.w) % bh == 0 &&
+           left_in_piece >= bh * trx.w;
+}
+
 /* Session 135: a piece of a CT32 / Z32, PSMT8 or PSMT4 upload with its addresses kept, put_at's writes
  * and marks without a call a pixel (the title's ~800,000 a frame); then the count and the position as
  * trx_pixel leaves them.  0 for another PSM */
@@ -628,22 +802,36 @@ static int trx_bulk(const u32 *w, u32 n) {
     u32 left = trx.w * trx.h - trx.ai, k, j, a, o, v;
     const u32 *at = trx.at + trx.ai;
     switch (trx.psm) {
-    case KH1_PSMCT32: case KH1_PSMZ32:
+    case KH1_PSMCT32: case KH1_PSMZ32: {
+        u32 x = trx.ai % trx.w, e;
         k = n < left ? n : left;
-        for (j = 0; j < k; j++) {
-            a = at[j];
-            v = w[j];
-            o = ld32(a);
-            if (o != v) {
-                st32(a, v);
-                page_seq[a >> 11] = seq;
-            } else if (!page_drawn[a >> 11]) {
+        for (j = 0; j < k;) {
+            /* session 148: whole blocks, 8 rows at a time, from a row start */
+            if (x == 0 && band_here(trx.ai + j, k - j, 8, 8) && band_blocks(at + j, 8, 6)) {
+                u32 bx, any = 0;
+                for (bx = 0; bx < trx.w; bx += 8) any |= band_mark(at[j + bx] >> 11, band_c32(at[j + bx], w + j + bx, trx.w));
+                marks += any != 0;
+                j += 8 * trx.w;
                 continue;
             }
-            page_drawn[a >> 11] = 0;
-            marks++;
+            e = j + trx.w - x < k ? j + trx.w - x : k; /* to the row's end */
+            x = e - j + x == trx.w ? 0 : e - j + x;
+            for (; j < e; j++) {
+                a = at[j];
+                v = w[j];
+                o = ld32(a);
+                if (o != v) {
+                    st32(a, v);
+                    page_seq[a >> 11] = seq;
+                } else if (!page_drawn[a >> 11]) {
+                    continue;
+                }
+                page_drawn[a >> 11] = 0;
+                marks++;
+            }
         }
         break;
+    }
     /* session 141 (the Dive's T8 texture streams, a tenth of its frame): mark's work inline, marks moved
      * once a piece (tex_scan's memo only asks whether it moved) */
     case KH1_PSMT8: {
@@ -660,6 +848,14 @@ static int trx_bulk(const u32 *w, u32 n) {
 #endif
         k = n * 4 < left ? n * 4 : left;
         for (j = 0; j < k; j += run) {
+            /* session 148: whole blocks, 16 rows at a time, from a row start */
+            if (x == 0 && band_here(trx.ai + j, k - j, 16, 16) && band_blocks(at + j, 16, 8)) {
+                u32 bx;
+                for (bx = 0; bx < trx.w; bx += 16)
+                    moved |= band_mark(at[j + bx] >> 13, band_t8(at[j + bx], (const u8 *)w + j + bx, trx.w));
+                run = 16 * trx.w;
+                continue;
+            }
             run = 16 - (trx.x0 + x) % 16;
             if (run > trx.w - x) run = trx.w - x;
             if (run > k - j) run = k - j;

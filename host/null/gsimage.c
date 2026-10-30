@@ -92,6 +92,14 @@ static int load_image(u32 bb, u32 pos_lo, u32 pos_hi, u32 reg_lo, u32 reg_hi, co
     u32 done = 0, buf[64];
     kh1_gsmem_trxdir(0, 0, bb, pos_lo, pos_hi, reg_lo, reg_hi);
     if (kh1_gsmem_image_same(s, bytes)) return 1; /* session 137: the title menus' every-frame uploads */
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    /* session 148: a word-aligned source's whole words in one piece (the worker's copies in the ring are), so the
+     * T8 / CT32 block paths (gsmem.c band_*) see whole bands of rows; the tail as before */
+    if (!((unsigned long)s & 3) && bytes >= 4) {
+        done = bytes & ~3u;
+        kh1_gsmem_image((const u32 *)(const void *)s, done / 4);
+    }
+#endif
     while (done < bytes) { /* in words, as the IMAGE qwords bring it (src need not be aligned) */
         u32 k = bytes - done < sizeof buf ? bytes - done : sizeof buf, i;
         for (i = 0; i < (k + 3) / 4; i++) buf[i] = 0;
@@ -126,7 +134,7 @@ u32 kh1_gs_load_us, kh1_gs_loads, kh1_gs_loads_same, kh1_gs_load_bytes;
  * (gsmem.c kh1_gsmem_image_gen); new bytes are copied in after a sync (no op still reads the copy), with a new
  * generation, and the worker uploads them from the copy.  The worker's work is in order with the sends as before. */
 #define BIG_KEPT 8
-static struct { u32 k[5], bytes, gen, use; u8 *copy; } big[BIG_KEPT];
+static struct { u32 k[5], bytes, gen, use, pos, keyed; u8 *copy; } big[BIG_KEPT];
 static u32 big_gen, big_use;
 
 static void w_load_big(const u32 *a, const u32 *d, u32 nqw) {
@@ -137,27 +145,36 @@ static void w_load_big(const u32 *a, const u32 *d, u32 nqw) {
     kh1_gsmem_image_gen = 0;
 }
 
-/* 1 when the upload went to the worker that way (0: the caller uploads it here) */
+/* 1 when the upload went to the worker that way (0: the caller uploads it here).
+ * Session 148 (3d-zo's Dive on a Vita: 42 large uploads per 2 s, none unchanged, each one a full sync, the game
+ * waiting ~350 ms per 2 s for the worker in exactly those 42 waits): new bytes go into the least recently used
+ * copy, waiting only until the worker has run the last op that reads that copy (`pos`, normally long done), not
+ * for every op put so far.  The kept copy of the same rectangle, when another, is no longer offered for the
+ * compare (`keyed` 0) but stays as it is for the ops that may still read it */
 static int load_big(const u32 *a, const void *src) {
     u32 i, k = BIG_KEPT, b[8];
     for (i = 0; i < BIG_KEPT; i++)
-        if (big[i].copy && big[i].bytes == a[5] && big[i].k[0] == a[0] && big[i].k[1] == a[1] && big[i].k[2] == a[2] &&
-            big[i].k[3] == a[3] && big[i].k[4] == a[4]) k = i;
+        if (big[i].copy && big[i].keyed && big[i].bytes == a[5] && big[i].k[0] == a[0] && big[i].k[1] == a[1] &&
+            big[i].k[2] == a[2] && big[i].k[3] == a[3] && big[i].k[4] == a[4]) k = i;
     if (k < BIG_KEPT && kh1_bytes_same(big[k].copy, src, a[5])) {
         kh1_gs_loads_same++;
     } else {
-        kh1_gsq_sync(); /* no op reads a copy now */
-        if (k == BIG_KEPT) {
-            for (i = k = 0; i < BIG_KEPT; i++)
-                if (!big[i].copy || big[i].use < big[k].use) k = i;
-            if (!big[k].copy || big[k].bytes < a[5]) {
-                free(big[k].copy);
-                big[k].copy = (u8 *)malloc(a[5]);
-                if (!big[k].copy) return 0;
+        u32 old = k;
+        for (i = k = 0; i < BIG_KEPT; i++)
+            if (!big[i].copy || (big[k].copy && big[i].use < big[k].use)) k = i;
+        if (big[k].copy) kh1_gsq_wait(big[k].pos); /* no op still reads this copy */
+        if (!big[k].copy || big[k].bytes < a[5]) {
+            free(big[k].copy);
+            big[k].copy = (u8 *)malloc(a[5]);
+            if (!big[k].copy) {
+                big[k].keyed = 0;
+                return 0;
             }
-            for (i = 0; i < 5; i++) big[k].k[i] = a[i];
-            big[k].bytes = a[5];
         }
+        if (old < BIG_KEPT && old != k) big[old].keyed = 0;
+        for (i = 0; i < 5; i++) big[k].k[i] = a[i];
+        big[k].bytes = a[5];
+        big[k].keyed = 1;
         memcpy(big[k].copy, src, a[5]);
         big[k].gen = ++big_gen;
     }
@@ -166,6 +183,7 @@ static int load_big(const u32 *a, const void *src) {
     b[6] = big[k].gen;
     b[7] = k;
     kh1_gsq_put(w_load_big, b, 8, 0, 0);
+    big[k].pos = kh1_gsq_pos();
     return 1;
 }
 

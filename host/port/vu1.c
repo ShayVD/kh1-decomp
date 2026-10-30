@@ -859,10 +859,12 @@ static __inline__ float32x4_t vfin(uint32x4_t u) {
     return vreinterpretq_f32_u32(vminq_u32(vreinterpretq_u32_s32(p), vdupq_n_u32(0xFF7FFFFFu)));
 }
 /* an arithmetic result: NEON flushed it already.  Its operands are finite (fin()'s, or what the VU wrote), so
- * it is finite or an infinity, never a NaN: the float clamp to +-FLT_MAX is fout()'s, -0 kept */
+ * it is finite or an infinity, never a NaN: the clamp to +-FLT_MAX is fout()'s, -0 kept.  Session 148: done as
+ * vfin's two integer minimums (an infinity's pattern to the largest finite of its sign, every finite value
+ * as it is), so the two share their constants: the float form's +-FLT_MAX were two more literal-pool loads a
+ * result in the translated programs (~10% of P0's instructions were those reloads) */
 static __inline__ uint32x4_t vfo(float32x4_t r) {
-    float32x4_t m = vreinterpretq_f32_u32(vdupq_n_u32(0x7F7FFFFFu));
-    return vreinterpretq_u32_f32(vmaxq_f32(vminq_f32(r, m), vnegq_f32(m)));
+    return vreinterpretq_u32_f32(vfin(vreinterpretq_u32_f32(r)));
 }
 static __inline__ uint32x4_t vflush(uint32x4_t u) { /* a value passed through (MAX / MINI): denormal to 0 */
     uint32x4_t z = vceqq_u32(vandq_u32(u, vdupq_n_u32(0x7F800000u)), vdupq_n_u32(0));
