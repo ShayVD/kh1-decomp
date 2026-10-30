@@ -1021,3 +1021,13 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
 - **Swapped-commutative-operand scan (r46/swapscan.py):** wm f71748 / gb f4a650 38->36 (`(Ent *)(j * sizeof(Ent) + (u32)base)`), then 34 with hill3o. gb f367e8 100->92 (`*(f32 *)((u32)b + (i << 2))`), then 84 with hill3o. wm f632e8: no OR operand order helps.
 - **wm f72a70 / gb f4b978 39->37:** the outer goto loop written as `while (!((a = D_002C5AD0.x8) & 0x4000))`. That is 8 bytes bigger, but scores lower.
 - **hill3o (300 iters) on the untouched drafts at score 40 or less:** f42ce0 16->14 and f28448 7->5 (then matched). No change for f38630, f47610, f74440, f639c0, f36bc0, f72f40, f74a28, f7f628, f69278, f3a860, f72a70, gb f4b978.
+
+## Round 47
+
+- **Tools:** tools/ovl/retflip.py and tools/ovl/swapscan.py are committed, with a docs line each.
+- **retflip over all 135 wm drafts:** nothing new beyond round 46.
+- **swapscan:** wm f6e278 202->200 with `(It *)(D_0108F288 * sizeof(It) + (u32)items)`, ported to gb f47180. f632e8 is still the only open swap.
+- **hill3o (150 iters, seed 2) over all 87 wm drafts above 40:** 41 improved. The biggest were f75d80 2412->1758, f26e80 722->472, f25918 382->172, f7d0a8 331->265, f22358 188->123, f4d9c0 58->20, f4b338 112->84, f53758 102->84 and f7c880 48->36.
+- **wm f4d9c0 matched**, and gb f268c8 followed through twins.py. `w2 = x + w; h2 = y + h;` uses fresh sums (the original's addu has x first), and the 0xC0 store comes before 0xE0.
+- **drafttwins --apply:** 16 gb twins took the wm gains.
+- **Shared prototypes:** include/sce/libgraph.h declares `void sceGsPutDrawEnv(...)`, but src/sdk/gcc991111/text_00260000_s2.c defines it returning s32. No other include/ prototype is void for a function defined with a value. Many file-local declarations in src/ and ovl/*/hand declare func_001f9438 or func_001c0310 void, while their definitions (src/text/wintext.c, src/util/task.nostrict.c) return s32. Those files match as written, so they cannot be changed blindly. The overlay callees whose s32 flip helped (func_00f29500, f4a000, f55190 and others) are void in ovl/*/auto. So the original callers probably used implicit-int declarations, not real int returns. func_0020be10 is genuinely void (src/menu/pointer.c), and its s32 flip in wm f6f2a8 / gb f481b0 helped only as a perturbation.
