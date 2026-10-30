@@ -1,3 +1,4 @@
+/* Round 64 wwm2: score 584 -> 581 with CONTEXT_ONLY definitions of func_00f71140 and func_00f6b5d0 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 3299eab3 (wm func_00f71b68 near miss, score 584 -> 551, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 551 was not valid. Restored the last valid statement order: score 584. Earlier header below. */
 /* score 660 (3904 vs 3848 bytes): full structure (empty-case wait, mode1 swap-select, mode2 delete, back/re-find, end cleanup); remaining diffs are block placement (wait loop, end block). Round 25 draft wwm2. Round 19 (wwm1): score 660 -> 584 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { s16 v[2]; } S2;
@@ -50,10 +51,10 @@ void func_0020be10(s32);
 void func_0024e468(s32);
 s32 func_00f47110(void);
 void func_00f6ade8(s32);
-void func_00f6b5d0(s32, s32, s32);
+void func_00f6b5d0(s32, s32, s32); CONTEXT_ONLY void func_00f6b5d0(s32 a0, s32 a1, s32 a2) {}
 Win *func_00f6b6a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00f710f0(s32, s32);
-void func_00f71140(s32, s32);
+void func_00f71140(s32, s32); CONTEXT_ONLY void func_00f71140(s32 a0, s32 a1) {}
 void func_00f712b8(s32, s32);
 s32 func_00f71b58(void); CONTEXT_ONLY s32 func_00f71b58() { return 0; }
 void func_00f71748(Win *, Win *, Win *, Win *, Win *, Win *);
