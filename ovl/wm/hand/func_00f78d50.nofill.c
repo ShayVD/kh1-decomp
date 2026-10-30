@@ -1,6 +1,6 @@
-/* Round 44 wwm2: score 59 -> 5 (2 words). The masked msdscan showed one li a0,1 in the target, so func_001fd720 takes an argument: func_001fd720(1). The nops after the soft-double libcalls mean the nofill mode. hill3o then reordered both global-store blocks. D_0108F6B8.x0 is stored before x4, and Mode.f8 returns s32. Left: the lui for the final D_0108F6B4 store is in v1, where the original has v0. Moving the store, u32 k, and casting either vtable call to void did not fix it. */
-/* Round 39 (wwm2): wm.x func_00f78d50 near miss: score 67 -> 59 (124 words). The loop stores in address order: D_0108F7C0[i], then D_0108F830[i], then D_0108F8A0[i] (alias-pattern sweep, /tmp/claude-0/s141/r39/as2.py). Earlier header below. */
-/* 124 words, score 67 (was 126/71). Round 32 wwm2: hill2 reordered the global clears; ctx2 gives nothing. Earlier header: func_00f78d50: score 71, 126 words differ. original leaves soft-double libcall delay slots empty; global stores scheduled differently; all flag modes tried */
+/* wm.x func_00f78d50: matched by hand. */
+#include "ovl.h"
+
 typedef struct {
     s32 x0;
     s32 x4;
@@ -49,6 +49,7 @@ void func_00f78d50(s32 arg) {
     double a;
     f32 *p;
     f32 v;
+    s32 t;
 
     D_00FB5BB0 = 1;
     D_00FB5EC4 = 0;
@@ -88,5 +89,6 @@ void func_00f78d50(s32 arg) {
     D_00FB5EA8 = func_0024b7a0(3, arg, 0);
     D_00FB5EA8->f8(func_00f7da90, 1, 1);
     D_00FB5EA8->f8(func_00f78bc0, 1, 2);
-    D_0108F6B4 = arg + k;
+    t = arg + k;
+    D_0108F6B4 = t;
 }
