@@ -919,6 +919,61 @@ and the drafts.tsv drafts). Temporary modes were added for the combinations: nof
 nostrict_nofill_nosib, norlo_nosib. f37770 was the only match, and no other draft improved.
 Use the signal per function. It is not a per-file mode.
 
+### Loop shape, exit blocks and case trees (wwm1, round 36)
+
+Run `tools/ovl/cfdiff.py` first. It compares the branch sequences, and the levers below change
+which branches come where. Registers come last. A variant that brings cfdiff to 0 often scores worse
+at first, because its registers shift. Run hill3.py on it before you drop it.
+
+**break vs goto decides loop rotation** (stmt.c expand_end_loop):
+- A `for(;;)` whose `break` comes within about 30 insns of the top is rotated. It is entered with
+  `b test`, and the code from the top through the last such break is moved to the bottom.
+- This works at any nesting depth.
+- A `goto` to a label after the loop does not count. The loop stays unrotated, with its test at the
+  top and a `b` back.
+- When the target rotates one exit and not another, write the first as `break` and the second as
+  `goto out;`. Examples:
+  - wm func_00f75d80 (2058 -> 1810): its record dialog exits by break.
+  - wm func_00f74f30 (188 -> 176): its confirm exit is `goto done23;`.
+- A plain `while (c)` is not rotated. jump1 copies its test to the top instead.
+
+**Exit-block placement** (loop.c):
+- A block is moved when it ends in an unconditional jump out of the loop and is preceded by a
+  conditional jump to the insn right after it.
+- It goes to the barrier before the jump target's label, at the target's loop level. When there is no
+  barrier there, it goes to the next one forward.
+- To keep a block in place:
+  - Enter the block through a label, such as an if/else join.
+  - Make its jump target lie inside the same loop. In wm func_00f71b68 (568 -> 554, cfdiff 0) a
+    `back1:` label inside the rotated mode2 exit, with `goto back1` from the row<0 path, does this.
+  - Put the exit code inside the loop, before the `continue` (wm func_00f6f2a8, 567 -> 553).
+- An outer `for(;;)` in place of a backward `goto` changes which barrier the blocks land at
+  (func_00f71b68, 581 -> 568).
+- jump1 inverts `if (c) goto quit; f(); goto wait;` and places the quit code right after the test.
+
+**An empty case for the balanced case tree:**
+- gcc 2.96 balances the case tree only when the case list has more than 2 nodes. A range such as
+  `case 1: case 2:` counts as one node.
+- wm func_00f6edd8 (167 -> 135) gets the original's tree for `case 0` and `case 1..2` from an added
+  `case 3: break;`.
+
+**Loop counters:**
+- A count-up `for (i = 0; i < n; i++)` with its own counter lets loop.c count down (`bnez`/`bgez`).
+- A running sum (`m += 38`) instead of `i * 38` keeps a multiply out of the loop
+  (wm func_00f51d18, 400 -> 334, cfdiff 0).
+- When every set of n is a constant, combine knows n >= 0 and emits `beq` instead of `blez`. A running
+  `n++` keeps the `blez`.
+
+**Pitfall: K&R CONTEXT_ONLY copies.**
+- A context copy written old-style, such as `CONTEXT_ONLY f32 cosf() { return 0; }` after the
+  prototype, is a definition with no prototype.
+- gcc then passes each f32 argument as a promoted double, so every call gets a `jal fptodp`
+  before it.
+- Write the copy with the prototype's parameters: `CONTEXT_ONLY f32 cosf(f32 x) { return 0; }`.
+  wm func_00f7ad38 went 616 -> 463.
+- In round 36 every other empty-paren CONTEXT_ONLY definition in nonmatchings was a no-argument
+  function.
+
 ## Results
 
 Kept up to date by the session that changes them (`make ovl-progress`).
