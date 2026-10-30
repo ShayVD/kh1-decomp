@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 530 -> 382, and the size now matches (3832). The target has an orphan beqzl n; break 7 next to the float fade at func_00f28ed8. That is a dead int division by n inside an inline float lerp: static inline f32 flerp25918(f32 a, f32 b, s32 i, s32 n) { s32 q = i / n; return (f32)i * (b - a) / (f32)n + a; } (see docs/overlays.md, orphan divide-by-zero check). Using it for the -100 fade too is worse (390). */
 /* score 530 (3808 vs 3832). Main-menu state machine: wait D_00FBAA90 == 3, ids[] from func_00f2ac10(n) >= 3, D_00FBB550 = index of D_00FBB330, three intro branches (func_001b9b78(3)/(4) and func_001bb370), then do { if (state == 4) ...; switch (state - 1) { 5 cases } } while (state) (jump table of 5), slide-out loop with n = D_00F878E0 and func_00f22d70. Lerps need n as a variable: v = (0 - 640) * i / n + 640. Moving the integer lerps into temps v/k before the func_00f21ef0 float call took it 644 -> 530. Left: register allocation of n/prev/id across the cases and some lerp temps; 24 bytes short. Round 28 wwm2. */
 extern s32 D_00FBAA90;
 extern s32 D_00FBAA68;
@@ -31,6 +32,11 @@ s32 func_00f26d50(s32, s32 *);
 s32 func_00f27a00(s32 *);
 s32 func_00f28158(s32 *);
 void func_00f22d70(void);
+
+static inline f32 flerp25918(f32 a, f32 b, s32 i, s32 n) {
+    s32 q = i / n;
+    return (f32)i * (b - a) / (f32)n + a;
+}
 
 void func_00f25918(void)
 {
@@ -104,7 +110,7 @@ void func_00f25918(void)
             }
             func_00f29500(0, 0x3600, D_00FBAA68);
             func_00f28448(i < 8 ? (0 - 640) * i / 8 + 640 : 0, 0, 128, ids);
-            func_00f28ed8(0, 0, 128, (f32)i * 100.0f / (f32)n + 0.0f);
+            func_00f28ed8(0, 0, 128, flerp25918(0.0f, 100.0f, i, n));
             func_001bfac8();
         }
         func_00f29418();
