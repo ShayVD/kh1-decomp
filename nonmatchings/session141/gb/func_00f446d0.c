@@ -1,3 +1,4 @@
+/* Round 42 wwm2: score 1324 -> 1280, port.py of the wm twin func_00f6b7c8 draft, with wm D_00FB4AFC mapped by hand to gb D_00F7037C. Earlier header below. */
 /* NEAR MISS 1405 words, score 1324 (5984 vs 6064 bytes). Structurally complete draft, not polished (time-boxed). Settings/option panel: builds a header item, D_00F7041C/2 row items, then 7 label+box item pairs via func_00f43388/func_00f444b8 (LABEL/BOX/POS/COL macros), then the cursor item; the inner loop refreshes box values from the func_001bc4e0() record (stride 96) and colours per D_00F82A34 until D_00F82AC0 or pad 0x6000. The call sequence matches the original call for call. Left: the original keeps depth in f21 and 0.0f in f20 (ours swaps them), different stack slots for the item arrays (orig: lab[14] at sp+0, box at sp+64.., rows at sp+96, flag at 128, wait at 132, head at 136), and lbu/lui addressing of the colour globals. */
 typedef struct {
     u8 x0, x1, x2, x3, x4, x5;
@@ -27,12 +28,12 @@ extern s32 D_00F7043C, D_00F70440, D_00F70444, D_00F70448;
 extern s32 D_00F7044C, D_00F70450, D_00F70454, D_00F70458;
 extern s32 D_00F70460, D_00F70464, D_00F70468, D_00F7046C;
 extern s32 D_00F70470, D_00F70474, D_00F70478, D_00F7047C;
-Item *func_00f43388(void);
+Item *func_00f43388(void); CONTEXT_ONLY Item * func_00f43388() { return 0; }
 void func_00f444b8(Item *, f32, f32);
-u8 *func_001bc4e0(void);
+u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 void func_0011d768(s32);
 void func_0024e468(s32);
-void func_001bfac8(void);
+void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
 void func_00f444d8(s32, s32);
 void func_00f43cf0(s32);
 
@@ -79,29 +80,29 @@ void func_00f43cf0(s32);
 
 void func_00f446d0(void) {
     Item *lab[16];
+    Item *cur;
+    s32 i, y, n;
     Item *box[8];
     Item *rows[8];
+    f32 depth;
+    Item *s15;
+    u8 *t;
+    Item *it;
     s32 flag;
     s32 wait;
     Item *head;
-    f32 depth;
-    Item *it;
-    Item *s15;
-    Item *cur;
-    s32 i, y, n;
-    u8 *t;
 
-    depth = D_00F702F0;
     wait = D_00F702F0;
+    depth = D_00F702F0;
     for (;;) {
         it = func_00f43388();
+        it->x5 = 15;
         it->x1 = 6;
-        head = it;
-        it->x0 = 2;
         it->xC = 1;
         it->x3 = 0;
-        it->x5 = 15;
         it->x10 = 0;
+        it->x0 = 2;
+        head = it;
         POS(it, D_00F70404, D_00F70408);
         it->xA = (D_00F7041C + 1) * D_00F70420;
         it->x8 = *(u16 *)&D_00F7040C;
@@ -110,15 +111,15 @@ void func_00f446d0(void) {
         y = D_00F70408 + D_00F70420 + D_00F70420;
         for (i = 0; i < D_00F7041C / 2; i++) {
             it = func_00f43388();
-            it->x1 = 3;
             it->xC = 2;
+            it->x1 = 3;
             it->x0 = 2;
-            it->x3 = 0;
             it->x5 = 15;
+            it->x3 = 0;
             it->x10 = 0;
             POS(it, D_00F70404 + 2, y);
-            rows[i] = it;
             it->xA = *(u16 *)&D_00F70420 - 1;
+            rows[i] = it;
             it->x8 = *(u16 *)&D_00F7040C - 4;
             COL(it, D_00F7043C, D_00F70440, D_00F70444, D_00F70448);
             func_00f444b8(it, 256.0f, depth);
@@ -129,11 +130,11 @@ void func_00f446d0(void) {
         lab[0] = it;
         it = func_00f43388();
         box[0] = it;
-        it->x5 = 4;
-        it->x1 = 4;
         it->x0 = 2;
-        it->xC = 3;
+        it->x1 = 4;
+        it->x5 = 4;
         it->x3 = 1;
+        it->xC = 3;
         it->x10 = 0;
         POS(it, D_00F70490 + 2, y);
         lab[1] = it;
@@ -144,21 +145,21 @@ void func_00f446d0(void) {
         s15 = it;
         lab[2] = it;
         BOX(it, 1, D_00F70490);
+        y += D_00F70420;
         box[3] = it;
         lab[3] = it;
-        y += D_00F70420;
         LABEL(it, 16);
         lab[4] = it;
         BOX(it, 1, D_00F70490);
+        y += D_00F70420;
         box[4] = it;
         lab[5] = it;
-        y += D_00F70420;
         LABEL(it, 17);
         lab[6] = it;
         BOX(it, 1, D_00F70490);
+        y += D_00F70420;
         box[5] = it;
         lab[7] = it;
-        y += D_00F70420;
         LABEL(it, 20);
         lab[8] = it;
         BOX(it, 1, D_00F70490);
@@ -169,20 +170,20 @@ void func_00f446d0(void) {
         lab[10] = it;
         BOX(it, 5, D_00F70490);
         box[1] = it;
-        lab[11] = it;
         y += D_00F70420;
+        lab[11] = it;
         LABEL(it, 19);
         lab[12] = it;
         BOX(it, 5, D_00F70490);
-        box[2] = it;
         lab[13] = it;
+        box[2] = it;
         cur = func_00f43388();
-        cur->x1 = 14;
-        cur->x0 = 2;
-        cur->xC = 3;
         cur->x3 = 0;
+        cur->xC = 3;
         cur->x5 = 15;
+        cur->x1 = 14;
         n = D_00F702DC;
+        cur->x0 = 2;
         cur->x10 = (s32)(func_001bc4e0() + n * 96 + 52);
         if (D_00F82ABC == 0) {
             cur->x1C = D_00F7045C;
@@ -191,11 +192,11 @@ void func_00f446d0(void) {
             cur->x1C = D_00F7045C + D_00F70424;
             cur->x20 = D_00F70408 + D_00F70428 + 4;
         }
-        cur->x14 = cur->x1C;
-        cur->x18 = cur->x20;
         flag = 0;
-        cur->x30 = 0.0f;
+        cur->x14 = cur->x1C;
         cur->x2C = 0.0f;
+        cur->x18 = cur->x20;
+        cur->x30 = 0.0f;
         COL(cur, D_00F70460, D_00F70464, D_00F70468, D_00F7046C);
         func_00f444b8(cur, 256.0f, depth);
         for (;;) {
