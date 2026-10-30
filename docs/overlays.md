@@ -572,6 +572,43 @@ The prefix goes on the base side, and the remaining index field is the one whose
 already in a register. Look for this when the target does `addu rX,base,giv` and then a small
 displacement, where our build uses a different giv with the whole offset in the displacement.
 
+### A load kept after float stores: a bitfield read through a struct with f32 fields (gb func_00f333f8, wm func_00f5a4f0)
+
+The setup block of f333f8 fills a local `OvlVec v[5]` from fields of `u8 *D_00F56DC0`. In the
+target, `ld v0,88(t1)` for v[3][1] comes after eleven f32 stores to v[] (and the f32 load at +136
+comes later still). Our build, in any statement order, hoisted the `ld` to the top of the block, as
+strict aliasing allows: a `u64` load and an `f32` store cannot alias. This changed the schedule,
+the FP register numbers and the ra/rb loop that follows (score 120).
+
+The read that matched is a bitfield of a struct view that also has an f32 field:
+
+```c
+typedef struct {
+    u8 pad0[88];
+    u64 lo : 32;
+    u64 fa : 4;
+    u64 fb : 28;      /* 28 bits wide: gives the target's andi 0xffff before andi 0xf */
+    u8 pad96[40];
+    f32 f136;
+} Wm333;
+v[3][1] = ((u16)((Wm333 *)D_00F56DC0)->fb & 0xF) * 200.0f;   /* was (u16)(*(u64 *)(p + 88) >> 36) & 0xF */
+```
+
+gcc then treats the read as one that may alias the f32 stores, so it stays below the stores that
+precede it in the source. The likely reason is that the bitfield read takes the struct's alias set,
+which contains f32 (not yet confirmed in alias.c). Variants that did not hold the load back:
+- a plain `u64 w88` member of the same struct;
+- `*(u64 *)&view->pad0[88]`;
+- `-fno-strict-aliasing`. It holds back every load, but it also splits the Box bitfield reads and
+  breaks the loop.
+
+With the struct read in place, guarded hill3 brought the score from 226 to 6. A brute force over the
+order of five zero stores to D_00F80960 then matched both twins.
+
+Look for this when the target loads a field (often a bitfield word) late, behind stores of another
+type, and our build hoists the load to the start of the block. Try reading it through a struct view
+that also has a field of the stored type.
+
 ### Session 141 rounds 37-38 (wwm2)
 
 - **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
