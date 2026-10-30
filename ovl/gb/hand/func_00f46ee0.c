@@ -1,7 +1,9 @@
-/* Round 53 wgb: score 71 -> 2, size-exact. Each colour read is a block of s32 locals declared r, a, b, g (first the col statement, then the func_001f9438 argument instead of the global RGBA). Left: in the second func_001fc308 call the original puts addu a2 before move a0; argument forms, an x+w temp, statement orders and hill3 240 s keep 2. Earlier header below. */
-/* Round 46 wwm2: score 77 -> 71, func_001f9438 and func_001fbcd8 declared s32. Earlier header below. */
-/* Round 41 wwm2: score 81 -> 77, port.py of the wm twin func_00f6dfd8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* 132 words / score 81 (676 vs 672). The call/argument structure is right, and declaring sum first gives the original's stack slots. Left: colour global address scheduling. The original emits a separate lui for each of D_00F7056C/68/70/64; ours shares one hi through a move. Tried six RGBA macro orders and every order of the x/y/w/col statements. */
+/* gb.x func_00f46ee0: matched by hand. */
+#include "ovl.h"
+
+/* gb.x func_00f46ee0: matched. Each colour read is a block of s32 locals (r, a, b, g), and w + 8 goes into its own local before the func_001fc308 calls (found by decomp-permuter, wgb round 54). */
+#include "ovl.h"
+
 typedef struct {
     u8 pad0[3];
     s8 x3;
@@ -43,6 +45,7 @@ void func_00f46ee0(Obj *o, void *ctx) {
     s32 x;
     s32 y;
     s32 w;
+    s32 w8;
 
     n = func_001bc500();
     lst = func_001bc4d0();
@@ -54,11 +57,12 @@ void func_00f46ee0(Obj *o, void *ctx) {
     x = D_00F70558;
     y = D_00F7055C;
     w = D_00F70560;
+    w8 = w + 8;
     func_001fc308(ctx, x, y + D_00F70578, 0, D_00F70574, 17, 0, col, col);
     func_001fc308(ctx, x + w, y + D_00F70578, 0, D_00F70574, 18, 0, col, col);
     {
         s32 r = D_00F70564, a = D_00F70570, b = D_00F7056C, g = D_00F70568;
-        func_001f9438(ctx, 2, x + (w + 8) / 2, y, D_00F71198[lst[D_00F82AC8 * 16 + 5]], o->x5, RGBA(r, g, b, a));
+        func_001f9438(ctx, 2, x + w8 / 2, y, D_00F71198[lst[D_00F82AC8 * 16 + 5]], o->x5, RGBA(r, g, b, a));
     }
     func_001f9438(ctx, o->x3, D_00F7057C, D_00F70584, 114, o->x5, RGBA(o->r, o->g, o->b, o->a));
     func_001fbcd8(ctx, 1, 4, 0, D_00F70580, D_00F70588, sum, 0, RGBA(o->r, o->g, o->b, o->a));
