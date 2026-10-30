@@ -624,6 +624,22 @@ func_00f549d0, wm func_00f46cb8 (109 -> 83), and wm func_00f30d48 (13 -> 8 words
 gains (wm draft to gb with `port.py wm FUNC gb FUNC`, for example gb func_00f20518 72 -> 2 words). wwm2's
 drafttwins.py had already applied most of those before this round was committed.
 
+**Known pitfall (wwm2, round 48): what a reorderer must treat as a barrier.** wwm2's scratch reorderer
+(hill3o, rounds 41-47) fixed only lines with `{` or `}`. It moved `break`, `return`, `goto`, `case`,
+`default` and labels, and it did not count `x++`, `&x`, or the assignment in a one-line `if (c) x = 0;` as
+writes. 33 commits on 27 drafts were wrong (for example wm func_00f7c880 at 36 had moved a `break` above two
+stores). Round 48 reverted 26 of them (wm func_00f3a640's current order is valid), and 6 gb drafts ported from them, to their last valid order. Matched functions were not affected. Any tool
+that reorders statements must keep all of the following in place and never move anything across them:
+braces and control headers (`if`, `else`, `for`, `while`, `do`, `switch`), `break`, `continue`,
+`return`, `goto`, `case`, `default`, labels (including `L: x = 0;`), and the end of a statement that spans
+several lines. It must count as writes the assignments inside a one-line `if`, `x++`/`x--` anywhere in an
+expression, every target of a chained assignment (`a = b = 0`), and any local whose address is taken
+(`&x`). Calls are barriers, and memory needs the alias rules above. tools/ovl/hill3.py does all of this,
+including chained assignments, labels and multi-line statements since round 48. Use it, or run its
+`--check` on the result of any other reorderer. The r35 hill3.py copies (wwm2 r35, wwm1 w3/w4) keep
+control lines and labels in place but miss chained assignments, `x++` inside an expression, `L: stmt;`,
+multi-line statements, calls to names other than `func_`/`sce`/`Plat`, and pointer-against-global aliasing.
+
 ## Results
 
 Kept up to date by the session that changes them (`make ovl-progress`).
