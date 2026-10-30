@@ -1,3 +1,4 @@
+/* Round 62 (wwm2): score 138 -> 124 (640 vs 640 bytes): the c[] stores one per line, reordered by hill3 (500 s). Left: the target keeps a / 2 << 24 in c[6][0] and reloads it twice (lw 112(sp)) where ours keeps it in s4, and one li 20 is shared there. A d = 20 local or a g = 20 - f local does not help, and no build mode changes the code. */
 /* dktitle.x func_00f23aa8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 144 -> 138 with sclimb.py. */
 
 void func_00206370(void *, s32, s32, s32, s32, s32, s32, s32, s32);
@@ -15,14 +16,20 @@ s32 func_00f23aa8(void *o, s32 x, s32 a) {
     if (p > 100) p = 100;
     c[6][0] = a / 2 << 24;
     i = p / 20;
-    f = p % 20;
     j = i + 1;
-    c[0][0] = D_00F26E70[i * 3 + 0]; c[0][1] = D_00F26E70[j * 3 + 0];
-    c[1][0] = D_00F26E70[i * 3 + 1]; c[1][1] = D_00F26E70[j * 3 + 1];
-    c[2][0] = D_00F26E70[i * 3 + 2]; c[2][1] = D_00F26E70[j * 3 + 2];
-    c[3][0] = D_00F26E88[i * 3 + 0]; c[3][1] = D_00F26E88[j * 3 + 0];
-    c[4][0] = D_00F26E88[i * 3 + 1]; c[4][1] = D_00F26E88[j * 3 + 1];
-    c[5][0] = D_00F26E88[i * 3 + 2]; c[5][1] = D_00F26E88[j * 3 + 2];
+    f = p % 20;
+    c[0][0] = D_00F26E70[i * 3 + 0];
+    c[0][1] = D_00F26E70[j * 3 + 0];
+    c[1][0] = D_00F26E70[i * 3 + 1];
+    c[1][1] = D_00F26E70[j * 3 + 1];
+    c[2][1] = D_00F26E70[j * 3 + 2];
+    c[4][0] = D_00F26E88[i * 3 + 1];
+    c[4][1] = D_00F26E88[j * 3 + 1];
+    c[5][0] = D_00F26E88[i * 3 + 2];
+    c[3][0] = D_00F26E88[i * 3 + 0];
+    c[3][1] = D_00F26E88[j * 3 + 0];
+    c[2][0] = D_00F26E70[i * 3 + 2];
+    c[5][1] = D_00F26E88[j * 3 + 2];
     top = (c[0][0] * (20 - f) + c[0][1] * f) / 20 | c[6][0] | ((c[2][0] * (20 - f) + c[2][1] * f) / 20 << 16 | (c[1][0] * (20 - f) + c[1][1] * f) / 20 << 8);
     bot = (c[3][0] * (20 - f) + c[3][1] * f) / 20 | c[6][0] | ((c[5][0] * (20 - f) + c[5][1] * f) / 20 << 16 | (c[4][0] * (20 - f) + c[4][1] * f) / 20 << 8);
     func_00206370(o, 0, 0, 512, 319, top, top, bot, bot);
