@@ -1021,3 +1021,69 @@ hit the stub callee sits at a lower address than the function.
   - Also left: the missing b of the first item case.
 - Still open, control flow right but registers worse: f26e80's row loop (539) and f25918's slide loop
   (376).
+
+## Round 36
+
+Scope: the wm high half (0xf50000 and up), ordered by `cfdiff.py --scan wm` distance relative to size.
+I skipped f3a640, f6dfd8, f5e540 and f696a0. None of the drafts below matches yet. All scores are
+from `hand.py try`.
+
+Rules I worked out (tested in /tmp/claude-0/s141/wwm1/r36/t):
+- Loop rotation (stmt.c expand_end_loop): a `for(;;)` gets b-entry (`b test; body; test at the
+  bottom`) when a `break` comes within about 30 insns of the top. The code moved to the bottom runs
+  from the top through the last such break. This works at any nesting depth; my earlier note that it
+  needs top level was wrong.
+  - A `goto` to a label after the loop does not count, so the loop stays unrotated (test at top, `b`
+    back).
+  - So when the original has one exit rotated and another not, write the first as `break` and the
+    second as `goto`.
+  - A plain `while (c)` gets its test duplicated at the top by jump1 instead of rotated.
+- loop.c exit-block moves: a block that ends in an unconditional jump out of the loop, and is
+  preceded by a conditional jump to the insn right after it, is moved to the barrier before the
+  target label at the target's loop level (or to the next such barrier forward).
+  - The move is blocked when the block is entered through a label, such as an if/else join.
+  - It is also blocked when the jump target lies inside the same loop. A label placed inside the
+    rotated exit code (f71b68 `back1:`) keeps such blocks inline.
+  - An outer `for(;;)` in place of a backward `goto` changes which barrier the blocks land at.
+- jump1 inverts `if (c) goto quit; f(); goto wait;` and places the quit code right after the test.
+- Case trees: gcc balances only when there are more than 2 case nodes. An empty `case 3: break;`
+  gave f6edd8 the original tree for case 0 and cases 1..2.
+- Counters: a count-up `for (i = 0; i < n; i++)` with a fresh i lets loop.c count down (bnez or
+  bgez). A running sum (`m += 38`) instead of `i*38` keeps the giv out of the loop.
+  - When every set of n is a constant, combine knows n >= 0 (beq instead of blez). A running `n++`
+    keeps the blez.
+- K&R CONTEXT_ONLY definitions such as `f32 cosf() {...}` after the prototype make the call pass a
+  promoted double through fptodp. A prototyped copy fixes it (f7ad38, 616 -> 463).
+  - I checked all 70 empty-paren CONTEXT_ONLY definitions in nonmatchings: they are all no-argument
+    functions, so no other draft has this bug.
+- Pad struct bug: `{ u8 pad[8]; u32 x8; u32 x10; }` puts x10 at 0xc. The correct layout is
+  `{ u8 pad[8]; u32 x8; u32 xc; u32 x10; }`. I fixed it in f71b68 and f6f2a8.
+  - gb/func_00f4aa70.norlo.c and gb/func_00f481b0.c still have the bug. They are not mine, so I left
+    them.
+
+Gains (score before -> after):
+- f75d80 (2412 -> 1796, 5 commits):
+  - the inner dialog as a bottom-test goto loop;
+  - the sel==0 state code placed first;
+  - a count-up record loop;
+  - the record dialog and the last selA dialog exit by break.
+  - Left: register-level crossjump differences, and the size is 6176 vs 6344 bytes.
+  - Variants D1 (cfdiff 29, 2036) and D5 (cfdiff 20, 2009; hill3 2005) are structurally closer but
+    score worse; they are in /tmp/claude-0/s141/wwm1/r36/.
+- f71b68 (581 -> 548): outer loop, rotated mode2, `back1:` label, Pad fix and hill3 order. The branch
+  sequence is identical.
+- f6f2a8 (709 -> 505): Pad fix, cancel exit by goto, cancel code inside the select loop, and the dialog
+  wait loop holding both exit arms. hill3 found nothing better.
+  - Variant E (a running n in the MAKE calls) gets cfdiff 0 but scores 1105, or 649 after hill3.
+- f74f30 (190 -> 172): the clamp against n - 8, the confirm exit by goto, and if/else stores. cfdiff 0.
+- f51d18.norlo (400 -> 334): shared cancel tail, own fade counter, and a running sum. cfdiff 0.
+- f6edd8 (167 -> 135): shared bad-slot tail and the empty case 3.
+- f6b7c8 (1086 -> 1054): nonzero-first t[7] test and a count-up wait loop.
+  - Variant E (if/else box stores) gets cfdiff 0 but scores 1094.
+- f7ad38.nofill (616 -> 463): prototyped cosf and sinf.
+
+Tried without gain:
+- f6cfa0: f(2) block placement.
+- f7d0a8: pointer-select forms (if-conversion).
+- f73570: case tree. The target's left subtree is unbalanced and I could not explain it.
+- f6d810: duplicating the win block. The crossjump difference is at register level.
