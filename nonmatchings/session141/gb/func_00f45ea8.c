@@ -1,8 +1,5 @@
+/* drafttwins.py: score 170 -> 164, port.py of the wm twin func_00f6cfa0 draft. Earlier header below. */
 /* Round 46 wwm2: score 178 -> 170, hill3o statement order. Earlier header below. */
-/* Round 46 wwm2: score 180 -> 178, func_00f22f08 declared s32. Earlier header below. */
-/* Round 41 wwm2: score 216 -> 180, port.py of the wm twin func_00f6cfa0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* gb.x func_00f45ea8 near miss: 307 words differ, score 216 (ours 2176 bytes, original 2160). Port of wm func_00f6cfa0 (nonmatchings/session141/wm) via tools/ovl/port.py, at the same score; see that file for the findings and what is left. */
-/* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00F71148/D_00F71150 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00F702F0) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct Win {
     s8 b0, b1, b2, b3, b4, b5, b6, b7;
@@ -70,57 +67,57 @@ s32 func_00f45ea8(void)
 {
     Win *w[6];
     s16 lst[6];
-    s8 codes[6];
-    Win *w2;
-    s32 t;
+
     s16 *pl;
-    Win *w3;
-    Ent *p;
     Win **pw;
     s8 *pc;
+    s8 codes[6];
+    Win *w2;
+    Win *w3;
     s32 i, k, sel, old, r;
+    Ent *p;
+    s32 t;
     s32 y;
-
     t = D_00F702F0;
     if (func_00f20018()) {
         D_00F71160.v[0] = 227;
     } else {
         D_00F71160.v[0] = 2;
     }
-    pl = lst;
     sel = 0;
-    lst[0] = 1;
+    pl = lst;
     if (D_00F70734 >= 0) sel = D_00F70734;
+    lst[2] = 9;
     lst[5] = 13;
     lst[1] = 3;
-    pw = w;
-    codes[0] = 1;
     codes[1] = 2;
+    lst[0] = 1;
+    codes[0] = 1;
     codes[2] = 5;
-    lst[2] = 9;
+    pw = w;
     D_00F82998.v[0] = D_00F71160.v[0];
     lst[3] = 11;
-    codes[5] = 9;
     lst[4] = 213;
     codes[3] = 6;
     D_00F82998.v[1] = D_00F71160.v[1];
     D_00F82998.v[2] = D_00F71160.v[2];
-    y = D_00F703E8;
+    codes[4] = 8;
     D_00F82998.v[3] = D_00F71160.v[3];
     D_00F82998.v[4] = D_00F71160.v[4];
+    codes[5] = 9;
     D_00F82998.v[5] = D_00F71160.v[5];
-    codes[4] = 8;
     D_00F702D0 = codes[sel];
+    y = D_00F703E8;
     for (i = 0; i < 6; i++) {
         *pw = func_00f43388();
         (*pw)->b0 = 1;
         (*pw)->b1 = 0;
         (*pw)->b2 = 2;
         (*pw)->b3 = 0;
+        (*pw)->a = (*pw)->at = 0;
         (*pw)->hC = 1;
         (*pw)->x10 = *pl;
         (*pw)->tx = (*pw)->x = D_00F703E4;
-        (*pw)->a = (*pw)->at = 0;
         (*pw)->y = (*pw)->ty = y;
         (*pw)->h8 = D_00F703F0;
         if (i == sel) {
@@ -129,8 +126,8 @@ s32 func_00f45ea8(void)
         } else {
             (*pw)->b4 = 0;
         }
-        y += D_00F703EC;
         pl++;
+        y += D_00F703EC;
         pw++;
     }
     if (D_00F829DC == 0) {
@@ -183,8 +180,8 @@ top:
             sel++;
             if (sel >= 6) sel = 5;
         }
-        w2->x10 = D_00F82998.v[sel];
         pw = w;
+        w2->x10 = D_00F82998.v[sel];
         for (i = 0; i < 6; i++) {
             if (i == sel) {
                 (*pw)->b4 = 1;
@@ -198,21 +195,21 @@ top:
         if (sel != old) func_0011d768(1);
         func_0024e468(1);
     }
-    r = codes[sel];
     D_00F70734 = sel;
+    r = codes[sel];
     switch (r) {
-    case 1:
-    case 7:
+        break;
     case 8:
-    case 5:
-        break;
-    case 4:
     case 3:
+    case 1:
+    case 4:
     case 6:
-        D_00F82AC0 = 1;
-        break;
     case 2:
+        break;
     case 9:
+    case 7:
+        D_00F82AC0 = 1;
+    case 5:
         p = func_001bc4e0();
         p = &p[func_001be278() + 1];
         if (p->aA & 0xF) {
@@ -233,8 +230,8 @@ top:
                         for (;;) {
                             u32 b = D_002C5AD0.x8;
                             if (b & 0x2000) {
-                                func_0011d768(2);
                                 break;
+                                func_0011d768(2);
                             }
                             if (b & 0x4000) {
                                 func_0011d768(3);
