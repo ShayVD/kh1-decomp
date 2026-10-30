@@ -377,6 +377,7 @@ int main(int argc, char **argv) {
         kh1_dma_vu1 = getenv("KH1_HOST_VU1") && atoi(getenv("KH1_HOST_VU1")); /* session 137v: the 3D */
         kh1_vu1_verbose = kh1_dma_vu1 ? atoi(getenv("KH1_HOST_VU1")) - 1 : 0;
         if (getenv("KH1_HOST_VU1TR")) kh1_vu1_tr = atoi(getenv("KH1_HOST_VU1TR")); /* 0 / 1 / 2: checked */
+        if (getenv("KH1_HOST_VU1NAT")) kh1_vu1_native = atoi(getenv("KH1_HOST_VU1NAT")); /* session 150: vu1_nat.h */
         if (getenv("KH1_HOST_VU1DUMP")) { /* DIR:N, host/port/vu1.c's dump_run */
             static char dir[200];
             char *c;

@@ -23,6 +23,8 @@
  *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
  *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
  *                             interpreter only; 2 both, compared (slow; differences go to the log)
+ *       vu1nat=N              session 150: 1 (the default) runs the programs written by hand as C
+ *                             (host/port/vu1_nat.h, P18 so far) in place of their translation; 0 the translation
  *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
  *                             ("kh1-gxm: shadertest" lines; gxm.c)
  *       shacc_restart=1       session 137v: restart the shader compiler when a shader fails (off: hangs Vita3K)
@@ -325,6 +327,7 @@ extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 extern volatile u32 kh1_vita_us_finish_at[4], kh1_vita_finishes_at[4]; /* host/vita/gxm.c, session 147d */
+extern volatile u32 kh1_vita_pend_in, kh1_vita_pend_out, kh1_vita_pend_nowait; /* host/vita/gxm.c, session 150 */
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
@@ -399,6 +402,14 @@ static int watchdog(SceSize args, void *argp) {
                  kh1_vita_finishes_at[1] - nfat0[1], (kh1_vita_us_finish_at[2] - fat0[2]) / 1000,
                  kh1_vita_finishes_at[2] - nfat0[2], (kh1_vita_us_finish_at[3] - fat0[3]) / 1000,
                  kh1_vita_finishes_at[3] - nfat0[3]);
+            { /* session 150: the blocks of uploads into targets that land in a target's pixels, and those outside */
+                u32 pin = kh1_vita_pend_in, pout = kh1_vita_pend_out, pnw = kh1_vita_pend_nowait;
+                kh1_vita_pend_in -= pin;
+                kh1_vita_pend_out -= pout;
+                kh1_vita_pend_nowait -= pnw;
+                vlog("kh1-vita: uploads into targets: %u blocks in a target's pixels, %u outside; %u writes with no wait "
+                     "for the GPU\n", pin, pout, pnw);
+            }
             /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
             vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
                  "slowest frame %u.%u ms\n", (us_record - rec0) / 1000, (us_frame - frame0) / 1000,
@@ -527,6 +538,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
         else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
         else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
+        else if (strcmp(line, "vu1nat") == 0) kh1_vu1_native = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -639,7 +651,7 @@ int main(int argc, char **argv) {
         else
             vlog("kh1-vita: disc image %s\n", iso);
     }
-    vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
+    vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), vu1nat=%d, pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vu1_native, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
      * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */
     if (kh1_host_trace < 2) {

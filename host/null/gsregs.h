@@ -59,6 +59,9 @@ void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n);
 /* a GIF tag starts: the PACKED Q goes back to 1.0, and with PRE, PRIM is written from the tag */
 void kh1_gs_giftag(int pre, u32 prim);
 const KH1GsState *kh1_gs_state(void);
+/* session 150: moves on every write that changes a state register's value (set()) and on kh1_gs_reset: equal
+ * values twice, nothing in the state changed in between */
+extern u32 kh1_gs_gen;
 /* the distinct draw states since the last kh1_gs_reset / kh1_gs_clear_draws, in the order first
  * drawn (at most 256 kept; the kicks of a state past them go to KH1GsState.lost).  Fills up to
  * max and returns the count. */

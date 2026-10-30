@@ -1256,6 +1256,128 @@ give the same state and kicks as the interpreter; vu1neon_test now makes a third
 c = +-a*b, some a bit off) and catches the Z weights reversed or an "exact" claimed for every ADD or MUL.
 **Not yet measured on a Vita** (3d-zr): the `vu1 programs:` line's P13 / P18 ns a pair (~49 / ~51).
 
+## P18 as hand-written C (session 150)
+
+The first step of running the VU1's vertex work natively: P18 (the 3D renderer's main vertex program, about a
+third of the game thread's VU1 time in the Dive) written by hand as C, `host/port/vu1_nat.h`, included by
+vu1.c after the FMAC helpers. It runs in place of the translation when the micro memory holds P18 and the run
+starts at 007 (`vu1nat=0` on the Vita / `KH1_HOST_VU1NAT=0` on the host goes back to the translation; vu1tr=2
+compares it with the interpreter as it does the translation).
+
+What P18 does, from 007: it reads a record stream at TOP. Op 0 loads a matrix into one of three slots (vf05-08,
+vf12-15, vf19-22). Op 1 is a GIF tag and z vertices, each a qword whose w picks the slot, the position and the
+STQ. Anything else ends the stream. Each vertex: the slot's matrix times the position, Q = 1 / w, xyz and STQ
+times Q, the screen edge from the last vertex, the z of its cross product with the edge before (the operands
+swapped on alternate vertices) whose sign is the ADC bit, and XYZ to 12.4. Out at TOP + 0x1E0: the tag, then
+STQ, RGBA (vf01) and XYZF2 per vertex; at the end the EOP word and the kick.
+
+It is **bit-exact**, not an approximation: every FMAC is the same NEON operation with the same fin() / fout()
+clamps as the translation's helper, Q is qop()'s, and the MAC flag is vu_ek()'s with the scalar form where that
+answers 0. What it saves:
+
+- The registers stay in NEON registers across a vertex instead of being stored and reloaded at every
+  instruction (on the A9 a load of what NEON just stored waits for the store).
+- Values the loop makes are already fout()'s (finite, no denormal), so fin() is applied only to what comes from
+  VU memory or the registers the run starts with.
+- The cross product's MSUB is needed in full only for the run's last vertex (its MAC flag and vf30 are what the
+  run leaves behind). Every other vertex needs only z's sign, which NEON gives exactly unless z or its product is
+  0; those go through vu_ek() as before. The last vertex is redone in full at the end.
+- The VU's branches that pick the matrix, the per-instruction counting (the run's pair and cycle counts are
+  added up per record instead, the same totals), and qop()'s call.
+
+Checked offline with the session 149 replayer: all 3,397 dumped P18 runs (two dump sets) give the same
+registers, VU memory, Q / MAC / I, pair and cycle counts and kicks as the translation. ARM instructions over the
+2,790 runs of the denser set: translation ~50.7M, native ~31.4M (-38%). The bigger saving on the Vita should be
+the memory round trips, which an instruction count does not show; the `vu1 programs:` line's P18 time per run
+measures it (**not yet measured on a Vita**).
+
+A full ARM build of the host runner (vitasdk-independent, `make vita-armcheck`) over 6,500 frames of
+dive_en.txt under qemu-arm gives the same 130 frame digests as main, and the same VU1 run, pair, cycle, kick
+and translated counts in every `vu1 frame` line. P18 runs from 000 (its setup) still go to the translation.
+
+## P13 as hand-written C (session 150)
+
+3d-zt (P18 native) measured on the Vita: P18 40 -> 25.5 ns a pair (-36%), close to its -38% in ARM instructions,
+so the instruction count is a fair guide on the A9. The Dive's frame rate stayed ~14.6 pictures a second: P18 was
+~3% of the game thread there, P13 and P0 most of the VU1 time. Keeping the translation's VFs in local variables
+(a quick transform of vu1_tr.c in scratch) changed P0 and P13 by under 1%, so the programs get written by hand.
+
+P13 (`nat_13` in vu1_nat.h) is the skinned renderer, from 006. Its records: op 0 a matrix (w 0: into slot z; w 1:
+this record is the bone palette; else nothing), op 1 a GIF tag and z vertices, op 2 a stream of bone indices
+(the x y z w words of its qwords, read one at a time through a JR whose target names the word), anything else the
+end. A vertex is (-, -, -, n), n pre-weighted positions and STQ. Each position goes through its index's matrix
+(0 / 1 the slots, 0x100 + k the palette's k-th, loaded into slot 2) and the products are summed in ACC, then
+vf28 = ACC + vf00 * I with I 0 (a -0 in ACC becomes +0). Then as P18: Q, STQ, the screen edge, the ADC from the
+cross product's sign, plus a guard band: CLIPW of (x, y, z / 4096 through 20.12) - 2046 against 2046, and the
+ADC also when any of the last three vertices is outside it (FCAND 0x3FFFF).
+
+The same savings as P18 (registers in NEON, fin() only on what comes from memory, the cross product's MSUB in
+full only for the run's last vertex), plus the slot matrices fin()'d once until a load replaces them. All 2,035
+dumped P13 runs (both sets) give the same registers, VU memory, Q / MAC / I / clip flags, pair and cycle counts
+and kicks as the translation. ARM instructions over the 1,657 runs of the denser set: 41.8M -> 24.2M (-42%).
+
+## P0 as hand-written C (session 150)
+
+3d-zu (P13 native too) on the Vita: P13 37.3 -> 21.9 ns a pair (-41%); the Dive 15.7 pictures a second over frames
+1,500-13,000 (zt 14.2, zr 14.9 over the same stretch). P0 is now ~25% of the game thread on its own.
+
+P0 (`nat_0`, from 00c and from 04e, its branch there) is the map renderer: a strip of vertices (the position with
+its flags in w, the colour as integers, ST in 20.12). It is software-pipelined: each pass takes one vertex into view
+space (vf13-16), the one before into clip space (vf01-04), projects the one before that, and tests the triangle of
+the last three view-space vertices. CLIPW of each against its w (each vertex's six bits are worked out once here
+and shifted in, where the program does three CLIPWs a pass); the vertex's flags ANDed with the MAC flags of the
+cross product's z times the flags word as a float; the ADC (XYZF2's w to vi12) for a back face, a vertex flagged 0,
+or a triangle wholly outside one plane (the FCOR chain). It is written pass for pass in the translation's order.
+
+A triangle that crosses a plane goes to the program's clipper (05e-111, `nat_clip`): the triangle cut against
+five planes in turn (the polygon, up to nine vertices, between the buffers at 58 and 80; 11a an edge, 140 / 15b
+where it crosses), then into clip space and kicked as a fan of its own at 30, the fan's triangles tested for a
+back face as the strip's are. nat_0 puts its registers back into vf[] / vi[] / acc, runs the clipper on them
+with the translation's own operations (vu_op() and the rest, in its order; only ~1.5% of triangles get here),
+and takes them back. The clipper's MAC flag is that of its last FMAC whose flag the program can read (123 / 131,
+15a / 175, 0fa); its stalls are 078, 0e8 (WAITQ), 7 for each crossing worked out, and 1 at 107 when the last
+vertex skipped the back-face test (0fd's DIV still running).
+
+All 4,467 dumped P0 runs match the translation (registers, VU memory, flags, counts, kicks); a 6,500-frame
+qemu-arm run gives main's 130 digests and vu1 lines. ARM instructions over the 3,665 runs of the denser set:
+108.2M (translation) -> 79.1M (native, the clipping runs given up and run again by the translation) -> 71.5M
+(the clipper native too, -34% on the translation).
+
+## The GS worker after the native VU1 programs (session 150)
+
+zv on the Vita (P0's main loop native): 15.8 pictures a second over frames 1,500-13,000, flat on zu's 15.75,
+though VU1 went from 14.7 to 13.0 ms a frame (P0 68 -> 46 ns a pair). The game thread's wait for the GS worker
+went from 2.8 to 5.9 ms a frame: the worker (second core) is busy ~28 ms of each ~31 ms frame, so it sets the
+rate now. Under qemu-arm (frames 5,000-5,060, `vcpu 2`) its time is per vertex and per triangle: gs_kick, the
+prim hook's state compare (kh1_pipes_prim), draw_into's target search and page marking, the ring copies.
+
+Cuts, each giving main's 130 digests and vu1 lines over 6,500 frames:
+- `kh1_gs_gen` (gsregs.c) moves when set() changes a register's value; kh1_pipes_prim skips building and
+  comparing KH1DrawRegs while it and PRIM are what they were at the last compare.
+- draw_into: the last target found for a colour / a Z surface tried first; each target's page list kept for
+  its columns and height (the Dive marks its targets again after each of its many uploads).
+- kh1_gsmem_draw: the same registers again with no upload, copy or pixel write since only count (draw_into
+  would return early for each target).
+- kh1_gs_packed_stq_xyzf: a TRISTRIP's vertex past its first four, with the draw state found, does gs_kick's
+  steps for that case only.
+
+zx on the Vita: still 15.7 pictures a second; VU1 12.3 ms and the worker 26.9 ms a frame, but the three cores
+are each ~27 ms busy now: the worker waits 5 ms a frame for the recording on the GPU thread, which waits ~7.5
+ms a frame in sceGxmFinish before writing uploads into targets (pend_flush, one a frame in the Dive).
+3d-zy: pend_add keeps only the blocks that land in the target's pixels (pend_write dropped the rest after the
+wait), and marks the target pending only when one does; the log's `uploads into targets:` line counts both.
+zy2 on the Vita (with main's sound fix): 15.7 again; 87% of the blocks land in the target's pixels, and the
+wait stayed ~5 ms a frame. The GXM mock's calls for frame 4,999 of the Dive show why: the flush is at the
+begin of the shadow pass (target 2, loaded, with CLUT-sized uploads into it), and neither target 2 nor 3
+(the slot capture's, also pending) had been drawn or sampled by any scene of the frame yet. So each target
+now keeps the last scene that drew or sampled it (`used`, from a count of scenes begun), and pend_flush
+waits only when one of its targets was used by a scene sceGxmFinish has not yet covered; a CLUT readback
+waits only when its target was. The log's line adds the flushes that needed no wait. The mock (scenes run
+late, at sceGxmFinish) gives the same display and 3D target hashes every 50th frame over 6,500 Dive frames.
+
+The worker's instructions in those frames: 336M -> 257M (-23%). A word-at-a-time copy for small ring ops was
+tried and dropped: more instructions than the library's NEON memcpy.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

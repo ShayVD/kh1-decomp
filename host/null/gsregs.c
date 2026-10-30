@@ -53,6 +53,7 @@ static s32 gs_vx0, gs_vw = 8192; /* session 93: the view the scissor rule reads 
  * environment the game sends writes (renderer-spec 5.1) */
 void kh1_gs_reset(void) {
     memset(&gs, 0, sizeof gs);
+    kh1_gs_gen++;
     gs.prmodecont.lo = 1;
     gs_q = 0x3F800000;
     gs_xshift = 0;
@@ -274,11 +275,14 @@ static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
     if (i == 0 || i == 1 || i == 3 || i == 6) gs.nvert = 0;
 }
 
+u32 kh1_gs_gen;
+
 static void set(KH1GsReg *r, u32 lo, u32 hi) {
     if (r->lo == lo && r->hi == hi && cur != ~0u && !view_moved) {
         relook = 1;
         return;
     }
+    if (r->lo != lo || r->hi != hi) kh1_gs_gen++;
     r->lo = lo;
     r->hi = hi;
     cur = ~0u;
@@ -373,6 +377,8 @@ void kh1_gs_packed(u32 desc, const u32 *q) {
 }
 
 void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {
+    u32 xy, p;
+    int draw;
     for (; n; n--, q += 12) {
         gs_q = q[2];
         gs.st.lo = q[0];
@@ -380,7 +386,39 @@ void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {
         gs.rgbaq.lo = (q[4] & 0xFF) | (q[5] & 0xFF) << 8 | (q[6] & 0xFF) << 16 | (q[7] & 0xFF) << 24;
         gs.rgbaq.hi = gs_q;
         /* XYZF2, or XYZF3 with ADC (no drawing): kh1_gs_write's 0x04 / 0x0C */
-        gs_kick(!(q[11] >> 15 & 1), gs_xs((q[8] & 0xFFFF) | (q[9] & 0xFFFF) << 16), q[10] >> 4 & 0xFFFFFF, q[11] >> 4 & 0xFF);
+        draw = !(q[11] >> 15 & 1);
+        xy = gs_xs((q[8] & 0xFFFF) | (q[9] & 0xFFFF) << 16);
+        p = gs_prim();
+        if (cur < DRAWS && !relook && gs.nvert == 3 && (p & 7) == 4 && nsv == 4) {
+            /* session 150: a TRISTRIP's vertex past its first four with the state found (most of the VU1 kicks):
+             * gs_kick's steps for that case only */
+            KH1GsDraw *k = &draws[cur];
+            KH1GsContext *c = &gs.ctx[p >> 9 & 1];
+            s32 x = (s32)(xy & 0xFFFF) - (s32)(c->xyoffset.lo & 0xFFFF);
+            s32 y = (s32)(xy >> 16) - (s32)(c->xyoffset.hi & 0xFFFF);
+            k->kicks++;
+            if (x < k->x0) k->x0 = x;
+            if (x > k->x1) k->x1 = x;
+            if (y < k->y0) k->y0 = y;
+            if (y > k->y1) k->y1 = y;
+            vq[0] = vq[1];
+            vq[1] = vq[2];
+            vq[2].xy = xy;
+            vq[2].z = q[10] >> 4 & 0xFFFFFF;
+            vq[2].f = q[11] >> 4 & 0xFF;
+            vq[2].uv = gs.uv.lo;
+            vq[2].rgba = gs.rgbaq.lo;
+            vq[2].q = gs.rgbaq.hi;
+            vq[2].s = gs.st.lo;
+            vq[2].t = gs.st.hi;
+            if (draw) {
+                if (kh1_gs_prim_hook) kh1_gs_prim_hook(p, vq, 3, cur);
+                k->draws++;
+                kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
+            }
+            continue;
+        }
+        gs_kick(draw, xy, q[10] >> 4 & 0xFFFFFF, q[11] >> 4 & 0xFF);
     }
 }
 

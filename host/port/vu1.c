@@ -1088,6 +1088,13 @@ typedef struct {
 static const TrProg tr_progs[1] = { { 0, 0, 0, 0 } };
 #define TR_PROGS 0
 #endif
+#include "vu1_nat.h"
+/* the program's C: the hand-written one (vu1_nat.h) where there is one for this entry and case, else the translation */
+static int tr_go(int prog, u32 pc) {
+    int (*f)(u32) = nat_run(tr_progs[prog].num);
+    if (f && f(pc)) return 1;
+    return tr_progs[prog].run(pc);
+}
 static u32 tr_us[KH1_VU1_PROGS], tr_runs[KH1_VU1_PROGS], tr_pairs[KH1_VU1_PROGS];
 int kh1_vu1_prog_stats(int i, int *num, u32 *us, u32 *runs, u32 *pairs) {
     if (i < 0 || i >= TR_PROGS || i >= KH1_VU1_PROGS) return 0;
@@ -1156,7 +1163,7 @@ static void tr_check(int prog, u32 pc) {
     tr_out = 0;
     tr_hash = 2166136261u;
     tr_lost = 0;
-    ok = tr_progs[prog].run(pc);
+    ok = tr_go(prog, pc);
     tr_save(&tr_b);
     st = keep;
     tr_load(&tr_a);
@@ -1231,7 +1238,7 @@ static void start_run(u32 pc) {
         u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, n0 = st.insns;
         int ran;
         tr_lost = 0;
-        ran = tr_progs[prog].run(pc);
+        ran = tr_go(prog, pc);
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
             tr_us[prog] += kh1_vu1_clock() - t0;
             tr_runs[prog]++;
