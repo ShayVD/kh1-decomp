@@ -1,5 +1,6 @@
-/* Round 46 wwm2: score 7 -> 5, hill3o statement order. Earlier header below. */
-/* 4 words differ, score 7 (1564 vs 1568 incl. trailing nop). Left: in both D_00FBB558 blocks orig does lw s0,4(s4); addu s0,s8,s0 (z first), ours addu s0,s0,s8, plus one move t0/addiu a1 swap that follows. Key finds: xx/yy reused for the GS offsets, list[i] index loop, literal % 24, i reused for z + D_00FBB558.b. Tried z + i / i + z / i += z, 10 min permuter (no gain) */
+/* wm.x func_00f28448: matched by hand. */
+#include "ovl.h"
+
 typedef struct { s32 a, b, c, d; } T28;
 extern u64 **D_00F85160;
 extern s32 D_00F874F8[];
@@ -93,19 +94,19 @@ void func_00f28448(s32 x, s32 y, s32 z, s32 *list) {
         func_00f66b90(p);
         if (D_00FBB558.a) {
             i = D_00FBB558.b;
-            i = z + i;
+            w = z + i;
             xx = (512 - D_00F874F8[0x1C]) / 2;
-            p = func_00f23a58(xx, i + 352, 5, 128, p);
-            p = func_00f23a58(xx + 12, i + 357, 16, 128, p);
+            p = func_00f23a58(xx, w + 352, 5, 128, p);
+            p = func_00f23a58(xx + 12, w + 357, 16, 128, p);
             xx = (D_00F874F8[0x53] + 12) / 2 + 256;
-            yy = i + 356;
+            yy = w + 356;
             p = func_001f0868(p, 1, 2, -128, xx, yy, func_00f2b8f0(func_002193f0() + 13), 16);
         }
         if (D_00FBB558.c) {
             i = D_00FBB558.d;
-            i = z + i;
-            p = func_00f23a58((512 - D_00F874F8[0x1C]) / 2, i + 352, 5, 128, p);
-            yy = i + 356;
+            w = z + i;
+            p = func_00f23a58((512 - D_00F874F8[0x1C]) / 2, w + 352, 5, 128, p);
+            yy = w + 356;
             p = func_001f0868(p, 1, 2, -128, 256, yy,
                               func_001bb370() ? func_00f2b8f0(25) : func_00f2b8f0(23), 16);
         }
