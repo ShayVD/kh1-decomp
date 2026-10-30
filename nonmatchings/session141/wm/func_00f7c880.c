@@ -1,4 +1,4 @@
-/* func_00f7c880: score 64, 111 words differ. case 2: c[0] address not taken from the giv Round 30 (wgb, no gain): *D_0108FAA0[i] or ((u8 *)D_0108FAA0)[i * 4] for the case-2 [0] store, a chained store (56 words), D_0108FA98[i] = 0 after a = 0, a = [i][3] read before the switch (loses the s2 giv, worse), CONTEXT_ONLY callees (ctx2). Round 20 (wwm1): tools/ovl/i2a.py, the two constant initializers as ordered assignments: 111 -> 107 words, score 64 -> 50. */
+/* func_00f7c880: score 64, 111 words differ. case 2: c[0] address not taken from the giv Round 30 (wgb, no gain): *D_0108FAA0[i] or ((u8 *)D_0108FAA0)[i * 4] for the case-2 [0] store, a chained store (56 words), D_0108FA98[i] = 0 after a = 0, a = [i][3] read before the switch (loses the s2 giv, worse), CONTEXT_ONLY callees (ctx2). Round 20 (wwm1): tools/ovl/i2a.py, the two constant initializers as ordered assignments: 111 -> 107 words, score 64 -> 50. Round 23 (wwm1): score 50 -> 48 with w4.py (dependency-checked statement order plus if/else polarity flips). */
 extern s32 D_0108FA60[2];
 extern s32 D_0108FA98[2];
 extern u8 D_0108FAA0[2][4];
@@ -55,8 +55,6 @@ void func_00f7c880(s32 *arg) {
             col[1][0] = 0;
             col[2][0] = 0;
             col[3][0] = 0;
-            col[3][3] = v;
-            done = 1;
             col[0][1] = 0;
             col[1][1] = 0;
             col[2][1] = 0;
@@ -64,15 +62,17 @@ void func_00f7c880(s32 *arg) {
             col[0][2] = 0;
             col[1][2] = 0;
             col[2][2] = 0;
+            col[1][3] = v;
             col[3][2] = 0;
             col[0][3] = v;
-            col[1][3] = v;
             col[2][3] = v;
             xs[0] = 0;
             ys[0] = 42;
             xs[1] = 512;
             ys[1] = 42;
             xs[2] = 0;
+            col[3][3] = v;
+            done = 1;
             ys[2] = 384;
             xs[3] = 512;
             ys[3] = 384;

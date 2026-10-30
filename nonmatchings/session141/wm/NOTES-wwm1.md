@@ -690,3 +690,18 @@ hit the stub callee sits at a lower address than the function.
   test (li a0,66 with no compare). My guess is that the x = 1 store became dead only after reload, so jump2 deleted
   the branch and left its operands. A volatile read of D_0108FA74 gives the right size (564 vs 568, 22 words) but the
   same score.
+
+## Round 23
+
+- w4 (scratch, /tmp/claude-0/s141/wwm1/w4.py): w3 (dependency-checked statement order) plus a move that flips one
+  if/else polarity at a time (swap arms, negate the condition; one move in four is a flip). Ran over 91 drafts (wm,
+  gb, dkmovie drafts scoring 60 or less, plus the drafts ifswap improved), 150 s each, seed 7. No matches. Gains
+  saved (score only improves): wm f5dfd8 30->26, f23628 81->73, f696a0 35->33, f69278 41->37, f7c880 50->48,
+  f78d50 59->41, f45e68 44->36; gb f425a8 35->33, f46718 230->228, f36ee0 30->26; dktitle f228c8 (session141
+  copy) 378->374. Some of these fall outside my range; the coordinator settles overlaps by score.
+  After the rebase, upstream already had equal or better versions of all but two (gb f425a8 31, wm f696a0 31; wm
+  f78d50 is now matched in ovl/wm/hand). This commit carries only wm f7c880 50->48 and dktitle f228c8 378->374.
+- tools/ovl/ifswap.py and tools/ovl/inl.py are committed (241571eb), with a docs/overlays.md paragraph each.
+- f78978 "real but redundant" dead test: tried x = 1 before the test, no initializer, testing D_00FB5EC4 first, a
+  flag variable, the same value on both paths, nested ifs, goto, and an empty if body. None beat 13. The best was
+  `|| flag`, which gives the right size but scores 24.

@@ -1,4 +1,4 @@
-/* dktitle.x func_00f228c8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 408 -> 398 with sclimb.py. Round 22 (wwm1): the if/else at line(s) 149,357 with the arms swapped and the test negated (ifswap.py): score 398 -> 378. */
+/* dktitle.x func_00f228c8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 408 -> 398 with sclimb.py. Round 22 (wwm1): the if/else at line(s) 149,357 with the arms swapped and the test negated (ifswap.py): score 398 -> 378. Round 23 (wwm1): score 378 -> 374 with w4.py (dependency-checked statement order plus if/else polarity flips). */
 
 typedef struct { s32 x0; s32 x4; u64 x8; } Pad;
 typedef struct { void (*f0)(s32, s32); s32 (*f1)(void); } Cb;
@@ -118,16 +118,16 @@ s32 func_00f228c8(void) {
             D_00F2C708 = 21;
             goto c21;
         } else if (D_003F8370[0] == 2 || D_003F8370[1] == 2) {
-            if (D_003F8370[0] == 4 || D_003F8370[1] == 4) {
-                if (D_003F8370[0] == 2) {
-                    D_00F2C708 = 19;
-                    goto c19;
-                } else {
+            if (!(D_003F8370[0] == 4 || D_003F8370[1] == 4)) {
+                D_00F2C708 = 23;
+            } else {
+                if (D_003F8370[0] != 2) {
                     D_00F2C708 = 20;
                     goto c20;
+                } else {
+                    D_00F2C708 = 19;
+                    goto c19;
                 }
-            } else {
-                D_00F2C708 = 23;
             }
         } else {
             D_00F2C708 = 23;
@@ -187,12 +187,12 @@ s32 func_00f228c8(void) {
             func_0011d768(1);
             D_00F26E10 ^= 1;
         }
-        if (D_00F26E10) {
-            func_0020bc48(8, 460, 220);
-            a = 2; b = 1;
-        } else {
+        if (!(D_00F26E10)) {
             func_0020bc48(8, 364, 220);
             a = 1; b = 2;
+        } else {
+            func_0020bc48(8, 460, 220);
+            a = 2; b = 1;
         }
         func_00207630(a, 0, 274, 220, 90, 300, 44);
         func_00207630(b, 0, 370, 220, 90, 396, 45);
@@ -221,8 +221,8 @@ s32 func_00f228c8(void) {
         func_00f208a8();
         func_00f20da0(&D_00F2C778);
         func_00f20f30();
-        D_00F2C6FC = 300;
         D_00F2C708++;
+        D_00F2C6FC = 300;
         break;
     case 6:
         func_00233168();
@@ -249,8 +249,8 @@ s32 func_00f228c8(void) {
         func_00f208a8();
         func_00f20da0(&D_00F2C788);
         func_00f20f98();
-        D_00F2C708++;
         D_00F2C6FC = 300;
+        D_00F2C708++;
         break;
     case 11:
         func_00233168();
@@ -340,8 +340,8 @@ s32 func_00f228c8(void) {
         break;
     case 26:
         if (--D_00F2C6FC == 0) {
-            D_00F2C708++;
             D_00F2C6FC = 2505;
+            D_00F2C708++;
         } else if (D_002C5AD0.x4) {
             func_00f21808();
             D_00F2C708++;
@@ -410,15 +410,15 @@ s32 func_00f228c8(void) {
     case 31:
         func_00f227b0();
         if (D_003F34A4 == 0) {
-            if (D_003F720C == 1) {
+            if (D_003F720C != 1) {
+                D_00F2C708 = 27;
+                D_00F2C6FC = 2505;
+            } else {
                 func_0011c5e8();
                 func_00109558(2);
                 func_00111830();
                 D_002B6480 = D_003F720C;
                 func_00f20198();
-            } else {
-                D_00F2C708 = 27;
-                D_00F2C6FC = 2505;
             }
         }
         break;
@@ -438,10 +438,10 @@ s32 func_00f228c8(void) {
                 D_002A3F44 = 1;
                 func_00f227f8();
                 func_00110448(0);
-                D_002BCDA8 = 0;
                 D_002BC128 = 0;
-                D_002BC134 = 2;
                 D_002BC130 = 0;
+                D_002BC134 = 2;
+                D_002BCDA8 = 0;
                 func_00111600(0, 0, 2, &D_002BCDA8, &D_002BC128, &D_002BC130);
             } else {
                 D_00F2C708 = 27;
