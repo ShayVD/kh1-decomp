@@ -1237,3 +1237,14 @@ None of the drafts below changed.
   - The 8-byte gap is a delay-slot fill, not missing code. One &D_00F28460 copy lands in s1 where the target has s0, so reorg moves the target label's `lw a2,0(s1)` into a bnel slot: one instruction and one nop fewer.
   - The size-exact 182 version stays next to it as func_00f245c0.exact.nofill.c.
 - **The last-frame break is confirmed against the target.** At 0xf24a14 the target branches to the switch when f3DD50[f3DD40] != f3DD4C. On the last-frame path, the 0x2000 test (0xf24a3c beqzl), the wait loop's flag-8 exit (0xf24a68 bnezl) and its fall-through (0xf24a9c b) all go to 0xf24f0c, the `jal func_00f25010` after the decode loop. They skip the loop-bottom flag-8 test, the f3DD74[n] != 2 check and the flag-4 block. The old draft's fall-through into that tail was the bug.
+- **Second-argument lever (func_00f279f8 / func_00f269c0):** every dkmovie caller already passes two arguments: f23750, f245c0, f25180 (matched), f25658, f25978, f25288 and the matched f26be0. Nothing else to apply.
+- **f23750: 130 -> 110, 816 -> 808 bytes (size exact).**
+  - The search keeps `p = &tbl[k]`, and done reads `p[-1] - b`, with `b = tbl[idx] + rem` set inside the loop. In the target, done reuses the loop's sum and reads tbl[k - 1] as -4 off the loop's address. hill3 then reordered the set-up.
+  - Left: the target spills tbl to 0(sp), ours spills cur. The greg dump shows cur at 7 uses over 258 insns against tbl at 9 over 100, so cur has the lowest priority. Declaration order changes nothing.
+- **f275e0 (15):** the coordinator's two shapes, tried:
+  - `if (c) do {} while (c)` gives 66.
+  - goto into a do-while gives 43: the right shape, but the goto in from outside the loop stops loop.c from treating it as a loop (no hoist, no alignment). A while/for with the test on top gets its test copied in front, and moving the 16 hoist only goes from 20 back to 64.
+  - The closest, at 20, is the goto loop through a local `Strm *d`: no reload at the test, but no loop alignment nop and no v0 -> a1 copy.
+  - gcse cannot remove the reload in the plain goto form. Each D_00F28460 read is high/lo_sum/mem on fresh pseudos, and the single gcse pass PREs only the high part.
+- **f25288 (97):** loop.c hoists `b.f14 = 16`'s constant into s7, which pushes started to 48(sp). The target materialises `li v1,16` in the block and keeps started in s8. A goto loop scores 123, and no build mode changes it.
+- **f207a0 (14):** all 24 orders of the four -1 stores, a chain assignment and spreading them out give 14 every time; sched2 normalises the store order. In lreg, the -1 (5 refs over 22 insns) outranks both %hi pseudos and takes v0. The target gives it a1.
