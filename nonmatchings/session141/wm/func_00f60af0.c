@@ -1,6 +1,5 @@
+/* drafttwins.py: score 94 -> 80, port.py of the gb twin func_00f399f8 draft. Earlier header below. */
 /* score 94 (56 words; 496 vs 512 bytes). Updates entry nibble bitfields by (v - cur)/2, then the u64 bitfields at +88 and a float. Control flow and the nibble loop match. Left: the original computes each of the three +88 fields from its own (u16)v / 2 (one of them as a 64-bit dsrl), and builds the 64-bit masks in a different register order. Tried s32/u16 v, inverted index branch. */
-#include "ovl.h"
-
 typedef struct {
     u16 a : 4;
     u16 b : 4;
@@ -58,10 +57,10 @@ void func_00f60af0(s32 idx) {
         }
     }
     D_00F9B540->cur = v;
-    D_00F9B540->cur3 = v;
+    D_00F9B540->fa = (u16)((u16)v / 2 + 0xFFFF);
     D_00F9B540->cur2 = v;
     D_00F9B540->y = -2944.0f - ((u16)v * 420 - 2520);
-    D_00F9B540->fa = (u16)v / 2 + 0xFFFF;
-    D_00F9B540->fb = (u16)v / 2;
-    D_00F9B540->fc = (u16)((u16)v / 2 - 1);
+    D_00F9B540->cur3 = v;
+    D_00F9B540->fb = D_00F9B540->cur3 / 2;
+    D_00F9B540->fc = (u16)(D_00F9B540->cur2 / 2 - 1);
 }
