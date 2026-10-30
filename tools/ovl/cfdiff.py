@@ -58,6 +58,8 @@ def norm(op: str, args: str) -> str | None:
         op += "z"
     if op == "j" and re.match(r"\s*\$", args):
         op = "jr"
+    if op == "jal" and re.match(r"\s*\$", args):
+        op = "jalr"  # gcc -S writes jalr as `jal $31,$2`
     if op == "jal":
         m = re.search(r"([A-Za-z_][\w.]*)", args)
         callee = m.group(1) if m else "?"
