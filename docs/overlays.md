@@ -500,6 +500,12 @@ statement-called prototype between void and s32, and keeping the flips that lowe
 improved 21 wm/gb drafts. For example, wm func_00f28ed8 went from 75 to 67 and func_00f69fd0 from
 127 to 107 (`sceGsSyncPath` returns int). func_00f4b338 / gb func_00f24240 also return a value.
 
+Operand order of a commutative add: for `i = z + i`, expand_binop swaps the operands when the target
+is the second operand, which gives `addu s0,s0,s8`. If the original has `addu s0,s8,s0` (the loaded
+value's register is both source and result), write the sum to another variable: `i = D.b; w = z + i;`
+and use w afterwards. Global allocation then gives w the register of i, which dies at the add.
+That matched wm func_00f28448.
+
 ### Constant kept in the loop by a twice-set temp (gb func_00f2fe38, func_00f30640; wm func_00f56f30, func_00f57738)
 
 loop.c hoists a loop-invariant constant such as 0.017453292f out of the loop unless the
