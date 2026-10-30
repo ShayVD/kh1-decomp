@@ -1,4 +1,7 @@
-/* dkmovie.x func_00f25180: near miss (session 141), 8 words: the header pointer and the second byte (bC) swap a1 / a2; local orders and types tried. */
+/* dkmovie.x func_00f25180: matched by hand. */
+#include "ovl.h"
+
+/* dkmovie.x func_00f25180: matched (session 141, round 58, wwm2). func_00f279f8 takes the height * 16 as a second argument, which puts it in a1 as the target has it. */
 #include "ovl.h"
 typedef struct { u8 pad[8]; u8 b8; u8 pad9[2]; u8 bB; u8 bC; } MvHdr;
 typedef struct {
@@ -14,7 +17,7 @@ typedef struct {
 } MovieWork;
 extern MovieWork *D_00F28460;
 extern u8 *D_00F28464;
-void func_00f279f8(s32);
+void func_00f279f8(s32, s32);
 void func_00f26b60(void);
 void func_0024e640(void *, s32, void *, s32);
 void func_00f25658(void);
@@ -29,7 +32,7 @@ void func_00f25180(void) {
     D_00F28460->f3DD20 = w;
     D_00F28460->f3DD1C = ht;
     D_00F28460->f3DD24 = ht * 16;
-    func_00f279f8(w);
+    func_00f279f8(w, ht * 16);
     func_00f26b60();
     *(volatile u32 *)0x10002010 = 0x40000000;
     if (D_00F28460->f3DD90->b8 == 0) {
