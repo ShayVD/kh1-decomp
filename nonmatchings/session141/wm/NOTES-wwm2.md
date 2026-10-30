@@ -1338,3 +1338,18 @@ None of the drafts below changed.
 - Applied in wm: f3bc48 6 -> 0 (MATCH, func_00f3bbf8), f31430 368 -> 366, f53af0 194 -> 192, f58f98 60 -> 54, f71b68 584 -> 581, f72a70 37 -> 35, f77648 166 -> 164.
 - gb gains sent to the coordinator for routing: f2c9f8 194 -> 192 (func_00f2c300), f31ea0 76 -> 70 (func_00f31208 + func_00f30d80), f446d0 1280 -> 1278 (func_0024e468), f4b978 37 -> 35 (func_0024e468), f50550 166 -> 164 (func_0011d768), f4aa70.norlo 595 -> 592 (func_00f4a048 + func_00f444d8).
 - No new idea for dktitle f21ca0 (187) or f24b60 (281).
+
+## Round 65 (wwm2)
+
+- Added a line to the f3bc48 hand header: the D_01067FE0b asm-label name is what stops loop.c from reusing loop 1's base address, and we don't know a natural source form for it yet.
+- nothrow.py extended:
+  - Mismatches now carry a direction tag (T-likely or O-likely). Both directions were already searched in round 64; across all drafts there are 61 T-likely and 70 O-likely mismatches.
+  - Every existing CONTEXT_ONLY definition is now also tried removed.
+  - `--wide` adds every callee with a matched definition in ovl/OVL/{hand,auto}, not only the ones near a mismatched branch.
+  - Candidates are tagged matched, earlier or ext.
+  - The `--wide --all` batch (/tmp/claude-0/s141/r65/all.txt) finds no new gains. The only gains are the six gb ones from round 64; the wm ones are already applied. No removal of an existing definition gains.
+  - The func_0024e468 and func_0011d768 gains (gb f446d0, f4b978, f50550 and wm f72a70, f77648) are `ext`: those callees are in the main ELF and cannot be defined in the overlay's source file, so they stand in for some other cause.
+- wm f72a70: score 35, size 1244 -> 1236 (target 1232). The change is `goto test; top: ... test: if (!(...)) goto top;`.
+  - The 4 bytes left come from sched1 moving the hoisted `lui 0x2c` above the last two calls, into s6.
+  - gb f4b978 looks like the same function (same score and sizes), so the same change should carry over.
+  - Checked: the copy at /tmp/claude-0/s141/r65/gb/func_00f4b978.c (goto form plus CONTEXT_ONLY func_0024e468) scores 35 at 1236 vs 1232, down from 37 at 1252.
