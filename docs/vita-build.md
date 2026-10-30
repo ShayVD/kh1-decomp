@@ -1161,6 +1161,52 @@ the session 141 form (kept verbatim) and still finds them equal (dropping the cl
 (`vf` / `acc` in memory, ~19%): keeping them in NEON registers would need the translator to emit value-based
 code (locals per VF), a larger change.
 
+## Late frames make up the vblanks they lost (session 149)
+
+Shay's 3d-zp log (the Dive, per 2 s): the game waited 0 ms for the GS worker, so the game thread is the whole
+limit now. ~24 vblank calls a second in most of the Dive (the game draws on every other one), ~15 in the
+heaviest scenes, with ~330 ms of vblank wait per 2 s in the 24-a-second stretches. A drawn frame takes ~4
+vblanks; session 145 let it go on without waiting, but the empty frame after it (a few ms) then waited for the
+next vblank, since only one frame a vblank could skip. Each game frame is one vblank of the game's time
+(host/null/threads.c calls kh1_host_vblank once a frame, the game's vblank handler counts it), so that wait
+only slowed the game.
+
+host/vita/main.c now counts the vblanks the frames have used (`vcount`): a frame goes on without waiting while
+the display's count is ahead of it, using up one vblank, and waits for the next vblank once it has caught up,
+as before. At most `CATCH_UP` (4) lost vblanks are made up, so a long stall (a disc load) does not run the game
+fast afterwards. A game faster than the display is paced as before (it is never ahead of the vblanks), and
+`latewait=1` still always waits. **Not yet measured on a Vita** (3d-zq): the watchdog's `vblank wait` should
+fall to near 0 in the Dive and the vblank calls a second rise by about as much (~24 to ~27-28 in the 24-a-second
+stretches, a guess from the wait alone).
+
+### The VU1 FMACs: exact zeros and inlining (session 149)
+
+With the game thread the limit, the VU1 programs are its biggest cost: in 3d-zp's log P13 ~975 ms per 2 s (the
+24-a-second stretches), P18 ~1,046 ms and P0 ~440 ms (the 15-a-second ones). Measured offline: the host runner
+dumps every Nth run's start (`KH1_HOST_VU1DUMP=DIR:N`, ~2,200 runs over frames 0-21,000 of dive_en.txt), and a
+scratch replayer (it includes host/port/vu1.c and out/gen/vu1_tr.c, so it is never committed) runs each dump's
+program translated and interpreted and compares the state and the kicks, or runs it N times. Compiled with
+vitasdk's gcc (the Vita's code), linked against the Linux libc and counted under qemu-arm with a TB-count plugin.
+Two costs stood out:
+
+- **An exact 0 went to the scalar form.** An FMAC whose MAC flag some FMAND reads (vu_ope / vu_opbe / vu_opbel,
+  `vu_ek`) answered 0 for any field that came out 0, because NEON's flush makes a denormal 0 where fout() flags U.
+  P18's back-face test (an OPMSUB cross product, flagged) has many exact 0s: the scalar form with three fout()
+  calls ran ~90 times a run. Now a 0 is told apart: x + y is exactly 0 when x == -y, x - y when x == y, x * y
+  when a factor's exponent is 0, ACC + p / ACC - p when ACC == -p / p (p not flushed: a flushed p is bad already).
+  NEON's compare reads a denormal as 0, as fin() does. Those get fout()'s Z (and S from the sign) on NEON; a 0
+  from a flush still goes to the scalar form (never seen in the dumps after this).
+- **The helpers were not inlined.** gcc kept `vu_opbl` / `vu_opbe` as out-of-line clones in tr_13 (tr_13 is too
+  big for its inlining limits), each call passing the VF through memory. They are `always_inline` now (the code
+  grows ~10 KB). vu_opbl / vu_opbel also take fin() of the whole register before the lane, so four FMACs that
+  broadcast x, y, z, w of one register share it.
+
+ARM instructions over the dumps (10 passes each, the replayer's own copying left out): P13 166M -> 98M (-41%),
+P18 169M -> 111M (-34%), P0 250M -> 241M (-4%). All 10,090 runs of a second, denser dump set (every 331st run)
+give the same state and kicks as the interpreter; vu1neon_test now makes a third of its cases cancel (b = +-a,
+c = +-a*b, some a bit off) and catches the Z weights reversed or an "exact" claimed for every ADD or MUL.
+**Not yet measured on a Vita** (3d-zr): the `vu1 programs:` line's P13 / P18 ns a pair (~49 / ~51).
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
