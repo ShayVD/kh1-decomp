@@ -1,54 +1,63 @@
+/* Round 42 wwm2: score 102 -> 96, port.py of the gb twin func_00f3fad8 draft (its unused D_00F56DC0 declaration dropped). Earlier header below. */
 /* score 102 (66 words; 344 vs 352 bytes). Image-upload packet (DMA cnt + GIF tag + BITBLTBUF/TRXPOS/TRXREG/TRXDIR + image tag + DMA ref). Nibbles-per-pixel if-chain gives the movz chain; qwc = n/32, +1 if n&31. The original copies p (move t7,a0), writes all qwords through one base t = p+16 and computes the final DMA tag address as t+112, not p+128. An inline `Qw *hdr(Qw *t, ...) { ...; return t + 7; }` gets the size right (352) but spills 3 more saved registers (score 110). */
-#include "ovl.h"
-
-typedef union {
-    kh1_u128 q;
-    u64 d[2];
-    u32 w[4];
-} Qw;
-
-static inline void put(Qw *q, u64 a, u64 b) {
-    q->d[0] = a;
-    q->d[1] = b;
-}
-
-Qw *func_00f66bd0(Qw *p, u32 addr, s32 dbp, s32 dbw, s32 dpsm, s32 dx, s32 dy, s32 w, s32 h) {
-    s32 k;
+typedef struct { u16 a, b, c, flags, d, e; } GbEnt;
+typedef struct {
+    u8 pad0[4];
+    u16 count;
+    u16 w;
+    u16 pad8;
+    u16 h;
+    u8 padc[0x70 - 0xC];
+    GbEnt ents[1];
+} GbHdr;
+typedef struct {
+    u8 pad0[0xA0];
+    GbHdr hdr;
+} GbMap;
+typedef struct { u8 pad0[4]; u16 used; u8 pad6[8]; u16 kind; } GbCell;
+typedef struct { u8 pad0[8]; GbCell cells[1]; } GbGrid;
+u32 *func_00f66bd0(u32 *p, u32 addr, s32 dbp, s32 dbw, s32 dpsm, s32 dsax, s32 dsay, s32 w, s32 h) {
+    s32 f;
     s32 n;
-    s32 q;
-    Qw *t;
-
-    k = 8;
-    if ((dpsm & 7) == 1) k = 6;
-    if ((dpsm & 7) == 2) k = 4;
-    if ((dpsm & 7) == 3) k = 2;
-    if ((dpsm & 7) == 4) k = 1;
-    n = w * h * k;
-    q = n / 32;
-    if (n & 31) q++;
-    p[0].w[0] = 0x10000007;
-    p[0].w[1] = 0;
-    p[0].w[2] = 0;
-    p[0].w[3] = 0;
-    t = p + 1;
-    t[0].d[0] = 0x1000000000000005;
-    t[0].d[1] = 14;
-    t[1].d[0] = 0;
-    t[1].d[1] = 63;
-    t[2].d[0] = ((u64)dbp << 32) | ((u64)dbw << 48) | ((u64)dpsm << 56);
-    t[2].d[1] = 80;
-    t[3].d[0] = ((u64)dx << 32) | ((u64)dy << 48);
-    t[3].d[1] = 81;
-    t[4].d[0] = (s64)w | ((u64)h << 32);
-    t[4].d[1] = 82;
-    t[5].d[0] = 0;
-    t[5].d[1] = 83;
-    t[6].d[0] = (q | 0x8000) | 0x0800000000000000;
-    t[6].d[1] = 0;
-    p = t + 7;
-    p->w[0] = q | 0x30000000;
-    p->w[1] = addr;
-    p->w[2] = 0;
-    p->w[3] = 0;
-    return p + 1;
+    s32 qwc;
+    u64 *q;
+    s32 x = dpsm & 7;
+    f = 8;
+    if (x == 1)
+        f = 6;
+    if (x == 2)
+        f = 4;
+    if (x == 3)
+        f = 2;
+    if (x == 4)
+        f = 1;
+    n = w * h * f;
+    qwc = n / 32;
+    if (n & 31)
+        qwc++;
+    p[0] = 0x10000007;
+    p[1] = 0;
+    p[2] = 0;
+    p[3] = 0;
+    q = (u64 *)(p + 4);
+    q[0] = 0x1000000000000005;
+    q[1] = 14;
+    q[2] = 0;
+    q[3] = 0x3F;
+    q[4] = ((u64)dbp << 32) | ((u64)dbw << 48) | ((u64)dpsm << 56);
+    q[5] = 0x50;
+    q[6] = ((u64)dsax << 32) | ((u64)dsay << 48);
+    q[7] = 0x51;
+    q[8] = w | ((u64)h << 32);
+    q[9] = 0x52;
+    q[10] = 0;
+    q[11] = 0x53;
+    q[12] = qwc | 0x8000 | ((u64)2 << 58);
+    q[13] = 0;
+    p = (u32 *)(q + 14);
+    p[0] = qwc | 0x30000000;
+    p[1] = addr;
+    p[2] = 0;
+    p[3] = 0;
+    return p + 4;
 }
