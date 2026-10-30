@@ -1315,3 +1315,18 @@ None of the drafts below changed.
   - Every remaining difference is which register each hoisted global high part (lui 0xf3) gets, and the zero-store that goes with it.
   - The target's allocation order is 870, 7E8, 818, 7D8, 860, 7B8, 7A8, 808. Ours is 870, 7B8, 860, 7A8, 7E8, 818, 7D8, 808.
   - hill3 (520 s, 2469 tries) finds nothing. The order probably comes from ref counts, so some statement in the original differs.
+
+## Round 63 (wwm2)
+
+- **f228c8: matched** (ovl/dktitle/hand/func_00f228c8.c; drafts.tsv row removed; session141 draft removed).
+  - The last word was the case 27 switch dispatch `beqz v0; li v0,2` (ours beqzl). It is the nothrow rule: a CONTEXT_ONLY definition of func_00f21ca0, the first call after the switch, fixes it.
+  - These one at a time do not help: func_0011d768 gives 9, func_00109558 gives 5, func_00f21928 gives 3.
+- **f24b60 stays at 281.**
+  - Splitting p into separate locals barely moves it. Splitting the first part or the pool part gives 281-285. Splitting the part from lines 121-130 gives 235, but builds 2468 bytes, so it is not kept.
+  - Swapping the i/j declaration order does nothing.
+  - Declaring func_00f26648 as returning void * makes every store address come before its call, as in the target, but gives 353.
+  - The target materialises &D_00F26E28 into fresh s-registers per loop (addiu then 0(reg)). Ours keeps lo_sum addressing.
+- **f23aa8 stays at 124.**
+  - Moving `c[6][0] = a / 2 << 24` to the top gives 163. Just before the c[] loads or before the ORs gives 134. Splitting the shift gives 124.
+  - The target spills c6, c[1][0], c[2][0], c[3] and c[4][1]. Ours spills a different set, so it is a priority difference.
+- **f21ca0:** not reached again. It has no calls, so the nothrow lever does not apply.
