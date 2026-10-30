@@ -1,3 +1,4 @@
+/* Round 34 wwm1: score 722 -> 393 (2872 -> 2924 vs 2944 bytes). The target recomputes x + 0x60 and y + (off + C) on both sides of each `if (gl != 0) func_00f24548(...)` with a `b` over the else copy (gcse PRE of expressions written in the call arguments): x + 0x60 inline in every call, `yy = off + C;` before the test and `y + yy` in both calls. Left (control flow): the func_00f24fe0 row loop tail (target beqz, beqz, b). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 47650907 (wm func_00f26e80 near miss, score 722 -> 472, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 472 was not valid. Restored the last valid statement order: score 722. Earlier header below. */
 /* score 722 (2872 vs 2944). Item carousel (x, y, list, flag, t): off = t*96/100, centre icon with glow (func_00f24548) and func_00f23df0, size/alpha/glow from double maths on |t| written as a = d; if (d < 0) a = 0.0 - d; (gives the __cmpdf2/__subdf3(0,d) calls without code duplication); with cnt >= 2 the neighbours at off+0x60/0x120, the fading extras at off/off+0x180 and the up/down arrows (func_00f23a58/func_00f24380) at x + 0x60 - w/2; then func_00f23a58(x+0x90, y+0x2A), 3 func_00f24fe0 rows with ys = D_00FB6778 (aggregate initializer in the original, struct copy here), footer and func_00f66fe8(1). Call sequence lines up. Left: the original spills x, list and flag to the stack and recomputes |t| differently in places; 72 bytes short. Round 28 wwm2. */
 typedef struct { s16 a; s16 b; s32 u; s32 v; s32 w; s32 h; } Tex;
@@ -30,7 +31,7 @@ void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
     s32 icon;
     s32 sz, al, gl;
     s32 k;
-    s32 xx, yy;
+    s32 yy;
     s32 id;
     s32 n;
     s32 i;
@@ -66,12 +67,11 @@ void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
     a = d;
     if (d < 0) a = 0.0 - d;
     gl = (s32)((100.0 - a) / 100.0 * 128.0);
-    yy = y + (off + 0xC0);
-    xx = x + 0x60;
+    yy = off + 0xC0;
     if (gl != 0) {
-        p = func_00f24548(xx, yy, sz, sz, 32, (gl << 24) | 0x800000, p);
+        p = func_00f24548((x + 0x60), y + yy, sz, sz, 32, (gl << 24) | 0x800000, p);
     }
-    p = func_00f23df0(xx, yy, sz, sz, icon, al, p);
+    p = func_00f23df0((x + 0x60), y + yy, sz, sz, icon, al, p);
     if (cnt >= 2) {
         sz = 64;
         if (off > 0) {
@@ -90,16 +90,16 @@ void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
         }
         k = cnt * 2;
         icon = func_00f24f50(list[(D_00FBB550 + k - 1) % cnt]);
-        yy = y + (off + 0x60);
+        yy = off + 0x60;
         if (gl != 0) {
-            p = func_00f24548(xx, yy, sz, sz, 32, (gl << 24) | 0x800000, p);
+            p = func_00f24548((x + 0x60), y + yy, sz, sz, 32, (gl << 24) | 0x800000, p);
         }
-        p = func_00f23df0(xx, yy, sz, sz, icon, al, p);
+        p = func_00f23df0((x + 0x60), y + yy, sz, sz, icon, al, p);
         if (off > 0) {
             d = t;
             if (d < 0) d = 0.0 - d;
             al = (s32)(d * 0.5 / 100.0 * 128.0);
-            p = func_00f23df0(xx, y + off, 64, 64, func_00f24f50(list[(D_00FBB550 + k - 2) % cnt]), al, p);
+            p = func_00f23df0((x + 0x60), y + off, 64, 64, func_00f24f50(list[(D_00FBB550 + k - 2) % cnt]), al, p);
         }
         p = func_00f23a58(x + (0x60 - D_00F874F8[15].w / 2), y + 0x70, 15, 0xE0 - D_00FBB340, p);
         if (off < 0) {
@@ -118,16 +118,16 @@ void func_00f26e80(s32 x, s32 y, s32 *list, s32 flag, f32 t)
             gl = 0;
         }
         icon = func_00f24f50(list[(D_00FBB550 + k + 1) % cnt]);
-        yy = y + (off + 0x120);
+        yy = off + 0x120;
         if (gl != 0) {
-            p = func_00f24548(xx, yy, sz, sz, 32, (gl << 24) | 0x800000, p);
+            p = func_00f24548((x + 0x60), y + yy, sz, sz, 32, (gl << 24) | 0x800000, p);
         }
-        p = func_00f23df0(xx, yy, sz, sz, icon, al, p);
+        p = func_00f23df0((x + 0x60), y + yy, sz, sz, icon, al, p);
         if (off < 0) {
             d = t;
             if (d < 0) d = 0.0 - d;
             al = (s32)(d * 0.5 / 100.0 * 128.0);
-            p = func_00f23df0(xx, y + (off + 0x180), 64, 64, func_00f24f50(list[(D_00FBB550 + k + 2) % cnt]), al, p);
+            p = func_00f23df0((x + 0x60), y + (off + 0x180), 64, 64, func_00f24f50(list[(D_00FBB550 + k + 2) % cnt]), al, p);
         }
         p = func_00f24380(x + (0x60 - D_00F874F8[15].w / 2), y + 0xF8, 15, 0xE0 - D_00FBB340, p);
     }
