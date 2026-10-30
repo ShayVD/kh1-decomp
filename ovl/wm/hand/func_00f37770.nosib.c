@@ -1,3 +1,6 @@
+/* wm.x func_00f37770: matched by hand. Round 34 wwm1: the draft (score 24 in plain -O2) matches unchanged in nosib mode (-fno-optimize-sibling-calls); found by a nosib sweep of the wm low-half drafts after the f23628 cross-jump finding. */
+#include "ovl.h"
+
 /* score 24 (1176 bytes, same size). Camera/object orient keyframe: rot from degrees (constant needs 0.017453291f; gcc 2.96 rounds 0.01745329f to ...fa33), type switch 2/3/9/4, acos(dot/PlatSqrtf(|d|^2*|u|^2)) axis-angle, slerp loop. `default: case 0:` in both mode switches gives the orig slti tree (96 -> 24). Left: s5/s6 swap between n and &rot. Tried statement/decl orders, r = rot pointer, loop forms. Round 26 wwm2. */
 #include "platform/math.h"
 typedef struct { u8 pad[20]; s32 type; s32 dur; s32 rx; s32 ry; s32 rz; } Key;
