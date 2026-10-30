@@ -1,3 +1,4 @@
+/* Round 42 wwm2: score 544 -> 460, port.py of the wm twin func_00f51d18 draft, with its ease tables mapped by hand (wm D_00FA5B38 / D_00FA5B60 = gb D_00F613B8 / D_00F613E0). Earlier header below. */
 /* NEAR MISS 567 words, score 544 (3008 vs 3040 bytes). Grid-cursor edit loop (sibling of func_00f31ea0): camera rotation on dir&0xF000, mode 0 = move cursor (x5C nibble bitfields clamped to sub xA6/xA8/xAA) / reset from x60 nibbles, mode 1 = menu actions (func_00f51258 confirm, func_00f24d00 layer step, fade D_00F6137C). Tried: World 8-aligned (u64 pad, gives the ld/sd bitfields), buf[20]+s16 sv[8] for the 256 frame, switch vs if on mode, dz and bitfield-order spellings. Left: dz comes out sra/andi instead of andi/sltu, D_00F56DC0 address-reg choices, and the mode-1 movement block ordering. */
 typedef struct {
     u64 pad0[9];
@@ -55,47 +56,47 @@ Pad *func_001ba488(s32);
 s32 func_00f25418(Pad *);
 void func_00f20170(s32, s32);
 void func_00f2a470(s32 *, s32 *);
-s32 func_00f20060(void);
+s32 func_00f20060(void); CONTEXT_ONLY s32 func_00f20060() { return 0; }
 void func_00f29400(s32);
 void func_00f219b0(s32);
 f32 func_001befc8(s32, void *);
-void func_001bfac8(void);
+void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
 void func_0011d768(s32);
 void func_00f24240(void *, s32);
-void func_00f29870(void);
+void func_00f29870(void); CONTEXT_ONLY void func_00f29870() {}
 void func_00f24570(s32, void *);
 void func_00f24780(void *);
-void func_00f2aac8(void);
+void func_00f2aac8(void); CONTEXT_ONLY void func_00f2aac8() {}
 void func_00f30d80(s32);
 s32 func_00f51258(s32, s32);
 void func_00f2abd8(void);
-void func_00f23ed8(void);
+void func_00f23ed8(void); CONTEXT_ONLY void func_00f23ed8() {}
 void func_00f24d00(s32, s32);
 s32 func_00f24bb0(s32, s32, s32, void *);
 
 void func_00f2ac20(void) {
-    s32 buf[20];
-    s16 sv[8];
-    s32 dx;
-    s32 dy;
-    s32 id;
-    s32 mode;
-    s32 sel;
     Pad *pad;
-    u8 *sub;
-    s32 dir;
-    s32 dz;
-    s32 rx, ry, ax, ay;
-    s32 i, k;
-    u32 b;
+    s32 dx;
     s32 a0, a1;
     s32 nx, ny, nz, ox, oy, oz;
+    s32 dir;
+    s32 rx, ry, ax, ay;
+    s32 id;
+    s32 dz;
+    s32 mode;
+    s32 i, k;
+    s32 dy;
+    u8 *sub;
+    s32 buf[20];
+    s16 sv[8];
+    s32 sel;
+    u32 b;
 
     D_00F61370 = 0;
-    D_00F56DC0->x78 = 1;
-    id = D_00F56DC0->x4C - 1;
     sel = 0;
     mode = 0;
+    id = D_00F56DC0->x4C - 1;
+    D_00F56DC0->x78 = 1;
     a0 = func_00f25918(id);
     a1 = func_00f25978(id);
     func_00f2bfd8(D_00F56DC0->x48, a0, a1, 0);
@@ -114,8 +115,8 @@ void func_00f2ac20(void) {
         dy = 0;
         dx = 0;
         func_00f2a470(&dx, &dy);
-        b = pad->x8;
         dz = 0;
+        b = pad->x8;
         if (b & 0x400) dz = 1;
         if (b & 0x100) dz = -1;
         if (b & 8) {
@@ -142,8 +143,8 @@ void func_00f2ac20(void) {
         }
         if (dir & 0xF000) {
             rx = D_00F56DC0->x10D4;
-            ry = D_00F56DC0->x10D8;
             ax = 0;
+            ry = D_00F56DC0->x10D8;
             if (rx < 1024) {
                 ax = (dir & 0x4000) ? 256 : 0;
             }
@@ -172,8 +173,8 @@ void func_00f2ac20(void) {
                     }
                     func_001bfac8();
                 }
-                D_00F56DC0->x10D4 = rx + ax;
                 D_00F56DC0->x10D8 = ry + ay;
+                D_00F56DC0->x10D4 = rx + ax;
                 if (ry + ay >= 2048) {
                     D_00F56DC0->x10D8 = ry + ay - 4096;
                 }
@@ -198,22 +199,22 @@ void func_00f2ac20(void) {
             }
             if (pad->x4 & 0x2000) {
                 func_00f29870();
-                dz = 0;
                 dy = 0;
                 dx = 0;
+                dz = 0;
             } else if (b & 0x4000) {
                 if (D_00F56DC0->x74 & 2) {
                     func_0011d768(3);
                     sv[0] = *(u16 *)((u8 *)D_00F56DC0 + 96);
                     func_00f24570(*(u16 *)((u8 *)D_00F56DC0 + 96), D_00F56DC4);
                     {
-                        s32 c0 = D_00F56DC0->f0;
                         s32 c2 = D_00F56DC0->f2;
-                        D_00F56DC0->g2 = 1;
-                        D_00F56DC0->g1 = 1;
-                        D_00F56DC0->g0 = 1;
+                        s32 c0 = D_00F56DC0->f0;
                         D_00F56DC0->h0 = c0;
+                        D_00F56DC0->g0 = 1;
                         D_00F56DC0->h2 = c2;
+                        D_00F56DC0->g1 = 1;
+                        D_00F56DC0->g2 = 1;
                     }
                     func_00f24780(D_00F56DC4);
                     func_00f24240(D_00F56DC4, 0);
@@ -237,8 +238,8 @@ void func_00f2ac20(void) {
             if (dx | dz | dy) {
                 ox = D_00F56DC0->h0;
                 nx = ox + dx;
-                if (nx < 0) nx = 0;
                 oy = D_00F56DC0->h1;
+                if (nx < 0) nx = 0;
                 if (nx > *(u16 *)(sub + 6) - 1) nx = *(u16 *)(sub + 6) - 1;
                 ny = oy + dz;
                 if (ny < 0) ny = 0;
@@ -319,13 +320,13 @@ void func_00f2ac20(void) {
                     dy = D_00F56DA8[q * 4 + 10];
                 }
                 if (dir & 0x40) {
-                    dx = -D_00F56DA8[q * 4 + 8];
                     dy = -D_00F56DA8[q * 4 + 10];
+                    dx = -D_00F56DA8[q * 4 + 8];
                 }
                 k = 0;
                 if (dx != 0) {
-                    sel = 0;
                     k = dx;
+                    sel = 0;
                 }
                 if (dy != 0) {
                     k = dy;
@@ -336,8 +337,8 @@ void func_00f2ac20(void) {
                     sel = 1;
                 }
                 if (dir & 0x80) {
-                    k = -1;
                     sel = 1;
+                    k = -1;
                 }
                 if (k == 0) goto tail;
                 func_00f24d00(sel, k);
