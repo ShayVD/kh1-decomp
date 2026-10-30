@@ -1,3 +1,7 @@
+/* wm.x func_00f42f20: matched by hand. */
+#include "ovl.h"
+
+/* Round 28 wwm1: matched. func_00f29aa0 returns s32 (ovl/wm/hand/func_00f29aa0.c); declared void, the else path loaded a with bnel into v1 and the 15032/15033 blocks swapped v0/v1. Earlier header below. */
 /* Round 27 wwm1: score 84 -> 26 at exact size (976). Value bug found by valaudit: func_00f29aa0 takes the packet-pointer cell (u64 **, as in f23018), and the draft passed *D_00F85160. Also D_002C5958 is u32 (srl, as in f33270/f3e988), and s.a for the D_00F850E0 calls is read through ssf() (direct D_00F86500[..].s.a folded +4 into the symbol). Left: v0/v1 for the 15032 index and a1/v1 for a in the else test (bne vs bnel). Earlier header below. */
 /* Round 44 wwm2: score 104 -> 84 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* 166 words, score 104 (1016 vs 976; was 205 words, score 118). Round 32 wwm2: a CONTEXT_ONLY func_00f42ce0 (ctx2) took it to 170, hill2 (D_00F9B1E0 = 1 before D_00F9B1DC = 1.0f) to 166. Earlier header: 205 words left (round 12): main world-map loop. Target hoists the plain D_00F86500 base and +128/+1216/+192 offsets into s5..s7 and keeps a/b on the stack. The ssf() helper for the x branch helps (from 228); a local W pointer or wb() helper for the D_00F850E0 accesses is worse. */
@@ -14,7 +18,7 @@ extern u64 **D_00F85160;
 J *func_001ba488(s32);
 CONTEXT_ONLY void func_00f42ce0(s32 a0) {}
 void func_00f294a0(s32, s32, s32);
-void func_00f29aa0(s32, u64 **, s32, f32 (*)[4], f32 (*)[4], f32 (*)[4], f32);
+s32 func_00f29aa0(s32, u64 **, s32, f32 (*)[4], f32 (*)[4], f32 (*)[4], f32);
 s32 func_00f40c98(void);
 s32 func_00f66ac8(u64 *);
 s32 func_00f66ae0(u64 *);
