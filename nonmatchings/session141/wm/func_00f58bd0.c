@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 289 -> 287, hill3o statement order. Earlier header below. */
 /* 190 words, score 289 (964 vs 968; was 206/309). Round 33 wwm2: hill2 (c[5] before c[4] in the loop, c[0] last in the tail block); ctx2 and interleave give nothing. Earlier header: 206 words left (round 12): 40-frame palette crossfade with sound (sibling of func_00f58748). Target hoists D_00379F28, D_0037A028 and &D_00F9B540 into s5..s7 and keeps dir, spd and to on the stack (frame 144 vs our 160). We do not hoist, and we keep c1+1 and c1+2 live instead. */
 typedef struct { u8 pad[64]; u8 c[8]; } G58bd0;
 typedef struct { s8 t[40]; } T58bd0;
@@ -17,11 +18,11 @@ void func_00f551a8(void);
 
 void func_00f58bd0(s32 dir) {
     T58bd0 tbl;
-    s32 from;
-    s32 to;
     s32 spd;
-    s32 i;
+    s32 to;
     s32 h;
+    s32 i;
+    s32 from;
     s32 c0;
     s32 c1;
 
