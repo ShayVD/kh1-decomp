@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 776 -> 770 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* score 776 (2224 vs 2264). Minimap blips: mode = func_00f2c300(D_00F9B2EC) - 1, header packets from D_00F9B330 sprite UVs and D_00F87070 tex regs, h = 340/300 (spilled), zmin -10000 or -57599.996f, r = *func_00f3f2c0() * 0.5f * 5.0f; loop 1 over func_00f3b480() objects (func_00f3b460/func_00f3e910) coloured col.v[k-1], loop 2 over the 64 D_00F9A5C0 marks (flag & 4 = raw pos, else sceVu0ApplyMatrix by D_00F864C0) coloured col.v[3]; footer then func_00f66fb0(9). The colour table is an aggregate initializer in the original (D_00FB7150 = {0x73008cff, 0x73f4a800, 0x73f400f4, 0x7300ec9d}); drafted as a struct copy so hand.py scores it. Left: we hoist one extra FP constant (f24), mode in s5 not s8, 40 bytes short. Round 28 wwm2. */
 typedef struct { s32 x0; s32 u; s32 v; s32 w; s32 h; } Spr;
 typedef struct { u8 pad[0x50]; f32 x; f32 y; f32 z; } Obj;
