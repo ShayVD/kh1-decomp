@@ -5,9 +5,10 @@
 
 Finds runs of simple statements (one per line, same indent, inside the function body: assignments,
 x++ / x--, calls) and hill-climbs their order with hand.py's compile-and-diff, keeping a candidate
-when (score, words differ) does not get worse. Ranking by the score first works better than by the
-word count (wwm2, round 35: on wm func_00f4c610 the word ranking made things worse); --rank=words
-ranks by the word count first. Only orders that keep every conflicting pair of
+when (score, words differ) does not get worse and its size gap to the target (|ours - original| bytes)
+is no larger than the starting draft's, so a lower score can never come from code going missing.
+Ranking by the score first works better than by the word count (wwm2, round 35: on wm
+func_00f4c610 the word ranking made things worse); --rank=words ranks by the word count first. Only orders that keep every conflicting pair of
 statements in its original order are tried, so the result means the same as the draft:
 
 - two statements conflict when one writes a name the other reads or writes (the base name of the
@@ -171,10 +172,16 @@ def blocks(lines: list[str], func: str) -> list[tuple[int, int, list[str], list[
     return out
 
 
+GAPS: dict[str, int] = {}
+
+
 def score(name: str, func: str, code: str) -> tuple[int, int]:
     ok, out = hand.try_code(name, func, code, diff=False)
     if ok:
+        GAPS[code] = 0
         return (0, 0)
+    g = re.search(r"\((\d+) vs (\d+) bytes", out)
+    GAPS[code] = abs(int(g.group(1)) - int(g.group(2))) if g else 10**6
     m = re.search(r"(\d+) words differ, score (\d+)", out)
     return (int(m.group(1)), int(m.group(2))) if m else (10**6, 10**6)
 
@@ -234,8 +241,10 @@ def main() -> int:
     def key(s: tuple[int, int]) -> tuple[int, int]:
         return s if by_words else (s[1], s[0])
 
-    best = start = score(name, func, render(perms))
-    t0, tries, invalid = time.time(), 0, 0
+    code0 = render(perms)
+    best = start = score(name, func, code0)
+    gap0 = GAPS.pop(code0)
+    t0, tries, invalid, toobig = time.time(), 0, 0, 0
     while time.time() - t0 < secs and best[0] > 0 and invalid < 5000:
         k = random.randrange(len(bl))
         pm = list(perms[k])
@@ -250,15 +259,19 @@ def main() -> int:
             continue
         invalid = 0
         cand = perms[:k] + [pm] + perms[k + 1:]
-        s = score(name, func, render(cand))
+        code = render(cand)
+        s = score(name, func, code)
         tries += 1
+        if GAPS.pop(code) > gap0:
+            toobig += 1
+            continue
         if key(s) <= key(best):
             if key(s) < key(best):
                 out.parent.mkdir(parents=True, exist_ok=True)
                 out.write_text(render(cand))
             best, perms = s, cand
     print(f"{func}: {len(bl)} blocks, start {start[0]} words / score {start[1]}, "
-          f"best {best[0]} / {best[1]}, {tries} tries" + (f" -> {out}" if key(best) < key(start) else ""))
+          f"best {best[0]} / {best[1]}, {tries} tries, {toobig} over the size gap {gap0}" + (f" -> {out}" if key(best) < key(start) else ""))
     return 0
 
 
