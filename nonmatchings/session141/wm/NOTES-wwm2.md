@@ -1194,3 +1194,39 @@ None of the drafts below changed.
   - Left: the prologue order (h, first, base, size, qs, fcode).
 - **xs_genie f218f8:** `&a[0]`, a switch, if/else forms, an inner-block declaration of p, and a volatile read of D_00FC0E48 all stay at 3 or get worse. No natural plain-C barrier found.
 - **wm f3a640 audit (1bd518ad):** func_00f64c38 is a 5-insn leaf, `return ((s32 *)tbl->f14)[i * 2];`, so it does not read sp->f8 and the f8 move is safe. The same commit moved `D_00FCE390[id].s.on = 0;` after a `return 0;`, which was a real behaviour change (dead store). Round 51's version already has it back before the return, so nothing to revert now.
+
+## Round 58 (hill3 volatile barrier, dkmovie f25180 matched)
+
+- **hill3: volatile accesses are now ordered barriers against each other.**
+  - A line counts as volatile if it says `volatile` (a `*(volatile T *)0x...` cast) or names a volatile macro or object. Names come from `#define NAME ...volatile...` and file-scope declarations with `volatile`, collected from the draft and its `#include "..."` headers recursively.
+  - Two such lines never swap, and a plain statement can still move past one.
+  - tools/ovl/hill3_test.py checks f25978's case 2 swap, which `--check` now rejects, plus three control cases.
+- **dkmovie f25180: matched** (ovl/dkmovie/hand/func_00f25180.c; dkmovie byte-identical, objdiff 100%). func_00f279f8 takes the height * 16 as a second argument, which puts it in a1 (func_00f23750 already declared it with two).
+- **f26d90: 103 -> 32** (824 vs 824 bytes).
+  - The reload after the f3DD48 store is not aliasing. Each arm of the f3DF51 test stores its own result to f3DD48. The two store tails cross-jump, and the join reloads D and f3DD48 for the `< 0` test.
+  - The target also passes D_00F28460 in a2 to func_00f27de8, so the draft declares a third argument (the definition takes two).
+  - Left: the f3DD74/f3DD40 block takes D in a1 and the 2 in a2, the other way round from the target. Post-increment, `%=`, a cached m and temp-index forms all stay at 32. hill3 has no movable statements here, because every line stores through D.
+- **f25978: 112 -> 65** (1572 bytes; the target's 1576 includes one alignment nop).
+  - The function returns 0 (`move v0,zero` before the epilogue).
+  - The IPU_CTRL bit 14 test is unsigned (srl).
+  - base sums `((bF >> 1) << 16)` first, and hill3 reordered the prologue.
+  - Left: the target materialises `first = 1` after the h load (`li v0,1`). Here sched1 puts the 1 first and it takes a0, which shifts h and the IPU_CTRL address into a1/a2.
+  - Also left: the closing `IPU_CTRL = (IPU_CTRL | 0x40000000) + base` allocates the load and the or result separately in the target. f25658 has the same tail, and five tail forms leave it unchanged.
+- **f245c0: 380 -> 309 -> 252 -> 224 -> 182** (2592 vs 2592 bytes).
+  - **Call 15 was a false flag.** Its a0 is D_00F28460 already in a0. valaudit read the `lw a0,0(s6)` in a nullified beqzl delay slot as the argument source.
+  - **The real differences were control flow:**
+    - The last-frame case breaks out of the decode loop (its branches go straight to the func_00f25010 call).
+    - The flag-4 wait loop tests 0x40, then 8.
+    - The restart test is two ifs (not folded to `& 0x88`).
+    - The 0x100 wait is a do-while whose first test is flag 8, to the end of the pass (a goto), and which loops on 0x100. A `while` gets its exit test copied in front.
+  - **Then statement shapes:**
+    - func_00f279f8 takes `(w, ht * 16)`.
+    - The header fields are stored in the target's order. h is a u8 pointer, so the loads stay after earlier stores.
+    - `f3DDD0 |= 0x200`.
+    - The packet advance goes through n (`n = size; n += 0x10; f3DD90 += n` gives s0).
+    - `f3DD44++`.
+  - **Not kept:** /tmp/claude-0/s141/r58/f245c0_c2.nofill.c scores 118. It drops n around `++f3DD2C` (tests f3DD50[f3DD40] twice) and adds an empty `case 2:`, which gives the target's switch tree. It builds 2584 bytes because reorg fills a branch-likely slot from the target label. The only remaining instruction difference is the &D_00F28460 copy in s0 versus s1 at that branch. I rejected it under the size rule.
+- **f25658: 70 -> 52** (800 vs 800 bytes). The "dead reload" of size is func_00f269c0's second argument, `(D->f3DD90, size)`, as in f25978, and base is summed in the same order.
+- **f212c0: 93 -> 89.** c1 is read before c0. The target's pointer copy for c0 is still missing (four forms tried).
+- **f275e0 (15):** the target is a rolled loop (`b test`, with the loop-invariant D copied in the delay slot). Every while/for/`||`/`?:` form is rotated by jump.c's duplicate_loop_exit_test (LOOP_VTOP in the jump dump, 184 bytes). The goto form has no loop notes, so D is reloaded.
+- **Not worked:** f207a0, f20b48, f22d28 (register-only, already permuted), f23750, f25288.
