@@ -18,6 +18,10 @@ statements in its original order are tried, so the result means the same as the 
   whose address is taken) or reached through a pointer (`*p`, `p->x`, `p[i]` on a name that is not
   a declared array). A store through a pointer conflicts with every other memory access; a store to
   an object conflicts with every access through a pointer. Different objects never alias;
+- volatile accesses keep their order against each other: a line that says `volatile` (a
+  `*(volatile u32 *)0x...` cast) or names a volatile object (a `#define NAME ...volatile...`
+  hardware register macro such as IPU_CMD, or a file-scope declaration with `volatile`, read from the
+  draft and the headers it includes with `#include "..."`) never crosses another such line;
 - calls, `asm`, `++`/`--` inside expressions, chained assignments (`a = b = 0`) and lines with more
   than one statement are barriers; labelled lines and the last line of a multi-line statement never move.
 
@@ -58,6 +62,29 @@ KEYWORDS = {"sizeof"}
 NOALIAS = "--noalias" in sys.argv  # assume pointers never reach globals or each other's targets
 GLOBAL: set[str] = set()  # file-scope arrays and structs, and locals whose address is taken
 LOCAL: set[str] = set()  # arrays and structs declared in the function body
+VOLATILE: set[str] = set()  # macros and objects that are volatile (hardware registers)
+
+
+def load_volatile(path: Path, seen: set | None = None) -> None:
+    """collect volatile macro and object names from path and the files it includes"""
+    seen = set() if seen is None else seen
+    if path in seen or not path.is_file():
+        return
+    seen.add(path)
+    text = path.read_text(errors="replace")
+    for m in re.finditer(r"^\s*#\s*define\s+([A-Za-z_]\w*)\b(.*)$", text, re.M):
+        if "volatile" in m.group(2):
+            VOLATILE.add(m.group(1))
+    for ln in text.split("\n"):
+        if "volatile" in ln and not ln.startswith((" ", "\t", "#")) and ln.rstrip().endswith(";"):
+            m = re.search(r"([A-Za-z_]\w*)\s*(\[[^\]]*\]\s*)*(=.*)?;\s*$", ln.split("//")[0].rstrip())
+            if m:
+                VOLATILE.add(m.group(1))
+    for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M):
+        for d in (path.parent, hand.ROOT / "include", hand.ROOT):
+            if (d / inc).is_file():
+                load_volatile((d / inc).resolve(), seen)
+                break
 
 
 def mem(expr: str) -> tuple[bool, bool]:
@@ -75,6 +102,13 @@ def mem(expr: str) -> tuple[bool, bool]:
 
 
 def info(line: str) -> dict:
+    d = _info(line)
+    s = line.strip()
+    d["vol"] = "volatile" in s or any(n in VOLATILE for n in ID.findall(s))
+    return d
+
+
+def _info(line: str) -> dict:
     s = line.strip()
     body = s[:-1]
     barrier = (";" in body or "asm" in s or any(n not in KEYWORDS for n in CALL.findall(s))
@@ -107,7 +141,7 @@ def info(line: str) -> dict:
 
 
 def conflict(a: dict, b: dict) -> bool:
-    if a["barrier"] or b["barrier"]:
+    if a["barrier"] or b["barrier"] or (a["vol"] and b["vol"]):
         return True
     if a["lhs"] == b["lhs"] or a["base"] in b["reads"] or b["base"] in a["reads"]:
         return True
@@ -192,6 +226,7 @@ def score(name: str, func: str, code: str) -> tuple[int, int]:
 
 
 def check(func: str, draft: Path, cand: Path) -> int:
+    load_volatile(draft.resolve())
     a, b = draft.read_text().split("\n"), cand.read_text().split("\n")
     bl = blocks(a, func)
     inblock = set()
@@ -231,6 +266,7 @@ def main() -> int:
     hand.MODE = draft.suffixes[-2][1:] if len(draft.suffixes) > 1 else ""
     out = Path(outs[0]) if outs else hand.ROOT / "out" / "ovl" / name / "hill3" / draft.name
     lines = draft.read_text().split("\n")
+    load_volatile(draft.resolve())
     bl = blocks(lines, func)
     if not bl:
         print(f"{func}: no movable statements")
