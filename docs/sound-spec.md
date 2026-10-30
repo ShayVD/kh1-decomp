@@ -257,7 +257,7 @@ VMIXL / VMIXEL / VMIXR / VMIXER; addresses (bytes) 0x1C ESA, 0x1D EEA, 0x1F IRQA
 ### The SPU2 model
 
 ADPCM (filters {0, 60, 115, 98, 122} / {0, 0, -52, -55, -60}, a shift over 12 read as 9; the loop flags
-bit 0 end, bit 1 repeat, bit 2 start), the ADSR envelope's rates as the PSX's, 4-point Catmull-Rom
+bit 0 end, bit 1 repeat, bit 2 start), the noise generator (since 2026-10-30, below), the ADSR envelope's rates as the PSX's, 4-point Catmull-Rom
 interpolation at 256 steps (the console's is Gaussian), core 0's output into core 1 through AVOL, and the reverb: the
 PSX algorithm at half rate over the core's work area, with **the presets read from the disc's own
 LIBSD.IRX** (found by the signature `7d 00 5b 00 80 6d`, 0x44 bytes a mode; mode m at the room preset +
@@ -265,7 +265,7 @@ LIBSD.IRX** (found by the signature `7d 00 5b 00 80 6d`, 0x44 bytes a mode; mode
 core 0 and 4 on core 1. Without LIBSD.IRX the reverb is off and the rest plays.
 
 **Not modelled** (be direct): BlockTrans (the core's PCM input: the movies' sound, dkmovie.x; answered
-0), noise, pitch modulation, the IRQ address, the echo / delay modes' feedback, Gaussian interpolation.
+0), pitch modulation (the driver sets PMON on 7 notes in the first 20,000 frames of Dive), the IRQ address, the echo / delay modes' feedback, Gaussian interpolation.
 Nothing here was compared against a console recording.
 
 ### Threads and cost
@@ -336,6 +336,37 @@ Nothing here was compared against a console recording.
   retiming.
 - `make` byte-identical, `make test` and the selftests pass (the null server is still the host's default,
   so tests/host/sound_test.c is unchanged).
+
+### The pool's block limit: most room SEs were silent (2026-10-30)
+
+Reported on the Vita as "not all of the sound effects work". A host run of the Dive script (`KH1_HOST_SND=iop`,
+frames 0-20,000) counted, for each SE play the game queued, whether a key-on followed within 8 ticks: of 325
+plays, nearly all on banks -1 (the room's) and -8 (the event's) started no voice; system SEs (bank 2) did.
+
+The cause was iop.c's model of thvpool, not the driver or the SPU2. The driver keeps every bank chunk in one
+pool (CreateVpl, 0x3C000 bytes) with an entry in its table at +0xCADF0, one pool block each, and a room's SE
+bank is split into one entry per SE ("SeSep": 62-88 for Dive's rooms). iop.c's pool kept its blocks in a side
+table of **64**, so once the boot bank, the music and the room's first SEs had taken them, every further
+pAllocateVpl failed though most of the pool was free. The driver then runs its "Rearranging" compaction
+(func_0df50, Kprintf'd), which cannot help, and drops the chunk. So the room's SE table was cut short, its wave
+banks (the `.wd` chunks behind them) never registered (no "WaveStandby bank(-1)" line at `KH1_HOST_IOP=1`), the
+battle track's bank (slot 1) never loaded, and later SE banks (-3, -6, -8) loaded with count 0. A play of an
+SE whose table entry did load still failed: its note asks for its wave bank by number (func_051cc ->
+func_0dda8(0, bank, program)), finds none, keys the voice off and frees it, the SE's tracks end at once, and
+two frames later the game (objreq.nostrict.c func_001474a0, polling `func_0011d6f0`) sees it ended and sends a
+stop (command 6).
+
+The side table now holds 2048 blocks (more than the driver's 1,536 entries). The same run: no
+"Rearranging", every bank's Standby line, 3,277 key-ons instead of 934, and the few plays left without one are
+event-bank ids the loaded event bank does not have (20209 ...: one each). The driver does more work with the
+SEs playing: 1.30 G IOP instructions over the run instead of 0.80 G.
+
+The same run turned up **noise**: sceSdSetCoreAttr(SD_C_NOISE_CLK | 1, 0x2E-0x3F) on core 1 and NON on 274 key-ons
+(wind and whooshes). spu2.c now has the PSX / PS2 noise generator per core (psx-spx "SPU Noise Generator":
+the clock's bits 0-1 the step - 4, bits 2-5 the shift; a 16-bit level shifted left with the parity of bits
+15, 12, 11 and 10, inverted), and a voice with its NON bit plays the noise in place of its wave under its own
+envelope and volumes; the wave runs on underneath for its loop and end flags. Not compared against a
+console.
 
 Section 3's open questions can now be answered from the driver's own code (the m2c output of the IRX is
 easy to make again, but it is the user's copy and stays out of the repo); that is not done here.

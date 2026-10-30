@@ -16,7 +16,10 @@
  *     the disc's LIBSD.IRX (kh1_spu2_find_presets); without it the reverb stays off.  The work area
  *     is the model's own buffer, not sound RAM (the driver keeps its waves out of it anyway).
  *
- * Not modelled: the noise generator, pitch modulation, the core sound-data input (sceSdBlockTrans:
+ *   - the noise generator (the PSX / PS2 one, a core's clock from sceSdSetCoreAttr SD_C_NOISE_CLK): a
+ *     voice with its NON bit plays the core's noise in place of its wave, under its envelope;
+ *
+ * Not modelled: pitch modulation, the core sound-data input (sceSdBlockTrans:
  * the movie's PCM), the SPU2's IRQ address, the echo / delay modes' delay and feedback.  Not part of
  * the PS2 build. */
 #include "common.h"
@@ -60,6 +63,9 @@ typedef struct {
     u32 esa, eea, irqa;
     u16 fx_on;
     s32 fx_mode, fx_delay, fx_feedback, fx_depth_l, fx_depth_r;
+    u16 noise_clk;  /* SD_C_NOISE_CLK: bits 0-1 the step - 4, bits 2-5 the shift */
+    u16 noise_lvl;
+    s32 noise_timer;
 } Core;
 
 /* the reverb's work area (in samples, a power of two past the largest preset's reach) and its
@@ -259,12 +265,14 @@ static __inline__ __attribute__((always_inline)) s32 cubic(const s16 *s, u32 fra
     return r > 32767 ? 32767 : r < -32768 ? -32768 : r;
 }
 
-/* one 48 kHz sample of one voice, before its volumes: 0 for a voice that is off */
-static __inline__ __attribute__((always_inline)) s32 voice_sample(Voice *v, int c, int n) {
+/* one 48 kHz sample of one voice, before its volumes: 0 for a voice that is off.  nz: the core's
+ * noise for this sample when the voice's NON bit is set (the wave still plays on underneath, for its
+ * loop and end flags) */
+static __inline__ __attribute__((always_inline)) s32 voice_sample(Voice *v, int c, int n, const s16 *nz) {
     s32 out;
     u32 step;
     if (v->phase == PH_OFF) return 0;
-    out = cubic(v->s, v->counter & 0xFFF);
+    out = nz ? *nz : cubic(v->s, v->counter & 0xFFF);
     out = (out * v->env) >> 15;
     step = v->pitch > 0x3FFF ? 0x3FFF : v->pitch;
     v->counter += step;
@@ -376,6 +384,27 @@ static s32 mvol(u16 reg) { return reg & 0x8000 ? 0x7FFF : (s16)(reg << 1); }
 static int sd_deferred;
 static void publish_env(void);
 static s32 mix_dry[2][2][MIX_MAX], mix_wet[2][2][MIX_MAX];
+static s16 mix_noise[2][MIX_MAX];
+
+/* the core's noise generator over a stretch (psx-spx "SPU Noise Generator"; it runs whether or not a
+ * voice listens, as the hardware's does) */
+static void noise_run(Core *k, s16 *out, int frames) {
+    s32 step = (k->noise_clk & 3) + 4, reload = 0x20000 >> ((k->noise_clk >> 2) & 15);
+    u32 lvl = k->noise_lvl;
+    s32 t = k->noise_timer;
+    int i;
+    for (i = 0; i < frames; i++) {
+        t -= step;
+        if (t < 0) {
+            lvl = ((lvl << 1) | (((lvl >> 15) ^ (lvl >> 12) ^ (lvl >> 11) ^ (lvl >> 10) ^ 1) & 1)) & 0xFFFF;
+            t += reload;
+            if (t < 0) t += reload;
+        }
+        out[i] = (s16)lvl;
+    }
+    k->noise_lvl = (u16)lvl;
+    k->noise_timer = t;
+}
 
 static void voice_render(Voice *__restrict__ v, int c, int n, int frames, s32 (*__restrict__ dry)[MIX_MAX], s32 (*__restrict__ wet)[MIX_MAX]) {
     const Core *k = &core[c];
@@ -383,8 +412,9 @@ static void voice_render(Voice *__restrict__ v, int c, int n, int frames, s32 (*
     s32 ml = -(s32)((k->vmixl & bit) != 0), mr = -(s32)((k->vmixr & bit) != 0);
     s32 mel = -(s32)((k->vmixel & bit) != 0), mer = -(s32)((k->vmixer & bit) != 0);
     int sweep_l = v->voll & 0x8000, sweep_r = v->volr & 0x8000, i;
+    const s16 *nz = (k->non & bit) ? mix_noise[c] : 0;
     for (i = 0; i < frames && v->phase != PH_OFF; i++) {
-        s32 s = voice_sample(v, c, n), l, r;
+        s32 s = voice_sample(v, c, n, nz ? nz + i : 0), l, r;
         if (sweep_l) vol_tick(v, 0, v->voll);
         if (sweep_r) vol_tick(v, 1, v->volr);
         l = (s * v->vol[0]) >> 15;
@@ -401,6 +431,7 @@ static void mix_part(s16 *out, int frames) {
     for (c = 0; c < 2; c++) {
         memset(mix_dry[c], 0, sizeof mix_dry[c]);
         memset(mix_wet[c], 0, sizeof mix_wet[c]);
+        noise_run(&core[c], mix_noise[c], frames);
         for (n = 0; n < 24; n++)
             if (core[c].v[n].phase != PH_OFF) voice_render(&core[c].v[n], c, n, frames, mix_dry[c], mix_wet[c]);
     }
@@ -454,6 +485,15 @@ int kh1_spu2_voices_on(void) {
 /* ---- libsd ---- */
 
 static u32 sd_trans_func[2], sd_trans_arg[2];
+
+/* sceSdSetCoreAttr(entry, value): SD_C_EFFECT_ENABLE (2) and SD_C_NOISE_CLK (8), with the core in bit 0,
+ * are the ones that change the mix */
+static void core_attr(u32 entry, u32 val) {
+    switch (entry & ~1u) {
+    case 2: core[entry & 1].fx_on = (u16)(val != 0); break;
+    case 8: core[entry & 1].noise_clk = (u16)(val & 0x3F); break;
+    }
+}
 
 static void set_param(u32 p, u32 val) {
     int c = p & 1, n = (p >> 1) & 31, reg = (p >> 8) & 0xFF;
@@ -592,7 +632,7 @@ static void sd_apply(u32 fn, u32 a0, u32 a1) {
     case 5: set_param(a0, a1); break;
     case 7: set_switch(a0, a1); break;
     case 9: set_addr(a0, a1); break;
-    case 11: if ((a0 & ~1u) == 2) core[a0 & 1].fx_on = (u16)(a1 != 0); break;
+    case 11: core_attr(a0, a1); break;
     case 25: memset(&rv[a0 & 1], 0, sizeof rv[0]); break;
     }
 }
@@ -665,9 +705,7 @@ u32 kh1_sd_call(int fn, const u32 *a) {
     case 8: return get_switch(a[0]);
     case 9: set_addr(a[0], a[1]); return 0;
     case 10: return get_addr(a[0]);
-    case 11: /* sceSdSetCoreAttr(entry, value): SD_C_EFFECT_ENABLE (2) is the one that changes the mix */
-        if ((a[0] & ~1u) == 2) core[a[0] & 1].fx_on = (u16)(a[1] != 0);
-        return 0;
+    case 11: core_attr(a[0], a[1]); return 0; /* sceSdSetCoreAttr */
     case 12: return 0;
     case 17: { /* sceSdVoiceTrans(channel, mode, iop address, spu address, size) */
         u32 size = a[4], spu = a[3] & (SPU_RAM - 1);

@@ -66,8 +66,11 @@ typedef struct {
     int used, count, max;
 } IopSema;
 
-/* a variable-length pool: first fit over a list of blocks kept in a side table */
-#define VPL_BLOCKS 64
+/* a variable-length pool: first fit over a list of blocks kept in a side table.  The driver keeps every
+ * bank chunk in its one pool (up to 1536 entries in its table, one block each: a room's SE bank alone is
+ * 60-90), so the side table has room for more than that; at 64 the room's banks stopped loading
+ * (docs/sound-spec.md "The pool's block limit") */
+#define VPL_BLOCKS 2048
 typedef struct {
     int used;
     u32 base, size;
