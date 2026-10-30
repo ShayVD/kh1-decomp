@@ -352,20 +352,21 @@ void func_00f6f2a8(void)
             }
         }
         func_0024e468(1);
+        continue;
+    out:
+        D_0108F1E8 = 0.0f;
+        func_00f6b5d0(4, 0, D_00FB4A70);
+        D_0108F2B4 = 1;
+        func_0024e468(D_00FB4A70 + 1);
+        func_00f6ade8(4);
+        if (D_0108F1B8 > 0) {
+            D_0108F1B8 = -1;
+        }
+        while (func_001f44a0(&D_00FB5930) != 0) {
+            func_0024e468(1);
+        }
+        return;
     }
-out:
-    D_0108F1E8 = 0.0f;
-    func_00f6b5d0(4, 0, D_00FB4A70);
-    D_0108F2B4 = 1;
-    func_0024e468(D_00FB4A70 + 1);
-    func_00f6ade8(4);
-    if (D_0108F1B8 > 0) {
-        D_0108F1B8 = -1;
-    }
-    while (func_001f44a0(&D_00FB5930) != 0) {
-        func_0024e468(1);
-    }
-    return;
 next:;
     }
 }
