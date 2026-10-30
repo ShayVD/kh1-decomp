@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 75 -> 67, func_00f29500 declared s32 (v0 stays busy after the call). Earlier header below. */
 /* score 75 (1340 vs 1344, trailing nop only). Title/logo panel: switches D_00FBAA60/64 to the 877F8/87A68 texture tables, fade-in alpha from t (t*128/30), func_002193f0 picks the button sprite (switch with default: case 0: gives the slti tree), colour ramp between t 20..60 written as u/v halves joined by one col = u | v, slide-in offsets t*-128/60+128 and t*-256/60+256, then three func_001f0758 text rows. Keys: col = 0 inside the t < 20 branch, separate k = hi | 0xFFFFFF for the text colour, alpha float first in the fade product. Left: float register numbering in the fade/ramp maths and the (0x700 - x) << 4 header word (orig computes it into the x register). Round 27 wwm2. */
 extern u64 **D_00F85160;
 extern void *D_00FBAA60;
@@ -12,7 +13,7 @@ u64 *func_00f66b78(u64 *);
 void func_00f66b90(u64 *);
 s32 func_00f66ae0(u64 *);
 void func_00f66fe8(s32, s32);
-void func_00f29500(s32, s32, s32);
+s32 func_00f29500(s32, s32, s32);
 s32 func_002193f0(void);
 s32 func_00f2b8f0(s32);
 u64 *func_00f24738(s32, s32, s32, u32, u64 *);
