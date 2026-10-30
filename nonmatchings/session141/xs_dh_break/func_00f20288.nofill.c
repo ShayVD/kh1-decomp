@@ -1,3 +1,4 @@
+/* Round 55 wwm2: shard.h's DhShard struct and D_00F317F0 pasted in place of the #include, so hand.py compiles the draft (score 55, 1036 vs 1048). Earlier header below. */
 /* Round 45 wwm2: score 57 -> 55 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* score 95 (1036 vs 1048; was 173). Round 29 wwm2: the literals 3.2f / 0.975f (gcc 2.96 truncates), the scalars declared n, start, spr, jx, jy first (their stack slots 80-96 now match), the second header written through q and q += 16 before start = q (the original keeps it in s1 and spills it), the strip stores in order [0], [1], [2], and the end test as `if (!D_00425BC4 || D_00F311C4 > 1200) { ...; return 4; }`. Left: register choice and schedule in the shard loop, buf + 2 header writes through s1, and three unfilled delay slots (12 bytes). To score it with hand.py, paste shard.h's struct in place of the #include. Round 21 (wwm1): score 95 -> 57 (206 words) with the dependency-checked reorderer (wwm2 r35 hill3, as /tmp/claude-0/s141/wwm1/w3.py). */
 /* xs_dh_break.x func_00f20288: draft (session 136), not byte-identical; the port runs it
@@ -6,7 +7,19 @@
  * 2,500 shards as a 4-vertex textured strip (a shard facing away, func_00236e80, is not kicked),
  * shaken by D_00FA2400; a shard whose time has come spins and falls. Ends (4) after 1,200 time
  * units, or at once when D_00425BC4 is 0, setting D_002BC0A8 bit 0 again. */
-#include "shard.h"
+typedef struct {
+    OvlVec pt[4];  /* 0x00: the corners, from the centre after func_00f20820 */
+    OvlVec c;      /* 0x40: the centre (y 0, w 1) */
+    OvlVec rot;    /* 0x50: the angles */
+    OvlVec drot;   /* 0x60: the angles' steps (x y z) */
+    OvlVec vel;    /* 0x70: the fall (y only) */
+    f32 tu[4];     /* 0x80: the corners' texture u */
+    f32 tv[4];     /* 0x90: and v (1 - grid y) */
+    f32 start;     /* 0xA0: D_00F311C4's time it starts to fall */
+    u8 padA4[0xB0 - 0xA4];
+} DhShard;
+
+extern DhShard D_00F317F0[2500];
 #include "platform/dma.h"
 #include "platform/gs.h"
 
