@@ -508,6 +508,32 @@ constant stays in the loop. The functions also needed:
 
 The wm twins also needed the wm table addresses (D_00FA5C40 / D_00FA5C90), not the gb ones.
 
+### Base + c with a shared i*N+k register: a union view with a byte prefix (gb func_00f20518, wm func_00f47610)
+
+The original stored `sw v0,4(v1)` after `addu v1,v1,s0`, where s0 = i*24 + 16 is also the
+address register of the store before it. Our build folded the field offset into the
+displacement instead (`addu v1,s2,v1; sw v0,20(v1)`, with s2 = i*24). The loop dump shows
+why. cse turns `base->e[i].w[5]` into (base + i*24) + 20, which gives loop.c a separate
+i*24 + 20 giv. The original's RTL was (base + 4) + (i*24 + 16): the constant was added to the
+base, and the index part matched a giv that already existed.
+
+Rewriting the field access or the index arithmetic (`((s32 *)p)[i * 6 + 5]`,
+`(&p->e[i].w[4])[1]`, `*(s32 *)((u8 *)p + (i * 24 + 16) + 4)`) is always folded back to
+base + i*24 + 20. Only a view of the same array shifted by a byte prefix keeps the split:
+
+```c
+typedef union {
+    struct { u8 p0[0]; E e[4]; } v0;
+    struct { u8 p4[4]; E e[4]; } v4;   /* added */
+    struct { u8 p8[8]; E e[4]; } v8;
+} W;
+D->v4.e[i].w[4] = x;   /* was D->v0.e[i].w[5]: same address, now (base + 4) + (i*24 + 16) */
+```
+
+The prefix goes on the base side, and the remaining index field is the one whose offset is
+already in a register. Look for this when the target does `addu rX,base,giv` and then a small
+displacement, where our build uses a different giv with the whole offset in the displacement.
+
 ### Session 141 rounds 37-38 (wwm2)
 
 - **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
