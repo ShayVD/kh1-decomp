@@ -1,5 +1,5 @@
+/* drafttwins.py: score 421 -> 419, port.py of the wm twin func_00f549d0 draft. Earlier header below. */
 /* Round 36 (wgb): gb.x func_00f2d8d8 near miss: 445 -> 441 words, score 519 -> 421 (aligned diff 434 -> 335). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
-/* near miss: 445 words, score 519. Whole structure written (5 RotTransPers corners, 4 rays, two textured sprites with func_001bebd0's view in between); frame matches. Left: register allocation (the original keeps y0 + 8 in s7 across the ray loop, constants 1 / 5 not hoisted) and part C's load order. */
 typedef struct { u8 pad0[264]; s32 u0, v0, w0, h0; s32 pad280; s32 u1, v1, w1, h1; } MapUv;
 typedef struct { u16 x : 4; u16 y : 4; u16 z : 4; u16 w : 4; } Cell;
 extern u8 *D_00F56DC0;
@@ -16,11 +16,11 @@ u64 *func_00f2d8d8(u64 *p, OvlMtx base) {
     OvlVec pos;
     OvlVec cam[6];
     struct { u8 pad[192]; OvlMtx m; } view;
-    s32 (*o)[4];
-    s32 *q;
     f32 h;
     u64 alpha;
+    s32 *q;
     s32 x, y, i;
+    s32 (*o)[4];
     s32 x0, y0, x1, y1, u0, v0, u1, v1;
     s32 a;
     h = (f32)W(u16, 166) * 200.0f * 0.5f;
@@ -31,10 +31,10 @@ u64 *func_00f2d8d8(u64 *p, OvlMtx base) {
     pos[3] = 1.0f;
     PlatVu0UnitMatrix(m);
     PlatVu0TransMatrix(m, m, pos);
-    PlatVu0MulMatrix(m, base, m);
     v[3] = 1.0f;
     v[0] = 0.0f;
     v[2] = 0.0f;
+    PlatVu0MulMatrix(m, base, m);
     v[1] = h - (f32)((W(u16, 168) >> 1) + 1) * 200.0f;
     o = iv;
     PlatVu0RotTransPers(o++, m, v, 0);
@@ -144,8 +144,8 @@ u64 *func_00f2d8d8(u64 *p, OvlMtx base) {
     a = W(s32, 4308) / 8;
     if (a < 0) a = -a;
     a = D_00F61384 * (128 - a) / 256;
-    v[3] = 1.0f;
     v[0] = 0.0f;
+    v[3] = 1.0f;
     v[2] = 0.0f;
     v[1] = -((f32)W(Cell, 92).y * 200.0f);
     PlatVu0RotTransPers(iv[0], view.m, v, 0);
