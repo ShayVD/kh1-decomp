@@ -1,3 +1,4 @@
+/* Round 45 wwm2: score 103 -> 97 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f25288: near miss (session 141, wwm1), 844 vs 864 bytes (201 words shown, mostly shift): structure complete; left: the 0x10002010 wait loop has its address hoisted in the original (ours recomputes it, so the EE short-loop padding differs), &D_00F28460 is taken after the f3DF55 test in the original, register order of the header loads. Round 21 (wwm1): score 115 -> 107 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). Round 22 (wwm1): 107 -> 103 with w3.py seed 3. */
 typedef struct {
     u8 pad[0x3DD00];
