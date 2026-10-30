@@ -956,6 +956,19 @@ at first, because its registers shift. Run hill3.py on it before you drop it.
   `case 1: case 2:` counts as one node.
 - wm func_00f6edd8 (167 -> 135) gets the original's tree for `case 0` and `case 1..2` from an added
   `case 3: break;`.
+- When the tree is lopsided, look for a case that shares the default's code. wm func_00f73570
+  (325 -> 297, cfdiff 0) has eight one-bit cases, 0x100..0x8000. The original's left subtree is
+  0x100 with a chain to 0x200 and 0x400. That comes from `case 0: default: t = 8;`, which adds a ninth
+  node: the root stays 0x800, and the left list {0, 0x100, 0x200, 0x400} splits at 0x100.
+  - The compare against 0 jumps to the default's own code, so it is deleted and leaves no trace.
+- The last leaf test is inverted (`bne` to the default) when that case's body is the first one after
+  the dispatch. So the original's source order of cases shows there: in f73570, case 0x8000 comes
+  first.
+- fold makes one range test (`addiu; sltiu`) only from two bounds that are adjacent in the `&&` tree.
+  `k == 2 && id >= 30 && id < 65` parses as `(k == 2 && id >= 30) && id < 65` and gives two compares.
+  Write `k == 2 && (id >= 30 && id < 65)` instead (wm func_00f7ad38, 463 -> 457).
+- In an if/else-if chain, the arm order decides the block order. wm func_00f6edd8 (135 -> 115,
+  cfdiff 0) needed `else if (cur == i) { seven: ... } else { c = 0 }`, not the negated test.
 
 **Loop counters:**
 - A count-up `for (i = 0; i < n; i++)` with its own counter lets loop.c count down (`bnez`/`bgez`).
