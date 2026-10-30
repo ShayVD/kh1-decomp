@@ -1,4 +1,4 @@
-/* Round 47 wwm2: score 91 -> 85, hill3o statement order. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from dc5891cc (wm func_00f2ba68 near miss, score 91 -> 85, hill3o statement order (wwm2 round 4) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 85 was not valid. Restored the last valid statement order: score 91. Earlier header below. */
 /* 48 words left (round 12): 42-case condition switch over func_00f353a8 stats. Left: t-register numbering off by one (sum lives in a2 in the target), case 43 gives xori where the target has sltiu, and a bnezl at the loop end. */
 typedef struct { s32 h[5]; s16 n; s16 m; s16 cnt[192]; s16 best[192]; } R2ba68;
 typedef struct { u16 type; u16 val; u16 c; u16 d; } E2ba68;
@@ -14,27 +14,29 @@ void func_001bb218(s32, s32);
 void func_001ba358(s32, s32);
 
 A2ba68 *func_00f2ba68(s32 id, P2ba68 *p) {
+    R2ba68 r;
+    A2ba68 *a;
+    u16 *v;
+    s32 n;
+    s32 lvl;
     s32 x;
     s32 sum;
     s32 i;
-    u16 *v;
-    s32 lvl;
     s32 ok;
-    R2ba68 r;
-    s32 n;
-    A2ba68 *a;
+
     n = func_001bb2e0(id);
     a = func_00f2b9a0(id, n);
     if (a == NULL) return 0;
     if (!func_00f2b9e8(a)) return 0;
-
     func_00f353a8(&r);
     lvl = func_001baf08(p);
     x = func_001baf38(p);
     for (i = 0; i < 8; i++) {
+        if (a->e[i].type == 0) continue;
+        v = &a->e[i].val;
+        ok = 0;
         sum = r.cnt[58];
         sum += r.cnt[59];
-        if (a->e[i].type == 0) continue;
         sum += r.cnt[60];
         sum += r.cnt[61];
         sum += r.cnt[62];
@@ -42,11 +44,9 @@ A2ba68 *func_00f2ba68(s32 id, P2ba68 *p) {
         sum += r.best[58];
         sum += r.best[59];
         sum += r.best[60];
-        ok = 0;
         sum += r.best[61];
         sum += r.best[62];
         sum += r.best[63];
-        v = &a->e[i].val;
         switch (a->e[i].type) {
         case 2: if (!(lvl < *v)) ok = 1; break;
         case 3: if (!(p->w[0] < *v)) ok = 1; break;
