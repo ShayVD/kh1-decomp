@@ -824,3 +824,7 @@ hit the stub callee sits at a lower address than the function.
   (596 vs 568). Six single-call forms (`!= 0`, ternaries, `!!`, a local set by if/else or default-then-if) all
   give 576 bytes and score 142, worse in the aligned diff too (83 vs 51 lines). A lead, not a fix: the shape is
   right but the prologue and registers move.
+- storeperm results (task 3): dkmovie f23ae8 rerun on the 538 version gave 538 -> 508 (f3DD9C after f3DD98, past
+  f3DDA0/f3DF68; the 0x12345678 guard word stored before f3DD14); ordcheck clean. wm f75d80 (2412): the first sweep
+  (MAXN 7) was killed by the 2-hour shell limit inside one long run before writing its OUT file, because TLIM is
+  only checked between runs. A full rerun with MAXN=5 (23 runs, 36 minutes) gave nothing: 2412 -> 2412.
