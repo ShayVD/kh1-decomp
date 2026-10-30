@@ -99,5 +99,13 @@ typedef struct {
  * in kh1_gs_draws (256 past them).  tests/host/primasm_test.c checks a port's primitive assembly
  * (include/platform/primasm.h) against it; a run never sets it */
 extern void (*kh1_gs_prim_hook)(u32 prim, const KH1GsVert *v, u32 n, u32 state);
+/* session 151 (docs/vita-build.md "The VU1 strips in one piece"): when set too, a TRISTRIP's [ST, RGBAQ, XYZF2]
+ * vertices past its first with the draw state found (the VU1 programs' kicks) are handed on as one strip in
+ * place of a prim hook call a triangle: d is KH1_GS_STRIP_MASK words of draw bits (bit j: the kick of vertex j
+ * drew the triangle of vertices j - 2, j - 1, j) and then the n vertices, the first nq of them those the queue
+ * held before (the hook would have seen the same triangles in the same order) */
+#define KH1_GS_STRIP_MAX 128
+#define KH1_GS_STRIP_MASK (KH1_GS_STRIP_MAX / 32)
+extern void (*kh1_gs_strip_hook)(u32 prim, const u32 *d, u32 n, u32 nq);
 
 #endif

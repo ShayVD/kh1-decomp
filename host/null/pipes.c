@@ -305,14 +305,39 @@ static void r_prim(const u32 *a, const u32 *d, u32 nqw) {
     } while (step && (q += step) < nqw);
 }
 
+/* session 151: a strip's op (kh1_gs_strip_hook): arguments PRIM, the vertex count n and the queued count nq, data the
+ * draw bits and the n vertices.  Each vertex goes to the GPU's form once, and each triangle a bit names goes to the
+ * recorder as r_prim gives it (the vertices in the GS's order, IIP 0's colour the last vertex's, the same signature);
+ * the ops of the next strips with the same arguments join it */
+static void r_strip(const u32 *a, const u32 *d, u32 nqw) {
+    u32 prim = a[0], n = a[1], step = KH1_GS_STRIP_MASK / 4 + n * (u32)(sizeof(KH1GsVert) / 16), q = 0, j;
+    KH1GpuVert gv[KH1_GS_STRIP_MAX], tri[3];
+    KH1VertCtx vc;
+    kh1_vertex_ctx(&vc, &last_p, rec_r.zbuf_lo, prim, rec_r.tex0_lo, rec_r.tex0_hi);
+    do {
+        const u32 *m = d + q * 4;
+        const KH1GsVert *v = (const KH1GsVert *)(m + KH1_GS_STRIP_MASK);
+        kh1_vertex_of(&vc, (const KH1PaVert *)v, n, gv);
+        for (j = 2; j < n; j++) {
+            if (!(m[j >> 5] >> (j & 31) & 1)) continue;
+            tri[0] = gv[j - 2];
+            tri[1] = gv[j - 1];
+            tri[2] = gv[j];
+            if (!(prim >> 3 & 1)) { /* IIP 0: the colour of the vertex that drew (primasm.c) */
+                memcpy(tri[0].rgba, gv[j].rgba, sizeof tri[0].rgba);
+                memcpy(tri[1].rgba, gv[j].rgba, sizeof tri[1].rgba);
+            }
+            kh1_cmd_prim(rec, &last_d, &last_p, tri, 3, prim_sig(prim, v + j - 2, 3));
+        }
+    } while ((q += step) < nqw);
+}
+
 /* the GS worker's side: the registers compared with the last kick's, a new state op when they moved; the texture
- * lookup (it reads GS memory); then the primitive op */
-void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
+ * lookup (it reads GS memory) */
+static void prim_state(u32 prim) {
     const KH1GsState *gs = kh1_gs_state();
     const KH1GsContext *c = &gs->ctx[prim >> 9 & 1];
     KH1DrawRegs r;
-    u32 a[2];
-    (void)state;
     recorder();
     if (have_last && kh1_gs_gen == last_gen && prim == last_prim) goto same;
     last_gen = kh1_gs_gen;
@@ -357,9 +382,26 @@ same:
         tex_lookup(c->tex0.lo, c->tex0.hi);
         tex_look = 0;
     }
+}
+
+/* then the primitive op */
+void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
+    u32 a[2];
+    (void)state;
+    prim_state(prim);
     a[0] = prim;
     a[1] = n;
     kh1_recq_put(r_prim, a, 2, (const u32 *)v, n * (u32)(sizeof *v / 16));
+}
+
+/* session 151: or a strip's (gsregs.h's kh1_gs_strip_hook) */
+void kh1_pipes_strip(u32 prim, const u32 *d, u32 n, u32 nq) {
+    u32 a[2];
+    (void)nq;
+    prim_state(prim);
+    a[0] = prim;
+    a[1] = n;
+    kh1_recq_put(r_strip, a, 2, d, KH1_GS_STRIP_MASK / 4 + n * (u32)(sizeof(KH1GsVert) / 16));
 }
 
 /* session 126: called with the frame's commands before they are cleared (tests/host/cmdbuf_test.c) */

@@ -42,6 +42,9 @@
  *                             states, the primitives' GPU vertices, the batches and commands) on the GPU frame's
  *                             thread, between its frames, while the GS worker goes on (gsqueue.h's kh1_recq); 0
  *                             keeps it on the worker
+ *       gsstrip=N             session 151: 1 (the default, with recq=1) hands the VU1 programs' strips to the recorder
+ *                             whole (host/null/gsregs.c's kh1_gs_strip_hook): one op a strip, each vertex turned
+ *                             into the GPU's form once; 0 one op a triangle, as before
  *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
  *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
  *                             the command menu's cursor)
@@ -127,6 +130,7 @@ static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
 static int late_wait;    /* session 145: config.txt's latewait= */
 #define CATCH_UP 4 /* session 149: the vblanks late frames may still make up (kh1_host_vblank) */
 static int use_recq = 1; /* session 146: config.txt's recq= */
+static int use_gsstrip = 1; /* session 151: config.txt's gsstrip= */
 static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
 static int strip_always;  /* config.txt's strip= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
@@ -204,6 +208,7 @@ void kh1_null_iop_frame(void);
 void kh1_pipes_start(void);
 void kh1_pipes_frame(void);
 void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state);
+void kh1_pipes_strip(u32 prim, const u32 *d, u32 n, u32 nq);
 static void timed_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     SceUInt64 t0 = sceKernelGetProcessTimeWide();
     kh1_pipes_prim(prim, v, n, state);
@@ -539,6 +544,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
         else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
         else if (strcmp(line, "vu1nat") == 0) kh1_vu1_native = atoi(v);
+        else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -693,8 +699,12 @@ int main(int argc, char **argv) {
                 vlog("kh1-vita: the frame's GPU work: %s\n", kh1_pipes_snap ? "a thread on the third core" : "the GS worker (no thread)");
                 /* session 146: the recording on that thread too (a kick's own time is then not timed: two clock
                  * reads a kick, ~3,000 kicks a drawn frame in the Dive, were a share of the worker's time) */
-                if (kh1_pipes_snap && use_recq && kh1_recq_start(2u << 20) == 0) kh1_gs_prim_hook = kh1_pipes_prim;
-                vlog("kh1-vita: the recording: %s\n", kh1_recq_on ? "on the GPU frame's thread" : "the GS worker's");
+                if (kh1_pipes_snap && use_recq && kh1_recq_start(2u << 20) == 0) {
+                    kh1_gs_prim_hook = kh1_pipes_prim;
+                    if (use_gsstrip) kh1_gs_strip_hook = kh1_pipes_strip;
+                }
+                vlog("kh1-vita: the recording: %s%s\n", kh1_recq_on ? "on the GPU frame's thread" : "the GS worker's",
+                     kh1_gs_strip_hook ? ", the VU1 strips whole" : "");
             }
         }
     } else {

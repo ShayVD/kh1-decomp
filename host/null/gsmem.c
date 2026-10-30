@@ -1563,6 +1563,20 @@ void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc
     dl_ok = 1;
 }
 
+void kh1_gsmem_draw_n(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc_lo, u32 sc_hi, u32 test_lo, u32 n) {
+    u32 k;
+    if (!n) return;
+    kh1_gsmem_draw(frame_lo, frame_hi, zbuf_lo, zbuf_hi, sc_lo, sc_hi, test_lo);
+    /* the calls after the first repeat its registers with nothing between: each only counts (or, with no FRAME,
+     * does nothing) */
+    if (!dl_ok || --n == 0) return;
+    for (k = 0; k < dl_n; k++) {
+        tgt[dl_i[k]].draws += n;
+        tgt[dl_i[k]].sent += n;
+        st.target_draws += n;
+    }
+}
+
 /* kh1_gsmem_sprite (session 83): a point-sampled textured sprite drawn into the model, as the GS
  * draws it: the pixels from (X0 - OFX + 15) >> 4 up to but not including (X1 - OFX + 15) >> 4 (Y
  * likewise) inside SCISSOR, each texel at U0 + (16 x - X0') (U1 - U0) / (X1 - X0) in 10.4 (no

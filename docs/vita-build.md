@@ -1378,6 +1378,36 @@ late, at sceGxmFinish) gives the same display and 3D target hashes every 50th fr
 The worker's instructions in those frames: 336M -> 257M (-23%). A word-at-a-time copy for small ring ops was
 tried and dropped: more instructions than the library's NEON memcpy.
 
+## The VU1 strips in one piece (session 151)
+
+The VU1 programs' kicks are PACKED [ST, RGBAQ, XYZF2] TRISTRIPs. Each vertex went through the GS model one at a time
+(gs_kick, or session 150's shortcut past a strip's fourth vertex), and each drawn triangle was a prim hook call:
+kh1_pipes_prim's compare, a recording op copying the three queued vertices (96 bytes), and on the GPU thread r_prim
+assembling and converting all three vertices again (so each strip vertex went to the GPU's form three times).
+
+- **gsregs.c `gs_strip`** (`kh1_gs_strip_hook` set): with the draw state found (each packet's first vertex too: its
+  PRE PRIM's relook done once here), a TRISTRIP's vertices are taken together: the same register file, queue, extent,
+  counts and session 135's quad as gs_kick leaves them, the draw bits collected, then one hook call for the strip and
+  `kh1_gsmem_draw_n` for its triangles (the calls after the first only count, as before; split at the quad's draw so
+  the order with gs_quad stays). Up to 128 vertices a call; a longer strip carries its queue into the next.
+- **pipes.c `kh1_pipes_strip` / `r_strip`**: the state compare and texture lookup once (`prim_state`, shared with
+  kh1_pipes_prim), one recording op of the draw bits and the vertices (32 bytes a vertex); on the GPU thread each
+  vertex is converted once and each drawn triangle goes to kh1_cmd_prim exactly as r_prim gave it (the GS's order,
+  IIP 0's colour, the same signature), so the commands and batches are the same.
+- **Switch**: config.txt `gsstrip=0` (Vita; it needs recq=1) or `KH1_HOST_GSSTRIP=0` (host) goes back to a hook call
+  a triangle. The Vita log's `the recording:` line says `, the VU1 strips whole` when on.
+
+Under qemu-arm (en.iso, dive_en.txt, frames 5,000-5,060, the Vita's thread order, spin-waits and the host's digest
+left out): the GS worker 285M -> 229M instructions (-20%), the GPU thread 266M -> 230M (-14%); the game thread is
+unchanged. Checked: the ARM build's 151 GS digest and vu1 lines to frame 6,500 identical to the base; on x86 the
+worker-order run's GPU target hashes and GS digests every 50th frame the same as the base to frame 5,550 (110 of
+each; the runs were stopped there), and the trace-5 gxmcheck log to frame 6,500 the same but for host pointers
+(`node draw ... arg`) with its 4,758 shots byte-identical.
+`make test` PASS, kh1.elf byte-identical. **Not yet measured on a Vita.** Left on the worker: the upload stores
+(kh1_gsmem_image ~37M), the library copies (~30M: the rings), the GIF decode of the other paths; on the GPU thread
+the batcher's per-triangle key and compares (kh1_batch_key, memcmp: ~25M with their library share), which a
+strip-level batch call could cut next.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
