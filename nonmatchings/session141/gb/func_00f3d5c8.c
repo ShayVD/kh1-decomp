@@ -1,3 +1,4 @@
+/* Round 46 (wgb): score 426 -> 410 (1240 vs 1224; was 1176). The far-corner GS words are written ((v + 32) << 4) and so on, which keeps the addiu 32 + sll 4 the target has; (v + 32) * 16 folds to v*16 + 512. The instruction multiset now differs only by spills (lw/sw at 48-52(sp) and one andi 0x1). Guarded hill3 (420 s) found nothing more. Left: register allocation and stack slots across the func_00f3fad8 loop. */
 /* drafttwins.py: score 428 -> 426, port.py of the wm twin func_00f646c0 draft. Earlier header below. */
 /* gb.x func_00f3d5c8 near miss: 280 words differ, score 428 (ours 1176 bytes, original 1224). Port of wm func_00f646c0's near miss (port.py), not worked further. See the wm file for notes. */
 typedef struct { u8 pad[16]; s32 x10; } Ent;
@@ -68,9 +69,9 @@ u64 *func_00f3d5c8(u64 *p, s32 x0, s32 y0, s32 id, s32 idx, s32 dbp, s32 w, s32 
                 *p++ = 3;
                 *p++ = (xx * 16) | ((u64)(yy * 16) << 16) | ((u64)1 << 32);
                 *p++ = 5;
-                *p++ = ((v + 32) * 16) | ((u64)((u + 32) * 16) << 16);
+                *p++ = ((v + 32) << 4) | ((u64)((u + 32) << 4) << 16);
                 *p++ = 3;
-                *p++ = ((xx + 32) * 16) | ((u64)((yy + 32) * 16) << 16) | ((u64)1 << 32);
+                *p++ = ((xx + 32) << 4) | ((u64)((yy + 32) << 4) << 16) | ((u64)1 << 32);
                 u += 32;
                 *p++ = 5;
                 if (u >= tw) {
