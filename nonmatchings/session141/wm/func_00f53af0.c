@@ -1,3 +1,4 @@
+/* Round 64 wwm2: score 194 -> 192 with CONTEXT_ONLY definitions of func_00f533f8 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from dcd79c10 (wm func_00f53af0 near miss, score 194 -> 186, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 186 was not valid. Restored the last valid statement order: score 194. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f53af0 near miss: 332 -> 332 words, score 204 -> 194 (aligned diff 108 -> 104). port.py of gb func_00f2c9f8's round 36 draft, the round 36 order from tools/ovl/hill3.py (score-ranked, strict dependency rules). See the gb file for what is left. Earlier header below. */
 /* wm.x func_00f53af0 near miss: 332 words differ, score 204 (ours 1400 bytes, original 1376). Port of gb func_00f2c9f8 (nonmatchings/session141/gb), which has the same diff and notes. Symbols mapped: D_00FA5B34/5B04/5AF0 = gb D_00F613B4/61384/61370, D_0108CE10 = D_00F80650, D_00F9B540 = D_00F56DC0. */
@@ -14,7 +15,7 @@ u64 *func_00f66ae0(u64 *);
 u64 *func_00f66b78(u64 *);
 void func_00f66b90(u64 *);
 void func_00f66f78(s32, u64 *);
-u64 *func_00f533f8(GbPos, GbPos, void *, u32, u64 *, s32);
+u64 *func_00f533f8(GbPos, GbPos, void *, u32, u64 *, s32); CONTEXT_ONLY u64 * func_00f533f8(GbPos a0, GbPos a1, void * a2, u32 a3, u64 * a4, s32 a5) { return 0; }
 u64 *func_00f53758(GbPos, GbPos, void *, s32, u64 *);
 u64 *func_00f549d0(u64 *, void *);
 
