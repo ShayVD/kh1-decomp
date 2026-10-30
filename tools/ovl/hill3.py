@@ -18,7 +18,8 @@ statements in its original order are tried, so the result means the same as the 
   whose address is taken) or reached through a pointer (`*p`, `p->x`, `p[i]` on a name that is not
   a declared array). A store through a pointer conflicts with every other memory access; a store to
   an object conflicts with every access through a pointer. Different objects never alias;
-- calls, `asm`, `++`/`--` inside expressions and lines with more than one statement are barriers.
+- calls, `asm`, `++`/`--` inside expressions, chained assignments (`a = b = 0`) and lines with more
+  than one statement are barriers; labelled lines and the last line of a multi-line statement never move.
 
 --noalias drops the memory rules except "a store through a pointer never crosses another pointer
 access" (stores through different pointers, and pointers against globals, are assumed not to
@@ -45,6 +46,7 @@ import hand  # noqa: E402
 
 SIMPLE = re.compile(r"^\s+[^\s{}/#].*;\s*$")
 SKIP = re.compile(r"^\s*(if|for|while|do|switch|return|case|default|goto|break|continue|else)\b"
+                  r"|^\s*[A-Za-z_]\w*\s*:(?!:)"  # a label, even with a statement after it
                   r"|^\s*(const\s+|static\s+|register\s+|volatile\s+)*"
                   r"(s8|u8|s16|u16|s32|u32|s64|u64|f32|f64|int|char|void|struct|union|unsigned|signed|long|short|float|double|[A-Z]\w*)\b\s*\**\s*\w+\s*(=|;|,|\[)")
 ASG = re.compile(r"^(.+?)\s*(\+|-|\*|/|%|<<|>>|&|\||\^)?=(?!=)\s*(.*);$")
@@ -75,7 +77,8 @@ def mem(expr: str) -> tuple[bool, bool]:
 def info(line: str) -> dict:
     s = line.strip()
     body = s[:-1]
-    barrier = (";" in body or "asm" in s or any(n not in KEYWORDS for n in CALL.findall(s)))
+    barrier = (";" in body or "asm" in s or any(n not in KEYWORDS for n in CALL.findall(s))
+               or len(re.findall(r"(?<![=!<>])(?:<<|>>|[-+*/%&|^])?=(?!=)", body)) > 1)  # a = b = c writes b too
     m2 = re.match(r"^(\w+)\s*(\+\+|--);$", s) or re.match(r"^(?:\+\+|--)\s*(\w+);$", s)
     if m2:
         v = m2.group(1)
@@ -155,7 +158,9 @@ def blocks(lines: list[str], func: str) -> list[tuple[int, int, list[str], list[
     out = []
     i = start + 1
     while i < len(lines):
-        if SIMPLE.match(lines[i]) and not SKIP.match(lines[i]):
+        prev = lines[i - 1].split("//")[0].rstrip()
+        cont = bool(prev) and not prev.endswith((";", "{", "}", ":", "*/")) and not prev.lstrip().startswith("#")
+        if SIMPLE.match(lines[i]) and not SKIP.match(lines[i]) and not cont:  # cont: the end of a multi-line statement
             ind = len(lines[i]) - len(lines[i].lstrip())
             j = i
             while (j + 1 < len(lines) and SIMPLE.match(lines[j + 1]) and not SKIP.match(lines[j + 1])
