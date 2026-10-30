@@ -1,3 +1,4 @@
+/* Round 62e (wwm2): score 23 -> 3. func_00111830 is declared s32 (as in src/game/gamestate.c; probably an implicit int declaration in the original), which fixes case 31's register. func_00f21068 goes back to void: wwm1's s32 helped the older layout, but here it costs case 27's v0/v1. Left: one switch-dispatch `beqz v0; li v0,2` that we fill as beqzl. Tried: default: break, case 0 moved last, func_001117e0 / func_0020d748 return types. */
 /* Round 62d (wwm2): score 113 -> 23, 3556 vs 3560 bytes (the 4 bytes are the trailing alignment nop). D_00F2C708 = 18/23 written `if (!D_00F26E10) 23; else 18`, b = 2 set before a = 1 in the 364 arm, and case 18 ends `if (S[0] == 4 || S[1] == 4) {19/20} } D_00F2C708 = 23;` so the 23 store is shared. Left: case 27's v0/v1 swap, one beqz that we fill as beqzl, and case 31's lui register. */
 /* Round 62c (wwm2): score 177 -> 113: cases 19, 20 and 21 are three full copies of the menu (func_001efc10(11/12/13)) instead of one copy reached by goto with msg; cross-jumping merges them back as in the target, with the D_002C5AD0 high part set in each case. */
 /* Round 62b (wwm2): score 259 -> 177, 3564 vs 3560 bytes; the callee sequence now matches. case 4/9/14 moved between cases 13 and 15 (the target's block order). case 18 tests `S[0] == 2 || S[1] == 2` first and only then the both-2 case, and the 19/20 arms are swapped. func_00111600 takes three arguments (as in src/game/progress.c), so no & args are computed. case 31 reads D_003F720C once into a local. case 27 decrements D_00F2C6FC before the D_002BC07C == 128 test. Left: the case 18 jump threading (the target reuses the loaded S[0] and S[1]) and the placement of the D_002C5AD0 high part (s3). */
@@ -17,7 +18,7 @@ void func_00109558(s32);
 void func_00110448(s32);
 void func_00111600(s32, s32, s32);
 s32 func_001117e0(void); CONTEXT_ONLY s32 func_001117e0() { return 0; }
-void func_00111830(void); CONTEXT_ONLY void func_00111830() {}
+s32 func_00111830(void); CONTEXT_ONLY s32 func_00111830() { return 0; }
 void func_0011c5e8(void);
 void func_0011c7a8(s32, s32, s32, s32, s32, s32);
 void func_0011d140(s32, s32);
@@ -48,7 +49,7 @@ void func_00f20da0(void *);
 void func_00f20f30(void);
 void func_00f20f98(void); CONTEXT_ONLY void func_00f20f98() {}
 void func_00f21000(void); CONTEXT_ONLY void func_00f21000() {}
-s32 func_00f21068(void); CONTEXT_ONLY s32 func_00f21068() { return 0; }
+void func_00f21068(void); CONTEXT_ONLY void func_00f21068() {}
 void func_00f213a8(void); CONTEXT_ONLY void func_00f213a8() {}
 void func_00f21808(void); CONTEXT_ONLY void func_00f21808() {}
 void func_00f21928(void);
