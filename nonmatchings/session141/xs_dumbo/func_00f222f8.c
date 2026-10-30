@@ -1,4 +1,4 @@
-/* Round 55 (wwm2): func_00249988 takes its real signature from src/hud/hudmath.c, (out, a, b, f32 t), so the arguments are set up a1, a0, a2 with f12 in the jal delay slot as in the target: score 119 -> 93 at the same size (1548 vs 1560). Round 31 (wgb): 346 -> 343 words with func_00249988 declared and called in the order (f32, f32 *, f32 *, f32 *): same EE EABI registers, but the target sets the arguments up in this order (cf. wm func_00f3a860). score 93 (1548 vs 1560). Round 29 wwm2, first draft: builds the 9 x 10 strip of triangle pairs from the D_00F2C410 grid (row pointers r0/r1/r2), alpha per row clamped by func_00249950, UV scroll + wrap (func_00f21ca8), the partial last row lerped by frac (func_00249988), then the top row's alpha cleared. Key: the row loop must not be a loop.c loop (127/0/128 are reloaded each row, nothing strength-reduced): a goto into a for(;;) (or a plain goto loop) with r2 += 10 at its top; a structured for/while hoists them (288-346). Left: the original's start label is 8-aligned (one nop), its r2 and gcse copies get later stack slots (r2 72, copies 76-96 in another order), and the end-of-row increments are scheduled differently. */
+/* Round 55 (wwm2): func_00249988 takes its real signature from src/hud/hudmath.c, (out, a, b, f32 t), so the arguments are set up a1, a0, a2 with f12 in the jal delay slot as in the target: score 119 -> 93 at the same size (1548 vs 1560). Then 93 -> 47: two zero locals z0/z1 used in the last loop add two insns to gcse's count (its hash table grows a size), so the gcse copies get the original's stack slots 76-96 (same lever as the func_00f20570 match). Left: r2 (slot 72 in the original, 64 here) must come after i+1 and j < 9 in pseudo order, the start label's alignment nop, and the end-of-row increment order. Round 31 (wgb): 346 -> 343 words with func_00249988 declared and called in the order (f32, f32 *, f32 *, f32 *): same EE EABI registers, but the target sets the arguments up in this order (cf. wm func_00f3a860). score 93 (1548 vs 1560). Round 29 wwm2, first draft: builds the 9 x 10 strip of triangle pairs from the D_00F2C410 grid (row pointers r0/r1/r2), alpha per row clamped by func_00249950, UV scroll + wrap (func_00f21ca8), the partial last row lerped by frac (func_00249988), then the top row's alpha cleared. Key: the row loop must not be a loop.c loop (127/0/128 are reloaded each row, nothing strength-reduced): a goto into a for(;;) (or a plain goto loop) with r2 += 10 at its top; a structured for/while hoists them (288-346). Left: the original's start label is 8-aligned (one nop), its r2 and gcse copies get later stack slots (r2 72, copies 76-96 in another order), and the end-of-row increments are scheduled differently. */
 #include "ovl.h"
 typedef struct { u8 h[0x10]; OvlVec pos[3]; OvlVec col[3]; OvlVec pad70; OvlVec uv[3]; } Tri;
 extern OvlVec D_00F2C410[10][10];
@@ -12,6 +12,7 @@ void func_00f222f8(Tri *t, s32 rows, f32 du, f32 dv, f32 alpha, f32 frac) {
     s32 j, i;
     OvlVec *r0, *r1, *r2;
     Tri *p;
+    f32 z0 = 0.0f, z1 = 0.0f;
 
     inv = 1.0f / rows;
     p = t;
@@ -120,11 +121,11 @@ start:
         p[0].col[0][0] = 128.0f;
         p[0].col[0][1] = 128.0f;
         p[0].col[0][2] = 128.0f;
-        p[0].col[0][3] = 0.0f;
+        p[0].col[0][3] = z0;
         p[0].col[1][0] = 128.0f;
         p[0].col[1][1] = 128.0f;
         p[0].col[1][2] = 128.0f;
-        p[0].col[1][3] = 0.0f;
+        p[0].col[1][3] = z1;
         p[1].col[2][0] = 128.0f;
         p[1].col[2][1] = 128.0f;
         p[1].col[2][2] = 128.0f;
