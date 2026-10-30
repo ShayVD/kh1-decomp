@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 901 -> 891 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* Round 41 wwm2: score 935 -> 901, port.py of the wm twin func_00f5e8a8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* NEAR MISS 588 words, score 935 (2452 vs 2472 bytes). Textured 3D box/grid draw: header GS packets, per-face visibility from mask bits + func_00f36508, then 2x2-cell quads (4 unrolled ApplyMatrix/Scale/FTOI4 vertices each) over the 3 rotating axes. Structure and constants are right. The rolled 4-vertex loop scored 863 but is 516 bytes short, so the unrolled form is kept. Tried: modes (nostrict 911, norlo 933), axis indices as an s32 array (968). Left: the original spills loop vars to fixed slots 240..296 and alpha to 288 (recomputing alpha<<24), while ours keeps them in registers (extra f23 save, different frame use). */
 typedef struct { s32 w; s32 h; s32 pad[2]; } Tex;
