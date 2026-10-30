@@ -1,6 +1,5 @@
+/* drafttwins.py: score 31 -> 29, port.py of the gb twin func_00f425a8 draft. Earlier header below. */
 /* Round 42 wwm2: score 35 -> 31, store order from r42/hill3o.py (score-ranked, dependency-safe, distinct array elements may swap): ws[1] and ys[3] before xs[0], xs[new_var] last. The float-store block (us/vs) gave nothing in 300 iterations. Earlier header below. */
-/* Round 41 wwm2: score 166 -> 35, port.py of the gb twin func_00f425a8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* Round 36 (wwm2): wm.x func_00f696a0 near miss: score 178 -> 166 (173 -> 175 words, 760 vs 752); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 362). Earlier header below. */
 extern s32 D_0108F248;
 extern s32 D_0108F25C;
 s32 func_00f69278(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
@@ -25,23 +24,23 @@ void func_00f696a0(s32 tex0, s32 tex1, s32 x, s32 y, s32 w, s32 h, s32 psm, s32 
   switch (psm)
   {
     case 4:
+      k = 20;
       a = 2;
       b = 8;
       c = (w * h) / 128;
-      k = 20;
       break;
 
     case 8:
       k = 19;
+      c = (w * h) / 64;
       b = 16;
       a = 16;
-      c = (w * h) / 64;
       break;
 
     default:
-      c = 0;
       k = (b = 0);
       a = 0;
+      c = 0;
       break;
 
   }
@@ -62,23 +61,23 @@ void func_00f696a0(s32 tex0, s32 tex1, s32 x, s32 y, s32 w, s32 h, s32 psm, s32 
   d = (s32) (s * w);
   if (flip == 0)
   {
-    xs[3] = x;
     d = x + (d << 4);
+    xs[3] = x;
   }
   else
   {
-    xs[3] = x;
     d = x - (d << 4);
+    xs[3] = x;
   }
   new_var2 = ((s32) (s * h)) << 4;
   ws[1] = 1;
   ys[3] = y;
+  xs[1] = d;
   xs[0] = d;
   ys[1] = y;
-  xs[1] = d;
-  ws[0] = 1;
   ws[3] = 1;
   e = y + new_var2;
+  ws[0] = 1;
   ys[0] = e;
   ys[new_var] = e;
   ws[new_var] = 1;
@@ -94,7 +93,7 @@ void func_00f696a0(s32 tex0, s32 tex1, s32 x, s32 y, s32 w, s32 h, s32 psm, s32 
   us[new_var] = 0.0f;
   vs[new_var] = vs[0];
   us[1] = 1.0f;
-  us[0] = 1.0f;
   vs[1] = 0.0f;
+  us[0] = 1.0f;
   func_00f68ec0(xs, ys, zs, ws, w, p, us, vs, k, c, a7, a9, a10, a11);
 }
