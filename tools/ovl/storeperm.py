@@ -10,7 +10,8 @@ matched this way (round 24): only the order of its last six stores was wrong.
 
 Prints the score per run and the final result. A match is written to $OVLTOOL_DIR/sp_match_FUNC[.mode].c (default
 out/ovl/tools); OUT=path writes the best version found. MAXN=n (default 7) limits the run length (n! orders per run, 7! = 5040 at about
-0.2 s each), and TLIM=seconds stops the sweep after that long (the runs left are listed). DRY=1 only
+0.2 s each), and TLIM=seconds stops the sweep after that long (the runs left are listed). FROM=line skips the runs that start
+above that line (to resume a cut-off sweep from its OUT file). DRY=1 only
 lists the runs.
 A store through one pointer can alias a store through another; the sweep does not check that, so read a kept order
 before trusting the draft's behaviour (a byte-identical match settles it)."""
@@ -101,7 +102,7 @@ def score(T):
 best, r0 = score(L)
 start = best
 print('%s %s start %d (%s)' % (o, f, best, r0[10:80]), flush=True)
-R = runs(L)
+R = [c for c in runs(L) if c[0] + 1 >= int(os.environ.get('FROM', '0'))]
 print('runs:', ' '.join('%d+%d' % (c[0] + 1, len(c)) for c in R), flush=True)
 if os.environ.get('DRY'):
     sys.exit(0)
@@ -129,5 +130,5 @@ for c in R:
         print('  run at line %d (%d stores): %d -> %d' % (c[0] + 1, len(c), best, rb), flush=True)
         best = rb
 print('%s %s %s %d -> %d' % (o, f, 'MATCH' if best == 0 else 'done', start, best), flush=True)
-if os.environ.get('OUT') and best < start:
+if os.environ.get('OUT'):
     open(os.environ['OUT'], 'w').write('\n'.join(L))
