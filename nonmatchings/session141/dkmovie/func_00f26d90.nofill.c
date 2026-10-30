@@ -1,3 +1,4 @@
+/* Round 58 (wwm2): score 103 -> 32 (824 vs 824 bytes). Each arm of the f3DF51 test stores its result to f3DD48 itself; the shared store tail is cross-jumped and the join reloads D_00F28460 and f3DD48 for the < 0 test, as in the target. The target also passes D_00F28460 in a2 to func_00f27de8, so this caller declares it with a third argument (the definition takes two). Left: the f3DD74/f3DD40 block takes D in a1 and the 2 in a2 where the target has them the other way round. */
 /* Round 57 (wwm2): score 192 -> 103 (788 vs 824 bytes). valaudit flagged func_00f23598's a2 as a reload of D_00F28460 in the target, where ours reused the cached m. Every statement after the first func_00f234e8 now reads D_00F28460 directly, including the slot step written as `f3DD40++; f3DD40 = f3DD40 % f3DF50;`. Left: the target saves s2 for arg0, keeps &D_00F28460 in s0/s1, and reloads D_00F28460 and f3DD48 after the store `f3DD48 = n` (ours tests n). The nostrict modes are worse (151/156). Earlier header below. */
 /* Round 25 (wwm1): score 193 -> 192 with tools/ovl/storeperm.py (store-order sweep). */
 /* Round 45 wwm2: score 200 -> 193 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
@@ -6,7 +7,7 @@
 
 s32 func_00f22048(s32, s32, s32, s32);
 s32 func_00f22118(MovieWork *);
-s32 func_00f27de8(s32, s32);
+s32 func_00f27de8(s32, s32, MovieWork *);
 s32 func_00f27eb0(s32, MovieWork *);
 s32 func_00f275e0(s32);
 void func_00f234e8(s32, s32, s32, s32 *, MovieWork *);
@@ -28,7 +29,7 @@ void func_00f26d90(s32 arg0, s32 arg1) {
             D_00F28460->f3DD48 = -1;
         }
     } else {
-        func_00f27de8(arg1, (s32)D_00F28460->f80);
+        func_00f27de8(arg1, (s32)D_00F28460->f80, D_00F28460);
     }
     FlushCache(0);
     for (i = 0; i < 0x40; i++) {
@@ -37,11 +38,10 @@ void func_00f26d90(s32 arg0, s32 arg1) {
     }
     FlushCache(0);
     if (D_00F28460->f3DF51 != 0) {
-        n = func_00f22118(D_00F28460);
+        D_00F28460->f3DD48 = func_00f22118(D_00F28460);
     } else {
-        n = func_00f27eb0(arg0, D_00F28460);
+        D_00F28460->f3DD48 = func_00f27eb0(arg0, D_00F28460);
     }
-    D_00F28460->f3DD48 = n;
     if (D_00F28460->f3DD48 < 0) {
         for (;;) {
             func_00f23480();
