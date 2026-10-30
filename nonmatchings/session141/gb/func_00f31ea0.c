@@ -1,3 +1,4 @@
+/* Round 54 wgb: score 62 -> 56, CONTEXT_ONLY empty definitions of func_00f31208 and func_00f30d80 after their prototypes (wwm2 tools/ovl/nothrow.py), on top of the void func_00f2e098. Earlier header below. */
 /* Round 54 wgb: score 76 -> 62, func_00f2e098 declared void (found by wwm1's tools/ovl/rettype.py, the gb twin of the wm f58f98 change). Earlier header below. */
 /* Round 51 wwm2: score 108 -> 76, now at the exact size (1992). Port of wm func_00f58f98. The fixed address 0x00F56DC0 is replaced by a second declaration, `extern World *D_00F56DC0b __asm__("D_00F56DC0")`, which relocates against the real symbol. The D_00F61560 test and its `= 1` store use `D_00F61560b __asm__("D_00F61560")`. This is a stand-in: gcc assumes the two names do not alias, and D_00F61560 is stored. Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 6bd50b7b (gb func_00f31ea0 near miss, score 168 -> 158, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 158 was not valid. Restored the last valid statement order: score 168. Earlier header below. */
@@ -55,7 +56,7 @@ s32 func_00f27300(s32);
 void func_00f31048(void);
 void func_00f30cb8(s32);
 void func_00f32728(s32, s32);
-void func_00f31208(void);
+void func_00f31208(void); CONTEXT_ONLY void func_00f31208(void) {}
 s32 func_00f3b4f8(void);
 void func_00f29400(s32);
 s32 func_00f259d8(s32);
@@ -63,7 +64,7 @@ void func_0011d768(s32);
 void func_00f31ad8(s32);
 s32 func_00f31030(s32);
 void func_00f30bf8(s32);
-void func_00f30d80(s32);
+void func_00f30d80(s32); CONTEXT_ONLY void func_00f30d80(s32 a0) {}
 s32 func_001bb6d0(s32);
 void func_00f24240(void *, s32);
 
