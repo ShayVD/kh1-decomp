@@ -97,7 +97,7 @@ void func_00f74f30(void)
     v = 0;
     if (n >= 9) {
         v = cnt;
-        if (n < v + 8) v = n - 8;
+        if (v > n - 8) v = n - 8;
     }
     D_0108F53C = 0;
     D_0108F538 = 1;
