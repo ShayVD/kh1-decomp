@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 217 -> 185 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* gb.x func_00f3b4f8 near miss: 324 words differ, score 217 (ours 1372 bytes, original 1352). Port of wm func_00f625f0's near miss. port.py could not map D_00FA5FC8, so I mapped it by hand to D_00F61848 (D_00F61838 + 0x10). Same frame problem as the wm draft: the original keeps h on the stack at sp+16 and reloads 360.0f each time. */
 typedef struct { u8 b[0x50]; u8 x50; u8 pad51[0x7e - 0x51]; s16 x7e; s16 x80; } World;
 typedef struct { s32 r, g, b, a; } Col;
