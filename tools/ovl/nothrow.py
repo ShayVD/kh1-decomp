@@ -6,6 +6,8 @@
     python3 tools/ovl/nothrow.py --scan OVL [DIR ...]         # every func_*.c in DIR (default nonmatchings/session141/OVL)
     python3 tools/ovl/nothrow.py --all                        # --scan of every nonmatchings/session141/* overlay,
                                                               # plus the drafts listed in ovl/*/drafts.tsv
+    --wide (before the other arguments) also tries every callee of the function that has a matched
+    definition in ovl/OVL/hand or ovl/OVL/auto, not only the ones next to a mismatched branch.
 
 reorg fills a conditional branch's delay slot with the plain branch only when the stolen insn is
 harmless on the other path. A call counts as killing the call-clobbered registers only when it
@@ -26,7 +28,17 @@ Each qualifying callee is tried alone: a CONTEXT_ONLY definition (named paramete
 singles is tried. The output is one `== OVL func path: base N` line per draft that has a
 likely/plain mismatch, then one indented line per try (`+func_X: N (gain G)`). A final `GAIN` line
 per draft lists the best set when it beats the base. The drafts are never written; candidates are
-built in a temporary directory only. Read the candidate before keeping it, and land it the usual way
+built in a temporary directory only.
+
+Both directions are searched: `T-likely` marks a branch where the original has the -likely form
+and ours the plain one, `O-likely` the reverse. Besides adding definitions, every CONTEXT_ONLY
+definition the draft already has is also tried removed (`-func_X`, turned back into a plain
+prototype), since an extra nothrow call can just as well cause a wrong plain branch. Each candidate
+is tagged `matched` when the callee has a matched definition in ovl/OVL/hand or ovl/OVL/auto,
+`earlier` when its address is below the function's (so it can really be defined above it in the
+original file), and `ext` when it lies outside the overlays (below 0xf00000). An `ext` callee
+cannot be defined in the original's file, so a gain from it is a stand-in for some other cause and
+is worth a closer look. Read the candidate before keeping it, and land it the usual way
 (ordcheck, size rule, hand.py keep for a match).
 """
 import itertools
@@ -143,6 +155,35 @@ def with_defs(text, names):
     return text
 
 
+def matched_names(ovl):
+    """names with a definition in ovl/OVL/hand or ovl/OVL/auto"""
+    out = set()
+    for d in ('hand', 'auto'):
+        for p in (ROOT / 'ovl' / ovl / d).glob('*.c'):
+            out.update(re.findall(r'\b(func_[0-9a-f]{8})\s*\([^;{)]*\)\s*\{', p.read_text()))
+    return out
+
+
+CTX = re.compile(r'CONTEXT_ONLY\s+([^;{}()]*?)\b(\w+)\s*\(([^;{]*?)\)\s*\{')
+
+
+def ctx_defs(text):
+    return [m.group(2) for m in CTX.finditer(text)]
+
+
+def without_def(text, name):
+    """text with the CONTEXT_ONLY definition of name turned back into a prototype"""
+    for m in CTX.finditer(text):
+        if m.group(2) != name:
+            continue
+        k, depth = m.end(), 1
+        while k < len(text) and depth:
+            depth += (text[k] == '{') - (text[k] == '}')
+            k += 1
+        return text[:m.start()] + '%s%s(%s);' % (m.group(1), name, m.group(3)) + text[k:]
+    return None
+
+
 def defined(text, name):
     return re.search(r'\b%s\s*\([^;{]*\)\s*\{' % re.escape(name), text) is not None
 
@@ -154,6 +195,8 @@ def worker(files):
     AD._init()
     AD._orig = AD.K.require_orig(AD._cfg)
     ovl = os.environ.get('KH1_OVL', '?')
+    wide = os.environ.get('KH1_WIDE') == '1'
+    matched = matched_names(ovl)
 
     def build(f, sym, text):
         with tempfile.TemporaryDirectory() as td:
@@ -180,40 +223,77 @@ def worker(files):
         mis = likely_mismatches(a, b)
         if not mis:
             continue
+        def tag(name):
+            addr = int(name[5:], 16)
+            ts = []
+            if name in matched:
+                ts.append('matched')
+            if addr < 0xf00000:
+                ts.append('ext')
+            elif addr < f.addr:
+                ts.append('earlier')
+            return '[%s]' % ','.join(ts) if ts else ''
+
+        def ok(name):
+            return name != fn and not defined(text, name) and re.search(PROTO % re.escape(name), text)
+
         cands = []
         for idx, ra, rb in mis:
             for t in near_callees(b, idx, f.addr):
                 name = 'func_%08x' % int(t, 16)
-                if name not in cands and name != fn and not defined(text, name) \
-                        and re.search(PROTO % re.escape(name), text):
+                if name not in cands and ok(name):
                     cands.append(name)
-        print('== %s %s %s: base %d, %d likely/plain mismatch(es) (%s), candidates %s' % (
-            ovl, fn, path, base, len(mis), ', '.join('%s/%s' % (ra, rb) for _, ra, rb in mis[:6]),
-            ' '.join(cands) or '-'), flush=True)
+        if wide:
+            for ins in b:
+                op, _, rest = ins.partition(' ')
+                if op == 'jal' and rest.strip().startswith('0x'):
+                    name = 'func_%08x' % int(rest.strip(), 16)
+                    if name in matched and name not in cands and ok(name):
+                        cands.append(name)
+        print('== %s %s %s: base %d, %d likely/plain mismatch(es) (%s), candidates %s, defined %s' % (
+            ovl, fn, path, base, len(mis),
+            ', '.join('%s/%s %s' % (ra, rb, 'T-likely' if LIKELY.match(ra) else 'O-likely')
+                      for _, ra, rb in mis[:6]),
+            ' '.join(c + tag(c) for c in cands) or '-', ' '.join(ctx_defs(text)) or '-'), flush=True)
         singles = []
         for name in cands:
             t = with_defs(text, [name])
             if t is None:
                 continue
             sc, _ = build(f, sym, t)
-            singles.append((sc, name))
-            print('   +%s: %d (gain %d)' % (name, sc, base - sc), flush=True)
+            singles.append((sc, '+' + name))
+            print('   +%s%s: %d (gain %d)' % (name, tag(name), sc, base - sc), flush=True)
+        for name in ctx_defs(text):
+            t = without_def(text, name)
+            if t is None:
+                continue
+            sc, _ = build(f, sym, t)
+            singles.append((sc, '-' + name))
+            print('   -%s: %d (gain %d)' % (name, sc, base - sc), flush=True)
         singles.sort()
         best = (base, ())
         for sc, name in singles:
             if sc < best[0]:
                 best = (sc, (name,))
         top = [n for _, n in singles[:4]]
+
+        def apply(t, ops):
+            for o in ops:
+                t = with_defs(t, [o[1:]]) if o[0] == '+' else without_def(t, o[1:])
+                if t is None:
+                    return None
+            return t
         for x, y in itertools.combinations(top, 2):
-            t = with_defs(text, [x, y])
+            t = apply(text, [x, y])
             if t is None:
                 continue
             sc, _ = build(f, sym, t)
-            print('   +%s +%s: %d (gain %d)' % (x, y, sc, base - sc), flush=True)
+            print('   %s %s: %d (gain %d)' % (x, y, sc, base - sc), flush=True)
             if sc < best[0]:
                 best = (sc, (x, y))
         if best[0] < base:
-            print('GAIN %s %s %s %d -> %d with %s' % (ovl, fn, path, base, best[0], ' '.join(best[1])), flush=True)
+            print('GAIN %s %s %s %d -> %d with %s' % (ovl, fn, path, base, best[0],
+                  ' '.join(n[1:] if n[0] == '+' else n for n in best[1])), flush=True)
 
 
 def run(ovl, files):
@@ -242,6 +322,9 @@ def main():
     if argv[:1] == ['--worker']:
         worker(argv[1:])
         return 0
+    if argv[:1] == ['--wide']:
+        os.environ['KH1_WIDE'] = '1'
+        argv = argv[1:]
     if not argv:
         sys.exit(__doc__)
     if argv[0] == '--all':
