@@ -927,3 +927,21 @@ hit the stub callee sits at a lower address than the function.
 - gb twins: none for f46070 (best 0.29) or f2ac98 (0.17); f436d0's closest is gb f20718 above.
 - wm f2ba68 (91): the loop sum lives in a2 in the target and t0 in ours, and the target hoists the
   base/index setup differently; not pursued.
+
+## Round 33
+
+- valaudit and rettype on f344f0, f4c238, f3e138 and f2ba68: rettype finds nothing, and valaudit finds no
+  value bug, only these address and form notes.
+- wm f344f0 (87, 1012 vs 1008): the first packet is a layout cause. The target computes p+16 and p+32
+  up front and stores the second pair through p+16 (sd 8(a2), sd zero,0(a2); cx->p = p+32 from a
+  register). `q = p + 2; r = p + 4;` before the stores reproduces that shape, but the GIF word lands in
+  v0, p is copied to t0, and the size grows to 1020 (93). `p += 2` forms reach the exact size 1008 but
+  score 88-90. The same q form on the tail packet: 91. Still open: the s8 = sp+64 loop invariant (ours
+  hoists %hi(D_00F8C224)).
+- wm f4c238 (108): the target's y update re-inserts the field unchanged and has no zero register in the
+  loop. `y = y`, `y + 0`, a zero local, and x = 0 for the clamp all score 192-207: the draft's
+  `+ (oz = 0)` trick is what keeps the rest in place.
+- wm f3e138 (119): valaudit's func_00f688c8/func_00f68a40 a0 differences are address forms (the target
+  loads h with lw 4(&D[i]) because &D[i] stays live in s1). The tail recomputes &D[i] from a spilled i*2
+  and a fresh %hi, so the target ran out of registers there. Not a value bug, and no new form tried.
+- wm f2ba68 (91): only the known case-43 sltiu/xori note.
