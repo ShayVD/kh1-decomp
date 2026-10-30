@@ -1,6 +1,6 @@
+/* Round 46 wwm2: score 77 -> 71, func_001f9438 and func_001fbcd8 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 81 -> 77, port.py of the wm twin func_00f6dfd8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* 132 words / score 81 (676 vs 672). The call/argument structure is right, and declaring sum first gives the original's stack slots. Left: colour global address scheduling. The original emits a separate lui for each of D_00F7056C/68/70/64; ours shares one hi through a move. Tried six RGBA macro orders and every order of the x/y/w/col statements. */
-
 typedef struct {
     u8 pad0[3];
     s8 x3;
@@ -28,8 +28,8 @@ extern s16 D_00F71198[];
 s32 func_001bc500(void);
 u8 *func_001bc4d0(void);
 void func_001fc308(void *, s32, s32, s32, s32, s32, s32, u32, u32);
-void func_001f9438(void *, s32, s32, s32, s32, s32, u32);
-void func_001fbcd8(void *, s32, s32, s32, s32, s32, s32, s32, u32);
+s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
+s32 func_001fbcd8(void *, s32, s32, s32, s32, s32, s32, s32, u32);
 
 #define RGBA(r, g, b, a) ((r) | ((g) << 8) | ((b) << 16) | ((a) << 24))
 
