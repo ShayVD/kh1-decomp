@@ -1,3 +1,4 @@
+/* Round 26 (wwm1): score 1054 -> 1042 with tools/ovl/storeperm.py (store-order sweep). */
 /* Round 47 wwm2: score 1062 -> 1054, hill3o statement order. Earlier header below. */
 /* NEAR MISS 1069 words, score 1210 (4312 vs 4552 bytes). Port of gb func_00f39eb0 (gb scores 1270 with the same source); D_0108EE80 mapped by hand = gb D_00F826C0. See the gb file for what was tried. Round 19 (wwm1): score 1210 -> 1062 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u64 d[6]; } Blk48;
@@ -116,13 +117,13 @@ void func_00f60fa8(s32 id, u64 **pp, u8 *colors) {
     p += 2;
     func_00f66b90(p);
 
-    fw = D_00FA6000.x1B0 - 2;
     ang = (D_00FA5FB8 + 67.5f) * 0.01745329f;
     fh = D_00FA6000.x1B4 - 2;
     uv0 = (u64)(D_00FA6000.x1A8 * 16 + 16) | ((u64)((D_00FA6000.x1AC + 1) * 16) << 16);
+    fw = D_00FA6000.x1B0 - 2;
     uv1 = (u64)((D_00FA6000.x1A8 + D_00FA6000.x1B0) * 16) | ((u64)((D_00FA6000.x1AC + 1) * 16) << 16);
-    v[3] = 1.0f;
     v[2] = 1.0f;
+    v[3] = 1.0f;
     uv3 = (u64)((D_00FA6000.x1A8 + D_00FA6000.x1B0) * 16) | ((u64)((D_00FA6000.x1AC + D_00FA6000.x1B4) * 16) << 16);
     e = D_0108EE00;
     i = 7;
@@ -304,8 +305,8 @@ void func_00f60fa8(s32 id, u64 **pp, u8 *colors) {
     p[1] = 1;
     p += 2;
     p[1] = 3;
-    x = D_0108EEB0 * 18 + 202;
     p[0] = (u64)(D_00FA6000.x54 * 16 + 16) | ((u64)(D_00FA6000.x58 * 16 + 16) << 16);
+    x = D_0108EEB0 * 18 + 202;
     p += 2;
     p[0] = XYZ(x * 16, y * 16);
     p[1] = 5;
