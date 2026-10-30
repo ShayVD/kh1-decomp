@@ -461,6 +461,359 @@ static int nat_13(u32 pc) {
     }
 }
 
+/* P11, from 007: P18 with a near-plane cull and a guard band.  The same record stream and output; per vertex,
+ * after the matrix: w - 1 negative (SUB.w's MAC flag) culls it (CLIP set to 0x3F, the ADC, no STQ or XYZ
+ * written); else as P18, plus CLIPW of (x - 2048, y - 2048, 0) against 2048, the ADC also when any of the last
+ * three vertices is outside it.  The program is scheduled without stalls, so its cycles are its pairs */
+static __inline__ u32 nat_clipbits(uint32x4_t u);
+static int nat_11(u32 pc) {
+    u32 np = 3, nv = 0, q = 0, mcull = 0, cl = clip_last;
+    int lastc = 0, isi = 0;
+    uint32x4_t v26, v27, v28 = VU_LD(vf[28]), v29 = VU_LD(vf[29]);
+    uint32x4_t v30 = VU_LD(vf[30]), v31 = VU_LD(vf[31]), a = VU_LD(acc), rgba = VU_LD(vf[1]);
+    uint32x4_t xyz = VU_LD(vu_lanes[0xe]), xy = VU_LD(vu_lanes[0xc]), lx, ly;
+    uint32x4_t g = vsetq_lane_u32(0x45000000u, vdupq_n_u32(0), 3); /* (0, 0, 0, 2048) */
+    float32x4_t c0 = vdupq_n_f32(0), c1 = c0, c2 = c0, c3 = c0, k2048 = vdupq_n_f32(2048.0f);
+    u16 i1, i2, i3, i4, i5, i7 = 0, s = 0xFFFF;
+    if (pc != 7) return 0;
+    v26 = nat_u(vfin(VU_LD(vf[26])));
+    v27 = nat_u(vfin(VU_LD(vf[27])));
+    lx = ly = v26;
+    i2 = (u16)top;
+    i3 = (u16)(i2 + 0x1E0);
+    vi[11] = i3;
+    for (;;) {
+        const u32 *h = mem[i2 & (DATA_QW - 1)];
+        u16 op = (u16)h[0];
+        i4 = (u16)h[2];
+        i5 = (u16)h[3];
+        i1 = (u16)(op - 1);
+        np += 5;
+        if (!op) { /* a matrix into slot z (0, 1, else 2): vf05-08, vf12-15, vf19-22 */
+            int r = i4 == 0 ? 5 : i4 == 1 ? 12 : 19;
+            np += i4 == 0 ? 8 : 11;
+            i4 = (u16)(i4 - 1);
+            i2 = (u16)(i2 + 8);
+            memcpy(vf[r], mem[(i2 - 7) & (DATA_QW - 1)], 16);
+            memcpy(vf[r + 1], mem[(i2 - 6) & (DATA_QW - 1)], 16);
+            memcpy(vf[r + 2], mem[(i2 - 5) & (DATA_QW - 1)], 16);
+            memcpy(vf[r + 3], mem[(i2 - 4) & (DATA_QW - 1)], 16);
+            if (s == (u16)r) s = 0xFFFF;
+            continue;
+        }
+        i2 = (u16)(i2 + 1);
+        v31 = VU_LD(mem[i2 & (DATA_QW - 1)]);
+        i2 = (u16)(i2 + 1);
+        np += 3;
+        if (op != 1) { /* the end: the EOP word, the kick */
+            if (nv) {
+                if (lastc)
+                    mac_now = mcull;
+                else /* the last vertex's MSUB in full: its MAC flag and vf30's xyz */
+                    mac_now = nat_cross_last(lx, ly, a, xyz, &v30);
+                vi[7] = i7;
+                clip_now = cl;
+                q_reg = q;
+                if (isi) { /* a vertex not culled: vf26 / vf27 its edge and position (else the run's own, not fin()'d) */
+                    i_reg = 0x45000000u;
+                    VU_ST(vf[26], v26);
+                    VU_ST(vf[27], v27);
+                }
+            }
+            clip_last = cl;
+            vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[5] = i5;
+            VU_ST(vf[28], v28); VU_ST(vf[29], v29);
+            VU_ST(vf[30], v30); VU_ST(vf[31], v31); VU_ST(acc, a);
+            mem[i3 & (DATA_QW - 1)][0] = vi[13];
+            np += 10;
+            st.insns += np;
+            st.cycles += np;
+            kick(vi[11]);
+            tpc = 7 & (MICRO_N - 1);
+            return 1;
+        }
+        /* 02f-034: a GIF tag and z vertices (at least one), CLIP 0 */
+        i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
+        cl = 0;
+        VU_ST(mem[i3 & (DATA_QW - 1)], v31);
+        i3 = (u16)(i3 + 1);
+        np += 6;
+        v31 = vfo(vsubq_f32(vfin(v31), vfin(v31))); /* 048, each vertex: vf31 - vf31 */
+        for (;;) {
+            uint32x4_t n = VU_LD(mem[i2 & (DATA_QW - 1)]), p = VU_LD(mem[(i2 + 1) & (DATA_QW - 1)]);
+            uint32x4_t t = VU_LD(mem[(i2 + 2) & (DATA_QW - 1)]);
+            float32x4_t pf, qq;
+            u32 w, m;
+            int sl = i7 == 0 ? 5 : i7 == 1 ? 12 : 19;
+            i2 = (u16)(i2 + 3);
+            np += sl == 5 ? 6 : 9;
+            if (s != (u16)sl) {
+                s = (u16)sl;
+                c0 = vfin(VU_LD(vf[sl]));
+                c1 = vfin(VU_LD(vf[sl + 1]));
+                c2 = vfin(VU_LD(vf[sl + 2]));
+                c3 = vfin(VU_LD(vf[sl + 3]));
+            }
+            /* 03a-03d (or the slot's): the matrix; RGBA out */
+            pf = vfin(p);
+            VU_ST(mem[(i3 + 1) & (DATA_QW - 1)], rgba);
+            a = vfo(vmulq_f32(c0, vdupq_lane_f32(vget_low_f32(pf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c1, vdupq_lane_f32(vget_low_f32(pf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c2, vdupq_lane_f32(vget_high_f32(pf), 0))));
+            v28 = vfo(vaddq_f32(nat_f(a), vmulq_f32(c3, vdupq_lane_f32(vget_high_f32(pf), 1))));
+            /* 049-050: Q = 1 / w; w - 1's MAC flag (vf00.w is 1; w is fout()'s) */
+            w = vgetq_lane_u32(v28, 3);
+            q = nat_rcp(w);
+            m = 0;
+            fout(fin(w) - 1.0f, 3, &m);
+            i1 = (u16)(i5 & vi[14]);
+            i5 = (u16)(i5 + 1);
+            np += 11;
+            nv++;
+            if (m & 0x10) { /* 051-053, 071-076: culled */
+                lastc = 1;
+                mcull = m;
+                cl = 0x3F;
+                v29 = n;
+                v30 = t;
+                i1 = (u16)(vi[13] | vi[12]);
+                np += 9;
+            } else {
+                uint32x4_t v;
+                u32 mm;
+                lastc = 0;
+                isi = 1;
+                /* 054-05c: STQ and xyzw times Q, (x, y) - 2048, the edge (z 0, w 2048) */
+                qq = nat_f(vdupq_n_u32(q));
+                v28 = vfo(vmulq_f32(nat_f(v28), qq));
+                v30 = vfo(vmulq_f32(vfin(t), qq));
+                VU_ST(mem[i3 & (DATA_QW - 1)], v30);
+                v31 = vbslq_u32(xy, vfo(vsubq_f32(nat_f(v28), k2048)), vdupq_n_u32(0));
+                v29 = vbslq_u32(xy, vfo(vsubq_f32(nat_f(v28), nat_f(v27))), g);
+                /* 060: CLIPW of vf31 against 2048 */
+                v = vbslq_u32(xyz, v31, g);
+                cl = ((cl << 6) | nat_clipbits(v)) & 0xFFFFFF;
+                /* 062-067: the cross product's z sign, operands by parity */
+                if (i1) { lx = v26; ly = v29; } else { lx = v29; ly = v26; }
+                mm = nat_cross_z(lx, ly, xyz, &a);
+                v27 = v28;
+                v26 = v29;
+                v28 = vbslq_u32(xyz, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(nat_f(v28), 16.0f))), v28);
+                {
+                    u32 *o = mem[(i3 + 2) & (DATA_QW - 1)];
+                    vst1q_lane_u32(o, v28, 0);
+                    vst1q_lane_u32(o + 1, v28, 1);
+                    vst1q_lane_u32(o + 2, v28, 2);
+                }
+                np += 21;
+                if (cl & 0x3FFFF) { /* off the guard band */
+                    i1 = (u16)(vi[13] | vi[12]);
+                    np += 6;
+                } else {
+                    i1 = (u16)((mm & 0x20 ? vi[13] : 0) | vi[12]);
+                    np += 5 + (mm & 0x20 ? 6 : 5);
+                }
+            }
+            i4 = (u16)(i4 - 1);
+            i3 = (u16)(i3 + 3);
+            i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
+            mem[(i3 - 1) & (DATA_QW - 1)][3] = i1;
+            if (!i4) break;
+            np += 4;
+        }
+    }
+}
+
+/* P10, from 006: a strip of positions only (XYZ2 at 12.4, the ADC word 0).  Its record stream at TOP: op 0 a matrix
+ * into slot z (vf05-08, vf12-15, vf19-22), op 1 a GIF tag and z positions (w picks the slot; the position's own w
+ * is not read, the matrix's w row is added once), anything else the end.  Software-pipelined: a pass takes one
+ * position through its matrix, divides the one before by its w and writes the one before that.  The program
+ * assumes z >= 3; with fewer its count wraps as a u16, as here */
+static int nat_10(u32 pc) {
+    u32 np = 3, cy = 0, q = 0, ng = 0;
+    u16 i1, i2, i3, i4, i7 = vi[7];
+    uint32x4_t v25 = VU_LD(vf[25]), v26 = VU_LD(vf[26]), v27 = VU_LD(vf[27]), v28 = VU_LD(vf[28]);
+    uint32x4_t v31 = VU_LD(vf[31]), a = VU_LD(acc), xyz = VU_LD(vu_lanes[0xe]);
+    float32x4_t c[3][4], one = vdupq_n_f32(1.0f);
+    u32 have = 0;
+    static const u16 slot_r[3] = { 5, 12, 19 };
+    int full = 1;
+    if (pc != 6) return 0;
+    i2 = (u16)top;
+    i3 = (u16)(i2 + 0x200);
+    vi[11] = i3;
+#define NAT10_XF(v) do { /* the slot i7 picks (i7 counts down as the program's ibeq / iaddi do) */ \
+        int r_ = i7 == 0 ? 0 : i7 == 1 ? 1 : 2; \
+        const float32x4_t *m_; \
+        float32x4_t p_ = vfin(v); \
+        np += r_ ? 10 : 7; \
+        i7 = (u16)(i7 - 1); \
+        if (!(have >> r_ & 1)) { \
+            have |= 1u << r_; \
+            c[r_][0] = vfin(VU_LD(vf[slot_r[r_]])); \
+            c[r_][1] = vfin(VU_LD(vf[slot_r[r_] + 1])); \
+            c[r_][2] = vfin(VU_LD(vf[slot_r[r_] + 2])); \
+            c[r_][3] = vfin(VU_LD(vf[slot_r[r_] + 3])); \
+        } \
+        m_ = c[r_]; \
+        a = vfo(vmulq_f32(m_[0], vdupq_lane_f32(vget_low_f32(p_), 0))); \
+        a = vfo(vaddq_f32(nat_f(a), vmulq_f32(m_[1], vdupq_lane_f32(vget_low_f32(p_), 1)))); \
+        a = vfo(vaddq_f32(nat_f(a), vmulq_f32(m_[2], vdupq_lane_f32(vget_high_f32(p_), 0)))); \
+        nw_ = vfo(vaddq_f32(nat_f(a), vmulq_f32(m_[3], one))); \
+    } while (0)
+    for (;;) {
+        const u32 *h = mem[i2 & (DATA_QW - 1)];
+        u16 op;
+        if (full) { /* 009-00c */
+            i1 = (u16)h[0];
+            i4 = (u16)h[2];
+            np += 4;
+        }
+        full = 1;
+        op = i1;
+        i1 = (u16)(i1 - 1);
+        np += 2;
+        if (!op) { /* 01a-02e: a matrix into slot z */
+            int r = i4 == 0 ? 0 : i4 == 1 ? 1 : 2;
+            np += r ? 11 : 8;
+            i4 = (u16)(i4 - 1);
+            i2 = (u16)(i2 + 5);
+            memcpy(vf[slot_r[r]], mem[(i2 - 4) & (DATA_QW - 1)], 16);
+            memcpy(vf[slot_r[r] + 1], mem[(i2 - 3) & (DATA_QW - 1)], 16);
+            memcpy(vf[slot_r[r] + 2], mem[(i2 - 2) & (DATA_QW - 1)], 16);
+            memcpy(vf[slot_r[r] + 3], mem[(i2 - 1) & (DATA_QW - 1)], 16);
+            have &= ~(1u << r);
+            continue;
+        }
+        i2 = (u16)(i2 + 1);
+        v31 = VU_LD(mem[i2 & (DATA_QW - 1)]);
+        i2 = (u16)(i2 + 1);
+        np += 3;
+        if (op != 1) { /* the end: the EOP word, the kick */
+            vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[7] = i7;
+            VU_ST(vf[25], v25); VU_ST(vf[26], v26); VU_ST(vf[27], v27); VU_ST(vf[28], v28);
+            VU_ST(vf[31], v31); VU_ST(acc, a);
+            if (ng) q_reg = q;
+            mem[i3 & (DATA_QW - 1)][0] = vi[13];
+            np += 10;
+            st.insns += np;
+            st.cycles += np + cy;
+            kick(vi[11]);
+            tpc = 6 & (MICRO_N - 1);
+            return 1;
+        }
+        /* 02f-031: the GIF tag out, the first position */
+        ng++;
+        i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
+        v27 = VU_LD(mem[i2 & (DATA_QW - 1)]);
+        i2 = (u16)(i2 + 1);
+        VU_ST(mem[i3 & (DATA_QW - 1)], v31);
+        i3 = (u16)(i3 + 1);
+        np += 3;
+        cy += 1;
+        { /* 032-042: the first position through its matrix; the second loaded */
+            uint32x4_t nw_;
+            u16 s7 = i7;
+            i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
+            {
+                u16 t7 = i7;
+                i7 = s7;
+                NAT10_XF(v27);
+                i7 = t7;
+            }
+            np -= 1; /* 6 / 9 pairs */
+            v28 = VU_LD(mem[i2 & (DATA_QW - 1)]);
+            i2 = (u16)(i2 + 1);
+            v27 = nw_;
+        }
+        { /* 043-054: the second through its matrix, Q = 1 / the first's w */
+            uint32x4_t nw_;
+            i4 = (u16)(i4 - 1);
+            q = nat_rcp(vgetq_lane_u32(v27, 3));
+            v26 = v27;
+            NAT10_XF(v28);
+            v27 = nw_;
+            i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
+        }
+        /* 055-05b: the third loaded, the first projected */
+        v28 = VU_LD(mem[i2 & (DATA_QW - 1)]);
+        i2 = (u16)(i2 + 1);
+        i4 = (u16)(i4 - 1);
+        v26 = vfo(vmulq_f32(nat_f(v26), nat_f(vdupq_n_u32(q))));
+        np += 7;
+        cy += 1;
+        for (;;) { /* 05c-074 */
+            uint32x4_t nw_;
+            v25 = vbslq_u32(xyz, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(nat_f(v26), 16.0f))), v25);
+            np -= 1; /* 6 / 9 pairs with 05c-05d */
+            q = nat_rcp(vgetq_lane_u32(v27, 3));
+            v26 = v27;
+            NAT10_XF(v28);
+            v27 = nw_;
+            mem[i3 & (DATA_QW - 1)][3] = 0;
+            i3 = (u16)(i3 + 1);
+            i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
+            v28 = VU_LD(mem[i2 & (DATA_QW - 1)]);
+            i2 = (u16)(i2 + 1);
+            i4 = (u16)(i4 - 1);
+            {
+                u32 *o = mem[(i3 - 1) & (DATA_QW - 1)];
+                vst1q_lane_u32(o, v25, 0);
+                vst1q_lane_u32(o + 1, v25, 1);
+                vst1q_lane_u32(o + 2, v25, 2);
+            }
+            v26 = vfo(vmulq_f32(nat_f(v26), nat_f(vdupq_n_u32(q))));
+            np += 8; /* 06d-074 */
+            if (!i4) break;
+            cy += 2;
+        }
+        /* 075-089: the last two out, the next header read; on at 00d */
+        q = nat_rcp(vgetq_lane_u32(v27, 3));
+        v25 = vbslq_u32(xyz, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(nat_f(v26), 16.0f))), v25);
+        mem[i3 & (DATA_QW - 1)][3] = 0;
+        i3 = (u16)(i3 + 1);
+        v26 = v27;
+        i2 = (u16)(i2 - 1);
+        {
+            u32 *o = mem[(i3 - 1) & (DATA_QW - 1)];
+            vst1q_lane_u32(o, v25, 0);
+            vst1q_lane_u32(o + 1, v25, 1);
+            vst1q_lane_u32(o + 2, v25, 2);
+        }
+        mem[i3 & (DATA_QW - 1)][3] = 0;
+        i3 = (u16)(i3 + 1);
+        i1 = (u16)mem[i2 & (DATA_QW - 1)][0];
+        i4 = (u16)mem[i2 & (DATA_QW - 1)][2];
+        { /* 080: vf26 times Q with its MAC flag (the run's) */
+            u32 m = 0, u[4], t[4];
+            VU_ST(t, v26);
+            if (!vu_opbe(u, K_MUL, t, &q, acc, 0xf, &m)) {
+                f32 r0 = fin(t[0]) * fin(q);
+                f32 r1 = fin(t[1]) * fin(q);
+                f32 r2 = fin(t[2]) * fin(q);
+                f32 r3 = fin(t[3]) * fin(q);
+                u[0] = fout(r0, 0, &m);
+                u[1] = fout(r1, 1, &m);
+                u[2] = fout(r2, 2, &m);
+                u[3] = fout(r3, 3, &m);
+            }
+            mac_now = m;
+            v26 = VU_LD(u);
+        }
+        v25 = vbslq_u32(xyz, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(nat_f(v26), 16.0f))), v25);
+        {
+            u32 *o = mem[(i3 - 1) & (DATA_QW - 1)];
+            vst1q_lane_u32(o, v25, 0);
+            vst1q_lane_u32(o + 1, v25, 1);
+            vst1q_lane_u32(o + 2, v25, 2);
+        }
+        np += 21;
+        cy += 1;
+        full = 0;
+    }
+#undef NAT10_XF
+}
+
 /* the six bits of VU1's CLIPW of a register against its own w (vu_clipw()'s) */
 static __inline__ u32 nat_clipbits(uint32x4_t u) {
     static const u32 wp[4] = { 1, 4, 16, 0 }, wn[4] = { 2, 8, 32, 0 };
@@ -1039,6 +1392,7 @@ static int nat_0(u32 pc) {
     tpc = 0x4e & (MICRO_N - 1);
     return 1;
 }
+
 #endif
 
 /* the program numbers (tools/vu/find_vu1.py's) that have one.  A native run answers 0, before it changes
@@ -1047,6 +1401,8 @@ static int (*nat_run(int num))(u32) {
     if (!kh1_vu1_native) return 0;
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
     if (num == 0) return nat_0;
+    if (num == 10) return nat_10;
+    if (num == 11) return nat_11;
     if (num == 13) return nat_13;
     if (num == 18) return nat_18;
 #endif
