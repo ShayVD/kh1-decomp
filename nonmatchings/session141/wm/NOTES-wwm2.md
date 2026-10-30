@@ -1159,3 +1159,19 @@ None of the drafts below changed.
   - Body-in-loop forms are strength-reduced (101-113). Every build mode was tried on a/b/g1/w1, and the hash-table lever changes nothing.
 - **dktitle f228c8 (374) and f24b60 (358):** both differ structurally (prologue and schedule from the first block on). hill3 for 240 s and 300 s gave nothing.
 - **Missed by the layout method:** dktitle f24330 (123, a session132 drafts.tsv file). xs_dh_break f20820 showed only because its status was stale; after make ovl it is matched (8/9).
+
+## Round 56 (bucket lever write-up; dkmovie f260c0/f25978 restructured)
+
+- **docs/overlays.md:** new entry "gcse's hash table size as a register lever". **tools/ovl/gcsebucket.py** prints the bucket count, the implied max_cuid range, and each symbol expression's bucket.
+- **Bucket lever on the 3-5 point drafts:** /tmp/claude-0/s141/r56/asmscan3.py puts 1-7 empty asms before every top-level statement.
+  - gb f425a8 and wm f696a0 never go below 3 (252 tries each). The swapped cw/size zeros are user pseudos, not gcse pseudos.
+  - dktitle f241c8 stays at 3 at best and f26710 at 9. Neither moves.
+  - xs_genie f218f8 reaches 0 with an odd count (1, 3, 5, 7) of empty asms right before `p = a`, and stays at 3 with an even count. The bucket count stays at 31 throughout, so this is a sched2 tie between `lui s4` and `move s0,sp` in that block, not the bucket lever. It is only a hint. Zero locals (return value, loop starts) leave it at 3.
+- **dkmovie f260c0: 360 -> 207 -> 89** (1156 vs 1152 bytes).
+  - The target is one switch with case 0 inside it, body order 0x40, 0x50/0x51, 0x1C30, 0x3860, 0x6400, 0xC800, 0x8000/0x8700, 0x3830/0x3F30. After it comes `if (t == 0) present; else f3DF34++` (an unknown type also advances the clock).
+  - The f3DED8 test is nested ifs (`!= 0`, then `== 1`), and `p = 0` sits above the switch.
+  - Left: p in its own register, f3DF38[1] in s0 with slti/sltiu for `>= 0`, and plain versus likely branches into the three epilogue entries. Early returns and an inner switch made no difference.
+- **dkmovie f25978: 256 -> 226 -> 224** (1568 vs 1576 bytes).
+  - Types 1 and 2 test IPU_CTRL bit 14 after func_00f26848 and, on a clear bit, read IPU_CTRL again and discard it. With that test, both paths cross-jump into one call, and valaudit's callee sequence matches. hill3 (360 s) gave 2 more points.
+  - Left: the s-register choice for n/mx/my and the IPU pointers.
+- **xs_dumbo f222f8 (47):** do-while, while, label-loop and inner-loop forms of the row loop score 47-55. Moving the r2 step to the end of the row is a loop.c loop (271). The start label's alignment and r2's slot are unchanged.
