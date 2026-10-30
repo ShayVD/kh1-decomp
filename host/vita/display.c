@@ -18,7 +18,13 @@
  *
  * Session 136: when the GPU renderer runs (gxm.c, kh1_vita_present_gpu), the picture is its display target,
  * drawn each vblank after the frame's GPU scenes (main.c), and the GS model draws no pixels.  Not part of the
- * PS2 build. */
+ * PS2 build.
+ *
+ * Wide screen (config.txt wide=, docs/vita-build.md "Wide screen"): kh1_vita_display_mode picks how the
+ * picture covers the 960 x 544 screen: 0 the 4:3 picture pillarboxed as above, 1 the GPU's wide display target
+ * (main.c set the hor+ view, host/port/view.c, so the target is the view's 678 x 448) over the whole screen, 2 the
+ * 4:3 picture stretched to the whole screen.  In 1 and 2 the status strip is drawn only while no picture is
+ * shown (the boot, a load, a hang) or with strip=1. */
 #include <psp2/display.h>
 #include <psp2/gxm.h>
 #include <psp2/kernel/processmgr.h>
@@ -43,6 +49,8 @@ static u32 pic_w, pic_lines;               /* the texture's picture: columns, th
 static unsigned long status_frames, drawn_at; /* the last vblank's; the vblank of the last draw */
 static unsigned status_reads;
 static int gpu; /* session 136: the picture is gxm.c's display target */
+static int mode; /* 0 4:3 pillarboxed, 1 the wide view's target, 2 4:3 stretched (kh1_vita_display_mode) */
+static int strip_on = 1;
 volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown; /* the watchdog's (main.c) */
 volatile u32 kh1_vita_us_present; /* session 135: microseconds in present_buffer (the watchdog's) */
 
@@ -72,15 +80,26 @@ static void strip(void) {
 /* the texture's picture over the canvas (its 512 columns and the display's lines are the canvas's
  * 512 x 384: NTSC's taller pixels), the strip, shown */
 static void draw(void) {
+    int pic = 0;
     vita2d_start_drawing();
     vita2d_clear_screen();
     if (gpu) {
-        if (kh1_vita_gxm_present(canvas.ox, canvas.oy, 512.0f * canvas.s, 384.0f * canvas.s)) shown++;
+        if (mode ? kh1_vita_gxm_present(0.0f, 0.0f, (f32)FB_W, (f32)FB_H)
+                 : kh1_vita_gxm_present(canvas.ox, canvas.oy, 512.0f * canvas.s, 384.0f * canvas.s)) {
+            shown++;
+            pic = 1;
+        }
         kh1_vita_shown = shown;
-    } else if (pic_w && pic_lines)
-        vita2d_draw_texture_part_scale(tex, canvas.ox, canvas.oy, 0, 0, (float)pic_w, (float)pic_lines, canvas.s,
-                                       canvas.s * 384.0f / (float)pic_lines);
-    strip();
+    } else if (pic_w && pic_lines) {
+        if (mode)
+            vita2d_draw_texture_part_scale(tex, 0.0f, 0.0f, 0, 0, (float)pic_w, (float)pic_lines, (float)FB_W / (float)pic_w,
+                                           (float)FB_H / (float)pic_lines);
+        else
+            vita2d_draw_texture_part_scale(tex, canvas.ox, canvas.oy, 0, 0, (float)pic_w, (float)pic_lines, canvas.s,
+                                           canvas.s * 384.0f / (float)pic_lines);
+        pic = 1;
+    }
+    if (!mode || !pic || strip_on > 1) strip();
     vita2d_end_drawing();
     vita2d_swap_buffers();
     drawn_at = status_frames;
@@ -143,6 +162,13 @@ void kh1_vita_present_gpu(void) {
     gpu = 1;
     kh1_dma_after_send = count_send;
     kh1_dma_after_send_reads = 0; /* session 141: tadr only, so the sends need not wait for the GS worker */
+}
+
+/* config.txt's wide= and strip= (main.c): mode 1 only with the GPU's picture (the GS model's buffers stay the
+ * PS2's 512 wide, so the software picture takes 1 as 2); strip 1 keeps the status strip over a full-screen picture */
+void kh1_vita_display_mode(int m, int strip_always) {
+    mode = m;
+    strip_on = strip_always ? 2 : 1;
 }
 
 /* session 136: each vblank after the GPU's frame (main.c) */

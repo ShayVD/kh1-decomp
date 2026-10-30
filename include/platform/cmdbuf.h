@@ -101,6 +101,8 @@ typedef struct {
     u32 uoff;          /* its uniform slot (bytes into the frame's uniform slot) */
     u8 lost;           /* a vertex or uniform allocation did not fit */
     u8 samples;        /* 1 + the KH1CmdRec.tgt index it samples, 0 none */
+    u8 wtex;           /* wide screen: the target it samples has the view's margin, so it is sampled its whole width
+                        * (its s taken over that width, KH1CmdRec.tsw) */
     u8 hasv;           /* its vertices were given (not a count-only primitive) */
     u8 kind;           /* session 127: KH1_CMD_* (the fields above are a draw's) */
     s16 tslot, pslot;  /* a draw's texture cache entry and palette slot (-1 none) */
@@ -175,6 +177,8 @@ typedef struct {
     KH1CmdPass prev[KH1_CMD_PASSES];
     u32 nprev;
     KH1CmdCount frame, total;
+    f32 tsw[KH1_CMD_TARGETS];   /* wide screen: each target's last pass's width (unscaled) when it had the view's margin
+                                 * (target.h's ox), else 0 */
 } KH1CmdRec;
 
 /* a recorder over two rings' memory (KH1_RING_FRAMES x vslot / uslot bytes, 32-byte aligned) */

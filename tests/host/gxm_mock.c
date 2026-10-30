@@ -704,6 +704,11 @@ static int compare(const char *what, u32 rt, u32 bp, u32 rows) {
         printf("kh1-gxm-mock: frame %u: no %s target drawn (%u draws)\n", frame, what, g.draws);
         return 1;
     }
+    if (ppm && w > 512) { /* a wide view's target (KH1_HOST_WIDE) whole; the comparison takes the model's 512 */
+        char name[32];
+        snprintf(name, sizeof name, "gpu_wide_%s", what);
+        write_ppm(name, gpu, w, h > rows ? rows : h, stride);
+    }
     if (w > 512) w = 512;
     if (h > rows) h = rows;
     kh1_gsmem_read_rect(KH1_PSMCT32, bp, 8, 0, 0, w, h, gs, w);
