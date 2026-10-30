@@ -948,3 +948,29 @@ portall wm gb: ported 0 (the gb twin was found by peel.py).
   | gb | f446d0 | 1324 -> 1280 | D_00FB4AFC = D_00F7037C |
   | gb | f46718 | 230 -> 228 | D_00FB4C7C = D_00F704FC |
   | wm | f66bd0 | 102 -> 96 | the gb declaration of D_00F56DC0 was unused and is dropped |
+
+## Round 43 (wwm2)
+
+**msdscan over every draft (r42/msd2_wm.txt, r42/msd2_gb.txt, filtered with r42/msdfilt.py).**
+Each hit below names the instruction difference the scan showed, then what came of it.
+
+- **f7c510: score 86 -> 78.**
+  - The scan showed srl where we had sra, so the qword count is unsigned: `((((u32)p - (u32)top) >> 4) - 1) | 0x10000000`.
+  - Per-arm `X = x; Y = y;` copies plus `y4 = Y + 4` before the second flag test bring back the arm copies.
+  - Left: the Y copy is still coalesced into the load register, and x0 goes to a2 instead of the x temp.
+- **wm f69278: score 41 -> 37.** The drafttwins rerun ported gb f42180 onto it; f42180 is the twin of f79700 from round 42.
+- **False positives:** f72a70 (lui 0x0) and f6ae68 (lui 0xa) only differ in our unrelocated jump-table address. msd should mask `lui X; addu; lw; jr` sequences.
+- **No gain:**
+  - **f465a8 (10):** I tried every pair of access forms for the two x10 reads. The base address is always built as a full address.
+  - **f78d50 (59):** the target leaves nops after the soft-double libcalls (`jal; nop; move a0,v0`). Mode .nofill gives 45 in the loop but breaks the prologue. Something stops reorg filling the libcall arg moves.
+  - **f23628 (81):** the one-call forms of the f23018 call (`!= 0`, ternary, flag variable) score 136.
+  - **f5a4f0 (196):**
+    - The target computes i * 15 / 30 as /2 too, but it keeps a leftover `li v1,30; beqzl; break 7` divide-by-zero check.
+    - So the divisor 30 was a register that only later became known as a constant, maybe through an inline helper's parameter.
+    - A variable n and a temp t are both worse.
+  - **f4bdf8 (179):** all orders of the three field stores in each of the six blocks were worse or equal.
+  - **f4b338 (112):**
+    - The target has `xori r,r,0` before movn/movz, so the result is compared against a value that only later becomes known as 0.
+    - Return types u8 through s64, `!= ret` and `!= flags` all leave the score at 112.
+  - **f36bc0 (6):** an inline bound `(s32)(o->f20 / D)` is worse (78-101).
+  - **f2ba68, f3a030, f2dc50, f60af0, f66bd0, f69fd0:** as described in round 42 or in their headers.
