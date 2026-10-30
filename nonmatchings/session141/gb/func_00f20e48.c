@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 245 -> 215, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 249 -> 245, func_00f24240 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 337 -> 249, port.py of the wm twin func_00f47f40 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f20e48 near miss: 236 words differ, score 337 (ours 1420 bytes, original 1480). World init: view-screen matrix and two light matrices at World+4112, misc World fields, the 16-byte header from func_001ba980, palette bytes from D_00379F28 / D_0037A028, and GbPos bitfields at 72/92/94/96 from func_001bb678. Logic is complete. Findings: the float constants are truncated, so write 0.577f, 0.8f, 0.3f, 0.4f and 0.1f as is, since this gcc truncates; the u16 bitfields are accessed with ld/sd because World is 16-aligned (declare them as u16 bitfields, not u64); hold World->m in a local OvlMtx *mm and index mm[1], mm[2] directly; load b0 once into a local. Left: (1) the order of the matrix constant stores (the original first stores the last use of each constant); (2) the GbPos block after func_001bb678. The original computes v / 2 - 1 as u16 arithmetic (+0xffff) and re-extracts each field for the 94/96 copies, while ours CSEs them (60 bytes shorter). All orders of the six bitfield lines were tried (no match). wm twin: func_00f47f40 (same score). */
@@ -86,10 +87,10 @@ s32 func_00f24240(void *, s32);
 s32 func_001ba3f0(s32);
 
 void func_00f20e48(void) {
-    s32 i;
-    u16 v;
     OvlMtx *mm;
     s32 n;
+    u16 v;
+    s32 i;
     mm = D_00F56DC0->m;
     sceVu0ViewScreenMatrix(mm[0], 512.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 16777000.0f, 1.0f, 65536.0f);
     sceVu0CopyMatrix(D_00F56E00, mm[0]);
@@ -100,6 +101,7 @@ void func_00f20e48(void) {
     mm[1][0][3] = 0.0f;
     mm[1][1][0] = -0.577f;
     mm[1][1][1] = 0.577f;
+    D_00F56DC0->x7C = 0;
     mm[1][1][2] = -0.577f;
     mm[1][1][3] = 0.0f;
     mm[1][2][0] = -0.577f;
@@ -124,7 +126,6 @@ void func_00f20e48(void) {
     mm[2][2][3] = 0.0f;
     mm[2][3][0] = 0.1f;
     mm[2][3][1] = 0.1f;
-    D_00F56DC0->x7C = 0;
     mm[2][3][2] = 0.3f;
     mm[2][3][3] = 1.0f;
     D_00F56DC0->x78 = 1;
