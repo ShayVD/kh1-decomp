@@ -1,5 +1,5 @@
-/* drafttwins.py: score 584 -> 551, port.py of the wm twin func_00f71b68 draft. Earlier header below. */
-/* Round 41 wwm2: score 660 -> 584, port.py of the wm twin func_00f71b68 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 0657d46c (gb func_00f4aa70 near miss, score 660 -> 584, port of wm func_00f71b68 (wwm2 rou) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 551 was not valid. Restored the last valid statement order: score 660. Earlier header below. */
+/* score 660: gb port of wm f71b68 via portmap2; same remaining block-placement diffs. Round 25 draft wwm2. */
 typedef struct { s16 v[2]; } S2;
 typedef struct { u8 pad[16]; s32 x10; } Win;
 typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
@@ -73,21 +73,21 @@ void func_00f4aa70(void)
     s32 pcol;
     s32 prow;
     s32 half;
-    u32 trig, held;
-    s32 mode, row, done, n, t, v;
-    s32 save;
     s32 flag;
+    s32 save;
+    s32 mode, row, done, n, t, v;
+    u32 trig, held;
+
+    mode = D_00F702F0;
     ic = D_00F74078;
     D_00F82C64 = -1;
-    mode = D_00F702F0;
     save = D_00F702D8;
+    flag = 0;
     w0 = func_00f445a8(10, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 120, 2, D_00F70658, D_00F7065C, D_00F70660, D_00F70664, 256, mode);
     w1 = func_00f445a8(10, 3, 0, 2, 0, 0, 0, 0, 300, 0, 0, 120, 2, D_00F70658, D_00F7065C, D_00F70660, D_00F70664, 256, mode);
     w2 = func_00f445a8(10, 3, 0, 2, 0, 0, 0, 0, 0, 0, 0, 120, 2, D_00F70668, D_00F7066C, D_00F70670, D_00F70674, 256, mode);
-
     w3 = func_00f445a8(10, 3, 0, 2, 0, 0, 0, 0, 300, 0, 0, 120, 2, D_00F70668, D_00F7066C, D_00F70670, D_00F70674, 256, mode);
     wa = func_00f445a8(10, 1, 0, 2, 0, 15, 83, 0, 100, D_00F70640 - 32, 0, 0, 0, D_00F70658, D_00F7065C, D_00F70660, D_00F70664, 256, mode);
-    flag = 0;
     wb = func_00f445a8(10, 1, 0, 2, 0, 15, 84, 0, 100, D_00F70644 - 32, 0, 0, 0, D_00F70668, D_00F7066C, D_00F70670, D_00F70674, 256, mode);
     help = func_00f445a8(10, 2, 0, 2, 0, D_00F70518, 53, 0, D_00F7051C, D_00F70520, 0, 0, 0, D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, func_00f20018() == 0 ? mode : 1);
     func_00f445a8(10, 0, 2, 1, 0, 15, 7, 4, D_00F704A4, D_00F704A8, 0, D_00F704AC, 0, 0, 0, 0, 0, 256, mode);
@@ -98,11 +98,11 @@ void func_00f4aa70(void)
         func_0020be10(16);
         while (!(D_002C5AD0.x8 & 0x6000)) func_0024e468(1);
         flag = 1;
-        goto end;
         func_0011d768(3);
+        goto end;
     }
-    col = 0;
     row = 0;
+    col = 0;
     half = D_00F82B48 / 2;
     if (!func_00f4aa60()) {
         func_00f4a1c0(0, 0);
@@ -111,8 +111,8 @@ void func_00f4aa70(void)
     func_00f4a048(0, 0);
     func_0024e468(D_00F702F0);
 mode1:
-    done = 0;
     wt->x10 = ic.v[0];
+    done = 0;
     help->x10 = 53;
     for (;;) {
         pcol = col;
@@ -129,8 +129,8 @@ mode1:
             }
             if (D_00F82C58 == row * 2 + col) {
                 func_0011d768(4);
-                held = 0;
                 trig = 0;
+                held = 0;
                 goto cancel;
             }
             D_00F82C60 = row * 2 + col;
@@ -140,8 +140,8 @@ mode1:
                 if (!(D_002C5AD0.x8 & 0x6000)) {
                     n = 0;
                     do {
-                        n++;
                         D_00F82C5C = 1;
+                        n++;
                         func_00f4a048(col, row);
                         func_0024e468(1);
                     } while (n < 20 && !(D_002C5AD0.x8 & 0x6000));
@@ -151,8 +151,8 @@ mode1:
                 if (t) break;
                 n = 0;
                 do {
-                    n++;
                     D_00F82C5C = 0;
+                    n++;
                     func_00f4a048(col, row);
                     func_0024e468(1);
                     if (n >= 20) break;
@@ -164,35 +164,35 @@ mode1:
                 D_00F82C60 = -1;
                 trig = 0;
                 func_0011d768(3);
+                D_00F82C5C = 0;
                 held = 0;
                 help->x10 = 54;
-                D_00F82C5C = 0;
                 goto cancel;
             }
             func_0011d768(2);
-            row = 0;
-            D_00F82B50[D_00F82C58]->x9 = D_00F82BC8[D_00F82C60] + 1;
             col = 0;
             prow = 0;
+            pcol = 0;
+            D_00F82B50[D_00F82C58]->x9 = D_00F82BC8[D_00F82C60] + 1;
+            row = 0;
             D_00F82B50[D_00F82C60]->x9 = D_00F82BC8[D_00F82C58] + 1;
             func_00f444d8(11, 0, D_00F702F0);
-            pcol = 0;
             func_0024e468(D_00F702F0);
             func_00f43cf0(11);
             func_00f4a650(wa, wb, w0, w1, w2, w3);
             func_00f4a048(0, 0);
             help->x10 = 53;
         chk:
-            trig = 0;
             held = 0;
             if (!func_00f4aa60()) done = 1;
+            trig = 0;
         }
     cancel:
         if (held & 0x4000) {
             if (D_00F82C58 < 0) {
                 func_0011d768(3);
-                goto out;
                 done = -1;
+                goto out;
             }
             D_00F82C58 = -1;
             trig = 0;
@@ -220,8 +220,8 @@ mode1:
                 if (func_00f49ff8(col, n)) row = n;
             }
             if (trig & 0x80) {
-                trig = 0;
                 n = col - 1;
+                trig = 0;
                 if (func_00f49ff8(n, row)) col = n;
             }
             if (trig & 0x20) {
@@ -241,18 +241,18 @@ mode1:
         if (done) break;
         func_0024e468(1);
     }
-mode2:
+out:
     if (done < 0) goto end;
     func_00f4a048(-1, -1);
-    func_0024e468(1);
     half = row;
-out:
-    D_00F82C64 = -1;
-    wt->x10 = ic.v[1];
+    func_0024e468(1);
+mode2:
+    pcol = col;
     row = 0;
     prow = 0;
+    wt->x10 = ic.v[1];
     help->x10 = 57;
-    pcol = col;
+    D_00F82C64 = -1;
     for (;;) {
         trig = D_002C5AD0.x10;
         held = D_002C5AD0.x8;
@@ -269,8 +269,8 @@ out:
             func_0024e468(1);
             do {
                 D_00F82C30[row * 2]->x4 = 1;
-                D_00F82C64 = row;
                 D_00F82C30[row * 2 + 1]->x4 = 1;
+                D_00F82C64 = row;
                 if (!(D_002C5AD0.x8 & 0x6000)) {
                     n = 0;
                     do {
@@ -278,11 +278,11 @@ out:
                         n++;
                     } while (n < 20 && !(D_002C5AD0.x8 & 0x6000));
                 }
-                held = D_002C5AD0.x8;
                 D_00F82C30[row * 2]->x4 = 0;
-                t = held & 0x6000;
-                D_00F82C64 = -2;
                 D_00F82C30[row * 2 + 1]->x4 = 0;
+                D_00F82C64 = -2;
+                held = D_002C5AD0.x8;
+                t = held & 0x6000;
                 if (t) break;
                 n = 0;
                 do {
@@ -311,8 +311,8 @@ out:
                 row = 0;
                 col = 0;
             }
-            trig = 0;
             help->x10 = 57;
+            trig = 0;
         }
         v = D_00F82BF0 / 2;
         if (trig & 0x40) {
@@ -333,8 +333,8 @@ out:
         }
         if (trig & 0xA0) col = (col + 1) & 1;
         if (col != pcol || row != prow) {
-            pcol = col;
             prow = row;
+            pcol = col;
             func_0011d768(1);
         }
         func_00f4a1c0(col, row);
@@ -342,14 +342,15 @@ out:
     }
 back1:
     func_00f4a1c0(-1, -1);
+back:
     D_00F82C64 = -1;
     row = 0;
     while (func_00f49ff8(col, row)) row++;
+    if (row) row--;
     if (!func_00f49ff8(col, row)) col = (col + 1) & 1;
     func_00f4a048(col, row);
     func_0024e468(1);
     goto mode1;
-    if (row) row--;
 end:
     D_00F82A28 = 0;
     func_00f444d8(11, 0, D_00F702F0);
@@ -359,8 +360,7 @@ end:
     func_00f43cf0(11);
     if (D_00F829F8 > 0) D_00F829F8 = -1;
     func_001be4d8();
-back:
-    D_00F702DC = save;
     D_00F702D8 = save;
+    D_00F702DC = save;
     if (flag) func_0020bda8(16);
 }
