@@ -1,3 +1,5 @@
+/* dkmovie.x func_00f270c8: matched by hand (session 141, wwm1 round 24) under nofill: the stores to f3DF0C and f3DF10 go first, then f3DD5C[0..2] in order, then f3DF08 (tried every order of the last six stores). */
+#include "ovl.h"
 /* Round 45 wwm2: score 30 -> 22 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f270c8: draft (session 141, round 28), structurally complete, not polished, 1176 vs 1184 bytes, 217 words differ, score 148 (m2c draft scored 307). Player reset: installs the work area, sets the picture size when one is given, clears the player state and the three stream slots, and places the slot buffers after the work area (0x3DF80, 0x162780, 0x286F80). Round 19 (wwm1): 217 -> 126 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 134 -> 96 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 21 (wwm1): score 96 -> 76 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). Round 22 (wwm1): 76 -> 52 with w3.py seed 3. Then the if as `func_00219380() == 0` first (bnezl like the original), without the CONTEXT_ONLY stub: score 38. Then 38 -> 30 with w3.py seed 5. */
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
@@ -77,10 +79,10 @@ void func_00f270c8(MovieWork *w, s32 width, s32 height, s32 limit) {
         D_00F28460->f3DD68[i] = 0;
         D_00F28460->f3DD50[i] = 0;
     }
-    D_00F28460->f3DF08 = ((s32)D_00F28460 + 0x3AB87F) & ~0xFF;
-    D_00F28460->f3DD5C[0] = (s32)D_00F28460 + 0x3DF80;
-    D_00F28460->f3DF10 = 0x124800;
-    D_00F28460->f3DD5C[2] = (s32)D_00F28460 + 0x286F80;
-    D_00F28460->f3DD5C[1] = (s32)D_00F28460 + 0x162780;
     D_00F28460->f3DF0C = 0x123800;
+    D_00F28460->f3DF10 = 0x124800;
+    D_00F28460->f3DD5C[0] = (s32)D_00F28460 + 0x3DF80;
+    D_00F28460->f3DD5C[1] = (s32)D_00F28460 + 0x162780;
+    D_00F28460->f3DD5C[2] = (s32)D_00F28460 + 0x286F80;
+    D_00F28460->f3DF08 = ((s32)D_00F28460 + 0x3AB87F) & ~0xFF;
 }
