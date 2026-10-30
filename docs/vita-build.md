@@ -1246,6 +1246,27 @@ A full ARM build of the host runner (vitasdk-independent, `make vita-armcheck`) 
 dive_en.txt under qemu-arm gives the same 130 frame digests as main, and the same VU1 run, pair, cycle, kick
 and translated counts in every `vu1 frame` line. P18 runs from 000 (its setup) still go to the translation.
 
+## P13 as hand-written C (session 150)
+
+3d-zt (P18 native) measured on the Vita: P18 40 -> 25.5 ns a pair (-36%), close to its -38% in ARM instructions,
+so the instruction count is a fair guide on the A9. The Dive's frame rate stayed ~14.6 pictures a second: P18 was
+~3% of the game thread there, P13 and P0 most of the VU1 time. Keeping the translation's VFs in local variables
+(a quick transform of vu1_tr.c in scratch) changed P0 and P13 by under 1%, so the programs get written by hand.
+
+P13 (`nat_13` in vu1_nat.h) is the skinned renderer, from 006. Its records: op 0 a matrix (w 0: into slot z; w 1:
+this record is the bone palette; else nothing), op 1 a GIF tag and z vertices, op 2 a stream of bone indices
+(the x y z w words of its qwords, read one at a time through a JR whose target names the word), anything else the
+end. A vertex is (-, -, -, n), n pre-weighted positions and STQ. Each position goes through its index's matrix
+(0 / 1 the slots, 0x100 + k the palette's k-th, loaded into slot 2) and the products are summed in ACC, then
+vf28 = ACC + vf00 * I with I 0 (a -0 in ACC becomes +0). Then as P18: Q, STQ, the screen edge, the ADC from the
+cross product's sign, plus a guard band: CLIPW of (x, y, z / 4096 through 20.12) - 2046 against 2046, and the
+ADC also when any of the last three vertices is outside it (FCAND 0x3FFFF).
+
+The same savings as P18 (registers in NEON, fin() only on what comes from memory, the cross product's MSUB in
+full only for the run's last vertex), plus the slot matrices fin()'d once until a load replaces them. All 2,035
+dumped P13 runs (both sets) give the same registers, VU memory, Q / MAC / I / clip flags, pair and cycle counts
+and kicks as the translation. ARM instructions over the 1,657 runs of the denser set: 41.8M -> 24.2M (-42%).
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
