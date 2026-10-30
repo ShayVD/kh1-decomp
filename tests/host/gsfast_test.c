@@ -165,6 +165,17 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
         if (r == 2 && seed % 3 == 0) { /* session 141: a large one, past the first blocks' row and column */
             x = R() % 1500; y = R() % 1500; w = 1 + R() % 540; h = 1 + R() % 200; bw = 1 + R() % 32;
         }
+        if (seed % 3 == 1 && R() % 4) { /* session 148: whole blocks of CT32 / Z32 / T8 (gsmem.c band_*), some not */
+            static const u32 bpsms[] = { KH1_PSMCT32, KH1_PSMZ32, KH1_PSMT8, KH1_PSMT8 };
+            psm = bpsms[R() % 4];
+            x = R() % 8 * 16 + (R() % 6 == 0 ? 8 : 0);
+            y = R() % 8 * 16 + (R() % 6 == 0 ? 4 : 0) + (psm != KH1_PSMT8 && R() % 3 == 0 ? 8 : 0);
+            w = (1 + R() % 16) * 16 + (R() % 8 == 0 ? 8 : 0);
+            h = (1 + R() % 8) * 16 + (R() % 8 == 0 ? 3 : 0);
+            bw = (w + 63) / 64 + R() % 3;
+            if (psm == KH1_PSMT8) bw = (bw + 1) & ~1u; /* T8's width in pairs of 64 */
+            if (R() % 4 == 0) bp = R() % 0x4000 & ~31u; /* page aligned */
+        }
         u32 lo = bp | bw << 14 | psm << 20 | 7u << 26 | 7u << 30;
         for (pass = 0; pass < 3; pass++) {
             u32 left = (w * h * (psm == KH1_PSMT4 || psm == KH1_PSMT4HL || psm == KH1_PSMT4HH ? 4 : psm == KH1_PSMCT32 || psm == KH1_PSMZ32 ? 32 :
@@ -172,8 +183,8 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
             u32 ds = pass == 2 ? data + 1 : data;
             kh1_gsmem_trxdir(0, 0, bp | bw << 16 | psm << 24, 0, x | y << 16, w, h);
             for (i = 0; i < left; i++) { ds = ds * 1103515245u + 12345u; words[i] = ds ^ ds >> 16; }
-            for (i = 0; i < left; i += j) { /* pieces of 1 .. 64 words */
-                j = 1 + R() % 64;
+            for (i = 0; i < left; i += j) { /* pieces of 1 .. 64 words; session 148: or whole, or up to 8 KiB */
+                j = seed % 3 == 1 && R() % 2 ? (R() % 2 ? left : 1 + R() % 2048) : 1 + R() % 64;
                 if (j > left - i) j = left - i;
                 kh1_gsmem_image(words + i, j);
             }
@@ -228,11 +239,11 @@ static u32 state_hash(void) {
     return h;
 }
 
-int main(void) {
+int main(int argc, char **argv) {
     u32 it, h0, h1, drawn = 0, x, y, hits = 0;
     KH1GsMemStats s0, s1;
     static u32 rect[256 * 256];
-    for (it = 0; it < 600; it++) {
+    for (it = 0; it < (argc > 1 ? 0u : 600u); it++) {
         int flat = it % 4 != 3, cached = it % 3 != 0, shape = it % 2, r0, r1;
         r0 = run(it * 7919u + 1, 0, cached, flat, &h0, &s0, shape);
         r1 = run(it * 7919u + 1, 1, cached, flat, &h1, &s1, shape);
@@ -243,14 +254,19 @@ int main(void) {
         }
         drawn += (r1 & 1) != 0;
     }
-    CHECK("most sprites draw", drawn > 200);
+    CHECK("most sprites draw", argc > 1 || drawn > 200);
     for (it = 0; it < 150; it++) {
+        if (argc > 1 && (it * 104729u + 7) % 3 != 1) continue; /* session 148: `up`, the block uploads only (qemu-arm) */
         u32 s0v = run_up(it * 104729u + 7, 0, &h0, &s0), s1v = run_up(it * 104729u + 7, 1, &h1, &s1);
         if (s0v != s1v || h0 != h1 || memcmp(&s0, &s1, sizeof s0)) {
             printf("gsfast_test: uploads %u: stamps %08x / %08x, memory %08x / %08x%s\n", it, s0v, s1v, h0, h1,
                    memcmp(&s0, &s1, sizeof s0) ? ", counters differ" : "");
             fails++;
         }
+    }
+    if (argc > 1) {
+        printf("gsfast_test: %s (%s: 50 block upload runs)\n", fails ? "FAIL" : "PASS", argv[1]);
+        return fails != 0;
     }
     kh1_gsmem_texels = 0;
     kh1_gsmem_palette = 0;

@@ -1104,6 +1104,47 @@ KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, the gxmcheck b
 same 172 GS digests and GPU target hashes as main's, and the ARM build the same digests under qemu.
 **Not yet measured on a Vita** (3d-zo): the `gs worker ops:` line's w_kick.
 
+## The large uploads' syncs and the upload stores (session 148)
+
+**On a Vita (3d-zo):** 3d-zo's log mapped to names with out/vita/kh1.elf: in the Dive, per 2 s, the GS worker's
+ops were w_kick ~660 ms (7,700 ops), w_load ~320 (777), w_block ~190 (1,790), w_qwords ~160 (1,150), w_gpu_frame
+~55; it was busy ~1.39 s. The game thread waited ~346 ms for the worker in **42 waits**, and the `large uploads:`
+line had 42 uploads per 2 s on the game thread, none unchanged, ~267 ms. Counted on the host (dive_en.txt, a
+temporary log of each upload's source op, frames 5000-5060): one 256 x 256 CT32 upload at 0x3600 per drawn frame
+(the texture area, rewritten each frame by the T8 textures and CT32 CLUTs streamed after it: ~11 T8 128 x 128
+through 0x3600 from the GIF channel, ~19 T8 of 32-256 pixels by PlatGsExecLoadImage, CT32 CLUTs and PATH2's
+CT32 pieces). Each large upload with new bytes did a full kh1_gsq_sync before it overwrote its kept copy, so the
+game thread waited for the whole queue every drawn frame. Two changes:
+
+- **The large upload's copy without a sync** (host/null/gsimage.c `load_big`): new bytes go into the least
+  recently used of the 8 kept copies; the game thread waits only until the worker has run the last op that reads
+  that copy (`kh1_gsq_wait(pos)`, the position after that op's put), which is long done. The same rectangle's
+  older copy, when another, is no longer offered for the compare but is left as it is for ops still in the queue.
+  On the ARM profile (below) the game thread's spin in those waits (q_wait_tail, ~24M instructions over 60 frames)
+  is gone.
+- **T8 and CT32 / Z32 uploads a block at a time** (host/null/gsmem.c `band_t8` / `band_c32`, from trx_bulk): a
+  band of whole blocks (16 rows of T8 or 8 of CT32 from a block's top row, the rectangle's x and width whole
+  blocks) is stored block by block: a block is 256 bytes in one page, T8's four 64-byte columns each a fixed
+  permutation of 4 rows x 16 pixels (two kinds by the column's parity), CT32's four 16-word columns each two rows'
+  words interleaved in pairs. The permutations are read from kh1_gsmem_addr once (band_init); on NEON a T8
+  column is 8 VTBLs over two rows each, a CT32 column 4 VCOMBINEs, with one compare of the old bytes a block and
+  the page's stamp, drawn bits and marks set once a block (marks moved once, as the T8 run loop already did).
+  Anything else (a part row, a rectangle not on block edges) goes through the pixel loops as before. gsimage.c's
+  load_image now hands a word-aligned source to kh1_gsmem_image in one piece (it went in 256-byte pieces, two rows
+  of a 128-wide T8, so no band was ever whole).
+
+The ARM profile (qemu-arm with an instruction-count plugin, `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=1000
+KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, en.iso, dive_en.txt, frames 5000-5060 as the
+difference of two runs): the worker's kh1_gsmem_image 235M -> 37M instructions, the worker's work ~460M -> ~353M
+(it now idles ~79M); the game thread 610M -> 572M. Checked: tests/host/gsfast_test.c's upload runs now include
+whole-block CT32 / Z32 / T8 rectangles, some off the block edges, in pieces of up to 8 KiB or whole, against the
+model with the fast paths off (and `gsfast_test up` under qemu-arm in tests/selftest.sh for the NEON forms; a
+wrong VTBL index, a CT32 column swapped or the changed test dropped is caught); the worker-order run on the ARM
+build under qemu to frame 6500 (`KH1_HOST_GSQ_CHECK=50`) gives the same 130 digests as main's; the x86 gxmcheck run
+with the GPU thread (`KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1`) the same digests and GPU target hashes as main's.
+**Not yet measured on a Vita** (3d-zp): the `gs worker:` line's waits (from ~42 per 2 s) and the `large uploads:`
+time, the `gs worker ops:` line's w_load / w_block / w_qwords.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
