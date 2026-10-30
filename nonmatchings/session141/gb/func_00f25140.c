@@ -1,3 +1,4 @@
+/* Round 39 (wgb): gb.x func_00f25140 near miss: 67 words, score 120 -> 108. msd showed slti 0 in the target where ours had slt: the z clamp is if (z < 0) z = 0 (the draft compared against oz), then a hill3 order (score-ranked, strict rules, 150 s, seed 3) under the default mode (nofill/norlo the same, nostrict 156). Tried: x = 0 for x = oz (217), dropping the (oz = 0) in the y line (193) or + 0 (118). Earlier header below. */
 /* Round 41 wwm2: score 126 -> 120, port.py of the wm twin func_00f4c238 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f25140 near miss: 70 words differ, score 126; size matches (728 bytes). Resizes the world: re-centres the entity box, shifts every entity's x/z nibbles and the cursor, then stores w/d/h. A 10-minute -j1 permuter run found a zero variable used three times: wd->ents[i].y = wd->ents[i].y + (oz = 0), plus x = oz / z < oz in the cursor clamp. That suggests the original has a zero-valued y offset variable. Left: the original reuses ox/oz's registers (t6/t7) for the cursor x/z, copies the world pointer for the loop's count reload (move a2,t3), and stores h, w, d in that order. Doing the ox/oz reuse by hand (r1) made it worse (187). Bitfields: GbBox x0 as u16 and the rest as u32, plus the f29f10 GbWorld layout. */
 typedef struct {
@@ -88,8 +89,8 @@ s32 func_00f25140(s32 w, s32 d, s32 h)
     {
       oz = h - ez;
     }
-    tx = ox - D_00F56DC4->box.x0;
     tz = oz - D_00F56DC4->box.z0;
+    tx = ox - D_00F56DC4->box.x0;
     for (i = 0; i < wd->count; i++)
     {
       wd->ents[i].x = wd->ents[i].x + tx;
@@ -112,16 +113,16 @@ s32 func_00f25140(s32 w, s32 d, s32 h)
     {
       y = d - 1;
     }
-    if (z < oz)
+    if (z < 0)
     {
-      z = oz;
+      z = 0;
     }
     if (z > (h - 1))
     {
       z = h - 1;
     }
-    D_00F56DC0->px = x;
     D_00F56DC0->py = y;
+    D_00F56DC0->px = x;
     D_00F56DC0->pz = z;
   }
   D_00F56DC0->w = w;
