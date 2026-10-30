@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 318 -> 316, func_00f68770 declared void. Earlier header below. */
 /* 387 words by address, 173 after alignment (round 13). Logic believed complete (3 loops: D_00FBE3B8 list, D_00FBE7B8 flags with 0x4000/0x8000/else, D_00FCC570 sound points with a 6-way switch). The ApplyMatrix output is m[3] of the unit matrix. Left: we hoist sp+80 into an s-reg and spill i to the stack; the target recomputes addiu sp,80 at each use and keeps i in s8 for all three loops (frame 192 vs our 208). */
 typedef struct { u8 pad0[6]; s16 h6; u8 pad8[10]; u16 h18; u8 pad20[12]; f32 m[4][4]; u8 pad96[48]; } S34998;
 typedef struct { s32 w0; s32 w4; u8 pad8[12]; s32 w20; u8 pad24[8]; u8 b32[1]; } O34998;
@@ -12,7 +13,7 @@ void sceVu0UnitMatrix(f32 (*)[4]);
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 O34998 *func_00f3d978(f32, f32, f32 *, s32);
 s32 func_00f3dbf8(s32, u8 *, s32);
-s32 func_00f68770(s32, s32, void *, s32, s32);
+void func_00f68770(s32, s32, void *, s32, s32);
 
 void func_00f34998(void) {
     f32 v[4];
