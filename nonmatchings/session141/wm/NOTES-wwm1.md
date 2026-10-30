@@ -991,3 +991,33 @@ hit the stub callee sits at a lower address than the function.
 - wm f344f0 (87): `s32 buf[16]`, a buffer pointer, and a cached or volatile D_00F8C224 all leave the
   s8 = sp+64 invariant unexplained. The scores were 87 (volatile: 87 at 1020 bytes), 154 for the cached
   global, and 124 for the if/else swap.
+
+## Round 35
+
+- tools/ovl/cfdiff.py committed: the round 34 scratch tool, plus `--scan`, `-v`, the soft-float name map,
+  and only the draft's own function from the -S output. gcc writes jalr as `jal $31,$r`, and the tool
+  now counts that as jalr, so wm f46cb8's diff 1 was noise.
+- nosib sweep: all 218 drafts were tried, each in its own mode plus nosib.
+  - Coverage: nonmatchings/session141 for wm (both halves), gb, dkmovie, dktitle and xs_*, plus
+    read-only copies of the drafts.tsv drafts.
+  - The combined modes nofill_nosib, nostrict_nofill_nosib and norlo_nosib were added to kh1.toml only
+    for the sweep and then reverted.
+  - Results: no new match and no gain; 201 same, 16 worse. A first run reported gains for dkmovie
+    f23750/f245c0, but they were false: two drafts of one function were copied to the same scratch name.
+    The final run used unique names.
+- Why nosib changes cross-jumping (the details are in docs/overlays.md, "Two calls merged into one jal: a
+  nosib signal"):
+  - With sibling calls on, each call is a CALL_PLACEHOLDER. When a placeholder ends a basic block, the
+    .01.sibling pass leaves a `(use (const_int 0))` there, and jump2's find_cross_jump stops on it.
+  - Test functions: per-arm calls whose result is kept in an s register merge only in nosib mode. Inside
+    a loop they merge in both modes. With only a0 and the call shared, they merge in neither mode.
+- wm f24fe0 (39 -> 35): `if (it == NULL || func_00f2b9e8(it) == 0) n = 0; else n = it->n;`. The
+  `it != NULL && ...` / else form gives the exact branch sequence but rotates s3-s5 (49).
+- wm f31430 (262 -> 232): the D_00FBEBB8 block is `switch (D_00F8C1E8) { case 0: default: ...; case 1:
+  ...; case 2: case 3: ... }`. If/else chains and `default:` placed last all give other compare trees or
+  layouts (286, 240).
+  - Left: one extra b after the switch, because our %hi(D_00F8C1E8) is placed on its own block for the
+    path that skips the item code. The target puts lui s4 in a bnezl slot.
+  - Also left: the missing b of the first item case.
+- Still open, control flow right but registers worse: f26e80's row loop (539) and f25918's slide loop
+  (376).
