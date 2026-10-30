@@ -1,3 +1,4 @@
+/* Round 62 (wwm2): score 358 -> 281, 2460 vs 2464 bytes (was 2472). The trailing-blank scan is `i--; while (E28[i] == ' ' || E28[i] == '\t') i--;`, which matches the target's jump-into-loop layout. Both `no != 0` exits `goto fail;`, with `fail: D_00F2C894 = 0;` after the last return, so the store sits before the epilogue as in the target. The second switch is ordered case 2, 4, 3. Both fade loops store the clamp inside the loop (`if ((x += 4) >= 128) { x = 128; break; }`), so the 128 store survives flow and 256 is hoisted into s2. The pool pointers chain through p (`D_00F2C8AC = p = func_00f26648(...)`, ..., `p += 0x20000`), so the address registers are set before the calls. Left: p is in s2 where the target has s4 (with one extra move per call), the prologue's high-part registers, and &D_00F26E28 kept in s2 in the target's memcmp loop. */
 /* dktitle.x func_00f24b60: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 410 -> 368 with sclimb.py. Then 368 -> 358 with the dependency-checked reorderer (w3.py). */
 #include "platform/thread.h"
 
@@ -105,9 +106,8 @@ void func_00f24b60(void) {
     for (i = 0; i < n && D_00F26E28[i] != '#'; i++);
     if (i != D_00F26E2C) {
         j = i + 1;
-        do {
-            i--;
-        } while (D_00F26E28[i] == ' ' || D_00F26E28[i] == '\t');
+        i--;
+        while (D_00F26E28[i] == ' ' || D_00F26E28[i] == '\t') i--;
         i++;
         while (D_00F26E28[j] != '\r' && D_00F26E28[j] != '\n') j++;
         do {
@@ -120,15 +120,14 @@ void func_00f24b60(void) {
     D_00F26E24 = p;
     if (D_0046A678) p = func_00f26648(D_00F274B0, p, 64, &size);
     else p = func_00f26648(D_00F274C8, p, 64, &size);
-    p = (u8 *)(((s32)p + 63) & ~63);
-    D_00F2C8A4 = p;
-    D_00F2C8A8 = p;
+    D_00F2C8A4 = D_00F2C8A8 = (u8 *)(((s32)p + 63) & ~63);
     D_00F26E20 = size;
-    D_00F2C8AC = func_00f26648(D_00F274E0, p, 64, 0);
-    D_00F2C8B0 = func_00f26648(D_00F274F8, D_00F2C8AC, 64, 0);
-    D_00F2C8B4 = func_00f26648(D_00F27510, D_00F2C8B0, 256, 0);
+    D_00F2C8AC = p = func_00f26648(D_00F274E0, D_00F2C8A8, 64, 0);
+    D_00F2C8B0 = p = func_00f26648(D_00F274F8, p, 64, 0);
+    D_00F2C8B4 = p = func_00f26648(D_00F27510, p, 256, 0);
     D_00F2C8D0 = 0x20000;
-    if ((u32)(D_00F2C8B4 + 0x20000) >= (u32)func_00f20000) PlatBreak();
+    p += 0x20000;
+    if ((u32)p >= (u32)func_00f20000) PlatBreak();
     func_001f31a8(D_00F26EA0, 1);
     D_00F2C89C = 1;
     func_0024e468(30);
@@ -155,10 +154,7 @@ void func_00f24b60(void) {
     }
     D_0046A614 = 132;
     func_0024e468(10);
-    if (no != 0) {
-        D_00F2C894 = 0;
-        return;
-    }
+    if (no != 0) goto fail;
     D_0046A614 = 140;
     r = func_0024e098();
     if (r == 3) {
@@ -208,16 +204,9 @@ ask:
             no = D_00F26E68 = D_00F26E68 & 1;
             func_0024e468(1);
         }
-        if (no != 0) {
-            D_00F2C894 = 0;
-            return;
-        }
+        if (no != 0) goto fail;
     } else {
         switch (func_0024e098()) {
-        case 3:
-            func_0011d768(4);
-            func_00f24a88(7);
-            break;
         case 2:
             func_0011d768(4);
             v = 5;
@@ -226,15 +215,22 @@ ask:
             func_0011d768(4);
             func_00f24a88(6);
             break;
+        case 3:
+            func_0011d768(4);
+            func_00f24a88(7);
+            break;
         }
     }
     func_0020be10(16);
     func_0011d768(2);
     for (;;) {
-        if ((D_00F26E6C += 4) >= 128) break;
+        D_00F26E6C += 4;
+        if (D_00F26E6C >= 128) {
+            D_00F26E6C = 128;
+            break;
+        }
         func_0024e468(1);
     }
-    D_00F26E6C = 128;
     D_00F2C8E0[0] = 0;
     D_00F2C8E0[1] = 0;
     D_00F2C8D8 = 0;
@@ -242,10 +238,14 @@ ask:
     D_00F2C8E0[2] = 0;
     D_00F2C8D4 = 1;
     D_00F26E6C = 8;
-    do {
+    for (;;) {
         func_0024e468(1);
-    } while ((D_00F26E6C += 8) < 256);
-    D_00F26E6C = 256;
+        D_00F26E6C += 8;
+        if (D_00F26E6C >= 256) {
+            D_00F26E6C = 256;
+            break;
+        }
+    }
     D_00F2C890 = 0;
     func_0010c170(func_00f26520, 0);
     for (;;) {
@@ -258,4 +258,7 @@ ask:
     }
     if (D_0046A688.f1c() != 2) func_00f24a88(6);
     else func_00f24a88(8);
+    return;
+fail:
+    D_00F2C894 = 0;
 }
