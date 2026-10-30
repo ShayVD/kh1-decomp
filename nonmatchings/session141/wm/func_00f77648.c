@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 166 -> 158, hill3o statement order. Earlier header below. */
 /* score 168 (first draft); round 30 wgb: 228 words, score 166, 1192 vs 1192 bytes with func_00f6b5b0 declared (Win *, f32, f32) and called (*pw++, 256.0f, ...) like its matched callers, plus a CONTEXT_ONLY definition so the call is nothrow; was 253/168). Confirm dialog: builds a title, a box and three option windows with func_00f6b6a0 (19 args), fades them in, then loops on pad input (0x4000 cancel returns, 0x2000 confirm calls func_00f4d528(sel) and never returns, 0x10/0x40 move the selection with wraparound). Two S3 copies (D_00FBA218 -> sp+112, D_00FBA220 -> sp+128); declare w[3] first. Left: gcc CSEs the 256 constant into s6 across calls (the original reloads it with li each time); sel/k/loop registers are shifted from that. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct { u8 pad[4]; u8 b4; } Win;
@@ -25,23 +26,23 @@ void func_00f4d528(s32);
 
 void func_00f77648(void)
 {
-    Win *w[3];
-    S3 a = D_00FBA218;
-    S3 b = D_00FBA220;
-    Hdl *h;
-    s32 sel = 0;
-    s32 k = 1;
-    s32 i, y, prev;
-    s16 *pa;
-    Win **pw;
 
+    Win *w[3];
+    Hdl *h;
+    S3 a = D_00FBA218;
+    s32 k = 1;
+    Win **pw;
+    s16 *pa;
+    s32 sel = 0;
+    S3 b = D_00FBA220;
+    s32 i, y, prev;
     func_00f6b5d0(2, 0, D_00FB4A70);
     func_00f6b6a0(20, 0, 2, 1, 0, 15, 213, 4, D_00FB4C24, D_00FB4C28, 0, D_00FB4C2C, 0, 0, 0, 0, 0, 256, D_00FB4A70);
     if (func_00f47110() == 0) k = D_00FB4A70;
     h = func_00f6b6a0(20, 2, 0, 2, 0, D_00FB4C98, b.v[0], 0, D_00FB4C9C, D_00FB4CA0, 0, 0, 0, D_00FB4CA4, D_00FB4CA8, D_00FB4CAC, D_00FB4CB0, 256, k);
+    pw = w;
     y = D_00FB4B3C;
     pa = a.v;
-    pw = w;
     for (i = 2; i >= 0; i--) {
         *pw++ = func_00f6b6a0(20, 0, 2, 1, 0, 15, *pa++, 1, D_00FB4B38, y, 0, D_00FB4DA0, 0, 0, 0, 0, 0, 0, D_00FB4A70);
         y += D_00FB4B6C;
@@ -81,8 +82,8 @@ void func_00f77648(void)
         if (((D_002C5AD0.x8 | D_002C5AD0.x8 >> 24) & 0x10) && sel == 0) {
             sel = 2;
         } else if ((D_002C5AD0.x10 | D_002C5AD0.x10 >> 24) & 0x10) {
-            sel--;
             if (sel < 0) sel = 0;
+            sel--;
         }
         if (((D_002C5AD0.x8 | D_002C5AD0.x8 >> 24) & 0x40) && sel == 2) {
             sel = 0;
