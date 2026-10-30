@@ -1,5 +1,4 @@
-/* Round 47 wwm2: score 170 -> 164, hill3o statement order. Earlier header below. */
-/* Round 46 wwm2: score 178 -> 170, hill3o statement order. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 4521558b (wm func_00f6cfa0 near miss, score 178 -> 170, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 164 was not valid. Restored the last valid statement order: score 178. Earlier header below. */
 /* Round 46 wwm2: score 180 -> 178, func_00f4a000 declared s32. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f6cfa0 near miss: score 216 -> 180 (307 -> 427 words, 2168 vs 2160); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
 /* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00FB58C8/D_00FB58D0 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00FB4A70) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
@@ -70,58 +69,58 @@ s32 func_00f6cfa0(void)
 {
     Win *w[6];
     s16 lst[6];
-
-    s16 *pl;
-    Win **pw;
-    s8 *pc;
     s8 codes[6];
     Win *w2;
-    Win *w3;
-    s32 i, k, sel, old, r;
-    Ent *p;
     s32 t;
+    Win **pw;
+    Win *w3;
+    s16 *pl;
+    s8 *pc;
+    Ent *p;
+    s32 i, k, sel, old, r;
     s32 y;
+
     t = D_00FB4A70;
     if (func_00f47110()) {
         D_00FB58E0.v[0] = 227;
     } else {
         D_00FB58E0.v[0] = 2;
     }
-    sel = 0;
     pl = lst;
+    sel = 0;
+    lst[0] = 1;
     if (D_00FB4EB4 >= 0) sel = D_00FB4EB4;
-    lst[2] = 9;
     lst[5] = 13;
     lst[1] = 3;
-    codes[1] = 2;
-    lst[0] = 1;
-    codes[0] = 1;
-    codes[2] = 5;
     pw = w;
+    codes[0] = 1;
+    codes[1] = 2;
+    codes[2] = 5;
+    lst[2] = 9;
     D_0108F158.v[0] = D_00FB58E0.v[0];
     lst[3] = 11;
+    D_0108F158.v[1] = D_00FB58E0.v[1];
+    y = D_00FB4B68;
     lst[4] = 213;
     codes[3] = 6;
-    D_0108F158.v[1] = D_00FB58E0.v[1];
     D_0108F158.v[2] = D_00FB58E0.v[2];
-    codes[4] = 8;
+    codes[5] = 9;
     D_0108F158.v[3] = D_00FB58E0.v[3];
     D_0108F158.v[4] = D_00FB58E0.v[4];
-    codes[5] = 9;
     D_0108F158.v[5] = D_00FB58E0.v[5];
+    codes[4] = 8;
     D_00FB4A50 = codes[sel];
-    y = D_00FB4B68;
     for (i = 0; i < 6; i++) {
         *pw = func_00f6a480();
         (*pw)->b0 = 1;
         (*pw)->b1 = 0;
         (*pw)->b2 = 2;
         (*pw)->b3 = 0;
-        (*pw)->a = (*pw)->at = 0;
         (*pw)->hC = 1;
         (*pw)->x10 = *pl;
-        (*pw)->tx = (*pw)->x = D_00FB4B64;
         (*pw)->y = (*pw)->ty = y;
+        (*pw)->a = (*pw)->at = 0;
+        (*pw)->tx = (*pw)->x = D_00FB4B64;
         (*pw)->h8 = D_00FB4B70;
         if (i == sel) {
             (*pw)->b4 = 1;
@@ -129,8 +128,8 @@ s32 func_00f6cfa0(void)
         } else {
             (*pw)->b4 = 0;
         }
-        pl++;
         y += D_00FB4B6C;
+        pl++;
         pw++;
     }
     if (D_0108F19C == 0) {
@@ -183,8 +182,8 @@ top:
             sel++;
             if (sel >= 6) sel = 5;
         }
-        pw = w;
         w2->x10 = D_0108F158.v[sel];
+        pw = w;
         for (i = 0; i < 6; i++) {
             if (i == sel) {
                 (*pw)->b4 = 1;
@@ -198,21 +197,21 @@ top:
         if (sel != old) func_0011d768(1);
         func_0024e468(1);
     }
-    D_00FB4EB4 = sel;
     r = codes[sel];
+    D_00FB4EB4 = sel;
     switch (r) {
-        break;
-    case 8:
-    case 3:
     case 1:
-    case 4:
-    case 6:
     case 2:
+    case 7:
+    case 8:
+        break;
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+        D_0108F280 = 1;
         break;
     case 9:
-    case 7:
-        D_0108F280 = 1;
-    case 5:
         p = func_001bc4e0();
         p = &p[func_001be278() + 1];
         if (p->aA & 0xF) {
@@ -233,8 +232,8 @@ top:
                         for (;;) {
                             u32 b = D_002C5AD0.x8;
                             if (b & 0x2000) {
-                                break;
                                 func_0011d768(2);
+                                break;
                             }
                             if (b & 0x4000) {
                                 func_0011d768(3);
