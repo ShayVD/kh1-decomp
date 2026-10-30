@@ -1,7 +1,5 @@
+/* drafttwins.py: score 178 -> 176, port.py of the gb twin func_00f45ea8 draft. Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 4521558b (wm func_00f6cfa0 near miss, score 178 -> 170, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 164 was not valid. Restored the last valid statement order: score 178. Earlier header below. */
-/* Round 46 wwm2: score 180 -> 178, func_00f4a000 declared s32. Earlier header below. */
-/* Round 36 (wwm2): wm.x func_00f6cfa0 near miss: score 216 -> 180 (307 -> 427 words, 2168 vs 2160); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
-/* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00FB58C8/D_00FB58D0 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00FB4A70) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct Win {
     s8 b0, b1, b2, b3, b4, b5, b6, b7;
@@ -218,33 +216,31 @@ top:
             w3 = 0;
             func_0011d768(4);
             func_0020be10(16);
-            if (D_00FB58C8[0] != 0) {
-                pc = D_00FB58C8;
-                pl = D_00FB58D0;
-                do {
-                    if (*pc & p->aA) {
-                        if (w3 == 0) {
-                            w3 = func_00f6b6a0(6, 8, 2, 4, 0, 15, *pl, 4, 160, 216, 0, 0, 0, 0, 0, 0, 0, 256, D_00FB4A70);
-                            func_0024e468(D_00FB4A70);
-                        }
-                        w3->x10 = *pl;
-                        func_0024e468(1);
-                        for (;;) {
-                            u32 b = D_002C5AD0.x8;
-                            if (b & 0x2000) {
-                                func_0011d768(2);
-                                break;
-                            }
-                            if (b & 0x4000) {
-                                func_0011d768(3);
-                                break;
-                            }
-                            func_0024e468(1);
-                        }
+            i = 0;
+            pl = D_00FB58D0;
+            while (D_00FB58C8[i]) {
+                if (D_00FB58C8[i] & p->aA) {
+                    if (w3 == 0) {
+                        w3 = func_00f6b6a0(6, 8, 2, 4, 0, 15, *pl, 4, 160, 216, 0, 0, 0, 0, 0, 0, 0, 256, D_00FB4A70);
+                        func_0024e468(D_00FB4A70);
                     }
-                    pl++;
-                    pc++;
-                } while (*pc);
+                    w3->x10 = *pl;
+                    func_0024e468(1);
+                    for (;;) {
+                        u32 b = D_002C5AD0.x8;
+                        if (b & 0x2000) {
+                            func_0011d768(2);
+                            break;
+                        }
+                        if (b & 0x4000) {
+                            func_0011d768(3);
+                            break;
+                        }
+                        func_0024e468(1);
+                    }
+                }
+                pl++;
+                i++;
             }
             func_0020bda8(16);
             func_00f6b5d0(6, 0, D_00FB4A70);
