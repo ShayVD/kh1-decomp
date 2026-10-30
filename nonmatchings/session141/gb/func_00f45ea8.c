@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 180 -> 178, func_00f22f08 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 216 -> 180, port.py of the wm twin func_00f6cfa0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f45ea8 near miss: 307 words differ, score 216 (ours 2176 bytes, original 2160). Port of wm func_00f6cfa0 (nonmatchings/session141/wm) via tools/ovl/port.py, at the same score; see that file for the findings and what is left. */
 /* score 216 (2176 vs 2160). Menu with 6 entries (codes {1,2,5,6,8,9}, labels {1,3,9,11,213,13}). The navigation loop is a for loop whose condition holds the confirm check (pad 0x2000, then for entry 0 an e[cur+1].a8 test that plays sound 4 and stays in the loop). The switch needs explicit case 1/2/7/8 labels so the jump table spans 1..9. Item 9 opens a sub-loop over D_00F71148/D_00F71150 and then does goto top. Left: the init-store schedule, register numbering (y/i, s8 = hi(D_00F702F0) in the original), the item loop re-reading *pc instead of reusing it, and where the func_0011d768(2) block is placed in the pad-wait loop. */
@@ -52,7 +53,7 @@ void func_0024e468(s32);
 s32 func_00f20018(void);
 void func_00f21e48(void);
 s32 func_00f22ee8(void);
-void func_00f22f08(void);
+s32 func_00f22f08(void);
 void func_00f26430(s32);
 Win *func_00f43388(void);
 void func_00f43cf0(s32);
