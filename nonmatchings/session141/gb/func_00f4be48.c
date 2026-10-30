@@ -1,3 +1,4 @@
+/* Round 38 (wgb): no change (8 words, score 11). Tried: k = 2 for one or both 2 arguments of the func_00f445a8(14, 3, ...) call (69 words), and y = D_00F703B8 before the call (47 words). */
 /* gb.x func_00f4be48 near miss: 8 words differ, score 11 (ours 1580 bytes, original 1584; the 4-byte gap is the trailing alignment nop). Port of wm func_00f72f40 (nonmatchings/session141/wm) via tools/ovl/port.py; see that file for the findings. Same remaining diff: in the first func_00f445a8(14, 3, ...) call, D_00F703B8 (arg 12) and the constant 2 (arg 13) get v0/v1 swapped and the D_00F703B8 load is scheduled too early. Tried in round 19: (s32)2, 1 + 1 in either 2 slot, *&D_00F703B8, a block-local temp for D_00F703B8 or for 2 (all 11), and a temp shared by both calls (79). Round 33 (wgb): the CONTEXT_ONLY callee search (ctx2) finds nothing. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct { u8 pad[4]; u8 b4; u8 pad5[2]; u8 b7; } Win;
