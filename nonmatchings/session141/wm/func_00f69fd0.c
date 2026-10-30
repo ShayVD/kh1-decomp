@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 127 -> 107, sceGsSyncPath and func_00f69f98 declared s32. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f69fd0 near miss: score 183 -> 127 (113 -> 145 words, 724 vs 736); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
 /* 113 words, score 183 (732 vs 736; was 148/184). Round 33 wwm2: hill2 moved `D_0108F25C = D_00FB4F50.xC` and `D_00FB4EB8 = 0` within the init block; ctx2 gives nothing. Earlier header: score 184. Init function: around 30 global stores, sceGsSyncPath, func_001be278, then a one-time block that loads a module via func_0024b778/func_0024b7a0 and registers four callbacks through o->fn. The original preloads 1 (s8) and 128 (s3) into saved registers before sceGsSyncPath, so the 128 and 1 constants are probably shared variables. The store schedule is still far off. */
 typedef struct { void *x0; void *x4; void (*fn)(void (*)(void), s32, s32); } Obj;
@@ -44,12 +45,12 @@ extern s32 D_0108F254;
 extern s32 D_00FB4A50;
 extern s32 D_0108F180;
 extern Obj *D_00FB4F4C;
-void sceGsSyncPath(s32, s32);
+s32 sceGsSyncPath(s32, s32);
 s32 func_001be278(void);
 void func_00f6ad98(void);
 s32 func_0024b778(s32);
 Obj *func_0024b7a0(s32, s32, s32, s32);
-void func_00f69f98(void);
+s32 func_00f69f98(void);
 void func_00f6ae68(void);
 void func_00f77af0(void);
 void func_00f748f8(void);
