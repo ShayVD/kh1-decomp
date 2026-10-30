@@ -1,3 +1,4 @@
+/* Round 46 (wgb): score 178 -> 176, size now exact (2160). The item loop is while (D_00F71148[i]) { if (D_00F71148[i] & p->aA) ...; pl++; i++; } with no if around it. With an index, gcse no longer carries the loop-test byte into the body (lbu + sll/sra), so the body reloads it with lb as the target does. The *pc forms (do/while inside an if, while, for) and a u8 read in the test do not. Guarded hill3 (420 s) found nothing more. Left: the init-store schedule and registers, and the beqzl/bnezl and b/nop shape of the pad-wait loop. */
 /* Round 48 wwm2: the hill3o order from 828f8a6d (gb func_00f45ea8 near miss, score 178 -> 170, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 164 was not valid. Restored the last valid statement order: score 178. Earlier header below. */
 /* Round 46 wwm2: score 180 -> 178, func_00f22f08 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 216 -> 180, port.py of the wm twin func_00f6cfa0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
@@ -219,33 +220,31 @@ top:
             w3 = 0;
             func_0011d768(4);
             func_0020be10(16);
-            if (D_00F71148[0] != 0) {
-                pc = D_00F71148;
-                pl = D_00F71150;
-                do {
-                    if (*pc & p->aA) {
-                        if (w3 == 0) {
-                            w3 = func_00f445a8(6, 8, 2, 4, 0, 15, *pl, 4, 160, 216, 0, 0, 0, 0, 0, 0, 0, 256, D_00F702F0);
-                            func_0024e468(D_00F702F0);
-                        }
-                        w3->x10 = *pl;
-                        func_0024e468(1);
-                        for (;;) {
-                            u32 b = D_002C5AD0.x8;
-                            if (b & 0x2000) {
-                                func_0011d768(2);
-                                break;
-                            }
-                            if (b & 0x4000) {
-                                func_0011d768(3);
-                                break;
-                            }
-                            func_0024e468(1);
-                        }
+            i = 0;
+            pl = D_00F71150;
+            while (D_00F71148[i]) {
+                if (D_00F71148[i] & p->aA) {
+                    if (w3 == 0) {
+                        w3 = func_00f445a8(6, 8, 2, 4, 0, 15, *pl, 4, 160, 216, 0, 0, 0, 0, 0, 0, 0, 256, D_00F702F0);
+                        func_0024e468(D_00F702F0);
                     }
-                    pl++;
-                    pc++;
-                } while (*pc);
+                    w3->x10 = *pl;
+                    func_0024e468(1);
+                    for (;;) {
+                        u32 b = D_002C5AD0.x8;
+                        if (b & 0x2000) {
+                            func_0011d768(2);
+                            break;
+                        }
+                        if (b & 0x4000) {
+                            func_0011d768(3);
+                            break;
+                        }
+                        func_0024e468(1);
+                    }
+                }
+                pl++;
+                i++;
             }
             func_0020bda8(16);
             func_00f444d8(6, 0, D_00F702F0);
