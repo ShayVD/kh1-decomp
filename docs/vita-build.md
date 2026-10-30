@@ -1211,6 +1211,11 @@ a FIFO; the RPCs whose answer the game reads wait on the tick thread's lock.
   load; build d splits the ticks and the mix onto two threads.
 - Movies have no sound (the core PCM input is not modelled). The real driver also changes timing where
   an event waits for a voice line, so host pad scripts drift when run with sound (sound-spec 6).
+- 2026-10-30 (build snd-f): most of the room's and the events' sound effects were silent after the first
+  room change, and the battle track never loaded: the IOP model's memory pool allowed only 64 blocks
+  (sound-spec 6, "The pool's block limit"). Fixed, and the SPU2's noise generator added. With the SEs
+  playing the driver does about 60% more work in Dive on the host (1.30 G IOP instructions over the first
+  20,000 frames instead of 0.80 G); watch the "short" count on the sound line in busy rooms.
 
 ## What next, in order
 
