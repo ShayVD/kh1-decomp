@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 38 -> 36, f = (Ent *)(j * sizeof(Ent) + (u32)base) puts the scaled index first in the addu. Earlier header below. */
 /* Round 36 (wgb): no change. Same note as gb func_00f4a650: the o3->f24 / o3->h8 stores sit above the o4 stores, valid only if o3 and o4 are distinct objects. */
 /* Round 35 (wgb): wm.x func_00f71748 near miss: 35 -> 21 words, score 62 -> 38 (1040 = 1040). port.py of gb func_00f4a650's round 35 draft (statement order from the dependency-safe hill climb); left: FP temporary numbering in the panel blocks. Earlier header below. */
 /* score 62 (35 words; 1040 vs 1040 bytes). Startup and layout: resets the tables, pairs linked entries (96-byte records, link at +9), then lays out six panels. Fixes: write the 0x100 clear loop as an ascending `for (i = 0; i < 256; i++)` (gcc reverses it to match the original); D_0108F3B0 updated with ++ in place, not through a local k; a brute-forced statement order in the first panel block. Left: float scheduling and register choice in the two panel blocks (512-x sub.s placement, the halfword -10 stores), and two lui/sd swaps in the prologue and pair block. */
@@ -63,7 +64,7 @@ void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
         found = 0;
         if (e->b9 != 0) {
             j = e->b9 - 1;
-            f = &base[j];
+            f = (Ent *)(j * sizeof(Ent) + (u32)base);
             if (f->b0 != 0 && f->b8 == 0 && f->b3 != 0 && f->b9 == i + 1) {
                 D_0108F3C8[D_0108F3B0] = e;
                 D_0108F360[D_0108F3B0] = i;
