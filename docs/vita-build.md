@@ -1294,6 +1294,33 @@ qemu-arm run gives main's 130 digests and vu1 lines. ARM instructions over the 3
 108.2M (translation) -> 79.1M (native, the clipping runs given up and run again by the translation) -> 71.5M
 (the clipper native too, -34% on the translation).
 
+## P11 and P10 as hand-written C (session 151)
+
+The zx log's `vu1 programs:` line after P18 / P13 / P0 went native: in the Dive's busy stretches P11 ~410-460 ms per
+2 s (36 ns a pair), P0 ~330-590, P4 ~115-150 (45 ns), P10 ~40-50 (34 ns). P11 and P10 are now in vu1_nat.h too.
+
+- **P11** (`nat_11`, from 007) is P18 with two more tests per vertex. After the matrix, SUB.w vf00 = w - 1 and an
+  FMAND of its S bit: w < 1 culls the vertex (FCSET 0x3F, the ADC; no STQ or XYZ written, vf28 left unprojected,
+  vf29 / vf30 the loaded qwords). Else as P18, plus vf29.w = 2048 (vf31.w + I), vf31.xy = xy - 2048 and a CLIPW of
+  (x - 2048, y - 2048, 0) against 2048; the ADC when FCAND 0x3FFFF (any of the last three vertices off that guard
+  band) or the cross product's z is negative. The run's MAC flag is the last vertex's: the cull's SUB.w, or the
+  OPMSUB in full. The program has no stalls (every pair one cycle).
+- **P10** (`nat_10`, from 006) is not a sibling of P13: a strip of positions only. Records: op 0 a matrix in the
+  next four qwords (z the slot), op 1 a GIF tag and z positions (w the slot; the position's own w is not read:
+  MADDw adds the matrix's w row times vf00.w), anything else the end. Software-pipelined three deep (transform,
+  1 / w and project, ftoi4 and store with the ADC word 0). The program assumes z >= 3: with fewer its u16 count
+  wraps and it writes 65,536 vertices round VU memory; nat_10 does the same. Stalls: 031 (1), 057 (1), each
+  loop pass after the first (2 at 05c), 076 (1).
+
+Checked with a scratch fuzzer (it includes vu1.c and out/gen/vu1_tr.c, so it is never committed): record streams
+made up at random (matrices, positions and slots, a sixth of the floats from the edges: zeros, denormals,
+Inf / NaN patterns, +-max; repeated vertices for zero edges), each run native and translated from the same state,
+comparing every VF / VI, ACC, Q / I / MAC / clip, VU memory, the kicks' hash, pairs and cycles. 30,000 P11 and
+20,000 P10 runs identical, built with vitasdk's gcc and run under qemu-arm (a one-cycle change in any of P11's
+paths is caught). The same fuzzer passes nat_18 on 10,000 runs. qemu-arm wall time, native against translated
+(P18's 67% measured -36% on a Vita): P11 67%, P10 72%. **Not yet run on the disc's own runs** (no ISO in that
+container) **or measured on a Vita.**
+
 ## The GS worker after the native VU1 programs (session 150)
 
 zv on the Vita (P0's main loop native): 15.8 pictures a second over frames 1,500-13,000, flat on zu's 15.75,
