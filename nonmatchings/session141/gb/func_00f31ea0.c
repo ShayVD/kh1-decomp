@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 176 -> 168, func_00f2e098 and func_00f27300 declared s32. Earlier header below. */
 /* gb.x func_00f31ea0 near miss: 464 words differ, score 176 (ours 2032 bytes, original 1992). Free-camera / map-view input loop: pad direction rotates the World x10D4/x10D8 angles over 15 eased frames (func_001befc8 on D_00F615D0 / D_00F615F8, / 22.5 and / 90, with +-4096 wrap); buttons drive func_00f20170 / func_00f219b0 / func_00f31208 / func_00f3b4f8 and the D_00F61560 sub-mode; palette refresh into D_00F806D0 (RGBAQ(r/2, g/2, b/2, 102), as in func_00f31208); then the func_00f30bf8 / func_00f30d80 shortcuts and the World x4C change handler. Logic is complete. An unused s32[4] local gives the 160-byte frame. Left: every D_00F56DC0 access comes out as lui/addiu + lw 0 (the outer for (;;) loop hoists &D_00F56DC0, and reload rematerializes it), where the original uses lw %lo directly; that is the 40-byte excess. A goto loop gets the size close (1984, 366 words) but GCSE then keeps &D_00F56DC0 and &D_00F61560 in s-registers (score 196). Modes nogcse/nosi/nofill/nostrict/norlo/faddr/fmam/nosib and nostrict_norcse do not help. */
 typedef struct {
     u8 pad0[72];
@@ -34,7 +35,7 @@ extern u8 D_00F615F8[];
 extern s32 D_00F806C8;
 extern u64 D_00F806D0[8];
 extern u8 D_00379F28[][4];
-void func_00f2e098(void);
+s32 func_00f2e098(void);
 void func_00f2e0f0(void);
 void func_00f2e1a0(void);
 void func_00f22338(s32, s32, s32, s32);
@@ -45,7 +46,7 @@ void func_001bfac8(void);
 s32 func_00f20060(void);
 void func_00f20170(s32, s32);
 void func_00f219b0(s32);
-void func_00f27300(s32);
+s32 func_00f27300(s32);
 void func_00f31048(void);
 void func_00f30cb8(s32);
 void func_00f32728(s32, s32);
