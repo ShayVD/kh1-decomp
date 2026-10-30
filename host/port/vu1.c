@@ -1291,6 +1291,47 @@ static __inline__ u32 unpack_el(u32 vl, u32 usn, u32 e) {
     return !usn && h & 0x80 ? h | 0xFFFFFF00u : h;
 }
 
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+/* session 151: unpack_run on NEON: a vector's elements read as one load (V3: the next element as w; V2: x and y
+ * twice; V1: x four times), widened with or without the sign, ROW added or accumulated in a register.  The game
+ * thread's unpacks were ~10% of its instructions under qemu-arm in the Dive, an element at a time */
+static __inline__ __attribute__((always_inline)) void unpack_run(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
+    u32 nel = vn + 1, i, cycle = 0, e = 0, x;
+    const u8 *b = (const u8 *)dbuf;
+    uint32x4_t r = vld1q_u32(row), v;
+    for (i = 0; i < num; i++, e += nel) {
+        if (vl == 0) {
+            if (vn >= 2) v = vld1q_u32(dbuf + e);
+            else if (vn == 1) {
+                uint32x2_t t = vld1_u32(dbuf + e);
+                v = vcombine_u32(t, t);
+            } else v = vdupq_n_u32(dbuf[e]);
+        } else if (vl == 1) {
+            const u16 *h = (const u16 *)b + e;
+            uint16x4_t t;
+            if (vn >= 2) t = vld1_u16(h);
+            else if (vn == 1) t = vreinterpret_u16_u32(vdup_n_u32((u32)h[0] | (u32)h[1] << 16));
+            else t = vdup_n_u16(h[0]);
+            v = usn ? vmovl_u16(t) : vreinterpretq_u32_s32(vmovl_s16(vreinterpret_s16_u16(t)));
+        } else {
+            const u8 *c = b + e;
+            uint16x4_t t;
+            if (vn >= 2) x = (u32)c[0] | (u32)c[1] << 8 | (u32)c[2] << 16 | (u32)c[3] << 24;
+            else if (vn == 1) x = ((u32)c[0] | (u32)c[1] << 8) * 0x10001u;
+            else x = c[0] * 0x01010101u;
+            if (usn) t = vget_low_u16(vmovl_u8(vcreate_u8(x)));
+            else t = vreinterpret_u16_s16(vget_low_s16(vmovl_s8(vcreate_s8(x))));
+            v = usn ? vmovl_u16(t) : vreinterpretq_u32_s32(vmovl_s16(vreinterpret_s16_u16(t)));
+        }
+        if (mode == 1) v = vaddq_u32(v, r);
+        else if (mode == 2) v = r = vaddq_u32(r, v);
+        vst1q_u32(mem[addr & (DATA_QW - 1)], v);
+        addr++;
+        if (++cycle == wl) { addr += cl - wl; cycle = 0; }
+    }
+    if (mode == 2) vst1q_u32(row, r);
+}
+#else
 /* session 143: unpack_fast's loop when every element it reads is here, one copy per format (vn, vl constants
  * at each call) so that no test of the format or of the data's end runs an element */
 static __inline__ __attribute__((always_inline)) void unpack_run(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
@@ -1312,6 +1353,7 @@ static __inline__ __attribute__((always_inline)) void unpack_run(u32 vn, u32 vl,
         if (++cycle == wl) { addr += cl - wl; cycle = 0; }
     }
 }
+#endif
 
 /* Session 137v (the Dive's speed on a Vita): the unmasked V1 / V2 / V3 / V4 of 32, 16 and 8 bits with no
  * filling cycle (WL <= CL), unpack's loop without a call an element; 0 for the rest, which unpack does */
@@ -1320,7 +1362,11 @@ static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
     if (vl == 3 || wl > cl) return 0;
     /* V4-32 / V3-32 with all their words here, MODE 0, CL == WL: the words themselves */
     if (vl == 0 && vn >= 2 && mode == 0 && cl == wl && num * nel + (vn == 2) <= got) {
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+        for (i = 0; i < num; i++) vst1q_u32(mem[(addr + i) & (DATA_QW - 1)], vld1q_u32(dbuf + i * nel)); /* no call a qword */
+#else
         for (i = 0; i < num; i++) memcpy(mem[(addr + i) & (DATA_QW - 1)], dbuf + i * nel, 16);
+#endif
         return 1;
     }
     /* session 143: the last element read, (num - 1) * nel + (V3 ? 3 : nel - 1), is inside the got words */

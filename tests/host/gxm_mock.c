@@ -289,6 +289,8 @@ typedef struct {
     const void *ix;
     unsigned n;
     u8 st[sizeof g];                       /* the context at the draw */
+    SceGxmNotification fn;                 /* end: written once the scene has run (session 151) */
+    int has_fn;
 } Queued;
 static Queued *queue;
 static u32 nqueue, capqueue;
@@ -308,7 +310,10 @@ static void flush(void) {
     for (i = 0; i < nqueue; i++) {
         Queued *q = &queue[i];
         if (q->op == 0) do_begin(&q->cs, &q->ds);
-        else if (q->op == 2) do_end();
+        else if (q->op == 2) {
+            do_end();
+            if (q->has_fn) *q->fn.address = q->fn.value;
+        }
         else {
             /* the draw's state, keeping the scene's surfaces and the counters */
             u32 *col = g.col, cs = g.cstride, cw = g.cw, ch = g.ch, *z = g.z, zs = g.zstride, *zsave = g.zsave;
@@ -354,10 +359,13 @@ static void do_begin(const SceGxmColorSurface *cs, const SceGxmDepthStencilSurfa
     }
 }
 int sceGxmEndScene(SceGxmContext *c, const SceGxmNotification *vn, const SceGxmNotification *fn) {
-    (void)c; (void)vn; (void)fn;
-    enqueue(2);
+    Queued *q = enqueue(2);
+    (void)c; (void)vn;
+    q->has_fn = fn != 0;
+    if (fn) q->fn = *fn;
     return 0;
 }
+volatile unsigned int *sceGxmGetNotificationRegion(void) { static volatile unsigned int r[512]; return r; }
 static void do_end(void) {
     /* not stored: the scene's depth stays on chip and the surface's memory keeps what an earlier scene stored
      * (session 137v: the mock used to scribble it, which a later scene's load of that earlier store, past a scene

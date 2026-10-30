@@ -767,6 +767,46 @@ static void finish_at(int at) {
     kh1_vita_finishes_at[at]++;
 }
 
+/* session 151: each of the frame's scenes, at its end, has the GPU write its number (scene_no) into a word of
+ * GXM's notification region once its fragments are done (stored).  The scenes run in order, so a target whose
+ * last scene (used) has written is free for the CPU, and the wait is for that scene, not for every scene sent
+ * so far: the Dive's CLUT readbacks read a target the frame's second scene drew, and sceGxmFinish there waited
+ * for all its 3D scenes (~7 ms a frame on main 9c32dca) */
+#define NOTE_SLOT 400 /* vita2d uses none of the region */
+static volatile u32 *note;
+static SceGxmNotification scene_note(void) {
+    SceGxmNotification n;
+    if (!note) note = sceGxmGetNotificationRegion() + NOTE_SLOT;
+    n.address = note;
+    n.value = scene_no;
+    return n;
+}
+static int scene_done(u32 n) { return n <= finish_seen || (note && (int)(*note - n) >= 0); }
+volatile u32 kh1_vita_scene_waits; /* the watchdog's: waits that were for one scene, not a sceGxmFinish */
+/* the GPU done with scene n (and so with those before it); `at` as finish_at's */
+static void wait_scene(u32 n, int at) {
+    SceUInt64 t0;
+    if (scene_done(n)) return;
+#ifndef KH1_HOST /* the host's mock runs scenes at sceGxmFinish only */
+    t0 = sceKernelGetProcessTimeWide();
+    while (!scene_done(n))
+        if (sceKernelGetProcessTimeWide() - t0 > 100000) { /* a scene with no end: as before */
+            finish_at(at);
+            return;
+        }
+    {
+        u32 us = (u32)(sceKernelGetProcessTimeWide() - t0);
+        kh1_vita_us_finish += us;
+        kh1_vita_us_finish_at[at] += us;
+        kh1_vita_finishes_at[at]++;
+        kh1_vita_scene_waits++;
+    }
+#else
+    (void)t0;
+    finish_at(at);
+#endif
+}
+
 static void stencil(u32 mode) {
     switch (mode) {
     case 1: sceGxmSetFrontStencilFunc(ctx, SCE_GXM_STENCIL_FUNC_EQUAL, SCE_GXM_STENCIL_OP_KEEP, SCE_GXM_STENCIL_OP_KEEP,
@@ -845,14 +885,15 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
  * two targets no scene of the frame had used yet, ~5 ms a frame of waiting) */
 static void pend_flush(Target *only) {
     u32 i, k = 0, sel = only ? 1u << (u32)(only - tgt) : ~0u;
-    int wait = 0, any = 0;
+    u32 wait = 0;
+    int any = 0;
     for (i = 0; i < KH1_CMD_TARGETS; i++)
-        if (sel >> i & 1 && tgt[i].pend && tgt[i].used > finish_seen) wait = 1;
+        if (sel >> i & 1 && tgt[i].pend && tgt[i].used > wait) wait = tgt[i].used;
     for (i = 0; i < pend_n; i++) {
         u32 b = pend_list[i], own = pend_own[b] & sel, j;
         if (own) {
             if (!any) {
-                if (wait) finish_at(1);
+                if (!scene_done(wait)) wait_scene(wait, 1);
                 else kh1_vita_pend_nowait++;
             }
             any = 1;
@@ -1028,7 +1069,10 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             break;
         }
         case KH1_GXM_END_SCENE:
-            if (open) sceGxmEndScene(ctx, 0, 0);
+            if (open) {
+                SceGxmNotification fn = scene_note();
+                sceGxmEndScene(ctx, 0, &fn);
+            }
             open = 0;
             cur = 0;
             break;
@@ -1044,7 +1088,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             u32 e, *o = (u32 *)pal_rb;
             if (!s || !s->mem) break;
             pend_flush(s);
-            if (s->used > finish_seen) finish_at(2); /* session 150: not again for the next readback of the frame */
+            wait_scene(s->used, 2); /* session 151: the scene that drew it, not all of the frame's so far */
             for (e = 0; e < 256; e++) {
                 u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g;
                 g = (p >> 4) < s->h && (p & 15) < s->w ? ((u32 *)s->mem)[(p >> 4) * s->stride + (p & 15)] : 0;
@@ -1066,7 +1110,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             if (!d || !d->mem || !k) break;
             if (!s || !s->mem) { pend_add(d, r->tgt[c->tgt - 1], &k->x, c->dx, c->dy, c->w, c->h); break; }
             pend_flush(0);
-            finish_at(3);
+            wait_scene(s->used > d->used ? s->used : d->used, 3); /* session 151 */
             sx = k->x.sx;
             sy = k->x.sy;
             for (y = 0; y < c->h; y++) {
@@ -1186,7 +1230,10 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         }
         kh1_vita_us_part[part] += (u32)(sceKernelGetProcessTimeWide() - t1);
     }
-    if (open) sceGxmEndScene(ctx, 0, 0);
+    if (open) {
+        SceGxmNotification fn = scene_note();
+        sceGxmEndScene(ctx, 0, &fn);
+    }
     if (display >= 0 && tgt[display].pend) pend_flush(&tgt[display]); /* the present reads it; the rest wait for
                                                                       * the next frame's start */
     frames++;
