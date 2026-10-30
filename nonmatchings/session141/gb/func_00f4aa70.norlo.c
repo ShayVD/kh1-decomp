@@ -1,9 +1,10 @@
+/* Round 55 wgb: Pad.x10 now at offset 0x10 (an xc field before it; was 0xc), as wwm1 fixed in wm func_00f71b68 / func_00f6f2a8. Score unchanged (592). Earlier header below. */
 /* Round 54 wgb: score 595 -> 592, CONTEXT_ONLY definitions of func_00f4a048 and func_00f444d8 after their prototypes (wwm2 tools/ovl/nothrow.py). Earlier header below. */
 /* drafttwins.py: score 619 -> 595, port.py of the wm twin func_00f71b68 draft. Earlier header below. */
 /* Round 48 wwm2: score 660 -> 619 under the norlo build mode (tools/ovl/modescan.py). Earlier header below. */
 typedef struct { s16 v[2]; } S2;
 typedef struct { u8 pad[16]; s32 x10; } Win;
-typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
+typedef struct { u8 pad[8]; u32 x8; u32 xc; u32 x10; } Pad;
 typedef struct { u8 pad[4]; s8 x4; } Ic4;
 typedef struct { u8 pad[9]; s8 x9; } Ic9;
 extern Pad D_002C5AD0;
