@@ -2,7 +2,8 @@
 """tools/ovl/storeperm.py (session 141, wwm1 round 25): OVL DRAFT
 
 Store-order sweep. Finds each run of up to 7 consecutive simple stores (one-line `lvalue = expr;` or `lvalue op= expr;`
-at one indentation, no call, no ++/--, no declaration) where no statement reads or rewrites what another one in the
+at one indentation, no call, no ++/--, no declaration, no control statement or label: a one-line `if (c) x = y;`,
+`case 1: x = y;` or `L: x = y;` never moves) where no statement reads or rewrites what another one in the
 run writes, and tries every order of that run with hand.py try. The runs are swept one at a time, top to bottom; a
 run's best order is kept only if hand.py's score goes down, and later runs start from it. dkmovie func_00f270c8
 matched this way (round 24): only the order of its last six stores was wrong.
@@ -27,12 +28,13 @@ mode = '.' + base.split('.')[1] if base.count('.') > 1 else ''
 L = open(d).read().split('\n')
 ST = re.compile(r'^(\s+)([^=;{}"]+?)\s*(=|\+=|-=|\*=|/=|\|=|&=|\^=|<<=|>>=)\s*([^;{}"]+);\s*$')
 CALL = re.compile(r'\b(?!sizeof\b|if\b|while\b|for\b|switch\b|return\b)[A-Za-z_]\w*\s*\(')
+CTRL = re.compile(r'^\s*(if|else|for|while|do|switch|return|case|default|goto|break|continue)\b|^\s*[A-Za-z_]\w*\s*:(?!:)')
 DECL = re.compile(r'^(const\s+|static\s+|volatile\s+|unsigned\s+|signed\s+)*[A-Za-z_]\w*[\s\*]+[A-Za-z_]\w*(\[[^\]]*\])?$')
 
 
 def store(line):
     m = ST.match(line)
-    if not m or '++' in line or '--' in line or '==' in m.group(2):
+    if not m or '++' in line or '--' in line or '==' in m.group(2) or CTRL.match(line):
         return None
     lv, rhs = m.group(2).strip(), m.group(4)
     if CALL.search(lv) or CALL.search(rhs) or DECL.match(lv) or '?' in lv:

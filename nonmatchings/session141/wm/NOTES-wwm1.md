@@ -726,3 +726,29 @@ hit the stub callee sits at a lower address than the function.
   It then scores 55, and a 10-minute w4 run found nothing.
 - The v0-after-call fix did not apply to any of these: none of the differing spots follows a call whose result is
   ignored.
+
+## Round 25
+
+- tools/ovl/storeperm.py (store-order sweep, docs/overlays.md paragraph). Swept 33 drafts: dkmovie, dktitle
+  (session141 copies), xs_*, xl_limit, wm RANKING rows 130+. Three runs at a time; TLIM 3600 s when the score is
+  under 200, 600 s otherwise. The whole sweep hit its 2-hour limit. dkmovie f23ae8 and wm f6f2a8 were cut off
+  mid-sweep, and five high-score wm drafts never started. No matches. Saved gains: dkmovie f26d90 193->192, wm f47f40
+  249->241, f58748 331->329, f646c0 428->426, f71b68 584->580. After the rebase, upstream already had better or equal versions of f47f40 (215), f646c0 (426) and
+  f71b68 (551), so only f26d90 and f58748 are committed. A gain on wm f51d18
+  (408->390) was dropped: it reordered the one-line `if (nz < 0) nz = 0;` / `if (nz > max) nz = max;` clamps, which
+  changes behaviour. storeperm now treats one-line ifs, labels, case lines and control statements as barriers.
+- f25180 ht*16 tie: ht*16 as its own variable used twice (double store, `| h16`, `+ (h16 & 0)`, `h16 - h16`,
+  st2 inline) stays at 16. cse folds the extra uses before local-alloc, so the ref counts do not change.
+- hill3 hole audit (w3.py, w4.py, sclimb's cmoves.py). w3/w4 already kept if/return/break/goto/case/default/else
+  lines out of the movable blocks (BAD), but they took `x = y++;` and `a[i++] = v;` as reading y / i only, and a
+  `L: x = 1;` label line was movable. sclimb's checker let a one-line `if (c) x = y;` move, and missed embedded
+  ++/-- too. All three are fixed: embedded ++/-- makes the line a barrier, and labels and one-line ifs never move.
+  The audit (/tmp/claude-0/s141/wwm1/r25/ordcheck.py) checked every git version step of the 31 session141 drafts
+  whose headers name w3, w4, sclimb or the dependency-checked reorderer. It looked for pairs of lines that changed
+  order where one is control flow or a label, or where an embedded ++/-- writes a name the other line uses.
+  - My saves: only two one-line ifs crossed another line, both from sclimb in round 19 and both independent: wm
+    f51d18 `if (nx < 0) nx = 0;` vs `oy = ...h1;`, and wm f75d80 `if (D_0108F1B8 > 0) ...` vs `v = 1;`. The other
+    hits were ifswap arm swaps, which are valid (dktitle f228c8, wm f7c880). Nothing to restore.
+  - wwm2's hill3o saves did move break, case, default and a label. dkmovie f23ae8 (d6d14605) moved `next_packet:`
+    past `D_00F283C8 = 0;` and moved case/default/break lines. wm f7ad38 (6ff9b223) moved case/break lines and
+    one-line `if (...) goto/continue` lines. Both are wwm2's saves, so I left them for wwm2.

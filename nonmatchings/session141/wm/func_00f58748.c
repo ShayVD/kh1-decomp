@@ -1,3 +1,4 @@
+/* Round 25 (wwm1): score 331 -> 329 with tools/ovl/storeperm.py (store-order sweep). */
 /* 202 words left (round 12): 40-frame palette crossfade (D_00379F28/D_0037A028 -> D_0108CE90). Frame is 112 vs 96 in the target, so locals are wrong; a 2D-array table variant was worse. Start by getting the frame size right. Round 19 (wwm1): 202 -> 191 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 352 -> 331 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 pad[64]; u8 r; u8 g; u8 b; u8 pad2; u8 r2; u8 g2; u8 b2; } G58748;
 extern G58748 *D_00F9B540;
@@ -57,9 +58,9 @@ void func_00f58748(s32 dir) {
     c0 = func_00f58128(D_0108CE88) * 4;
     D_00F9B540->r = D_00379F28[c0];
     D_00F9B540->r2 = D_0037A028[c0];
-    D_00F9B540->b2 = D_0037A028[c0 + 2];
-    D_00F9B540->b = D_00379F28[c0 + 2];
     D_00F9B540->g = D_00379F28[c0 + 1];
     D_00F9B540->g2 = D_0037A028[c0 + 1];
+    D_00F9B540->b = D_00379F28[c0 + 2];
+    D_00F9B540->b2 = D_0037A028[c0 + 2];
     func_00f551a8();
 }
