@@ -778,3 +778,36 @@ hit the stub callee sits at a lower address than the function.
   (PlatVu0MulMatrix vs stores to a local), wm f29dc0 (lod rewrite, deliberate), wm f60fa8 and f6b7c8 (call vs local
   or `lab[7]` stores), and wm f3a640.nostrict (`sp->f8` stored before func_00f64c38, deliberate per wwm2's round 51
   header; worth a check by wwm2).
+
+## Round 27
+
+- valaudit --scan wm over the 58 low-half drafts (below 0xf50000): one real value bug. wm f42f20.norlo passed
+  *D_00F85160 to func_00f29aa0, whose second parameter is the packet-pointer cell itself (u64 **, as wm f23018
+  passes it). With that fixed, D_002C5958 as u32 (srl, as in f33270/f3e988) and s.a of the D_00F850E0 calls read
+  through ssf(), 84 -> 26 at exact size. The other flags were address forms, spill choices or scheduling: f49718's
+  lui 0x108 is a hoisted delay-slot load, f32df0's a3/t0 swap is x/y spill choice, f4b338's missing a2 setter is id
+  living on the stack, f2ba68 case 43 (sltiu vs xori) does not move with four forms of the test.
+- wm f23550 20 -> 5: the tail as `if (r != 0) return -1; if (m.sel >= n) return -2; return vals[m.sel];`. Left: the
+  target loads 10 once (li a3,10) for the m.x30 store and the 4th argument. Ours keeps two li: cse turns every form
+  of the argument (literal, m.x30, a t = 10 local, `m.x30 = 10` as the argument, chains) back into the constant, so
+  local-alloc never gets the a3 copy preference. storeperm over the three stores gave nothing.
+- Bucket lever: an end-of-function empty-asm count scan (0-16 asms) over the 21 drafts at 2-26 never moved a score,
+  and a 1/2/3/5-asm scan before every top-level statement (wwm2's asmscan3) found one hint: wm f37770 reaches 0 with
+  2 or more asms before func_001bf888(q0, ...), before the type switch or before the anim test (bucket count
+  unchanged at 129, so not the bucket lever). Cause, from the -dl/-dg dumps: global-alloc priority
+  floor_log2(refs) * refs / live_length. n (pseudo 89: 7 refs, 181 insns) scores 773 and the hoisted `mode < 2`
+  (pseudo 267: 3 refs, 39 insns) 769, so n is allocated first and takes s5. Two more insns in n's range give 765
+  and the target's order. 182 insns is an exact tie (14/182 = 3/39), which goes to the lower pseudo, so n before
+  the type load (+1) changes nothing. Hoisting (f32)n out of the loop (one ref fewer) fixes both registers but moves
+  the cvt out of the loop (still 24). No plain-C form found: statement orders before and after n, loop and
+  condition forms, case orders of the loop switch, address forms of the loop's arguments, type load placement.
+  The priority script is /tmp/claude-0/s141/wwm1/r27/sc/prio.py (prints the allocation order with each pseudo's
+  refs, live length and priority).
+- Same priority reading for f44158 (arg4 4 refs/11 insns = 7272 against arg0 4 refs/19 = 4210; the target needs
+  arg0 first, and both keep the `arg0 != arg4` compare in case 1) and f20d08 (the D_00F8512C address pseudos have
+  3 refs over 14 insns against 3 over 4 for the values). Neither has a plain-C fix yet.
+- Field type as a store-order lever: wm f387a8 with c, f24 or f54 retyped (void *, f32) and wm f32770's C32770
+  fields (s32 o / u32 id / int x): no gain. f3ba08's split constant 1 (guarded do-while and for forms with `one`
+  inside the guard) hoists the literal out of the outer loop (18-22). f465a8 with D_00F9B2E0 in either read keeps
+  two lui (16), and volatile still builds the full address (10). f43430's buf-loop moves do not change with
+  count-down, do-while or for-init loops.
