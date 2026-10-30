@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 181 -> 179, hill3o statement order. Earlier header below. */
 /* Round 45 wwm2: score 183 -> 181, hill3o statement order under this build mode. Earlier header below. */
 /* Round 44 wwm2: score 215 -> 183 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f625f0 near miss: score 217 -> 215 (324 -> 324 words, 1372 vs 1352); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
@@ -31,26 +32,26 @@ void func_00f62440(s32);
 
 s32 func_00f625f0(void)
 {
-    Pad *pad;
-    u8 *p;
     Col *c;
-    u8 *rgb;
-    f32 f;
-    s32 h;
-
-    s32 i;
-    s32 b8;
+    u8 *p;
     u8 save[8];
+    f32 f;
+
+    u8 *rgb;
+    s32 h;
+    s32 b8;
+    s32 i;
+    Pad *pad;
     c = D_0108EE00;
     for (i = 0; i < 8; i++) {
         p = &D_00F9B540->b[i];
         rgb = &D_00379F28[*p * 4];
         c->r = rgb[0] >> 1;
+        save[i] = *p;
         c->g = rgb[1] >> 1;
         c->a = 128;
         c->b = rgb[2] >> 1;
         c++;
-        save[i] = *p;
     }
     for (i = 0; i < 3; i++) {
         D_0108EE80[i].r = 0;
