@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 202 -> 200, e = (It *)(D_0108F288 * sizeof(It) + (u32)items) puts the scaled index first in the addu (swapscan). Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f6e278 near miss: score 268 -> 202 (565 -> 444 words, 2816 vs 2824); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, two passes, seeds 362/363 then 364). Earlier header below. */
 /* score 268 (2808 vs 2824 bytes). Menu setup (like f73eb0): 6 info windows, an icon row from func_00f6a480, then 4 + 3 windows (the last gets x40 = func_00f6dfd8), then a loop until D_0108F188: copy item bytes x2..x4 into the 3 counters (zero when x5 == 0 and x6 < 71), refresh D_003E8E08, and draw the D_0108F28C icon (jump table 0x40..0x46 at 0x00FBA100, default first) with D_0108F248.x0/x8 swapped around func_00f693e0. The draft scored 401. Putting default first plus `t = e->x6 >= 71;` gave 410, then two hill2 passes over the declaration, prologue, icon-field and colour-store order gave 268. Left: the original reaches D_00FB4CC8/CD0/CD4 through a raw `lui 0xfb; move; addiu` (no symbol; treating them as an array made it worse, 498), the prologue register choice (i in s1), and the 16 bytes it lacks. */
 typedef struct { u8 x0; u8 x1; u8 pad2; u8 x3; u8 pad4; u8 x5; u8 pad6[2]; s16 x8; s16 xa; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; u8 pad34[4]; u8 x38; u8 x39; u8 x3a; u8 x3b; } Ic;
@@ -153,7 +154,7 @@ void func_00f6e278(void)
     w[2] = func_00f6b6a0(3, 5, 0, 3, 4, D_00FB4C98, 0, 0, D_00FB4CD4 + func_001f0118(61, D_00FB4C98) + D_00FB4CB4, D_00FB4CCC - 1, 0, 0, 0, D_00FB4CA4, D_00FB4CA8, D_00FB4CAC, D_00FB4CB0, 256, mode);
     func_00f6b6a0(3, 7, 0, 3, 0, 15, 0, 0, 0, 0, 0, 0, 0, D_00FB4D0C, D_00FB4D10, D_00FB4D14, D_00FB4D18, 256, mode)->x40 = func_00f6dfd8;
     for (;;) {
-        e = &items[D_0108F288];
+        e = (It *)(D_0108F288 * sizeof(It) + (u32)items);
         t = e->x6 >= 71;
         if (e->x5 == 0 && !t) {
             w[0]->x10 = 0;
