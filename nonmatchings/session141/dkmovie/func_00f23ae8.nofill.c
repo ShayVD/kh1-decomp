@@ -1,3 +1,4 @@
+/* Round 45 wwm2: score 624 -> 596, hill3o statement order under this build mode. Earlier header below. */
 /* Round 45 wwm2: score 629 -> 624 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f23ae8: draft (session 141, round 28), structurally complete, not polished, 2652 vs 2776 bytes, 592 words differ, score 675 (m2c output unusable). The decode task: waits for ready slots, lays out the IPU buffers after f3DF08 (a guard word 0x12345678 at f3DD14), then walks each ready slot's packets: type 4 audio goes to func_00f21910 / func_00f21a20, type 3 pictures are fed through the IPU (BDEC/IDEC commands on 0x10002000, output via func_00f23aa8 in chunks of up to 0x3FF macroblocks) and shown (func_00f22df8). Stops on flag 8 or after f3DF1C frames, then idles setting 0x40000. Labels follow the m2c control flow. Round 19 (wwm1): score 675 -> 629 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
@@ -27,15 +28,15 @@ extern u8 D_00F28568[];
 extern u8 D_00F28580[];
 
 void func_00f23ae8(void) {
-    s32 len, dst;
     s32 i, cnt, f;
-    u8 *p;
-    s32 w, ht, mbw, sz, buf0, buf1, buf2;
-    s32 frame, slot, shown;
     u32 nmb, c;
+    s32 w, ht, mbw, sz, buf0, buf1, buf2;
     MovieWork *m;
-    s32 cw, ch;
 
+    s32 frame, slot, shown;
+    s32 cw, ch;
+    s32 len, dst;
+    u8 *p;
     func_00f207a0(D_00F28460);
     for (;;) {
         cnt = 0;
@@ -70,28 +71,28 @@ void func_00f23ae8(void) {
     D_00F28460->f3DF6B = 0;
     m = D_00F28460;
     w = m->f3DD20;
+    mbw = w / 16;
     ht = m->f3DD24;
     m->f3DDA4 = 0;
+    sz = mbw * (ht / 16) * 24 + 0x28;
     buf0 = (m->f3DF08 + 0x3F) & ~0x3F;
     m->f3DDAC = (s32)m->aux[0];
-    mbw = w / 16;
     cw = w;
-    ch = ht;
-    sz = mbw * (ht / 16) * 24 + 0x28;
     buf1 = (buf0 + (sz + 0x3F) / 64 * 256 + 0x3F) & ~0x3F;
-    buf2 = (buf1 + mbw * ((ht + 15) / 16) * 1024 + 0x3F) & ~0x3F;
     m->f3DDA8 = 0;
+    buf2 = (buf1 + mbw * ((ht + 15) / 16) * 1024 + 0x3F) & ~0x3F;
     *(s32 *)(buf2 + 0x40) = 0x12345678;
     m->f3DD14 = buf2 + 0x40;
+    ch = ht;
     if ((u32)(D_00F28460->f3DD14 + 4) >= (u32)((s32)D_00F28460 + D_00F28460->f3DF48)) {
         __asm__ volatile("break");
     }
-    sceGsSyncPath(0, 0);
     shown = 0;
-    sceIpuInit();
-    func_00f22e28(buf0, buf1, 0x400, w, ht, 0x1180, 0, D_00F28460->f3DF61, D_00F28460->f3DEF0);
     frame = 0;
     slot = 0;
+    sceGsSyncPath(0, 0);
+    sceIpuInit();
+    func_00f22e28(buf0, buf1, 0x400, w, ht, 0x1180, 0, D_00F28460->f3DF61, D_00F28460->f3DEF0);
 next_slot:
     D_00F283C8 = 0;
     if (D_00F28460->f3DD74[slot] != 2) {
@@ -123,18 +124,18 @@ next_slot:
         goto end;
     }
     p = (u8 *)D_00F28460->f3DD84[slot];
-    D_00F283C8 = 0;
 next_packet:
+    D_00F283C8 = 0;
     while (p[0] != 3) {
         if (p[0] == 4) {
             switch (p[8]) {
-            case 1:
-                break;
-            default:
                 func_00f21910(p + 0x10, D_00F28460);
                 break;
-            case 2:
+            case 1:
+                break;
                 func_00f21a20(p + 0x10, D_00F28460);
+            case 2:
+            default:
                 break;
             }
             p = p + 0x10 + *(s16 *)(p + 4);
@@ -149,19 +150,19 @@ next_packet:
     sceGsSyncPath(0, 0);
     func_00f230c0(buf2, (s32)(p + 0x10), len + 0x10);
     FlushCache(0);
-    IPU_CTRL = 0x40000000;
     sceIpuSync(0, 0);
     IPU_CMD = 0;
-    sceIpuSync(0, 0);
-    dst = buf1;
-    IPU_CTRL = *(s32 *)(p + 0xC);
-    func_00f23a78(buf2);
-    sceIpuSync(0, 0);
+    IPU_CTRL = 0x40000000;
     IPU_CMD = 0x40000000;
     sceIpuSync(0, 0);
     IPU_CTRL = *(s32 *)(p + 0xC);
-    nmb = mbw * (ht / 16);
+    func_00f23a78(buf2);
+    dst = buf1;
+    sceIpuSync(0, 0);
+    IPU_CTRL = *(s32 *)(p + 0xC);
     IPU_CMD = (p[2] << 24) | 0x10010000;
+    sceIpuSync(0, 0);
+    nmb = mbw * (ht / 16);
     while (nmb != 0) {
         c = nmb < 0x400 ? nmb : 0x3FF;
         func_00f23aa8(dst, c);
@@ -176,9 +177,9 @@ next_packet:
         FlushCache(0);
         func_0024e6e8(buf1, w * ht);
     }
-    p = p + 0x10 + len;
     FlushCache(0);
     shown = 1;
+    p = p + 0x10 + len;
     func_00f23ae0();
     func_00f22df8(buf0);
     sceGsSyncPath(0, 0);
@@ -189,9 +190,9 @@ next_packet:
         func_001eda90(0, 0xEF);
         D_00F28460->f3DF67 = 1;
     }
-    frame++;
     D_00F28460->f3DDD0 |= 4;
     func_00f23480();
+    frame++;
     m = D_00F28460;
     if (m->f3DD50[slot] < frame) {
         m->f3DD74[slot] = 0;
