@@ -1,5 +1,4 @@
-/* Round 47 wwm2: score 600 -> 598, hill3o statement order. Earlier header below. */
-/* Round 45 wwm2: score 616 -> 600, hill3o statement order under this build mode. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 6ff9b223 (wm func_00f7ad38 near miss, score 616 -> 600, hill3o order under the new build m) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 598 was not valid. Restored the last valid statement order: score 616. Earlier header below. */
 /* Round 44 wwm2: score 628 -> 616 under the nofill build mode (r44/modescan.py). Earlier header below. */
 /* score 524 (3200 vs 3176 bytes). Sibling of f7a350: the same 3-pack texture upload, then each kind 3/4 entry is filtered by id (66..70 skipped; >= 100 are map markers for sel/D_00FB6498.x94, with dim set when they differ; 2..64 need f[id] & 1 and not & 2; 72..97 need f[id-70] & 2; D_00FB649C.f is the flag array, addressed from D_00FB649C+16 as the original does). It is then lifted by func_00f787b0, projected per vertex (skipped when z is invalid), coloured by the D_0108F7C0/830/8A0 fades and the pack-k switch, and ids 21..26 are drawn 4 times rotated by D_0108F918 (the original reuses the id-21 index variable as the inner loop counter; kept). Colour bytes need (s32) truncation (u8 from float gives the 0x4f000000 sequence). u32 id gives the sltiu compares. Left: 24 bytes: the texture-upload argument order, the s4/s5 and t5/t6 register numbering, the double col[3] store, and the blend=72 merge in the k switch. hill2 found nothing (the word count is dominated by misalignment). Round 18 (wwm1): 732 words with CONTEXT_ONLY definitions of cosf and sinf (ctx2.py). Round 19 (wwm1): score 675 -> 628 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { s32 n; s32 grp; s32 tex; } Hdr;
@@ -41,40 +40,40 @@ void func_00f7ad38(s32 sel)
 {
     s32 xs[4];
     s32 ys[4];
-    u8 *addr;
     s32 zs[4];
-    f32 lift, cx, cy, ang, fx, fy;
     s32 q[4];
-    Hdr *h;
-
     f32 v[4];
-    f32 *pa;
-    Grp *g;
-    u32 id;
     s32 sc[4];
+    u8 col[4];
+    Hdr *h;
+    Grp *g;
     Tex *tx;
     s32 i, j, w, th, last, mode, t, d0, d4;
     Ent *e;
     u64 blend;
     s32 k, n, m, dim, a;
-    u8 col[4];
+    u32 id;
+    u8 *addr;
+    f32 lift, cx, cy, ang, fx, fy;
+    f32 *pa;
+
     mode = 0;
-    t = 0;
     D_0108F6E4 = 0;
+    t = 0;
     blend = 0;
     if (sel >= 2 && sel < 28) {
         if ((D_00FB64AC[sel] & 1) && (D_00FB64AC[sel] & 8)) D_0108F6E4 = 1;
     }
     for (k = 2; k >= 0; k--) {
+        last = -1;
+        v[3] = 1.0f;
         th = 0;
         h = (Hdr *)D_0108F6B8[k];
-        tx = (Tex *)((u8 *)h + h->tex);
-        last = -1;
         w = 0;
+        tx = (Tex *)((u8 *)h + h->tex);
         d4 = 0;
         g = (Grp *)((u8 *)h + h->grp);
         d0 = 0;
-        v[3] = 1.0f;
         for (i = 0; i < h->n; i++, g++) {
             e = (Ent *)(D_0108F6B8[k] + g->off);
             for (j = 0; j < g->n; j++, e++) {
@@ -83,17 +82,17 @@ void func_00f7ad38(s32 sel)
                     w = tx[last].w;
                     th = tx[last].h;
                     switch (tx[last].fmt) {
-                        mode = 20;
                     case 4:
-                        d0 = 8;
-                        d4 = 2;
                         t = w * th / 128;
-                        mode = 19;
+                        d0 = 8;
+                        mode = 20;
+                        d4 = 2;
                         break;
                     case 8:
                         t = w * th / 64;
-                        d0 = 16;
+                        mode = 19;
                         d4 = 16;
+                        d0 = 16;
                         break;
                     default:
                         mode = 0;
@@ -118,13 +117,13 @@ void func_00f7ad38(s32 sel)
                             goto show;
                         }
                     }
+                    if (D_00FB6498.x94 + 100 == id) goto show;
                     if (D_00FB6498.x94 != 27) continue;
                     if (id != 113) continue;
-                    if (D_00FB6498.x94 + 100 == id) goto show;
                 } else {
                     if (id >= 2 && id < 65) {
-                        if (D_00FB649C.f[id] & 2) continue;
                         if (!(D_00FB649C.f[id] & 1)) continue;
+                        if (D_00FB649C.f[id] & 2) continue;
                     }
                     if (id >= 72 && id < 98) {
                         if (!(D_00FB649C.f[id - 70] & 2)) continue;
@@ -146,18 +145,18 @@ void func_00f7ad38(s32 sel)
                     zs[n] = sc[2];
                     q[n] = sc[3];
                 }
-                col[2] = 0x80;
-                col[3] = 0x80;
-                col[0] = 0x80;
                 col[1] = 0x80;
+                col[2] = 0x80;
+                col[0] = 0x80;
+                col[3] = 0x80;
                 if (e->id >= 2 && e->id < 28) {
                     if (sel == e->id) {
-                        D_0108F8A0[sel] += (128.0f - D_00FB5BC4) * 10.0f / D_00FB5BB8;
                         D_0108F7C0[sel] += (128.0f - D_00FB5BBC) * 10.0f / D_00FB5BB8;
+                        D_0108F8A0[sel] += (128.0f - D_00FB5BC4) * 10.0f / D_00FB5BB8;
                         D_0108F830[sel] += (128.0f - D_00FB5BC0) * 10.0f / D_00FB5BB8;
                         if (D_0108F7C0[sel] >= 128.0f) D_0108F7C0[sel] = 128.0f;
-                        if (D_0108F8A0[e->id] >= 128.0f) D_0108F8A0[e->id] = 128.0f;
                         if (D_0108F830[e->id] >= 128.0f) D_0108F830[e->id] = 128.0f;
+                        if (D_0108F8A0[e->id] >= 128.0f) D_0108F8A0[e->id] = 128.0f;
                     } else {
                         D_0108F7C0[e->id] -= (128.0f - D_00FB5BBC) * 10.0f / D_00FB5BB8;
                         if (D_0108F7C0[e->id] < D_00FB5BBC) D_0108F7C0[e->id] = D_00FB5BBC;
@@ -171,8 +170,8 @@ void func_00f7ad38(s32 sel)
                     col[2] = (s32)D_0108F8A0[e->id];
                     if (e->id == D_00FB6498.x94) {
                         col[2] = 0x80;
-                        col[0] = 0x80;
                         col[1] = 0x80;
+                        col[0] = 0x80;
                         col[3] = 0x80;
                     }
                 }
@@ -195,19 +194,19 @@ void func_00f7ad38(s32 sel)
                     }
                     blend = 72;
                     break;
-                    break;
                 case 2:
                     blend = 72;
-                    col[1] = 0x80;
-                    col[0] = 0x80;
                     col[3] = 80;
+                    col[0] = 0x80;
+                    col[1] = 0x80;
                     col[2] = 0x80;
+                    break;
                 }
                 if (e->id < 27) {
-                    a = col[3];
                     if (e->id < 21) goto one;
                     cx = (xs[0] + xs[1] + xs[2] + xs[3]) / 4;
                     cy = (ys[0] + ys[1] + ys[2] + ys[3]) / 4;
+                    a = col[3];
                     m = e->id - 21;
                     for (n = 0; n < 4; n++) {
                         pa = &D_0108F918[m * 4 + n];
