@@ -1,3 +1,4 @@
+/* Round 45 wwm2: score 132 -> 130 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f23750: near miss (session 141, wwm1), 824 vs 808 bytes (175 words shown, mostly shift): structure complete; the inner tbl[] search is a goto loop (no alignment nop in the original); left: tbl local is spilled to sp[0] in the original while ours spills cur, and the inner loop computes idx*4 once before its label. */
 #include "ovl.h"
 typedef unsigned int size_t;
