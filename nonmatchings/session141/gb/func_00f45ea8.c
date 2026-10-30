@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 178 -> 170, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 180 -> 178, func_00f22f08 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 216 -> 180, port.py of the wm twin func_00f6cfa0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* gb.x func_00f45ea8 near miss: 307 words differ, score 216 (ours 2176 bytes, original 2160). Port of wm func_00f6cfa0 (nonmatchings/session141/wm) via tools/ovl/port.py, at the same score; see that file for the findings and what is left. */
@@ -72,11 +73,11 @@ s32 func_00f45ea8(void)
     s8 codes[6];
     Win *w2;
     s32 t;
-    Win **pw;
-    Win *w3;
     s16 *pl;
-    s8 *pc;
+    Win *w3;
     Ent *p;
+    Win **pw;
+    s8 *pc;
     s32 i, k, sel, old, r;
     s32 y;
 
@@ -99,12 +100,12 @@ s32 func_00f45ea8(void)
     lst[2] = 9;
     D_00F82998.v[0] = D_00F71160.v[0];
     lst[3] = 11;
-    D_00F82998.v[1] = D_00F71160.v[1];
-    y = D_00F703E8;
+    codes[5] = 9;
     lst[4] = 213;
     codes[3] = 6;
+    D_00F82998.v[1] = D_00F71160.v[1];
     D_00F82998.v[2] = D_00F71160.v[2];
-    codes[5] = 9;
+    y = D_00F703E8;
     D_00F82998.v[3] = D_00F71160.v[3];
     D_00F82998.v[4] = D_00F71160.v[4];
     D_00F82998.v[5] = D_00F71160.v[5];
@@ -118,9 +119,9 @@ s32 func_00f45ea8(void)
         (*pw)->b3 = 0;
         (*pw)->hC = 1;
         (*pw)->x10 = *pl;
-        (*pw)->y = (*pw)->ty = y;
-        (*pw)->a = (*pw)->at = 0;
         (*pw)->tx = (*pw)->x = D_00F703E4;
+        (*pw)->a = (*pw)->at = 0;
+        (*pw)->y = (*pw)->ty = y;
         (*pw)->h8 = D_00F703F0;
         if (i == sel) {
             (*pw)->b4 = 1;
@@ -201,16 +202,16 @@ top:
     D_00F70734 = sel;
     switch (r) {
     case 1:
-    case 2:
     case 7:
     case 8:
-        break;
-    case 3:
-    case 4:
     case 5:
+        break;
+    case 4:
+    case 3:
     case 6:
         D_00F82AC0 = 1;
         break;
+    case 2:
     case 9:
         p = func_001bc4e0();
         p = &p[func_001be278() + 1];
