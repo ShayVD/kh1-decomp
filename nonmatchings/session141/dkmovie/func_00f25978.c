@@ -1,4 +1,4 @@
-/* Round 56 (wwm2): score 256 -> 226 (1568 vs 1576 bytes; valaudit's callee sequence now matches). After func_00f26848 in the type 1 and type 2 paths, the target tests IPU_CTRL bit 14 and on a clear bit reads IPU_CTRL once more, discarding the value. With that test in both cases they cross-jump into one func_00f26848 call, as in the target (the old draft had one call too many). Left: register choice (s2-s6 for n, mx, my and the IPU pointers) and the prologue schedule. Earlier header below. */
+/* Round 56 (wwm2): score 256 -> 226 -> 224 (1568 vs 1576 bytes; 224 from hill3, 360 s, which moved the qs/fcode/first/n set-up and the type 2 command build; valaudit's callee sequence now matches). After func_00f26848 in the type 1 and type 2 paths, the target tests IPU_CTRL bit 14 and on a clear bit reads IPU_CTRL once more, discarding the value. With that test in both cases they cross-jump into one func_00f26848 call, as in the target (the old draft had one call too many). Left: register choice (s2-s6 for n, mx, my and the IPU pointers) and the prologue schedule. Earlier header below. */
 /* dkmovie.x func_00f25978: draft (session 141, round 28), structurally complete, not polished, 1552 vs 1576 bytes, 323 words differ, score 262 (m2c draft scored 549). IPU decode task for MPEG-style packets (the func_00f25658 sibling): per picture it reads the picture type from the IPU, for P/B pictures the motion vector pair, then runs the intra (type 2), predicted (type 1) or skipped (type 3) path through func_00f26540 / func_00f26848; type 4 ends the packet. Round 19 (wwm1): score 262 -> 256 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
 
@@ -22,18 +22,18 @@ void func_00f25978(void) {
     s32 a, b, c;
 
     h = (MvPkt *)D_00F28460->f3DD90;
-    fcode = h->bA;
+    qs = h->b9;
     base = (h->bE << 20) + (((h->bF & 1) << 22) + ((h->bF >> 1) << 16));
     size = h->f0;
-    qs = h->b9;
+    fcode = h->bA;
+    first = 1;
     IPU_CTRL = base + 0x1200000;
     IPU_CTRL = (IPU_CTRL | 0x40000000) + base;
-    first = 1;
     while (IPU_CTRL < 0) {
     }
-    n = -1;
     my = 0;
     D_00F28460->f3DD90 += 0x10;
+    n = -1;
     mx = 0;
     func_00f269c0(D_00F28460->f3DD90, size);
     for (;;) {
@@ -90,10 +90,10 @@ void func_00f25978(void) {
             break;
         case 2:
             func_00f26a20((s32)D_00F28464 + 0x70, 0x300);
-            a = first << 26;
             IPU_CTRL = base + 0x1200000;
-            IPU_CMD = a | (qs << 16) | 0x28000000;
+            a = first << 26;
             first = 0;
+            IPU_CMD = a | (qs << 16) | 0x28000000;
             while (IPU_CTRL < 0) {
             }
             while ((D3_CHCR >> 8) & 1) {
