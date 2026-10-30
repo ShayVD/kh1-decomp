@@ -359,6 +359,23 @@ Writing the first single-use temp inline matched it:
 on the line before. For a register swap between two long-lived values, try inlining a temp that
 is used only once, on the next line (/tmp/claude-0/s141/wwm1/inl.py does it one temp at a time).
 
+**Orphan divide-by-zero check.** Sometimes the target has a `li vN,C; beqzl vN; break 7` with
+no `div` that uses vN, often next to a shift that does the real division. gcc 2.96 emits
+this when it divides by a value that is a register at expand time and the quotient is never
+used. The trap_if survives, and flow deletes the div.
+
+A divisor that is a constant in the C source does not give this pattern. gcc folds
+`i * 15 / 30` to a shift with no check, and a `/ n` with `n = 30` keeps a real `div`. The
+pattern does come back when a `static inline` helper takes the divisor as a parameter and
+computes a quotient it never uses. For example, `static inline s32 h(s32 t, s32 n) { s32 q = t / n;
+return t * 15 / 30; }` called as `h(i, 30)` gives `srl; li 30; addu; beqzl; break 7; sra 1`
+exactly. This took wm func_00f5a4f0 and gb func_00f333f8 from 196 to 174.
+
+The real helper is probably a lerp-like function that drops one of its results. If the
+check tests a variable instead (wm func_00f25918's `beqzl s3` on n), the dead division is by
+that variable. The related `xori r,r,0` before movn/movz (wm func_00f4b338, gb func_00f24240)
+is not reproduced by an inline compare helper: gcc substitutes the constant and drops the xor.
+
 ## decomp-permuter on an overlay function (session 135)
 
 tools/permuter.py works in overlay mode as it is (KH1_OVL points kh1tool at the overlay's layout,
