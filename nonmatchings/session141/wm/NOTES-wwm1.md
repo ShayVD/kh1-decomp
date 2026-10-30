@@ -945,3 +945,49 @@ hit the stub callee sits at a lower address than the function.
   loads h with lw 4(&D[i]) because &D[i] stays live in s1). The tail recomputes &D[i] from a spilled i*2
   and a fresh %hi, so the target ran out of registers there. Not a value bug, and no new form tried.
 - wm f2ba68 (91): only the known case-43 sltiu/xori note.
+
+## Round 34 (control flow first)
+
+- Tool (scratch, /tmp/claude-0/s141/wwm1/r34/cfdiff.py OVL draft.c...): diffs the branch/jal opcode
+  sequence of the target against the draft's -S output (beqz/bnez/likely forms normalised; the dp*
+  soft-float names in our -S output show up as name-only differences against __*df2/3). It ranked the wm
+  low half: f26e80 (6 real), f31430 (7), f3e988 (2), f25918 (1), the rest 0 or noise.
+- wm f23628 (71 -> 69, nosib): the target's single jal func_00f23018 is jump2 cross-jumping of two
+  per-arm calls (lui s1 duplicated per arm, .p2align nop after the b). With -O2, sched2 leaves a
+  `(use (const_int 0))` after the call in the fall-through arm, and find_cross_jump stops on it.
+  With -fno-optimize-sibling-calls the two calls merge (the mechanism of the flag was not traced).
+  Single-call forms (arm-local a1, goto, ternary, `!= 0` argument) all score 142, because the stores and
+  the D_00F850D8 address move before the branch.
+  Left: sched1 hoists the %hi of D_00F850BC/C0/C4/D_00F8C23C to the prologue (the target has one after
+  each call), plus the movn/movz form of the 27 -> 13 tail. The forms tried for that tail gave 85-95.
+- nosib sweep of every plain low-half wm draft, plus the open dkmovie drafts: **f37770 matches as is in
+  nosib mode** (24 -> 0). Nothing else gains. f24fe0, f26810, f28258, f465a8 and f47b60 get worse, and the
+  rest are unchanged.
+- wm f31430 (368 -> 264):
+  - The target shares one jal func_00f31118, with the f3d4d8 arm first and b reloaded from the stack. It
+    is written as one call reached through `if (D_00F8C130 == 0) { ...; b = 0; if (D_00F8C130 == 0) goto
+    skip; }` (348). Two calls let cse put 0 straight into a1.
+  - An unused `f32 xx[4];` after `OvlMtx m;` gives the 288-byte frame and every stack offset of the target
+    (266). The original has a 16-byte local here that is not identified.
+  - Moving `mask = 0;` next to `snd = -1;` gives 264.
+  - Left: the %hi of D_00FBBA58 sits in the delay slot of the b3D test (the target puts it after the test
+    and again on the false path), and the c.lt.s 0.3f block is scheduled differently.
+- wm f26e80 (722 -> 393): the target repeats `x + 0x60` and `y + (off + C)` on both sides of each
+  `if (gl != 0) func_00f24548(...)`, with a `b` over the else copy. Written as x + 0x60 inline in every
+  call, `yy = off + C;` before the test, and `y + yy` in both calls. Inlining all of y + (off + C) gives
+  812, because gcc reassociates it as (y + off) + C.
+  The last control-flow difference is the row loop's `(flag != 0 && i + 1 < n) ? 1 : 0`. The target
+  branches on it, and `if (...) e = 1; else e = 0;` gives the exact branch sequence (2948 bytes). But p
+  moves from s1 to s2 everywhere, and the score becomes 539. Reusing gl/al/sz/k/icon/cnt/off, a
+  block-local e, or two calls all score 537-891, so that change is not committed. Start there next.
+- wm f3e988 nostrict (770 -> 721): branch sequence now equal. px is computed before the mode test, and the
+  test is written `if (mode == 0) zz = dz * 128; else zz = dz * 64;` in both loops.
+- wm f25918 (172): computing k = (0 - 128) * i / n + 128 before func_00f21ef0 in the second slide loop
+  gives the target's size (3832) and branch sequence. But the down-counter and the i*-640 giv swap s1
+  and s2 in every slide loop, and the score becomes 376. Not committed.
+- wm f47b60 / f47f40: control flow and callee sequence already equal. The gap is the u64 bitfield code
+  (the target masks each copied field twice: andi 0xffff, andi 0xf, and 15). It is a data-shape problem,
+  not control flow, so the round's approach does not apply.
+- wm f344f0 (87): `s32 buf[16]`, a buffer pointer, and a cached or volatile D_00F8C224 all leave the
+  s8 = sp+64 invariant unexplained. The scores were 87 (volatile: 87 at 1020 bytes), 154 for the cached
+  global, and 124 for the if/else swap.
