@@ -1,3 +1,4 @@
+/* Round 31 wwm1: score 56 -> 4. The second table loop writes through its own pointer local (o2): with one o for both loops, o (14 refs over 72 insns) outranked i (23 over 192) in global-alloc and took s2; split, i is allocated first and gets s2, as in the target. Left: the addiu of &D_00F9B2CC is scheduled before li v0,1 (one slot). Earlier header below. */
 /* 30 words differ, score 56 (1008 vs 1008 bytes); logic complete (loader like f47810; 64-byte unused pad gives the 288 frame). Left: s2/s3 swapped (orig i in s2, &dir and the u64 out pointer share s3) and the D_00F9B2CC = 1 store scheduling. Tried: decl orders, separate loop vars, count-up vs count-down loops, do-while, inline helper, indexed loops, late struct copies, 10 min permuter (no gain) */
 typedef struct { char s[6]; } Dir6;
 typedef struct { char s[10]; } Dir10;
@@ -56,6 +57,7 @@ void func_00f436d0(void) {
     Dir10 dir2 = D_00FB7240;
     char pad[64];
     u64 *o;
+    u64 *o2;
     TexDef *t;
     s32 i;
 
@@ -87,11 +89,11 @@ void func_00f436d0(void) {
     }
     func_001bb7c8(D_00FB72F8, D_00F8702C);
     func_00f65a68(D_00F8702C);
-    o = D_00F87170;
+    o2 = D_00F87170;
     t = D_00F85000;
     for (i = 0; i < 18; i++) {
         s32 a = t->a;
-        *o++ = func_00f65bb8(func_00f65b48(13824, D_00F8702C, a), D_00F8702C, a, t->b);
+        *o2++ = func_00f65bb8(func_00f65b48(13824, D_00F8702C, a), D_00F8702C, a, t->b);
         t++;
     }
     func_001bef40(path, dir2.s, D_00FB7310);
