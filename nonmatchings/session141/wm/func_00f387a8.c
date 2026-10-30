@@ -1,3 +1,4 @@
+/* Round 48 wwm2: score 12 -> 6, statement order from tools/ovl/hill3.py (seed 3, --check ok, same built size). Earlier header below. */
 /* Round 33 wwm2, still 7 words (score 12). Tried: every ordered placement of f04/f34/c in block 1 (5814 builds); the original's store order in block 1 only (105 words) plus a single-move search from there (10); every single swap and move in both blocks, then all pairs of the 60 best (about 3800 builds). None goes below 7. Why: even swapping two stores of zero (c and f34) changes the float constant registers (f20/f21/f22), because the store order changes how long each constant is live. So store order and register choice cannot be set separately here. Earlier header: 7 words, score 12 (656 bytes, same size; was 102 words, score 123). Round 32 wwm2: hill2 over the two 19-store k-> blocks (two runs, 240 s and 600 s) fixed the s0/s1 and float constant registers along with the store order. Left: in block 1 the original stores f04 before f34 and c; in block 2 it stores id first and f40 before b. Every single-line move from here is worse, and writing both blocks in the original's store order changes the register allocation (104 words). ctx2 and interleave give nothing. Earlier header: 102 words left (660 vs 656): structure right; s0/s1 swap for r vs m1, float const regs (200 f22, 1.0 f21), &func_00f380b0 hoisted to s0 in target, and the two store blocks are scheduled in different orders. Tried decl orders and m2c store orders. */
 typedef struct { u8 pad[0x1C]; s32 a; s32 b; s32 c; } Src387;
 typedef struct {
@@ -57,48 +58,48 @@ void func_00f387a8(s32 arg0, Src387 *arg1) {
 
     h = func_00f36380();
     k = func_00f363c0(h);
-    k->f50 = 200.0f;
     k->a = arg1->a;
+    k->f50 = 200.0f;
     k->id = arg0;
+    k->f30 = -200.0f;
     k->b = arg1->b;
     k->c = arg1->c;
-    k->f30 = -200.0f;
-    k->f08 = 3;
     k->f3C = 1.0f;
-    k->f34 = 0;
+    k->f08 = 3;
+    k->f40 = 200.0f;
     k->f04 = 0;
+    k->f24 = 2;
+    k->f34 = 0;
     k->f0C = 0;
     k->f20 = 0;
-    k->f40 = 200.0f;
-    k->f24 = 2;
     k->f38 = 0;
-    k->f44 = 0;
     k->f4C = 1.0f;
     k->f54 = 2;
+    k->f44 = 0;
     k->f48 = 0;
     sceVu0CopyMatrix(k->m, m1);
     func_001c0310(11, func_00f380b0, h);
 
     h = func_00f36380();
     k = func_00f363c0(h);
-    k->f3C = 1.0f;
     k->a = arg1->a;
-    k->f30 = -200.0f;
-    k->f04 = 0;
+    k->id = arg0;
+    k->f40 = 200.0f;
+    k->f3C = 1.0f;
     k->b = arg1->b;
     k->f54 = 2;
+    k->f30 = -200.0f;
     k->c = arg1->c;
+    k->f04 = 0;
+    k->f08 = 3;
     k->f0C = 0;
     k->f20 = 0;
-    k->f40 = 200.0f;
-    k->f08 = 3;
     k->f34 = 0;
-    k->id = arg0;
     k->f38 = 0;
-    k->f4C = 1.0f;
     k->f44 = 0;
-    k->f50 = 200.0f;
+    k->f4C = 1.0f;
     k->f48 = 0;
+    k->f50 = 200.0f;
     k->f24 = 2;
     sceVu0CopyMatrix(k->m, m2);
     func_001c0310(11, func_00f380b0, h);
