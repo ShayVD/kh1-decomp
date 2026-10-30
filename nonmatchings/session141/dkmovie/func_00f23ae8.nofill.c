@@ -1,3 +1,4 @@
+/* Round 28 wwm1: score 508 -> 504, func_001eda90 declared s32 as defined in the main ELF source. Earlier header below. */
 /* Round 27 wwm1: score 538 -> 508, storeperm rerun on the 538 version (f3DD9C after f3DD98 past f3DDA0/f3DF68, and the 0x12345678 guard word stored before f3DD14). Earlier header below. */
 /* Round 27 wwm1: score 620 -> 538. valaudit showed 7 more D_00F28460 loads in the target (lw -31648): the second, third and fourth `m = D_00F28460` copies are gone and those blocks read D_00F28460 directly (wwm2's round 57 lever from f26d90/f245c0). Keeping the first copy (the f3DD9C..f3DDA0 stores) is best (removing it too: 548). Earlier header below. */
 /* Round 27 wwm1: score 624 -> 620, storeperm on the valid order (f3DD9C, f3DD94, f3DD98 stores off one m, distinct fields). Earlier header below. */
@@ -10,7 +11,7 @@ void FlushCache(s32);
 void sceGsSyncPath(s32, s32);
 void sceIpuInit(void);
 void sceIpuSync(s32, s32);
-void func_001eda90(s32, s32);
+s32 func_001eda90(s32, s32);
 void func_0024b1e8(void *, void *, s32);
 void func_0024e468(s32);
 void func_0024e6e8(s32, s32);
