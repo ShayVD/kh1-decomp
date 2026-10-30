@@ -100,8 +100,8 @@ draw count shows up) and its vertex work small.
 fell from ~216 ms (GS path, an earlier log) to ~59 ms (the parse, still counted as P18's runs). The Dive's steady
 stretch (frames ~5,100-6,550) ran at 31.4 frames/s (~15.7 pictures/s, against 16.09 for s151b on the GS path): no
 gain, as expected while the GPU is the limit (the start-of-frame wait ~540 ms per 2 s, the same as before). The GS
-worker was busy ~2.27 s of 2.4 s there and waited 627 ms on the recording (the GPU thread). The picture (the cull's
-winding) is not yet confirmed by eye.
+worker was busy ~2.27 s of 2.4 s there and waited 627 ms on the recording (the GPU thread). The picture looked right
+(Shay, by eye: the default natcull=1 is GXM's matching cull mode).
 
 ## The stages after
 
