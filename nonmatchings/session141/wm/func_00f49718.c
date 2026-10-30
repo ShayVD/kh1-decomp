@@ -1,3 +1,4 @@
+/* drafttwins.py: score 303 -> 295, port.py of the gb twin func_00f22620 draft. Earlier header below. */
 /* score 327 (1316 vs 1320). Port of gb func_00f22620 (wgb near miss, same score) via portmap2; D_00F56D90/98 -> D_00F9B510/18 and D_00F74210 -> D_010809C8 mapped by hand. See the gb header for what is left. Round 26 wwm2. Round 19 (wwm1): 217 -> 198 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 311 -> 303 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 pad0[0x2200]; u64 tex[1]; } GbWorld;
 typedef struct { s16 idx; s16 pad2; s32 u; s32 v; s32 w; s32 h; } GbTbl;
@@ -36,9 +37,10 @@ void func_00f49718(void) {
             a = 31;
             b = 32;
         } else {
-            show = 0;
             switch (D_00F9B510) {
             case 0:
+            default:
+                show = 0;
                 break;
             case 1:
                 show = 1;
