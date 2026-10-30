@@ -10,6 +10,7 @@ void kh1_vita_fill(unsigned int abgr);
 /* session 136: the picture drawn by the GPU (gxm.c) instead of the GS model's buffer */
 void kh1_vita_present_gpu(void);
 void kh1_vita_draw(void);
+void kh1_vita_display_mode(int mode, int strip_always); /* config.txt wide= / strip= (display.c) */
 int kh1_vita_frame_copied(void); /* display.c: a frame copy was sent since the last call */
 void kh1_vita_gxm_latch(void);   /* gxm.c: the display target, whole, kept for the present */
 
