@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 807 -> 805 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* score 897 (3868 vs 3792 bytes): menu panel draw: backdrop f799e0, three gradient quads, title GIF packet (f07d8) + 6 corner icons, name packet with sel==5 brightness + 6 icons, optional caption (f0868) and option list (f0ea8, null-terminated arg->list), selected-row highlight quads. Logic complete; remaining diffs are register allocation/spills (original caches a*4, a*5, a*2, a<<8 in stack slots) and statement scheduling. No gb twin (no 3792-byte gb function). Round 25 wwm2. Round 19 (wwm1): score 897 -> 855 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 855 -> 807 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef union {
     kh1_u128 q;
