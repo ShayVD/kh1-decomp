@@ -240,6 +240,8 @@ const KH1CmdRec *kh1_pipes_recorder(void) {
 static KH1DrawRegs last_r;
 static u32 last_scissor[2];
 static int have_last;
+/* session 150: kh1_gs_gen and PRIM at the last compare: unchanged, the registers are last_r's again (most kicks) */
+static u32 last_gen, last_prim;
 
 /* session 125: the primitive's vertex signature for batch.h's column groups (FNV-1a over the type and the
  * queued vertices; never 0).  Session 143: a word a step, not a byte (KH1GsVert is all u32; the A9 paid
@@ -303,6 +305,9 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     u32 a[2];
     (void)state;
     recorder();
+    if (have_last && kh1_gs_gen == last_gen && prim == last_prim) goto same;
+    last_gen = kh1_gs_gen;
+    last_prim = prim;
     memset(&r, 0, sizeof r);
     r.prim = prim;
     r.frame_lo = c->frame.lo;
@@ -338,6 +343,7 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
         have_last = 1;
         tex_look = 1;
     }
+same:
     if (tex_look && prim >> 4 & 1) { /* session 127: the binding may have moved: the texture cache's answer */
         tex_lookup(c->tex0.lo, c->tex0.hi);
         tex_look = 0;

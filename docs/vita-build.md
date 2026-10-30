@@ -1294,6 +1294,27 @@ qemu-arm run gives main's 130 digests and vu1 lines. ARM instructions over the 3
 108.2M (translation) -> 79.1M (native, the clipping runs given up and run again by the translation) -> 71.5M
 (the clipper native too, -34% on the translation).
 
+## The GS worker after the native VU1 programs (session 150)
+
+zv on the Vita (P0's main loop native): 15.8 pictures a second over frames 1,500-13,000, flat on zu's 15.75,
+though VU1 went from 14.7 to 13.0 ms a frame (P0 68 -> 46 ns a pair). The game thread's wait for the GS worker
+went from 2.8 to 5.9 ms a frame: the worker (second core) is busy ~28 ms of each ~31 ms frame, so it sets the
+rate now. Under qemu-arm (frames 5,000-5,060, `vcpu 2`) its time is per vertex and per triangle: gs_kick, the
+prim hook's state compare (kh1_pipes_prim), draw_into's target search and page marking, the ring copies.
+
+Cuts, each giving main's 130 digests and vu1 lines over 6,500 frames:
+- `kh1_gs_gen` (gsregs.c) moves when set() changes a register's value; kh1_pipes_prim skips building and
+  comparing KH1DrawRegs while it and PRIM are what they were at the last compare.
+- draw_into: the last target found for a colour / a Z surface tried first; each target's page list kept for
+  its columns and height (the Dive marks its targets again after each of its many uploads).
+- kh1_gsmem_draw: the same registers again with no upload, copy or pixel write since only count (draw_into
+  would return early for each target).
+- kh1_gs_packed_stq_xyzf: a TRISTRIP's vertex past its first four, with the draw state found, does gs_kick's
+  steps for that case only.
+
+The worker's instructions in those frames: 336M -> 257M (-23%). A word-at-a-time copy for small ring ops was
+tried and dropped: more instructions than the library's NEON memcpy.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a

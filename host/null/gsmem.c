@@ -54,6 +54,14 @@ static KH1GsMemStats st;
 static KH1GsUpload log_[LOG];
 static u32 nlog;
 static KH1GsTarget tgt[TARGETS];
+/* session 150: each target's pages in draw_into's order, for the columns and height they were found for */
+#define PL_MAX 512
+static u16 tgt_pl[TARGETS][PL_MAX];
+static u32 tgt_pl_n[TARGETS], tgt_pl_cols[TARGETS], tgt_pl_h[TARGETS];
+/* session 150: kh1_gsmem_draw's last registers and the targets it counted.  The same registers again with no
+ * upload, copy or pixel write since (useq) find each target already marked for them (draw_into's early return):
+ * only the counts move */
+static u32 dl_regs[7], dl_useq, dl_ok, dl_n, dl_i[2];
 static u32 ntgt, useq, tgt_useq[TARGETS]; /* useq counts uploads, copies and pixel writes; tgt_useq: its
                                             * value when the target's pages were last marked */
 static u32 page_drawn[512];          /* the word bits a draw changed and no upload wrote since */
@@ -101,6 +109,7 @@ void kh1_gsmem_reset(void) {
     for (i = 0; i < AT_KEYS; i++) at_key[i].dlen = 0; /* the pages' stamps start again at 0 */
     same_used = 0;
     cbp0 = cbp1 = clut_seq = nlog = ntgt = useq = 0;
+    dl_ok = 0;
     clut_done = 0; /* session 147c: the buffer is cleared */
     clut_ver++;
     /* session 118: seq goes on counting, so a texture cache's stamp from before a reset is never one
@@ -1458,45 +1467,83 @@ int kh1_gsmem_targets(KH1GsTarget *out, int max) {
 
 /* one surface drawn: its target found or added, its pages marked (again only after an upload, a copy
  * or a pixel write, or when the surface grew) */
-static void draw_into(u32 fbp, u32 bw, u32 psm, u32 cols, u32 h, u32 mask) {
+static int draw_into(u32 fbp, u32 bw, u32 psm, u32 cols, u32 h, u32 mask) {
     u32 i, r, c, ph = bits16(psm) ? 64 : 32;
     KH1GsTarget *t;
-    if (!mask) return;
-    for (i = 0; i < ntgt; i++)
-        if (tgt[i].bp == fbp * 32 && tgt[i].bw == bw && tgt[i].psm == psm) break;
+    static u32 hint[2]; /* session 150: the last target found for a colour / a Z surface (each kick asks again) */
+    u32 *hi = &hint[psm >> 4 & 1];
+    if (!mask) return -1;
+    if (*hi < ntgt && tgt[*hi].bp == fbp * 32 && tgt[*hi].bw == bw && tgt[*hi].psm == psm) i = *hi;
+    else {
+        for (i = 0; i < ntgt; i++)
+            if (tgt[i].bp == fbp * 32 && tgt[i].bw == bw && tgt[i].psm == psm) break;
+        *hi = i;
+    }
     if (i == ntgt) {
-        if (ntgt == TARGETS) return;
+        if (ntgt == TARGETS) return -1;
         t = &tgt[ntgt++];
         memset(t, 0, sizeof *t);
         t->bp = fbp * 32;
         t->bw = bw;
         t->psm = psm;
         tgt_useq[i] = useq - 1;
+        tgt_pl_cols[i] = 0;
     }
     t = &tgt[i];
     t->draws++;
     t->sent++;
     st.target_draws++;
-    if (tgt_useq[i] == useq && h <= t->h && (mask & ~t->mask) == 0) return;
+    if (tgt_useq[i] == useq && h <= t->h && (mask & ~t->mask) == 0) return (int)i;
     if (h > t->h) t->h = h;
     t->mask |= mask;
     seq++;
     /* each page by a pixel in it, through the PSM's own layout (a Z format's block XOR stays inside
-     * the page, so the extent is the colour twin's) */
-    for (r = 0; r < (t->h + ph - 1) / ph; r++)
-        for (c = 0; c < cols; c++) {
-            u32 p = page_of(psm, kh1_gsmem_addr(psm, fbp * 32, bw, c * 64, r * ph));
+     * the page, so the extent is the colour twin's); session 150: the list kept for the target's columns and
+     * height (the Dive marks its targets again after each of its many uploads) */
+    if (tgt_pl_cols[i] != cols || tgt_pl_h[i] != t->h) {
+        tgt_pl_n[i] = 0;
+        for (r = 0; r < (t->h + ph - 1) / ph; r++)
+            for (c = 0; c < cols; c++)
+                if (tgt_pl_n[i] < PL_MAX)
+                    tgt_pl[i][tgt_pl_n[i]++] = (u16)page_of(psm, kh1_gsmem_addr(psm, fbp * 32, bw, c * 64, r * ph));
+        tgt_pl_cols[i] = cols;
+        tgt_pl_h[i] = t->h;
+    }
+    if (tgt_pl_n[i] < PL_MAX) {
+        for (r = 0; r < tgt_pl_n[i]; r++) {
+            u32 p = tgt_pl[i][r];
             page_drawn[p] |= t->mask;
             page_tgt[p] = i + 1;
             page_seq[p] = seq;
-            marks++;
         }
+        marks += tgt_pl_n[i];
+    } else
+        for (r = 0; r < (t->h + ph - 1) / ph; r++)
+            for (c = 0; c < cols; c++) {
+                u32 p = page_of(psm, kh1_gsmem_addr(psm, fbp * 32, bw, c * 64, r * ph));
+                page_drawn[p] |= t->mask;
+                page_tgt[p] = i + 1;
+                page_seq[p] = seq;
+                marks++;
+            }
     tgt_useq[i] = useq;
+    return (int)i;
 }
 
 void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc_lo, u32 sc_hi, u32 test_lo) {
     u32 bw = frame_lo >> 16 & 63, psm = frame_lo >> 24 & 63, h = (sc_hi >> 16 & 0x7FF) + 1;
-    u32 cols = ((sc_lo >> 16 & 0x7FF) >> 6) + 1, mask;
+    u32 cols = ((sc_lo >> 16 & 0x7FF) >> 6) + 1, mask, k;
+    int t;
+    if (dl_ok && useq == dl_useq && frame_lo == dl_regs[0] && frame_hi == dl_regs[1] && zbuf_lo == dl_regs[2] &&
+        zbuf_hi == dl_regs[3] && sc_lo == dl_regs[4] && sc_hi == dl_regs[5] && test_lo == dl_regs[6]) {
+        for (k = 0; k < dl_n; k++) {
+            tgt[dl_i[k]].draws++;
+            tgt[dl_i[k]].sent++;
+            st.target_draws++;
+        }
+        return;
+    }
+    dl_ok = 0;
     if (!bw) return; /* no FRAME yet (FBW 0): nothing a draw could reach */
     if (cols > bw) cols = bw;
     switch (psm) {
@@ -1504,11 +1551,16 @@ void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc
     case KH1_PSMCT24: mask = ~frame_hi & 0x00FFFFFF; break;
     default: mask = (~frame_hi & 0x80F8F8F8) ? ~0u : 0; break; /* CT16 / CT16S: FBMSK in RGBA5551's bits */
     }
-    draw_into(frame_lo & 0x1FF, bw, psm, cols, h, mask);
+    dl_n = 0;
+    if ((t = draw_into(frame_lo & 0x1FF, bw, psm, cols, h, mask)) >= 0) dl_i[dl_n++] = (u32)t;
     if (test_lo >> 16 & 1 && !(zbuf_hi & 1)) {
         psm = 0x30 | (zbuf_lo >> 24 & 15);
-        draw_into(zbuf_lo & 0x1FF, bw, psm, cols, h, psm == 0x31 ? 0x00FFFFFF : ~0u);
+        if ((t = draw_into(zbuf_lo & 0x1FF, bw, psm, cols, h, psm == 0x31 ? 0x00FFFFFF : ~0u)) >= 0) dl_i[dl_n++] = (u32)t;
     }
+    dl_regs[0] = frame_lo; dl_regs[1] = frame_hi; dl_regs[2] = zbuf_lo; dl_regs[3] = zbuf_hi;
+    dl_regs[4] = sc_lo; dl_regs[5] = sc_hi; dl_regs[6] = test_lo;
+    dl_useq = useq;
+    dl_ok = 1;
 }
 
 /* kh1_gsmem_sprite (session 83): a point-sampled textured sprite drawn into the model, as the GS
