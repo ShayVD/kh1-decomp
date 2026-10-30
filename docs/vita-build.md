@@ -1294,10 +1294,10 @@ qemu-arm run gives main's 130 digests and vu1 lines. ARM instructions over the 3
 108.2M (translation) -> 79.1M (native, the clipping runs given up and run again by the translation) -> 71.5M
 (the clipper native too, -34% on the translation).
 
-## P11, P10 and P4 as hand-written C (session 151)
+## P11 and P10 as hand-written C (session 151)
 
 The zx log's `vu1 programs:` line after P18 / P13 / P0 went native: in the Dive's busy stretches P11 ~410-460 ms per
-2 s (36 ns a pair), P0 ~330-590, P4 ~115-150 (45 ns), P10 ~40-50 (34 ns). P11, P10 and P4's main loop are now in vu1_nat.h too.
+2 s (36 ns a pair), P0 ~330-590, P4 ~115-150 (45 ns), P10 ~40-50 (34 ns). P11 and P10 are now in vu1_nat.h too; P4 is not (below).
 
 - **P11** (`nat_11`, from 007) is P18 with two more tests per vertex. After the matrix, SUB.w vf00 = w - 1 and an
   FMAND of its S bit: w < 1 culls the vertex (FCSET 0x3F, the ADC; no STQ or XYZ written, vf28 left unprojected,
@@ -1312,29 +1312,38 @@ The zx log's `vu1 programs:` line after P18 / P13 / P0 went native: in the Dive'
   wraps and it writes 65,536 vertices round VU memory; nat_10 does the same. Stalls: 031 (1), 057 (1), each
   loop pass after the first (2 at 05c), 076 (1).
 
-- **P4** (`nat_4`, from 00c, and 045 which branches there) is P0's main loop without the back-face test: the
-  same strip and pipelining (vf05 view space, vf28 clip space, vf06 / vf07 / vf22 the last three for CLIPW, the
-  ADC for a vertex flagged 0 or a triangle wholly outside one plane, the FCOR chain), colour (ITOF0, times vf31,
-  FTOI0) and ST (ITOF12, z 1, times Q). Its one kept MAC flag is 039's (vf28 = ACC + vf04 * vf05.w), done as
-  vu_opbel() does it where a field or the product is 0. One stall, 022's WAITQ (6 cycles). **A triangle that
-  crosses a plane (054, the clipper) is not done natively**: nat_4 then answers 0 and the translation runs the
-  whole run again. That is safe because until then nat_4 keeps every register in locals and has written only the
-  run's output (the GIF tag and the vertices after the input), which the translation writes again the same
-  before anything reads it; a strip whose input and output would wrap round VU memory (7 N + 8 > 1,024
-  qwords) or a count of 0 is left to the translation from the start. The clipper is P0's (05e-111) with other
-  registers (vi15 the link, vf06 / vf07 for vf23 / vf24, no stack saves of those) and a SUB.xyz where P0 has
-  SUB.xyzw in 12a / 145, so `nat_clip` could take it later.
+- **P11's culled run.** When every vertex of a run is culled, vf26 / vf27 keep what the run loaded, not fin()'d
+  copies: the first nat_11 stored its clamped locals there and a disc run showed it (vf27.z ff7fffff for
+  fff1ca69, a NaN pattern). It now stores them only when a vertex was not culled. The made-up streams never culled
+  every vertex of a run, which is why the fuzzer missed it.
 
 Checked with a scratch fuzzer (it includes vu1.c and out/gen/vu1_tr.c, so it is never committed): record streams
 made up at random (matrices, positions and slots, a sixth of the floats from the edges: zeros, denormals,
 Inf / NaN patterns, +-max; repeated vertices for zero edges), each run native and translated from the same state,
-comparing every VF / VI, ACC, Q / I / MAC / clip, VU memory, the kicks' hash, pairs and cycles (a run nat_4
-gives up is compared as tr_go runs it: the translation on the state nat_4 left). 30,000 P11, 20,000 P10 and
-20,000 P4 runs (from 00c and from 045; ~40% of the made-up strips clip and are given up) identical, built with vitasdk's gcc and run under qemu-arm (a one-cycle change in any of P11's
-paths is caught). The same fuzzer passes nat_18 on 10,000 runs. qemu-arm wall time, native against translated
-(P18's 67% measured -36% on a Vita): P11 67%, P10 72%, P4 78% on the runs it finishes (plus the wasted part of
-a given-up run). **Not yet run on the disc's own runs** (no ISO in that
-container) **or measured on a Vita.**
+comparing every VF / VI, ACC, Q / I / MAC / clip, VU memory, the kicks' hash, pairs and cycles. 30,000 P11 and
+20,000 P10 runs identical, built with vitasdk's gcc and run under qemu-arm (a one-cycle change in any of P11's
+paths is caught). qemu-arm wall time, native against translated (P18's 67% measured -36% on a Vita): P11 67%,
+P10 72%.
+
+On the disc's own runs (the English disc, the Dive pad script, `KH1_HOST_VU1DUMP`): 24,116 runs dumped with
+their state and replayed native against translated, every one identical (P0 11,118, P13 4,321, P18 2,876, P11
+2,262, P10 999; the "given up" ones, entries a native leaves to the translation, compared as tr_go runs them).
+The ARM build under qemu-arm, 6,500 frames of the Dive with the translation on, gives the same GS digests every
+50 frames and the same `vu1` lines as the branch it builds on (the whole log is byte-identical).
+
+On a Vita (a test build that still had the P4 main loop, through the Dive): P11 20-22 ns a pair (36 before), P10
+23-24 (34). P4 stayed at 42-49 ns a pair (45 before), as the clipping count below predicts.
+
+### P4 needs a native clipper first
+
+P4 (from 00c, and 045 which branches there) is P0's main loop without the back-face test. A native main loop was
+written and passed 20,000 fuzzed runs, giving up (answering 0 and letting the translation redo the run) when a
+triangle reaches the clipper at 054. On the disc's runs that is most of them: 465 of 541, 408 of 527 and 118 of
+131 P4 runs in three dumped stretches of the Dive clip, so a main loop alone would mostly add work. It was taken
+out. Native P4 needs the clipper too: P0's (05e-111, `nat_clip`) with other registers (vi15 the link, vf06 / vf07
+for vf23 / vf24, no stack saves of those), a SUB.xyz where P0 has SUB.xyzw in 12a / 145, and its own fan stage
+without the back-face test. P4 is ~115-150 ms per 2 s in the busy stretches, so it is the next VU1 program worth
+doing after this.
 
 ## The GS worker after the native VU1 programs (session 150)
 
