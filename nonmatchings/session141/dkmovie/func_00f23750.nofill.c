@@ -1,3 +1,4 @@
+/* Round 61 (wwm2): score 110 -> 84, building 816 vs 808 bytes. With `cur++; cur %= n;` in place of `cur = (cur + 1) % n`, tbl is spilled to 0(sp) and cur kept in a register, as in the target. The 8-byte gap is branch layout, not a statement difference. sched1 puts `idx = k - 2` and the D_00F28460 reload first in the done block, so the search loop's last test becomes `bnez done` (that reload in its delay slot) plus `b again`, where the target has `beqzl again; k++` and falls into done. The size-exact version (110) is func_00f23750.exact.nofill.c. */
 /* Round 59 (wwm2): score 130 -> 110, now 808 vs 808 bytes. The inner search keeps a pointer p = &tbl[k], and the done block reads p[-1] - b, where b = tbl[idx] + rem is set inside the loop (the target reuses the loop's sum at done, and the 8 extra bytes are gone). hill3 then reordered the set-up (score 114 -> 110). The p[-1] read: the target loads tbl[k - 1] as -4 off the loop's tbl[k] address (valaudit's lw -4(r)). Left: the target spills tbl to 0(sp) where ours spills cur. In the greg dump cur is 7 uses over 258 insns and tbl 9 over 100, so cur loses; declaration order makes no difference. */
 /* Round 48 wwm2: the hill3o order from 30871a17 (dkmovie func_00f23750 near miss, score 130 -> 84, hill3o order under the new bui) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 84 was not valid. Restored the last valid statement order: score 130. Earlier header below. */
 /* Round 45 wwm2: score 132 -> 130 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
@@ -107,7 +108,8 @@ void func_00f23750(void) {
         if (!((u32)idx < (u32)D_00F28460->f3DF1C)) {
             break;
         }
-        cur = (cur + 1) % n;
+        cur++;
+        cur %= n;
     }
     func_00f28208(D_00F28460);
     for (;;) {
