@@ -1,4 +1,4 @@
-/* Round 45 wwm2: score 770 -> 750, hill3o statement order under this build mode. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 010a77bf (wm func_00f3e988 near miss, score 770 -> 750, hill3o order under the new build m) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 750 was not valid. Restored the last valid statement order: score 770. Earlier header below. */
 /* Round 44 wwm2: score 776 -> 770 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* score 776 (2224 vs 2264). Minimap blips: mode = func_00f2c300(D_00F9B2EC) - 1, header packets from D_00F9B330 sprite UVs and D_00F87070 tex regs, h = 340/300 (spilled), zmin -10000 or -57599.996f, r = *func_00f3f2c0() * 0.5f * 5.0f; loop 1 over func_00f3b480() objects (func_00f3b460/func_00f3e910) coloured col.v[k-1], loop 2 over the 64 D_00F9A5C0 marks (flag & 4 = raw pos, else sceVu0ApplyMatrix by D_00F864C0) coloured col.v[3]; footer then func_00f66fb0(9). The colour table is an aggregate initializer in the original (D_00FB7150 = {0x73008cff, 0x73f4a800, 0x73f400f4, 0x7300ec9d}); drafted as a struct copy so hand.py scores it. Left: we hoist one extra FP constant (f24), mode in s5 not s8, 40 bytes short. Round 28 wwm2. */
 typedef struct { s32 x0; s32 u; s32 v; s32 w; s32 h; } Spr;
@@ -29,21 +29,21 @@ void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 
 void func_00f3e988(void)
 {
-
-    s32 mode;
     C4 col;
-    s32 h;
-    f32 r, zmin, dx, dz, zz, lim;
-    Obj *o;
-    s32 k;
     f32 v[4];
-    Mark *e;
-    s32 px, py;
-    s32 i;
+    s32 h;
+    s32 mode;
     s32 n;
     s32 su, sv;
-    f32 *pl;
+    s32 i;
+    s32 k;
+    s32 px, py;
     u64 *p;
+    Obj *o;
+    Mark *e;
+    f32 *pl;
+    f32 r, zmin, dx, dz, zz, lim;
+
     col = D_00FB7150;
     if (D_00F9B2EC != 0 && ((D_002C5958 >> 3) & 1)) return;
     if (D_00F850F4 == 0) return;
@@ -60,49 +60,50 @@ void func_00f3e988(void)
         sv = D_00F9B330[10].v;
         su = D_00F9B330[10].u;
     }
+    h = 340;
     p = func_00f66b78(p);
     p[0] = 0x30003;
     p[1] = 71;
     p += 2;
     p[0] = 0x60;
-    h = 340;
     p[1] = 20;
     p += 2;
     p[0] = 0;
     p[1] = 24;
     p += 2;
-    p[1] = 66;
     p[0] = 68;
+    p[1] = 66;
     p += 2;
     p[0] = 0x156;
     p[1] = 0;
     p += 2;
-    p[1] = 1;
     p[0] = 0x3F8080808080LL;
+    p[1] = 1;
     p += 2;
     p[0] = D_00F87070[n];
     p[1] = 6;
     p += 2;
-    p[1] = 3;
     p[0] = (s64)((su * 16) | ((s64)(sv * 16) << 16));
+    p[1] = 3;
     p += 2;
     p[0] = 0x0F4000C0;
     p[1] = 5;
     p += 2;
     p[0] = (s64)((su * 16 + 0x800) | ((s64)(sv * 16 + 0x800) << 16));
     p[1] = 3;
-    lim = 57599.996f;
     p += 2;
     p[0] = 0x174008C0;
     p[1] = 5;
     p += 2;
+    lim = 57599.996f;
     func_00f66b90(p);
     sv = D_00F9B330[11].v + 1;
-    if (mode != 0) h = 300;
     su = D_00F9B330[11].u + 1;
+    if (mode != 0) h = 300;
+    zmin = -10000.0f;
     p = func_00f66b78(p);
-    p[1] = 0;
     p[0] = 0x156;
+    p[1] = 0;
     p += 2;
     p[0] = 0x3F8080B3B300LL;
     p[1] = 1;
@@ -125,12 +126,11 @@ void func_00f3e988(void)
     p[0] = 0x8000000048LL;
     p[1] = 66;
     p += 2;
-    p[1] = 64;
     p[0] = 0x01670101007F0019LL;
+    p[1] = 64;
     p += 2;
     func_00f66b90(p);
     sv = D_00F9B330[12].v;
-    zmin = -10000.0f;
     su = D_00F9B330[12].u;
     r = *func_00f3f2c0() * 0.5f * 5.0f;
     if (mode != 0) zmin = -lim;
@@ -138,8 +138,8 @@ void func_00f3e988(void)
     for (i = 0; i < func_00f3b480(); i++) {
         o = func_00f3b460(i);
         k = func_00f3e910(o);
-        dx = o->x - pl[0];
         if (k == 0) continue;
+        dx = o->x - pl[0];
         dz = o->z - pl[2];
         if (dx <= r && -r <= dx && dz <= lim && zmin <= dz) {
             if (mode != 0) {
@@ -195,8 +195,8 @@ void func_00f3e988(void)
             px = (s32)(dx * 64.0f / r * 16.0f);
             py = h * 16 - (s32)(zz / lim * 16.0f);
             p = func_00f66b78(p);
-            p[1] = 0;
             p[0] = 0x156;
+            p[1] = 0;
             p += 2;
             p[0] = col.v[3] | 0x3F80000000000000LL;
             p[1] = 1;
@@ -204,8 +204,8 @@ void func_00f3e988(void)
             p[0] = D_00F87070[12];
             p[1] = 6;
             p += 2;
-            p[1] = 3;
             p[0] = (s64)(((su + 1) * 16) | ((s64)((sv + 1) * 16) << 16));
+            p[1] = 3;
             p += 2;
             p[0] = (s64)((px + 0x450) | ((s64)(py + 16) << 16));
             p[1] = 5;
