@@ -1,5 +1,5 @@
+/* drafttwins.py: score 2412 -> 1758, port.py of the wm twin func_00f75d80 draft. Earlier header below. */
 /* Round 41 wwm2: score 2430 -> 2412, port.py of the wm twin func_00f75d80 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* NEAR MISS 1531 words, score 2430 (6200 vs 6344 bytes). Structurally complete draft, not polished (time-boxed). Save/load slot screen state machine: setup (record count from func_001bc4e0/func_001bc510, D_00F71350 config, func_001f31a8), a two-item menu (sel 0/1 with pad x8/x10 edge bits, items[] via func_00f43388/func_00f4d880), then the state loop on D_00F82D90/D_00F82D94 with yes/no dialogs (func_00f445a8 ids 225/42/226/238/232/43, D_00F829E4 toggle, func_00f4d8c0 cursor), the load path (func_0024d1c8/func_0024d408/func_0024cf80/func_0024cf90) and the exit paths (main/next/state/close/end labels). Every call target and argument list is transcribed from the asm. Left: block placement differs (the original puts the cancel blocks right after the item loop and shares the confirm tails), the frame is 320 vs 272 because ours spills more locals, and the original reads pad x8 with ld in the D_00F82D90==2 wait loop. */
 typedef struct {
     u8 x0, x1, x2, x3, x4, x5;
     u8 pad6[2];
@@ -73,25 +73,25 @@ s32 func_0024cf90(void);
 void func_00f4ec88(void) {
     Item *items[4];
     P2 t0;
-    u8 *rec;
-    s32 pad2[2];
-    P2 t1;
-    s32 pad1[2];
-    s32 wait;
-    Item *s0;
-    s32 y;
-    s32 idx;
-    u8 *base;
-    u32 b;
-    Item *r;
     s32 n, i, cnt, k, v;
+    P2 t1;
+    s32 pad2[2];
+    u8 *rec;
+    s32 y;
     Snd *snd;
+    s32 pad1[2];
+    Item *r;
+    Item *s0;
+    s32 idx;
+    s32 sel;
     s32 old;
     P2 t2;
-    s32 pad0[2];
-    s32 sel;
-    s32 s2;
 
+    u32 b;
+    s32 s2;
+    u8 *base;
+    s32 pad0[2];
+    s32 wait;
     sel = 0;
     t0 = D_00F74150;
     t1 = D_00F74158;
@@ -109,25 +109,25 @@ void func_00f4ec88(void) {
     }
     D_00F82A0C = D_00F705C4;
     D_00F82A10 = D_00F705C8;
-    D_00F82A14 = D_00F705D4;
+    D_00F82D94 = -999;
     D_00F71350.x1E = cnt;
+    D_00F82A14 = D_00F705D4;
     D_00F82D9C = 0;
     D_00F702E0 = D_00F70334;
-    D_00F82D94 = -999;
     D_00F82DA0 = 0;
     D_00F71350.xC = D_00F705A8;
-    idx = 0;
     D_00F82D98 = 0;
     D_00F82D90 = 0;
     D_00F71350.xE = D_00F705AC;
     D_00F82DA4 = 0;
     snd = func_001f31a8(&D_00F71350);
+    v = 1;
     func_001f3dc0(D_00F829CC);
     func_00f445a8(18, 0, 2, 1, 0, 15, 1, 4, D_00F704A4, D_00F704A8, 0, D_00F704AC, 0, 0, 0, 0, 0, 256, wait);
 main:
-    D_00F702DC = 0;
     D_00F702D4 = 0;
-    v = 1;
+    D_00F702DC = 0;
+    idx = 0;
     D_00F702D8 = 0;
     if (func_00f20018() == 0) v = wait;
     r = func_00f445a8(17, 2, 0, 1, 0, D_00F70518, t0.v[idx / 2], 0, D_00F7051C, D_00F70520, 0, 0, 0,
@@ -208,8 +208,8 @@ main:
                     func_0011d768(2);
                     sel = 0;
                     func_00f444b8(s0, 0.0f, D_00F702F0);
-                    idx = 0;
                     func_0024e468(D_00F702F0);
+                    idx = 0;
                     D_00F82D9C = 0;
                     goto next;
                 }
@@ -241,10 +241,10 @@ main:
                 if (sel >= 2) sel = 1;
             }
         }
-    apply:
         idx = sel * 2;
         D_00F82D9C = sel;
         r->x10 = t0.v[sel];
+    apply:
         if (sel != old) func_0011d768(1);
         for (i = 0; i < 2; i++) {
             if (i == sel) {
@@ -256,7 +256,6 @@ main:
         }
         func_0024e468(1);
     }
-leave:
     D_00F82D98 = -1;
     func_00f444d8(17, 0, D_00F702F0);
     func_00f444d8(18, 0, D_00F702F0);
@@ -265,27 +264,28 @@ leave:
     func_00f43cf0(18);
     if (D_00F829F8 > 0) D_00F829F8 = -1;
     v = func_001be278() + 1;
-    D_00F702DC = v;
     D_00F702D4 = 0;
+leave:
+    D_00F702DC = v;
     D_00F702D8 = v;
-    return;
+state:
 next:
     func_0024e468(1);
     D_00F82D94 = -999;
+    v = 1;
     D_00F82D98 = 1;
     func_001f3dc0((s32)snd);
     func_00f444d8(17, 0, D_00F702F0);
     func_0024e468(D_00F702F0);
     func_00f43cf0(17);
-    v = 1;
     if (D_00F829F8 > 0) D_00F829F8 = -1;
     if (func_00f20018() == 0) v = D_00F702F0;
     func_00f445a8(17, 2, 0, 1, 0, D_00F70518, t1.v[idx / 2], 0, D_00F7051C, D_00F70520, 0, 0, 0,
                   D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, v);
+    return;
     func_00f445a8(17, 3, 0, 2, 0, 0, 0, 0, 0, D_00F703BC + 12, 0, D_00F703B8, 2,
                   D_00F70538, D_00F7053C, D_00F70540, D_00F70544, 256, wait);
     func_00f445a8(17, 0, 2, 1, 0, 15, t2.v[idx / 2], 7, D_00F703B8, D_00F703BC, 0, D_00F703F0, 0, 0, 0, 0, 0, 256, wait);
-state:
     while (D_00F82D94 < -1) {
         func_0024e468(1);
     }
@@ -337,10 +337,10 @@ state:
             func_0024e468(D_00F702F0);
             func_00f43d68(s0);
             D_00F82D98 = 1;
+            goto state;
             D_00F82D90 = 0;
             D_00F82D94 = -999;
             func_001f3dc0((s32)snd);
-            goto state;
         }
         if (D_00F82D94 < 0) goto end;
         D_00F829E4 = 1;
@@ -400,8 +400,8 @@ state:
         func_00f444b8(s0, 0.0f, D_00F702F0);
         func_0024e468(D_00F702F0);
         func_00f43d68(s0);
-        D_00F82D90 = 0;
         if (D_00F82D94 < 0) goto end;
+        D_00F82D90 = 0;
         s2 = func_001be010();
         D_00F82D8C = 1;
         if (func_001be278() == s2) goto end;
@@ -426,6 +426,7 @@ state:
             b = D_002C5AD0.x8;
             TOGGLE();
             if (b & 0x2000) {
+                goto end;
                 func_0011d768(2);
                 func_00f444b8(s0, 0.0f, D_00F702F0);
                 func_0024e468(D_00F702F0);
@@ -433,7 +434,6 @@ state:
                 func_001be320(s2);
                 snd->xD0 = 0;
                 snd->xD2 = 0;
-                goto end;
             }
             HILITE(s0);
         }
@@ -490,18 +490,18 @@ state:
                 func_0011d768(2);
                 func_00f444b8(s0, 0.0f, D_00F702F0);
                 func_0024e468(D_00F702F0);
+                break;
                 func_00f43d68(s0);
                 func_001be320(s2);
                 snd->xD0 = 0;
                 snd->xD2 = 0;
-                break;
             }
             HILITE(s0);
         }
     }
     D_00F82D8C = 1;
-    func_001f3dc0(D_00F829CC);
     goto end;
+    func_001f3dc0(D_00F829CC);
 close:
     func_0024e468(D_00F702F0);
     func_00f43d68(s0);
@@ -509,11 +509,11 @@ close:
     func_001f3dc0((s32)snd);
     D_00F82D94 = -999;
     D_00F82D98 = 1;
-    goto state;
-end:
     func_00f444d8(17, 0, D_00F702F0);
+    goto main;
+end:
+    goto state;
     func_0024e468(D_00F702F0);
     func_00f43cf0(17);
     if (D_00F829F8 > 0) D_00F829F8 = -1;
-    goto main;
 }
