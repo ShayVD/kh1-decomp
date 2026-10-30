@@ -1,3 +1,4 @@
+/* Round 64 wwm2: score 37 -> 35 with CONTEXT_ONLY definitions of func_0024e468 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 46 wwm2: score 39 -> 37, outer goto loop written as while (!((a = D_002C5AD0.x8) & 0x4000)), 1252 vs 1232 bytes. Earlier header below. */
 /* score 39 (1244 vs 1232, was 128). The first window loop is `for (k = 0; k < 2; k++)` (gcc reverses it; the final k == 2 is then reused for the constant 2 argument), and the clear loop is `for (k = 0; k < 2; k++) w[k]->b4 = 0; D_0108F52C = k;` (this gives `li s3,2; sw s3`). Both pad loops stay goto/for(;;) loops; a for loop with the test in its header duplicates the test at the top. Left: the original hoists only `lui s2,0x2c` into the delay slot of the jump to the outer test, while this draft schedules it before the second func_00f6b6a0 call (in s6). That costs 12 bytes plus register drift. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
@@ -22,7 +23,7 @@ Itm *func_001bc4f0(void);
 s32 func_001bc520(void);
 void func_001bdb58(void);
 void func_001f3dc0(s32);
-void func_0024e468(s32);
+void func_0024e468(s32); CONTEXT_ONLY void func_0024e468(s32 a0) {}
 void func_00f6ade8(s32);
 void func_00f6b5d0(s32, s32, s32);
 void *func_00f6b6a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
