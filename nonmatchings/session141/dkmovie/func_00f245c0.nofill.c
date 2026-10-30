@@ -1,3 +1,4 @@
+/* Round 45 wwm2: score 538 -> 524 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f245c0: draft (session 141, round 28), structurally complete, not polished, 2568 vs 2592 bytes, 632 words differ, score 608 (m2c output unusable). The demux task for MPEG-style movies: opens the stream (func_00f26d90), counts the frames, sets the picture size from the first header, then per packet decodes (func_00f25180 / func_00f260c0), keeps the three stream slots reading (f3DD44 read slot, f3DD40 decode slot), and stops on flag 8; flag 0x80 restarts the movie. Ends by setting 0x8000 and idling forever. Round 19 (wwm1): score 608 -> 538 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
 
