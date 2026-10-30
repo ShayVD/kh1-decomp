@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 211 -> 207, func_00f4b338 declared s32. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f47b60 near miss: score 223 -> 211 (138 -> 136 words, 932 vs 992); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* 138 words, score 223 (was 146/232). Round 33 wwm2: hill2 over the D_00F9B540 stores; ctx2 and interleave give nothing. Earlier header: 146 words left (round 12): bitfield set-up of D_00F9B540. The struct must be 8-aligned (ld/sd on GbPos u16 bitfields at 74/92/94/96). Left: the target masks copied fields twice (andi 0xffff, andi 0xf, and 15) and computes nx and nz separately; the expression forms tried (36 combinations) all give the same code. */
 typedef struct { u8 b[16]; } B16;
@@ -49,7 +50,7 @@ u16 func_001bb678(void);
 void func_00f4afd0(void);
 void func_001be820(s32, s32);
 void func_00f4b878(s32);
-void func_00f4b338(s32, s32);
+s32 func_00f4b338(s32, s32);
 s32 func_001ba3f0(s32);
 void func_00f4e3f8(s32);
 
