@@ -1,6 +1,5 @@
+/* drafttwins.py: score 202 -> 200, port.py of the wm twin func_00f6e278 draft. Earlier header below. */
 /* Round 41 wwm2: score 268 -> 202, port.py of the wm twin func_00f6e278 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* score 268 (2808 vs 2824 bytes). Port of wm func_00f6e278 (same shape; portmap2 plus D_00F70444/D_00F70448 by hand). See the wm file for notes. */
-/* score 268 (2808 vs 2824 bytes). Menu setup (like f73eb0): 6 info windows, an icon row from func_00f43388, then 4 + 3 windows (the last gets x40 = func_00f46ee0), then a loop until D_00F829C8: copy item bytes x2..x4 into the 3 counters (zero when x5 == 0 and x6 < 71), refresh D_003E8E08, and draw the D_00F82ACC icon (jump table 0x40..0x46 at 0x00FBA100, default first) with D_00F82A88.x0/x8 swapped around func_00f422e8. The draft scored 401. Putting default first plus `t = e->x6 >= 71;` gave 410, then two hill2 passes over the declaration, prologue, icon-field and colour-store order gave 268. Left: the original reaches D_00F70548/CD0/CD4 through a raw `lui 0xfb; move; addiu` (no symbol; treating them as an array made it worse, 498), the prologue register choice (i in s1), and the 16 bytes it lacks. */
 typedef struct { u8 x0; u8 x1; u8 pad2; u8 x3; u8 pad4; u8 x5; u8 pad6[2]; s16 x8; s16 xa; s16 xc; u8 padE[2]; s32 x10; f32 x14; f32 x18; f32 x1c; f32 x20; u8 pad24[8]; f32 x2c; f32 x30; u8 pad34[4]; u8 x38; u8 x39; u8 x3a; u8 x3b; } Ic;
 typedef struct { u8 pad[16]; s32 x10; u8 pad2[44]; void *x40; } Win;
 typedef struct { u8 pad[2]; u8 x2; u8 x3; u8 x4; u8 x5; u8 x6; u8 pad7[9]; } It;
@@ -154,7 +153,7 @@ void func_00f47180(void)
     w[2] = func_00f445a8(3, 5, 0, 3, 4, D_00F70518, 0, 0, D_00F70554 + func_001f0118(61, D_00F70518) + D_00F70534, D_00F7054C - 1, 0, 0, 0, D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, mode);
     func_00f445a8(3, 7, 0, 3, 0, 15, 0, 0, 0, 0, 0, 0, 0, D_00F7058C, D_00F70590, D_00F70594, D_00F70598, 256, mode)->x40 = func_00f46ee0;
     for (;;) {
-        e = &items[D_00F82AC8];
+        e = (It *)(D_00F82AC8 * sizeof(It) + (u32)items);
         t = e->x6 >= 71;
         if (e->x5 == 0 && !t) {
             w[0]->x10 = 0;
