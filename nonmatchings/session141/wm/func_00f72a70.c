@@ -1,3 +1,4 @@
+/* Round 65 wwm2: score 35 at 1236 vs 1232 bytes (was 1244). The outer loop is now `goto test; top: ... test: if (!((a = D_002C5AD0.x8) & 0x4000)) goto top;`, which gives the original's `b test` entry with no duplicated test (a goto into a do-while body gives the same code). Left: the hoisted `lui 0x2c` is scheduled up into the second func_00f6b6a0 call's argument setup and lands in s6, where the original keeps it after the last call (in the `b` delay slot, in s2) [4 bytes]. Also left: the outer test is beqz with the exit block's lui in its slot, where the original has beqzl filled from the loop top. nothrow.py --wide finds nothing more, and a pad pointer local or a split test does not help. Earlier header below. */
 /* Round 64 wwm2: score 37 -> 35 with CONTEXT_ONLY definitions of func_0024e468 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 46 wwm2: score 39 -> 37, outer goto loop written as while (!((a = D_002C5AD0.x8) & 0x4000)), 1252 vs 1232 bytes. Earlier header below. */
 /* score 39 (1244 vs 1232, was 128). The first window loop is `for (k = 0; k < 2; k++)` (gcc reverses it; the final k == 2 is then reused for the constant 2 argument), and the clear loop is `for (k = 0; k < 2; k++) w[k]->b4 = 0; D_0108F52C = k;` (this gives `li s3,2; sw s3`). Both pad loops stay goto/for(;;) loops; a for loop with the test in its header duplicates the test at the top. Left: the original hoists only `lui s2,0x2c` into the delay slot of the jump to the outer test, while this draft schedules it before the second func_00f6b6a0 call (in s6). That costs 12 bytes plus register drift. */
@@ -52,7 +53,8 @@ void func_00f72a70(s32 arg0, Hdl *h)
     }
     func_00f6b6a0(14, 3, 0, 2, 0, 0, 0, 0, 0, D_00FB4B3C + 12, 0, D_00FB4B38, 2, D_00FB4CB8, D_00FB4CBC, D_00FB4CC0, D_00FB4CC4, 256, t);
     func_00f6b6a0(14, 0, 2, 1, 0, 15, 86, 7, D_00FB4B38, D_00FB4B3C, 0, D_00FB4B70, 0, 0, 0, 0, 0, 256, t);
-    while (!((a = D_002C5AD0.x8) & 0x4000)) {
+    goto test;
+top:
         if (a & 0x2000) {
             func_0011d768(2);
             D_0108F52C = 0;
@@ -144,7 +146,8 @@ void func_00f72a70(s32 arg0, Hdl *h)
             func_001f3dc0(arg0);
         }
         func_0024e468(1);
-    }
+test:
+    if (!((a = D_002C5AD0.x8) & 0x4000)) goto top;
     func_0011d768(3);
     func_00f6b5d0(14, 0, D_00FB4A70);
     func_0024e468(D_00FB4A70);
