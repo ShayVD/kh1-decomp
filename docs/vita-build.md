@@ -1317,6 +1317,14 @@ are each ~27 ms busy now: the worker waits 5 ms a frame for the recording on the
 ms a frame in sceGxmFinish before writing uploads into targets (pend_flush, one a frame in the Dive).
 3d-zy: pend_add keeps only the blocks that land in the target's pixels (pend_write dropped the rest after the
 wait), and marks the target pending only when one does; the log's `uploads into targets:` line counts both.
+zy2 on the Vita (with main's sound fix): 15.7 again; 87% of the blocks land in the target's pixels, and the
+wait stayed ~5 ms a frame. The GXM mock's calls for frame 4,999 of the Dive show why: the flush is at the
+begin of the shadow pass (target 2, loaded, with CLUT-sized uploads into it), and neither target 2 nor 3
+(the slot capture's, also pending) had been drawn or sampled by any scene of the frame yet. So each target
+now keeps the last scene that drew or sampled it (`used`, from a count of scenes begun), and pend_flush
+waits only when one of its targets was used by a scene sceGxmFinish has not yet covered; a CLUT readback
+waits only when its target was. The log's line adds the flushes that needed no wait. The mock (scenes run
+late, at sceGxmFinish) gives the same display and 3D target hashes every 50th frame over 6,500 Dive frames.
 
 The worker's instructions in those frames: 336M -> 257M (-23%). A word-at-a-time copy for small ring ops was
 tried and dropped: more instructions than the library's NEON memcpy.

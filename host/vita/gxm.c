@@ -461,6 +461,10 @@ static int present_load(void) {
     return 0;
 }
 
+/* session 150 (the watchdog's): blocks of uploads into targets kept for a target's pixels, and left as outside them;
+ * flushes of them that needed no wait for the GPU */
+volatile u32 kh1_vita_pend_in, kh1_vita_pend_out, kh1_vita_pend_nowait;
+
 /* ---- render targets and depth buffers ---- */
 typedef struct {
     u32 w, h;      /* the pass's size */
@@ -477,8 +481,12 @@ typedef struct {
      * Session 141: kept as the GS words they wrote (pend_block), placed by the target's own FBP / FBW */
     u8 pend;
     u32 fbp, fbw;
+    /* session 150: the last scene (scene_no) that drew it or sampled it; once finish_seen has passed it the GPU is
+     * done with its pixels, and pend_flush writes them with no wait */
+    u32 used;
 } Target;
 static Target tgt[KH1_CMD_TARGETS];
+static u32 scene_no, finish_seen; /* scenes begun, and the count when sceGxmFinish last returned */
 
 /* GXM's render target objects, one a size; when the table is full the one used longest ago (never one of
  * this frame: sceGxmFinish at the frame's start covers the older) is destroyed for the new size */
@@ -558,6 +566,7 @@ static Target *target(u32 i, u32 rt, u32 w, u32 h) {
     if (t->mem && t->w == w && t->h == h) return (t->gxrt = rt_of(w, h)) ? t : 0;
     if (t->mem) heap_free(t->heap, t->mem, t->bytes);
     memset(t, 0, sizeof *t);
+    t->used = scene_no; /* its memory may have been another's that a scene in flight uses */
     t->w = w;
     t->h = h;
     t->rt = (u8)rt;
@@ -750,6 +759,7 @@ static void finish_at(int at) {
     SceUInt64 t0 = sceKernelGetProcessTimeWide();
     u32 us;
     sceGxmFinish(ctx);
+    finish_seen = scene_no;
     us = (u32)(sceKernelGetProcessTimeWide() - t0);
     kh1_vita_us_finish += us;
     kh1_vita_finishes++;
@@ -830,14 +840,21 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
     }
 }
 
-/* the pending uploads written (one wait for the GPU for them all); `only` one target's, or all */
+/* the pending uploads written; `only` one target's, or all.  Session 150: a wait for the GPU (one for them all)
+ * only when a scene not yet finished drew or sampled one of those targets (the Dive's mid-frame flush is for
+ * two targets no scene of the frame had used yet, ~5 ms a frame of waiting) */
 static void pend_flush(Target *only) {
     u32 i, k = 0, sel = only ? 1u << (u32)(only - tgt) : ~0u;
-    int any = 0;
+    int wait = 0, any = 0;
+    for (i = 0; i < KH1_CMD_TARGETS; i++)
+        if (sel >> i & 1 && tgt[i].pend && tgt[i].used > finish_seen) wait = 1;
     for (i = 0; i < pend_n; i++) {
         u32 b = pend_list[i], own = pend_own[b] & sel, j;
         if (own) {
-            if (!any) finish_at(1);
+            if (!any) {
+                if (wait) finish_at(1);
+                else kh1_vita_pend_nowait++;
+            }
             any = 1;
             for (j = 0; j < KH1_CMD_TARGETS; j++)
                 if (own >> j & 1) pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
@@ -855,8 +872,6 @@ static int pend_outside(const Target *t, u32 b) {
     u32 pg = ((b & 0x3FFF) - t->fbp * 32) >> 5 & 511;
     return !t->fbw || pg % t->fbw * 64 >= t->w || pg / t->fbw * 32 >= t->h;
 }
-/* session 150 (the watchdog's): blocks of uploads into targets kept for a target's pixels, and left as outside them */
-volatile u32 kh1_vita_pend_in, kh1_vita_pend_out;
 
 /* an upload's (BITBLTBUF's destination) w x h at (dx, dy), or a copy's from GS memory: the words it wrote.
  * Session 150: only the blocks that land in the target's pixels, and the target pending only when one does:
@@ -998,6 +1013,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             zbound = c->depth != KH1_DS_NONE;
             scenes++;
             cur->drawn = 1;
+            cur->used = ++scene_no;
             if (c->rt == KH1_RT_DISPLAY) display = c->tgt;
             /* target pixels to the window: the vertex shader's u_xf maps x to 2x / w - 1 (y down), z as is */
             sceGxmSetViewport(ctx, cur->w * 0.5f, cur->w * 0.5f, cur->h * 0.5f, cur->h * 0.5f, 0.0f, 1.0f);
@@ -1028,7 +1044,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             u32 e, *o = (u32 *)pal_rb;
             if (!s || !s->mem) break;
             pend_flush(s);
-            finish_at(2);
+            if (s->used > finish_seen) finish_at(2); /* session 150: not again for the next readback of the frame */
             for (e = 0; e < 256; e++) {
                 u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g;
                 g = (p >> 4) < s->h && (p & 15) < s->w ? ((u32 *)s->mem)[(p >> 4) * s->stride + (p & 15)] : 0;
@@ -1087,6 +1103,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                              !s || !s->mem ? "not made" : "the scene's own target");
                     break;
                 }
+                s->used = scene_no;
                 if (sceGxmTextureInitLinearStrided(&t, s->mem, SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR, w, h, s->stride * 4) < 0) {
                     snprintf(tex_why, sizeof tex_why, "target %u as a %u x %u texture (stride %u): refused", c->src, w, h,
                              s->stride);

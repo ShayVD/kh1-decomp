@@ -316,7 +316,7 @@ extern s32 D_00532B80, D_0063F540, D_004E4520;
 extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 extern volatile u32 kh1_vita_us_finish_at[4], kh1_vita_finishes_at[4]; /* host/vita/gxm.c, session 147d */
-extern volatile u32 kh1_vita_pend_in, kh1_vita_pend_out; /* host/vita/gxm.c, session 150 */
+extern volatile u32 kh1_vita_pend_in, kh1_vita_pend_out, kh1_vita_pend_nowait; /* host/vita/gxm.c, session 150 */
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
@@ -392,10 +392,12 @@ static int watchdog(SceSize args, void *argp) {
                  kh1_vita_finishes_at[2] - nfat0[2], (kh1_vita_us_finish_at[3] - fat0[3]) / 1000,
                  kh1_vita_finishes_at[3] - nfat0[3]);
             { /* session 150: the blocks of uploads into targets that land in a target's pixels, and those outside */
-                u32 pin = kh1_vita_pend_in, pout = kh1_vita_pend_out;
+                u32 pin = kh1_vita_pend_in, pout = kh1_vita_pend_out, pnw = kh1_vita_pend_nowait;
                 kh1_vita_pend_in -= pin;
                 kh1_vita_pend_out -= pout;
-                vlog("kh1-vita: uploads into targets: %u blocks in a target's pixels, %u outside\n", pin, pout);
+                kh1_vita_pend_nowait -= pnw;
+                vlog("kh1-vita: uploads into targets: %u blocks in a target's pixels, %u outside; %u writes with no wait "
+                     "for the GPU\n", pin, pout, pnw);
             }
             /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
             vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
