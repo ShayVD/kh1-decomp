@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 67 -> 65, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 75 -> 67, func_00f29500 declared s32 (v0 stays busy after the call). Earlier header below. */
 /* score 75 (1340 vs 1344, trailing nop only). Title/logo panel: switches D_00FBAA60/64 to the 877F8/87A68 texture tables, fade-in alpha from t (t*128/30), func_002193f0 picks the button sprite (switch with default: case 0: gives the slti tree), colour ramp between t 20..60 written as u/v halves joined by one col = u | v, slide-in offsets t*-128/60+128 and t*-256/60+256, then three func_001f0758 text rows. Keys: col = 0 inside the t < 20 branch, separate k = hi | 0xFFFFFF for the text colour, alpha float first in the fade product. Left: float register numbering in the fade/ramp maths and the (0x700 - x) << 4 header word (orig computes it into the x register). Round 27 wwm2. */
 extern u64 **D_00F85160;
@@ -23,16 +24,16 @@ u64 *func_001f0758(u64 *, s32, s32, s32, s32, s32, s32);
 
 void func_00f28ed8(s32 x, s32 y, s32 alpha, f32 t)
 {
-    u64 *p;
-    s32 a;
-    s32 idx;
-    s32 n;
-    u32 col;
     s32 hi;
+
+    s32 a;
     s32 c;
     s32 off;
+    s32 n;
+    u64 *p;
     s32 u, v, k;
-
+    s32 idx;
+    u32 col;
     D_00FBAA60 = D_00F877F8;
     D_00FBAA64 = D_00F87A68;
     func_00f29500(0, 0x2600, D_00FBAA6C);
@@ -64,20 +65,20 @@ void func_00f28ed8(s32 x, s32 y, s32 alpha, f32 t)
     case 2:
         idx = 5;
         break;
-    default:
-    case 0:
-        idx = 1;
         break;
+    case 0:
+    default:
+        idx = 1;
     }
     if (t < 20.0f) {
         col = 0;
         hi = alpha << 24;
     } else {
         if (t < 60.0f) {
-            hi = alpha << 24;
             c = (s32)((t - 20.0f) * 255.0f / 40.0f + 0.0f);
-            u = (c << 8) | (c << 16);
+            hi = alpha << 24;
             v = c | ((s32)(((f32)alpha - 0.0f) * (t - 20.0f) / 40.0f + 0.0f) << 24);
+            u = (c << 8) | (c << 16);
         } else {
             hi = alpha << 24;
             c = (s32)((t - 60.0f) * -127.0f / 40.0f + 255.0f);
