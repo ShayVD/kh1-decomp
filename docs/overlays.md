@@ -653,6 +653,30 @@ f32a38 draft had this bug. After the fix, the score went 249 to 213. f32a38 259 
 f3d5c8 and f646c0 426 → 410. A sweep of all gb and wm drafts for the `(sum) * 2^k` form found no
 other gains (round 47).
 
+### End-coordinate locals before the packet calls (gb func_00f3c1f0, wm func_00f632e8)
+
+The second XYZ word of a sprite is `x + (bw << 4)` / `y + (bh << 4)`. Written inline in the
+`q[0] = ...` store, gcc computes the sum after the `func_00f3fa80(func_00f3f9d0(q))` calls. The
+original has it in s registers before those calls. Compute it into its own locals right after
+the x/y shift, before the calls:
+
+```c
+x = (x - bw / 2 + 0x700) << 4;
+y = (y - bh / 2 + 0x740) << 4;
+x1 = x + (bw << 4);
+y1 = y + (bh << 4);
+q = func_00f3fa80(func_00f3f9d0(q));
+...
+q[0] = ((u64)y1 << 16) | x1 | 0x100000000;
+```
+
+With `tx` computed before `ty`, this took f3c1f0 from 29 to a match. The pair has to sit before
+the calls: placed after them, it scores 43–61. Look for this when the target does `sll 5`/`addu`
+on the size registers before the first `jal`, and ours does them just before the `sd`. The
+lever is not general. wm func_00f584d0 (whose target computes `u+w`, `w<<4` and `h<<4` before the
+calls) got worse with every split (74 → 107–187), and the `y + 320` local in gb func_00f28aa8
+gained nothing (round 49).
+
 ### Session 141 rounds 37-38 (wwm2)
 
 - **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
