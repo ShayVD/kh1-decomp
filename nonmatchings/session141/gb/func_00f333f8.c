@@ -1,6 +1,5 @@
+/* Round 42 wwm2: score 196 -> 174, port.py of the wm twin func_00f5a4f0 draft. Earlier header below. */
 /* Round 41 wwm2: score 220 -> 196, port.py of the wm twin func_00f5a4f0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* gb.x func_00f333f8 near miss: 280 words differ, score 220 (ours 1360 bytes, original 1392). Camera fly-in/out over 30 frames: the GbXf D_00F80960 (v[4], pos, rot) is copied to a local xf, start vectors are built from World fields (s32 at 4308/4312 * PI / 2048, u16 166/170 * 200 * 0.5, the p5C.y nibble at 88, f32 at 136) and the D_00F56DC4 box, then func_001be988 interpolates rot/pos/v[0] each frame (in reverse when arg != 2), followed by func_001bebd0 and func_00f36020. Logic is complete. PI must be written 3.1415926f to get 0x40490fda. Left: (1) the original keeps a dead division-by-30 trap (li v1,30; beqzl v1; break) next to the i / 2 shift in both branches (ours, written i * 15 / 30, folds cleanly; a variable n = 30 gives a real div, 368); (2) the setup store order and the 1.0f register (f4 in the original). A 300 s hill climb over the setup block cut words differ to 263 but raised the score to 256. wm twin: func_00f5a4f0 (same score). */
-/* wm.x func_00f333f8 near miss: 280 words differ, score 220 (ours 1360 bytes, original 1392). Port of gb func_00f333f8 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. */
 typedef struct { OvlVec v[4]; OvlVec pos; OvlVec rot; } GbXf;
 typedef struct { u8 pad[4]; u32 ax : 4; u32 ay : 4; u32 az : 4; u32 ar : 4; u32 bx : 4; u32 by : 4; u32 bz : 4; u32 br : 4; } Box;
 extern u8 *D_00F56DC0;
@@ -26,6 +25,11 @@ void func_00f36020(s32, s32, void *, s32, s32, void *, void *);
 void func_00f2b9b8(void *, Box *, s32);
 s32 func_001c00e8(s32, void *, kh1_u128);
 void func_00f333a0(void);
+
+static inline s32 part5a4f0(s32 t, s32 n) {
+    s32 q = t / n;
+    return t * 15 / 30;
+}
 
 void func_00f333f8(s32 arg) {
     OvlVec v[5];
@@ -103,7 +107,7 @@ void func_00f333f8(s32 arg) {
             func_001be988(D_00F80960.rot, xf.rot, v[2], i, 30);
             func_001be988(D_00F80960.pos, xf.pos, v[3], i, 30);
             func_001be988(D_00F80960.v[0], xf.v[0], v[4], i, 30);
-            func_00f32728(5, base + i * 15 / 30);
+            func_00f32728(5, base + part5a4f0(i, 30));
             k = base - i * 15 / 30;
         }
         func_001be9f0(D_00F80960.rot);
