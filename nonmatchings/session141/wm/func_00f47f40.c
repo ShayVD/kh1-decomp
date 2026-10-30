@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 249 -> 245, func_00f4b338 declared s32. Earlier header below. */
 /* wm.x func_00f47f40 near miss: 236 words differ, score 337 (ours 1420 bytes, original 1480). Port of gb func_00f20e48 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. Round 19 (wwm1): 236 -> 200 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 285 -> 249 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 b[16]; } Blk16;
 typedef struct {
@@ -80,7 +81,7 @@ void func_00f4afd0(void); CONTEXT_ONLY void func_00f4afd0() {}
 void func_001be820(void *, s32);
 void func_00f597b0(void);
 void func_00f4b878(void *);
-void func_00f4b338(void *, s32);
+s32 func_00f4b338(void *, s32);
 s32 func_001ba3f0(s32);
 
 void func_00f47f40(void) {
