@@ -1330,3 +1330,11 @@ None of the drafts below changed.
   - Moving `c[6][0] = a / 2 << 24` to the top gives 163. Just before the c[] loads or before the ORs gives 134. Splitting the shift gives 124.
   - The target spills c6, c[1][0], c[2][0], c[3] and c[4][1]. Ours spills a different set, so it is a priority difference.
 - **f21ca0:** not reached again. It has no calls, so the nothrow lever does not apply.
+
+## Round 64 (wwm2): tools/ovl/nothrow.py
+
+- New tool tools/ovl/nothrow.py. It aligns the target and draft opcodes with the `l` dropped and finds branches where plain and -likely differ. It then collects the callees in nearby blocks (it follows b/conditional targets) and tries a CONTEXT_ONLY definition of each one after its prototype: singles first, then pairs of the best 4. It only reports and never writes drafts.
+- Batch over every overlay (session141 plus copies of the drafts.tsv-listed drafts): 61 drafts have mismatches, and 13 of them gain. Nothing gains in dkmovie, dktitle or xs_*.
+- Applied in wm: f3bc48 6 -> 0 (MATCH, func_00f3bbf8), f31430 368 -> 366, f53af0 194 -> 192, f58f98 60 -> 54, f71b68 584 -> 581, f72a70 37 -> 35, f77648 166 -> 164.
+- gb gains sent to the coordinator for routing: f2c9f8 194 -> 192 (func_00f2c300), f31ea0 76 -> 70 (func_00f31208 + func_00f30d80), f446d0 1280 -> 1278 (func_0024e468), f4b978 37 -> 35 (func_0024e468), f50550 166 -> 164 (func_0011d768), f4aa70.norlo 595 -> 592 (func_00f4a048 + func_00f444d8).
+- No new idea for dktitle f21ca0 (187) or f24b60 (281).
