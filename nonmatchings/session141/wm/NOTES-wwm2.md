@@ -1095,3 +1095,20 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
   - f639c0 (5): hill3 for 240 s found nothing.
   - f72f40 (11): an asm alias, volatile, a temp and an array view of D_00FB4B38 changed nothing.
   - f69aa8 (5), f7ecd8 (11), f74a28 (12): already exhausted in earlier rounds (wgb's analysis, my round 41 analysis, the c[] register choice).
+
+## Round 53 (field-type lever sweep; no matches)
+
+- **f3bc48 (8).** The swapped store is v90[3] (swc1 at -4(s1), with s1 = &flags at 160), not v80[3]. Nothing helped:
+  - retyping H3bc48 fields (u32, all u32, void * mask) or the vector fields (OvlVec, a struct of 4 floats, f32[2][4]);
+  - nostrict mode (12);
+  - every position of the v90[3] line;
+  - chained 1.0f stores, a `one` local, a loop.
+- **Store/load-pair drafts in 4-20.**
+  - f78458 (3): two plain-global stores; retyping any of five globals changes nothing (distinct globals never alias).
+  - f38630 (4): x00 as void *, s16 * or u32 at every one of 20 store positions stays at 4.
+  - f66b38 (28): the reloads already match under every element type and nostrict; it is the a1/a2/a3 choice; the best statement order is 26 (not kept, still registers).
+  - Others are not store pairs: f7cb60 (branch), f21260 and f74440 (arg-move order), f3a030 (giv offset), f2dc50 (likely), f3ba08 (constant register).
+- **24-37 group.**
+  - Guarded hill3, 200 s each: no gain on f67c60, f79868, f5e368, f55d78, f696a0, f632e8, f71748. f651d0 has no movable statements.
+  - Not changed after a look: f56780, f69278, f72a70, f79700 (headers list what is left; all were climbed in rounds 41-46).
+- **docs/overlays.md:** new entry "Field type as a store-order lever".

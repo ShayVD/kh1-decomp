@@ -670,6 +670,25 @@ other gains (round 47).
   - `func_001bfac8(); while (1) { ...; func_001bfac8(); }` matched both menu loops. `while (1) { func_001bfac8(); ... }` did not.
   - A likely reason, not checked in the dumps: the first jal sits in the prologue block, so sched2 keeps sd ra next to it, and the call at the loop end is later folded into the one before the loop.
 
+### Field type as a store-order lever (wm func_00f3ac48, wwm2 round 52)
+
+A run of field stores into `D_00FCE390[slot]` came out in the right set but with one pair swapped.
+The target stored x10C (a list pointer, set from an s32 global) right after xF4; ours stored it
+four stores later. Store orders alone, including a 7-store storeperm sweep, could not fix it.
+
+Declaring the field `s32 x10C` instead of `s32 *x10C` did. It is stored straight from the s32
+global, and the later read casts it back: `q = (s32 *)D_00FCE390[slot].x10C;`. Then x10C landed in
+its place. One remaining store order (xE8 before xF0) gave the match.
+
+Why it works is not confirmed in the dumps. The likely reason is that the field's type gives the
+store an alias set, and that decides which other loads and stores it must stay ordered with. This
+changes sched2's ready list in a way that statement order cannot.
+
+When one store or load pair is swapped and every order fails, retype the fields involved before
+sweeping orders: try s32 versus a pointer, a struct versus an array, or the type of a struct view.
+It is not universal. Retyping did not help f3bc48 (conds/v90[3]) or f38630 (x00/x40). It also did
+nothing for f78458, which stores to two plain globals; distinct globals never alias each other.
+
 ### Statement order: tools/ovl/hill3.py (wgb, rounds 35-36)
 
 Many near misses differ only in statement order: sched1 breaks ties by the original insn order, and
