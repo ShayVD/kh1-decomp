@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 428 -> 426, hill3o statement order. Earlier header below. */
 /* score 428 (1176 vs 1224). GS texture-upload packet builder: func_00f66bd0 image chunks, an A+D header block, then one 4-reg sprite per set bit of in->x10/x14 bitmap. Structure and stores are right; left: the original keeps p in a3 (not a saved reg) and rebuilds the 0x10AB4000_00000004 tag inside the inner loop, while my build hoists it (t8) and keeps p in s1, so the registers shift and it is 48 bytes short. Return value is `in` (NULL when func_00f64658 fails), so the end does `in = (Info *)p`. */
 typedef struct { u8 pad[16]; s32 x10; } Ent;
 typedef struct { u8 pad[16]; Ent *x10; } Tbl;
@@ -10,11 +11,11 @@ u64 *func_00f646c0(u64 *p, s32 x0, s32 y0, s32 id, s32 idx, s32 dbp, s32 w, s32 
     Ent *e;
     s32 e10;
     Info *in;
-    s32 n, k, per, dy, src;
-    u64 *hdr;
-    u32 bits;
-    u32 *bp;
     s32 b, v, u, xx, yy, rows, cols, c;
+    u32 bits;
+    u64 *hdr;
+    u32 *bp;
+    s32 n, k, per, dy, src;
 
     e = &t->x10[idx];
     e10 = e->x10;
@@ -22,8 +23,8 @@ u64 *func_00f646c0(u64 *p, s32 x0, s32 y0, s32 id, s32 idx, s32 dbp, s32 w, s32 
     if (in != 0) {
     n = in->x8;
     dy = 0;
-    src = in->xC;
     per = tw / 32;
+    src = in->xC;
     while (n > 0) {
         k = per < n ? per : n;
         n -= per;
@@ -50,13 +51,13 @@ u64 *func_00f646c0(u64 *p, s32 x0, s32 y0, s32 id, s32 idx, s32 dbp, s32 w, s32 
     *p++ = dbp | ((u64)1 << 61) | (((u64)(w / 64) << 14) | ((u64)1 << 34)) | (((u64)a8 << 20) | ((u64)a9 << 37)) | ((u64)0x9900 << 18);
     *p++ = 6;
     *p++ = a10;
-    *p++ = 1;
+    bits = in->x10;
+    u = 0;
     b = 0;
     v = 0;
-    bits = in->x10;
-    bp = in->x14;
     xx = in->x0 + x0;
-    u = 0;
+    bp = in->x14;
+    *p++ = 1;
     for (rows = in->x4; rows != 0; rows--) {
         yy = in->x2 + y0;
         for (c = in->x6; c != 0; c--) {
@@ -70,8 +71,8 @@ u64 *func_00f646c0(u64 *p, s32 x0, s32 y0, s32 id, s32 idx, s32 dbp, s32 w, s32 
                 *p++ = ((v + 32) * 16) | ((u64)((u + 32) * 16) << 16);
                 *p++ = 3;
                 *p++ = ((xx + 32) * 16) | ((u64)((yy + 32) * 16) << 16) | ((u64)1 << 32);
-                *p++ = 5;
                 u += 32;
+                *p++ = 5;
                 if (u >= tw) {
                     v += 32;
                     u = 0;
