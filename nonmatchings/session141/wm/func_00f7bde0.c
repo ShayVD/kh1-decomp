@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 66 -> 62, hill3o statement order. Earlier header below. */
 /* 45 words left (score 66): frame and temporaries right (V4 aligned(16) struct copies through ld/sd); FP register numbering and the load order of D_00FB5EBx / D_00FB5C3x differ. */
 #include "ovl.h"
 
@@ -21,32 +22,32 @@ static inline V4 mk(f32 x, f32 y, f32 z, f32 w) {
 }
 
 void func_00f7bde0(void) {
+    f32 ang;
     OvlMtx vs;
     OvlMtx m80;
     OvlMtx world;
+
     OvlMtx view;
     V4 rot;
     V4 tr;
     V4 r;
     OvlMtx m;
-    f32 ang;
-    f32 scrz;
     f32 one;
-
+    f32 scrz;
     ang = D_00FB5C44 * 3.1415f / 180.0f;
     tr.x = D_00FB5EB0;
     tr.y = D_00FB5EB4;
     tr.w = D_00FB5EBC;
     tr.z = D_00FB5EB8;
+    one = 1.0f;
     rot = tr;
     r.x = D_00FB5C30;
     r.y = D_00FB5C34;
     r.z = D_00FB5C3C;
     r.w = D_00FB5C40;
-    tr = r;
     scrz = 256.0f / tanf(ang * 0.5f);
-    one = 1.0f;
     PlatVu0UnitMatrix(m);
+    tr = r;
     PlatVu0RotMatrix(m, m, &rot);
     PlatVu0TransMatrix(world, m, &tr);
     func_00f7bd10(view, D_00FB5C20, D_00FB5BF0, D_00FB5C00, D_00FB5C10);
