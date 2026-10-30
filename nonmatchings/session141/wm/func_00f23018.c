@@ -1,3 +1,4 @@
+/* Round 27 wwm1: score 85 -> 47 (1332 vs 1336). valaudit: the target stores D_00FBAA78 and D_00FBAA7C through two address registers (s1, s0: sw 0(s1), sw 0(s0)) and D_00FBAA80..8C by %lo. As scalars written through pointer locals pa/pb (the array, scalars alone or a [2] array give 63-147). Left: pa/pb in s0/s1 the other way round (placement and declaration order of pa/pb do not move it), the D_00FB6498 field store order at the top and v0/v1 in the draw call. Earlier header below. */
 /* Round 46 wwm2: score 89 -> 85, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 91 -> 89, func_00f294a0 declared s32. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f23018 near miss: 251 -> 251 words, score 99 -> 91 (aligned diff 73 -> 66). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
@@ -28,7 +29,9 @@ extern char D_00FB6690[];
 extern char D_00FB66A8[];
 extern s32 D_00FBAA70;
 extern s32 D_00FBAA74;
-extern s32 D_00FBAA78[6];
+extern s32 D_00FBAA78;
+extern s32 D_00FBAA7C;
+extern s32 D_00FBAA80, D_00FBAA84, D_00FBAA88, D_00FBAA8C;
 extern s32 D_00FBAA94;
 extern s32 D_00FBB32C;
 extern s32 D_00FBB334;
@@ -80,6 +83,7 @@ s32 func_00f23018(s32 id, s32 arg)
     u64 *p;
     f32 m[4][4];
     s32 heap;
+    s32 *pa, *pb;
     u8 cam[128];
     D_00FBAA70 = 0;
     D_00FBAA74 = 0;
@@ -110,12 +114,14 @@ s32 func_00f23018(s32 id, s32 arg)
     func_00f65a68(pal[0]);
     func_00f29810(tex[0], work, cam);
     sceVu0UnitMatrix(m);
-    D_00FBAA78[0] = func_001bb500(0x60000, 128);
-    D_00FBAA78[1] = func_001bb500(0x64000, 128);
-    D_00FBAA78[2] = func_001bb500(0x34000, 128);
-    D_00FBAA78[3] = func_001bb500(0x4000, 128);
-    D_00FBAA78[4] = func_001bb500(0x67000, 128);
-    D_00FBAA78[5] = func_001bb500(0x20000, 128);
+    pa = &D_00FBAA78;
+    pb = &D_00FBAA7C;
+    *pa = func_001bb500(0x60000, 128);
+    *pb = func_001bb500(0x64000, 128);
+    D_00FBAA80 = func_001bb500(0x34000, 128);
+    D_00FBAA84 = func_001bb500(0x4000, 128);
+    D_00FBAA88 = func_001bb500(0x67000, 128);
+    D_00FBAA8C = func_001bb500(0x20000, 128);
     D_00FB6498.init(heap, 0x200000);
     D_00F873F0 = 1;
     p = *D_00F85160;
