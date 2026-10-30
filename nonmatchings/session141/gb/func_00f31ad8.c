@@ -1,5 +1,5 @@
+/* drafttwins.py: score 289 -> 287, port.py of the wm twin func_00f58bd0 draft. Earlier header below. */
 /* Round 41 wwm2: score 367 -> 289, port.py of the wm twin func_00f58bd0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* 217 words / score 367 (980 vs 968). Logic complete; sibling of f31650 (same palette lerp family). Orig hoists &D_00379F28/&D_0037A028/&D_00F56DC0 into s5/s6/s7, keeps old in s8 and 40 in s3; ours spills old and base. Frame 144 vs ours 160. No variants tried. */
 typedef struct { u8 pad[64]; u8 c[8]; } G58bd0;
 typedef struct { s8 t[40]; } T58bd0;
 extern G58bd0 *D_00F56DC0;
@@ -18,11 +18,11 @@ void func_00f2e0b0(void);
 
 void func_00f31ad8(s32 dir) {
     T58bd0 tbl;
-    s32 from;
-    s32 to;
     s32 spd;
-    s32 i;
+    s32 to;
     s32 h;
+    s32 i;
+    s32 from;
     s32 c0;
     s32 c1;
 
