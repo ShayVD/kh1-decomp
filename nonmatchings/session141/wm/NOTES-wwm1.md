@@ -763,9 +763,18 @@ hit the stub callee sits at a lower address than the function.
   Run on origin at b93d9837 over every session141 gb, wm, dkmovie, dktitle and xs draft, it flags 33 drafts. All
   33 come from wwm2's hill3o and its ports (rounds 45-47); none come from wgb or from me. The list went to the
   coordinator.
-- storeperm reruns. wm f60fa8 1054->1042, f6b7c8 1272->1226, f5e8a8 871->860 and f7de08 799->765 are saved and
-  checked by hand (only distinct fields or elements are reordered, and a, b and c in f5e8a8 are a rotation of 0, 1
-  and 2). wm f6f2a8 had no gain. Two drafts are not saved because they are on the audit list and wwm2 is repairing
+- storeperm reruns. wm f60fa8 1054->1042, f6b7c8 1272->1226 and f7de08 799->765 are saved and checked by hand (only
+  distinct fields or elements are reordered). An f5e8a8 gain (871->860) was dropped at rebase: wwm2 reverted that
+  draft's invalid hill3o order (now 891), so the run's base was not valid. wm f6f2a8 had no gain. Two drafts are not saved because they are on the audit list and wwm2 is repairing
   them: dkmovie f23ae8 (596->592 by swapping `m->f3DD94` / `m->f3DD98` at line 64) and wm f75d80 (skipped). f7de08
   ran in three parts: runs before line 257 in one process, [250, 284) and [284, end) in two more, then combined.
   storeperm now takes TO=line as well as FROM=line for that.
+- ordcheck second pass. The first pass missed f5e8a8 (8b136dc8, found by wwm2) because duplicate lines whose count
+  changed were dropped from the pairing. Now identical lines pair in order and difflib pairs the rest; each version
+  is read at its own path (a session132 copy got mixed in before); a pair counts as still flipped when it was
+  flagged an odd number of times; and a call class (call vs call or memory/D_ store), chained assignments and `&x`
+  were added. On origin after wwm2's round 48 reverts, no clearly unsafe move remains. Flagged but judged fine:
+  gb f22620 / wm f49718 (`show = 0` moved into the case 0/default arm, every case sets show), gb f2d8d8 / wm f549d0
+  (PlatVu0MulMatrix vs stores to a local), wm f29dc0 (lod rewrite, deliberate), wm f60fa8 and f6b7c8 (call vs local
+  or `lab[7]` stores), and wm f3a640.nostrict (`sp->f8` stored before func_00f64c38, deliberate per wwm2's round 51
+  header; worth a check by wwm2).

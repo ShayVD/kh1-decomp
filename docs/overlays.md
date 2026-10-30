@@ -398,16 +398,19 @@ of 7 is 5040 compiles, about 17 minutes. `MAXN`, `TLIM` (seconds), `DRY=1` (list
 `OUT=path` control it. It does not check aliasing through different pointers, so read a kept order
 before you trust the draft's behaviour. `FROM=line` resumes a cut-off sweep from its `OUT` file.
 
-`tools/ovl/ordcheck.py DRAFT...` checks a draft's git history for statement reorders that may have
-changed what it does. It flags a pair of lines that changed order in one step when one of them is
+`tools/ovl/ordcheck.py DRAFT...` checks a draft's history for statement reorders that may have
+changed what it does. Each commit's version is read at the path that commit used. Identical lines are
+paired in order (the k-th copy with the k-th); for a text whose count changed, only the copies difflib
+lines up are paired. It flags a pair of lines that changed order in one step when one of them is
 control flow (`break`, `return`, `goto`, `continue`, `case`, `default`, a label, an `if (...) {`
 line, or a one-line `if` that jumps), when an embedded `++`/`--` writes a name the other line uses,
-or when one line assigns a plain variable that the other line uses. Lines in opposite arms of an
-if/else are never flagged, so ifswap's arm swaps pass. A step that adds or drops more than `MAXEDIT`
-(default 6) lines counts as a hand rewrite and is skipped. By default it prints a flip only while the
-current file still has the pair in the opposite order from the first version that had both lines;
-`ALL=1` prints every flagged step. Read each hit, since some flips are harmless. A byte-identical
-match is always fine.
+when one line assigns a plain variable the other uses (every name of a chain `a = b = c;` and an `&x`
+passed to a call count as writes), or when a call moves past another call or a store to memory or a
+`D_` global (capitalised names count as macros, not calls). Lines in opposite arms of an if/else are
+never flagged, so ifswap's arm swaps pass. A step that adds or drops more than `MAXEDIT` (default 6)
+lines counts as a hand rewrite and is skipped. By default it prints a pair only if it was flagged an
+odd number of times, so a later repair clears it; `ALL=1` prints every flagged step. Read each hit,
+since some flips are harmless. A byte-identical match is always fine.
 
 **Orphan divide-by-zero check.** Sometimes the target has a `li vN,C; beqzl vN; break 7` with
 no `div` that uses vN, often next to a shift that does the real division. gcc 2.96 emits
