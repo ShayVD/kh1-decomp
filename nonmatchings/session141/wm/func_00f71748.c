@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 36 -> 34, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 38 -> 36, f = (Ent *)(j * sizeof(Ent) + (u32)base) puts the scaled index first in the addu. Earlier header below. */
 /* Round 36 (wgb): no change. Same note as gb func_00f4a650: the o3->f24 / o3->h8 stores sit above the o4 stores, valid only if o3 and o4 are distinct objects. */
 /* Round 35 (wgb): wm.x func_00f71748 near miss: 35 -> 21 words, score 62 -> 38 (1040 = 1040). port.py of gb func_00f4a650's round 35 draft (statement order from the dependency-safe hill climb); left: FP temporary numbering in the panel blocks. Earlier header below. */
@@ -31,14 +32,14 @@ s32 func_001f0118(s32, s32);
 
 void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
 {
-    s32 i, j, k, n, v, found;
-    Ent *base, *e, *f;
-    f32 x, w;
-    s8 *p;
 
+    s32 i, j, k, n, v, found;
+    f32 x, w;
+    Ent *base, *e, *f;
+    s8 *p;
     D_0108F418 = -1;
-    D_0108F41C = 0;
     D_0108F420 = -1;
+    D_0108F41C = 0;
     for (i = 0; i < 10; i++) {
         D_0108F310[i] = 0;
         D_0108F338[i] = 0;
@@ -67,8 +68,8 @@ void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
             f = (Ent *)(j * sizeof(Ent) + (u32)base);
             if (f->b0 != 0 && f->b8 == 0 && f->b3 != 0 && f->b9 == i + 1) {
                 D_0108F3C8[D_0108F3B0] = e;
-                D_0108F360[D_0108F3B0] = i;
                 D_0108F428[i] = 1;
+                D_0108F360[D_0108F3B0] = i;
                 D_0108F428[j] = 1;
                 D_0108F3B0++;
                 D_0108F3C8[D_0108F3B0] = f;
@@ -94,19 +95,19 @@ void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
     v = func_001f0118(83, o1->b5);
     o1->f20 = D_00FB4DD0;
     w = D_00FB4DC0 - 20;
-    o1->f24 = w;
-    o3->f24 = w + 8.0f;
     x = D_00FB4DD0 + v + 10;
-    o3->h8 = D_00FB4DD0 - 10;
+    o3->f24 = w + 8.0f;
+    o1->f24 = w;
     o4->f24 = w + 8.0f;
     o4->h8 = 512.0f - x;
+    o3->h8 = D_00FB4DD0 - 10;
     o3->f20 = 0.0f;
     o4->f20 = x;
     v = func_001f0118(84, o2->b5);
     o2->f20 = D_00FB4DD4;
-    x = D_00FB4DD0 + v + 10;
     w = D_00FB4DC4 - D_0108F3B0 / 2 * 28 + 8;
     o2->f24 = w;
+    x = D_00FB4DD0 + v + 10;
     o6->f24 = w + 8.0f;
     o5->f24 = w + 8.0f;
     o5->f20 = 0.0f;
