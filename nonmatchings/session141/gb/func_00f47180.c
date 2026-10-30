@@ -1,3 +1,4 @@
+/* Round 46 (wgb): score 186 -> 133 (2820 vs 2824). Two source changes, then guarded hill3 (420 s, seed 46, passes --check). (1) ic->x2c = ic->x30 = 0.0f; as one chained statement keeps 0.0f in $f20 across the loop (swc1 $f20) as the target does; two separate stores give sw zero. (2) ic->x8 = (s16)D_00F7040C - 4; gives addiu -4 where the u16 form gave li 0xfffc + addu. Tried and worse: the switch with every case writing a, b and then cw, ch, fmt (191); t = (e->x6 < 71) == 0 made no change. Left: the target uses sltiu 1 where ours uses xori, and the case 0x40 arm and the D_00F70548 address loads are laid out differently. */
 /* Round 41 (wgb): score 200 -> 186, statement order from hill3 (300 s, seed 41, default mode). Earlier header below. */
 /* drafttwins.py: score 202 -> 200, port.py of the wm twin func_00f6e278 draft. Earlier header below. */
 /* Round 41 wwm2: score 268 -> 202, port.py of the wm twin func_00f6e278 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
@@ -91,19 +92,19 @@ void func_00f47180(void)
     u8 col[4];
     s32 mode, i, x, n, t;
     s32 fmt;
-    mode = D_00F702F0;
-    D_00F82A28 = 0;
     D_00F829FC = 4;
-    D_00F82A14 = 400;
-    D_00F82A00 = 0;
-    i = 0;
-    D_00F82A3C = 430;
+    mode = D_00F702F0;
     D_00F82A44 = 0;
+    D_00F82A28 = 0;
+    D_00F82A14 = 400;
+    i = 0;
+    D_00F82A00 = 0;
+    D_00F82A3C = 430;
     D_00F82A38 = 0;
     D_00F82A40 = 190;
 
-    D_00F82AC8 = 0;
     D_00F82A94 = 0;
+    D_00F82AC8 = 0;
     save = D_00F702D8;
     func_00f445a8(3, 6, 0, 1, 0, 15, 0, 0, D_00F70410, D_00F70414, 0, D_00F70418, (D_00F7042C + 1) * D_00F70430, 10, 10, 10, 100, 256, mode);
     x = D_00F70408 + D_00F70430 + D_00F70430;
@@ -116,16 +117,15 @@ void func_00f47180(void)
         ic->x3 = 0;
         ic->x5 = 15;
         ic->x1c = D_00F70404 + 2;
-        ic->x2c = 0.0f;
-        ic->x14 = D_00F70404 + 2;
-        ic->xa = D_00F70430 - 1;
         ic->x20 = x;
-        ic->x8 = D_00F7040C - 4;
+        ic->x14 = D_00F70404 + 2;
+        ic->x18 = x;
+        ic->x8 = (s16)D_00F7040C - 4;
+        ic->xa = D_00F70430 - 1;
         ic->x38 = D_00F7043C;
         ic->x39 = D_00F70440;
         ic->x3a = D_00F70444;
-        ic->x18 = x;
-        ic->x30 = 0.0f;
+        ic->x2c = ic->x30 = 0.0f;
         ic->x3b = D_00F70448;
         func_00f444b8(ic, 256.0f, mode);
         x += D_00F70430 * 2;
@@ -139,8 +139,8 @@ void func_00f47180(void)
     D_00F82A2C = 128.0f;
     D_00F82ACC = 0;
     D_00F71170.xc = D_00F704C0;
-    D_00F829C8 = 0;
     D_00F71170.xe = D_00F704C4;
+    D_00F829C8 = 0;
     func_001f31a8(&D_00F71170, 1);
     D_003E8E08 = D_00F72878;
     func_00f445a8(3, 2, 0, 1, 0, D_00F70518, 82, 0, D_00F7051C, D_00F70520, 0, 0, 0, D_00F70524, D_00F70528, D_00F7052C, D_00F70530, 256, func_00f20018() == 0 ? mode : 1);
@@ -176,8 +176,8 @@ void func_00f47180(void)
             fmt = 0;
             break;
         case 0x40:
-            ch = 64;
             cw = 64;
+            ch = 64;
             a = 0x20000;
             b = 0x21000;
             fmt = 8;
@@ -225,8 +225,8 @@ void func_00f47180(void)
     func_0024e468(D_00F702F0 + 1);
     D_00F82A94 = 1;
     D_00F702D8 = save;
-    D_00F829FC = 0;
     D_00F82A44 = 1;
+    D_00F829FC = 0;
     func_00f43cf0(3);
     if (D_00F829F8 > 0) D_00F829F8 = -1;
 }
