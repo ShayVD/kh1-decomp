@@ -79,8 +79,8 @@ void func_00f71b68(void)
     s32 flag;
     s32 save;
 
-    flag = 0;
     D_0108F424 = -1;
+    flag = 0;
     ic = D_00FBA128;
     mode = D_00FB4A70;
     save = D_00FB4A58;
@@ -106,8 +106,8 @@ void func_00f71b68(void)
             func_0024e468(1);
         }
     }
-    col = 0;
     half = D_0108F308 / 2;
+    col = 0;
     row = 0;
     if (!func_00f71b58()) {
         func_00f712b8(0, 0);
@@ -120,11 +120,11 @@ void func_00f71b68(void)
     done = 0;
     help->x10 = 53;
     for (;;) {
-        pcol = col;
         trig = D_002C5AD0.x10;
         trig |= trig >> 24;
         held = D_002C5AD0.x8;
         prow = row;
+        pcol = col;
         if (held & 0x2000) {
             func_0011d768(2);
             if (D_0108F418 < 0) {
@@ -166,11 +166,11 @@ void func_00f71b68(void)
                 } while (!t);
             } while (!t);
             if (held & 0x4000) {
-                D_0108F420 = -1;
                 trig = 0;
+                D_0108F420 = -1;
                 func_0011d768(3);
-                held = 0;
                 help->x10 = 54;
+                held = 0;
                 D_0108F41C = 0;
                 goto cancel;
             }
@@ -199,9 +199,9 @@ void func_00f71b68(void)
                 done = -1;
                 goto out;
             }
+            trig = 0;
             D_0108F418 = -1;
             help->x10 = 53;
-            trig = 0;
             func_0011d768(3);
         }
         if (trig & 0x40) {
@@ -211,8 +211,8 @@ void func_00f71b68(void)
                 row = n;
             } else if (row != 0) {
                 if (func_00f710f0(col - 1, n)) {
-                    col = col - 1;
                     row = n;
+                    col = col - 1;
                 } else if (D_0108F418 < 0) {
                     done = 1;
                 }
@@ -227,8 +227,8 @@ void func_00f71b68(void)
                 if (func_00f710f0(col, n)) row = n;
             }
             if (trig & 0x80) {
-                trig = 0;
                 n = col - 1;
+                trig = 0;
                 if (func_00f710f0(n, row)) col = n;
             }
             if (trig & 0x20) {
@@ -237,8 +237,8 @@ void func_00f71b68(void)
             }
             func_00f71140(col, row);
         } else if (D_0108F3B0 == 0) {
-            col = pcol;
             done = 0;
+            col = pcol;
             row = prow;
         } else {
             prow = -1;
@@ -256,13 +256,13 @@ out:
 mode2:
     D_0108F424 = -1;
     wt->x10 = ic.v[1];
+    pcol = col;
     help->x10 = 57;
     row = 0;
     prow = 0;
-    pcol = col;
     for (;;) {
-        held = D_002C5AD0.x8;
         trig = D_002C5AD0.x10;
+        held = D_002C5AD0.x8;
         trig |= trig >> 24;
         if (held & 0x4000) {
             D_0108F424 = -1;
@@ -290,8 +290,8 @@ mode2:
                 held = D_002C5AD0.x8;
                 D_0108F3F0[row * 2]->x4 = 0;
                 D_0108F424 = -2;
-                t = held & 0x6000;
                 D_0108F3F0[row * 2 + 1]->x4 = 0;
+                t = held & 0x6000;
                 if (t) break;
                 n = 0;
                 do {
@@ -325,8 +325,8 @@ mode2:
         }
         v = D_0108F3B0 / 2;
         if (trig & 0x40) {
-            trig = 0;
             row++;
+            trig = 0;
             if (row >= v) row = v - 1;
         }
         if (trig & 0x10) {
@@ -350,8 +350,8 @@ mode2:
         func_0024e468(1);
     }
 back:
-    row = 0;
     D_0108F424 = -1;
+    row = 0;
     while (func_00f710f0(col, row)) row++;
     if (row) row--;
     if (!func_00f710f0(col, row)) col = (col + 1) & 1;
@@ -367,7 +367,7 @@ end:
     func_00f6ade8(11);
     if (D_0108F1B8 > 0) D_0108F1B8 = -1;
     func_001be4d8();
-    D_00FB4A58 = save;
     D_00FB4A5C = save;
+    D_00FB4A58 = save;
     if (flag) func_0020bda8(16);
 }
