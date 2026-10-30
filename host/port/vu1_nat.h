@@ -862,8 +862,8 @@ static void nat_mr32(u32 *t) {
     t[0] = l0; t[1] = l1; t[2] = l2; t[3] = l3;
 }
 /* 140 / 15b: where the edge from p to o crosses the plane (vi13 the axis: vf25 / vf26 turned until it is x), into
- * vf25-27; 140 (o the vertex in) puts p out first */
-static u32 nat_cross(u32 (*p)[4], u32 (*o)[4], int put, u32 *np, u32 *cx) {
+ * vf25-27; 140 (o the vertex in) puts p out first.  p4: P4's copy (125 / 140), whose first SUB leaves vf27.w */
+static u32 nat_cross(u32 (*p)[4], u32 (*o)[4], int put, u32 *np, u32 *cx, int p4) {
     u32 u[4];
     for (;;) {
         int z = vi[13] == vi[0];
@@ -873,7 +873,8 @@ static u32 nat_cross(u32 (*p)[4], u32 (*o)[4], int put, u32 *np, u32 *cx) {
         nat_mr32(vf[26]);
         *np += 5;
     }
-    vu_op(vf[27], K_SUB, vf[26], vf[25], acc, 1, 1, 1);
+    vu_op(u, K_SUB, vf[26], vf[25], acc, 1, 1, 1);
+    vu_put(vf[27], u, p4 ? 0xe : 0xf);
     vu_op(vf[26], K_SUB, o[1], p[1], acc, 1, 1, 1);
     q_reg = qop(0x38, vf[25][0], vf[27][0]);
     vu_op(vf[27], K_SUB, o[2], p[2], acc, 1, 1, 1);
@@ -898,8 +899,8 @@ static u32 nat_cross(u32 (*p)[4], u32 (*o)[4], int put, u32 *np, u32 *cx) {
     return nat_addf(vf[27], p[2]);
 }
 /* 11a: the edge from the vertex at vi8 - 3 (vf17-19) to the one at vi8 (vf21-23): the first kept, and where it
- * crosses the plane (bit vi5 of the first's CLIPW, vi6 of the second's; vf30.x the side) */
-static u32 nat_edge(u32 *np, u32 *cx) {
+ * crosses the plane (bit vi5 of the first's CLIPW, vi6 of the second's; vf30.x the side).  p4: P4's copy (0ff) */
+static u32 nat_edge(u32 *np, u32 *cx, int p4) {
     u32 m, i;
     vu_op(vf[17], K_ADD, vf[20], vf[21], acc, 1, 1, 1);
     vu_put(vf[21], NAT_M(vi[8]), 0xf);
@@ -930,11 +931,11 @@ static u32 nat_edge(u32 *np, u32 *cx) {
             return m;
         }
         vu_opbl(vf[25], K_SUB, vf[21], vf[25], 3, acc, 1, 1, 1);
-        vi[1] = 0x12c;
+        vi[1] = p4 ? 0x111 : 0x12c;
         vu_opbl(vf[26], K_SUB, vf[17], vf[26], 3, acc, 1, 1, 1);
         vi[11] = (u16)(vi[11] + 1);
         *np += 2 + 4;
-        m = nat_cross(&vf[21], &vf[17], 0, np, cx);
+        m = nat_cross(&vf[21], &vf[17], 0, np, cx, p4);
     } else {
         {
             u32 u[4];
@@ -953,11 +954,11 @@ static u32 nat_edge(u32 *np, u32 *cx) {
             return m;
         }
         vu_opbl(vf[25], K_SUB, vf[17], vf[25], 3, acc, 1, 1, 1);
-        vi[1] = 0x136;
+        vi[1] = p4 ? 0x11b : 0x136;
         vu_opbl(vf[26], K_SUB, vf[21], vf[26], 3, acc, 1, 1, 1);
         vi[11] = (u16)(vi[11] + 2);
         *np += 4 + 4;
-        m = nat_cross(&vf[17], &vf[21], 1, np, cx);
+        m = nat_cross(&vf[17], &vf[21], 1, np, cx, p4);
     }
     for (i = 0; i < 3; i++) {
         vu_put(NAT_M(vi[9]), vf[25 + i], 0xf);
@@ -965,7 +966,10 @@ static u32 nat_edge(u32 *np, u32 *cx) {
     }
     return m;
 }
-static u32 nat_clip(u32 *np, u32 *cx) {
+/* p4: P4's clipper (054-0f4, its subroutines at 0f7 on): the same planes, with vi15 the link, vf06 / vf07 in
+ * the buffer for vf23 / vf24 and only vi3 / vi7 / vi10 kept on the stack (vf23 / vf24 are free in P4), and its own
+ * fan (0cd-0ee): no back-face test, each vertex projected and put out as the next is transformed */
+static u32 nat_clip(u32 *np, u32 *cx, int p4) {
     /* the five planes: the bits of the two ends, vf30.x, the axis, the buffer to cut from (into the other) */
     static const u16 pl[5][4] = {
         { 0x800, 0x20, 2, 0x58 }, { 0x80, 2, 0, 0x80 }, { 0x40, 1, 0, 0x58 }, { 0x200, 8, 1, 0x80 }, { 0x100, 4, 1, 0x58 },
@@ -973,13 +977,15 @@ static u32 nat_clip(u32 *np, u32 *cx) {
     static const u32 side[5] = { 0xBF800000u, 0xBF800000u, 0x3F800000u, 0xBF800000u, 0x3F800000u };
     u32 m = 0, u[4], k;
     int p;
-    /* 05e-064: vf23 / vf24 and vi2 / vi3 / vi7 / vi10 kept on the stack at vi14 */
+    /* 05e-064: vf23 / vf24 and vi2 / vi3 / vi7 / vi10 kept on the stack at vi14 (P4: vi3 / vi7 / vi10) */
+    if (!p4) {
+        vi[14] = (u16)(vi[14] - 1);
+        vu_put(NAT_M(vi[14]), vf[23], 0xf);
+        vi[14] = (u16)(vi[14] - 1);
+        vu_put(NAT_M(vi[14]), vf[24], 0xf);
+    }
     vi[14] = (u16)(vi[14] - 1);
-    vu_put(NAT_M(vi[14]), vf[23], 0xf);
-    vi[14] = (u16)(vi[14] - 1);
-    vu_put(NAT_M(vi[14]), vf[24], 0xf);
-    vi[14] = (u16)(vi[14] - 1);
-    NAT_M(vi[14])[0] = vi[2];
+    if (!p4) NAT_M(vi[14])[0] = vi[2];
     NAT_M(vi[14])[1] = vi[3];
     NAT_M(vi[14])[2] = vi[7];
     NAT_M(vi[14])[3] = vi[10];
@@ -988,8 +994,8 @@ static u32 nat_clip(u32 *np, u32 *cx) {
     vi[8] = 0x58;
     vi[9] = 0x80;
     vu_put(NAT_M(vi[8] + 0), vf[22], 0xf);
-    vu_put(NAT_M(vi[8] + 3), vf[23], 0xf);
-    vu_put(NAT_M(vi[8] + 6), vf[24], 0xf);
+    vu_put(NAT_M(vi[8] + 3), vf[p4 ? 6 : 23], 0xf);
+    vu_put(NAT_M(vi[8] + 6), vf[p4 ? 7 : 24], 0xf);
     vu_put(NAT_M(vi[8] + 9), vf[22], 0xf);
     vu_put(vf[22], NAT_M(vi[7] - 9), 0xf);
     vu_put(vf[23], NAT_M(vi[7] - 6), 0xf);
@@ -1021,8 +1027,8 @@ static u32 nat_clip(u32 *np, u32 *cx) {
     vu_put(NAT_M(vi[8] + 4), vf[23], 0xf);
     vu_put(NAT_M(vi[8] + 7), vf[24], 0xf);
     vu_put(NAT_M(vi[8] + 10), vf[22], 0xf);
-    *np += 34;
-    *cx += 1; /* 078 */
+    *np += p4 ? 31 : 34;
+    *cx += 1; /* 078 (P4 06b) */
     /* 080-0d9: the planes */
     for (p = 0; p < 5; p++) {
         u16 src = pl[p][3], dst = (u16)(src ^ (0x58 ^ 0x80));
@@ -1040,9 +1046,10 @@ static u32 nat_clip(u32 *np, u32 *cx) {
         *np += 9;
         do {
             vi[10] = (u16)(vi[10] - 1);
-            m = nat_edge(np, cx);
+            m = nat_edge(np, cx, p4);
             *np += 5;
         } while (vi[10] != vi[0]);
+        if (p4) vi[15] = (u16)(0x7c + 0x12 * p + 7); /* the link of the plane's bal to 0f7 */
         /* 112: the first vertex out again after the last */
         vi[8] = dst;
         vu_put(vf[21], NAT_M(vi[8] + 0), 0xf);
@@ -1056,6 +1063,65 @@ static u32 nat_clip(u32 *np, u32 *cx) {
         if (p < 4) vi[5] = pl[p + 1][0];
         else vi[8] = 0x80;
         if (vi[11] == vi[0]) goto done;
+    }
+    if (p4) {
+        /* 0cd-0da: the polygon's first vertex into clip space, a GIF tag kicked alone, then the fan's */
+        vi[3] = (u16)(vi[0] + vi[8]);
+        vu_put(vf[20], NAT_M(vi[3]), 0xf);
+        vi[10] = (u16)(vi[0] + vi[11]);
+        vi[15] = 0x30;
+        vi[7] = (u16)(vi[15] + 2);
+        vu_opbl(acc, K_MUL, vf[1], vf[20], 0, acc, 1, 1, 1);
+        vi[11] = 0x7fff;
+        vu_opbl(acc, K_MADD, vf[2], vf[20], 1, acc, 1, 1, 1);
+        vi[11] = (u16)(vi[11] + 1);
+        vu_opbl(acc, K_MADD, vf[3], vf[20], 2, acc, 1, 1, 1);
+        NAT_M(vi[15])[0] = vi[11];
+        vu_opbl(vf[26], K_MADD, vf[4], vf[20], 3, acc, 1, 1, 1);
+        vi[11] = (u16)(vi[10] + 0x7fff);
+        vi[11] = (u16)(vi[11] + 1);
+        kick(vi[15]);
+        q_reg = qop(0x38, vf[0][3], vf[26][3]);
+        NAT_M(vi[15])[0] = vi[11];
+        *np += 14;
+        *cx += 5; /* 0db (WAITQ) */
+        /* 0db-0ed: each vertex projected and put out, the next into clip space */
+        for (;;) {
+            vu_opb(vf[25], K_MUL, vf[26], &q_reg, acc, 1, 1, 1);
+            vu_put(vf[29], NAT_M(vi[3] + 2), 0xf);
+            vu_put(vf[20], NAT_M(vi[3] + 3), 0xf);
+            vu_put(vf[27], NAT_M(vi[3] + 1), 0xf);
+            vi[3] = (u16)(vi[3] + 3);
+            vu_opb(u, K_MUL, vf[29], &q_reg, acc, 1, 1, 1);
+            vi[10] = (u16)(vi[10] - 1);
+            vu_put(vf[29], u, 0xe);
+            vu_opbl(acc, K_MUL, vf[1], vf[20], 0, acc, 1, 1, 1);
+            vi[7] = (u16)(vi[7] + 3);
+            vu_opb(u, K_MUL, vf[0], &i_reg, acc, 1, 1, 1);
+            vu_put(vf[25], u, 0x1);
+            vu_opbl(acc, K_MADD, vf[2], vf[20], 1, acc, 1, 1, 1);
+            vu_opbl(acc, K_MADD, vf[3], vf[20], 2, acc, 1, 1, 1);
+            m = 0;
+            if (!vu_opbel(u, K_MADD, vf[4], vf[20], 3, acc, 0xf, &m)) {
+                for (k = 0; k < 4; k++) u[k] = fout(fin(acc[k]) + fin(vf[4][k]) * fin(vf[20][3]), (int)k, &m);
+            }
+            vu_put(NAT_M(vi[7] - 4), vf[29], 0xf);
+            vu_put(vf[26], u, 0xf);
+            vu_ftoi(u, vf[25], 1);
+            vu_put(vf[25], u, 0xf);
+            vu_ftoi(u, vf[27], 0);
+            vu_put(vf[27], u, 0xf);
+            q_reg = qop(0x38, vf[0][3], vf[26][3]);
+            vu_put(NAT_M(vi[7] - 2), vf[25], 0xf);
+            vu_put(NAT_M(vi[7] - 3), vf[27], 0xf);
+            *np += 19;
+            if (vi[10] == vi[0]) break;
+            *cx += 2; /* 0db (WAITQ) again */
+        }
+        kick(vi[15]);
+        *np += 1;
+        *cx += 1; /* 0ef's DIV: the one at 0e9 still running */
+        goto done;
     }
     /* 0da-0e8: the polygon's first vertex into clip space, a GIF tag kicked alone, then the fan's (vi11 the count) */
     vi[3] = (u16)(vi[0] + vi[8]);
@@ -1159,8 +1225,18 @@ static u32 nat_clip(u32 *np, u32 *cx) {
         }
     }
 done:
-    /* 107-10f: Q again, vi2 / vi3 / vi7 / vi10 and vf24 / vf23 back from the stack, vf20.w 1 */
+    /* 107-10f: Q again, vi2 / vi3 / vi7 / vi10 and vf24 / vf23 back from the stack, vf20.w 1 (P4 0ef-0f4: vi3 / vi7 /
+     * vi10) */
     q_reg = qop(0x38, vf[0][3], vf[28][3]);
+    if (p4) {
+        vi[3] = (u16)NAT_M(vi[14])[1];
+        vi[7] = (u16)NAT_M(vi[14])[2];
+        vi[10] = (u16)NAT_M(vi[14])[3];
+        vi[14] = (u16)(vi[14] + 1);
+        vf[20][3] = vf[0][3];
+        *np += 6;
+        return m;
+    }
     vi[2] = (u16)NAT_M(vi[14])[0];
     vi[3] = (u16)NAT_M(vi[14])[1];
     vi[7] = (u16)NAT_M(vi[14])[2];
@@ -1350,7 +1426,7 @@ static int nat_0(u32 pc) {
                     VU_ST(vf[12], v12); VU_ST(vf[20], v20); VU_ST(vf[21], v21); VU_ST(vf[22], v22); VU_ST(vf[23], v23);
                     VU_ST(vf[24], v24); VU_ST(vf[25], v25); VU_ST(vf[26], v26); VU_ST(vf[27], v27); VU_ST(vf[28], v28);
                     VU_ST(vf[29], v29); VU_ST(acc, a);
-                    m = nat_clip(&np, &cx);
+                    m = nat_clip(&np, &cx, 0);
                     fc = clip_last;
                     i1 = vi[1]; i2 = vi[2]; i3 = vi[3]; i4 = vi[4]; i5 = vi[5]; i6 = vi[6]; i7 = vi[7]; i10 = vi[10];
                     i11 = vi[11]; i12 = vi[12]; i13 = vi[13];
@@ -1393,6 +1469,215 @@ static int nat_0(u32 pc) {
     return 1;
 }
 
+/* 039: vf28 = ACC + vf04 * vf05.w, the FMAC whose MAC flag the run leaves: as vu_opbel() / the scalar form make
+ * it, NEON's result where no field or product is 0 (only the run's last one's flag is needed, nat_4 redoes it) */
+static __inline__ uint32x4_t nat_madd4w(uint32x4_t a, float32x4_t p3, uint32x4_t v5) {
+    float32x4_t p = vmulq_f32(p3, vdupq_lane_f32(vget_high_f32(vfin(v5)), 1)), r = vaddq_f32(vfin(a), p);
+    uint32x4_t abs7 = vdupq_n_u32(0x7FFFFFFFu), z = vdupq_n_u32(0);
+    uint32x4_t zz = vorrq_u32(vceqq_u32(vandq_u32(nat_u(p), abs7), z), vceqq_u32(vandq_u32(nat_u(r), abs7), z));
+    uint32x2_t any = vorr_u32(vget_low_u32(zz), vget_high_u32(zz));
+    if (vget_lane_u32(vpmax_u32(any, any), 0)) {
+        u32 m = 0, u[4], c[4], b[4];
+        VU_ST(c, a);
+        VU_ST(b, v5);
+        if (!vu_opbel(u, K_MADD, vf[4], b, 3, c, 0xf, &m)) {
+            int k;
+            for (k = 0; k < 4; k++) u[k] = fout(fin(c[k]) + fin(vf[4][k]) * fin(b[3]), k, &m);
+        }
+        return VU_LD(u);
+    }
+    return vfo(r);
+}
+
+/* P4, from 00c (045 branches there): the map renderer without the back-face test, as P0's main loop otherwise: a
+ * strip (the position with its flags in w, the colour as integers, ST in 20.12), software-pipelined (a vertex into
+ * view space, the one before into clip space and projected), CLIPW of the last three, the ADC for a vertex flagged
+ * 0 or a triangle wholly outside one plane.  A triangle that crosses a plane goes to the program's clipper (054,
+ * nat_clip()'s P4 form; session 151: most of P4's runs clip one, so the main loop alone, session 151's first
+ * nat_4, was taken out), then the ADC on it as for a cull.  A strip whose input and output would wrap round VU
+ * memory is left to the translation */
+static int nat_4(u32 pc) {
+    u32 np, q, fc = clip_last, wI, b22, b6, b7, cx = 0, mclip = 0;
+    int clipped = 0; /* the clipper ran after the pass's 039: its MAC flag is the run's so far */
+    u16 i1 = vi[1], i2, i3, i4, i5, i6, i7, i10, i11, i12, i13 = vi[13];
+    uint32x4_t v5, v6, v7, v8 = VU_LD(vf[8]), v20, v22, v26 = VU_LD(vf[26]), v27 = VU_LD(vf[27]), v28, v29, a;
+    uint32x4_t xyz = VU_LD(vu_lanes[0xe]), xy = VU_LD(vu_lanes[0xc]), l5 = vdupq_n_u32(0), la = l5;
+    float32x4_t W[4], P[4], c31 = vfin(VU_LD(vf[31])), pf;
+    if (pc == 0x45) np = 2;
+    else if (pc == 0xc) np = 0;
+    else return 0;
+    i1 = (u16)top;
+    i10 = (u16)(mem[i1 & (DATA_QW - 1)][0] & 0x7FFF);
+    if (!i10 || i10 * 7u + 8 > DATA_QW) return 0;
+    {
+        int k;
+        for (k = 0; k < 4; k++) {
+            W[k] = vfin(VU_LD(vf[13 + k]));
+            P[k] = vfin(VU_LD(vf[1 + k]));
+        }
+        { Fu f; f.u = vf[0][3]; wI = fo(f.f * fin(i_reg)); } /* muli.w vf28, vf00, I */
+    }
+    /* 00c-022: the first vertex into view and clip space, the GIF tag */
+    i3 = (u16)(i1 + 1);
+    v20 = vbslq_u32(xyz, VU_LD(mem[i3 & (DATA_QW - 1)]), VU_LD(vf[0]));
+    i11 = 0x7FFF;
+    i4 = i5 = i6 = 0xFFFE;
+    pf = vfin(v20);
+    a = vfo(vmulq_f32(W[0], vdupq_lane_f32(vget_low_f32(pf), 0)));
+    a = vfo(vaddq_f32(nat_f(a), vmulq_f32(W[1], vdupq_lane_f32(vget_low_f32(pf), 1))));
+    a = vfo(vaddq_f32(nat_f(a), vmulq_f32(W[2], vdupq_lane_f32(vget_high_f32(pf), 0))));
+    v5 = vfo(vaddq_f32(nat_f(a), vmulq_f32(W[3], vdupq_lane_f32(vget_high_f32(pf), 1))));
+    v29 = VU_LD(mem[i1 & (DATA_QW - 1)]);
+    i2 = (u16)(i3 + i10 * 4);
+    v22 = v6 = v7 = VU_LD(vf[0]);
+    b22 = b6 = b7 = nat_clipbits(v22);
+    pf = nat_f(v5);
+    a = vfo(vmulq_f32(P[0], vdupq_lane_f32(vget_low_f32(pf), 0)));
+    a = vfo(vaddq_f32(nat_f(a), vmulq_f32(P[1], vdupq_lane_f32(vget_low_f32(pf), 1))));
+    a = vfo(vaddq_f32(nat_f(a), vmulq_f32(P[2], vdupq_lane_f32(vget_high_f32(pf), 0))));
+    v28 = vfo(vaddq_f32(nat_f(a), vmulq_f32(P[3], vdupq_lane_f32(vget_high_f32(pf), 1))));
+    VU_ST(mem[i2 & (DATA_QW - 1)], v29);
+    i7 = (u16)(i2 + 2);
+    i12 = (u16)(i11 + 0xFF1);
+    q = nat_rcp(vgetq_lane_u32(v28, 3));
+    np += 23;
+    for (;;) {
+        float32x4_t qq = nat_f(vdupq_n_u32(q));
+        int cull;
+        /* 023-02b */
+        v6 = v7;
+        v7 = v5;
+        b6 = b7;
+        b7 = nat_clipbits(v7);
+        v28 = vfo(vmulq_f32(vfin(v28), qq));
+        v29 = VU_LD(mem[(i3 + 1) & (DATA_QW - 1)]);
+        fc = (fc << 18 | b22 << 12 | b6 << 6 | b7) & 0xFFFFFF;
+        v26 = vbslq_u32(xy, VU_LD(mem[(i3 + 2) & (DATA_QW - 1)]), v26);
+        v20 = vbslq_u32(xyz, VU_LD(mem[(i3 + 3) & (DATA_QW - 1)]), v20);
+        v8 = VU_LD(mem[i3 & (DATA_QW - 1)]);
+        v28 = vsetq_lane_u32(wI, v28, 3);
+        i3 = (u16)(i3 + 3);
+        v29 = nat_u(vcvtq_f32_s32(vreinterpretq_s32_u32(v29)));
+        i7 = (u16)(i7 + 3);
+        v26 = vbslq_u32(xy, nat_u(vmulq_n_f32(vcvtq_f32_s32(vreinterpretq_s32_u32(v26)), 1.0f / 4096.0f)), v26);
+        /* 02c-034: the next vertex into view space; XYZF2 and the colour */
+        pf = vfin(v20);
+        a = vfo(vmulq_f32(W[0], vdupq_lane_f32(vget_low_f32(pf), 0)));
+        i1 = (u16)((fc & 0x3F) != 0);
+        v27 = vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(vfin(v28), 16.0f)));
+        i4 = i5;
+        v29 = vfo(vmulq_f32(nat_f(v29), c31));
+        i5 = i6;
+        a = vfo(vaddq_f32(nat_f(a), vmulq_f32(W[1], vdupq_lane_f32(vget_low_f32(pf), 1))));
+        i6 = i1;
+        a = vfo(vaddq_f32(nat_f(a), vmulq_f32(W[2], vdupq_lane_f32(vget_high_f32(pf), 0))));
+        i13 = (u16)vgetq_lane_u32(v8, 3);
+        v5 = vfo(vaddq_f32(nat_f(a), vmulq_f32(W[3], vdupq_lane_f32(vget_high_f32(pf), 1))));
+        VU_ST(mem[(i7 - 2) & (DATA_QW - 1)], v27);
+        v26 = vsetq_lane_u32(0x3F800000u, v26, 2); /* addw.z vf26, vf00, vf00w */
+        i4 = (u16)(i4 + i5);
+        v29 = vreinterpretq_u32_s32(vcvtq_s32_f32(vfin(v29)));
+        i4 = (u16)(i4 + i6);
+        i10 = (u16)(i10 - 1);
+        /* 035-03d: into clip space; ST times Q; Q of the next */
+        pf = nat_f(v5);
+        a = vfo(vmulq_f32(P[0], vdupq_lane_f32(vget_low_f32(pf), 0)));
+        v26 = vbslq_u32(xyz, vfo(vmulq_f32(vfin(v26), qq)), v26);
+        a = vfo(vaddq_f32(nat_f(a), vmulq_f32(P[1], vdupq_lane_f32(vget_low_f32(pf), 1))));
+        VU_ST(mem[(i7 - 3) & (DATA_QW - 1)], v29);
+        a = vfo(vaddq_f32(nat_f(a), vmulq_f32(P[2], vdupq_lane_f32(vget_high_f32(pf), 0))));
+        v28 = nat_madd4w(a, P[3], v5);
+        la = a;
+        l5 = v5;
+        clipped = 0;
+        VU_ST(mem[(i7 - 4) & (DATA_QW - 1)], v26);
+        i1 = (u16)((fc & 0x20820) != 0);
+        q = nat_rcp(vgetq_lane_u32(v28, 3));
+        np += 27;
+        if (!i13) {
+            cull = 1;
+        } else {
+            np += 2;
+            if ((s16)i4 > 0) { /* 047-053: a vertex off the screen: culled when all three are outside one plane */
+                np += 2;
+                if (i1) {
+                    i1 = nat_fcor(fc, 0xfdf7df);
+                    np += 3;
+                    cull = i1;
+                } else {
+                    static const u32 pl[4] = { 0xffbefb, 0xffdf7d, 0xffefbe, 0xfdf7df };
+                    int k;
+                    i1 = nat_fcor(fc, 0xff7df7);
+                    np += 1;
+                    cull = 0;
+                    for (k = 0; !cull && k < 4; k++) {
+                        cull = i1 != 0;
+                        i1 = nat_fcor(fc, pl[k]);
+                        np += 2;
+                    }
+                    if (!cull) {
+                        cull = i1 != 0;
+                        np += 2;
+                    }
+                }
+                if (!cull) { /* 054: the clipper, on the VU's registers; then the ADC on the triangle as for a cull */
+                    vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[5] = i5; vi[6] = i6; vi[7] = i7; vi[10] = i10;
+                    vi[11] = i11; vi[12] = i12; vi[13] = i13;
+                    VU_ST(vf[5], v5); VU_ST(vf[6], v6); VU_ST(vf[7], v7); VU_ST(vf[8], v8); VU_ST(vf[20], v20);
+                    VU_ST(vf[22], v22); VU_ST(vf[26], v26); VU_ST(vf[27], v27); VU_ST(vf[28], v28);
+                    VU_ST(vf[29], v29); VU_ST(acc, a);
+                    mclip = nat_clip(&np, &cx, 1);
+                    clipped = 1;
+                    fc = clip_last;
+                    i1 = vi[1]; i2 = vi[2]; i3 = vi[3]; i4 = vi[4]; i5 = vi[5]; i6 = vi[6]; i7 = vi[7]; i10 = vi[10];
+                    i11 = vi[11]; i12 = vi[12]; i13 = vi[13];
+                    v5 = VU_LD(vf[5]); v6 = VU_LD(vf[6]); v7 = VU_LD(vf[7]); v8 = VU_LD(vf[8]); v20 = VU_LD(vf[20]);
+                    v22 = VU_LD(vf[22]); v26 = VU_LD(vf[26]); v27 = VU_LD(vf[27]); v28 = VU_LD(vf[28]);
+                    v29 = VU_LD(vf[29]); a = la = VU_LD(acc);
+                    cull = 1;
+                }
+            } else
+                cull = 0;
+        }
+        if (cull) { /* 0f5 / 0f6: the ADC */
+            mem[(i7 - 2) & (DATA_QW - 1)][3] = i12;
+            np += 2;
+        }
+        /* 040 / 041 */
+        np += 2;
+        v22 = v6;
+        b22 = b6;
+        if (!i10) break;
+    }
+    /* 042-044: the kick */
+    np += 3;
+    if (clipped)
+        mac_now = mclip;
+    else {
+        u32 m = 0, u[4], c[4], b[4];
+        VU_ST(c, la);
+        VU_ST(b, l5);
+        if (!vu_opbel(u, K_MADD, vf[4], b, 3, c, 0xf, &m)) {
+            int k;
+            m = 0;
+            for (k = 0; k < 4; k++) fout(fin(c[k]) + fin(vf[4][k]) * fin(b[3]), k, &m);
+        }
+        mac_now = m;
+    }
+    vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[5] = i5; vi[6] = i6; vi[7] = i7; vi[10] = i10;
+    vi[11] = i11; vi[12] = i12; vi[13] = i13;
+    VU_ST(vf[5], v5); VU_ST(vf[6], v6); VU_ST(vf[7], v7); VU_ST(vf[8], v8); VU_ST(vf[20], v20);
+    VU_ST(vf[22], v22); VU_ST(vf[26], v26); VU_ST(vf[27], v27); VU_ST(vf[28], v28); VU_ST(vf[29], v29);
+    VU_ST(acc, la);
+    clip_last = clip_now = fc;
+    q_reg = q;
+    st.insns += np;
+    st.cycles += np + 6 + cx; /* 022's WAITQ; the clipper's */
+    kick(i2);
+    tpc = 0x45 & (MICRO_N - 1);
+    return 1;
+}
+
 #endif
 
 /* the program numbers (tools/vu/find_vu1.py's) that have one.  A native run answers 0, before it changes
@@ -1401,6 +1686,7 @@ static int (*nat_run(int num))(u32) {
     if (!kh1_vu1_native) return 0;
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
     if (num == 0) return nat_0;
+    if (num == 4) return nat_4;
     if (num == 10) return nat_10;
     if (num == 11) return nat_11;
     if (num == 13) return nat_13;

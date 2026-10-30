@@ -1429,6 +1429,31 @@ late, at sceGxmFinish) gives the same display and 3D target hashes every 50th fr
 The worker's instructions in those frames: 336M -> 257M (-23%). A word-at-a-time copy for small ring ops was
 tried and dropped: more instructions than the library's NEON memcpy.
 
+## Waits for one scene, NEON unpacks, P4 native (session 151b)
+
+Main 9c32dca on the Vita (frames 1,500-13,000): 15.7 pictures a second, as zy2. The upload wait was gone (5.1 ->
+0.1 ms a frame) but the CLUT readbacks' waits grew from 1.8 to 7.3 ms: each still a sceGxmFinish, and the GPU
+was now further behind when the frame's palettes were read (the Dive reads 14 back from a target its second scene
+drew, after every 3D scene is sent). That wait runs down the chain: the GPU thread ~8.7 ms a frame in waits, the
+GS worker 8.1 ms waiting for the recording (on the GPU thread), the game 5.3 ms waiting for the GS worker.
+
+- **gxm.c `scene_note` / `wait_scene`**: each scene's sceGxmEndScene gives a fragment notification that writes
+  the scene's number (word 400 of GXM's notification region) once it is done; a target's `used` is the last scene
+  that drew or sampled it, and the readback, pend_flush and a blit wait only until that scene has written (a busy
+  poll on the GPU thread; past 100 ms a sceGxmFinish, as before). The log's `uploads into targets:` line counts
+  these waits (their time stays in `gpu waits`). The host's mock writes the notification when it runs the scene,
+  and gxm.c there does a sceGxmFinish for an unfinished scene (the mock runs scenes only then).
+- **vu1.c `unpack_run` on NEON**: a vector's elements in one load, widened, ROW added in a register (and the
+  V4-32 copy without a memcpy call a qword). The game thread under qemu-arm (frames 5,000-5,060): 466M -> 440M.
+- **P4 native** (`nat_4`, with `nat_clip`'s P4 form): the main loop as session 151 wrote it, and the clipper
+  P0's with P4's differences (vi15 the link, vf06 / vf07 into the buffer, only vi3 / vi7 / vi10 on the stack,
+  SUB.xyz at 12a / 145, and P4's own fan at 0cd-0ee without the back-face test). The dumped disc runs: 542 P4 runs,
+  3,385 of their triangles clipped, every one the same as the translation (registers, VU memory, flags, kicks,
+  pairs and cycles); P0's 4,467 the same as before.
+
+Checked: the ARM build's 130 GS digests and vu1 lines to frame 6,500 identical to main; the GXM mock's display and
+3D target hashes every 50th frame over 6,500 Dive frames identical to main's gxm.c. **Not yet measured on a Vita.**
+
 ## The VU1 strips in one piece (session 151)
 
 The VU1 programs' kicks are PACKED [ST, RGBAQ, XYZF2] TRISTRIPs. Each vertex went through the GS model one at a time
