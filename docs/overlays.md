@@ -895,8 +895,9 @@ Examples:
 - wm func_00f37770: matched unchanged as `.nosib.c`. Its draft had scored 24 in plain -O2.
 
 **Why (traced with `-da` dumps of f23628):**
-1. With sibling-call optimisation on, gcc 2.96 expands every call that is not inside a loop as a
-   CALL_PLACEHOLDER: the normal sequence plus a sibcall alternative.
+1. With sibling-call optimisation on, gcc 2.96 expands calls as CALL_PLACEHOLDERs: the normal sequence
+   plus a sibcall alternative. The `.01.sibling` dump of f23628 has a NOTE_INSN_DELETED where each one
+   was, 15 more notes than with nosib.
 2. The `.01.sibling` pass (optimize_sibling_and_tail_recursive_calls) picks the normal sequence for
    calls that are not in tail position. When the placeholder is the last thing in a basic block, so a
    label follows the call and its result move, the pass emits an `(insn (use (const_int 0)))` there.
@@ -907,9 +908,9 @@ Examples:
    label, which belong to the arm that falls through. That arm's last insn is the USE, it does not
    match the other arm's result move, and the cross-jump stops.
 
-**Small tests** (/tmp/claude-0/s141/wwm1/r35/t/a.c, one function per shape):
+**Small tests** (one function per shape, -O2 against nosib):
 - `if (g) r = f(h, 1); else r = f(h, 0); f2(0, 0); g = r;` has two `jal f` at -O2 and one in nosib mode.
-- The same if/else inside a `for` loop merges in both modes, because calls in loops get no placeholder.
+- The same if/else inside a `for` loop merges in both modes. This fits calls in loops getting no placeholder, which was inferred and not checked in the dumps.
 - When the arms share only `lw a0` and the call (no result kept in an s register), nothing merges in
   either mode. So a single shared call in the target does not always mean nosib.
 
