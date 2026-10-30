@@ -851,3 +851,22 @@ hit the stub callee sits at a lower address than the function.
   shows why arg4 (88) has 11 live insns: it is dead through case 0 (live_length counts only insns where the
   pseudo is live), so the target needs arg4 live through case 0 or arg0 with more refs; `arg0 == arg4` in
   case 1 and moving default: gave nothing (16).
+
+## Round 29
+
+- tools/ovl/rettype.py (committed): the round-28 return-type sweep as one tool. Per draft (session141 of every
+  overlay plus the drafts.tsv drafts, read from copies): matched return types first, then every other
+  void-declared callee as s32 one at a time (ordered by target-asm hints: v0 read after the jal or written
+  in its delay slot), then the best pairs and all gainers together, then s32/int/u32 callees whose result is
+  never used as void. Gains go to --out; drafts are never written.
+- Batch over 223 drafts (JOBS=2, about 25 minutes). Gains: dkmovie f20b48 4 -> 2 (func_00f209d0 s32: its
+  matched C is void but it ends in a tail call of func_001ed8c8), dkmovie f23ae8 504 -> 502 (func_00f23480
+  s32, a tail call of func_0024e468), wm f58f98 74 -> 60 (func_00f55190 back to void), wm f6b7c8
+  1226 -> 1086 (func_00f6b5b0 s32). Not applied (other owners): gb f31ea0 76 -> 62 with func_00f2e098 void
+  (the gb twin of the f58f98 change), dktitle session132 f228c8 408 -> 406 with func_00f21068 s32; the
+  files are in /tmp/claude-0/s141/wwm1/r29/rt/. No pair beat its best single.
+- wm f20d08 (21): the two D_00F8512C decrements are global-alloc order. The address pseudo (3 refs over 14
+  insns) and the loaded value (3 over 4) both cross the branch, and the value wins v0. The target has the
+  address in v0, so its address must have outranked the value. Moving `D_00F8512C--` to each of the 6
+  positions of both else blocks (35 combinations) gives 21 every time: sched1 puts the store back in the
+  same place. All 18 flag modes are 21 or worse.
