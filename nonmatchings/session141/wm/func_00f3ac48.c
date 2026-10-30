@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 56 -> 52, func_00f64c38 declared s32. Earlier header below. */
 /* wm f3ac48 near miss: 94 words differ, score 56 (784 vs 784 bytes). Two 1-word struct params give the sw a0/a1 to 0/4(sp). The search loops are in a static inline findrec(), which fixes the i/e registers. D_00FCE390[slot] is indexed directly everywhere. Left: the inline's return 0 / e==0 test is not threaded (orig bltzl k straight to the epilogue), store scheduling of the E fields (x10C), and the q loop's fresh li 1. Tried: plain loops, a j var for the second loop, separate r/e vars, an out-param inline (worse), an id-search inline (worse), while/for/do-while q loops. */
 typedef struct {
     OvlMtx m;
@@ -27,7 +28,7 @@ s32 func_00f43d88(s32);
 Obj *func_00f3f260(s32, s32);
 Rec *func_00f62c78(s32, s32);
 s32 func_00f62c90(s32);
-void func_00f64c38(s32, s32);
+s32 func_00f64c38(s32, s32);
 s32 func_00f20020(void);
 void sceVu0CopyMatrix(OvlMtx, OvlMtx);
 void sceVu0UnitMatrix(OvlMtx);
