@@ -82,12 +82,26 @@ python3 tools/ovl/hand.py try  gb func_00f3bab0 d.c      # compile a draft (ovl.
 python3 tools/ovl/hand.py keep gb func_00f3bab0 d.c      # on a match: ovl/gb/hand/func_00f3bab0.c
 python3 tools/ovl/hand.py perms gb func_00f3bab0 d.c     # every order of the lines between //{ and //}
 python3 tools/ovl/twins.py [NAME...]                     # copy matched C to same-shape functions
+python3 tools/ovl/drafttwins.py --apply                  # port near-miss drafts between wm and gb twins
 ```
 
 twins.py: gb and wm share most of their code (and the summons share helpers), so every
 match is tried on the functions with the same instructions (symbols, call targets and
 labels masked; large literals masked as a fallback) in every overlay. Run it after each
 `make ovl`.
+
+drafttwins.py (`python3 tools/ovl/drafttwins.py [--apply] [--dir nonmatchings/session141] [wm gb]`)
+does the same for near misses that do not match yet. It pairs each draft in DIR/A with each
+draft in DIR/B whose target has the same mnemonic sequence. It scores both drafts with
+`hand.py try`, ports the better one onto the other with port.py, and prints the port's score.
+With `--apply`, each improving port that has no unmapped symbols replaces its twin's draft:
+a new header line comes first, then the twin's old header. Each replacement is committed on
+its own, with `$COMMIT_TAIL` appended to the commit message. A port that matches is only
+written and reported, so promote it with `hand.py keep`.
+
+In round 41 the first run improved 31 gb and 6 wm drafts, for example wm func_00f55d78
+from 223 to 27 and gb func_00f51360 from 11 to 3. Rerun it after a draft improves, so the
+gain reaches its twin.
 
 autodecomp's variants (tools/permute.py) added for the overlays: `callee_stubs` (overlay
 callees at lower addresses as empty `CONTEXT_ONLY` definitions: callee defined above
