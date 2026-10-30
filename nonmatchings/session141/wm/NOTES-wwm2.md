@@ -1081,3 +1081,17 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
   - Left: one store pair, x10C vs xE8.
 - **f3a640 70 -> 42, now at the exact size (544, was 528).** Same index q walk, plus `tp = &D_00FCE390[id].t`, a local for the func_00f64c38 result, and sp->f8 before the call. Left: the target builds each sub-struct base as (id*272 + off) + D.
 - **f46070 (51):** the bits/c copy order ignores the source order (c first still emits bits first), so it is a scheduler choice. **f24380 (48):** pure register permutation, not reworked. **f28258, f7a350, f73eb0, f625f0, f31430, f549d0:** not reached or no new idea; all heavily worked before.
+
+## Round 52 (f3ac48 matched)
+
+- **f3ac48 matched.** The last store pair was caused by x10C's pointer type. Declaring `s32 x10C` (stored from the s32 global, cast to s32 * at the q read) lets the scheduler put the x10C store right after xF4. After that, one store order (xE4, xF4, x10C, xE0, xEC, xE8, xF0) gave the match. Takeaway: when a store pair is scheduler-chosen, try the field's type (its alias set) before trying more orders. twins.py found no gb twin.
+- **f3bc48 (8), no change.**
+  - Loop 1: the target fills bne's slot with i++ (not likely), and its latch has no i++ of its own. Our pre-reorg latch is `i++; a1 += 192; slt; s0 += 192`, and reorg takes bnel because i is live on the fallthrough.
+  - Tried for loop 1 (all 8 or worse): do-while, while, `++i < 256`, nested ifs, continue, goto, an id temp, flags-first, i++ before the test, every build mode.
+  - Tried for the conds/v80[3] pair (no change): conds as s32/u32/f32 * and other v80/v90 bases.
+- **f3a640 (42), no change.** Neither the s32 list field nor a flat f3ac48-style struct helps: the flat struct CSEs (D+4)/(D+12) bases (168).
+- **Leads with score ≤ 40, cheapest first:**
+  - f74440.nofill (4): eight compare/inline forms tried, no change.
+  - f639c0 (5): hill3 for 240 s found nothing.
+  - f72f40 (11): an asm alias, volatile, a temp and an array view of D_00FB4B38 changed nothing.
+  - f69aa8 (5), f7ecd8 (11), f74a28 (12): already exhausted in earlier rounds (wgb's analysis, my round 41 analysis, the c[] register choice).
