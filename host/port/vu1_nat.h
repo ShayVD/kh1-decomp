@@ -475,6 +475,353 @@ static __inline__ u32 nat_clipbits(uint32x4_t u) {
 /* FCOR: every bit outside x set */
 static __inline__ u16 nat_fcor(u32 fc, u32 x) { return (u16)(((fc | x) & 0xFFFFFF) == 0xFFFFFF); }
 
+/* P0's clipper (05e-111 and its subroutines), on the VU's own registers (vf[], vi[], acc): a triangle that crosses
+ * a plane, cut against five planes in turn (a polygon of up to nine vertices in the buffers at 58 and 80), then
+ * transformed, projected and kicked as a fan of its own (at 30).  Few triangles come here, so it is written with
+ * the translation's operations (vu_op() and the rest), instruction for instruction in its order.  *np counts the
+ * pairs, *cx the stall cycles; it answers the MAC flag of its last FMAC whose flag the program can read */
+#define NAT_M(r) (mem[(r) & (DATA_QW - 1)])
+/* mulx.w t, s, vf30x, with its MAC flag (123 / 131) */
+static u32 nat_mulw30(u32 *t, const u32 *s) {
+    u32 m = 0, u[4];
+    if (!vu_opbel(u, K_MUL, s, vf[30], 0, acc, 0x1, &m)) {
+        f32 r3 = fin(s[3]) * fin(vf[30][0]);
+        u[3] = fout(r3, 3, &m);
+    }
+    vu_put(t, u, 0x1);
+    return m;
+}
+/* add.xyzw t, t, s, with its MAC flag (15a / 175) */
+static u32 nat_addf(u32 *t, const u32 *s) {
+    u32 m = 0, u[4];
+    if (!vu_ope(u, K_ADD, t, s, acc, 0xf, &m)) {
+        int k;
+        for (k = 0; k < 4; k++) {
+            f32 r = fin(t[k]) + fin(s[k]);
+            u[k] = fout(r, k, &m);
+        }
+    }
+    vu_put(t, u, 0xf);
+    return m;
+}
+static void nat_mr32(u32 *t) {
+    u32 l0 = t[1], l1 = t[2], l2 = t[3], l3 = t[0];
+    t[0] = l0; t[1] = l1; t[2] = l2; t[3] = l3;
+}
+/* 140 / 15b: where the edge from p to o crosses the plane (vi13 the axis: vf25 / vf26 turned until it is x), into
+ * vf25-27; 140 (o the vertex in) puts p out first */
+static u32 nat_cross(u32 (*p)[4], u32 (*o)[4], int put, u32 *np, u32 *cx) {
+    u32 u[4];
+    for (;;) {
+        int z = vi[13] == vi[0];
+        vi[13] = (u16)(vi[13] - 1);
+        if (z) break;
+        nat_mr32(vf[25]);
+        nat_mr32(vf[26]);
+        *np += 5;
+    }
+    vu_op(vf[27], K_SUB, vf[26], vf[25], acc, 1, 1, 1);
+    vu_op(vf[26], K_SUB, o[1], p[1], acc, 1, 1, 1);
+    q_reg = qop(0x38, vf[25][0], vf[27][0]);
+    vu_op(vf[27], K_SUB, o[2], p[2], acc, 1, 1, 1);
+    vu_op(vf[25], K_SUB, o[0], p[0], acc, 1, 1, 1);
+    vu_opb(u, K_ADD, vf[0], &q_reg, acc, 1, 1, 1);
+    vu_put(vf[29], u, 0x8);
+    if (put) {
+        int k;
+        for (k = 0; k < 3; k++) {
+            vu_put(NAT_M(vi[9]), p[k], 0xf);
+            vi[9] = (u16)(vi[9] + 1);
+        }
+    }
+    vf[29][0] = absf(vf[29][0]);
+    vu_opbl(vf[25], K_MUL, vf[25], vf[29], 0, acc, 1, 1, 1);
+    vu_opbl(vf[26], K_MUL, vf[26], vf[29], 0, acc, 1, 1, 1);
+    vu_opbl(vf[27], K_MUL, vf[27], vf[29], 0, acc, 1, 1, 1);
+    vu_op(vf[25], K_ADD, vf[25], p[0], acc, 1, 1, 1);
+    vu_op(vf[26], K_ADD, vf[26], p[1], acc, 1, 1, 1);
+    *np += 2 + 22;
+    *cx += 7; /* 145 / 160, 14b / 166 (WAITQ), and 136 / 12c after the return */
+    return nat_addf(vf[27], p[2]);
+}
+/* 11a: the edge from the vertex at vi8 - 3 (vf17-19) to the one at vi8 (vf21-23): the first kept, and where it
+ * crosses the plane (bit vi5 of the first's CLIPW, vi6 of the second's; vf30.x the side) */
+static u32 nat_edge(u32 *np, u32 *cx) {
+    u32 m, i;
+    vu_op(vf[17], K_ADD, vf[20], vf[21], acc, 1, 1, 1);
+    vu_put(vf[21], NAT_M(vi[8]), 0xf);
+    vi[8] = (u16)(vi[8] + 1);
+    vu_op(vf[18], K_ADD, vf[20], vf[22], acc, 1, 1, 1);
+    vu_put(vf[22], NAT_M(vi[8]), 0xf);
+    vi[8] = (u16)(vi[8] + 1);
+    vu_op(vf[19], K_ADD, vf[20], vf[23], acc, 1, 1, 1);
+    vu_put(vf[23], NAT_M(vi[8]), 0xf);
+    vi[8] = (u16)(vi[8] + 1);
+    vi[13] = (u16)(vi[0] + vi[7]);
+    clip_last = vu_clipw(vf[17], vf[17]);
+    clip_last = vu_clipw(vf[21], vf[21]);
+    {
+        u32 u[4];
+        vu_opbl(u, K_MUL, vf[17], vf[30], 0, acc, 1, 1, 1);
+        vu_put(vf[26], u, 0x1);
+    }
+    m = nat_mulw30(vf[25], vf[21]);
+    vi[1] = (u16)(clip_last & 0xFFF);
+    vi[3] = (u16)(vi[1] & vi[5]);
+    vi[4] = (u16)(vi[1] & vi[6]);
+    *np += 14;
+    if (vi[3] != vi[0]) { /* the first outside */
+        *np += 2;
+        if (vi[4] != vi[0]) { /* both: nothing */
+            *np += 2;
+            return m;
+        }
+        vu_opbl(vf[25], K_SUB, vf[21], vf[25], 3, acc, 1, 1, 1);
+        vi[1] = 0x12c;
+        vu_opbl(vf[26], K_SUB, vf[17], vf[26], 3, acc, 1, 1, 1);
+        vi[11] = (u16)(vi[11] + 1);
+        *np += 2 + 4;
+        m = nat_cross(&vf[21], &vf[17], 0, np, cx);
+    } else {
+        {
+            u32 u[4];
+            vu_opbl(u, K_MUL, vf[17], vf[30], 0, acc, 1, 1, 1);
+            vu_put(vf[25], u, 0x1);
+        }
+        m = nat_mulw30(vf[26], vf[21]);
+        *np += 2;
+        if (vi[4] == vi[0]) { /* both inside: the first */
+            for (i = 0; i < 3; i++) {
+                vu_put(NAT_M(vi[9]), vf[17 + i], 0xf);
+                vi[9] = (u16)(vi[9] + 1);
+            }
+            vi[11] = (u16)(vi[11] + 1);
+            *np += 4 + 2;
+            return m;
+        }
+        vu_opbl(vf[25], K_SUB, vf[17], vf[25], 3, acc, 1, 1, 1);
+        vi[1] = 0x136;
+        vu_opbl(vf[26], K_SUB, vf[21], vf[26], 3, acc, 1, 1, 1);
+        vi[11] = (u16)(vi[11] + 2);
+        *np += 4 + 4;
+        m = nat_cross(&vf[17], &vf[21], 1, np, cx);
+    }
+    for (i = 0; i < 3; i++) {
+        vu_put(NAT_M(vi[9]), vf[25 + i], 0xf);
+        vi[9] = (u16)(vi[9] + 1);
+    }
+    return m;
+}
+static u32 nat_clip(u32 *np, u32 *cx) {
+    /* the five planes: the bits of the two ends, vf30.x, the axis, the buffer to cut from (into the other) */
+    static const u16 pl[5][4] = {
+        { 0x800, 0x20, 2, 0x58 }, { 0x80, 2, 0, 0x80 }, { 0x40, 1, 0, 0x58 }, { 0x200, 8, 1, 0x80 }, { 0x100, 4, 1, 0x58 },
+    };
+    static const u32 side[5] = { 0xBF800000u, 0xBF800000u, 0x3F800000u, 0xBF800000u, 0x3F800000u };
+    u32 m = 0, u[4], k;
+    int p;
+    /* 05e-064: vf23 / vf24 and vi2 / vi3 / vi7 / vi10 kept on the stack at vi14 */
+    vi[14] = (u16)(vi[14] - 1);
+    vu_put(NAT_M(vi[14]), vf[23], 0xf);
+    vi[14] = (u16)(vi[14] - 1);
+    vu_put(NAT_M(vi[14]), vf[24], 0xf);
+    vi[14] = (u16)(vi[14] - 1);
+    NAT_M(vi[14])[0] = vi[2];
+    NAT_M(vi[14])[1] = vi[3];
+    NAT_M(vi[14])[2] = vi[7];
+    NAT_M(vi[14])[3] = vi[10];
+    /* 065-07f: the triangle into the buffer at 58 (each vertex the view-space position, the colour, ST; the first
+     * again after the last), the colours and STs as floats */
+    vi[8] = 0x58;
+    vi[9] = 0x80;
+    vu_put(NAT_M(vi[8] + 0), vf[22], 0xf);
+    vu_put(NAT_M(vi[8] + 3), vf[23], 0xf);
+    vu_put(NAT_M(vi[8] + 6), vf[24], 0xf);
+    vu_put(NAT_M(vi[8] + 9), vf[22], 0xf);
+    vu_put(vf[22], NAT_M(vi[7] - 9), 0xf);
+    vu_put(vf[23], NAT_M(vi[7] - 6), 0xf);
+    vu_put(vf[24], NAT_M(vi[7] - 3), 0xf);
+    vu_put(vf[25], NAT_M(vi[3] - 7), 0xf);
+    vu_itof(u, vf[22], 0);
+    vu_put(vf[26], NAT_M(vi[3] - 4), 0xf);
+    vu_put(vf[22], u, 0xf);
+    vu_itof(u, vf[23], 0);
+    vu_put(vf[27], NAT_M(vi[3] - 1), 0xf);
+    vu_put(vf[23], u, 0xf);
+    vu_itof(u, vf[24], 0);
+    vi[5] = 0x800;
+    vu_put(vf[24], u, 0xf);
+    for (k = 25; k <= 27; k++) {
+        vu_itof(u, vf[k], 2);
+        vu_put(vf[k], u, 0xc);
+    }
+    for (k = 25; k <= 27; k++) {
+        vu_opbl(u, K_ADD, vf[0], vf[0], 3, acc, 1, 1, 1);
+        vu_put(vf[k], u, 0x2);
+    }
+    vu_opbl(vf[20], K_MUL, vf[20], vf[0], 0, acc, 1, 1, 1);
+    vu_put(NAT_M(vi[8] + 2), vf[25], 0xf);
+    vu_put(NAT_M(vi[8] + 5), vf[26], 0xf);
+    vu_put(NAT_M(vi[8] + 8), vf[27], 0xf);
+    vu_put(NAT_M(vi[8] + 11), vf[25], 0xf);
+    vu_put(NAT_M(vi[8] + 1), vf[22], 0xf);
+    vu_put(NAT_M(vi[8] + 4), vf[23], 0xf);
+    vu_put(NAT_M(vi[8] + 7), vf[24], 0xf);
+    vu_put(NAT_M(vi[8] + 10), vf[22], 0xf);
+    *np += 34;
+    *cx += 1; /* 078 */
+    /* 080-0d9: the planes */
+    for (p = 0; p < 5; p++) {
+        u16 src = pl[p][3], dst = (u16)(src ^ (0x58 ^ 0x80));
+        vf[30][0] = side[p];
+        vi[6] = pl[p][1];
+        vi[7] = pl[p][2];
+        vi[8] = src;
+        for (k = 21; k <= 23; k++) {
+            vu_put(vf[k], NAT_M(vi[8]), 0xf);
+            vi[8] = (u16)(vi[8] + 1);
+        }
+        vi[9] = dst;
+        vi[10] = p ? vi[11] : 3;
+        vi[11] = 0;
+        *np += 9;
+        do {
+            vi[10] = (u16)(vi[10] - 1);
+            m = nat_edge(np, cx);
+            *np += 5;
+        } while (vi[10] != vi[0]);
+        /* 112: the first vertex out again after the last */
+        vi[8] = dst;
+        vu_put(vf[21], NAT_M(vi[8] + 0), 0xf);
+        vu_put(vf[22], NAT_M(vi[8] + 1), 0xf);
+        vu_put(vf[23], NAT_M(vi[8] + 2), 0xf);
+        for (k = 21; k <= 23; k++) {
+            vu_put(NAT_M(vi[9]), vf[k], 0xf);
+            vi[9] = (u16)(vi[9] + 1);
+        }
+        *np += 2 + 8 + 2;
+        if (p < 4) vi[5] = pl[p + 1][0];
+        else vi[8] = 0x80;
+        if (vi[11] == vi[0]) goto done;
+    }
+    /* 0da-0e8: the polygon's first vertex into clip space, a GIF tag kicked alone, then the fan's (vi11 the count) */
+    vi[3] = (u16)(vi[0] + vi[8]);
+    vu_put(vf[20], NAT_M(vi[3]), 0xf);
+    vi[10] = (u16)(vi[0] + vi[11]);
+    vi[2] = 0x30;
+    vi[7] = (u16)(vi[2] + 2);
+    vu_opbl(acc, K_MUL, vf[1], vf[20], 0, acc, 1, 1, 1);
+    vi[11] = 0x7fff;
+    vu_opbl(acc, K_MADD, vf[2], vf[20], 1, acc, 1, 1, 1);
+    vi[11] = (u16)(vi[11] + 1);
+    vu_opbl(acc, K_MADD, vf[3], vf[20], 2, acc, 1, 1, 1);
+    NAT_M(vi[2])[0] = vi[11];
+    vu_opbl(vf[25], K_MADD, vf[4], vf[20], 3, acc, 1, 1, 1);
+    vi[4] = 3;
+    vi[11] = (u16)(vi[10] + 0x7fff);
+    vi[11] = (u16)(vi[11] + 1);
+    kick(vi[2]);
+    q_reg = qop(0x38, vf[0][3], vf[25][3]);
+    NAT_M(vi[2])[0] = vi[11];
+    *np += 15;
+    *cx += 5; /* 0e8 (WAITQ) */
+    /* 0e9-106: each vertex projected and put out, the next into clip space; from the third on the fan's triangle
+     * tested (the flags word ANDed with the MAC flag of its cross product's z times the flags word as a float):
+     * a back face drops the polygon */
+    for (;;) {
+        int pos;
+        vu_put(vf[9], vf[10], 0xf);
+        vu_put(vf[10], vf[11], 0xf);
+        vu_opb(vf[25], K_MUL, vf[25], &q_reg, acc, 1, 1, 1);
+        vu_put(vf[29], NAT_M(vi[3] + 2), 0xf);
+        vu_put(vf[27], NAT_M(vi[3] + 1), 0xf);
+        vi[10] = (u16)(vi[10] - 1);
+        vu_op(vf[21], K_SUB, vf[10], vf[9], acc, 1, 1, 1);
+        vi[3] = (u16)(vi[3] + 3);
+        vu_op(vf[26], K_SUB, vf[25], vf[9], acc, 1, 1, 1);
+        vu_put(vf[11], vf[25], 0xf);
+        vu_opb(u, K_MUL, vf[0], &i_reg, acc, 1, 1, 1);
+        vu_put(vf[20], NAT_M(vi[3]), 0xf);
+        vu_put(vf[25], u, 0x1);
+        vu_ftoi(u, vf[27], 0);
+        vi[4] = (u16)(vi[4] - 1);
+        vu_put(vf[27], u, 0xf);
+        vu_opb(u, K_MUL, vf[29], &q_reg, acc, 1, 1, 1);
+        vi[8] = (u16)(vf[8][3]);
+        vu_put(vf[29], u, 0xe);
+        { /* opmula.xyz ACC, vf26, vf21 */
+            u32 sa[4] = { vf[26][1], vf[26][2], vf[26][0], 0 };
+            u32 sb[4] = { vf[21][2], vf[21][0], vf[21][1], 0 };
+            if (!vu_ope(u, K_MUL, sa, sb, acc, 0xe, 0)) {
+                u[0] = fo(fin(vf[26][1]) * fin(vf[21][2]));
+                u[1] = fo(fin(vf[26][2]) * fin(vf[21][0]));
+                u[2] = fo(fin(vf[26][0]) * fin(vf[21][1]));
+            }
+            vu_put(acc, u, 0xe);
+        }
+        vu_ftoi(u, vf[25], 1);
+        vu_put(vf[25], u, 0xf);
+        { /* opmsub.xyz vf26, vf21, vf26 */
+            u32 sa[4] = { vf[21][1], vf[21][2], vf[21][0], 0 };
+            u32 sb[4] = { vf[26][2], vf[26][0], vf[26][1], 0 };
+            if (!vu_ope(u, K_MSUB, sa, sb, acc, 0xe, 0)) {
+                u[0] = fo(fin(acc[0]) - fin(vf[21][1]) * fin(vf[26][2]));
+                u[1] = fo(fin(acc[1]) - fin(vf[21][2]) * fin(vf[26][0]));
+                u[2] = fo(fin(acc[2]) - fin(vf[21][0]) * fin(vf[26][1]));
+            }
+            vu_put(NAT_M(vi[7]), vf[27], 0xf);
+            vu_put(vf[26], u, 0xe);
+        }
+        vu_opbl(acc, K_MUL, vf[1], vf[20], 0, acc, 1, 1, 1);
+        vu_put(NAT_M(vi[7] - 1), vf[29], 0xf);
+        vu_opbl(acc, K_MADD, vf[2], vf[20], 1, acc, 1, 1, 1);
+        vi[13] = (u16)(vi[0] + vi[8]);
+        vu_opbl(acc, K_MADD, vf[3], vf[20], 2, acc, 1, 1, 1);
+        vu_put(NAT_M(vi[7] + 1), vf[25], 0xf);
+        vu_opbl(vf[25], K_MADD, vf[4], vf[20], 3, acc, 1, 1, 1);
+        vi[7] = (u16)(vi[7] + 3);
+        m = 0;
+        if (!vu_opbel(u, K_MUL, vf[26], vf[8], 3, acc, 0x2, &m)) {
+            f32 r2 = fin(vf[26][2]) * fin(vf[8][3]);
+            u[2] = fout(r2, 2, &m);
+        }
+        vu_put(vf[26], u, 0x2);
+        q_reg = qop(0x38, vf[0][3], vf[25][3]);
+        pos = (s16)vi[4] > 0;
+        vi[13] = (u16)(vi[13] & m);
+        *np += 23;
+        if (!pos) {
+            *np += 2;
+            if (vi[13] != vi[0]) { /* a back face */
+                *np += 2;
+                goto done;
+            }
+        }
+        *np += 2;
+        if (vi[10] == vi[0]) {
+            kick(vi[2]);
+            *np += 1;
+            if (pos) *cx += 1; /* 107's DIV: the one at 0fd still running */
+            break;
+        }
+    }
+done:
+    /* 107-10f: Q again, vi2 / vi3 / vi7 / vi10 and vf24 / vf23 back from the stack, vf20.w 1 */
+    q_reg = qop(0x38, vf[0][3], vf[28][3]);
+    vi[2] = (u16)NAT_M(vi[14])[0];
+    vi[3] = (u16)NAT_M(vi[14])[1];
+    vi[7] = (u16)NAT_M(vi[14])[2];
+    vi[10] = (u16)NAT_M(vi[14])[3];
+    vi[14] = (u16)(vi[14] + 1);
+    vu_put(vf[24], NAT_M(vi[14]), 0xf);
+    vi[14] = (u16)(vi[14] + 1);
+    vu_put(vf[23], NAT_M(vi[14]), 0xf);
+    vi[14] = (u16)(vi[14] + 1);
+    vf[20][3] = vf[0][3];
+    *np += 9;
+    return m;
+}
+
 /* P0, from 00c (and 04e, its branch there): the map renderer, a strip of vertices at TOP (a header qword, the
  * vertex count in x; each vertex the position (w its flags), the colour as integers, ST in 20.12).  The
  * program is software-pipelined: each pass transforms one vertex into view space (vf13-16) and the one
@@ -482,12 +829,9 @@ static __inline__ u16 nat_fcor(u32 fc, u32 x) { return (u16)(((fc | x) & 0xFFFFF
  * view-space vertices: CLIPW of each against its w, the vertex's flags ANDed with the MAC flags of the cross
  * product's z times the flags word as a float (the strip's winding), the ADC set (XYZF2's w to vi12) for a
  * back face or a vertex flagged 0 or a triangle wholly outside one plane.  Written here pass for pass in the
- * translation's order.  A triangle that crosses a plane goes to the program's clipper (05e on), which this does
- * not do: there it gives up, before the kick, and the translation runs the whole run again from the start (its
- * writes so far are the translation's own, to the same places: the output is after the input, so nothing it
- * reads was changed) */
+ * translation's order.  A triangle that crosses a plane goes to the program's clipper (05e on, nat_clip()) */
 static int nat_0(u32 pc) {
-    u32 np, m = 0, q, fc = 0, clip0 = clip_last, wI, it = 0, b22, b23, b24;
+    u32 np, m = 0, q, fc = 0, wI, it = 0, cx = 0, b22, b23, b24;
     u16 i1, i2, i3, i4, i5, i6, i7, i10, i11, i12, i13 = vi[13];
     uint32x4_t v5 = VU_LD(vf[5]), v6 = VU_LD(vf[6]), v7 = VU_LD(vf[7]), v8 = VU_LD(vf[8]), v9 = VU_LD(vf[9]);
     uint32x4_t v12, v20, v21 = VU_LD(vf[21]), v22, v23, v24, v25 = VU_LD(vf[25]), v26 = VU_LD(vf[26]);
@@ -646,9 +990,22 @@ static int nat_0(u32 pc) {
                         np += 2;
                     }
                 }
-                if (!cull) { /* the clipper: the translation does this run */
-                    clip_last = clip0;
-                    return 0;
+                if (!cull) { /* the clipper, on the VU's registers; then the ADC on the triangle as for a cull */
+                    vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[5] = i5; vi[6] = i6; vi[7] = i7; vi[10] = i10;
+                    vi[11] = i11; vi[12] = i12; vi[13] = i13;
+                    VU_ST(vf[5], v5); VU_ST(vf[6], v6); VU_ST(vf[7], v7); VU_ST(vf[8], v8); VU_ST(vf[9], v9);
+                    VU_ST(vf[12], v12); VU_ST(vf[20], v20); VU_ST(vf[21], v21); VU_ST(vf[22], v22); VU_ST(vf[23], v23);
+                    VU_ST(vf[24], v24); VU_ST(vf[25], v25); VU_ST(vf[26], v26); VU_ST(vf[27], v27); VU_ST(vf[28], v28);
+                    VU_ST(vf[29], v29); VU_ST(acc, a);
+                    m = nat_clip(&np, &cx);
+                    fc = clip_last;
+                    i1 = vi[1]; i2 = vi[2]; i3 = vi[3]; i4 = vi[4]; i5 = vi[5]; i6 = vi[6]; i7 = vi[7]; i10 = vi[10];
+                    i11 = vi[11]; i12 = vi[12]; i13 = vi[13];
+                    v5 = VU_LD(vf[5]); v6 = VU_LD(vf[6]); v7 = VU_LD(vf[7]); v8 = VU_LD(vf[8]); v9 = VU_LD(vf[9]);
+                    v12 = VU_LD(vf[12]); v20 = VU_LD(vf[20]); v21 = VU_LD(vf[21]); v22 = VU_LD(vf[22]);
+                    v23 = VU_LD(vf[23]); v24 = VU_LD(vf[24]); v25 = VU_LD(vf[25]); v26 = VU_LD(vf[26]);
+                    v27 = VU_LD(vf[27]); v28 = VU_LD(vf[28]); v29 = VU_LD(vf[29]); a = VU_LD(acc);
+                    cull = 1;
                 }
             } else {
                 np += 2;
@@ -677,16 +1034,15 @@ static int nat_0(u32 pc) {
     clip_now = fc;
     q_reg = q;
     st.insns += np;
-    st.cycles += np + 15 + 3 * it; /* the stalls: 01f / 021 / 022, 026, 02e */
+    st.cycles += np + 15 + 3 * it + cx; /* the stalls: 01f / 021 / 022, 026, 02e; the clipper's */
     kick(i2);
     tpc = 0x4e & (MICRO_N - 1);
     return 1;
 }
 #endif
 
-/* the program numbers (tools/vu/find_vu1.py's) that have one.  A native run answers 0 for an entry or a case it
- * does not do, and the translation runs it from the start: it has changed nothing the translation reads (P0's
- * writes so far are the translation's own, to the same places) */
+/* the program numbers (tools/vu/find_vu1.py's) that have one.  A native run answers 0, before it changes
+ * anything, for an entry or a case it does not do, and the translation runs it */
 static int (*nat_run(int num))(u32) {
     if (!kh1_vu1_native) return 0;
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)

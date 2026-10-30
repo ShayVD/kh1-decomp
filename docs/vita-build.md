@@ -1280,15 +1280,19 @@ and shifted in, where the program does three CLIPWs a pass); the vertex's flags 
 cross product's z times the flags word as a float; the ADC (XYZF2's w to vi12) for a back face, a vertex flagged 0,
 or a triangle wholly outside one plane (the FCOR chain). It is written pass for pass in the translation's order.
 
-A triangle that crosses a plane goes to the program's clipper (05e on: the triangle clipped against the six
-planes into a packet of its own, kicked there). nat_0 does not do that: it gives up before its kick, and the
-translation runs the run again from the start. Its writes so far are the translation's own, to the same places,
-and the output is after the input, so nothing the translation reads was changed; clip_last is put back. About
-14% of P0 runs clip a triangle (1.5% of triangles).
+A triangle that crosses a plane goes to the program's clipper (05e-111, `nat_clip`): the triangle cut against
+five planes in turn (the polygon, up to nine vertices, between the buffers at 58 and 80; 11a an edge, 140 / 15b
+where it crosses), then into clip space and kicked as a fan of its own at 30, the fan's triangles tested for a
+back face as the strip's are. nat_0 puts its registers back into vf[] / vi[] / acc, runs the clipper on them
+with the translation's own operations (vu_op() and the rest, in its order; only ~1.5% of triangles get here),
+and takes them back. The clipper's MAC flag is that of its last FMAC whose flag the program can read (123 / 131,
+15a / 175, 0fa); its stalls are 078, 0e8 (WAITQ), 7 for each crossing worked out, and 1 at 107 when the last
+vertex skipped the back-face test (0fd's DIV still running).
 
 All 4,467 dumped P0 runs match the translation (registers, VU memory, flags, counts, kicks); a 6,500-frame
-qemu-arm run gives main's 130 digests and vu1 lines. ARM instructions over the 3,665 runs of the denser set,
-the reruns included: 108.2M -> 79.1M (-27%); the reruns are ~22M of it, so a native clipper is the next step.
+qemu-arm run gives main's 130 digests and vu1 lines. ARM instructions over the 3,665 runs of the denser set:
+108.2M (translation) -> 79.1M (native, the clipping runs given up and run again by the translation) -> 71.5M
+(the clipper native too, -34% on the translation).
 
 ## The flashing floor: one-byte enums (2026-10-28)
 
