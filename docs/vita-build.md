@@ -9,8 +9,8 @@ Vita3K"). What it is, how to build it, what it does and does not do.
 the Vita's Cortex-A9 with vitasdk and packs `out/vita/kh1-decomp.vpk`:
 
 - all 519 game C files and the 7 drafts of the unmatched functions, unchanged (`-DKH1_VITA`,
-  `-fsigned-char` as on the EE, `-ffp-contract=off`, gnu89, `-O3` since 2026-10-30, the platform code with LTO:
-  "Clocks and compiler flags" below);
+  `-fsigned-char` as on the EE, `-ffp-contract=off`, gnu89, `-O2`; `--opt` picks -O3 / LTO, measured no
+  faster: "Clocks and compiler flags" below);
 - src/data/*.s's pieces (the user's ELF bytes, cut by the PS2 `make`), assembled for ARM;
 - the null platform's GS memory model, register file and DMA chain walk (host/null/ but main.c and
   pad.c), the shared port code (host/port/), and the Vita platform (host/vita/):
@@ -1471,14 +1471,14 @@ accepted. Nothing more to get here.
 --with-fpu=neon --with-float=hard --with-mode=thumb` (`arm-vita-eabi-gcc -v`; `-Q --help=target` shows
 `armv7-a+simd`, NEON, hard float, Thumb-2), so `-mcpu=cortex-a9 -mfpu=neon` change no instruction.
 
-**`--opt` (tools/vita/build.py, or `KH1_VITA_OPT=`)** picks the optimisation; the default is now `o3lto`:
+**`--opt` (tools/vita/build.py, or `KH1_VITA_OPT=`)** picks the optimisation; the default stays `o2` (o3lto measured no faster on a Vita, below):
 
 | `--opt` | game files (src/, ovl/) | platform (host/null, host/port, host/vita) | link |
 |---|---|---|---|
-| `o2` (main before this) | -O2 | -O2 | |
+| `o2` (the default) | -O2 | -O2 | |
 | `o3` | -O3 | -O3 | |
 | `lto` | -O2 | -O2, LTO | -O2 -flto |
-| `o3lto` (the default) | -O3 | -O3, LTO | -O3 -flto |
+| `o3lto` | -O3 | -O3, LTO | -O3 -flto |
 
 - **LTO is for the platform only.** The game's files declare a function as a variable where they take its
   address (`extern u8 func_x[]`, as the matching code needs), which is legal one file at a time but LTO's
@@ -1509,7 +1509,15 @@ instructions (-5%); the spin itself 570M -> 162M (the threads wait less, or wait
 the Vita's). An instruction count does not show what -O3 is mostly for (scheduling, unrolled loops on the
 A9's dual issue) nor the cost of the larger code in the A9's 32 KiB I-cache, so **the Vita decides**: compare a
 Vita log of the Dive (pictures a second, the `vu1 programs:` and `gs worker ops:` lines) against main's
-9c32dca (15.7 a second). If o3lto is slower, `--opt o3` or `lto` alone are the next to try.
+9c32dca (15.7 a second).
+
+**On a Vita (o3lto-b, Shay's, English disc, 2026-10-30): no measurable gain.** Pictures a second over frames
+1,600-6,200 of the Dive (from the watchdog lines' frame and time, two game frames a picture): 16.1, against
+15.5-16.3 for the day's other builds from main's code (main 9c32dca's own run 15.7). The per-window medians over
+the same frames match main's run: P13 21 ns a pair (22), P4 45 (45), the GS worker busy 2,169 ms (2,184), the
+GPU thread 1,311 (1,304), VU1 1,057 ms (1,060), the DMA walks 1,507 (1,486). The A9's time is in memory traffic
+and the threads' hand-offs, which neither flag changes. So the default stays o2 (smaller code, half the build
+time, no LTO surprises like the stack size below); `--opt` stays for later tries.
 
 Where the instructions go in those frames (o2, the spin left out), for the hand-written NEON question:
 P0 native (nat_0) ~11%, the translated tr_12 ~7%, the GS worker's kicks and GIF decode (gs_kick,

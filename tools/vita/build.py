@@ -58,7 +58,7 @@ OPTS = {
     "lto": (["-O2"], LTO, ["-O2", "-flto=auto"]),
     "o3lto": (["-O3"], LTO, ["-O3", "-flto=auto"]),
 }
-DEFAULT_OPT = "o3lto"
+DEFAULT_OPT = "o2"  # o3lto measured no faster on a Vita (docs/vita-build.md "Clocks and compiler flags")
 
 # gcc 14 and later refuse these by default (vitasdk's gcc is 15; the Linux cross gcc may be older)
 CFLAGS_GCC14 = ["-Wno-error=return-mismatch", "-Wno-error=declaration-missing-parameter-type"]
