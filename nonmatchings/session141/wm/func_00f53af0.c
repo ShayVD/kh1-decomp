@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 194 -> 186, hill3o statement order. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f53af0 near miss: 332 -> 332 words, score 204 -> 194 (aligned diff 108 -> 104). port.py of gb func_00f2c9f8's round 36 draft, the round 36 order from tools/ovl/hill3.py (score-ranked, strict dependency rules). See the gb file for what is left. Earlier header below. */
 /* wm.x func_00f53af0 near miss: 332 words differ, score 204 (ours 1400 bytes, original 1376). Port of gb func_00f2c9f8 (nonmatchings/session141/gb), which has the same diff and notes. Symbols mapped: D_00FA5B34/5B04/5AF0 = gb D_00F613B4/61384/61370, D_0108CE10 = D_00F80650, D_00F9B540 = D_00F56DC0. */
 typedef struct { u16 x : 4; u16 y : 4; u16 z : 4; u16 r : 4; } GbPos;
@@ -18,14 +19,14 @@ u64 *func_00f53758(GbPos, GbPos, void *, s32, u64 *);
 u64 *func_00f549d0(u64 *, void *);
 
 s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
-    u64 *p;
-    u64 *q;
-    s32 mode;
-    s32 type;
-    u32 col;
-    u32 col2;
     GbPos size;
+    u32 col;
+    u64 *p;
     GbPos one;
+    u64 *q;
+    s32 type;
+    u32 col2;
+    s32 mode;
     if (D_00FA5B34 == 0) {
         return arg0;
     }
@@ -33,8 +34,8 @@ s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
     p = func_00f66b78(*pp);
     p[1] = 24;
     p[0] = 0x720000006F00;
-    *pp = p + 2;
     func_00f66b90(p + 2);
+    *pp = p + 2;
     if (D_00FA5B34 == 1) {
         if (D_00F9B540->x74 & 2) {
             mode = 6;
@@ -51,14 +52,14 @@ s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
         case 4:
         case 5:
         case 6:
-            col = 0x800078D2;
             p = func_00f66b78(*pp);
             p[0] = ((u64)D_00FA5B04 << 32) | 72;
             p[1] = 66;
             q = p + 2;
+            *pp = p + 4;
+            col = 0x800078D2;
             q[0] = 0x30000;
             q[1] = 71;
-            *pp = p + 4;
             func_00f66b90(p + 4);
             one.x = 1;
             one.y = 1;
@@ -146,9 +147,9 @@ s32 func_00f53af0(s32 arg0, u64 **pp, Box *b) {
     p[1] = 66;
     q = p + 2;
     q[1] = 71;
-    q[0] = 0x5000D;
     *pp = p + 4;
     func_00f66b90(p + 4);
     func_00f66f78(arg0, func_00f66ae0(*pp));
     return arg0 + 1;
+    q[0] = 0x5000D;
 }
