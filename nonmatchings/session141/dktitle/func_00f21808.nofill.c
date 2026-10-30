@@ -1,3 +1,4 @@
+/* Round 45 wwm2: score 45 -> 39 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dktitle.x func_00f21808: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 59 -> 55 with sclimb.py (store order). Session 141 round 21 (wwm1): score 55 -> 45 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). */
 
 typedef struct { f32 v; s32 st; s32 t; } Fade;
