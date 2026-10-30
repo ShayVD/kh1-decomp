@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 59 -> 5 (2 words). The masked msdscan showed one li a0,1 in the target, so func_001fd720 takes an argument: func_001fd720(1). The nops after the soft-double libcalls mean the nofill mode. hill3o then reordered both global-store blocks. D_0108F6B8.x0 is stored before x4, and Mode.f8 returns s32. Left: the lui for the final D_0108F6B4 store is in v1, where the original has v0. Moving the store, u32 k, and casting either vtable call to void did not fix it. */
 /* Round 39 (wwm2): wm.x func_00f78d50 near miss: score 67 -> 59 (124 words). The loop stores in address order: D_0108F7C0[i], then D_0108F830[i], then D_0108F8A0[i] (alias-pattern sweep, /tmp/claude-0/s141/r39/as2.py). Earlier header below. */
 /* 124 words, score 67 (was 126/71). Round 32 wwm2: hill2 reordered the global clears; ctx2 gives nothing. Earlier header: func_00f78d50: score 71, 126 words differ. original leaves soft-double libcall delay slots empty; global stores scheduled differently; all flag modes tried */
 typedef struct {
@@ -9,7 +10,7 @@ typedef struct {
 typedef struct {
     void (*f0)(void);
     void (*f4)(void);
-    void (*f8)(void *, s32, s32);
+    s32 (*f8)(void *, s32, s32);
 } Mode;
 
 extern s32 D_00FB5BB0;
@@ -34,7 +35,7 @@ extern f32 D_0108F918[6][4];
 extern s32 D_00FB5EAC;
 extern Mode *D_00FB5EA8;
 extern s32 D_0108F6B4;
-void func_001fd720(void);
+void func_001fd720(s32);
 void func_00f206d8(s32, s32, s32);
 s32 func_0024b778(s32);
 Mode *func_0024b7a0(s32, s32, s32);
@@ -50,22 +51,22 @@ void func_00f78d50(s32 arg) {
     f32 v;
 
     D_00FB5BB0 = 1;
-    D_00FB5EC8 = 0;
-    D_00FB6164 = 0;
-    D_0108FA84 = 0;
-    D_0108F910 = 0;
     D_00FB5EC4 = 0;
-    D_0108FA80 = 0;
+    D_00FB5EC8 = 0;
+    D_0108F910 = 0;
     D_0108F914 = 0;
-    func_001fd720();
+    D_00FB6164 = 0;
+    D_0108FA80 = 0;
+    D_0108FA84 = 0;
+    func_001fd720(1);
     func_00f206d8(0, 0, 0);
-    D_00FB610C = -1;
-    D_0108F730[1] = 1;
-    D_0108F6B8.x4 = 0;
     D_00FB5EC0 = 0;
     D_0108F6B8.x0 = 0;
-    D_0108F730[0] = 1;
+    D_00FB610C = -1;
+    D_0108F6B8.x4 = 0;
     D_0108F6B8.x8 = 0;
+    D_0108F730[0] = 1;
+    D_0108F730[1] = 1;
     for (i = 0; i < 27; i++) {
         D_0108F7C0[i] = D_00FB5BBC;
         D_0108F830[i] = D_00FB5BC0;
