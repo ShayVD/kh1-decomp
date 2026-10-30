@@ -162,11 +162,11 @@ void func_00f6f2a8(void)
         func_0024e468(2);
     }
     for (;;) {
-        if (D_002C5AD0.x8 & 0x4000) {
-            func_0011d768(3);
-            break;
-        }
         t = D_002C5AD0.x8;
+        if (t & 0x4000) {
+            func_0011d768(3);
+            goto out;
+        }
         old = sel;
         if (((t | t >> 24) & 0x10) && sel == 0) {
             sel = n - 1;
@@ -353,6 +353,7 @@ void func_00f6f2a8(void)
         }
         func_0024e468(1);
     }
+out:
     D_0108F1E8 = 0.0f;
     func_00f6b5d0(4, 0, D_00FB4A70);
     D_0108F2B4 = 1;
