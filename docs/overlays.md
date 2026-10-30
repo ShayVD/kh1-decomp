@@ -739,6 +739,44 @@ sweeping orders: try s32 versus a pointer, a struct versus an array, or the type
 It is not universal. Retyping did not help f3bc48 (conds/v90[3]) or f38630 (x00/x40). It also did
 nothing for f78458, which stores to two plain globals; distinct globals never alias each other.
 
+### gcse's hash table size as a register lever (xs_dumbo func_00f20570, wwm2 round 55)
+
+In f20570 the only diff left was that %hi(D_00F2320C) and %hi(D_00F23214) used s1 and s2 the other
+way round from the target. Both are pseudos that gcse's PRE creates: it puts one copy at the end of
+each predecessor block. The `-dl` refs/live-length priority did not explain the swap. The pseudo
+numbers did, and gcse assigns those itself.
+
+- **How gcse numbers them.** `pre_delete` gives each redundant expression its reaching pseudo by
+  walking the expression hash table bucket by bucket. An expression's bucket is a hash of its content
+  (the symbol's name for a SYMBOL_REF, not its address) mod the table size. The lower pseudo usually
+  gets the lower s register.
+- **The table size is max_cuid / 2 | 1.** max_cuid is the number of insns when gcse runs, so adding
+  or removing insns changes the size and can swap two buckets.
+  - In f20570 the table had 53 buckets (max_cuid 104-107): %hi(D_00F23214) was in bucket 0 and
+    %hi(D_00F2320C) in bucket 45, so D_00F23214 got the lower pseudo.
+  - With 55 buckets (+3 to +6 insns) they are in buckets 52 and 48, which is the target's order.
+- **How to read it.** `python3 tools/ovl/gcsebucket.py draft.c [--grep=REGEX]` compiles a draft
+  (with its mode's flags) using `-dG`. It prints the bucket count, the max_cuid range that count
+  implies, and the bucket of each symbol expression. In a raw dump the same data is under
+  "Expression hash table (N buckets, M entries)", as "Index i (hash value h)".
+- **Plain C, not empty asms.** N copies of `__asm__ volatile("")` add N insns, so a scan over N
+  finds a bucket count that works. That is only a hint: an empty asm that reaches 0 words is not a
+  match (docs/matching-tips.md). An asm is also a scheduling barrier, and its count has no meaning in
+  the original source. The plain-C fix adds insns that exist only from cse1 to gcse:
+  - Zero locals set after the early return and used only in a block that several paths join:
+    `ret = 0; clr = 0; none = 0;` ... `if (D_00F2320C != none)`, `D_00F23214 = clr;`, `return ret;`.
+  - cse1 cannot fold them across the join. gcse's constant propagation folds them, and flow deletes
+    the dead sets, so the final code is unchanged.
+  - A use inside a block that cse1 can reach along a single path (one case of the switch) is folded
+    early and counts for nothing.
+  - Locals declared before the early return also shift local-alloc (v0 for a0 in the first block).
+- **It also moves other gcse pseudos.** In f222f8, two f32 zero locals in a closing loop gave
+  gcse's copies the target's stack slots 76-96 (score 93 -> 47).
+- **When to try it.** The remaining diff is gcse-created pseudos (%hi parts, PRE copies, hoisted
+  constants) in swapped registers or swapped stack slots, and order and type changes have not
+  fixed it. Scan the insn count with empty asms first. If some count gives 0 words, find a plain-C
+  change that adds that many insns.
+
 ### Statement order: tools/ovl/hill3.py (wgb, rounds 35-36)
 
 Many near misses differ only in statement order: sched1 breaks ties by the original insn order, and
