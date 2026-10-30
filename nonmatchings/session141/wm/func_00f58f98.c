@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 176 -> 168, func_00f55190 and func_00f4e3f8 declared s32. Earlier header below. */
 /* wm.x func_00f58f98 near miss: 463 words differ, score 176 (ours 2032 bytes, original 1992). Port of gb func_00f31ea0 (nonmatchings/session141/gb) via tools/ovl/port.py, with the ease tables mapped by hand (D_00FA5D50 / D_00FA5D78 = gb D_00F615D0 / D_00F615F8); same diff, see the gb file for notes. */
 typedef struct {
     u8 pad0[72];
@@ -34,7 +35,7 @@ extern u8 D_00FA5D78[];
 extern s32 D_0108CE88;
 extern u64 D_0108CE90[8];
 extern u8 D_00379F28[][4];
-void func_00f55190(void);
+s32 func_00f55190(void);
 void func_00f551e8(void);
 void func_00f55298(void);
 void func_00f49430(s32, s32, s32, s32);
@@ -45,7 +46,7 @@ void func_001bfac8(void);
 s32 func_00f47158(void);
 void func_00f47268(s32, s32);
 void func_00f48aa8(s32);
-void func_00f4e3f8(s32);
+s32 func_00f4e3f8(s32);
 void func_00f58140(void);
 void func_00f57db0(s32);
 void func_00f59820(s32, s32);
