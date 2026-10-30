@@ -1068,3 +1068,16 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
   - Loop 1 reads flags through `p = &D_01067FE0[i].flags` (id stays D_01067FE0[i].id) and returns `i * sizeof + (u32)b`.
   - Loop 2 reaches flags/mask/id/conds/cnt through a struct view `H3bc48 { flags, mask, id, conds, cnt }` of &D_01067FE0[i].flags. That view alone took it from 71 to 32.
   - Left: the base is CSEd across the two loops (the target recomputes it), and bne vs bnel at the id test.
+
+## Round 51 (asm-label aliases, register priority; no matches)
+
+- **Asm-label second declaration.** `extern T *D_Xb __asm__("D_X");` names the same symbol (the reloc is against D_X), but CSE and loop.c see a different symbol_ref, so its address is neither hoisted nor shared with D_X. Caveat: gcc assumes the two names do not alias, so treat it as a stand-in wherever the global is also stored through the other name.
+- **0x00F9B540:** no distinct symbol exists for this address; D_00F9B540 itself is the symbol. f58f98 now reaches it through `D_00F9B540b __asm__("D_00F9B540")` instead of the fixed-address cast: 108 -> 74 at the exact size. The gb twin f31ea0 got the same treatment (D_00F56DC0b/D_00F61560b): 108 -> 76 at the exact size.
+- **f3bc48 30 -> 8 (416).** Loop 2 goes through `D_01067FE0b` (asm-label alias) with `b2 = D_01067FE0b` for the return. Left: bne vs bnel at the loop 1 id test, and one store pair (conds vs v80[3]).
+- **f3ac48 52 -> 4 (784).**
+  - The search loops are inlined into the body, so `if (k < 0) return;` threads straight to the epilogue.
+  - The q walk is an index loop `for (i = 0; q[i] != 1; i += 12)`: strength reduction gives the target's fresh q giv and fresh `li 1`.
+  - i/e swap: the global.c priority is floor_log2(refs)*refs/live_length. e (15 refs/53 insns) outranked i (18/86) by a hair. Splitting `e = f(i++, ..)` into `e = f(i, ..); i++;` adds one i ref and flips them.
+  - Left: one store pair, x10C vs xE8.
+- **f3a640 70 -> 42, now at the exact size (544, was 528).** Same index q walk, plus `tp = &D_00FCE390[id].t`, a local for the func_00f64c38 result, and sp->f8 before the call. Left: the target builds each sub-struct base as (id*272 + off) + D.
+- **f46070 (51):** the bits/c copy order ignores the source order (c first still emits bits first), so it is a scheduler choice. **f24380 (48):** pure register permutation, not reworked. **f28258, f7a350, f73eb0, f625f0, f31430, f549d0:** not reached or no new idea; all heavily worked before.
