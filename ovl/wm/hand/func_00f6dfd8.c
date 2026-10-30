@@ -1,6 +1,9 @@
-/* Round 53 wgb: score 71 -> 2, size-exact, port.py of gb func_00f46ee0 (colour reads as s32 local blocks declared r, a, b, g). Left: addu a2 / move a0 order in the second func_001fc308 call. Earlier header below. */
-/* Round 46 wwm2: score 77 -> 71, func_001f9438 and func_001fbcd8 declared s32. Earlier header below. */
-/* score 77 (132 words; 676 vs 672 bytes). UI draw. One extra `move a1,v1` (shared %hi for D_00FB4CEC/CE8) and scheduling around the first func_001fc308; dropping the w local gives score 50 but loads D_00FB4CE0 twice (680 bytes). The RGBA tree in the original is (r | a<<24) | (b<<16 | g<<8). Tried RGBA operand orders, statement orders, decl orders/types, all modes. */
+/* wm.x func_00f6dfd8: matched by hand. */
+#include "ovl.h"
+
+/* wm.x func_00f6dfd8: matched, port.py of gb func_00f46ee0. Each colour read is a block of s32 locals (r, a, b, g), and w + 8 goes into its own local before the func_001fc308 calls (found by decomp-permuter, wgb round 54). */
+#include "ovl.h"
+
 typedef struct {
     u8 pad0[3];
     s8 x3;
@@ -42,6 +45,7 @@ void func_00f6dfd8(Obj *o, void *ctx) {
     s32 x;
     s32 y;
     s32 w;
+    s32 w8;
 
     n = func_001bc500();
     lst = func_001bc4d0();
@@ -53,11 +57,12 @@ void func_00f6dfd8(Obj *o, void *ctx) {
     x = D_00FB4CD8;
     y = D_00FB4CDC;
     w = D_00FB4CE0;
+    w8 = w + 8;
     func_001fc308(ctx, x, y + D_00FB4CF8, 0, D_00FB4CF4, 17, 0, col, col);
     func_001fc308(ctx, x + w, y + D_00FB4CF8, 0, D_00FB4CF4, 18, 0, col, col);
     {
         s32 r = D_00FB4CE4, a = D_00FB4CF0, b = D_00FB4CEC, g = D_00FB4CE8;
-        func_001f9438(ctx, 2, x + (w + 8) / 2, y, D_00FB5918[lst[D_0108F288 * 16 + 5]], o->x5, RGBA(r, g, b, a));
+        func_001f9438(ctx, 2, x + w8 / 2, y, D_00FB5918[lst[D_0108F288 * 16 + 5]], o->x5, RGBA(r, g, b, a));
     }
     func_001f9438(ctx, o->x3, D_00FB4CFC, D_00FB4D04, 114, o->x5, RGBA(o->r, o->g, o->b, o->a));
     func_001fbcd8(ctx, 1, 4, 0, D_00FB4D00, D_00FB4D08, sum, 0, RGBA(o->r, o->g, o->b, o->a));
