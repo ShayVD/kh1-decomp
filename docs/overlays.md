@@ -677,6 +677,32 @@ lever is not general. wm func_00f584d0 (whose target computes `u+w`, `w<<4` and 
 calls) got worse with every split (74 → 107–187), and the `y + 320` local in gb func_00f28aa8
 gained nothing (round 49).
 
+### Audit values before registers (gb func_00f422e8, wm func_00f693e0, func_00f799e0, func_00f62440)
+
+A draft can be wrong about a value and still score well, because the score only counts differing
+words. gb f422e8 passed `h` as the 6th argument to func_00f41dc8 where the original passes the
+power-of-two loop result `p`. The draft sat at 73 for rounds, and its headers called the residue
+"register choice". Its msd multiset was exact apart from one `move`. With `p` it became size-exact
+at 28, and one more lever matched it, along with both wm twins. wm f62440 was ported from gb and
+still passed the gb callbacks (func_00f3b0b8/func_00f3b250) to func_001c01b0. The target builds
+`lui 0xf6` + 8624/9032, the wm twins func_00f621b0/func_00f62348 (96 → 92).
+
+Before chasing registers on a near miss, compare the values. For each `jal`, look at what sets each
+integer argument register the callee takes (a0–a3, t0–t3; f32 arguments go to $f12 and up). Then
+compare the non-sp immediates and load/store offsets. Two quick checks find most of these bugs:
+
+- An argument set by `move` in one build and computed in the other (`sll`, `addiu`, `lw`) means a
+  different variable is passed.
+- A `lui`/`addiu` pair that differs is a wrong symbol. Ported drafts should be grepped for
+  functions that are not in the overlay's own layout.tsv.
+
+Most other flags are address forms, not bugs. Examples: `lw 4(r)` against an `addiu 4` and
+`lw 0(r)`, a symbol+offset against a loaded base, or the same buffer from a different base
+register. Spill choices also show up: an argument loaded from the stack in one build and from
+an s register in the other. Check the C before changing it. A round 51 sweep of all gb and wm
+drafts (scratch script r51/audit.py, which reads callee arities from the draft's prototypes)
+found f62440 as the only other real value bug.
+
 ### Session 141 rounds 37-38 (wwm2)
 
 - **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
