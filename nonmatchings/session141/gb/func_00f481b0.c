@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 713 -> 709, func_0020be10 declared s32. Earlier header below. */
 /* Round 41 wwm2: score 837 -> 713, port.py of the wm twin func_00f6f2a8 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* score 837: gb port of wm f6f2a8 via portmap2; same remaining diffs. Round 25 wwm2. */
 typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
@@ -68,7 +69,7 @@ s32 func_001f31a8(Lay *, s32);
 void func_001f3dc0(s32);
 s32 func_001f44a0(Lay *);
 void func_0020bda8(s32);
-void func_0020be10(s32);
+s32 func_0020be10(s32);
 void func_0024d1c8(s32 *, s32, s32, s32);
 s32 func_0024d408(void);
 void func_0024e468(s32);
