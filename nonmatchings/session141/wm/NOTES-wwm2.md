@@ -1353,3 +1353,15 @@ None of the drafts below changed.
   - The 4 bytes left come from sched1 moving the hoisted `lui 0x2c` above the last two calls, into s6.
   - gb f4b978 looks like the same function (same score and sizes), so the same change should carry over.
   - Checked: the copy at /tmp/claude-0/s141/r65/gb/func_00f4b978.c (goto form plus CONTEXT_ONLY func_0024e468) scores 35 at 1236 vs 1232, down from 37 at 1252.
+
+## Round 67 (wwm2): small overlays and dktitle
+
+- **modescan** with every mode (nofill, norlo, nostrict*, nogcse*, nosi*, nosib, nogcse_nosib, nostrict_nosib, faddr, nostrict_norcse, fmam) on the round's 11 drafts: no draft improves under any other mode. No nosib signal: none of them merges two per-arm calls into one jal.
+- **Control-flow skeleton diff** (/tmp/claude-0/s141/r67/cf.py: the branch and call sequence with delay slots, target vs ours): the skeleton already matches for xs_dh_break f20288, xs_dumbo f222f8, dktitle f23aa8 and xl_limit f225b0. In those the only differences are delay-slot contents and registers. In f225b0 that is the second loop's bnezl vs our bnez, plus the `move s3,s1` copy.
+- **xs_genie f22078: 74 -> 39** (292 vs 296).
+  - The search is written as a do-while with the found path inside the loop, and `g = D_00FC1DE0; g = &g[i++];`. Setting g twice keeps loop.c from making g a pointer giv.
+  - Left: the original also leaves i*416 unreduced (its base address hoisted into a2), which -fno-strength-reduce does not reproduce either.
+  - nostrict_norcse scores 33, but no overlay file uses that mode, so the draft stays in the default mode.
+- **dktitle f24b60**: in the original, the first func_00f26648 result is stored through `addiu s0` (address first) and D_00F2C8BC is then reloaded. A `(u8 *)(void *)` cast on the call reproduces that block, but the function as a whole gets worse (281 -> 361, 482 -> 439 kept insns). Not kept.
+- **No progress** on xs_tink f20818 (tail-variant and gcse/sibcall flag sweeps all 35 or worse), xl_limit f225b0 (rp giv forms and second-loop forms are 41 or worse), xs_genie f218f8, dktitle f241c8, f26710 (sched ties), f23aa8 (registers) or xs_dumbo f222f8 (stack slots).
+- **dktitle f21808**: a 15-minute hill3 run (4,927 tries) stays at 31.
