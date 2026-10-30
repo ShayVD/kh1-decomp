@@ -1,3 +1,4 @@
+/* Round 46 (wgb): score 303 -> 295. show = 0 moves from before the switch into a case 0: default: arm, so it lands in the delay slot of the default path (move s1,zero) as in the target. Separate case 0 and default arms, or a default at the end, score worse (315-316). Guarded hill3 (300 s) found nothing more. Left: in the tail call func_00f32a38(&D_00F56DC8, D_00F56D9C, D_00F74210) the target loads the hi of D_00F74210 first, and reorg puts it in the delay slot of a bnezl at the D_00F56D98 test; ours starts with &D_00F56DC8. */
 /* Round 41 wwm2: score 327 -> 303, port.py of the wm twin func_00f49718 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* 217 words / score 327 (1316 vs 1320). Logic complete (endless frame loop: two sprites from D_00F61880[31/32 or 33/34] plus closing packet, then func_00f32a38/func_001efaf0/func_001bfac8). Switch needs case 0 to get the orig slti tree; orig puts show = 0 in the default path delay slot (ours hoists it before the switch). Orig loads table fields w, v, h, u in that order; locals for them made the switch shape regress (399). No more variants tried. */
 typedef struct { u8 pad0[0x2200]; u64 tex[1]; } GbWorld;
@@ -37,9 +38,10 @@ void func_00f22620(void) {
             a = 31;
             b = 32;
         } else {
-            show = 0;
             switch (D_00F56D90) {
             case 0:
+            default:
+                show = 0;
                 break;
             case 1:
                 show = 1;
