@@ -103,6 +103,14 @@ In round 41 the first run improved 31 gb and 6 wm drafts, for example wm func_00
 from 223 to 27 and gb func_00f51360 from 11 to 3. Rerun it after a draft improves, so the
 gain reaches its twin.
 
+msd.py (`python3 tools/ovl/msd.py OVL FUNC draft.c`, or `--scan OVL [DIR]` for every draft) prints the
+instructions only the target has and those only the draft has, ignoring order and jump-table loads. A
+single differing immediate or opcode (`addiu 2272` against `addiu 142`, `srl` against `sra`) usually names
+the expression to rewrite.
+
+modescan.py (`python3 tools/ovl/modescan.py OVL [DIR...] [--modes a,b]`) scores each draft under other
+build modes and lists those another mode improves; rename the draft to `func_X.<mode>.c` to apply it.
+
 autodecomp's variants (tools/permute.py) added for the overlays: `callee_stubs` (overlay
 callees at lower addresses as empty `CONTEXT_ONLY` definitions: callee defined above
 changes gcc's branch-likely and slot choices), `data_defs` (overlay data as `CONTEXT_ONLY`
@@ -465,6 +473,12 @@ This gave the original's r=f20, fi=f21, t=f22 (36 -> 33 and 34 -> 25 words); onl
 scheduling is left. When you see an allocation mismatch, check in the .lreg dump whether
 the variable was allocated locally. If it should not be, make it live across blocks or set
 it twice.
+
+Local-alloc also keeps v0 from a pseudo born on the insn right after a call whose return
+value is unused. The call still sets v0 (with a REG_UNUSED note), and local-alloc appears to
+count v0 as busy through the next insn. In wm func_00f78d50, `D_0108F6B4 = arg + k;` after a vtable call put the `lui` for the
+store in v1 (pseudo 193 in 3 in the .greg dispositions), where the original has v0. Writing
+`t = arg + k; D_0108F6B4 = t;` puts the add before the `high` insn, which gives v0 and the match.
 
 ### Constant kept in the loop by a twice-set temp (gb func_00f2fe38, func_00f30640; wm func_00f56f30, func_00f57738)
 
