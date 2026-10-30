@@ -97,10 +97,14 @@ void func_00f71b68(void)
     func_00f71748(wa, wb, w0, w1, w2, w3);
     if (D_0108F3B0 == 0 && D_0108F308 == 0) {
         func_0020be10(16);
-        while (!(D_002C5AD0.x8 & 0x6000)) func_0024e468(1);
-        flag = 1;
-        func_0011d768(3);
-        goto end;
+        for (;;) {
+            if (D_002C5AD0.x8 & 0x6000) {
+                flag = 1;
+                func_0011d768(3);
+                goto end;
+            }
+            func_0024e468(1);
+        }
     }
     col = 0;
     half = D_0108F308 / 2;
@@ -111,7 +115,7 @@ void func_00f71b68(void)
     }
     func_00f71140(0, 0);
     func_0024e468(D_00FB4A70);
-mode1:
+    for (;;) {
     wt->x10 = ic.v[0];
     done = 0;
     help->x10 = 53;
@@ -205,11 +209,13 @@ mode1:
             trig = 0;
             if (func_00f710f0(col, n)) {
                 row = n;
-            } else if (row == 0) {
-                if (D_0108F418 < 0) done = 1;
-            } else if (func_00f710f0(col - 1, n)) {
-                col = col - 1;
-                row = n;
+            } else if (row != 0) {
+                if (func_00f710f0(col - 1, n)) {
+                    col = col - 1;
+                    row = n;
+                } else if (D_0108F418 < 0) {
+                    done = 1;
+                }
             } else if (D_0108F418 < 0) {
                 done = 1;
             }
@@ -262,7 +268,7 @@ mode2:
             D_0108F424 = -1;
             func_0011d768(3);
             if (!func_00f71b58()) goto end;
-            goto back1;
+            break;
         }
         if (held & 0x2000) {
             func_0011d768(2);
@@ -327,7 +333,7 @@ mode2:
                 row = 0;
                 if (func_00f71b58() && half >= 0) {
                     func_0011d768(1);
-                    goto back1;
+                    break;
                 }
             }
             trig = 0;
@@ -351,7 +357,7 @@ back:
     if (!func_00f710f0(col, row)) col = (col + 1) & 1;
     func_00f71140(col, row);
     func_0024e468(1);
-    goto mode1;
+    }
 end:
     D_0108F1E8 = 0;
     func_00f6b5d0(11, 0, D_00FB4A70);
