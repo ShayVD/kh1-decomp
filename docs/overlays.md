@@ -609,6 +609,36 @@ Look for this when the target loads a field (often a bitfield word) late, behind
 type, and our build hoists the load to the start of the block. Try reading it through a struct view
 that also has a field of the stored type.
 
+### Globals reloaded after stores through a fixed-address pointer: set the pointer twice (gb func_00f3f2b0, wm func_00f663a8)
+
+The function writes a 12-word header through `f32 *v = (f32 *)0x1100FFA0`, reading D_00F82700..0C
+twice each. The target loads each global again after the stores in between, with the global's
+address kept in a register (`addiu t1,t1,9984` ... `lwc1 $f1,0(t1)`). Our build loaded each one once
+(10 `lwc1` in the target, 6 in ours, 52 bytes short). When v is assigned once from a constant,
+alias analysis records it as a known constant address. A constant address cannot overlap a different
+symbol, so gcc keeps the loaded values.
+
+The original reuses v. After the header it is set again as the base of the three M64 copies:
+
+```c
+v = (f32 *)0x1100C000;
+((M64 *)v)[0] = *a;
+((M64 *)v)[1] = *b;
+((M64 *)v)[2] = *c;
+```
+
+With two sets, v has no known value, the stores through it may alias the globals, and the reloads
+come out as in the target. Both twins matched. A volatile pointer, volatile globals (these give
+`lw` + `mtc1` instead of `lwc1`), `v++` stores and nostrict did not give the reloads. The `ldl`/`ldr`
+copies were already right with the plain `typedef struct { f32 m[16]; } M64;`.
+
+Look for this when the target loads the same global more than once with stores through a constant
+pointer in between, and our build loads it once.
+
+`tools/ovl/latescan.py OVL [draft.c ...]` sweeps for both patterns. LATE lists loads that the target
+issues after more stores of their block than ours does (f333f8: `ld 88 +11`). MORE and MOREOP list
+loads the target repeats more often than ours, by key and by mnemonic (f3f2b0: `lwc1 10/6`).
+
 ### Session 141 rounds 37-38 (wwm2)
 
 - **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
