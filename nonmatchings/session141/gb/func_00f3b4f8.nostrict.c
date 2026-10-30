@@ -1,4 +1,4 @@
-/* Round 45 wwm2: score 185 -> 179, hill3o statement order under this build mode. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from 500c509d (gb func_00f3b4f8 near miss, score 185 -> 179, hill3o order under the new build m) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 179 was not valid. Restored the last valid statement order: score 185. Earlier header below. */
 /* Round 44 wwm2: score 217 -> 185 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* gb.x func_00f3b4f8 near miss: 324 words differ, score 217 (ours 1372 bytes, original 1352). Port of wm func_00f625f0's near miss. port.py could not map D_00FA5FC8, so I mapped it by hand to D_00F61848 (D_00F61838 + 0x10). Same frame problem as the wm draft: the original keeps h on the stack at sp+16 and reloads 360.0f each time. */
 typedef struct { u8 b[0x50]; u8 x50; u8 pad51[0x7e - 0x51]; s16 x7e; s16 x80; } World;
@@ -30,26 +30,26 @@ void func_00f3b348(s32);
 
 s32 func_00f3b4f8(void)
 {
-    u8 *p;
-
-    Col *c;
-    f32 f;
-    s32 b8;
-    s32 h;
     u8 save[8];
-    Pad *pad;
-    u8 *rgb;
+    s32 h;
     s32 i;
+    Col *c;
+    u8 *p;
+    u8 *rgb;
+    Pad *pad;
+    s32 b8;
+    f32 f;
+
     c = D_00F82640;
     for (i = 0; i < 8; i++) {
         p = &D_00F56DC0->b[i];
-        c->a = 128;
         rgb = &D_00379F28[*p * 4];
+        c->a = 128;
         c->r = rgb[0] >> 1;
-        save[i] = *p;
         c->g = rgb[1] >> 1;
         c->b = rgb[2] >> 1;
         c++;
+        save[i] = *p;
     }
     for (i = 0; i < 3; i++) {
         D_00F826C0[i].r = 0;
@@ -57,8 +57,8 @@ s32 func_00f3b4f8(void)
         D_00F826C0[i].b = 0;
         D_00F826C0[i].a = 0;
     }
-    D_00F826F4 = 0;
     D_00F826F0 = 0;
+    D_00F826F4 = 0;
     D_00F6183C = D_00F56DC0->x80;
     D_00F61838 = D_00F6183C * 45.0f;
     func_0011d768(21);
@@ -142,8 +142,8 @@ s32 func_00f3b4f8(void)
         }
         if (D_00F61838 < -180.0f) {
             f = D_00F61838 + 360.0f;
-            D_00F61838 = f;
             while (f < -180.0f) f += 360.0f;
+            D_00F61838 = f;
         }
         func_001bfac8();
     }
