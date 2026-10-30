@@ -870,3 +870,24 @@ hit the stub callee sits at a lower address than the function.
   address in v0, so its address must have outranked the value. Moving `D_00F8512C--` to each of the 6
   positions of both else blocks (35 combinations) gives 21 every time: sched1 puts the store back in the
   same place. All 18 flag modes are 21 or worse.
+
+## Round 30
+
+- wm f20d08 (21), D_00F8512C as a pointer or read once. A function-scope `s32 *pc = &D_00F8512C` set at
+  the top, at skip: or before func_00167698, used for the tests and decrements (`(*pc)--`, `*pc -= 1`)
+  or for the decrements only: 70-204. Read once into a local before the branch (at skip: or before
+  func_00167698, with `D_00F8512C = c - 1` or `--`): 113-148. The pointer then lives in an s-register
+  across the calls. A pointer scoped to each else block gives 21 again, since cse already shares the
+  address there.
+- Picks among the wm low-half drafts at 40-150 within 8 bytes, last touched more than 3 rounds ago (f3a640
+  left to wwm2): valaudit has no notes for f2b598, f24380, f46070, f3f998 or f436d0, and the round-29
+  rettype batch had no gains for them.
+  - f24380 (48): one basic block, so this is local-alloc order, not global (prio.py shows only two global
+    pseudos). Ported the statement orders of the matched siblings f24900/f24738 and the `(v1 - 1) << 4`
+    and `(v1 << 4) - 16` forms: 56-86.
+  - f2b598 (45): the target walks one pointer (v1) and keeps an i*3 offset off a copied base (a2). A local
+    table pointer, a pointer-and-index for loop, `!= -1` and two forms of the ok test give 45-77. The
+    table pointer brings the size to 340 (target 344) but scores 55.
+  - f46070 (51): the target copies D_00FB74B0 (c, to sp+16) before D_00FB74C0 (bits, sp+32); ours copies
+    bits first in every order of the copy statements (sched1 reorders them). Changing the declaration
+    order moves the stack slots (169-177).
