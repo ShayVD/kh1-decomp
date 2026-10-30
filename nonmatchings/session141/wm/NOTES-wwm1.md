@@ -828,3 +828,26 @@ hit the stub callee sits at a lower address than the function.
   f3DDA0/f3DF68; the 0x12345678 guard word stored before f3DD14); ordcheck clean. wm f75d80 (2412): the first sweep
   (MAXN 7) was killed by the 2-hour shell limit inside one long run before writing its OUT file, because TLIM is
   only checked between runs. A full rerun with MAXN=5 (23 runs, 36 minutes) gave nothing: 2412 -> 2412.
+
+## Round 28
+
+- Twins: no gb (or dktitle/dkmovie) function has a mnemonic sequence close to wm f42f20, f23018, f23550,
+  f37770, f44158, f20d08 or the callee f29aa0 (best difflib ratios 0.27-0.48), so there was nothing to port.
+  No other draft calls func_00f29aa0 with *D_00F85160.
+- wm f23018 and f42f20 matched: func_00f29aa0 returns s32 (ovl/wm/hand/func_00f29aa0.c) and func_0011ef10
+  returns a value too (the f23018 permuter run's only real change was a non-void func_0011ef10; s32 alone gave
+  19 -> 13, then s32 func_00f29aa0 matched both). The f23018 4-byte size gap was the alignment nop after jr ra
+  (autodecomp pads ours with zeros), not code.
+- Callee return-type sweep (/tmp/claude-0/s141/wwm1/r28/rettype.py, rettype2.py): every draft that declares a
+  callee void while its matched definition (ovl/OVL/hand, src/) or a matched file's prototype returns a value,
+  rescored with s32 / void *. Gains: wm f3bc48 8 -> 6 (func_00f3bb68), dkmovie f23ae8 508 -> 504
+  (func_001eda90). Nothing else in wm, gb or dkmovie moved.
+- wm f23550 5 -> 2: a local pinned to a3 (KH1_REG("$7")) gives the target's single li a3,10 for the m.x30
+  store and the 4th argument; it comes out one slot early (before lui v1,0x5). 13 placements among the
+  x2c/x30/sel stores give 2 or 6; setting it before the func_001bb500 call is wrong code (a3 is not kept
+  across calls). Plain forms (const local, m.x30 as the argument, struct pointer, all 18 flag modes) stay 5.
+- Priority ties: f37770 with nine n-range forms (n first, n >= 1, n > i, i++ split, i = 0 after the call, n
+  initialised in its declaration, a for/break loop, `n > 0 && anim`): all 24 or worse. f44158: the lreg dump
+  shows why arg4 (88) has 11 live insns: it is dead through case 0 (live_length counts only insns where the
+  pseudo is live), so the target needs arg4 live through case 0 or arg0 with more refs; `arg0 == arg4` in
+  case 1 and moving default: gave nothing (16).
