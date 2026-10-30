@@ -1063,3 +1063,8 @@ f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f62
 - **f45e68 (36).** The target forms &D_00F9B330[idx] twice (base+off and off+base) and loads w/u/v through copies of the first, h through the second. Every mix of e-> and D_00F9B330[idx]. reads for w/h/u/v, in four orders, plus inline accessors, scores 36 or worse.
 - **f3a860 (39).** hill3, strict and --noalias, 400 s: no gain. The `*a`/`*b` stores are pointer stores, so strict mode cannot move them past the global f loads.
 - **f24380 (48) and f28258 (85):** register allocation or a size difference comes first. Not worked further.
+- **f58f98 168 -> 108 (2032 -> 1984 bytes).** Hand port of wgb's gb f31ea0 round 45 fix (the three loop-top reads through `*(World **)0x00F9B540`). port.py mapped the symbols except D_00FA5D50/D_00FA5D78 and the fixed address, which I mapped by hand.
+- **f3bc48 89 -> 30, now at the exact size (416).** The target's loops walk the flags words with their own pointer giv (base + 160, step 192) next to an i*192 offset giv.
+  - Loop 1 reads flags through `p = &D_01067FE0[i].flags` (id stays D_01067FE0[i].id) and returns `i * sizeof + (u32)b`.
+  - Loop 2 reaches flags/mask/id/conds/cnt through a struct view `H3bc48 { flags, mask, id, conds, cnt }` of &D_01067FE0[i].flags. That view alone took it from 71 to 32.
+  - Left: the base is CSEd across the two loops (the target recomputes it), and bne vs bnel at the id test.
