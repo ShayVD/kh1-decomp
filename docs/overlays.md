@@ -639,6 +639,20 @@ pointer in between, and our build loads it once.
 issues after more stores of their block than ours does (f333f8: `ld 88 +11`). MORE and MOREOP list
 loads the target repeats more often than ours, by key and by mnemonic (f3f2b0: `lwc1 10/6`).
 
+### `(x + c) * 16` folds; `(x + c) << 4` does not (gb func_00f32a38, func_00f3d5c8; wm func_00f59b30, func_00f646c0)
+
+gcc distributes a multiply over a sum: `(D.x2C0 + 1) * 16` becomes `x*16 + 16` (`sll 4` then
+`addiu 16`), and `(v + 32) * 16` becomes `addiu 512` on the shifted value. A shift is not distributed,
+so `(x + 1) << 4` keeps the target's `addiu 1` then `sll 4`. Look for this when the target has
+`addiu rX,rY,c` and then `sll`/`dsll` of rX by 4. Ours has the shift first and an addiu of 16c, or
+the msd output pairs `addiu c` (target only) with `addiu 16c` (draft only).
+
+Mind the precedence: `<<` binds more loosely than `+`. So `u0 + (x - 3) * 16` must become
+`u0 + ((x - 3) << 4)`. Written as `u0 + (x - 3) << 4`, it means `(u0 + x - 3) << 4`. The round 46
+f32a38 draft had this bug. After the fix, the score went 249 to 213. f32a38 259 → 213, f59b30 259 → 209,
+f3d5c8 and f646c0 426 → 410. A sweep of all gb and wm drafts for the `(sum) * 2^k` form found no
+other gains (round 47).
+
 ### Session 141 rounds 37-38 (wwm2)
 
 - **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
