@@ -1,4 +1,4 @@
-/* score 325, 365 words (2372 vs 2368; round 30 wgb: func_001f3840, func_001f9438 and func_002014a0 return s32 as defined in src/text, was 327/368). The count switch needs a separate `cnt++; break;` per case 0..8 plus an explicit case 9, or gcc turns it into a range test instead of the 10-entry jump table. The draw loop uses two pairs: palette ids pal[2] (sp16) and colours c[2] (sp32), both indexed by sel == i. func_001fd548 is called unconditionally (t = ...; if (!D_00FB5A64) sel = t). The x4 switch needs t = 0 before it, with case 0x2000 an empty break. Left: the scheduling of the colour globals in the D_00FB5A64 block (the original keeps five %hi parts in s3..s7), the count index should share the k stack slot (sp48), and the x4 decision tree around 0x100/0x200. */
+/* score 297 (2372 vs 2368; round 37 wwm1: the x4 switch has `case 0:` sharing the default and case 0x8000 first, which gives the original's case tree and the inverted last leaf test, was 325;round 30 wgb: func_001f3840, func_001f9438 and func_002014a0 return s32 as defined in src/text, was 327/368). The count switch needs a separate `cnt++; break;` per case 0..8 plus an explicit case 9, or gcc turns it into a range test instead of the 10-entry jump table. The draw loop uses two pairs: palette ids pal[2] (sp16) and colours c[2] (sp32), both indexed by sel == i. func_001fd548 is called unconditionally (t = ...; if (!D_00FB5A64) sel = t). The x4 switch needs t = 0 before it, with case 0x2000 an empty break. Left: the scheduling of the colour globals in the D_00FB5A64 block (the original keeps five %hi parts in s3..s7), and the count index should share the k stack slot (sp48). */
 typedef struct { u8 pad[176]; s32 xB0; s32 xB4; } Obj;
 typedef struct { u8 b0; u8 pad1[3]; u32 x4; } Item;
 extern s32 D_00FB4A6C;
@@ -182,6 +182,7 @@ void func_00f73570(Obj *o)
             func_002078f0(o, pal[sel == i], 2, 0, 0, y, D_00FB4B34, 16, D_00FB5A08[it->b0]);
             t = 0;
             switch (it->x4) {
+            case 0x8000: t = 2; break;
             case 0x100: t = 7; break;
             case 0x200: t = 5; break;
             case 0x400: t = 6; break;
@@ -189,8 +190,7 @@ void func_00f73570(Obj *o)
             case 0x1000: t = 1; break;
             case 0x2000: break;
             case 0x4000: t = 3; break;
-            case 0x8000: t = 2; break;
-            default: t = 8; break;
+            case 0: default: t = 8; break;
             }
             xo = 0;
             if (it->b0 == 9) xo = D_00FB4A6C;
