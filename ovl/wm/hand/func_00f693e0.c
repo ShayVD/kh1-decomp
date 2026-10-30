@@ -1,7 +1,6 @@
-/* Round 50 (wgb): score 73 -> 28, size exact (704 = 704): the 6th argument to func_00f68ec0 is the power-of-two loop result p, not h, as in gb func_00f422e8 (see that file). Earlier header below. */
-/* Round 36 (wgb): wm.x func_00f693e0 near miss: 65 -> 65 words, score 77 -> 73 (aligned diff 46 -> 42). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
-/* Round 35 (wgb): wm.x func_00f693e0 near miss: 71 -> 65 words, score 89 -> 77. port.py of gb func_00f422e8's round 35 draft (statement order from the dependency-safe hill climb). Earlier header below. */
-/* score 89 (71 words; 708 vs 704 bytes). Same function as func_00f799e0, minus the last stack argument (4) to func_00f68ec0, so one fix gives both. The 15-minute -j1 permuter found `unsigned long nv; ... if ((nv = bpp) == 8)`, which stops cw's 8 from being reused and fixes the whole bpp branch block (was 111). Left: y and h swap s3/s4, and img lands in t5 instead of t1; then the xs/ys/qs/us/vs store order and one extra `move t1,s3` before the draw call. Tried x/y update orders, switch form, decl orders, all modes. */
+/* wm.x func_00f693e0: matched by hand. Port of gb func_00f422e8 (wgb round 50). */
+#include "ovl.h"
+
 extern void *D_0108F248;
 extern s32 D_0108F25C;
 void *func_00f69278(void *, void *, s32, s32, s32, s32, s32, s32, s32, s32);
@@ -18,6 +17,7 @@ void func_00f693e0(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     s32 cw, ch, size;
     s32 p;
     s32 t;
+    s32 t2;
     unsigned long nv;
     s32 x1, y1;
     f32 v;
@@ -31,11 +31,11 @@ void func_00f693e0(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     if (bpp != 4) {
         if ((nv = bpp) == 8) {
             cw = 16;
-            t = w * h;
+            t2 = w * h;
             psm = 19;
-            t /= 64;
+            t2 /= 64;
             ch = 16;
-            size = t;
+            size = t2;
         } else {
             ch = 0;
             psm = 0;
