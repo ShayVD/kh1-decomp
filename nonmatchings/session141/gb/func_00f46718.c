@@ -1,3 +1,4 @@
+/* Round 42 wwm2: score 230 -> 228, port.py of the wm twin func_00f6d810 draft, with wm D_00FB4C7C mapped by hand to gb D_00F704FC. Earlier header below. */
 /* score 236 (1992 vs 1992). Port of the wm func_00f6d810 near miss (same score), with symbols mapped by portmap.py plus D_00F704FC by hand. The draw-loop register difference is the same as in wm; see nonmatchings/session141/wm/func_00f6d810.c. Round 22 (wwm1): the if/else at line(s) 169 with the arms swapped and the test negated (ifswap.py): score 236 -> 230. */
 typedef struct { u8 pad[176]; s32 x; s32 y; u8 pad2[6]; s16 hbe; s16 pad3; s16 hc2; u8 pad4[12]; s16 hd0; s16 hd2; } Obj;
 typedef struct { u8 b0; u8 pad1[4]; u8 b5; u8 b6; u8 b7; u8 pad8[8]; } Ent;
@@ -129,8 +130,8 @@ win:
                     D_00F829D8 = (o->y >> 4) + y - 1856;
                 }
             } else {
-                spr.col = 0x40404040;
                 col1 = D_00F704D0 | (D_00F704D4 << 8) | (D_00F704D8 << 16) | (D_00F704DC << 24);
+                spr.col = 0x40404040;
                 col2 = D_00F704F0 | (D_00F704F4 << 8) | (D_00F704F8 << 16) | (D_00F704FC << 24);
             }
             func_002016b0(o, D_00F704C8 + 6, y + 2, col1);
@@ -145,19 +146,19 @@ win:
         }
         i++;
     }
-    D_00F82AC8 = sel;
     p = &e[sel];
+    D_00F82AC8 = sel;
     if (D_00F829C8 == 0) {
         D_00F82A94 = 0;
         D_00F829FC = 0;
         D_00F82A28 = 0;
     }
     if (p->b5) {
+        rot[0] = 0.43633226f;
         D_00F82ACC = -1;
+        rot[2] = 0;
         rot[1] = 0.43633226f;
         rot[3] = 1.0f;
-        rot[0] = 0.43633226f;
-        rot[2] = 0;
         if (D_00F82A2C != D_00F82A30) {
             if (D_00F82A30 < D_00F82A2C) {
                 D_00F82A2C = D_00F82A2C - 128.0f / D_00F702F0;
