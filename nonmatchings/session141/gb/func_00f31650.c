@@ -1,5 +1,5 @@
+/* drafttwins.py: score 331 -> 329, port.py of the wm twin func_00f58748 draft. Earlier header below. */
 /* Round 41 wwm2: score 377 -> 331, port.py of the wm twin func_00f58748 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* 204 words / score 377 (852 vs 856); logic complete (40-step lerp of 8 palette entries between D_00379F28/D_0037A028 rows, j==0 also writes world colours). Frame 112 vs 96 (ours spills &D_00F56DC0 with sq); orig hoists D_0037A028 into s8 and 40 into s3, does all six divides before the j==0 block; scheduling differs throughout. No variants tried yet */
 typedef struct { u8 pad[64]; u8 r; u8 g; u8 b; u8 pad2; u8 r2; u8 g2; u8 b2; } G58748;
 extern G58748 *D_00F56DC0;
 extern s32 D_00F806C8;
@@ -58,9 +58,9 @@ void func_00f31650(s32 dir) {
     c0 = func_00f31030(D_00F806C8) * 4;
     D_00F56DC0->r = D_00379F28[c0];
     D_00F56DC0->r2 = D_0037A028[c0];
-    D_00F56DC0->b2 = D_0037A028[c0 + 2];
-    D_00F56DC0->b = D_00379F28[c0 + 2];
     D_00F56DC0->g = D_00379F28[c0 + 1];
     D_00F56DC0->g2 = D_0037A028[c0 + 1];
+    D_00F56DC0->b = D_00379F28[c0 + 2];
+    D_00F56DC0->b2 = D_0037A028[c0 + 2];
     func_00f2e0b0();
 }
