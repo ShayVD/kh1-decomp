@@ -1,4 +1,4 @@
-/* Round 56 (wwm2): score 256 -> 226 -> 224 (1568 vs 1576 bytes; 224 from hill3, 360 s, which moved the qs/fcode/first/n set-up and the type 2 command build; valaudit's callee sequence now matches). After func_00f26848 in the type 1 and type 2 paths, the target tests IPU_CTRL bit 14 and on a clear bit reads IPU_CTRL once more, discarding the value. With that test in both cases they cross-jump into one func_00f26848 call, as in the target (the old draft had one call too many). Left: register choice (s2-s6 for n, mx, my and the IPU pointers) and the prologue schedule. Earlier header below. */
+/* Round 57 (wwm2): 224 -> 112. The motion vectors are read as the target builds them: mx = IPU_CMD << 4; my = IPU_CMD << 4; mx += IPU_CMD; my += IPU_CMD; on s16 mx/my (sll 20 / sra 16, then sll 16 / sra 16). The extra refs give mx/my the target's s3/s2 and n s5. Round 56 (wwm2): score 256 -> 226 -> 224 (1568 vs 1576 bytes; 224 from hill3, 360 s, which moved the qs/fcode/first/n set-up and the type 2 command build; valaudit's callee sequence now matches). After func_00f26848 in the type 1 and type 2 paths, the target tests IPU_CTRL bit 14 and on a clear bit reads IPU_CTRL once more, discarding the value. With that test in both cases they cross-jump into one func_00f26848 call, as in the target (the old draft had one call too many). Left: register choice (s2-s6 for n, mx, my and the IPU pointers) and the prologue schedule. Earlier header below. */
 /* dkmovie.x func_00f25978: draft (session 141, round 28), structurally complete, not polished, 1552 vs 1576 bytes, 323 words differ, score 262 (m2c draft scored 549). IPU decode task for MPEG-style packets (the func_00f25658 sibling): per picture it reads the picture type from the IPU, for P/B pictures the motion vector pair, then runs the intra (type 2), predicted (type 1) or skipped (type 3) path through func_00f26540 / func_00f26848; type 4 ends the packet. Round 19 (wwm1): score 262 -> 256 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 #include "../nonmatchings/session141/dkmovie/movie_work.h"
 
@@ -54,20 +54,19 @@ void func_00f25978(void) {
             IPU_CMD = 0x38000000;
             while (IPU_CTRL < 0) {
             }
-            a = IPU_CMD;
+            mx = IPU_CMD << 4;
             IPU_CMD = 0x38000000;
             while (IPU_CTRL < 0) {
             }
-            b = IPU_CMD;
+            my = IPU_CMD << 4;
             IPU_CMD = 0x38000000;
             while (IPU_CTRL < 0) {
             }
-            c = IPU_CMD;
-            mx = a * 16 + c;
+            mx += IPU_CMD;
             IPU_CMD = 0x38000000;
             while (IPU_CTRL < 0) {
             }
-            my = b * 16 + IPU_CMD;
+            my += IPU_CMD;
         }
         switch (type) {
         case 1:
