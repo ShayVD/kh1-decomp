@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 138 -> 126, hill3o statement order. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f28a68 near miss: score 146 -> 138 (130 -> 126 words, 992 vs 1008); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* wm f28a68 near miss: 130 words differ, score 146 (992 vs 1008 bytes). Logic is complete: XYOFFSET/sprite packets, then seven func_001f0758 icon draws. Left is register pressure. The original keeps 0x700 in s6 and 20 in s7, and with no free s register it rematerializes &D_00F85160 on each use; ours keeps the address in s6. Also the y offset is computed into s0, and the D_00F877D0 fields load in x8, xC, x10, x4 order. Tried: a local k = 0x700 (gets s7 = 1792 but worse overall), reassigning the x/y params, and the load order. */
 typedef struct { s32 x0, x4, x8, xC, x10; } R877d0;
@@ -17,22 +18,21 @@ u64 *func_001f0758(u64 *, s32, s32, s32, s32, s32, s32);
 void func_00f28a68(s32 x, s32 y, s32 al) {
     u64 *p;
     s32 u, v, w, h;
-
-    x = 0x700 - x;
     func_00f29500(0, 0x2600, D_00FBAA6C);
-    y = 0x740 - y;
+    x = 0x700 - x;
     p = func_00f66b78(func_00f66ac8(*D_00F85160));
-    p[0] = 0x30003;
     p[1] = 71;
+    p[0] = 0x30003;
     p += 2;
     p[0] = 0;
+    y = 0x740 - y;
     p[1] = 20;
     p += 2;
     p[1] = 24;
     p[0] = (u64)(x << 4) | ((u64)(y << 4) << 32);
     p += 2;
-    p[0] = 68;
     p[1] = 66;
+    p[0] = 68;
     p += 2;
     func_00f66b90(p);
     u = D_00F877D0.x4;
@@ -52,14 +52,14 @@ void func_00f28a68(s32 x, s32 y, s32 al) {
     p[0] = ((u64)al << 24) | 0x00003F8000808080;
     p[1] = 1;
     p += 2;
-    p[0] = (u64)(u << 4) | ((u64)(v << 4) << 16);
     p[1] = 3;
+    p[0] = (u64)(u << 4) | ((u64)(v << 4) << 16);
     p += 2;
     p[1] = 5;
     p[0] = 0x174007000;
     p += 2;
-    p[1] = 3;
     p[0] = (u64)((u + w + 1) << 4) | ((u64)((v + h + 1) << 4) << 16);
+    p[1] = 3;
     p += 2;
     p[1] = 5;
     p[0] = (u64)((w + 0x700) << 4) | ((u64)((h + 0x740) << 4) << 16) | 0x100000000;
@@ -72,6 +72,7 @@ void func_00f28a68(s32 x, s32 y, s32 al) {
     p = func_001f0758(p, 1, -128, 22, 358, func_00f2b8f0(21), 16);
     p = func_001f0758(p, 1, -128, 271, 16, func_00f2b8f0(22), 16);
     p = func_001f0758(p, 1, -128, 436, 358, func_00f2b8f0(20), 16);
+
     p = func_00f66b78(p);
     p[0] = 0x5000D;
     p[1] = 71;
