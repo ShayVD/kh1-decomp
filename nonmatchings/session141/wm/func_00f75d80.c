@@ -473,7 +473,7 @@ selA:
     s0 = func_00f6b6a0(6, 9, 2, 4, 0, 15, 43, 4, D_00FB4DA4, D_00FB4DA8, 0, D_00FB4DB4, 0, 0, 0, 0, 0, 256, D_00FB4A70);
     for (;;) {
         b = D_002C5AD0.x8;
-        if (b & 0x4000) goto yes4;
+        if (b & 0x4000) break;
         if (D_0108F1A4 == 0) {
             if (b & 0x2000) {
                 if (func_001be278() == D_0108F554) {
@@ -488,20 +488,17 @@ selA:
                     goto end;
                 }
             }
-        } else if (b & 0x2000) {
-        yes4:
-            if (b & 0x2000) {
-                func_0011d768(2);
-            } else {
-                func_0011d768(3);
-            }
-            func_00f6b5b0(s0, 0.0f, D_00FB4A70);
-            goto close;
-        }
+        } else if (b & 0x2000) break;
         b = D_002C5AD0.x8;
         TOGGLE();
         HILITE(s0);
     }
+    if (b & 0x2000) {
+        func_0011d768(2);
+    } else {
+        func_0011d768(3);
+    }
+    func_00f6b5b0(s0, 0.0f, D_00FB4A70);
 close:
     func_0024e468(D_00FB4A70);
     func_00f6ae60(s0);
