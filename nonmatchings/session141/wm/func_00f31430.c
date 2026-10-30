@@ -1,3 +1,4 @@
+/* Round 34 wwm1: score 368 -> 348 (3832 -> 3824 vs 3816 bytes). The target has one jal func_00f31118 for both paths after func_00f3a860, with the f3d4d8 arm laid out first and `b` reloaded from the stack at the shared call: written as one call reached by falling out of `if (D_00F8C130 == 0) { ...f3d4d8...; b = 0; if (D_00F8C130 == 0) goto skip; }` (two calls let cse propagate b = 0 into a1). Left: frame 16 bytes smaller than the target (a/b at sp+176/180, target 192/196). Earlier header below. */
 /* Round 64 wwm2: score 368 -> 366 with CONTEXT_ONLY definitions of func_00f2f400 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 47 wwm2: score 384 -> 368, hill3o statement order. Earlier header below. */
 /* score 384 (3848 vs 3816). World-map player/camera update: early out on D_00F850F4, D_003F76BC init, then when D_00F8C220 == 0 && D_00F8C23C == 0 && D_00F9B1C0 >= 30: angle approach of D_00FBDA90 to D_00F8C210, D_00FBDA80 position update with clamps, pad actions (fa68/fcf8/fc50), D_00FBB808[3] item timers (func_00f2eb78/func_00f2d308), D_00FBB818/D_00FBB820 (func_00f2f400/func_00f2d2b0), D_00FBB824 shot + func_00f30568, D_00FBEBB8 offset from D_00F8C1E8, zoom D_00F8C144, func_00f324c0(held & 0x800); camera branches on D_00FBB5C4 with D_00FBB5C8 6-frame interpolation, Trans/Mul matrices, depth k clamped to +-256 (func_00f2d360/func_00f2d238/func_001ed410), D_00FBB828 and func_00f3a860/func_00f3d4d8/func_00f31118, then func_00f34998 and the tail calls. Left: the original frame is 16 bytes bigger (288 vs 272: one more 16-byte local vector), ours is 32 bytes long overall; not diffed further (time box). Round 28 wwm2. */
@@ -315,13 +316,13 @@ void func_00f31430(void)
     if (D_00FBB828 != 0) D_00FBB828--;
     if (func_00f40c98() == 0 && D_00FBB828 == 0 && D_00F8C1FC == 0 && (D_00F9B2EC == 0 || D_00F850A0 != 0)) {
         D_00F8C130 = func_00f3a860(&a, &b);
-        if (D_00F8C130 != 0) {
-            func_00f31118(a, b, buf);
-        } else {
+        if (D_00F8C130 == 0) {
             D_00F8C130 = func_00f3d4d8(buf, &a);
             b = 0;
-            if (D_00F8C130 != 0) func_00f31118(a, b, buf);
+            if (D_00F8C130 == 0) goto skip;
         }
+        func_00f31118(a, b, buf);
+    skip:;
     }
     if (D_00F8C220 == 0 && D_00F8C23C == 0 && D_00F9B1C0 >= 30) func_00f34998();
     func_00f362f8();
