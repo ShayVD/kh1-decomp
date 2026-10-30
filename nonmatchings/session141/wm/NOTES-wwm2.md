@@ -1140,3 +1140,22 @@ None of the drafts below changed.
 - **xs_dumbo f20570 (47).**
   - Only the s1/s2 choice of two %hi pseudos differs. The -dl dump shows %hi(D_00F23214) as reg 165 (13 refs, priority 3*13/100352) beating %hi(D_00F2320C) as reg 166 (14 refs, 3*14/131072). Each is set once per path by gcse PRE (11 and 12 sets).
   - Tried: all 720 case orders (best is the current order, 47), asm aliases (86-88), a tail temp, a case-3 pointer.
+
+## Round 55 (xs_dumbo f20570 matched)
+
+- **xs_dumbo f20570: matched** (ovl/xs_dumbo/hand/func_00f20570.c; make ovl OVL=xs_dumbo byte-identical, 53/53 in src).
+  - Priority was not the cause. The two %hi pseudos get their numbers in gcse's pre_delete, which walks the expression hash table bucket by bucket. The bucket is (content hash of the expression) mod table size, and the table size is max_cuid / 2 | 1. With 53 buckets %hi(D_00F23214) sits in bucket 0 and %hi(D_00F2320C) in bucket 45, so D_00F23214 gets the lower pseudo and takes s1. With 55 buckets it is 52 against 48, which is the original's order.
+  - The original therefore had 3 to 6 more insns at gcse time. An empty asm gives the hint (+3 to +6 asms give 0 words), but the docs rule it out as a match. Three zero locals do the same in plain C: `ret = 0; clr = 0; none = 0;` set after the early return and used only in the closing join block (`!= none`, `= clr`, `return ret`). cse1 cannot fold them across the join, so they survive to gcse. gcse's cprop then folds them, and flow deletes the sets.
+  - Locals declared before the early return give v0 instead of a0 for the first lui (5 points).
+  - How to check: `-dG` prints "Expression hash table (N buckets" and each expression's "hash value". /tmp/claude-0/s141/r55/cnt.py prints both.
+- **xs_dumbo f222f8: 119 -> 93 -> 47** (size unchanged, 1548 vs 1560).
+  - Step 1: func_00249988 now uses its real signature from src/hud/hudmath.c, (out, a, b, f32 t), which gives the original's argument setup order.
+  - Step 2: two f32 zero locals in the last loop apply the same hash-table lever. The gcse copies now get the original's stack slots 76-96.
+  - Left: r2 has to come after i+1 and j < 9 in pseudo order (slot 72); the start label's alignment nop; the end-of-row increment order. hill3 for 420 s and the loop-shape variants gave nothing.
+- **xs_dh_break f20288:** the draft compiles with shard.h's struct pasted in place of the include (55). hill3 for 300 s and modescan gave nothing. Any empty asm before the return reaches the exact size (1048) but scores 62.
+- **xs_genie f22078: stays at 74.**
+  - The original keeps i*416 as shifts each pass (no strength reduction), hoists `li 1` and the D_00FC0DA0 base, and places the found body inside the loop.
+  - Best variants: the goto loop g1 (76, exact size 296) and a while(1)/break form (76).
+  - Body-in-loop forms are strength-reduced (101-113). Every build mode was tried on a/b/g1/w1, and the hash-table lever changes nothing.
+- **dktitle f228c8 (374) and f24b60 (358):** both differ structurally (prologue and schedule from the first block on). hill3 for 240 s and 300 s gave nothing.
+- **Missed by the layout method:** dktitle f24330 (123, a session132 drafts.tsv file). xs_dh_break f20820 showed only because its status was stale; after make ovl it is matched (8/9).
