@@ -1,3 +1,4 @@
+/* Round 46 (wgb): score 256 -> 221 (2412 vs 2432). (1) The tex read in the loop is ((u64 *)(D_00F56DC0 + 8704))[ti], with ti = 29 set at the top, which gives the li 232 + addu the target has; a constant index folds into ld 8936. (2) The u32 view of q goes through u32 *qu = (u32 *)q, so it gets its own base register (s5 in the target) apart from the f32 reads. Then guarded hill3 (400 s, seed 46, passes --check). Left: the target reloads col[k] (lwu) at each of the four vertices where ours loads it once; its reload of D_00F56DC0 at 00F2D32C; and the frame (20 bytes short). */
 /* drafttwins.py: score 258 -> 256, port.py of the wm twin func_00f54050 draft. Earlier header below. */
 /* Round 36 (wgb): gb.x func_00f2cf58 near miss: 387 -> 372 words, score 294 -> 258 (aligned diff 230 -> 202). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 typedef struct { u8 b[16]; } Blk16;
@@ -40,13 +41,16 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
     Tex *tx;
     f32 vd[2];
     s32 a;
+    s32 ti;
+    u32 *qu;
     u32 col[2];
-    idx = D_00F71770;
     h = *(u16 *)(D_00F56DC0 + 166) * 200.0f * 0.5f;
+    nh = -h;
     one = 1.0f;
     t[3] = one;
     i = 8;
-    nh = -h;
+    idx = D_00F71770;
+    ti = 29;
     t[1] = 200.0f - h;
     t[0] = h;
     t[2] = h;
@@ -54,9 +58,9 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
     sceVu0TransMatrix(m, m, t);
     sceVu0MulMatrix(m, base, m);
     v[0] = 0.0f;
+    v[3] = one;
     v[1] = h - (((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) + 1) * 200.0f;
     v[2] = 0.0f;
-    v[3] = one;
     sceVu0ApplyMatrix(out, m, v);
     q[0] = one / out[3];
     sceVu0ScaleVectorXYZ(out, out, q[0]);
@@ -116,15 +120,15 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
     {
         f32 w = D_00F61880.x250;
         f32 s166 = *(u16 *)(D_00F56DC0 + 166);
-        x0 = D_00F61880.x248 + w * s166 * 0.25f;
         du = w * 0.5f;
         y0 = D_00F61880.x24C + (f32)D_00F61880.x254 * s166 * 0.25f;
+        x0 = D_00F61880.x248 + w * s166 * 0.25f;
     }
     a = D_00F61384 * 90 / 128;
     col[0] = col[1] = (a << 24) | 0x808080;
-    uc[0] = x0 / tx->w;
-    ua[0] = D_00F61880.x248 / (f32)tx->w;
     uc[1] = (x0 + du) / tx->w;
+    ua[0] = D_00F61880.x248 / (f32)tx->w;
+    uc[0] = x0 / tx->w;
     ua[1] = (D_00F61880.x248 + du) / tx->w;
     va[0] = va[1] = D_00F61880.x24C / (f32)tx->h;
     vd[0] = vd[1] = y0 / tx->h;
@@ -136,21 +140,22 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
     p[0] = 68;    p[1] = 66;    p += 2;
     func_00f3fa98(p);
     ix = idx.b;
+    qu = (u32 *)q;
     for (j = 0; j < 4; j++) {
         p = func_00f3fa80(p);
-        p[0] = 84;
         p[1] = 0;
         k = j & 1;
+        p[0] = 84;
         p += 2;
-        p[0] = *(u64 *)(D_00F56DC0 + 232 + 8704);
+        p[0] = ((u64 *)(D_00F56DC0 + 8704))[ti];
         p[1] = 6;
         st[0] = ua[k] * q[*ix];
         p += 2;
         st[1] = va[k] * q[*ix];
-        p[1] = 2;
         p[0] = *(u64 *)st;
+        p[1] = 2;
         p += 2;
-        p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
+        p[0] = col[k] | ((u64)qu[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;
         ix++;
         st[0] = uc[k] * q[*ix];
@@ -158,23 +163,23 @@ u64 *func_00f2cf58(u64 *p, OvlMtx base) {
         p[1] = 2;
         p[0] = *(u64 *)st;
         p += 2;
-        p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
+        p[0] = col[k] | ((u64)qu[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;
         ix++;
         st[0] = ua[k] * q[*ix];
         st[1] = vd[k] * q[*ix];
-        p[1] = 2;
         p[0] = *(u64 *)st;
+        p[1] = 2;
         p += 2;
-        p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
+        p[0] = col[k] | ((u64)qu[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;
         ix++;
         st[0] = uc[k] * q[*ix];
         st[1] = vd[k] * q[*ix];
-        p[1] = 2;
         p[0] = *(u64 *)st;
+        p[1] = 2;
         p += 2;
-        p[0] = col[k] | ((u64)*(u32 *)&q[*ix] << 32);        p[1] = 1;        p += 2;
+        p[0] = col[k] | ((u64)qu[*ix] << 32);        p[1] = 1;        p += 2;
         p[0] = (u64)ip[*ix][0] | ((u64)ip[*ix][1] << 16) | ((u64)((ip[*ix][2] >> 4) + 16) << 32);        p[1] = 4;        p += 2;
         ix++;
         func_00f3fa98(p);
