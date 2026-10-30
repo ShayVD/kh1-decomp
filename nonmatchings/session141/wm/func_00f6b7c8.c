@@ -267,7 +267,7 @@ void func_00f6b7c8(void) {
         if (D_0108F284 == 0) {
             func_0024e468(wait);
         } else {
-            for (n = wait; n > 0; n--) {
+            for (n = 0; n < wait; n++) {
                 func_001bfac8();
             }
         }
