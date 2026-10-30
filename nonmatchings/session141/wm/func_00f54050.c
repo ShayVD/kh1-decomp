@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 258 -> 256, hill3o statement order. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f54050 near miss: 387 -> 372 words, score 294 -> 258 (aligned diff 229 -> 201). port.py of gb func_00f2cf58's round 36 draft, the round 36 order from tools/ovl/hill3.py (score-ranked, strict dependency rules). A port of a hill3 order of the older gb draft scored 374 words, score 262, aligned 194. See the gb file for what is left. Earlier header below. */
 /* NEAR MISS 389 words, score 306 (2392 vs 2432 bytes). Port of gb func_00f2cf58 (same score); see that file for what was tried. Round 19 (wwm1): 389 -> 384 raw words with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). Round 19 (wwm1): score 306 -> 294 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { u8 b[16]; } Blk16;
@@ -24,33 +25,32 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
     OvlVec out;
     f32 q[12];
     Blk16 idx;
+    f32 nh;
+    s32 k;
     OvlMtx m;
     OvlVec t;
     f32 va[2];
     s32 i;
-    u32 col[2];
+    f32 ua[2];
     f32 h;
     f32 uc[2];
-    u8 *ix;
-    s32 k;
     f32 x0, y0, du, dv;
+    u8 *ix;
     f32 one;
-    f32 nh;
     s32 j;
     Tex *tx;
-    s32 a;
     f32 vd[2];
-    f32 ua[2];
-
+    s32 a;
+    u32 col[2];
     idx = D_00FB7820;
     h = *(u16 *)(D_00F9B540 + 166) * 200.0f * 0.5f;
     one = 1.0f;
-    nh = -h;
-    i = 8;
     t[3] = one;
+    i = 8;
+    nh = -h;
+    t[1] = 200.0f - h;
     t[0] = h;
     t[2] = h;
-    t[1] = 200.0f - h;
     sceVu0UnitMatrix(m);
     sceVu0TransMatrix(m, m, t);
     sceVu0MulMatrix(m, base, m);
@@ -100,6 +100,7 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
     sceVu0ScaleVectorXYZ(out, out, q[7]);
     sceVu0FTOI4Vector(ip[7], out);
     v[0] = nh;
+
     sceVu0ApplyMatrix(out, m, v);
     q[8] = one / out[3];
     sceVu0ScaleVectorXYZ(out, out, q[8]);
@@ -123,8 +124,8 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
     a = D_00FA5B04 * 90 / 128;
     col[0] = col[1] = (a << 24) | 0x808080;
     uc[0] = x0 / tx->w;
-    uc[1] = (x0 + du) / tx->w;
     ua[0] = D_00FA6000.x248 / (f32)tx->w;
+    uc[1] = (x0 + du) / tx->w;
     ua[1] = (D_00FA6000.x248 + du) / tx->w;
     va[0] = va[1] = D_00FA6000.x24C / (f32)tx->h;
     vd[0] = vd[1] = y0 / tx->h;
@@ -145,8 +146,8 @@ u64 *func_00f54050(u64 *p, OvlMtx base) {
         p[0] = *(u64 *)(D_00F9B540 + 232 + 8704);
         p[1] = 6;
         st[0] = ua[k] * q[*ix];
-        st[1] = va[k] * q[*ix];
         p += 2;
+        st[1] = va[k] * q[*ix];
         p[1] = 2;
         p[0] = *(u64 *)st;
         p += 2;
