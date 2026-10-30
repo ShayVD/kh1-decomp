@@ -1145,6 +1145,22 @@ with the GPU thread (`KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1`) the same digests and
 **Not yet measured on a Vita** (3d-zp): the `gs worker:` line's waits (from ~42 per 2 s) and the `large uploads:`
 time, the `gs worker ops:` line's w_load / w_block / w_qwords.
 
+### The VU1 programs' result clamp (session 148)
+
+The game thread is the limit once the large uploads stop syncing: in 3d-zo's log it spent ~1.28 s per 2 s in the
+DMA walks, ~1.0 s of it in the VU1 programs (P0 ~640 ms at ~74 ns a pair). A dynamic instruction mix of tr_0 on
+the ARM profile (each translation block's count times its instructions, from objdump): 22% `vldr`, 10% `vstr`,
+~17% the clamps' `vmin` / `vmax`, ~5% the arithmetic. Of the `vldr`s, ~21.6M of tr_0's 225M were literal-pool
+reloads of constants: gcc keeps rematerialising them under the function's register pressure (no -O level or
+scheduling flag changed that). `vfo` (fout()'s clamp to +-FLT_MAX) used two float constants of its own; it is
+now vfin's two integer minimums, which give the same bits for every result that is not a NaN (none is: the
+operands are finite, so a result is finite or an infinity) and share vfin's constants. tr_0 225M -> 215M,
+tr_12 119M -> 116M ARM instructions over frames 5000-5060. vu1neon_test compares vu_op / vu_opb / vu_opbl with
+the session 141 form (kept verbatim) and still finds them equal (dropping the clamp is caught); the ARM build's
+130 digests to frame 6500 are main's. What is left in tr_0 is mostly the VU registers' own loads and stores
+(`vf` / `acc` in memory, ~19%): keeping them in NEON registers would need the translator to emit value-based
+code (locals per VF), a larger change.
+
 ## The flashing floor: one-byte enums (2026-10-28)
 
 The Dive's stained-glass floor (and other grid-effect ground) was missing on every other drawn frame on a
