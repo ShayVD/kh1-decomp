@@ -99,12 +99,15 @@ void kh1_null_hud_wide(s32 margin16); /* host/null/plat_null.c: the HUD anchors,
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
  * (host/port/memmap.c) is .bss */
-int _newlib_heap_size_user = 160 * 1024 * 1024;
+/* both are read by the SDK by name (vita-elf-create's process parameters, newlib's sbrk), never by our
+ * code: `used` keeps LTO from dropping them (without it the main thread got the default 256 KiB stack
+ * and the app stopped at launch, 2026-10-30) */
+__attribute__((used)) int _newlib_heap_size_user = 160 * 1024 * 1024;
 /* session 137v: 4 MiB for the main thread's own frames, the rest the coroutines' stacks (platform/costack.h:
  * the kernel refuses a system call made on a stack outside the thread's).  Dive to the Heart makes two
  * (0x40000 each); a 52 MiB stack stopped the app at its start on hardware (C1-2681-7, no log) */
 #define MAIN_OWN (4 * 1024 * 1024)
-unsigned int sceUserMainThreadStackSize = 8 * 1024 * 1024;
+__attribute__((used)) unsigned int sceUserMainThreadStackSize = 8 * 1024 * 1024;
 static u32 costack_bytes;
 
 const char kh1_vita_dir[] = "ux0:data/kh1";

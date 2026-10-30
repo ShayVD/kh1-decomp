@@ -1487,6 +1487,11 @@ accepted. Nothing more to get here.
   (gs_kick into kh1_gs_write and the like).
 - **host/port/memmap.c stays out of LTO**: it defines the fixed memory map's names in top-level asm
   (`.set`), which LTO's symbol table does not see (the link then misses D_00720000 / D_009A0000).
+- **The SDK's named variables need `used`.** `sceUserMainThreadStackSize` (read by vita-elf-create for the
+  process parameters) and `_newlib_heap_size_user` (newlib's sbrk) are never referenced by our code, so LTO
+  dropped the first: the first o3lto VPK started its main thread with the default 256 KiB stack and stopped
+  at launch on a Vita (the core dump: stack 0x40000; MAIN_OWN alone is 4 MiB). host/vita/main.c marks both
+  `__attribute__((used))`, and build.py refuses a Vita link without them.
 - **Fat LTO objects** (`-ffat-lto-objects`): census.py's nm reads each object's symbols before the link.
 - No flag that changes a float result: `-ffp-contract=off` stays, no `-ffast-math`. The pictures must stay
   bit-identical.

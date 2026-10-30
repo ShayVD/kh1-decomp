@@ -312,6 +312,14 @@ def main():
             run([b + "arm-vita-eabi-as", "-o", pad, asm], "the segment pad")
             run([cc] + t["link"] + ["-o", elf] + objs + [pad] + extra + t["libs"], "the padded link")
             print("vita: the code segment padded by %d bytes (%d were left before the data's page)" % (gap + 512, gap))
+    if name == "vita":
+        # the SDK reads these by name (the process parameters, newlib's heap); LTO drops a variable
+        # nothing references, and the app then starts with the default 256 KiB stack and stops at once
+        syms = subprocess.run([census.NM, elf], capture_output=True, text=True).stdout.split()
+        lost = [s for s in ("sceUserMainThreadStackSize", "_newlib_heap_size_user") if s not in syms]
+        if lost:
+            print("vita: %s missing from the link (dropped by LTO?)" % " ".join(lost))
+            return 1
     print("%s: %s linked (%d objects, --opt %s)" % (name, os.path.relpath(elf, ROOT), len(objs), a.opt))
     if name == "linux-arm":
         print("linux-arm: run it as the host runner: KH1_HOST_ISO=... QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf "
