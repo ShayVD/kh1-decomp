@@ -1,3 +1,4 @@
+/* Round 27 wwm1: score 20 -> 5 (220 vs 216 bytes). The tail is `if (r != 0) return -1; if (m.sel >= n) return -2; return vals[m.sel];`. Left: the target loads 10 once into a3 for both the m.x30 store and the 4th argument (ours: li t0 for the store); a t = 10 local, m.x30 as the argument, chained and moved stores all keep two li. Earlier header below. */
 /* Round 29 (wgb): 30 words, score 20 (224 vs 216 bytes; was 228 bytes, score 21). Passing the literal 10 to func_00f2b360 and ending with `ret = -2; if (m.sel < n) ret = vals[m.sel]; return ret;` saved one instruction. Tried m.x30 = n = 10 chains, m.x30 as the argument, init store orders. */
 typedef struct {
     s32 type;
@@ -40,9 +41,8 @@ s32 func_00f23550(s32 arg0) {
     if (r != 0) {
         return -1;
     }
-    ret = -2;
-    if (m.sel < n) {
-        ret = vals[m.sel];
+    if (m.sel >= n) {
+        return -2;
     }
-    return ret;
+    return vals[m.sel];
 }
