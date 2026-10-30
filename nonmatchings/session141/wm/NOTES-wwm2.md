@@ -974,3 +974,21 @@ Each hit below names the instruction difference the scan showed, then what came 
     - Return types u8 through s64, `!= ret` and `!= flags` all leave the score at 112.
   - **f36bc0 (6):** an inline bound `(s32)(o->f20 / D)` is worse (78-101).
   - **f2ba68, f3a030, f2dc50, f60af0, f66bd0, f69fd0:** as described in round 42 or in their headers.
+
+## Round 44 (wwm2)
+
+**Inline-helper test (r44/t.c, t2.c, t3.c).**
+
+- **Orphan divide-by-zero check:**
+  - An inline helper that divides by its parameter and uses the quotient keeps a real `div` (t.c f1).
+  - When the quotient is dead, gcc 2.96 leaves `li 30; beqzl; break 7` without the div (t.c f2), which is exactly the target's signature. See docs/overlays.md.
+- **The `xori r,r,0` signature: not reproduced.**
+  - Inline compare helpers, a ternary, a zero variable and cross-block zeros all fold to a plain movz (f4b338 stays at 112).
+  - Comparing against a real register gives `xor r,r,rs`.
+
+**Results:**
+- **wm f5a4f0 and gb f333f8:** score 196 -> 174. A dead `t / n` helper in the else arm.
+- **wm f25918:** score 530 -> 382, and the size now matches. The orphan `beqzl n` sits next to the float fade, so I used an inline float lerp with a dead `i / n`.
+- **wm f78d50:** score 59 -> 5. Once the jump tables were masked, the scan showed a single `li a0,1`, so the call is `func_001fd720(1)`. The nops after the soft-double libcalls mean nofill mode. hill3o reordered both global-store blocks, and Mode.f8 returns s32. Left: the lui for D_0108F6B4 is in v1, where the original has v0. Casting the second call to void fixes it, but the function pointer then lands in a3.
+
+**msd.py now masks jump-table loads.** It drops the lw/addu/sll/addiu/lui chain that feeds a `jr` other than `jr ra`. The f72a70 and f6ae68 false positives are gone, and f78d50's real difference (the `li 1`) showed up.
