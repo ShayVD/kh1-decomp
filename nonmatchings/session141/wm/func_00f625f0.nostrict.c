@@ -1,5 +1,4 @@
-/* Round 47 wwm2: score 181 -> 179, hill3o statement order. Earlier header below. */
-/* Round 45 wwm2: score 183 -> 181, hill3o statement order under this build mode. Earlier header below. */
+/* Round 48 wwm2: the hill3o order from e77263fc (wm func_00f625f0 near miss, score 183 -> 181, hill3o order under the new build m) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 179 was not valid. Restored the last valid statement order: score 183. Earlier header below. */
 /* Round 44 wwm2: score 215 -> 183 under the nostrict build mode (r44/modescan.py). Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f625f0 near miss: score 217 -> 215 (324 -> 324 words, 1372 vs 1352); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* score 217 (1372 vs 1352). First draft from asm; the control flow is right. func_00f47158 takes no arguments and func_001c00e8 takes a kh1_u128 0 (por a2). Left: the frame. The original keeps h = func_001c00e8(...) on the stack at sp+16, with save[] at sp+0 and s0 at sp+32, because all of s0-s8 are taken by hoisted 0xfa/0x109 bases (s7 is a copy of s6). This draft keeps h in s8 and hoists 360.0f into f22, which the original reloads each time. The colour loop loads r/g/b through three copies of one pointer (a2 -> a0 -> v0); a struct array, locals and an inline helper did not reproduce that. */
@@ -32,25 +31,25 @@ void func_00f62440(s32);
 
 s32 func_00f625f0(void)
 {
+    u8 save[8];
+    s32 h;
+    s32 i;
     Col *c;
     u8 *p;
-    u8 save[8];
+    u8 *rgb;
+    Pad *pad;
+    s32 b8;
     f32 f;
 
-    u8 *rgb;
-    s32 h;
-    s32 b8;
-    s32 i;
-    Pad *pad;
     c = D_0108EE00;
     for (i = 0; i < 8; i++) {
         p = &D_00F9B540->b[i];
         rgb = &D_00379F28[*p * 4];
         c->r = rgb[0] >> 1;
-        save[i] = *p;
         c->g = rgb[1] >> 1;
         c->a = 128;
         c->b = rgb[2] >> 1;
+        save[i] = *p;
         c++;
     }
     for (i = 0; i < 3; i++) {
@@ -144,8 +143,8 @@ s32 func_00f625f0(void)
         }
         if (D_00FA5FB8 < -180.0f) {
             f = D_00FA5FB8 + 360.0f;
-            D_00FA5FB8 = f;
             while (f < -180.0f) f += 360.0f;
+            D_00FA5FB8 = f;
         }
         func_001bfac8();
     }
