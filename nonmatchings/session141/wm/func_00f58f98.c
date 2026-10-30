@@ -1,3 +1,4 @@
+/* Round 64 wwm2: score 60 -> 54 with CONTEXT_ONLY definitions of func_00f58300 and func_00f57e78 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 29 wwm1 (tools/ovl/rettype.py, reverse pass): score 74 -> 60 with func_00f55190 declared void again (both calls are bare statements; s32 helped at round 46, but not with the draft as it is now). Earlier header below. */
 /* Round 51 wwm2: score 108 -> 74, now at the exact size (1992). The fixed address 0x00F9B540 is gone. The three loop-top World reads use a second declaration of the same symbol, `extern World *D_00F9B540b __asm__("D_00F9B540")`, so the relocation is against the real symbol, but CSE and loop.c treat it as a different symbol_ref. The same trick on the D_00FA5CE0 test and its `= 1` store in the sub-mode arm gives the target's fresh lui at each access (104 -> 74). This is still a stand-in: gcc assumes the two names do not alias. D_00F9B540 is never stored here, but D_00FA5CE0 is, so this cannot count as final. Earlier header below. */
 /* Round 50 wwm2: score 168 -> 108 (2032 -> 1984 bytes, target 1992). Hand port of wgb's round 45 gb func_00f31ea0. The three loop-top reads go through (*(World **)0x00F9B540) so loop.c does not hoist &D_00F9B540. Symbols mapped by port.py; D_00FA5D50/D_00FA5D78 and the fixed address mapped by hand. Earlier header below. */
@@ -56,7 +57,7 @@ s32 func_00f4e3f8(s32);
 void func_00f58140(void);
 void func_00f57db0(s32);
 void func_00f59820(s32, s32);
-void func_00f58300(void);
+void func_00f58300(void); CONTEXT_ONLY void func_00f58300(void) {}
 s32 func_00f625f0(void);
 void func_00f504f8(s32);
 s32 func_00f4cad0(s32);
@@ -64,7 +65,7 @@ void func_0011d768(s32);
 void func_00f58bd0(s32);
 s32 func_00f58128(s32);
 void func_00f57cf0(s32);
-void func_00f57e78(s32);
+void func_00f57e78(s32); CONTEXT_ONLY void func_00f57e78(s32 a0) {}
 s32 func_001bb6d0(s32);
 void func_00f4b338(void *, s32);
 
