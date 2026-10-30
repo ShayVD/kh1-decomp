@@ -1,3 +1,4 @@
+/* Round 50 (wgb): score 49 -> 47 (420 vs 416 bytes). The f405c0 recipe: tex = (u8 *)w; o = tex; tex = o + 0xD0; a.col = (GbCol *)tex; c0 = (f32 *)tex; tex = o + 0x1E0; colours written through c0 (writing them through a.col reloads it from the stack), and the uv copy over ps = &t->uv[0].v and dd = o + 500 with ps[-1] / dd[-1] (the target's +12 / +500 offsets). The instruction multiset is now the target's plus one move: ours copies w twice (move t1,s2; move t3,t1), the target once. Tried six forms of the copy chain (o = w directly, tex += 0xD0, c0 first, w + 0x1E0) and passing w instead of o: none drop the move (47-89). Earlier header below. */
 /* Round 43 (wgb): score 55 -> 49 (412 vs 416 bytes). msd showed that the target counts the uv copy loop down (li 3 / bgez) over two pointers, so the loop is now written over a GbUV pointer and an f32 pointer; loop.c then reverses it as in the target. Left: the target's pointers are offset by +4 (t + 12 and w + 500, with u read at -4); the move t1,s2 / move a1,t1 copies; and 4 bytes. An inline helper taking w and col did not produce the moves (61). Earlier header below. */
 /* Round 36 (wgb): gb.x func_00f37448 near miss: 65 -> 77 words, score 83 -> 55 (aligned diff 61 -> 39). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
 /* 77 words / score 55 (428 vs 416): logic right; GbArgs needs the extra s32+OvlVec padding for the 96-byte frame. Same blocker as f36ee0/f405c0: the original copies w through t1 (move t1,s2; move a1,t1) and a.col through t1, which looks like an inlined helper taking w. Round 18 (wwm1): 65 raw words after sclimb.py statement and declaration moves. */
@@ -56,33 +57,38 @@ s32 func_00f23860(s32);
 void func_00f37448(s32 x, GbWork *w, s32 id, s32 c, s32 a4) {
     GbMode m;
     GbUVTbl *t;
-    void *buf;
+    u8 *tex;
+    u8 *o;
+    f32 *c0;
+    f32 *ps, *dd;
     s32 i, r;
     GbArgs a;
     r = func_00f23860(id - 1);
-    a.col = (GbCol *)((u8 *)w + 0xD0);
+    tex = (u8 *)w;
+    o = tex;
+    tex = o + 0xD0;
+    a.col = (GbCol *)tex;
+    c0 = (f32 *)tex;
+    tex = o + 0x1E0;
     t = D_00F813CC[id];
-    a.col->c0[0] = D_00379F28[c][0];
-    a.col->c0[1] = D_00379F28[c][1];
-    a.col->c0[2] = D_00379F28[c][2];
-    a.col->c0[3] = 128.0f;
-    a.col->c1[0] = D_0037A028[c][0];
-    a.col->c1[1] = D_0037A028[c][1];
-    a.col->c1[2] = D_0037A028[c][2];
-    a.col->c1[3] = 128.0f;
-    buf = (u8 *)w + 0x1E0;
+    c0[4] = D_00379F28[c][0];
+    c0[5] = D_00379F28[c][1];
+    c0[6] = D_00379F28[c][2];
+    c0[7] = 128.0f;
+    c0[8] = D_0037A028[c][0];
+    c0[9] = D_0037A028[c][1];
+    c0[10] = D_0037A028[c][2];
+    c0[11] = 128.0f;
     if (t != NULL) {
-        a.tex = (u8 *)w + 0x1E0;
-        buf = (u8 *)w + 0x2F0;
-        {
-            GbUV *s = t->uv;
-            f32 *d = w->uv[0];
-            for (i = 0; i < 4; i++) {
-                d[0] = s->u;
-                d[1] = s->v;
-                s++;
-                d += 4;
-            }
+        a.tex = tex;
+        tex = o + 0x2F0;
+        ps = &t->uv[0].v;
+        dd = (f32 *)(o + 500);
+        for (i = 0; i < 4; i++) {
+            dd[-1] = ps[-1];
+            dd[0] = ps[0];
+            ps += 2;
+            dd += 4;
         }
         a.x4 = 0;
     } else {
@@ -92,5 +98,5 @@ void func_00f37448(s32 x, GbWork *w, s32 id, s32 c, s32 a4) {
     m.b = 1;
     m.mode = 5;
     m.c = 1;
-    func_00f3e0d8(x, w, buf, &a, r, &m, a4);
+    func_00f3e0d8(x, (GbWork *)o, tex, &a, r, &m, a4);
 }
