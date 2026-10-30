@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 408 -> 400, func_00f24240 declared s32. Earlier header below. */
 /* Round 36 (wgb): gb.x func_00f2ac20 near miss (norlo mode): 547 -> 550 words, score 430 -> 408 (aligned diff 240 -> 235). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules; 85 s, seed 1) over the round 44 norlo draft; the order passes hill3.py --check against it. Earlier header below. */
 /* Round 44 wwm2: score 460 -> 430 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* Round 42 wwm2: score 544 -> 460, port.py of the wm twin func_00f51d18 draft, with its ease tables mapped by hand (wm D_00FA5B38 / D_00FA5B60 = gb D_00F613B8 / D_00F613E0). Earlier header below. */
@@ -64,7 +65,7 @@ void func_00f219b0(s32);
 f32 func_001befc8(s32, void *);
 void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
 void func_0011d768(s32);
-void func_00f24240(void *, s32);
+s32 func_00f24240(void *, s32);
 void func_00f29870(void); CONTEXT_ONLY void func_00f29870() {}
 void func_00f24570(s32, void *);
 void func_00f24780(void *);
