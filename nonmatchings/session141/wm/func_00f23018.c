@@ -1,4 +1,4 @@
-/* Round 27 wwm1: score 85 -> 47 (1332 vs 1336). valaudit: the target stores D_00FBAA78 and D_00FBAA7C through two address registers (s1, s0: sw 0(s1), sw 0(s0)) and D_00FBAA80..8C by %lo. As scalars written through pointer locals pa/pb (the array, scalars alone or a [2] array give 63-147). Left: pa/pb in s0/s1 the other way round (placement and declaration order of pa/pb do not move it), the D_00FB6498 field store order at the top and v0/v1 in the draw call. Earlier header below. */
+/* Round 27 wwm1: score 85 -> 19 (1332 vs 1336). valaudit: the target stores D_00FBAA78 and D_00FBAA7C through two address registers (sw 0(s1), sw 0(s0)) and D_00FBAA80..8C by %lo, so they are scalars, the first two written through pointer locals; pa is set before the second func_001bb7c8 call and pb just before the stores (that gives the target's s1/s0; together: 47). The target stores xac = arg after the second func_00f2b298 call (sw s2,172 follows that jal), id = 2 comes after the xc/x10 stores, D_00F873F0 = 1 after p = *D_00F85160, and D_00F878F0 is cleared a, b, c, d. Left: v0/v1 in the draw call, the 15001 call's a0/t0 order, and the lui register of D_00FBB338. Earlier header below. */
 /* Round 46 wwm2: score 89 -> 85, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 91 -> 89, func_00f294a0 declared s32. Earlier header below. */
 /* Round 36 (wgb): wm.x func_00f23018 near miss: 251 -> 251 words, score 99 -> 91 (aligned diff 73 -> 66). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
@@ -95,26 +95,26 @@ s32 func_00f23018(s32 id, s32 arg)
     func_00f68070();
     func_00f206d8(0, 0, 0);
 
+    D_00FB6498.xc = 0x3600;
+    D_00FB6498.x10 = 0x800;
     if (id == 0) {
         id = 2;
     }
-    D_00FB6498.xc = 0x3600;
-    D_00FB6498.x10 = 0x800;
     D_00FB6498.x94 = func_00f2b298(id);
-    D_00FB6498.xac = arg;
     D_00FB6498.x98 = func_00f2b298(id);
+    D_00FB6498.xac = arg;
     func_00f2ac98(D_00FB6498.x14);
     for (i = 0; i < 2; i++) {
         tex[i] = func_001bb500(0x30000, 128);
         pal[i] = func_001bb500(0x14000, 128);
     }
     func_001bb7c8(D_00FB6690, tex[0]);
+    pa = &D_00FBAA78;
     func_001bb7c8(D_00FB66A8, pal[0]);
     func_00f64b88(tex[0]);
     func_00f65a68(pal[0]);
     func_00f29810(tex[0], work, cam);
     sceVu0UnitMatrix(m);
-    pa = &D_00FBAA78;
     pb = &D_00FBAA7C;
     *pa = func_001bb500(0x60000, 128);
     *pb = func_001bb500(0x64000, 128);
@@ -123,18 +123,18 @@ s32 func_00f23018(s32 id, s32 arg)
     D_00FBAA88 = func_001bb500(0x67000, 128);
     D_00FBAA8C = func_001bb500(0x20000, 128);
     D_00FB6498.init(heap, 0x200000);
-    D_00F873F0 = 1;
     p = *D_00F85160;
+    D_00F873F0 = 1;
     lim[0] = p;
     lim[1] = p;
     func_001c06c0(-1, func_00f23008);
     func_00f23878();
     func_00f21ef0(0.0f);
     D_00FBB32C = 0;
-    D_00F878F0.d = 0;
+    D_00F878F0.a = 0;
     D_00F878F0.b = 0;
     D_00F878F0.c = 0;
-    D_00F878F0.a = 0;
+    D_00F878F0.d = 0;
     func_0011ef10(0x249F0, func_00f22240);
     func_0011ef10(0x249F1, func_00f222a0);
     func_0011ef10(0x270FE, func_00f25420);
