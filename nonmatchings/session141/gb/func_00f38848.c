@@ -1,3 +1,4 @@
+/* Round 45 (wgb): score 157 -> 90. The output pointer is s32 (*o)[4] advanced as *o++ in each sceVu0RotTransPers call (the target keeps it in s5), and the loop masks x and y with & ~15 before the func_00f3fa80 call and subtracts 48 after it, so x + 96 is built from the -48 value as in the target. Still different: the target loads two li 3 (ours shares one) and allocates the D_00F61880 field addresses differently. */
 /* Round 41 (wgb): score 159 -> 157, statement order from hill3 (120 s, seed 41, default mode). Earlier header below. */
 /* Round 41 wwm2: score 171 -> 159. The XYZ word is written x | 0x100000000 | (u64)y << 16, and the second UV word has its v (<< 16) half first. Found by r41/orsweep.py, which tries every order of the | terms in each packed GS word line. */
 /* 185 words / score 171 (908 vs 944). Logic complete (8 corners of box a..b, then 8 sprites of D_00F61880[idx] at each projected corner). Orig keeps the output pointer in s5 and advances it after each sceVu0RotTransPers call (addiu s5,sp,48...), and keeps 0x100000000 in s7 and 5 in s5 across the loop; ours folds the addresses to constants. Tried an advanced s32 *o pointer. */
@@ -13,59 +14,54 @@ u64 *func_00f38848(OvlVec *a, OvlVec *b, u64 color, s32 idx, f32 (*mtx)[4], u64 
     OvlVec v;
     s32 out[8][4];
     s32 i, x, y;
-    s32 *o;
-    o = out[0];
+    s32 (*o)[4];
     v[3] = 1.0f;
     v[0] = (*a)[0];
     v[1] = (*a)[1];
+    o = out;
     v[2] = (*a)[2];
-    sceVu0RotTransPers(o, mtx, v, 0);
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     v[0] = (*b)[0];
-    o += 4;
     v[2] = (*a)[2];
-    sceVu0RotTransPers(o, mtx, v, 0);
-    o += 4;
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     v[0] = (*a)[0];
     v[2] = (*b)[2];
-    sceVu0RotTransPers(o, mtx, v, 0);
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     v[0] = (*b)[0];
-    o += 4;
     v[2] = (*b)[2];
-    sceVu0RotTransPers(o, mtx, v, 0);
-    o += 4;
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     v[0] = (*a)[0];
     v[1] = (*b)[1];
     v[2] = (*a)[2];
-    sceVu0RotTransPers(o, mtx, v, 0);
-    o += 4;
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     v[0] = (*b)[0];
     v[2] = (*a)[2];
-    sceVu0RotTransPers(o, mtx, v, 0);
-    o += 4;
-    v[2] = (*b)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     v[0] = (*a)[0];
-    sceVu0RotTransPers(o, mtx, v, 0);
-    o += 4;
+    v[2] = (*b)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     v[0] = (*b)[0];
     v[2] = (*b)[2];
-    sceVu0RotTransPers(o, mtx, v, 0);
+    sceVu0RotTransPers(*o++, mtx, v, 0);
     p = func_00f3fa80(p);
     p[1] = 20;
     p[0] = 0;
     p += 2;
     func_00f3fa98(p);
     for (i = 0; i < 8; i++) {
-        x = ((out[i][0] + 8) & ~15) - 48;
-        y = ((out[i][1] + 8) & ~15) - 48;
+        x = (out[i][0] + 8) & ~15;
+        y = (out[i][1] + 8) & ~15;
         p = func_00f3fa80(p);
+        x -= 48;
+        y -= 48;
         p[0] = D_00F56DC0->tex[idx];
         p[1] = 6;
         p += 2;
         p[0] = 342;
         p[1] = 0;
         p += 2;
-        p[1] = 1;
         p[0] = color;
+        p[1] = 1;
         p += 2;
         p[0] = (D_00F61880[idx].u << 4) | ((u64)(D_00F61880[idx].v << 4) << 16);
         p[1] = 3;
@@ -76,8 +72,8 @@ u64 *func_00f38848(OvlVec *a, OvlVec *b, u64 color, s32 idx, f32 (*mtx)[4], u64 
         p[0] = ((u64)(((D_00F61880[idx].v + D_00F61880[idx].h) << 4) + 16) << 16) | (((D_00F61880[idx].u + D_00F61880[idx].w) << 4) + 16);
         p[1] = 3;
         p += 2;
-        p[1] = 5;
         p[0] = (x + 96) | ((u64)(y + 96) << 16) | 0x100000000;
+        p[1] = 5;
         p += 2;
         func_00f3fa98(p);
     }
