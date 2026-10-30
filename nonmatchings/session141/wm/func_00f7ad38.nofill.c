@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 600 -> 598, hill3o statement order. Earlier header below. */
 /* Round 45 wwm2: score 616 -> 600, hill3o statement order under this build mode. Earlier header below. */
 /* Round 44 wwm2: score 628 -> 616 under the nofill build mode (r44/modescan.py). Earlier header below. */
 /* score 524 (3200 vs 3176 bytes). Sibling of f7a350: the same 3-pack texture upload, then each kind 3/4 entry is filtered by id (66..70 skipped; >= 100 are map markers for sel/D_00FB6498.x94, with dim set when they differ; 2..64 need f[id] & 1 and not & 2; 72..97 need f[id-70] & 2; D_00FB649C.f is the flag array, addressed from D_00FB649C+16 as the original does). It is then lifted by func_00f787b0, projected per vertex (skipped when z is invalid), coloured by the D_0108F7C0/830/8A0 fades and the pack-k switch, and ids 21..26 are drawn 4 times rotated by D_0108F918 (the original reuses the id-21 index variable as the inner loop counter; kept). Colour bytes need (s32) truncation (u8 from float gives the 0x4f000000 sequence). u32 id gives the sltiu compares. Left: 24 bytes: the texture-upload argument order, the s4/s5 and t5/t6 register numbering, the double col[3] store, and the blend=72 merge in the k switch. hill2 found nothing (the word count is dominated by misalignment). Round 18 (wwm1): 732 words with CONTEXT_ONLY definitions of cosf and sinf (ctx2.py). Round 19 (wwm1): score 675 -> 628 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
@@ -42,33 +43,33 @@ void func_00f7ad38(s32 sel)
     s32 ys[4];
     u8 *addr;
     s32 zs[4];
-    s32 q[4];
     f32 lift, cx, cy, ang, fx, fy;
-    f32 v[4];
-    s32 sc[4];
-
+    s32 q[4];
     Hdr *h;
+
+    f32 v[4];
+    f32 *pa;
     Grp *g;
+    u32 id;
+    s32 sc[4];
     Tex *tx;
     s32 i, j, w, th, last, mode, t, d0, d4;
     Ent *e;
-    u32 id;
     u64 blend;
     s32 k, n, m, dim, a;
-    f32 *pa;
     u8 col[4];
     mode = 0;
-    D_0108F6E4 = 0;
     t = 0;
+    D_0108F6E4 = 0;
     blend = 0;
     if (sel >= 2 && sel < 28) {
         if ((D_00FB64AC[sel] & 1) && (D_00FB64AC[sel] & 8)) D_0108F6E4 = 1;
     }
     for (k = 2; k >= 0; k--) {
-        last = -1;
         th = 0;
         h = (Hdr *)D_0108F6B8[k];
         tx = (Tex *)((u8 *)h + h->tex);
+        last = -1;
         w = 0;
         d4 = 0;
         g = (Grp *)((u8 *)h + h->grp);
@@ -91,8 +92,8 @@ void func_00f7ad38(s32 sel)
                         break;
                     case 8:
                         t = w * th / 64;
-                        d4 = 16;
                         d0 = 16;
+                        d4 = 16;
                         break;
                     default:
                         mode = 0;
@@ -122,8 +123,8 @@ void func_00f7ad38(s32 sel)
                     if (D_00FB6498.x94 + 100 == id) goto show;
                 } else {
                     if (id >= 2 && id < 65) {
-                        if (!(D_00FB649C.f[id] & 1)) continue;
                         if (D_00FB649C.f[id] & 2) continue;
+                        if (!(D_00FB649C.f[id] & 1)) continue;
                     }
                     if (id >= 72 && id < 98) {
                         if (!(D_00FB649C.f[id - 70] & 2)) continue;
@@ -145,9 +146,9 @@ void func_00f7ad38(s32 sel)
                     zs[n] = sc[2];
                     q[n] = sc[3];
                 }
-                col[0] = 0x80;
-                col[3] = 0x80;
                 col[2] = 0x80;
+                col[3] = 0x80;
+                col[0] = 0x80;
                 col[1] = 0x80;
                 if (e->id >= 2 && e->id < 28) {
                     if (sel == e->id) {
@@ -170,9 +171,9 @@ void func_00f7ad38(s32 sel)
                     col[2] = (s32)D_0108F8A0[e->id];
                     if (e->id == D_00FB6498.x94) {
                         col[2] = 0x80;
+                        col[0] = 0x80;
                         col[1] = 0x80;
                         col[3] = 0x80;
-                        col[0] = 0x80;
                     }
                 }
                 switch (k) {
@@ -194,13 +195,13 @@ void func_00f7ad38(s32 sel)
                     }
                     blend = 72;
                     break;
-                case 2:
-                    col[3] = 80;
-                    blend = 72;
-                    col[0] = 0x80;
-                    col[1] = 0x80;
-                    col[2] = 0x80;
                     break;
+                case 2:
+                    blend = 72;
+                    col[1] = 0x80;
+                    col[0] = 0x80;
+                    col[3] = 80;
+                    col[2] = 0x80;
                 }
                 if (e->id < 27) {
                     a = col[3];
