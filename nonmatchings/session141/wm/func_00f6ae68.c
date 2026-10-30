@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 215 -> 207, hill3o statement order. Earlier header below. */
 /* Round 36 (wwm2): wm.x func_00f6ae68 near miss: score 245 -> 215 (428 -> 419 words, 1852 vs 1864); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* score 245 (1852 vs 1864). The endless draw loop was read from the asm. It draws a 6x8 grid of 64x64 tiles with func_00f693e0, then an optional func_00f696a0 sprite (when D_0108F1BC == 0 and D_0108F204 and D_0108F254 are set), four func_00f69df0 gradient quads from the Fx block at D_0108F208, and four fixed func_00f693e0 images. Last comes the jump-table image picked by D_00FB4A50 (1..10; default, 1 and 7 share one entry; table read from wm.elf at 0x00FBA0A0). Left: the 68/72 alpha selects come out as movz where the original uses movn with 68 and 72 kept in s1/s4; the s-register assignment around &D_00FB4F50 and &D_00FB4C30 differs; the size is 12 bytes short. */
 typedef struct { u8 r, g, b, a; } Rgba;
@@ -49,12 +50,12 @@ void func_00f6ae68(void)
     Rgba c[4];
     s32 x[4];
     s32 y[4];
+
     s32 i, j, h;
-    u64 al;
     u32 img, clut;
     Fx *f;
     u32 a2;
-
+    u64 al;
 loop:
     {
         al = 68;
@@ -100,12 +101,12 @@ loop:
         y[0] = f->y3C; y[1] = f->y3C; y[2] = 384; y[3] = 384;
         a2 = 68;
         func_00f69df0(c, x, y, f->f24 == 0 ? 68 : 72);
-        c[0].r = c[1].r = c[2].r = c[3].r = f->c0[0];
         y[0] = f->y38 - 2; y[1] = f->y38 - 2; y[2] = f->y38; y[3] = f->y38;
+        c[0].r = c[1].r = c[2].r = c[3].r = f->c0[0];
         c[0].g = c[1].g = c[2].g = c[3].g = f->c0[1];
         c[0].b = c[1].b = c[2].b = c[3].b = f->c0[2];
-        c[0].a = c[1].a = c[2].a = c[3].a = f->c0[3];
         x[0] = 0; x[1] = 512; x[2] = 0; x[3] = 512;
+        c[0].a = c[1].a = c[2].a = c[3].a = f->c0[3];
         if (f->f10 == 0) a2 = 68; else a2 = 72;
         func_00f69df0(c, x, y, a2);
         y[0] = f->y3C; y[1] = f->y3C; y[2] = f->y3C + 2; y[3] = f->y3C + 2;
