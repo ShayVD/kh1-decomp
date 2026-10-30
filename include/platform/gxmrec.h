@@ -65,6 +65,7 @@ typedef struct {
     u8 cls;           /* DRAW: primasm.h's KH1_PA_* */
     u8 stencil;       /* DRAW: 0, 1 tests DATE's stencil, 2 the set-up writes it, 3 the clear zeroes it */
     u8 psm;           /* BEGIN_SCENE: the target's PSM */
+    u8 wtex;          /* SET_TEXTURE: sample the target src its whole width (cmdbuf.h's KH1Cmd.wtex) */
     s16 slot, pslot;  /* TEX_UPLOAD / PAL_*: the slot; SET_TEXTURE: the texture entry (-1 none) and palette slot */
     s16 sx0, sy0, sx1, sy1; /* SET_REGION */
     u16 fbp, fbw;     /* BEGIN_SCENE */

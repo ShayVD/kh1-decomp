@@ -48,6 +48,9 @@ void kh1_target_of(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 tes
     case KH1_RT_SLOT: out->wide = 2; rows = 192; break;
     case KH1_RT_OFFSCREEN: gw = 256; rows = 256; break;
     }
+    /* a slot draw away from the canvas's origin (the shadow's window copy, XYOFFSET 0x7800) is a buffer of its own,
+     * not a capture of the view: no margin */
+    if (out->wide == 2 && out->ofx != 0x7000) { vx0 = 0; vw = 8192; }
     if (out->wide == 1) { out->ox = -vx0 / 16.0f; w = vw / 16.0f; }
     else if (out->wide == 2) { out->ox = -vx0 / 32.0f; w = vw / 32.0f; }
     else { out->ox = 0.0f; w = (f32)gw; }
