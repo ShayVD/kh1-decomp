@@ -1,3 +1,4 @@
+/* Round 31 wwm1: score 51 -> 15. c is copied with memcpy (gcc's inline block move) before the bits struct copy; with two struct assignments sched1 always put the 32-byte bits copy first. memcpy for bits instead gives 15 too. In the original these are aggregate initializers, so this is a stand-in for the order, not the source. Left: a0/a1/a2 numbering in the 105 - r*35 branch. Earlier header below. */
 /* score 51 (1332 vs 1336). Pad-intro animation loop: per frame i, q = i/4, k = q%8, tbl[k] picks a button whose alpha ramps 35..140 or back, mask bits pick which of 4 func_00f45e68 sprites draw in mode bit 0/1; first/cnt/done drive mode from func_00f40c98/func_00f35960/func_00f2c848. The three local tables are aggregate initializers in the original (D_00FB74B0 = {0x8C4D3F28, 0x8C193C7F x3}, D_00FB74C0 = {1,3,7,15,13,9,1,0}, D_00FB74E0 = {0,1,2,3,1,2,3,0}); this draft uses struct copies of the extern rodata so hand.py can score it (with initializers the rodata placement fails until the code matches). Keys: done != 0 || (f40c98 && f35960) shape keeps done on the stack (98 -> 59). Left: gcc schedules the 32-byte bits copy before the 16-byte c copy (orig c first; every decl/statement order tried), and a0/a1/a2 numbering in the 105 - r*35 branch. Round 27 wwm2. */
 extern u64 **D_00F85160;
 u64 *func_00f66ac8(u64 *);
@@ -12,6 +13,7 @@ s32 func_00f40c98(void);
 u64 *func_00f45e68(u64 *, s32, s32, s32);
 
 typedef struct { s32 v[4]; } A4;
+void *memcpy(void *, const void *, u32);
 typedef struct { s32 v[8]; } A8;
 extern A4 D_00FB74B0;
 extern A8 D_00FB74C0;
@@ -34,8 +36,8 @@ void func_00f46070(s32 mode, s32 n)
     f32 *f;
     u64 *p;
 
+    memcpy(&c, &D_00FB74B0, sizeof(c));
     bits = D_00FB74C0;
-    c = D_00FB74B0;
     tbl = D_00FB74E0;
     mask = 0;
     i = 0;
