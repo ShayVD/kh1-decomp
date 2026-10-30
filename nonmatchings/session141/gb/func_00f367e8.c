@@ -1,3 +1,4 @@
+/* Round 46 wwm2: score 100 -> 92, the a[]/b[] element reads written as *(f32 *)((u32)b + (i << 2)) so the pointer comes first in the addu. Earlier header below. */
 /* 59 words / score 100 (1048 = 1048). Logic complete (box outline: for 3 axes x 2 faces, a GIF tag + colour, then 10 sceVu0RotTransPers writes straight into the packet, offset by D_00F616C0 on the two other axes; then q[n][2] += 256, q[n][3] = 16). Needs a 16-byte aligned struct for the vector copies (ld/sd pairs). Left: q = p is set right after the % 3 divides in the original (ours after the vector copy), operand order of b + k*4 adds, and f0/f1 swaps in the mixed +=/-= offset pairs (the 10th corner uses f1 for i1 while the 2nd uses f0). Swapping the mixed pairs made it worse (128). Permuter run at hand-off. */
 typedef struct { f32 f[4]; } __attribute__((aligned(16))) V4;
 extern f32 D_00F616C0;
@@ -22,7 +23,7 @@ u64 *func_00f367e8(f32 *a, f32 *b, u64 color, f32 (*mtx)[4], u64 *p) {
             if (j == 0) {
                 v = *(V4 *)a;
             } else {
-                v.f[k] = b[k];
+                v.f[k] = *(f32 *)((u32)b + (k << 2));
             }
             i1 = (k + 1) % 3;
             i2 = (k + 2) % 3;
@@ -35,7 +36,7 @@ u64 *func_00f367e8(f32 *a, f32 *b, u64 color, f32 (*mtx)[4], u64 *p) {
             w.f[i2] += D_00F616C0;
             sceVu0RotTransPers((s32 *)p, mtx, w.f, 0);
             p += 2;
-            u.f[i1] = b[i1];
+            u.f[i1] = *(f32 *)((u32)b + (i1 << 2));
             sceVu0RotTransPers((s32 *)p, mtx, u.f, 0);
             p += 2;
             w = u;
@@ -43,7 +44,7 @@ u64 *func_00f367e8(f32 *a, f32 *b, u64 color, f32 (*mtx)[4], u64 *p) {
             w.f[i2] += D_00F616C0;
             sceVu0RotTransPers((s32 *)p, mtx, w.f, 0);
             p += 2;
-            u.f[i2] = b[i2];
+            u.f[i2] = *(f32 *)((u32)b + (i2 << 2));
             sceVu0RotTransPers((s32 *)p, mtx, u.f, 0);
             p += 2;
             w = u;
@@ -51,7 +52,7 @@ u64 *func_00f367e8(f32 *a, f32 *b, u64 color, f32 (*mtx)[4], u64 *p) {
             w.f[i2] -= D_00F616C0;
             sceVu0RotTransPers((s32 *)p, mtx, w.f, 0);
             p += 2;
-            u.f[i1] = a[i1];
+            u.f[i1] = *(f32 *)((u32)a + (i1 << 2));
             sceVu0RotTransPers((s32 *)p, mtx, u.f, 0);
             p += 2;
             w = u;
