@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 196 -> 174. The target's leftover li 30; beqzl; break 7 next to an i/2 shift is what gcc 2.96 leaves for a division whose result is dead, inside an inline helper that gets the divisor 30 as a parameter: the trap_if survives flow, the div does not (r44/t.c f2 reproduces it). Here the helper is part5a4f0(t, n) { s32 q = t / n; return t * 15 / 30; }, used in the else arm. Using it in both arms gives both checks but scores 196 because of setup differences elsewhere. The real helper is probably something more natural that computes and drops t / n. */
 /* Round 36 (wwm2): wm.x func_00f5a4f0 near miss: score 220 -> 196 (280 -> 276 words, 1360 vs 1392); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
 /* wm.x func_00f5a4f0 near miss: 280 words differ, score 220 (ours 1360 bytes, original 1392). Port of gb func_00f333f8 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. */
 typedef struct { OvlVec v[4]; OvlVec pos; OvlVec rot; } GbXf;
@@ -25,6 +26,11 @@ void func_00f5d118(s32, s32, void *, s32, s32, void *, void *);
 void func_00f52ab0(void *, Box *, s32);
 s32 func_001c00e8(s32, void *, kh1_u128);
 void func_00f5a498(void);
+
+static inline s32 part5a4f0(s32 t, s32 n) {
+    s32 q = t / n;
+    return t * 15 / 30;
+}
 
 void func_00f5a4f0(s32 arg) {
     OvlVec v[5];
@@ -102,7 +108,7 @@ void func_00f5a4f0(s32 arg) {
             func_001be988(D_0108D120.rot, xf.rot, v[2], i, 30);
             func_001be988(D_0108D120.pos, xf.pos, v[3], i, 30);
             func_001be988(D_0108D120.v[0], xf.v[0], v[4], i, 30);
-            func_00f59820(5, base + i * 15 / 30);
+            func_00f59820(5, base + part5a4f0(i, 30));
             k = base - i * 15 / 30;
         }
         func_001be9f0(D_0108D120.rot);
