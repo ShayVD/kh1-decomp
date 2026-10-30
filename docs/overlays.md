@@ -313,6 +313,48 @@ void f(void) { int i, k; for (i = 0; i < n; i++) { k = a[i] - 1;
 With `g` only declared, the first test is `beql ... ; lw $2,%lo(n)`. With `void g(int x) {}`
 above `f`, it is `beq ... ; lw $2,%lo(n)`.
 
+### What makes a call nothrow (session 141, wwm2 round 66)
+
+This is read from cc1's disassembly (the symbols are in the binary) and checked on the test above.
+
+- `can_throw` treats a CALL_INSN as throwing unless it has a `REG_EH_REGION` note with a value
+  of 0 or less. `flag_exceptions` makes no difference to that, so in C every call without the
+  note "can throw".
+- The note comes from `ECF_NOTHROW`. expand_call sets that flag from exactly two places:
+  - `TREE_NOTHROW` on the CALL_EXPR. Only the C++ front end sets it, for a callee declared
+    `throw()`.
+  - `TREE_NOTHROW` on the callee's FUNCTION_DECL (`flags_from_decl_or_type`).
+- The only writer of the decl bit is `rest_of_compilation`. After compiling a function it sets
+  `TREE_NOTHROW` when `nothrow_function_p()` holds, and that is always true when
+  `flag_exceptions` is 0, as it is for C.
+- So in C, a call is nothrow exactly when the callee was compiled earlier in the same file. Its
+  body doesn't matter: `void g(int x) { h(x); }`, which itself calls an external function, works
+  too.
+- No declaration does the same. On the test, on wm func_00f72a70 and on gb func_00f50550, these
+  all leave the call throwing:
+  - `__attribute__((const))`, `pure` and `noreturn`. noreturn also deletes the code after the call.
+  - `__attribute__((nothrow))`, which 2.96 warns about and ignores.
+  - A `static` prototype.
+  - `extern inline` with a body. That inlines the call away instead.
+  - `-fexceptions` or `-fno-exceptions` on a C compile.
+- The only declaration-level form is C++ `throw()`. With `g++ -x c++` (with or without
+  `-fno-exceptions`), `void g(int) throw();` gives the same code as a CONTEXT_ONLY definition: on
+  f72a70 and f50550 the scores were identical (35 and 164). The build compiles the overlays as C,
+  so this is only an explanation, not a tool.
+- So for a callee in the main ELF (func_0024e468, func_0011d768, any `ext` callee in
+  tools/ovl/nothrow.py), the original cannot have had a nothrow call. A CONTEXT_ONLY gain there
+  stands in for a different source shape.
+- Check where the original fills that slot from, as in these two cases:
+  - **gb func_00f50550.** The original's `beqz v0` slot holds `move s2,s1` from before the branch:
+    fill_simple_delay_slots, which is always a plain branch. The CONTEXT_ONLY func_0011d768
+    version steals `andi v0,v1,0x2000` from the target instead. So the branch opcode agrees, but
+    the source still lacks the copy just before the test.
+  - **wm func_00f72a70.** The CONTEXT_ONLY func_0024e468 version also fills the loop-top
+    `beqz v0` slot with `li a0,2`, where the original keeps a `nop`. That is the
+    func_0024e468(1) call on the taken path still counting as throwing there, which is plain C
+    behaviour. nothrow.py's `kept` count flags it: 294 original insns line up without the
+    definition and 293 with it, although the score is 39 -> 35.
+
 To try this mechanically: /tmp/claude-0/s141/wwm1/ctx2.py OVL FUNC draft.c [k] gives every
 declared callee (func_*, sce*, any prototype) a CONTEXT_ONLY definition, one at a time, then
 all together, then up to k at a time. It is greedy: after an improvement it tries the
