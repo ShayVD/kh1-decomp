@@ -171,7 +171,7 @@ void func_00f74f30(void)
                         D_0108F198 = 212;
                         D_0108F540 = 0;
                     }
-                    break;
+                    goto done23;
                 }
                 if ((b | b >> 24) & 0xA0) {
                     func_0011d768(1);
@@ -181,6 +181,7 @@ void func_00f74f30(void)
                 D_0108F198 = 212;
                 func_0024e468(1);
             }
+        done23:
             if (!res) {
                 D_0108F53C = -1;
                 func_00f6b5d0(6, 0, D_00FB4A70);
