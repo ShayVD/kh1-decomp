@@ -1,3 +1,4 @@
+/* Round 42 (wgb): score 172 -> 120 (124 -> 85 words differ, size exact). The frame count is now a local n = 30, used for the loop bound, the func_001be988 count arguments and the helper's divisor. Because the divisor is no longer a literal at loop time, loop.c no longer hoists a 30 into s8: s8 now holds sp+64 (v[4]) as in the target, and the trap's 30 is loaded in each arm. Statement order from hill3 with the size guard (420 s, seed 42); the first arm now has the same shape as the second (call with base + helper, then k = base + i * 15 / 30), which fixes the k register. Left: the setup block schedule before the loop. Earlier header below. */
 /* Round 41 (wgb): score 174 -> 172, size now exact (1392 bytes, 278 -> 124 words differ). The inline helper part5a4f0 is now used in both arms, so both of the target's li 30 / beqzl / break 7 checks appear. Box.ax is declared u16 ax : 4, because the target reads ax with its own lhu 4 while the other fields come out of one lw 4. Statement order from hill3 (400 s, seed 7). What is left: loop.c hoists the two 30s into one register that gets s8, whereas in the target s8 holds sp+64 (v[4]) and 30 is rematerialised as li v1,30 in each arm. Under nostrict the size is also exact, but the separate Box loads cost more. Earlier header below. */
 /* Round 42 wwm2: score 196 -> 174, port.py of the wm twin func_00f5a4f0 draft. Earlier header below. */
 /* Round 41 wwm2: score 220 -> 196, port.py of the wm twin func_00f5a4f0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
@@ -41,6 +42,7 @@ void func_00f333f8(s32 arg) {
     s32 i;
     s32 base;
     s32 k;
+    s32 n;
     func_00f33380(128);
     h = *(s16 *)(D_00F56DC0 + 118);
     func_00f29400(0);
@@ -50,21 +52,21 @@ void func_00f333f8(s32 arg) {
     }
     xf = D_00F80960;
     v[2][1] = *(s32 *)(D_00F56DC0 + 4312) * 3.1415926f * 0.00048828125f;
-    v[4][3] = 0.0f;
     v[0][0] = (s32)D_00F56DC4->ax;
-    v[0][2] = (s32)D_00F56DC4->az;
-    v[1][2] = (s32)D_00F56DC4->bz;
-    v[2][0] = *(s32 *)(D_00F56DC0 + 4308) * 3.1415926f * 0.00048828125f;
-    v[3][1] = ((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) * 200.0f;
-    v[2][2] = 0.0f;
+    v[4][3] = 0.0f;
     v[2][3] = 0.0f;
+    v[2][0] = *(s32 *)(D_00F56DC0 + 4308) * 3.1415926f * 0.00048828125f;
+    v[0][1] = (s32)D_00F56DC4->ay;
+    v[3][1] = ((u16)(*(u64 *)(D_00F56DC0 + 88) >> 36) & 0xF) * 200.0f;
+    v[0][2] = (s32)D_00F56DC4->az;
+    v[1][0] = (s32)D_00F56DC4->bx;
+    v[2][2] = 0.0f;
+    v[3][2] = -(*(u16 *)(D_00F56DC0 + 170) * 200.0f) * 0.5f;
     v[3][3] = 0.0f;
     v[4][0] = 0.0f;
-    v[1][0] = (s32)D_00F56DC4->bx;
-    v[1][1] = (s32)D_00F56DC4->by;
-    v[3][2] = -(*(u16 *)(D_00F56DC0 + 170) * 200.0f) * 0.5f;
-    v[0][1] = (s32)D_00F56DC4->ay;
+    v[1][2] = (s32)D_00F56DC4->bz;
     v[4][1] = 0.0f;
+    v[1][1] = (s32)D_00F56DC4->by;
     v[4][2] = *(f32 *)(D_00F56DC0 + 136);
     v[3][0] = -(*(u16 *)(D_00F56DC0 + 166) * 200.0f) * 0.5f;
     D_00F80960.v[1][0] = 0.0f;
@@ -72,13 +74,13 @@ void func_00f333f8(s32 arg) {
     D_00F80960.v[1][2] = 1.0f;
     D_00F80960.v[2][1] = 1.0f;
     D_00F80960.v[2][0] = 0.0f;
-    D_00F80960.v[2][3] = 1.0f;
+    D_00F80960.v[1][3] = 1.0f;
     D_00F80960.v[3][3] = 0.0f;
     D_00F80960.v[2][2] = 0.0f;
     D_00F80960.v[3][0] = 0.0f;
     D_00F80960.v[3][1] = 0.0f;
     D_00F80960.v[3][2] = 0.0f;
-    D_00F80960.v[1][3] = 1.0f;
+    D_00F80960.v[2][3] = 1.0f;
     for (i = 0; i < 3; i++) {
         ra[i] = 0.0f;
         rb[i] = 0.0f;
@@ -97,18 +99,19 @@ void func_00f333f8(s32 arg) {
         func_001bfac8();
     }
     base = h * 15;
-    for (i = 0; i < 30; i++) {
+    n = 30;
+    for (i = 0; i < n; i++) {
         if (arg == 2) {
-            func_001be988(D_00F80960.rot, v[2], xf.rot, i, 30);
-            func_001be988(D_00F80960.pos, v[3], xf.pos, i, 30);
-            func_001be988(D_00F80960.v[0], v[4], xf.v[0], i, 30);
-            k = base + part5a4f0(i, 30);
-            func_00f32728(5, k);
+            func_001be988(D_00F80960.rot, v[2], xf.rot, i, n);
+            func_001be988(D_00F80960.pos, v[3], xf.pos, i, n);
+            func_001be988(D_00F80960.v[0], v[4], xf.v[0], i, n);
+            func_00f32728(5, base + part5a4f0(i, n));
+            k = base + i * 15 / 30;
         } else {
-            func_001be988(D_00F80960.rot, xf.rot, v[2], i, 30);
-            func_001be988(D_00F80960.pos, xf.pos, v[3], i, 30);
-            func_001be988(D_00F80960.v[0], xf.v[0], v[4], i, 30);
-            func_00f32728(5, base + part5a4f0(i, 30));
+            func_001be988(D_00F80960.rot, xf.rot, v[2], i, n);
+            func_001be988(D_00F80960.pos, xf.pos, v[3], i, n);
+            func_001be988(D_00F80960.v[0], xf.v[0], v[4], i, n);
+            func_00f32728(5, base + part5a4f0(i, n));
             k = base - i * 15 / 30;
         }
         func_001be9f0(D_00F80960.rot);
