@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 382 -> 172, hill3o statement order. Earlier header below. */
 /* Round 44 wwm2: score 530 -> 382, and the size now matches (3832). The target has an orphan beqzl n; break 7 next to the float fade at func_00f28ed8. That is a dead int division by n inside an inline float lerp: static inline f32 flerp25918(f32 a, f32 b, s32 i, s32 n) { s32 q = i / n; return (f32)i * (b - a) / (f32)n + a; } (see docs/overlays.md, orphan divide-by-zero check). Using it for the -100 fade too is worse (390). */
 /* score 530 (3808 vs 3832). Main-menu state machine: wait D_00FBAA90 == 3, ids[] from func_00f2ac10(n) >= 3, D_00FBB550 = index of D_00FBB330, three intro branches (func_001b9b78(3)/(4) and func_001bb370), then do { if (state == 4) ...; switch (state - 1) { 5 cases } } while (state) (jump table of 5), slide-out loop with n = D_00F878E0 and func_00f22d70. Lerps need n as a variable: v = (0 - 640) * i / n + 640. Moving the integer lerps into temps v/k before the func_00f21ef0 float call took it 644 -> 530. Left: register allocation of n/prev/id across the cases and some lerp temps; 24 bytes short. Round 28 wwm2. */
 extern s32 D_00FBAA90;
@@ -41,15 +42,15 @@ static inline f32 flerp25918(f32 a, f32 b, s32 i, s32 n) {
 void func_00f25918(void)
 {
     s32 ids[32];
-    s32 prev;
-    s32 *q;
     s32 id;
+    s32 *q;
+    s32 k;
+    s32 v;
+
+    s32 i;
+    s32 prev;
     s32 state;
     s32 n;
-    s32 i;
-    s32 v;
-    s32 k;
-
     while (D_00FBAA90 != 3) {
         func_001bfac8();
     }
@@ -65,8 +66,8 @@ void func_00f25918(void)
     if (func_00f2ac10(8) >= 3) *q++ = 15;
     if (func_00f2ac10(9) >= 3) *q++ = 16;
     *q = 0;
-    q = ids;
     D_00FBB550 = 0;
+    q = ids;
     while (*q != 0 && *q != D_00FBB330) {
         q++;
         D_00FBB550++;
@@ -77,9 +78,9 @@ void func_00f25918(void)
     id = D_00FBB330;
     if (func_001b9b78(3) == 0 && func_001bb370() == 0) {
         D_00FBAA70 = -0x200;
-        n = 10;
         D_00FBAA74 = 0;
         D_00F878E4 = 0;
+        n = 10;
         for (i = 0; i < n; i++) {
             v = (0 - 640) * i / n + 640;
             func_00f29500(0, 0x3600, D_00FBAA68);
@@ -114,13 +115,13 @@ void func_00f25918(void)
             func_001bfac8();
         }
         func_00f29418();
-        n = 10;
         func_0011d1a8(11, 0x1111, 10);
         func_00f258c8(0);
+        n = 10;
         for (i = 0; i < n; i++) {
             v = (0 - 96) * i / n + 96;
-            k = (0 - 128) * i / n + 128;
             func_00f21ef0((f32)i * -100.0f / (f32)n + 100.0f);
+            k = (0 - 128) * i / n + 128;
             func_00f25728(1, id, ids, 0, 0, 0, 0, v);
             func_00f28ed8(0, 0, k, 100.0f);
             func_001bfac8();
@@ -149,8 +150,8 @@ void func_00f25918(void)
         switch (state - 1) {
         case 0:
             D_00FBAA70 = 0x70;
-            prev = state;
             D_00FBAA74 = -0x30;
+            prev = state;
             state = func_00f26d50(id, ids);
             if (state != 0) {
                 func_00f258c8(1);
@@ -159,8 +160,8 @@ void func_00f25918(void)
             if (state == 2) {
                 for (i = 0; i < n; i++) {
                     v = 640 * i / n;
-                    D_00FBAA74 = -0x30;
                     D_00FBAA70 = 0x70 - v;
+                    D_00FBAA74 = -0x30;
                     func_00f29500(0, 0x3600, D_00FBAA68);
                     func_00f28448(0, 0, 0, ids);
                     func_00f26810(-v, 0, id, 0);
@@ -242,8 +243,8 @@ void func_00f25918(void)
             D_00F878E4 = 1;
             break;
         case 3:
-            D_00F878E4 = 0;
             n = 10;
+            D_00F878E4 = 0;
             for (i = 0; i < n; i++) {
                 v = (0 - 640) * i / n;
                 func_00f25728(prev, id, ids, v, 0, 0, 0, 96 * i / n);
@@ -262,8 +263,8 @@ void func_00f25918(void)
             D_00F878E4 = 1;
             break;
         case 4:
-            n = 14;
             D_00F878E4 = 0;
+            n = 14;
             for (i = 0; i < n; i++) {
                 if (i == 3) {
                     func_0011d140(11, 0x1111);
@@ -277,8 +278,8 @@ void func_00f25918(void)
                 func_00f28ed8(0, 0, 128, (f32)i * 100.0f / (f32)n + 0.0f);
                 func_001bfac8();
             }
-            func_00f29418();
             n = 10;
+            func_00f29418();
             func_0011d1a8(11, 0x1111, 10);
             func_00f258c8(0);
             for (i = 0; i < n; i++) {
