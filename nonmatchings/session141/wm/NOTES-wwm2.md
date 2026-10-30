@@ -1284,3 +1284,34 @@ None of the drafts below changed.
   - These score 17: a named `u64 hw = (u64)dbw << 48` read by both branches (u64 or s64, any OR position), a second copy `hx = hw` for the flag branch, `v = hw; v |= ...` in the branch, and a shared zero-extended psm local.
   - These are worse (19-26): `hw |= psm << 56` in the branch and an if/else form.
   - None produces the `move t4,t1` copy. The remaining difference is mostly which pairs of ORs combine: the target gives (psm<<24 | dbp<<32) and (dbw<<48 | psm<<56), and ours gives (psm<<56 | dbp<<32) and (dbw<<48 | psm<<24).
+
+## Round 62 (wwm2): dktitle
+
+- **f24330: matched** (ovl/dktitle/hand/func_00f24330.c; drafts.tsv row removed; the session132 draft is left in place, as earlier matches did). Three keys:
+  - ad()/ad2() store the data word before the register word.
+  - The pk index is reached by `i = 1` after pk[0] and `i += 8` after pk[8]. cse1 then does not know i in the fbmsk branches, so the 160/144 offsets come from gcse as in the target. A plain `i = 9` lets cse1 fold everything.
+  - `cb = tbp + cbp` goes into its own local. Reusing cbp flips the addu operands.
+- **f228c8: 374 -> 3** (3556 vs 3560; the 4 bytes are the trailing alignment nop). The callee sequence matches.
+  - The trig test is `(t & 0x20000020) ? 1 : (t & 0x80000080) != 0`. A plain `||` is folded into one 0xA00000A0 mask.
+  - In the menu, a and b are set before func_0020bc48, and `if (!E10) 23; else 18`.
+  - Cases 19, 20 and 21 are three written-out copies of the menu. Cross-jumping merges them as in the target. One copy reached by goto with a msg variable puts the D_002C5AD0 high part in the wrong place.
+  - case 4/9/14 sits between cases 13 and 15.
+  - case 18 tests `S0 == 2 || S1 == 2` first and ends with a shared `D_00F2C708 = 23`.
+  - case 27 decrements before the D_002BC07C test, and case 31 reads D_003F720C into a local.
+  - Callee types:
+    - func_00111600 takes 3 arguments, as in src/game/progress.c.
+    - func_00111830 is declared s32, as in src/game/gamestate.c.
+    - func_00f21068 stays void. wwm1's s32 helped the older layout but costs case 27 here.
+  - Left: one switch-dispatch `beqz v0; li v0,2` that we fill as beqzl. These do not change it: default:, case order, return types, switching on a local, and every build mode.
+- **f24b60: 358 -> 281** (2460 vs 2464, was 2472). The callee sequence matches.
+  - `i--; while (...) i--;` for the blank scan.
+  - `goto fail` with `fail: D_00F2C894 = 0;` after the last return.
+  - The switch is ordered case 2, 4, 3.
+  - The fade-loop clamps are inside the loops (`if ((x += 4) >= 128) { x = 128; break; }`). Otherwise flow deletes the 128 store, because both stores use the same address pseudo.
+  - The pool pointers are chained through p.
+  - Left: p is in s2 where the target has s4, the prologue high parts, and &D_00F26E28 kept in an s-register in the target.
+- **f23aa8: 138 -> 124** with the c[] stores one per line, reordered by hill3. Left: the target spills a/2<<24 and reloads it from c[6][0], where ours keeps it in s4.
+- **f21ca0 stays at 187** (1428 vs 1432, the trailing nop).
+  - Every remaining difference is which register each hoisted global high part (lui 0xf3) gets, and the zero-store that goes with it.
+  - The target's allocation order is 870, 7E8, 818, 7D8, 860, 7B8, 7A8, 808. Ours is 870, 7B8, 860, 7A8, 7E8, 818, 7D8, 808.
+  - hill3 (520 s, 2469 tries) finds nothing. The order probably comes from ref counts, so some statement in the original differs.
