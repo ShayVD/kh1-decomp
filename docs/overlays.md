@@ -69,7 +69,9 @@ from m2c. Two kh1.toml flag modes are used by a few overlay functions (session 1
 - `nofill` (delay slots not filled): dkmovie's DMA register writers, gb func_00f4d880, the
   xs_dh_break random float (the main ELF's rand.nofill.c).
 - `nosib` (`-fno-optimize-sibling-calls`, new): wm's sound helpers func_00f2fe40,
-  func_00f2fe88, func_00f454b0 end in `jal` + return where -O2 would tail-call.
+  func_00f2fe88, func_00f454b0 end in `jal` + return where -O2 would tail-call. It also
+  changes cross-jumping of calls in if/else arms (wm func_00f23628, func_00f37770); see
+  "Two calls merged into one jal: a nosib signal".
 
 A hand file named `func_X.<mode>.c` is compiled with that mode (`KH1_MODE=<mode>` for
 autodecomp; hand.py and twins.py pass it on from the draft's or the source's name).
@@ -82,12 +84,42 @@ python3 tools/ovl/hand.py try  gb func_00f3bab0 d.c      # compile a draft (ovl.
 python3 tools/ovl/hand.py keep gb func_00f3bab0 d.c      # on a match: ovl/gb/hand/func_00f3bab0.c
 python3 tools/ovl/hand.py perms gb func_00f3bab0 d.c     # every order of the lines between //{ and //}
 python3 tools/ovl/twins.py [NAME...]                     # copy matched C to same-shape functions
+python3 tools/ovl/drafttwins.py --apply                  # port near-miss drafts between wm and gb twins
 ```
 
 twins.py: gb and wm share most of their code (and the summons share helpers), so every
 match is tried on the functions with the same instructions (symbols, call targets and
 labels masked; large literals masked as a fallback) in every overlay. Run it after each
 `make ovl`.
+
+drafttwins.py (`python3 tools/ovl/drafttwins.py [--apply] [--dir nonmatchings/session141] [wm gb]`)
+does the same for near misses that do not match yet. It pairs each draft in DIR/A with each
+draft in DIR/B whose target has the same mnemonic sequence. It scores both drafts with
+`hand.py try`, ports the better one onto the other with port.py, and prints the port's score.
+With `--apply`, each improving port that has no unmapped symbols replaces its twin's draft:
+a new header line comes first, then the twin's old header. Each replacement is committed on
+its own, with `$COMMIT_TAIL` appended to the commit message. A port that matches is only
+written and reported, so promote it with `hand.py keep`.
+
+In round 41 the first run improved 31 gb and 6 wm drafts, for example wm func_00f55d78
+from 223 to 27 and gb func_00f51360 from 11 to 3. Rerun it after a draft improves, so the
+gain reaches its twin.
+
+msd.py (`python3 tools/ovl/msd.py OVL FUNC draft.c`, or `--scan OVL [DIR]` for every draft) prints the
+instructions only the target has and those only the draft has, ignoring order and jump-table loads. A
+single differing immediate or opcode (`addiu 2272` against `addiu 142`, `srl` against `sra`) usually names
+the expression to rewrite.
+
+modescan.py (`python3 tools/ovl/modescan.py OVL [DIR...] [--modes a,b]`) scores each draft under other
+build modes and lists those another mode improves; rename the draft to `func_X.<mode>.c` to apply it.
+
+retflip.py (`python3 tools/ovl/retflip.py OVL draft.c... [--out DIR]`) flips each statement-called
+callee's prototype between void and s32 and keeps the flips that lower the score (see "v0 after a call"
+below); with --out it writes the improved drafts to DIR.
+
+swapscan.py (`python3 tools/ovl/swapscan.py OVL [DIR]`) lists drafts whose differing lines include a
+commutative instruction with its two sources swapped, which a fresh result variable or an
+integer-address rewrite usually fixes (see below).
 
 autodecomp's variants (tools/permute.py) added for the overlays: `callee_stubs` (overlay
 callees at lower addresses as empty `CONTEXT_ONLY` definitions: callee defined above
@@ -134,10 +166,312 @@ What the hand matches needed, most often first:
 - Address association: `(i*0x590 + 0x540) + base` needs the sum written in two steps;
   a base pointer local (`E *e = D; &e[i].sub`) keeps `base+off` from folding into %lo.
 
-Near misses and open questions are in the session's notes (docs/next-session.md); two
-recurring ones: an endless loop that calls a function without saving $ra (gb
-func_00f50db0, wm func_00f77ea8; gcc always saves it, maybe asm), and the angle-wrap
-helpers (gb func_00f25a68, wm func_00f35800 / func_00f4cb60, register allocation).
+Near misses and open questions are in the session's notes (docs/next-session.md). Session
+141 settled the two recurring ones: the "endless loop without $ra" (gb func_00f50db0, wm
+func_00f77ea8) was never a function, but case 9 of the main state machine's switch (below),
+and gb func_00f25a68 is wm func_00f35800 with gb's own literal (0.17453292f).
+
+### Session 141 additions
+
+- **The layout can split a function at its switch.** A `jr` through a jump table followed by
+  more code looks like a function end to the layout finder, so the case blocks after it
+  became fake functions (gb func_00f509f8's cases f50be8 / f50c58 / f50cc8 / f50db0, wm
+  func_00f77af0's f77ce0..f77ea8). Before hand-matching something odd (no prologue, never
+  called, `$ra` not saved), check whether a jump table (`lw` + `jr` with a D_ table) points
+  into it; merge it back into layout.tsv.
+- **CONTEXT_ONLY callees by hand.** `CONTEXT_ONLY void f(u8 *a0) {}` above the caller changes
+  branch-likely and slot choices (dktitle func_00f21068 needed func_00f209b0's). Try each
+  callee alone and all together (session 141's ctx.py did that mechanically).
+- **Two `li a0,K` arms that share one `jal`** (crossjumping) mean the source calls the
+  function in each arm of the if/else or switch: write the call in every case
+  (gb func_00f20290, wm func_00f47388).
+- **Callee prototypes decide store order and registers.** A callee returning a pointer
+  (gb func_00f509f8's `void *func_00f445a8(...)`), or a vtable slot returning s32, fixed the
+  order of stack-argument stores and the register holding the result.
+- **The rank.tsv "hard" functions** in gb / wm are mostly ordinary C with a few `kh1_u128`
+  arguments or copies (`por $aX,$zero,$zero` is a u128 zero argument). Only dkmovie's
+  MMI / sq movie routines (ovl/dkmovie/asm/mpeg_mmi.s, tools/asm_export.py --symbolic) were
+  hand-written.
+- **Porting between gb and wm.** twins.py needs the same instruction shape; when the
+  shape differs only in symbols and %hi/%lo data addresses, mapping the symbols by position
+  in the asm (lui base + offset included) and recompiling the twin's C ports it (tools/ovl/port.py SRC_OVL SRC_FUNC DST_OVL DST_FUNC in.c
+  out.c; tools/ovl/portall.py A B tries every matched function of A on B and keeps matches. It
+  gave wm func_00f50968, func_00f55ad8, func_00f781c0).
+- autodecomp's `--diff` now runs `objdump -z`: without it runs of zero words (nops) were
+  folded out and the side-by-side diff went out of step.
+- **sq / lq around a call is a caller-save spill.** gcc keeps a value live across a call in
+  a t register and saves it as a whole 128-bit quadword (gb func_00f3e388's t2 / t3 around
+  func_00f3f548, gb func_00f24780's grid base). The source is plain C; the work is the
+  register allocation.
+- **A `v0` set and never read before `jr ra` is a return value** (gb func_00f38408 returns
+  `p + 24`; the "unused" `addiu v0,s4,384` was it).
+- **Pointer copies change allocation and jump threading.** gb func_00f3e388 matched only when
+  the header was read through a copy (`hh = h;` after the first call, every later use through
+  `hh`): the stage-1 bound moved from v1 to v0 and the early exit stopped being threaded past
+  a reload. The permuter found it (new_var); try it by hand when a loop guard's register is off.
+- **An inner loop whose base goes straight into an s register** (no `move s0,t0`) increments
+  the pointer itself: `for (i = 0; i < n; i++, e++)`, not `e[i]` (gb func_00f3e388 / f3e0d8).
+- **GIF packet builders** (gb func_00f42cf8, func_00f41dc8, func_00f38408): a union of
+  `kh1_u128` / `u32 w[4]` / `{u64 lo, hi}` per qword and an inline `ad(q, data, reg)` that
+  stores both halves keep the per-qword address registers; incremented-pointer calls
+  (`f(o++, ...)`) give the `addiu s7,sp,N` before each `jal`.
+- **The permuter's base.c can lose `do {} while (0)`** and some casts (pycparser): check
+  that base.c still holds what you gave it.
+- **Batch 4 patterns (session 141, workers' notes in nonmatchings/session141/wm/NOTES-wwm*.md):**
+  - An unfolded `addiu aN,aM,8` shared by two branches is an index kept in its own local
+    (gb func_00f30d80 / func_00f29c40: `k = q * 4 + 8; x = T[k]; z = T[q * 4 + 10];`).
+  - `(f >> 8) & 0xF` tests, and `ld; dsrl32; andi 0xffff; andi 0xf` reads, are u16 bitfields
+    (`lo:8, kind:4, hi:4`); a u64 member gives the struct the 8-byte alignment for the `ld`.
+  - An `lhu` + `andi 1` + `andi 0xffff` flag test is a plain u16 field read as
+    `(u16)(flags & 1)`; an `ldl/lwl` struct copy is a 2-byte-aligned (all-u16) struct.
+  - Extra register copies that "can't be produced" came from reusing an index variable for
+    the next lookup (`j = i; i = g->c[j].t;`, wm func_00f4b1e8 family and its gb twins).
+  - A constant kept in its own local before a loop (`u32 ff = 0xFFFFFF;` in wm func_00f68ec0,
+    gb func_00f41dc8, wm func_00f792c8) moves its `lui` to where the original has it.
+  - Indexing an output array (`D[n]`, `n++`) instead of advancing a pointer reverses which
+    `lui` gets the higher pseudo (wm func_00f355a8 / func_00f5e178).
+  - Writing a store twice (`xf.pos[3] = 1.0f;` first and last) lets dead-store elimination
+    keep the late copy while the scheduler hoists it (wm func_00f606a0).
+  - A stray `move a0,...` before a call often means the callee takes fewer arguments than
+    m2c guessed (gb func_00f299c8's func_00f291f0, wm func_00f21600's func_00f66240).
+- **Batch 5 patterns (session 141):**
+  - Hill-climbing statement order (randomly swap or move lines inside chosen blocks, keep a
+    change when the differing-word count does not grow) beats plain random orders for
+    scheduling-only diffs (wm func_00f43ae0 from 20 words to a match).
+  - Runs of independent stores are reordered by the scheduler in no simple pattern; generating
+    every order of the block (24 to 144 files) matched wm func_00f21c48 / func_00f5d6b0.
+  - Packets whose entry addresses are all computed from the base first (`addiu tN,v0,16k`) come
+    from an indexed inline `put(p + 2k, a, b)`; chaining `p += 2` gives stepwise addresses
+    (wm func_00f2a4c0). A second packet wants its own pointer local (wm func_00f206f0).
+  - `x + -100.0f` loads a stored -100.0f constant where `x - 100.0f` does not (wm func_00f5d6b0);
+    a bare `sqrt.s` is `PlatSqrtf` from platform/math.h, not `sqrtf`.
+  - A loop written `for (; a = f(), b = g, !(cond);) {...}` gets the bottom test and initial
+    jump of a goto loop but keeps the loop notes, so invariants are hoisted (wm func_00f70828).
+  - `if (a == at) v = a * 0.5f; else {...; v = a * 0.5f;}` merges into one multiply
+    (wm func_00f6a530).
+
+## Branch-likely vs plain branch (session 141, wwm1 round 17)
+
+A conditional branch whose delay slot holds the first insn of its *taken* path (reorg's
+fill_slots_from_thread steals it and retargets the branch past it) comes out as a plain
+branch (`bltz`, `beq`, `bc1f`) when that insn is harmless on the not-taken path, and as a
+branch-likely (`bltzl`, `beql`, `bc1fl`) otherwise. "Harmless" means: the insn cannot
+trap, and the register it sets is not in the live set reorg computes for the fallthrough.
+
+How reorg computes that live set (resource.c `mark_target_live_regs`, traced in gdb on
+cc1, which has symbols, the way tools/matching/gdb_s13/rg.py does it):
+
+1. It takes the registers live at the start of the extended basic block (back to the
+   previous BARRIER) and steps forward to the fallthrough. A register that dies at the branch
+   itself (REG_DEAD on the branch) only becomes "pending dead" until the next CODE_LABEL, so
+   it still counts as live just after the branch. The branch's own operand (the `k` of
+   `if (k >= 0)`) and anything set in the same block stay live this way.
+2. Then `find_dead_or_set_registers` scans forward from the fallthrough. It drops registers
+   that are set before they are read. **A call kills the call-clobbered registers (v0, v1,
+   a0-a3, t0-t9) only when it cannot throw.** gcc 2.96 marks a call `REG_EH_REGION 0`
+   (nothrow) only when the callee was already defined earlier in the same file. A call to
+   an external function stops that kill, so a v0 / v1 / aN / tN set by the stolen insn stays
+   live and the slot has to be annulled.
+
+What this means for a source shape:
+
+- **The original has a plain branch, ours the -likely one, and the slot insn sets a
+  call-clobbered register:** look at the first call on the fallthrough path. Its callee was
+  defined above the function in the original file. Give it a `CONTEXT_ONLY` definition above
+  ours, not just a prototype (include/common.h: `CONTEXT_ONLY void f(OvlMtx a0, s32 a1) {}`).
+  The body is irrelevant; an empty one, a non-empty one and an old-style `void f() {}` all
+  work. A definition *after* the function, `__attribute__((const))`, `pure` and `noreturn`
+  do not; 2.96 ignores `nothrow`. gb func_00f350d0 went from 1 word to a match this way
+  (`bltzl v1` -> `bltz v1`, the stolen insn `lw v1,%lo(D_00F56DC0)`, the first fallthrough
+  call func_00f33d18).
+- The same definition also fixed gb func_00f35a80: three `beqzl` became the original's
+  `beqz`, with func_00f357b0 and func_00f358b8 defined above.
+- **It works in the other direction too.** In gb func_00f34aa8 the original has a `beql` (case
+  44 of a switch, with `move a0,sp` stolen from the case body), and ours had a plain `beq`
+  filled from the default path. A CONTEXT_ONLY func_00f33d18, the case body's first call,
+  matched it (65 words -> 0; the slot change shifted every later address). So whenever a
+  near miss differs in branch-likely use or in a slot near a call, try CONTEXT_ONLY
+  definitions of the calls next to the branch, both one at a time and together.
+- **The original has the -likely one, ours plain:** the original's fallthrough had a reader of
+  that register before its first call, or its first callee was not defined above (the
+  session 13 tip in docs/matching-tips.md is the same rule from the other side).
+- A callee-saved destination (s0-s8: an `i++` stolen from the loop latch) stays live across
+  any call, so that slot is always annulled unless the fallthrough sets it first.
+- The slot insn must not trap: a load from `%lo(sym)(reg)` or the stack can go in a plain
+  slot, a load through a pointer register cannot (`may_trap_p`), so that one is always
+  `-likely`. A volatile access is not moved into any slot.
+- Branch prediction (REG_BR_PROB from predict.c, e.g. 9001 for a branch whose fallthrough
+  leaves the loop) only decides which thread reorg tries first. It does not decide
+  annulled vs plain: in gb func_00f350d0 both versions had the same probabilities.
+
+Minimal check (/tmp/claude-0/s141/wwm1/bl/t1.py):
+
+```c
+extern int n; extern short *a; void g(int); void h(int);
+void f(void) { int i, k; for (i = 0; i < n; i++) { k = a[i] - 1;
+    if (k < 4) { if (k >= 0) { g(i); h(i); return; } } } }
+```
+
+With `g` only declared, the first test is `beql ... ; lw $2,%lo(n)`. With `void g(int x) {}`
+above `f`, it is `beq ... ; lw $2,%lo(n)`.
+
+### What makes a call nothrow (session 141, wwm2 round 66)
+
+This is read from cc1's disassembly (the symbols are in the binary) and checked on the test above.
+
+- `can_throw` treats a CALL_INSN as throwing unless it has a `REG_EH_REGION` note with a value
+  of 0 or less. `flag_exceptions` makes no difference to that, so in C every call without the
+  note "can throw".
+- The note comes from `ECF_NOTHROW`. expand_call sets that flag from exactly two places:
+  - `TREE_NOTHROW` on the CALL_EXPR. Only the C++ front end sets it, for a callee declared
+    `throw()`.
+  - `TREE_NOTHROW` on the callee's FUNCTION_DECL (`flags_from_decl_or_type`).
+- The only writer of the decl bit is `rest_of_compilation`. After compiling a function it sets
+  `TREE_NOTHROW` when `nothrow_function_p()` holds, and that is always true when
+  `flag_exceptions` is 0, as it is for C.
+- So in C, a call is nothrow exactly when the callee was compiled earlier in the same file. Its
+  body doesn't matter: `void g(int x) { h(x); }`, which itself calls an external function, works
+  too.
+- No declaration does the same. On the test, on wm func_00f72a70 and on gb func_00f50550, these
+  all leave the call throwing:
+  - `__attribute__((const))`, `pure` and `noreturn`. noreturn also deletes the code after the call.
+  - `__attribute__((nothrow))`, which 2.96 warns about and ignores.
+  - A `static` prototype.
+  - `extern inline` with a body. That inlines the call away instead.
+  - `-fexceptions` or `-fno-exceptions` on a C compile.
+- The only declaration-level form is C++ `throw()`. With `g++ -x c++` (with or without
+  `-fno-exceptions`), `void g(int) throw();` gives the same code as a CONTEXT_ONLY definition: on
+  f72a70 and f50550 the scores were identical (35 and 164). The build compiles the overlays as C,
+  so this is only an explanation, not a tool.
+- So for a callee in the main ELF (func_0024e468, func_0011d768, any `ext` callee in
+  tools/ovl/nothrow.py), the original cannot have had a nothrow call. A CONTEXT_ONLY gain there
+  stands in for a different source shape.
+- Check where the original fills that slot from, as in these two cases:
+  - **gb func_00f50550.** The original's `beqz v0` slot holds `move s2,s1` from before the branch:
+    fill_simple_delay_slots, which is always a plain branch. The CONTEXT_ONLY func_0011d768
+    version steals `andi v0,v1,0x2000` from the target instead. So the branch opcode agrees, but
+    the source still lacks the copy just before the test.
+  - **wm func_00f72a70.** The CONTEXT_ONLY func_0024e468 version also fills the loop-top
+    `beqz v0` slot with `li a0,2`, where the original keeps a `nop`. That is the
+    func_0024e468(1) call on the taken path still counting as throwing there, which is plain C
+    behaviour. nothrow.py's `kept` count flags it: 294 original insns line up without the
+    definition and 293 with it, although the score is 39 -> 35.
+
+To try this mechanically: /tmp/claude-0/s141/wwm1/ctx2.py OVL FUNC draft.c [k] gives every
+declared callee (func_*, sce*, any prototype) a CONTEXT_ONLY definition, one at a time, then
+all together, then up to k at a time. It is greedy: after an improvement it tries the
+remaining callees again on top of it. It keeps the best version. The older ctx.py did only
+func_* names.
+
+Round 17 results (every near miss in gb, wm and the small overlays, 258 drafts):
+
+- Matched: gb func_00f350d0, func_00f35a80, func_00f34aa8; wm func_00f5cb78, func_00f31118,
+  func_00f3ff98, func_00f3be50 (135 words -> 1 with func_00f3b118 defined, -> 0 with
+  func_00f3b370 too), and func_00f5bba0 (68 -> 3 with func_00f5ae10, then gb func_00f34aa8's
+  `v[0..3]` store order).
+- Closer: wm func_00f3d978 (99 -> 8), func_00f3cdd0 (24 -> 17), func_00f43430 (7 -> 6).
+- No change: wm func_00f32770, the other gb drafts, dktitle, dkmovie, xs_* and xl_limit.
+  Only the big drafts moved, by a few words.
+- Most hits are a sibling defined just above in the original file: an overlay helper at a
+  lower address, called first on the path after the branch. If a near miss still differs
+  only in branch-likely use, look at the callees at lower addresses than the function.
+
+Round 18:
+
+- It works in both directions. The main ELF's func_001fd858 has a `bnez` where the
+  original has `bnezl`, because its draft defines CONTEXT_ONLY func_001fe408 above the
+  function. That makes the fe408 call nothrow, so the call kills v0 in reorg's scan. Moving
+  the definition below the function (only a prototype above) gives the `bnezl`: 1 -> 0
+  difflib words on the flagged draft and 25 -> 24 on the natural one (lro6_s12.check; not
+  committed). If a draft has a `b*` where the original has `b*l`, look for definitions
+  above the function that should not be there.
+- Combined with statement moves: /tmp/claude-0/s141/wwm1/sclimb.py OVL draft.c SECS SEED
+  toggles a CONTEXT_ONLY definition per callee and moves statements with climb_s144's
+  dependency check. It matched wm func_00f2cfd8 (a stub plus two moves) and func_00f2c330 (one
+  store moved). Do not use free line swaps (hill2.py block mode) for this: they reorder
+  dependent statements and give low counts for wrong code.
+- A k=2 ctx2.py run over every near miss found no further direct match; the gains were in big
+  drafts (gb f50550 / wm f77648 253 -> 228, wm f42f20 205 -> 170).
+
+Round 19: wm func_00f4b878 (and its gb twin func_00f24780 by portall) went 202 -> 17 words
+with sclimb.py, 4 with the index sum reordered, and 0 when the seven zero locals were
+initialized by assignments after the declarations (`x0 = 0; y0 = 0; z0 = 0; first = 0;
+x1 = 0; ...`) instead of `s32 x0 = 0, y0 = 0, ...`. No order of the initializer list
+gave the target's stack-slot store order (32, 20, 24, 28); one order of plain assignments did.
+For a near miss that differs only in which stack slot each spilled zero-initialized local
+gets, try assignments in different orders instead of initializers.
+For drafts with a size difference, run sclimb.py with `OBJ=score` (hand.py's score). The raw
+word count often goes down while the alignment gets worse.
+
+`tools/ovl/i2a.py OVL DRAFT [N]` does the initializer-to-assignment change. It takes the constant
+initializers of the declarations at the top of the function body, removes them, and puts
+plain assignments after the last declaration. It then runs hand.py try on the source order and
+on N random orders (default 40), and writes the best version to `$I2A_DIR/best_OVL_FUNC.c`
+(default out/ovl/i2a/). It needs at least two constant initializers, and it reports raw word
+counts, so check the best file's hand.py score before you keep it. Starting from the 4-word
+f4b878 draft it finds the match.
+
+Round 21: xs_dh_break func_00f20820 had two FP constants (50.0f, 25.0f) in each other's
+registers ($f20 / $f21). global-alloc orders pseudos by floor_log2(refs) * refs / live length,
+and sched1 had hoisted both constant loads, so changing the order of statements did not help.
+Writing the first single-use temp inline matched it:
+`s->c[0] = (...) + func_00f20020() * 50.0f - 25.0f;` instead of `a = func_00f20020() * 50.0f;`
+on the line before. For a register swap between two long-lived values, try inlining a temp that
+is used only once, on the next line (tools/ovl/inl.py does it one temp at a time).
+
+`tools/ovl/inl.py OVL DRAFT` takes each local temp that is set with `v = EXPR;` and read only once
+more, on the next statement line. One temp at a time, it writes EXPR inline at that read, in
+parentheses, and runs hand.py try. It skips names that are not declared in the function, so it never
+removes a global store. It does not check side effects, so make sure the inlined expression
+(usually a call) does not now run after some other call before you keep a result. On f20820 it finds
+the match. Over all gb and wm drafts in round 22 it found nothing better.
+
+`tools/ovl/ifswap.py OVL DRAFT` takes each `if (C) {A} else {B}` at a single nesting level and tries
+`if (!C) {B} else {A}`. It flips a simple comparison directly (`==` to `!=`, `<` to `>=` and so on)
+and wraps anything else in `!(...)`. This changes which arm falls through, `beqz` vs `bnezl`, and the
+order of the arms in the output. `ONLY=12,40` applies only the sites at those line numbers, all
+together, and `OUT=path` saves that version. In round 22 it took wm f78978 from score 39 to 19,
+dkmovie f270c8 from 52 to 38, dktitle f228c8 from 398 to 378 and wm f6edd8 from 186 to 167. Keep a
+result only if hand.py's score goes down.
+
+`tools/ovl/storeperm.py OVL DRAFT` sweeps store order. It finds each run of up to 7 consecutive
+one-line stores with no dependency between them: no call, no `++`, no declaration, and no store reads
+or rewrites what another one writes. It tries every order of one run at a time, from the top, and
+keeps an order only if hand.py's score goes down. dkmovie f270c8 matched this way in round 24. A run
+of 7 is 5040 compiles, about 17 minutes. `MAXN`, `TLIM` (seconds), `DRY=1` (list the runs only) and
+`OUT=path` control it. It does not check aliasing through different pointers, so read a kept order
+before you trust the draft's behaviour. `FROM=line` resumes a cut-off sweep from its `OUT` file.
+
+`tools/ovl/ordcheck.py DRAFT...` checks a draft's history for statement reorders that may have
+changed what it does. Each commit's version is read at the path that commit used. Identical lines are
+paired in order (the k-th copy with the k-th); for a text whose count changed, only the copies difflib
+lines up are paired. It flags a pair of lines that changed order in one step when one of them is
+control flow (`break`, `return`, `goto`, `continue`, `case`, `default`, a label, an `if (...) {`
+line, or a one-line `if` that jumps), when an embedded `++`/`--` writes a name the other line uses,
+when one line assigns a plain variable the other uses (every name of a chain `a = b = c;` and an `&x`
+passed to a call count as writes), or when a call moves past another call or a store to memory or a
+`D_` global (capitalised names count as macros, not calls). Lines in opposite arms of an if/else are
+never flagged, so ifswap's arm swaps pass. A step that adds or drops more than `MAXEDIT` (default 6)
+lines counts as a hand rewrite and is skipped. By default it prints a pair only if it was flagged an
+odd number of times, so a later repair clears it; `ALL=1` prints every flagged step. Read each hit,
+since some flips are harmless. A byte-identical match is always fine.
+
+**Orphan divide-by-zero check.** Sometimes the target has a `li vN,C; beqzl vN; break 7` with
+no `div` that uses vN, often next to a shift that does the real division. gcc 2.96 emits
+this when it divides by a value that is a register at expand time and the quotient is never
+used. The trap_if survives, and flow deletes the div.
+
+A divisor that is a constant in the C source does not give this pattern. gcc folds
+`i * 15 / 30` to a shift with no check, and a `/ n` with `n = 30` keeps a real `div`. The
+pattern does come back when a `static inline` helper takes the divisor as a parameter and
+computes a quotient it never uses. For example, `static inline s32 h(s32 t, s32 n) { s32 q = t / n;
+return t * 15 / 30; }` called as `h(i, 30)` gives `srl; li 30; addu; beqzl; break 7; sra 1`
+exactly. This took wm func_00f5a4f0 and gb func_00f333f8 from 196 to 174.
+
+The real helper is probably a lerp-like function that drops one of its results. If the
+check tests a variable instead (wm func_00f25918's `beqzl s3` on n), the dead division is by
+that variable. The related `xori r,r,0` before movn/movz (wm func_00f4b338, gb func_00f24240)
+is not reproduced by an inline compare helper: gcc substitutes the constant and drops the xor.
 
 ## decomp-permuter on an overlay function (session 135)
 
@@ -163,6 +497,495 @@ hand change (the read's wait checks the retry bit before each sceCdSync, as a `f
 check first) matched it. dkmovie func_00f20140: the best output (13 words) only wraps the two packet
 stores in `do { } while (0)`; not kept. A draft that includes a header of its own (xs_dh_break's
 shard.h) must have it pasted in before `import` (the permuter's copy is compiled elsewhere).
+
+## Batch 7 patterns
+
+### Early return written as an inverted if/else (gb func_00f2c000, wm func_00f530f8)
+
+With `if (D_00F56DC0->x74 & 2) return 0;`, gcc puts the flag load into v1 and the original
+puts it into v0. The cause: sched1 hoists the return path's `v0 = 0` above the flag
+test, so v0 is busy when local-alloc picks a register for the flag temp, and the temp
+goes to v1. Writing the test the other way round keeps the early `v0 = 0` out of the
+block:
+
+```c
+if (!(D_00F56DC0->x74 & 2)) {
+    ... rest of the block ...
+} else {
+    return 0;
+}
+```
+
+That one change matched both functions (3 words -> 0).
+
+Round 34 swept every overlay's drafts with this rewrite: each early `if (C) return K;`
+(one-line, braced, or a braced block ending in a return, with no else) became
+`if (!(C)) { rest of the enclosing block } else { block }`, first each site alone and then
+all sites together. The sweeper reproduced the f2c000 match from the old draft. Results:
+
+- 53 drafts had a site and 72 candidates were built. There were no new matches.
+- Most candidates compile to exactly the same code as the original draft.
+- gb func_00f2c9f8, wm func_00f53af0 and wm func_00f3a640 lose a few words, but they get
+  a worse score and a size further from the target.
+
+So this is not a common fix. Try it when a near miss differs only in v0/v1 around an early
+`return 0`, or when the return value's `move v0,zero` lands above a load that should use v0.
+
+### Local vs global FP allocation (card-flip family: gb func_00f2eee8, func_00f2f688; wm func_00f55fe0, func_00f56780)
+
+Use gcc's own allocation dumps when callee-saved FP numbering (f20/f21/f22) is wrong:
+
+```sh
+tools/toolchain/ee-gcc2.96/bin/ee-gcc -c -x c -O2 -G0 -Iinclude -dl -dg draft.c
+```
+
+The command writes `draft.c.19.lreg` (local-alloc) and `draft.c.20.greg` (global). Each
+file has a "Register dispositions" table; hard register 32 is f0. What the dumps showed:
+
+- **Local-alloc goes first.** It takes only pseudos that live in one basic block
+  (REG_BASIC_BLOCK >= 0) and die exactly once (REG_N_DEATHS == 1). It gives each one the
+  lowest free register, so f20 comes first among the callee-saved ones.
+- **Global allocation takes everything else.** That is any pseudo that crosses blocks or
+  dies twice. It allocates by priority floor_log2(refs) * refs / live_length.
+- **sched1 can move FP work across a call** when the result is held in a callee-saved
+  pseudo.
+
+In the card-flip loops, the original's fi, r and t all behave as global pseudos. A draft
+with a fresh float per loop (fi2, r2, q2) let local-alloc grab f20 first, which gave the
+wrong numbering. The fix:
+
+- loop 2 reuses fi and r;
+- loop 2 sets `t = 0.0f;` at its top and passes t for its 0.0f arguments;
+- loop 1 does `fi = t;` between the two func_00f285e0-type calls.
+
+This gave the original's r=f20, fi=f21, t=f22 (36 -> 33 and 34 -> 25 words); only
+scheduling is left. When you see an allocation mismatch, check in the .lreg dump whether
+the variable was allocated locally. If it should not be, make it live across blocks or set
+it twice.
+
+Local-alloc also keeps v0 from a pseudo born on the insn right after a call whose return
+value is unused. The call still sets v0 (with a REG_UNUSED note), and local-alloc appears to
+count v0 as busy through the next insn. In wm func_00f78d50, `D_0108F6B4 = arg + k;` after a vtable call put the `lui` for the
+store in v1 (pseudo 193 in 3 in the .greg dispositions), where the original has v0. Writing
+`t = arg + k; D_0108F6B4 = t;` puts the add before the `high` insn, which gives v0 and the match.
+The same rule runs the other way. If the target avoids v0 right after a call whose result is unused,
+declare the callee as returning s32. A void callee leaves v0 free. In round 46, flipping each
+statement-called prototype between void and s32, and keeping the flips that lower the score,
+improved 21 wm/gb drafts. For example, wm func_00f28ed8 went from 75 to 67 and func_00f69fd0 from
+127 to 107 (`sceGsSyncPath` returns int). func_00f4b338 / gb func_00f24240 also return a value.
+
+Operand order of a commutative add: for `i = z + i`, expand_binop swaps the operands when the target
+is the second operand, which gives `addu s0,s0,s8`. If the original has `addu s0,s8,s0` (the loaded
+value's register is both source and result), write the sum to another variable: `i = D.b; w = z + i;`
+and use w afterwards. Global allocation then gives w the register of i, which dies at the add.
+That matched wm func_00f28448.
+
+### Constant kept in the loop by a twice-set temp (gb func_00f2fe38, func_00f30640; wm func_00f56f30, func_00f57738)
+
+loop.c hoists a loop-invariant constant such as 0.017453292f out of the loop unless the
+register holding it is set more than once. The original reloads it inside the loop. To
+match that, write `q = 0.017453292f; r = c * q; q = r;` so that q is set twice and the
+constant stays in the loop. The functions also needed:
+
+- the init order ten / a / ninety / i;
+- one accumulator per loop;
+- `a4 = 58` at the top of loop 1 (found by the permuter).
+
+The wm twins also needed the wm table addresses (D_00FA5C40 / D_00FA5C90), not the gb ones.
+
+### Base + c with a shared i*N+k register: a union view with a byte prefix (gb func_00f20518, wm func_00f47610)
+
+The original stored `sw v0,4(v1)` after `addu v1,v1,s0`, where s0 = i*24 + 16 is also the
+address register of the store before it. Our build folded the field offset into the
+displacement instead (`addu v1,s2,v1; sw v0,20(v1)`, with s2 = i*24). The loop dump shows
+why. cse turns `base->e[i].w[5]` into (base + i*24) + 20, which gives loop.c a separate
+i*24 + 20 giv. The original's RTL was (base + 4) + (i*24 + 16): the constant was added to the
+base, and the index part matched a giv that already existed.
+
+Rewriting the field access or the index arithmetic (`((s32 *)p)[i * 6 + 5]`,
+`(&p->e[i].w[4])[1]`, `*(s32 *)((u8 *)p + (i * 24 + 16) + 4)`) is always folded back to
+base + i*24 + 20. Only a view of the same array shifted by a byte prefix keeps the split:
+
+```c
+typedef union {
+    struct { u8 p0[0]; E e[4]; } v0;
+    struct { u8 p4[4]; E e[4]; } v4;   /* added */
+    struct { u8 p8[8]; E e[4]; } v8;
+} W;
+D->v4.e[i].w[4] = x;   /* was D->v0.e[i].w[5]: same address, now (base + 4) + (i*24 + 16) */
+```
+
+The prefix goes on the base side, and the remaining index field is the one whose offset is
+already in a register. Look for this when the target does `addu rX,base,giv` and then a small
+displacement, where our build uses a different giv with the whole offset in the displacement.
+
+### A load kept after float stores: a bitfield read through a struct with f32 fields (gb func_00f333f8, wm func_00f5a4f0)
+
+The setup block of f333f8 fills a local `OvlVec v[5]` from fields of `u8 *D_00F56DC0`. In the
+target, `ld v0,88(t1)` for v[3][1] comes after eleven f32 stores to v[] (and the f32 load at +136
+comes later still). Our build, in any statement order, hoisted the `ld` to the top of the block, as
+strict aliasing allows: a `u64` load and an `f32` store cannot alias. This changed the schedule,
+the FP register numbers and the ra/rb loop that follows (score 120).
+
+The read that matched is a bitfield of a struct view that also has an f32 field:
+
+```c
+typedef struct {
+    u8 pad0[88];
+    u64 lo : 32;
+    u64 fa : 4;
+    u64 fb : 28;      /* 28 bits wide: gives the target's andi 0xffff before andi 0xf */
+    u8 pad96[40];
+    f32 f136;
+} Wm333;
+v[3][1] = ((u16)((Wm333 *)D_00F56DC0)->fb & 0xF) * 200.0f;   /* was (u16)(*(u64 *)(p + 88) >> 36) & 0xF */
+```
+
+gcc then treats the read as one that may alias the f32 stores, so it stays below the stores that
+precede it in the source. The likely reason is that the bitfield read takes the struct's alias set,
+which contains f32 (not yet confirmed in alias.c). Variants that did not hold the load back:
+- a plain `u64 w88` member of the same struct;
+- `*(u64 *)&view->pad0[88]`;
+- `-fno-strict-aliasing`. It holds back every load, but it also splits the Box bitfield reads and
+  breaks the loop.
+
+With the struct read in place, guarded hill3 brought the score from 226 to 6. A brute force over the
+order of five zero stores to D_00F80960 then matched both twins.
+
+Look for this when the target loads a field (often a bitfield word) late, behind stores of another
+type, and our build hoists the load to the start of the block. Try reading it through a struct view
+that also has a field of the stored type.
+
+### Globals reloaded after stores through a fixed-address pointer: set the pointer twice (gb func_00f3f2b0, wm func_00f663a8)
+
+The function writes a 12-word header through `f32 *v = (f32 *)0x1100FFA0`, reading D_00F82700..0C
+twice each. The target loads each global again after the stores in between, with the global's
+address kept in a register (`addiu t1,t1,9984` ... `lwc1 $f1,0(t1)`). Our build loaded each one once
+(10 `lwc1` in the target, 6 in ours, 52 bytes short). When v is assigned once from a constant,
+alias analysis records it as a known constant address. A constant address cannot overlap a different
+symbol, so gcc keeps the loaded values.
+
+The original reuses v. After the header it is set again as the base of the three M64 copies:
+
+```c
+v = (f32 *)0x1100C000;
+((M64 *)v)[0] = *a;
+((M64 *)v)[1] = *b;
+((M64 *)v)[2] = *c;
+```
+
+With two sets, v has no known value, the stores through it may alias the globals, and the reloads
+come out as in the target. Both twins matched. A volatile pointer, volatile globals (these give
+`lw` + `mtc1` instead of `lwc1`), `v++` stores and nostrict did not give the reloads. The `ldl`/`ldr`
+copies were already right with the plain `typedef struct { f32 m[16]; } M64;`.
+
+Look for this when the target loads the same global more than once with stores through a constant
+pointer in between, and our build loads it once.
+
+`tools/ovl/latescan.py OVL [draft.c ...]` sweeps for both patterns. LATE lists loads that the target
+issues after more stores of their block than ours does (f333f8: `ld 88 +11`). MORE and MOREOP list
+loads the target repeats more often than ours, by key and by mnemonic (f3f2b0: `lwc1 10/6`).
+
+### `(x + c) * 16` folds; `(x + c) << 4` does not (gb func_00f32a38, func_00f3d5c8; wm func_00f59b30, func_00f646c0)
+
+gcc distributes a multiply over a sum: `(D.x2C0 + 1) * 16` becomes `x*16 + 16` (`sll 4` then
+`addiu 16`), and `(v + 32) * 16` becomes `addiu 512` on the shifted value. A shift is not distributed,
+so `(x + 1) << 4` keeps the target's `addiu 1` then `sll 4`. Look for this when the target has
+`addiu rX,rY,c` and then `sll`/`dsll` of rX by 4. Ours has the shift first and an addiu of 16c, or
+the msd output pairs `addiu c` (target only) with `addiu 16c` (draft only).
+
+Mind the precedence: `<<` binds more loosely than `+`. So `u0 + (x - 3) * 16` must become
+`u0 + ((x - 3) << 4)`. Written as `u0 + (x - 3) << 4`, it means `(u0 + x - 3) << 4`. The round 46
+f32a38 draft had this bug. After the fix, the score went 249 to 213. f32a38 259 → 213, f59b30 259 → 209,
+f3d5c8 and f646c0 426 → 410. A sweep of all gb and wm drafts for the `(sum) * 2^k` form found no
+other gains (round 47).
+
+### End-coordinate locals before the packet calls (gb func_00f3c1f0, wm func_00f632e8)
+
+The second XYZ word of a sprite is `x + (bw << 4)` / `y + (bh << 4)`. Written inline in the
+`q[0] = ...` store, gcc computes the sum after the `func_00f3fa80(func_00f3f9d0(q))` calls. The
+original has it in s registers before those calls. Compute it into its own locals right after
+the x/y shift, before the calls:
+
+```c
+x = (x - bw / 2 + 0x700) << 4;
+y = (y - bh / 2 + 0x740) << 4;
+x1 = x + (bw << 4);
+y1 = y + (bh << 4);
+q = func_00f3fa80(func_00f3f9d0(q));
+...
+q[0] = ((u64)y1 << 16) | x1 | 0x100000000;
+```
+
+With `tx` computed before `ty`, this took f3c1f0 from 29 to a match. The pair has to sit before
+the calls: placed after them, it scores 43–61. Look for this when the target does `sll 5`/`addu`
+on the size registers before the first `jal`, and ours does them just before the `sd`. The
+lever is not general. wm func_00f584d0 (whose target computes `u+w`, `w<<4` and `h<<4` before the
+calls) got worse with every split (74 → 107–187), and the `y + 320` local in gb func_00f28aa8
+gained nothing (round 49).
+
+### Audit values before registers (gb func_00f422e8, wm func_00f693e0, func_00f799e0, func_00f62440)
+
+A draft can be wrong about a value and still score well, because the score only counts differing
+words. gb f422e8 passed `h` as the 6th argument to func_00f41dc8 where the original passes the
+power-of-two loop result `p`. The draft sat at 73 for rounds, and its headers called the residue
+"register choice". Its msd multiset was exact apart from one `move`. With `p` it became size-exact
+at 28, and one more lever matched it, along with both wm twins. wm f62440 was ported from gb and
+still passed the gb callbacks (func_00f3b0b8/func_00f3b250) to func_001c01b0. The target builds
+`lui 0xf6` + 8624/9032, the wm twins func_00f621b0/func_00f62348 (96 → 92).
+
+Before chasing registers on a near miss, compare the values. For each `jal`, look at what sets each
+integer argument register the callee takes (a0–a3, t0–t3; f32 arguments go to $f12 and up). Then
+compare the non-sp immediates and load/store offsets. Two quick checks find most of these bugs:
+
+- An argument set by `move` in one build and computed in the other (`sll`, `addiu`, `lw`) means a
+  different variable is passed.
+- A `lui`/`addiu` pair that differs is a wrong symbol. Ported drafts should be grepped for
+  functions that are not in the overlay's own layout.tsv.
+
+Most other flags are address forms, not bugs. Examples: `lw 4(r)` against an `addiu 4` and
+`lw 0(r)`, a symbol+offset against a loaded base, or the same buffer from a different base
+register. Spill choices also show up: an argument loaded from the stack in one build and from
+an s register in the other. Check the C before changing it. A round 51 sweep of all gb and wm
+drafts (scratch script r51/audit.py, which reads callee arities from the draft's prototypes)
+found f62440 as the only other real value bug.
+
+### Session 141 rounds 37-38 (wwm2)
+
+- **A real struct layout for a table indexed with a hand-computed offset (wm func_00f7c078):**
+  - The draft read `D[k + a * 24 + 8]` from an `s8 D[]` table. That built the first address as o + base; the original has base + o.
+  - Declaring the table as `struct { s8 n[8]; s8 x[8]; s8 y[8]; } D[]` and reading `D[a].x[k]` matched.
+  - Plain 2-D arrays (`D[][24]`, `D[][3][8]`) did not help. Neither did rewriting the 9 gb/wm drafts that index colour tables as `D[n * 4 + c]` into `[n][c]`: no score changed.
+- **Arithmetic moved into each branch before a shared use (wm func_00f3fd60):**
+  - The draft set `v` in an if/else and then read `tbl[v - 1]`. gcc folds the -4 into the table offset; the original keeps a separate `addiu -1`.
+  - Writing `v = a - 1;` in one branch and `v = b - 1;` in the other, then reading `tbl[v]`, matched. The register of the loaded value changed with it.
+- **Load a global pointer into a local before a read it may alias (wm func_00f22e60, norlo mode):**
+  - The draft did `*D_00F85160 = p; if (D_00FBB338 == 0) a -= 12;`. A store through `*D_00F85160` may alias D_00FBB338, so the load of D_00FBB338 has to wait for the store.
+  - The original loads the pointer, then D_00FBB338, then stores. `u64 **q = D_00F85160; if (D_00FBB338 == 0) a -= 12; *q = p;` matched, including the movz operand registers.
+- **A wait call made once before the loop and again at the end of each pass (wm func_00f5d498, gb func_00f363a0, round 39):**
+  - Two signs point to it: the prologue saves ra last, right before the loop's first jal, and a label inside the loop is 8-byte aligned with a nop pad even though no branch jumps back to it.
+  - `func_001bfac8(); while (1) { ...; func_001bfac8(); }` matched both menu loops. `while (1) { func_001bfac8(); ... }` did not.
+  - A likely reason, not checked in the dumps: the first jal sits in the prologue block, so sched2 keeps sd ra next to it, and the call at the loop end is later folded into the one before the loop.
+
+### Field type as a store-order lever (wm func_00f3ac48, wwm2 round 52)
+
+A run of field stores into `D_00FCE390[slot]` came out in the right set but with one pair swapped.
+The target stored x10C (a list pointer, set from an s32 global) right after xF4; ours stored it
+four stores later. Store orders alone, including a 7-store storeperm sweep, could not fix it.
+
+Declaring the field `s32 x10C` instead of `s32 *x10C` did. It is stored straight from the s32
+global, and the later read casts it back: `q = (s32 *)D_00FCE390[slot].x10C;`. Then x10C landed in
+its place. One remaining store order (xE8 before xF0) gave the match.
+
+Why it works is not confirmed in the dumps. The likely reason is that the field's type gives the
+store an alias set, and that decides which other loads and stores it must stay ordered with. This
+changes sched2's ready list in a way that statement order cannot.
+
+When one store or load pair is swapped and every order fails, retype the fields involved before
+sweeping orders: try s32 versus a pointer, a struct versus an array, or the type of a struct view.
+It is not universal. Retyping did not help f3bc48 (conds/v90[3]) or f38630 (x00/x40). It also did
+nothing for f78458, which stores to two plain globals; distinct globals never alias each other.
+
+### gcse's hash table size as a register lever (xs_dumbo func_00f20570, wwm2 round 55)
+
+In f20570 the only diff left was that %hi(D_00F2320C) and %hi(D_00F23214) used s1 and s2 the other
+way round from the target. Both are pseudos that gcse's PRE creates: it puts one copy at the end of
+each predecessor block. The `-dl` refs/live-length priority did not explain the swap. The pseudo
+numbers did, and gcse assigns those itself.
+
+- **How gcse numbers them.** `pre_delete` gives each redundant expression its reaching pseudo by
+  walking the expression hash table bucket by bucket. An expression's bucket is a hash of its content
+  (the symbol's name for a SYMBOL_REF, not its address) mod the table size. The lower pseudo usually
+  gets the lower s register.
+- **The table size is max_cuid / 2 | 1.** max_cuid is the number of insns when gcse runs, so adding
+  or removing insns changes the size and can swap two buckets.
+  - In f20570 the table had 53 buckets (max_cuid 104-107): %hi(D_00F23214) was in bucket 0 and
+    %hi(D_00F2320C) in bucket 45, so D_00F23214 got the lower pseudo.
+  - With 55 buckets (+3 to +6 insns) they are in buckets 52 and 48, which is the target's order.
+- **How to read it.** `python3 tools/ovl/gcsebucket.py draft.c [--grep=REGEX]` compiles a draft
+  (with its mode's flags) using `-dG`. It prints the bucket count, the max_cuid range that count
+  implies, and the bucket of each symbol expression. In a raw dump the same data is under
+  "Expression hash table (N buckets, M entries)", as "Index i (hash value h)".
+- **Plain C, not empty asms.** N copies of `__asm__ volatile("")` add N insns, so a scan over N
+  finds a bucket count that works. That is only a hint: an empty asm that reaches 0 words is not a
+  match (docs/matching-tips.md). An asm is also a scheduling barrier, and its count has no meaning in
+  the original source. The plain-C fix adds insns that exist only from cse1 to gcse:
+  - Zero locals set after the early return and used only in a block that several paths join:
+    `ret = 0; clr = 0; none = 0;` ... `if (D_00F2320C != none)`, `D_00F23214 = clr;`, `return ret;`.
+  - cse1 cannot fold them across the join. gcse's constant propagation folds them, and flow deletes
+    the dead sets, so the final code is unchanged.
+  - A use inside a block that cse1 can reach along a single path (one case of the switch) is folded
+    early and counts for nothing.
+  - Locals declared before the early return also shift local-alloc (v0 for a0 in the first block).
+- **It also moves other gcse pseudos.** In f222f8, two f32 zero locals in a closing loop gave
+  gcse's copies the target's stack slots 76-96 (score 93 -> 47).
+- **When to try it.** The remaining diff is gcse-created pseudos (%hi parts, PRE copies, hoisted
+  constants) in swapped registers or swapped stack slots, and order and type changes have not
+  fixed it. Scan the insn count with empty asms first. If some count gives 0 words, find a plain-C
+  change that adds that many insns.
+
+### Statement order: tools/ovl/hill3.py (wgb, rounds 35-36)
+
+Many near misses differ only in statement order: sched1 breaks ties by the original insn order, and
+global alloc breaks ties by pseudo number. hand.py `perms` tries only one marked block. hill3
+hill-climbs every run of simple statements in the function and keeps only orders that preserve
+the program's meaning:
+
+```sh
+python3 tools/ovl/hill3.py gb func_00f2cf58 nonmatchings/session141/gb/func_00f2cf58.c 90 1 --out=/tmp/best.c
+python3 tools/ovl/hill3.py --check func_00f2cf58 nonmatchings/session141/gb/func_00f2cf58.c /tmp/best.c
+```
+
+- **Ranking:** by hand.py score first, then words differ (`--rank=words` for the reverse). wwm2 found
+  that ranking by words could make the score worse (wm func_00f4c610).
+- **What never moves:** two statements never swap when one writes a name the other reads or writes.
+  Calls, `asm`, `++`/`--` inside an expression, and lines with more than one statement are barriers.
+- **Memory (default, strict):** a store through a pointer (`->`, unary `*`, or a subscript of a
+  pointer) never crosses any memory access. A store to a global object (file-scope arrays and
+  structs, `D_` names, address-taken locals) never crosses a pointer access. Stores to the same base
+  with constant paths (`p[1]` and `p[0]`, `x->a` and `x->b`) may swap. Local arrays and structs whose
+  address is not taken cannot alias.
+- **`--noalias`:** keeps only the rule that a pointer store does not cross a pointer access. Use
+  it only after reading the result. gb func_00f429b0's 3-word order moves `D_00F82AAC = 1` below
+  `D_00F82AA8 = m->bufs[buf]`, which holds only while m does not point at D_00F82AAC.
+- **`--check DRAFT CAND`:** says whether CAND is a dependency-safe reordering of DRAFT and names each
+  move that is not. Run it on anything taken from another tool. The plain hill climb (r32 hill2.py)
+  deleted dependent stores and once reordered struct bitfields.
+
+Round 36 swept every gb RANKING row and wm RANKING rows 1-100 (159 jobs, 85-90 s each), then ported
+gb gains to the wm twins with port.py. 31 drafts improved (12 gb, 19 wm) and none matched. The biggest gains were
+gb func_00f2cf58 (score 294 -> 258) and its twin wm func_00f54050, gb func_00f2d8d8 (519 -> 421) and its twin wm
+func_00f549d0, wm func_00f46cb8 (109 -> 83), and wm func_00f30d48 (13 -> 8 words). Reverse ports also gave large gb
+gains (wm draft to gb with `port.py wm FUNC gb FUNC`, for example gb func_00f20518 72 -> 2 words). wwm2's
+drafttwins.py had already applied most of those before this round was committed.
+
+**Known pitfall (wwm2, round 48): what a reorderer must treat as a barrier.** wwm2's scratch reorderer
+(hill3o, rounds 41-47) fixed only lines with `{` or `}`. It moved `break`, `return`, `goto`, `case`,
+`default` and labels, and it did not count `x++`, `&x`, or the assignment in a one-line `if (c) x = 0;` as
+writes. 37 commits on 31 drafts were wrong (for example wm func_00f7c880 at 36 had moved a `break` above two
+stores, and wm func_00f22358 moved `q = p` across `if (...) return ...;`). Round 48 reverted 30 of them (wm
+func_00f3a640's current order is valid), and 6 gb drafts ported from them, to their last valid order. Matched functions were not affected. Any tool
+that reorders statements must keep all of the following in place and never move anything across them:
+braces and control headers (`if`, `else`, `for`, `while`, `do`, `switch`), `break`, `continue`,
+`return`, `goto`, `case`, `default` (also inside a one-line `if (c) continue;`), labels (including
+`L: x = 0;`), and the end of a statement that spans
+several lines. It must count as writes the assignments inside a one-line `if`, `x++`/`x--` anywhere in an
+expression, every target of a chained assignment (`a = b = 0`), and any local whose address is taken
+(`&x`). Calls are barriers, and memory needs the alias rules above. tools/ovl/hill3.py does all of this,
+including chained assignments, labels and multi-line statements since round 48. Use it, or run its
+`--check` on the result of any other reorderer. The r35 hill3.py copies (wwm2 r35, wwm1 w3/w4) keep
+control lines and labels in place but miss chained assignments, `x++` inside an expression, `L: stmt;`,
+multi-line statements, calls to names other than `func_`/`sce`/`Plat`, and pointer-against-global aliasing.
+
+### Two calls merged into one jal: a nosib signal (wwm1, rounds 34-35)
+
+**The signal.** The original has one `jal` where the draft has two, in this shape:
+- Both arms of an if/else call the same function and keep the result in an s register.
+- The arm laid out first ends with `b` into the other arm, just before that arm's call
+  (`li a1,1` in the `b`'s delay slot, often followed by a `.p2align` nop).
+- Each arm still has its own copies of the insns before the shared tail (wm func_00f23628 has `lui s1`
+  twice).
+
+This is jump2 cross-jumping two per-arm calls. In plain -O2, gcc does not do this when the arm that falls
+through ends with a call. Try the draft in nosib mode (`func_X.nosib.c`, or `nostrict_nosib`/`nogcse_nosib`)
+before you rewrite anything.
+
+Examples:
+- wm func_00f23628: 71 -> 69. Its two calls now merge as in the target.
+- wm func_00f37770: matched unchanged as `.nosib.c`. Its draft had scored 24 in plain -O2.
+
+**Why (traced with `-da` dumps of f23628):**
+1. With sibling-call optimisation on, gcc 2.96 expands calls as CALL_PLACEHOLDERs: the normal sequence
+   plus a sibcall alternative. The `.01.sibling` dump of f23628 has a NOTE_INSN_DELETED where each one
+   was, 15 more notes than with nosib.
+2. The `.01.sibling` pass (optimize_sibling_and_tail_recursive_calls) picks the normal sequence for
+   calls that are not in tail position. When the placeholder is the last thing in a basic block, so a
+   label follows the call and its result move, the pass emits an `(insn (use (const_int 0)))` there.
+   f23628 has 3 of these in `.01.sibling`. With `-fno-optimize-sibling-calls`, the `.02.jump` dump has
+   only 1, and it is not at the end of an arm.
+3. Nothing deletes these USEs before jump2.
+4. jump2's find_cross_jump compares the insns before the first arm's `b` with the insns before the join
+   label, which belong to the arm that falls through. That arm's last insn is the USE, it does not
+   match the other arm's result move, and the cross-jump stops.
+
+**Small tests** (one function per shape, -O2 against nosib):
+- `if (g) r = f(h, 1); else r = f(h, 0); f2(0, 0); g = r;` has two `jal f` at -O2 and one in nosib mode.
+- The same if/else inside a `for` loop merges in both modes. This fits calls in loops getting no placeholder, which was inferred and not checked in the dumps.
+- When the arms share only `lw a0` and the call (no result kept in an s register), nothing merges in
+  either mode. So a single shared call in the target does not always mean nosib.
+
+**Sweep, round 35.** All 218 overlay drafts were tried in their own mode plus nosib (nonmatchings/session141/*
+and the drafts.tsv drafts). Temporary modes were added for the combinations: nofill_nosib,
+nostrict_nofill_nosib, norlo_nosib. f37770 was the only match, and no other draft improved.
+Use the signal per function. It is not a per-file mode.
+
+### Loop shape, exit blocks and case trees (wwm1, round 36)
+
+Run `tools/ovl/cfdiff.py` first. It compares the branch sequences, and the levers below change
+which branches come where. Registers come last. A variant that brings cfdiff to 0 often scores worse
+at first, because its registers shift. Run hill3.py on it before you drop it.
+
+**break vs goto decides loop rotation** (stmt.c expand_end_loop):
+- A `for(;;)` whose `break` comes within about 30 insns of the top is rotated. It is entered with
+  `b test`, and the code from the top through the last such break is moved to the bottom.
+- This works at any nesting depth.
+- A `goto` to a label after the loop does not count. The loop stays unrotated, with its test at the
+  top and a `b` back.
+- When the target rotates one exit and not another, write the first as `break` and the second as
+  `goto out;`. Examples:
+  - wm func_00f75d80 (2058 -> 1810): its record dialog exits by break.
+  - wm func_00f74f30 (188 -> 176): its confirm exit is `goto done23;`.
+- A plain `while (c)` is not rotated. jump1 copies its test to the top instead.
+
+**Exit-block placement** (loop.c):
+- A block is moved when it ends in an unconditional jump out of the loop and is preceded by a
+  conditional jump to the insn right after it.
+- It goes to the barrier before the jump target's label, at the target's loop level. When there is no
+  barrier there, it goes to the next one forward.
+- To keep a block in place:
+  - Enter the block through a label, such as an if/else join.
+  - Make its jump target lie inside the same loop. In wm func_00f71b68 (568 -> 554, cfdiff 0) a
+    `back1:` label inside the rotated mode2 exit, with `goto back1` from the row<0 path, does this.
+  - Put the exit code inside the loop, before the `continue` (wm func_00f6f2a8, 567 -> 553).
+- An outer `for(;;)` in place of a backward `goto` changes which barrier the blocks land at
+  (func_00f71b68, 581 -> 568).
+- jump1 inverts `if (c) goto quit; f(); goto wait;` and places the quit code right after the test.
+
+**An empty case for the balanced case tree:**
+- gcc 2.96 balances the case tree only when the case list has more than 2 nodes. A range such as
+  `case 1: case 2:` counts as one node.
+- wm func_00f6edd8 (167 -> 135) gets the original's tree for `case 0` and `case 1..2` from an added
+  `case 3: break;`.
+- When the tree is lopsided, look for a case that shares the default's code. wm func_00f73570
+  (325 -> 297, cfdiff 0) has eight one-bit cases, 0x100..0x8000. The original's left subtree is
+  0x100 with a chain to 0x200 and 0x400. That comes from `case 0: default: t = 8;`, which adds a ninth
+  node: the root stays 0x800, and the left list {0, 0x100, 0x200, 0x400} splits at 0x100.
+  - The compare against 0 jumps to the default's own code, so it is deleted and leaves no trace.
+- The last leaf test is inverted (`bne` to the default) when that case's body is the first one after
+  the dispatch. So the original's source order of cases shows there: in f73570, case 0x8000 comes
+  first.
+- fold makes one range test (`addiu; sltiu`) only from two bounds that are adjacent in the `&&` tree.
+  `k == 2 && id >= 30 && id < 65` parses as `(k == 2 && id >= 30) && id < 65` and gives two compares.
+  Write `k == 2 && (id >= 30 && id < 65)` instead (wm func_00f7ad38, 463 -> 457).
+- In an if/else-if chain, the arm order decides the block order. wm func_00f6edd8 (135 -> 115,
+  cfdiff 0) needed `else if (cur == i) { seven: ... } else { c = 0 }`, not the negated test.
+
+**Loop counters:**
+- A count-up `for (i = 0; i < n; i++)` with its own counter lets loop.c count down (`bnez`/`bgez`).
+- A running sum (`m += 38`) instead of `i * 38` keeps a multiply out of the loop
+  (wm func_00f51d18, 400 -> 334, cfdiff 0).
+- When every set of n is a constant, combine knows n >= 0 and emits `beq` instead of `blez`. A running
+  `n++` keeps the `blez`.
+
+**Pitfall: K&R CONTEXT_ONLY copies.**
+- A context copy written old-style, such as `CONTEXT_ONLY f32 cosf() { return 0; }` after the
+  prototype, is a definition with no prototype.
+- gcc then passes each f32 argument as a promoted double, so every call gets a `jal fptodp`
+  before it.
+- Write the copy with the prototype's parameters: `CONTEXT_ONLY f32 cosf(f32 x) { return 0; }`.
+  wm func_00f7ad38 went 616 -> 463.
+- In round 36 every other empty-paren CONTEXT_ONLY definition in nonmatchings was a no-argument
+  function.
 
 ## Results
 

@@ -1,0 +1,1380 @@
+# Session 141, worker wwm2: wm.x at 0x00f50000 and above (no gb twin)
+
+All matches confirmed by `make ovl OVL=wm` (byte-identical, 755 functions at the end).
+
+## Matched (8)
+
+| Function | Notes |
+|---|---|
+| func_00f7da20 | `.nosib`: the final `func_001f31a8(&desc, 0)` is a `jal`, not a tail call |
+| func_00f7bfb8 | 128-byte clear: `for (i = 0; i < 128; i++)`, gcc reverses it (li 127 / bgez, short-loop nops) |
+| func_00f787b0 | v0/v1 swap fixed by a `do { if ... else ... } while (0)` around the sign select (permuter) |
+| func_00f78690 | parameter-list reader: `if (func_0024ba28(...) < 0) PlatBreak();` (include platform/thread.h) |
+| func_00f781c0 | `if (x) f(2); else f(3);` (crossjumped into one jal), `b = D[2]; b &= 0x2000;` for the v1 temp, store order of a chained pair |
+| func_00f7b9a0 | DMA end tag: `union { kh1_u128 q; u32 w[4]; }` so the `sq` zero comes before the `sw` (plain u32 cast reorders it; `.nostrict` also works) |
+| func_00f7ef20 | GIF packet: one inline helper per qword (put / rgba / xyz) gives the original's separate `addiu rN,a0,16*k` address registers; colour bytes read once into locals |
+| func_00f7c2e8 | 12-argument callee; the two per-index values loaded into locals in declaration order `b` then `c` |
+
+(func_00f781c0 was also matched on the coordinator's branch.)
+
+## Near misses (drafts in this directory, first line says what is left)
+
+| Function | Left |
+|---|---|
+| func_00f7cb60 | 3 words: reorg fills the &2 arm's `b` slot from before instead of stealing the shared `p[0] = 0` |
+| func_00f5c1c8 | 13 words, register allocation in the first loop only (second loop fixed by a CONTEXT_ONLY func_00f5ae10) |
+| func_00f7f628 | score 21: debug value editor; structure right, `move s8,a0` placement and a bgezl |
+| func_00f5dfd8 | score 38: func_00f65480 family (also f5e368, f5e540, f67530, f676b8): base pointer copied into a fresh pseudo |
+| func_00f7c078 | score 45: recursive path search, branch-likely choice in the x/y test |
+| func_00f7bde0 | score 66: camera matrices, FP register numbering / load order |
+| func_00f7f438 | score 71: GIF qword stores keep strict order in the original |
+| func_00f630c0 | score 81: second loop entered at its test, invariant not hoisted |
+| func_00f667b8 | score 93: DMA tag + vertex packet scheduling |
+
+Attempted without a useful draft: func_00f78bc0 (thread loop; the `func(4)` / `func(1)` calls share one jal, the
+fade counter is re-addressed each iteration), func_00f67530 / func_00f676b8 (src loop not strength-reduced in the original).
+
+Skipped: func_00f77ce0 / f77d50 / f77dc0 (switch cases of func_00f77af0, coordinator), func_00f55ad8 and
+func_00f50968 (coordinator), func_00f528f8 / f799e0 and the 200+ insn functions (not reached).
+
+## Tips
+
+- Inline helpers explain "a separate base register per struct": stores like `addiu v1,a0,16; sd x,0(v1); sd y,8(v1)`
+  for every qword come from `static inline void put(Qw *q, u64 a, u64 b)` (the inlined parameter is a new pseudo, so
+  the offset is not folded). Values read once (`lbu` before the first use, reused later) were locals in the source.
+- `sq` of a zero followed by a `sw` of the tag word into the same qword: write both through one union
+  (`kh1_u128 q; u32 w[4]`); with a cast, strict aliasing moves the `sw` above the `sq`.
+- Two `li a0,K` arms sharing one `jal` were `if (c) f(2); else f(3);` (crossjumping), as the coordinator noted.
+- A range check emitted as two compares (`slti 27` then `slti 21`) is nested ifs (`if (x < 27) { if (x >= 21 ...` );
+  `x < 27 && x >= 21` becomes one `sltiu` range test.
+- A double constant loaded with `lui at / ld a1,%lo(at)` is a literal (`len * 0.01 * 0.1f`), not an extern; while the
+  code does not match yet, hand.py refuses to place literal rodata, so diff with `extern double` first.
+- tools/autodecomp.py disasm: objdump needs `-z` (applied here too), or diffs past nop runs are shifted.
+
+## Round 2
+
+Matched: func_00f528f8 (16-aligned Col struct, stores r,g,b), func_00f56ce0 (v[2] before v[0]), func_00f574e8 (twin
+of f56ce0 with other tables), func_00f5c4e0, func_00f78ff8 (the two global copies swapped), func_00f7cd68 (exit calls
+inside the loop's break block keep a constant load below the call), func_00f7da90 (f7bde0 CONTEXT_ONLY stub for bnezl;
+zero stores as `FA78 = FA7C = FA68 = FA6C = F6D4 = 0; F6E8 = 0;`: chained assignments fix lui register order).
+
+Near misses saved here (first line gives score and what was tried): func_00f530f8 (6), func_00f7ecd8 (17),
+func_00f632e8 (35), func_00f79868 (37), func_00f78978 (45), func_00f7c880 (64), func_00f78d50 (71),
+func_00f799e0 (115), func_00f74440 (246, structure right).
+
+Skipped: func_00f69aa8 (gb twin func_00f429b0 unmatched), func_00f69df0 and func_00f5f250 (lead matched them).
+
+More tips:
+- A CONTEXT_ONLY empty stub of a callee (`CONTEXT_ONLY void f(void) {}`) can turn bnez into bnezl after its calls.
+- `t = w*h; t /= 128; size = t;` keeps the divide-adjust in place (blocks CSE); `(x - w/2 + 1792) << 4` keeps gcc from
+  distributing the constant, where `* 16` does not.
+- `if (st == 0) continue; switch (st) {...}` gives a linear compare chain where a plain switch gives a binary tree.
+- `k = x + 1; if (x == 0xFF) k = 0;` gives movz; the ternary gives branches.
+- f78d50 / f74440: the original leaves the delay slots of soft-double libcalls (__cmpdf2, __subdf3, __truncdfsf2) empty
+  while __extendsfdf2 slots are filled; no flag mode reproduces this yet.
+- `python3 tools/ovl/twins.py` writes ports into other overlays too (it wrote two gb files here); check git status after running it.
+- Chained assignments (`a = b = c = 0;`) and how the chain is split change the lui register order of zero stores to globals; brute-force chain orders and splits when only those registers differ.
+
+## Round 3 (small overlays)
+
+Matched: xs_dh_break func_00f20128 (the session 136 draft as is, in nostrict mode: with strict aliasing the u32 vertex
+stores do not depend on the u64 GIF-tag sd, so it is scheduled later), xl_limit func_00f20e10 (the >= 60 block sets
+kind = 5 itself instead of before the inner if, and the < 40 block is ordered kind, h, n, s; any order that makes the
+two blocks identical gets them crossjumped).
+
+Tips:
+- Run every old draft through all flag modes (/tmp/claude-0/s141/modes.sh) before hand work; f20128 was one rename away.
+- When two blocks end up with the same instructions in a different order, look for an assignment that reorg moved into
+  a delay slot from the branch target and brute-force the statement orders of both blocks together.
+
+Still open (headers updated): xs_mushu func_00f20550 (2 words), xs_genie func_00f218f8 (2 words), xs_tink
+func_00f20818 (35). Not reached: xs_dh_break func_00f20288 / func_00f20820 (104+ / 142 words), xl_limit func_00f225b0
+(60), xs_dumbo func_00f20570 / func_00f222f8 and xs_genie func_00f22078 (no draft in nonmatchings; scratch drafts in
+/tmp/claude-0/s141/db and gn2 score 49 and 101+).
+
+## Round 4 (wm upper half)
+
+Matched: func_00f67928 (string builder: `n /= 2; if (r >= n)` keeps n/2 in n's register; `if (r >= n / 2)` uses a new one).
+All old upper-half drafts went through every flag mode: none matches; func_00f78d50 improves to score 57 in nofill.
+Near misses saved: func_00f67c60 (46), func_00f62440 (98), func_00f79700 (187, same code as func_00f69278).
+Tried without progress: func_00f7cb60 (tail-arm variants all worse than the saved 3-word draft).
+
+## Round 5 (wm upper half, continued)
+
+Matched: func_00f681f8 (matrix to Euler angles; float constants spelled from the exact bit patterns, e.g. 1.5707963f,
+3.141592503f), func_00f601f0 (mode loop; reuse `p` as the u32 buffer pointer instead of a second local),
+func_00f62c98 (Hermite spline; `n = sp->n` local, and an unused `f32 v[8];` declared before m gives the 32 extra frame
+bytes), func_00f65d18 (texture upload: `e = tx->ent; e += idx;` instead of `&tx->ent[idx]`, `sz = e->size;` temp with
+tbp updated before data, and the copy loop wrapped in `if (e->count != 0)` for the doubled beqz), func_00f65f28 (its immediate-load sibling; found by a
+10-minute -j1 permuter run: the first shift loop body is `do { i <<= 1; } while (0);`, which keeps the original's
+`move v1,a3` copy of e->w for the loop compare).
+
+Tips:
+- GS packet writers: a macro that reassigns one `Qw *q = &p[i]` per qword makes the original's single base register
+  (addiu t7,a0,N per qword) and removes the spill frame; separate inline params do not.
+- A loop the original does not optimize (address recomputed in the loop, `b` into a shared `jal`) is a goto loop; two
+  identical "call; update; test" tails are crossjumped (func_00f78bc0).
+- Reusing one counter variable for several loops gives the shared saved register; `n /= 2` in place keeps the register.
+
+- A `do { ... } while (0);` around a loop body changes the loop notes enough to keep an extra register copy; worth a try
+  when the only diff is a `move` before a loop.
+
+Near misses saved (headers say what was tried): func_00f78bc0 (59), func_00f676b8 (60, same code as
+func_00f67530: the uv copy loop is not reversed in the original and only the dst giv is reduced), func_00f6dfd8 (77),
+func_00f79700 (84, was 187; same code as func_00f69278), func_00f60cf0 (138).
+func_00f7cb60: one 20-minute -j1 permuter run, no improvement (best non-hack candidate worse than the 3-word draft;
+the only lower-scoring output used a volatile index).
+
+## Round 6 (wm upper half, remaining)
+
+No matches this round (about 45 minutes).
+- func_00f693e0 is func_00f799e0 without the last stack argument (4) to its draw call, so one fix gives both. A
+  15-minute -j1 permuter run found `unsigned long nv; if ((nv = bpp) == 8)`, which stops gcc from reusing cw's
+  constant 8 for the compare and fixes the whole bpp branch block. Both near misses are updated: f693e0 111 -> 89,
+  f799e0 115 -> 93. Left: y/h are swapped between s3/s4, img lands in t5 instead of t1, and the stores of the vertex
+  arrays come in a different order.
+- func_00f7c510: complete draft at score 86, saved. The original copies x and y into new registers in each arm of the
+  flag `if`, which looks like inline or crossjump structure. Per-arm copies and an inline helper per arm did not
+  reproduce it.
+- func_00f69fd0: a long run of global initializer stores whose order is set by the scheduler. Not attempted.
+- Not reached: f64d48, f639c0, f63d18, f70418, f69aa8.
+
+## Round 7 (wm high half, no near-miss files yet)
+
+Matched: func_00f65bb8, which computes TEX0 only, without uploading. It is the f65f28 code with `cbp = tb + cidx` (or
+`* 4`) in the 4/8 cases. The `do { i <<= 1; } while (0);` first shift loop from f65f28 carried over unchanged, so
+these texture siblings share one source shape.
+
+Near misses saved:
+- func_00f66b38 (15 words, registers only).
+- func_00f78458 (score 13; one constant's load placement is left).
+- func_00f66bd0 (score 102).
+
+Not reached: f606a0, f60af0, f663a8, f651d0, f64d48, f639c0, f63d18, f70418, f69aa8.
+
+## Round 8
+
+Matched: func_00f606a0, a sibling of func_00f60898 that skips the flag and index checks and always uses
+func_001ba060(&D_0108DE90, idx - 71).
+- Store order brute-forced, plus a `v[1], v[0], v[2]` vector order.
+- The last fix came from a permuter hint: write `xf.pos[3] = 1.0f;` both as the first statement and again at the
+  end. Dead-store elimination keeps the last copy, and the scheduler hoists the last independent 1.0f store to the
+  top. So when one constant store sits at the wrong end of a run of stores, duplicating it at the other end is
+  worth a try.
+
+Near misses saved:
+- func_00f60af0 (94): bitfields.
+- func_00f663a8 (73, nostrict): VU memory writes. The original reloads every global after each VU store.
+
+Not reached: f651d0 (a large matrix loop; looked at only), f64d48, f639c0, f63d18, f70418, f69aa8.
+
+## Round 9
+
+No matches.
+- func_00f651d0: draft saved at score 155. It is a skinned-bone matrix build. The original saves t2..t5 with sq/lq
+  around the per-mesh call (caller-save) and keeps the bone pointer on the stack. An unused `f32 u[4][4]`
+  reproduces most of the frame.
+- func_00f78458: no gain. I tried every position for the -8 store and duplicate stores; it stays at score 13.
+- f63d18 and f70418: large packet and menu builders, looked at only. f64d48, f639c0 and f69aa8 not reached.
+
+## Round 10
+
+None of f64d48, f639c0, f69aa8 or f63d18 has a gb twin draft (twins f3dc50, f3c8c8, f429b0, f3cc20).
+
+Matched: func_00f64d48, an animation curve evaluator (pre/post infinity modes, key scan, lerp/Hermite).
+- Two switches have a `case 0:` that shares the default (this gives the slti <2 test). Put the post-infinity and
+  interpolation switches' `case 0: default:` first, so their return blocks sit right after the dispatch.
+- Keep the key times in an f32 `ts` that the cycle loops compare against. Without it, a mov.s copy appears.
+- Final step came from the permuter: in pre-infinity linear mode, write `kp = k; k2 = kp + 1; k1 = k2;` with a
+  separate `CKey *k2` declared after `dt`. That gives the `move a1,a2` copy and the right a2/a3/t0 registers.
+
+Near misses saved:
+- func_00f639c0 (score 5): menu text builder, same type table as f67928. Permuter: `r = 100 + i * 24;` as the
+  y argument. An s64 temp for the second qword's y part gets 4 words (score 7). Left: one addiu's position and
+  a move/lui swap.
+- func_00f69aa8 (score 43, registers only): picture viewer loop. Use `nb++; nb &= 1;`, because (nb+1)&1 becomes
+  xori. Load w/h/bpp before the func_00f471a0 call. Not permuted yet: worth a -j1 run.
+
+f63d18 not reached.
+
+## Round 11
+
+Matched: func_00f70418, a menu draw loop (gb twin f49320).
+- Index `D_0108F2C8[i]` directly inside the loop, not through a pointer set up earlier. The pointer form lets gcse
+  keep the 0x109 high part in a saved register and spills `n`. With the index, loop.c builds the giv's start value
+  fresh.
+- Use one variable for the 5/6 slot count and the 9..0 loop counter (both s5).
+- func_001f8f30 is called with no argument.
+
+Near misses saved:
+- func_00f68ec0.nostrict (score 9): ported from the gb f41dc8 draft (15 words), then fixed the n*16+p operand order and
+  hoisted the C00A constant into a local `u64 c`. What is left is scheduling in the flag branch.
+- func_00f63d18 (score 102): same family as f639c0. The packet qword is strength-reduced as a giv in my build but not
+  in the original.
+- func_00f69fd0 (score 184): an init function with a long run of global stores; not converging.
+
+f71748 (1040 bytes; reset loops, a link-building loop over 96-byte entries, then layout) was only looked at.
+
+## Round 12
+
+No matches.
+- func_00f63d18: the goto loop did not help (score 145, against 102 for the for loop). The loop has to stay a real
+  loop, because the original hoists the 1, 5 and 0x8000<<17 constants. The problem is that gcc turns the
+  (s64)((y + 1920) << 4) << 16 qword into a 64-bit loop induction variable (daddu by 0x1c00000). The original
+  recomputes it each pass. Tried s32 temps, s64 temps, an explicit y, and SCE_GS_SET_XYZ-style u64 casts. The
+  saved draft is unchanged.
+- func_00f71748: near miss saved at score 62 (see the header). A -j1 permuter run moved the second panel block's `w = ...`
+  line above `x = ...` (106 to 62).
+- Not reached: f792c8, f77648, f74440, f646c0 (f646c0 is a large texture upload / GIF packet builder; looked at
+  only).
+
+## Round 13
+
+Matched:
+- func_00f792c8 (nostrict): a sibling of f68ec0 (gb f41dc8) with a vertex count `cnt` and prim types for 3 versus N
+  vertices. Built from the f68ec0 template:
+  - `do {} while (0);` at the top of the flag branch.
+  - The vertex loop is written as `i = 0; if (cnt > 0) { u32 ff = 0xFFFFFF; o = (u32 *)(n * 16 + (s32)p); do {...}
+    while (++i < cnt); }`. That puts o's setup after the guard, and the ff local fixes the `lui t0,0xff` position.
+  - The store order was brute-forced: s/z, t/z, 0, 1/z, then x, y, 0xFFFFFF, 0.
+- func_00f68ec0 (nostrict): the same trick finishes the 3-word twin draft. Write `i = 0; ff = 0xFFFFFF;
+  o = (u32 *)(n * 16 + (s32)p);` before the colour loads, then `for (; i < 4; i++)`, and store `o[2] = ff`. The gb
+  twin f41dc8 should take the same change.
+
+Near miss saved: func_00f77648 (score 168, first draft; see the header).
+f74440 not reached.
+f71748: a 30-minute -j1 permuter run from the score-62 draft. Its best output only swaps two statements in the first
+panel block, which hand.py scores at 66 (worse), so the saved draft is kept.
+
+## Round 14
+
+No matches. The worktree was rebased onto 4384627, and the build is byte-identical.
+- f792c8 gb twin: none exists. gb's asm.json has no 0x9009/0x9029 constant, and gb has no function of size 1080, so
+  there is nothing to port by hand.
+- func_00f74440: score 4 (saved; the draft is meant for nofill mode, as func_00f74440.nofill.c). What got it there:
+  - nofill mode: the original leaves the soft-float libcall delay slots empty, but the ext call keeps sub.s in its
+    slot.
+  - An inline `DABS(double)` with a local `double z = 0.0`, called as `m = DABS(e[8] - e[4])` and
+    `if (m < DABS(d = e[9] - e[5])) { if (d < 0.0) d = 0.0 - d; m = d; }`.
+  - `do {} while (0);` after the three scale stores keeps them ahead of the MulMatrix arg moves.
+  Left: in the two inner abs blocks, the a0/a1 moves before __cmpdf2 are swapped. The permuter cannot parse OvlMtx
+  (an aligned typedef), so it was not run.
+- func_00f6edd8: score 186 (saved, see the header). n spills where the original spills p. A 15-minute permuter run
+  found nothing useful.
+- func_00f72a70: score 139 (saved, see the header). The 224 frame needs a bigger local array. The 256 constant
+  CSE and the k/ps/y register rotation are still open.
+- Not reached: f646c0, f640e8, f79ca8. None of the Round 14 functions has a gb twin draft (checked f47ce0, f4b978,
+  f3d5c8, f3cff0 and f52bb0).
+
+## Round 15
+
+Rebased onto origin/claude/project-thread-rl45wv; build byte-identical (889 -> 891 functions).
+
+Matched:
+- func_00f640e8: a 47+47-entry table init. `s32 *p = D_00377648; void **q = D_00377748;` then all `*++p = N;`
+  statements, then all `*++q = D_xxx;` statements (written sequentially; gcc interleaves them itself; interleaving
+  in the source scores 500). The draft was generated from m2c by a script.
+- func_00f79ca8: seven func_00f799e0 texture calls with an `s8 c[4]` colour. The fourth colour condition has to be
+  written inverted (`if (!(a||b) || FA70 == 67 || !BB0 || EC8) {48} else {128}`) so the 48 block comes first.
+
+Near misses saved:
+- func_00f646c0 (428): GS texture upload builder; the original keeps p in a3 and rebuilds the GIFtag in the inner
+  loop. Returns `in` (NULL on failure).
+- func_00f69278 (101): GS LoadImage packet in u32[4] qwords with a lo mask (extra high-half pick, 360 bytes).
+
+High-half (>= 0xf4fb14) unmatched functions under 1300 bytes with no hand or near-miss file, after this round:
+f67530 (392), f58140 (448), f4fba0 (456), f5d6b0 (560), f584d0 (632), f696a0 (752), f7b9e0 (816), f58748 (856),
+f53758 (920), f5f940 (944), f58bd0 (968), f5d8e0 (1048), f5fcf0 (1280), f74a28 (1288), f51008 (1296).
+
+## Round 16
+
+Rebased onto origin/claude/project-thread-rl45wv; build byte-identical (891 -> 894 functions).
+
+Matched:
+- func_00f67530 and its twin func_00f676b8 (the f676b8 near miss is removed). Three changes did it:
+  - The uv copy is a goto loop (no loop notes, so nothing gets strength-reduced or reversed) with split source
+    pointers: `pu = &src[1].u; pv = &src[1].v; dd = (f32 *)(base + 500); i = 0; loop: dd[-1] = *(f32 *)((u8 *)pu
+    + (i << 3)); dd[0] = *(f32 *)((u8 *)pv + (i << 3)); i++; dd += 4; if (i < 4) goto loop;`.
+  - The head is `tex = base; o = tex; tex += 208; d.col = (f32 *)tex; tex = base + 480;` and the call passes `o`.
+    That gives the extra `move t8,t3` and the t3 reuse.
+  - The argument order differs: f67530 calls func_00f65480(arg, o, tex, &d, a4, a5, &m), while f676b8 calls
+    func_00f651d0(arg, o, tex, &d, a4, &m, a5).
+- func_00f7b9e0: five or six func_00f7a1a8 quads with `Rgba c[4]` and `s32 x[4], y[4]`. Two things mattered:
+  - The function takes an argument and passes it on to func_00f7ad38(arg). That is the only way to keep a0 live, so
+    the %hi temps use a1.
+  - The third quad is written as pairs: c[0]/c[2] rgb and a, then c[1]/c[3], with x/y stored in [2],[3],[0],[1]
+    order.
+
+Near miss saved: func_00f696a0 (182, see the header).
+
+## Round 17
+
+Rebased onto origin/claude/project-thread-rl45wv; the build is byte-identical. No new matches.
+- func_00f69278: score 101 -> 41 (saved). Separate s64 locals per qword value stopped gcc copying the shared `v`
+  into t8, and p[0] now goes before p[8]. The 4-byte size gap is only the trailing alignment nop. Left: the DMA
+  ref tag OR order and width (see the header). A 20-minute -j1 permuter run found nothing.
+- func_00f72a70: score 139 -> 128 (saved).
+  - The main pad loop needs its test at the bottom, written as a goto.
+  - The two-entry clear loop needs to be a goto loop with its own pointer; as a do or for loop it is fully
+    unrolled.
+  - Left: the k/ps/y register rotation, and 8 bytes too many.
+- func_00f696a0: not reworked this round (still 182).
+- The only f6/f7 function under 1300 bytes left with no hand or near-miss file is f74a28 (1288). Not started.
+
+## Round 18
+
+Rebased onto origin/claude/project-thread-rl45wv. No matches this round. No gb twin drafts exist; gb has
+same-shape functions f4d930 (f74a28), f4be48 (f72f40), f49730 (f70828) and f4e6c0 (f757b8).
+- func_00f74a28: score 12 (saved). Only the 21/1 colour-constant registers are swapped; see the header.
+- func_00f73eb0: score 358 -> 152 (saved).
+  - m2c invents arguments for func_001bc520 (it takes none) and for func_001f31a8 (it takes 2).
+  - The pad loop is a goto loop with its test at the bottom.
+  - Left: global-store scheduling in the prologue and epilogue.
+- func_00f757b8: m2c looked at (same family as f74a28, with an extra D_0108F558 mode); not drafted.
+- func_00f72f40, func_00f70828: not started.
+
+## Round 19
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f757b8: MATCH, adapted from the f74a28 draft. Its gb twin func_00f4e6c0 also matches after renaming the
+  symbols. Keys: declare `e` before `skip` so they get the right stack slots, write the double store as
+  `D_00FB4A58 = D_00FB4A5C = ...`, and use `if (cur == i) {7} else {0}`.
+- func_00f70828: MATCH. Its gb twin func_00f49730 also matches; /tmp portmap.py maps the symbols by zipping the m2c token
+  lists. Key: the inner pad loop is a gcc 2.96 `for (; n = f(), old = cur, !(pad & 0x4000);)`. A for loop whose
+  condition is in the header gets its test at the bottom with an initial jump, and it keeps the loop notes, so
+  invariants such as `lui s5,0x2c` get hoisted. This differs from a goto loop, which hoists nothing. The `r == -1`
+  exit code lives inside the loop (and runs the function epilogue code before `break`).
+- func_00f72f40: score 11 (saved). See its header. It wants goto loops, not for loops.
+- func_00f73eb0: the for-loop form made it worse (262 vs 152); still 152.
+
+## Round 20
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f72a70: score 128 -> 39 (saved).
+  - The first window loop must be `for (k = 0; k < 2; k++)`; gcc reverses it, and the final k == 2 is reused for the
+    constant 2 argument.
+  - The clear loop is `for (k = 0; k < 2; k++) w[k]->b4 = 0; D_0108F52C = k;`.
+  - Left: where `lui 0x2c` (the pad base) is placed; see the header.
+- func_00f625f0: first draft, score 217 (saved). Frame and register-pressure differences remain; see the header.
+- func_00f6ae68: m2c fails (jump table); not drafted. Its gb twin is f43d70 (same shape).
+- func_00f74f30 (gb twin f4de38, same shape), func_00f6d810 and func_00f6a530: not drafted (m2c and asm dumped
+  only).
+
+## Round 21
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f6a530: MATCH. Its gb twin func_00f43438 (same size, 2048 bytes) also matches after portmap plus three
+  raw-address symbols (D_00F829C0/C4 for D_0108F180/184, D_00F70684 for D_00FB4E04). The alpha fade is
+  `if (a == at) alpha = a * 0.5f; else { ...; alpha = a * 0.5f; }`, which gcc cross-jumps into one mul. Two fixes
+  that look unrelated also changed the float register allocation there, so retry the alpha forms after fixing them:
+  - case 6 must be `if (x10 != 1) tbl = &D_00FB49F0; else tbl = &D_00FB4A20;`.
+  - after the fn3C() call the order must be `x = e->x; o->x90 = alpha; y = e->y;`.
+- func_00f6d810: score 322 -> 236 (saved). The up path does `goto win` into the down path's window code, written as
+  `(n - 8) << 4` / `(i - n + 8) << 4`, and the whole cursor-search section now matches. Left: in the draw loop,
+  &D_00FB4C48 is hoisted into s7 and the loop counter spills, where the original spills n instead. gb f46718 has
+  the same size (1992 bytes) and is probably its twin.
+- func_00f74f30: first draft, score 290 (saved). Both count loops match, including the empty loop that ee-gcc pads
+  with nops. The window calc becomes movn here, while the original uses a branch-likely; see the header.
+
+## Round 22
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- gb ports, both near misses at the same score as wm: f46718 (score 236, from f6d810) and f4de38 (score 290,
+  from f74f30). For f4de38 the m2c token lists do not line up, so plain zip fails. /tmp/.../wwm3/portmap2.py
+  builds the map from prefix plus suffix alignment instead. Hand-mapped: D_00F704FC, D_00F829D4.
+- hill.py (line-order hill climber) on f74a28 ran 600 s with blocks of decls, c[] pairs and selx/sely: 2549
+  tries, still 5 words. On f72f40 (decls, setup, the call args and clear-loop blocks) it ran 600 s: 2624 tries,
+  still 8 words. Statement order alone does not fix either one.
+- func_00f6cfa0: first draft, score 216 (saved). Notes in the header. The jump table spans 1..9, so the switch
+  needs explicit `case 1: case 2: case 7: case 8:` labels (476 -> 216 together with the other fixes). The
+  navigation loop is a for loop with the confirm check in its condition (comma expression).
+- func_00f6ae68: first draft, score 245 (saved). The jump table was read from wm.elf at 0x00FBA0A0 (rdw.py in the
+  same scratch dir).
+
+## Round 23
+
+Rebased onto origin/claude/project-thread-rl45wv. Three large high-half drafts are saved as near misses; the
+headers have the details.
+- func_00f73570: score 327 (2372 vs 2368 bytes). Ported to gb f4c478 at the same shape and score 327.
+- func_00f7d0a8: score 335 (camera fly-to). A bare `sqrt.s` needs `PlatSqrtf` (include "platform/math.h");
+  both `sqrtf` and `__builtin_sqrtf` give a call plus a NaN check. ee-gcc prints the EE `sqrt.s fd, ft` form as
+  `c1 0x10504` when ft != 0. Scalar locals rather than `f32 v[3]` stop &v[2] from being hoisted into a register.
+- func_00f7a350: score 99 (map icons and the GIF-tagged map name). Case order inside the switch sets the block
+  order. Declaration order sets the spill slot order, which counts for a lot here (spill slots sp+176..228
+  follow the order of the locals). Chained stores (`a[0] = a[1] = v;`) schedule like the original. Its
+  neighbour func_00f792c8 is .nostrict, but this function compiles worse in nostrict mode.
+- No gb twins for f7d0a8 or f7a350. The gb functions of similar size (f2cf58, f32a38, f377b0) call different
+  routines.
+
+## Round 24
+
+Rebased onto origin/claude/project-thread-rl45wv.
+- func_00f7a350: hill2 took it from 58 to 31 words (score 55, saved). /tmp/.../wwm3/hill2b.py is a local copy of
+  wwm1's hill2.py that points at this worktree. Two lessons:
+  - Choice slots must be on a single line, because the {{a@@b}} regex is not dotall.
+  - Block permutation can move statements across a `r = p + N;` re-point and silently change semantics; the first
+    run swapped the 0x47 and 0x42 packet constants. Group each re-point with its stores on one line, and only use
+    blocks of independent statements.
+- func_00f6e278: first draft, score 268 (saved). Two hill2 passes took it from 410 to 268. Its gb twin f47180
+  (2824 bytes, with the same 672-byte func_00f46ee0 before it) was ported with portmap2, score 268.
+- func_00f7ad38: first draft, score 524 (saved). It is f7a350's sibling. The colour bytes need (s32) truncation,
+  and id must be u32. hill2 does not help here, because the 24 extra bytes misalign the word count. No gb twin by
+  size.
+
+## Round 25
+
+The last three high-half functions now have structurally complete drafts (time-boxed). All are saved as near
+misses.
+- func_00f71b68: score 660 (3904 vs 3848 bytes). It is the swap/delete list editor: an empty-list wait, a mode-1
+  swap-select, a mode-2 delete and a re-find step, then cleanup. The 4-byte S2 icon pair is copied from
+  D_00FBA128 (lwl/lwr). The remaining diffs are block placement (the wait loop and the end block). The gb twin
+  f4aa70 was ported with portmap2 and also scores 660.
+- func_00f6f2a8: score 835 (4396 vs 4464 bytes). It is the top menu: item count, 3 icons plus a 4th when
+  func_00f6cf78() >= 3, a help window, the pad loop with wrapping navigation, a kind-3 guard dialog, and a 4-way
+  switch that restarts the menu.
+  - Two changes helped. Writing the restart as `for (;;)` with `goto next` instead of a goto label let gcc hoist
+    the 0.0f constant (1028 -> 897), because loop.c only sees syntactic loops. Typing the tables as s16 and
+    D_00FB4B70 as s32 also helped; gcc narrows that load to lhu itself.
+  - What is left: 128.0f is not hoisted into f21 at entry, the original keeps &icons in s8 (an `ip = icons` base
+    did not reproduce this), and gcse's sel*2 slot is at sp7C. The gb twin f481b0 was ported, score 837.
+- func_00f7de08: score 897 (3868 vs 3792 bytes). It is the panel draw: backdrop, gradient quads, title, name and
+  option-list GIF packets, and the selected-row highlight. The logic is complete. Alpha scaling forms:
+  - a*10240/12800 compiles to (a*5)<<11 over 12800;
+  - u8 b*77/128 compiles to >>7 with no rounding.
+  What is left is register allocation, because the original caches a*2, a*4, a*5 and a<<8 in stack slots. No
+  gb twin exists (no 3792-byte gb function).
+
+## Round 26 (wm low half)
+
+None of the ten functions matched. All have near-miss drafts, and each header says what is left and what was tried.
+
+| Function | Score | Size (draft vs original) | Source |
+| --- | --- | --- | --- |
+| f37770 | 24 | 1176, same size | new |
+| f33270 | 30 | 1056, same size | new |
+| f24fe0 | 39 | 1084 vs 1088 | new |
+| f3cdd0 | 49 | the 4 bytes are end padding | new |
+| f32df0 | 89 | 1140 vs 1152 | new |
+| f23018 | 99 | 1308 vs 1336 | new |
+| f46cb8 | 109 | 1100 vs 1088 | new |
+| f4bdf8 | 179 | 1084 vs 1088 | ported from the gb near miss f24d00 |
+| f4b878 | 267 | 1084 vs 1072 | ported from the gb near miss f24780 |
+| f49718 | 327 | 1316 vs 1320 | ported from the gb near miss f22620 |
+
+The three gb near misses were ported to wm with portmap3.py, a copy of portmap2 that takes the target overlay as an argument. Each port keeps the score of its gb draft. In f49718, three raw gb addresses had to be mapped by hand:
+- D_00F56D90 -> D_00F9B510
+- D_00F56D98 -> D_00F9B518
+- D_00F74210 -> D_010809C8
+
+The seven new drafts have no gb twin: no gb function has a matching size or call set. gb f38408 is 1088 bytes but calls nothing, so it is not a twin.
+
+Lessons:
+- **Switch case 0 (f37770):** a switch over cases {1, 2} plus default needs `default: case 0:` to reproduce the original's slti tree. This was also seen in gb f22620.
+- **Float constant rounding (f37770):** gcc 2.96 rounds the literal 0.01745329f to 0x3C8EFA33, while the original has 0x3C8EFA34; 0.017453291f gives 0x3C8EFA34.
+- **Unused locals and frame size:** an unused local array can reproduce the original's frame size. This worked in f46cb8 (`s32 buf[24]`, a 192-byte frame) and in f3cdd0 (`f32 u[4]`).
+- **Reused coordinate variables (f24fe0):** assigning new values to the same cx/cy variables, instead of writing the expressions inline, took the score from 218 to 39.
+- **Field pointers (f32df0):** when the original keeps a separate register per struct field across calls, explicit field-pointer locals reproduce it. This took the score from 292 to 121.
+- **Global array (f23018):** declaring the run of globals D_00FBAA78..8C as one `s32 [6]` array helped (149 -> 99).
+
+## Round 27 (wm)
+
+func_00f44898 matched (its own commit). The other functions are near misses, and each header says what is left and what was tried.
+
+| Function | Score | Size (draft vs original) | Source |
+| --- | --- | --- | --- |
+| f44898 | MATCH | 1344 | new |
+| f33270 | 24 | 1056, same size | Round 26 draft, hill2 (was 30) |
+| f37770 | 24 | 1176, same size | hill2 found nothing better |
+| f422c0 | 26 | 1368, same size | new, then hill2 (32 -> 26) |
+| f46070 | 51 | 1332 vs 1336 | new |
+| f2ac98 | 62 | 1360, same size | new |
+| f28ed8 | 75 | 1340 vs 1344 (end nop) | new |
+| f56780 | 165 | 1372 vs 1376 | ported from the gb near miss f2f688 (153) |
+| f55fe0 | 180 | 1368, same size | ported from the gb near miss f2eee8 (168) |
+| f26810 | 196 | 1344, same size | new |
+
+wm f55fe0/f56780 are the gb f2eee8/f2f688 pair. The other six have no gb twin.
+
+Lessons:
+- **Base-pointer locals for argument tables (f44898):** the last 15 words were the schedule of `func_00f21260(..., D_01080810[*st], D_01080800[*st], ...)`. Loading `q = D_01080810;` into a local first and passing `q[*st]` gave the match.
+- **Real loops are aligned:** gcc pads the label of a `while (1) { ... if (!more()) break; ...; }` loop to 8 bytes and does not pad a goto label. f44898 went from 32 to 20 by switching from the goto form. The `do { } while (1)` form rotates the tail call to the loop top, which is wrong.
+- **Float literals:** gcc 2.96 truncates when it converts a decimal literal to float. If the m2c literal comes out one ulp low, add digits. These were checked with a compile-only probe (cs.py):
+
+  | Literal | Gives |
+  | --- | --- |
+  | 0.29999999f | 0x3e999999 |
+  | 0.39999998f | 0x3ecccccc |
+  | 0.36999998f | 0x3ebd70a3 |
+  | 0.47f | 0x3ef0a3d7 |
+  | 3.1415926f | 0x40490fda |
+  | 1.59999996f | 0x3fcccccc |
+  | 0.59999997f | 0x3f199999 |
+  | -0.54999997f | 0xbf0ccccc |
+- **Local aggregate initializers (f46070):** hand.py cannot place the rodata of a local `s32 t[8] = {...}` until the code matches, so a draft shows score 999. To score while drafting, copy a struct from the extern rodata symbol instead (`typedef struct { s32 v[8]; } A8; extern A8 D_00FB74C0; A8 t = D_00FB74C0;`), which gives the same ldl/sdl copy. Switch back to initializers once it matches.
+- **Spill choice (f46070):** gcc spills the variable with fewer uses. Folding the two `done = 1` stores into one, `if (done != 0 || (a() && b())) { if (done == 0) mode = b(); done = 1; }`, kept `done` on the stack as in the original (98 -> 59).
+- **Colour joins (f28ed8):** when both branches of an if end in `or s0,v1,v0` at a shared label, write each branch as two halves u/v and one `col = u | v;` after the if.
+
+## Round 28 (wwm2)
+
+The last five undrafted wm functions now have structurally complete drafts. Time-boxed; none match.
+
+| Function | Score | Size (ours vs orig) | Note |
+| --- | --- | --- | --- |
+| f549d0 | 519 | 1964 vs 1984 | port of the gb f2d8d8 draft (gb also 519) |
+| f3e988 | 776 | 2224 vs 2264 | minimap blips; colour table drafted as a struct copy |
+| f26e80 | 722 | 2872 vs 2944 | item carousel; call sequence lines up |
+| f25918 | 530 | 3808 vs 3832 | main-menu state machine, 5-entry jump table |
+| f31430 | 384 | 3848 vs 3816 | world-map player/camera update; frame 16 bytes smaller than orig |
+
+gb twins: only f549d0 has one (gb f2d8d8, already drafted). The other four have no gb function of matching size or call set.
+
+f422c0 hill2: two more runs (init stores 61-73/81-90/92-95, then 81-89/92-95/116-123, 360 s each, about 1500 tries each) found nothing below 26.
+
+Lessons:
+- **Soft-float fabs:** write `a = d; if (d < 0) a = 0.0 - d;`. It gives the original's `__cmpdf2` / `__subdf3(0, d)` pair. A ternary or a macro made gcc duplicate the code that follows.
+- **Lerps with a variable n:** `v = (0 - 640) * i / n + 640;` with n in a local (not a constant) gives the original's mult/div sequence.
+- **Integer temps before float calls (f25918):** computing the integer lerps into locals before the `func_00f21ef0((f32)...)` call, instead of inline in the later call arguments, took it 644 -> 530.
+- **More float literals** (checked with cs.py):
+
+  | Literal | Gives |
+  | --- | --- |
+  | 0.069813165f | 0x3d8efa34 |
+  | 0.049999998f | 0x3d4ccccc |
+  | 0.5235987f | 0x3f060a90 |
+  | 1.9098597f | 0x3ff47648 |
+  | 57599.996f | 0x4760ffff |
+
+## Round 29 (wwm2, small overlays)
+
+None of these matched. xs_mushu f20550 was dropped after wwm1 matched it.
+
+| Function | Before | Now | What changed |
+| --- | --- | --- | --- |
+| xs_dh_break f20820 | 156 | 16 | stack array d[2] for the two distances, separate a/b jitters, `d[1] += 0.0f`, truncated literals, hill2 |
+| xs_dh_break f20288 | 173 | 95 | literals 3.2f/0.975f, declaration order (stack slots), header via q, store order, end-test shape |
+| xl_limit f225b0 | 60 | 41 | test/store as c->res[i], final read through rp (norlo) |
+| xs_dumbo f222f8 | none | 93 | first draft; the row loop as a goto loop |
+| xs_dumbo f20570 | (scratch 49) | 49 | saved; %hi s1/s2 swap left |
+| xs_genie f218f8 | 3 | 3 | 10 more loop/pointer forms, all modes, s32 return for func_00f21580: no change |
+| xs_genie f22078 | 74 | 74 | goto loop gives the right shape but no LICM (75); real loops get strength-reduced (101) |
+| xs_tink f20818 | 35 | 35 | direct/global/local create forms; a noreturn __assert gives 33 but is not the original |
+
+Lessons:
+- **A loop that loop.c must leave alone:** f222f8's row loop reloads its constants every pass and nothing in it is strength-reduced. Writing it as a goto loop, or as a `goto start;` into a `for (;;)` with the pointer step at the top, gives that. A structured for or while loop hoists the constants out.
+- **Stack slots follow declaration order:** for spilled scalars (f20288: n, start, spr, jx, jy at 80-96), declaring them in slot order fixed every slot offset.
+- **A value kept in a register and then spilled:** when the original writes through a register first and spills it afterwards, do the writes through a second pointer variable (q), then assign the spilled variable (start = q).
+- **hill2 and semantics:** line permutation moves statements across braces and data dependencies (xl_limit gave 38 that way, but the code was wrong). Only trust hill2 results inside blocks of independent statements. Slots `{{a@@b}}` must fit on one line.
+- **Truncated literals checked with cs.py:** 3.1415928f gives 0x40490fdb, 0.00088888888f gives 0x3a690452, 2.2049995f gives 0x400d1eb6, 3.2f gives 0x404ccccc, 0.975f gives 0x3f799999.
+
+## Round 30 (wwm2, RANKING.md rows 10-30)
+
+Four matches: f2c330, f2cfd8, f5bba0 and f3d978. Skipped as already worked in wwm1's round 14: f3be50, f3ba08, f465a8, f3fd60 and f3a0f0. wwm1's protofix had already checked the callee return types of every draft, so that step found nothing new.
+
+| Function | Before | Now | What did it |
+| --- | --- | --- | --- |
+| f2c330 | 8 words | match | hill2 over the two independent store blocks (u loaded before t, `g->x8` second) |
+| f2cfd8 | 6 | match | hill2 over the nine field stores after `idx = func_00f2ccb8()` |
+| f5bba0 | 68 | match | hill2 on the s[] stores (1, 2, 3, then 0), then ctx2: a CONTEXT_ONLY func_00f5ae10 |
+| f3d978 | 99 | match | ctx2 (CONTEXT_ONLY func_00f3b480) took it to 8 words, then `rad = o->f256;` right after `s = o->s;` |
+| f78458 | 11 words | 6 | hill2 over all ten setup stores |
+| f43430 | 7 | 6 | ctx2 (CONTEXT_ONLY func_00f41320) |
+
+No change from hill2 (detected independent blocks only) or from ctx2 singles and pairs: f22e60, f74440, f5d498, f639c0, f69aa8, f32770, f72f40, f74a28, f7ecd8, f7f628.
+
+Lessons:
+- **Store order is never "done":** f2c330 and f2cfd8 had headers saying store orders had been tried, yet both matched with hill2 over the whole block. Earlier passes had covered only part of each block.
+- **ctx2 first, then look at the diff again:** f3d978 went from 99 raw words to 8 with one CONTEXT_ONLY callee. After that, the leftover (the f256 load in a delay slot) was a one-line temp that the old header had already tried, but before the callee fix.
+- **Independent blocks:** /tmp/claude-0/s141/r29/blocks.py lists runs of three or more simple assignments with no calls and no reads of each other's targets. Its substring test is cautious (it skips `pos[0] = s->pos[0]` runs), so check by hand for blocks it misses.
+
+## Round 31 (wwm2, RANKING.md rows 27-50)
+
+No matches. I ran ctx2 (singles and pairs) on 17 drafts, then hill2 (300 s each) on the 8 with independent blocks that had not had a hill climb yet.
+
+Skipped:
+- Listed in wgb's round 29 report: f74a28, f41990, f2b598, f5c1c8.
+- Worked by wgb in round 29: f651d0, f23550, f79868, f7c078.
+- Matched already, so no draft left: f296d8.
+
+| Function | Before | Now | What did it |
+| --- | --- | --- | --- |
+| f20d08 | 64 words, score 53 | 10, score 21 | hill2 over the st stores (xC, xD and x4 right after x8), then the first tail branch stores D_00F85120 before D_00F85124 like the else-if branch |
+| f67c60 | 35, score 46 | 23, score 24 | hill2 moved `v = 0` after `cur = 0`; then `sel = (cur + 6) % 6` instead of `cur += 6` at the loop top |
+| f29dc0 | 24, score 43 | 23, score 41 | ctx2: CONTEXT_ONLY func_00f29658 |
+| f66b38 | 15, score 30 | 14, score 28 | hill2: the [3] store first, the [0] store last |
+
+No change from ctx2 or hill2:
+- f30d48, f37770, f33270, f42ce0, f2dc50, f2ac98, f422c0, f24fe0, f72a70, f24380, f44158, f632e8, f5dfd8.
+- Several of these had a hill climb in earlier rounds (f37770, f33270, f422c0), so only ctx2 was new for them.
+
+Callee return types (src/ and ovl/*/hand/ definitions vs draft prototypes, scratch script /tmp/claude-0/s141/r31/rt.py):
+- Only a few mismatches are not just pointer vs pointer: f20d08 func_001621e0 (void vs void *), f2ac98 func_00f2ac38 (s8 vs s32), f422c0 func_001bb7c8/func_00f404c8/func_00f64b88 (void vs s32) and func_001bff70 (s32 vs u16), f5dfd8 func_00f65480 (void vs pointer).
+- Fixing them changes nothing.
+
+Lessons:
+- **Make sibling blocks agree:** f20d08's two tail blocks did the same three stores in different orders. Writing them in one order let gcc cross-jump them, which took the score from 51 to 21.
+- **Fold an add into its one use:** in f67c60, `cur += 6` at the loop top followed by `cur % 6` matched better as `(cur + 6) % 6`.
+
+## Round 32 (wwm2, RANKING.md rows 70-100)
+
+No matches. I worked 21 drafts; for each I ran ctx2 (singles and pairs), then wgb's interleave.py (copied to /tmp/claude-0/s141/r32/il.py, taking draft paths as arguments), then hill2 (240 s each) on the 16 that have independent blocks.
+
+Skipped for long attempt notes (header of 460 characters or more): f344f0, f663a8, f693e0, f3a640, f79700, f63d18, f32df0, f66bd0, f46cb8, f28a68.
+
+| Function | Before | Now | What did it |
+| --- | --- | --- | --- |
+| f387a8 | 102 words, score 123 | 7, score 12 | hill2 over the two 19-store k-> blocks (240 s, then 600 s more) |
+| f42f20 | 205, score 118 | 166, score 104 | ctx2 (CONTEXT_ONLY func_00f42ce0), then hill2 |
+| f4c238 | 70, score 126 | 67, score 120 | hill2 |
+| f3e138 | 114, score 125 | 113, score 119 | hill2 |
+| f799e0 | 72, score 93 | 68, score 89 | hill2 |
+| f78d50 | 126, score 71 | 124, score 67 | hill2 |
+
+No change from any of the three tools:
+- f7bde0, f28258, f5e540, f2ba68, f6dfd8, f5e710, f27ff0, f62440, f4b338, f60af0, f58f98, f584d0.
+- f23628 and f23018 gained only a point or two from hill2, so I did not save them.
+- interleave.py found mixed int/float callees in only three drafts (f5e710, f42f20, f23018), and none of their reorderings helps.
+
+f4c610:
+- hill2 cut it from 69 to 57 words, but the score got worse (77 to 79), so I did not save it.
+- The real problem is the `lv` bitfield. The original does `ld; dsrl32 4; andi 0xffff; andi 0xf; cvt.s.w` with no truncation, while ours adds dsll32/dsra32.
+- These rewrites do not fix it: s32/u16/u32/u8 casts, `% 16`, a temp local, an s64 field and a u32 field.
+
+Lessons:
+- **Big store blocks hide register-allocation gains:** f387a8's header said the s0/s1 and float constant registers were wrong. They were fixed by store order alone, because the order of first use decides which constant gets which register.
+- **Don't copy the original's store order:** writing the blocks in the order the original stores them was much worse (104 words), because the scheduler moves stores anyway. hill2 on the source order is the way in.
+- **Watch the score, not just the word count:** hill2 lowers the word count, but on f4c610 that came with a worse score.
+
+## Round 33 (wwm2, f387a8 and RANKING.md rows 100-130)
+
+No matches.
+
+f387a8 stays at 7 words (score 12). I tried four searches:
+- Every ordered placement of f04, f34 and c in block 1 (5814 builds).
+- Block 1 written in the original's store order (105 words), then a single-move search from there (10 words).
+- Every single swap and move in both blocks, then all pairs of the 60 best edits, within one block and across the two (about 3800 builds).
+
+None goes below 7. Most single edits are neutral, so the search is stuck on a flat stretch. The reason: swapping just the c and f34 stores in block 1 (f34 stores zero) moves the float constants 200.0, 1.0 and -200.0 between f20, f21 and f22. The store order changes how long each constant is live, and so which register it gets. The remaining fix probably needs something outside store order, for example how the constants are introduced. The scripts are bf.py, ps.py and mv.py in /tmp/claude-0/s141/r33/.
+
+Rows 100-130:
+- Skipped for long attempt notes (460 characters or more): f28a68, f77648, f2a708, f73eb0, f26810, f56780, f625f0, f55fe0, f6cfa0, f5f940, f6d810, f6e278, f6ae68, f74f30.
+- No draft left: f57738, f56f30.
+- On the other 15 I ran ctx2 (singles and pairs), interleave.py and hill2 (240 s, on the 12 with independent blocks).
+- ctx2 and interleave changed nothing on any of the 15.
+
+| Function | Before | Now |
+| --- | --- | --- |
+| f69fd0 | 148 words, score 184 | 113, score 183 |
+| f47b60 | 146, score 232 | 138, score 223 |
+| f53758 | 152, score 253 | 148, score 231 |
+| f58bd0 | 206, score 309 | 190, score 289 |
+| f696a0 | 177, score 182 | 173, score 178 |
+
+Not saved:
+- hill2 lowered the word count but raised the score for f22358, f34998, f53af0, f59b30 and f6edd8.
+- No change at all: f4bdf8, f52ab0, f55d78, f5a4f0, f60cf0.
+
+## Round 34 (wwm2, register dispositions with -dl -dg)
+
+No matches. To get the dumps I compile with `ee-gcc -c -x c -O2 -G0 -Iinclude -dl -dg` from a scratch folder (/tmp/claude-0/s141/r34/dump.sh). Then I read the `Register N used ... across L insns` lines in .lreg and the dispositions table in .greg. Allocation order follows priority = floor_log2(refs) * refs / live length. Higher priority is allocated first and takes the lower register.
+
+| Function | Before | Now | Fix |
+| --- | --- | --- | --- |
+| f78458 | 6 words, score 11 | 2, score 3 | the constant 8 (local-alloc, live 30 insns) beat the %hi of D_0108F568 (live 32) for t4. Writing `D_0108F1A0 = 8;` twice (early and late) flips them; then I enumerated the order of seven stores |
+| f43430 | 6, score 8 | 2, score 2 | the D_00F9B1CC and D_00F9B1C8 addresses are global pseudos with 5 refs each, so live length decides. Swapping the two stores everywhere (init and all three branches) flips s5/s6; then I enumerated the branch store order |
+| f2dc50 | 15, score 30 | 6, score 10 | obj (15 refs, live 300) and &s->m (6 refs, live 75) were almost tied. `sm = s->m` right after `ok:` makes &s->m live longer, so obj wins s2 |
+
+Still open:
+- **f387a8 (7 words):**
+  - The three float constants are local-alloc pseudos and already get the original's f20/f21/f22.
+  - Constant locals (`f32 kp = 200.0f` etc., three positions, all definition and declaration orders, with and without int locals) fold back to constants and give 104 words when combined with the original's store order.
+  - Duplicate stores (each misplaced field duplicated at every position in its block, then pairs of the 40 best) stay at 7.
+- **f20d08 (10 words):** D_00F8512C's address (3 refs, live 14) and value (3 refs, live 4) are global pseudos. The value wins v0. Making the value live longer (reading it into a local earlier) or using a pointer changes the code shape and gives 76 words or more.
+- **f37770 (s5/s6):** n (7 refs, live 181) has priority 0.077 against 0.0106 for &rot (3 refs, live 284). The gap is too wide to close by reordering; the original probably keeps &rot alive in some other way. Not tried further.
+- **f33270 and f422c0:** not reached this round.
+
+Leads:
+- docs/overlays.md (Batch 4 patterns) says that `ld; dsrl32; andi 0xffff; andi 0xf` reads are u16 bitfields (`lo:8, kind:4, hi:4`) in a struct with a u64 member. That is exactly f4c610's leftover (Round 32), so it should be the next thing to try there.
+
+## Round 35 (wwm2)
+
+Three matches, each its own commit: wm f4c610, gb f25518 (the gb twin of f4c610) and wm f422c0.
+
+**f4c610:**
+1. The u16 bitfield layout gives the original's bitfield read: `u64 pad[0x58 / 8]; u32 x58; u16 lo : 4, lv : 4, hi : 8;`. The read is `ld; dsrl32 4; andi 0xffff; andi 0xf` with no dsll32/dsra32.
+2. A hill2 copy that minimizes hand.py's score instead of the word count (/tmp/claude-0/s141/r35/h2s.py) took it from score 77 to 13. hill3 then took it to 7.
+3. The last fix: `o->a.v[0] = 0; o->a.v[1] = 0;` come before `w = D_00F9B540;`. A store through o may alias the global, so the original stores first and loads the pointer afterwards.
+
+I built on my own version rather than wgb's (42 words, score 71), because mine scored better (13).
+
+**gb f25518:** the same source with D_00F56DC0 matches straight away.
+
+**f422c0:**
+1. Both b and off are local-alloc pseudos. off had the higher priority (0.158 vs 0.083), so it took s1.
+2. Moving `b = (u8 *)D_00F86500;` to just before off is computed (after `D_00F9B1C4 = 0`) shortens b's live range, so b takes s1. That gave 6 words.
+3. hill3, using my wm copy that ranks by score (/tmp/claude-0/s141/r35/hill3.py), took it to 3 words.
+4. `o2 = off + 0x540; e = (Sub *)(o2 + b);` keeps the original's add order and matched. Seven different ways of writing the expression inline all compile the same.
+
+Still at 2 words:
+- **f78458:** hill3 for 240 s, plus these single tweaks: forwarding D_0108F568 into D_0108F56C, a local copy of arg, a local for 8, a duplicate D_0108F568 store, and D_0108F568 stored first. None helped.
+- **f43430:** hill3 for 240 s, an `n > 0` guard around `p = buf`, count-down loops and index forms. The `buf[i]` form gets the delay slot right (`p` is then created after the test), but the first load uses sp, not s1.
+
+**f33270 (score 24):** fy and fx are global pseudos with 6 refs each (live 19 and 14), so fx is allocated first and takes f0.
+- Computing fx first fixes the load order but puts fy in f2.
+- Swapping the order of use and the declaration order, plus hill3 from the fx-first version, comes back to 24.
+
+Lessons:
+- **Aliasing sets the order of stores and loads:** stores through a pointer argument cannot move past a load of a global pointer. When the original stores before loading a global, write the stores first.
+- **A temp keeps an add order:** a sum written inline gets reassociated, while a separate temp (`o2 = off + 0x540`) keeps the original's order.
+- **Search by score:** when the word count and the score disagree, the score (aligned) is the better guide.
+
+## Round 36 (wwm2, hill3 on RANKING.md rows 100-130)
+
+I ran the score-ranked hill3 (/tmp/claude-0/s141/r35/hill3.py) on every draft in rows 100-130: 120 s each with seed 362 or 363, then a second 180 s pass (seed 364) on the biggest gainers. No matches. Seventeen drafts got a better score, and each new header says by how much:
+
+| Draft | Score | Draft | Score |
+|---|---|---|---|
+| f74f30 | 290 -> 190 | f2a708 | 179 -> 151 |
+| f6e278 | 268 -> 202 | f696a0 | 178 -> 166 |
+| f6ae68 | 245 -> 215 | f52ab0 | 185 -> 175 |
+| f6cfa0 | 216 -> 180 | f28a68 | 146 -> 138 |
+| f5a4f0 | 220 -> 196 | f60cf0 | 138 -> 136 |
+| f69fd0 | 183 -> 127 | f73eb0 | 150 -> 134 |
+| f5f940 | 205 -> 188 | f59b30 | 273 -> 259 |
+| f47b60 | 223 -> 211 | f625f0 | 217 -> 215 |
+| f6d810 | 236 -> 234 | | |
+
+No change: f56780, f55fe0, f53758, f77648, f4bdf8 (one word fewer, same score), f6edd8, f22358, f26810, f34998, f58bd0.
+
+`portall.py wm gb` found no new gb twins to port.
+
+**f55fe0 / f56780 (the func_00f4f6d8 call pair):** the matched callee ovl/wm/hand/func_00f4f6d8.c declares its parameters ints first: (id, pp, x, y, a4, scl, flag, ry, f1, s, f3). The drafts declare them in register order, with the floats third to fifth.
+- Every order that keeps the ints in order and the floats in order (126 of them, /tmp/claude-0/s141/r36/perms.py) was tried on f55fe0. None beats the draft's order (46). The callee's own order scores 66, because the mov.s $f12 then moves after t2.
+- The original puts `li a3,192` before `mov.s $f12`, and `mov.s $f12` before t1/t2. That fits no single parameter order, so the call scheduling comes from something else.
+
+**f55fe0, loop 2 s0/s1 swap:** in the dump, j (90 - i, 8 refs over 94 insns) gets s0 ahead of m (i + 90, 6 refs over 45 insns); the original has them the other way round. Single edits did not move it: j /= 2 in place, m /= 2 in place, m computed late as (i + 90) / 2, `68 + j / 2`, and j folded into its uses.
+
+## Round 37 (wwm2, manual work on drafts scoring 30 or less)
+
+Two matches:
+- **f7c078:** the table D_00FB6168 is an array of `struct { s8 n[8]; s8 x[8]; s8 y[8]; }` read as `D[a].x[k]`. The flat `D[k + a * 24 + 8]` form gives o + base; the struct gives the original's base + o for the first address.
+- **f3fd60:** subtract the 1 in each branch (`v = D_00F87300 - 1;` / `v = D_00F87E88[arg1].kind - 1;`), then index `D_00F87E60[v]`. With `[v - 1]` after the join, gcc folds the -4 into the table offset, and the loaded value also lands in a different register.
+
+`portall.py wm gb` found no gb twin for either.
+
+No gain (findings for whoever picks these up next):
+- **f78458:** sched1 (-dS) hoists every %hi/constant set to the top of the block and sinks the stores. So the live lengths, and with them the t4/t5/t6 choice, come from the order of the sources (the %hi/constant sets) against the sched1 store order.
+  - I placed the dead and the live `D_0108F1A0 = 8` at every pair of positions (dup78.py). The best result is still 3 / 2 words.
+  - The order dead store at the top, live store before D_0108F568 gives the original's store order, but the registers rotate: arg goes to t4, 8 to t5, %hi(568) to t6. The original has %hi(568) in t4, arg in t5 and 8 in t6.
+- **f7cb60:** arms `{ p[0] = 0; p[1] = 0; D_00FB5EC0 = 0; } else { D_00FB5EC0 = 1; p[0] = 0; }` fix the &2 arm (3 -> 2 words, same score 4; not committed).
+  - Left: in the else arm, sched2 puts p[0] = 0 before the D_00FB5EC0 store whatever the source order. %hi(D_00FB5EC0) is set inside that block, which lets the p[0] store go first.
+  - In the original, the %hi sits in the beqz slot and serves both arms, and the two stores keep source order.
+  - Neither reassigning p nor making p volatile helped.
+- **f28448:** `i = z + i` becomes (plus i z), because expand_binop swaps a commutative add whose second operand is the target. `i = z + D.b` keeps z first but loads into a temp register, not s0 (6 words).
+- **f3a030:** `(&D[i].s)->buf` gives the original's lw 4(s2), but with base + 224 invariant and a 272i giv (score 10). The original has base and 272i + 224. Every flat, array, cast and offset-variable form folds to one of the two.
+- **f47610:** the 243 named-field union views score at best 8 (the w[] draft is 4).
+- **f66b38:** n first, then stores [0], [1], [2], [3] gives the original's instruction order. Every register is off by one (a1/a2/a3 against the original's a2/a3/a1) and the score is 30 against 28, so I did not commit it.
+- **f44158:** in the dump, arg4 (pseudo 88: 4 refs over 11 insns) outranks arg0 (84: 4 refs over 19 insns) and takes s0. Duplicate stores and void uses of arg0 do not change the ref counts.
+- **f38630:** chained 200.0f stores, a 200.0f temp, and moving or duplicating `k->x00 = arg0`: no gain.
+
+## Round 38 (wwm2)
+
+**Match: f22e60 (norlo mode).**
+- `u64 **q = D_00F85160; if (D_00FBB338 == 0) a -= 12; *q = p;` matched.
+- Storing through `*D_00F85160` first meant D_00FBB338 had to be loaded after the store, because the store may alias it. That swapped the movz registers.
+
+**Better: f32770, score 8 -> 2.** Copying fx and fy into locals inside the if helped. Of the 1374 copy/store orders tried, the best is `x = fx; id; y = fy; c.x = x; c.o = o; c.y = y`. One swap is left: the original stores x before it loads fy.
+
+**Bulk struct test:** I rewrote 9 gb/wm drafts that index tables as `D[n * 4 + c]` or `D[row * 2 + 1]` into 2-D arrays (r38/to2d.py), and wm f58748 and gb f31ad8/f31650 as `[idx][c]` colour tables (r38/col2d.py).
+- The `D[n * 4 + c]` rewrites gave identical scores. The f58748/f31ad8/f31650 rewrites failed to compile (scores 331-377 before).
+- 2-D arrays of scalars fold to the same RTL. The f7c078 struct only made a difference because a shared offset was involved.
+
+`portall.py wm gb` found no new gb twins ("ported 0").
+
+No gain:
+- **f21260:** a non-void func_001655e0 makes the register allocator avoid v0 (11 words).
+- **f74440:** DABS / ternary / per-branch forms of the inner `if (d < 0.0)`.
+- **f74a28, f639c0, f3ba08, f36bc0:** looked at, no new idea.
+- **f22e60-style pointer local:** tried the idea on f28ed8 and f46070. Neither reads a global after the packet-pointer store, so the pattern does not apply to them.
+
+
+## Round 39 (wwm2)
+
+**Match: wm f5d498 and its gb twin f363a0.**
+- `func_001bfac8(); while (1) { ...; func_001bfac8(); }` with a plain-if clamp `if (sel >= f()) sel = f() - 1;` matched both.
+- Clues in the original: sd ra comes last in the prologue, and a join label is 8-byte aligned with a nop pad. Only loop and after-barrier labels get .p2align 3, so I first tried a `do { } while (0)` around the tail. That fixed the body (score 2), and the peeled call fixed the prologue.
+- r39/peel.py moves a call at the top of a `while (1)` / `for (;;)` loop to before the loop and repeats it at the end of the loop body. Swept over all wm drafts and the one gb candidate:
+  - gb f363a0 matched.
+  - No gain on f51d18, f625f0, f67c60, f7d0a8. f6b7c8 and f6f2a8 were skipped because they contain `continue`.
+
+**Better (committed):**
+- **f78d50:** score 67 -> 59, from the alias sweep. The loop stores are now in the order 7C0, 830, 8A0.
+- **f465a8:** score 16 -> 10. Case 4 reads the field as `.x10`, and the third branch reads it as `((s32 *)&D)[4]`, which defeats CSE. Left: the original addresses both loads off one lui (-19744(a0)); ours builds the full address.
+
+**Alias sweep (r39/as2.py):** for each store through a pointer that is followed by a global read, it tried moving the read above the store, or a pointer local. wm drafts with score 80 or less: only f78d50 gained. gb: nothing.
+
+**f32770 (still 2):**
+- The sched1 dump shows fy loaded through an alias-set-0 MEM, so it depends on the id store, and the x store depends on it. The original's order (x store, then the fy load into f1) needs x and y to overlap.
+- Tried with no gain: fx/fy as an f32[2] array or as a struct, which takes the fy load out of the alias chain. 408 store/copy orders of those forms gave scores of 6 to 12 (r39/e327g.py).
+
+**f43430 (still 2):** 30 buf-loop forms gave no gain, among them count-down loops, do-while, `n = i` copies and tests on the call result. The original's blez v0 has `move s0,v0` in its delay slot; ours puts `move s1,sp` there.
+
+**f3a0f0 (still 12):** 160 FP temp shapes gave no gain (named a/b, t1..t4, constant-first multiply). In the -dl dump, m31 is tied to the div result in ours. In the original, the div result is tied to m33 and the mul result to the 256 constant, so ties to operand 1 fail there. I have no source form for that.
+
+**f67c60 (still 24):**
+- The original's back edge goes to the f639c0 jal before the loop, and `addiu s3,6` sits in that jal's delay slot. So the loop starts with `cur += 6`, which reorg puts in the slot.
+- `cur += 6` at the loop top plus `sel = cur % 6` gives 26, because sched1 sinks the add past both calls. With f639c0 at the loop top, sel spills (70).
+
+**f2dc50, f387a8:** reread, nothing new to try.
+
+portall wm gb: ported 0 (the gb twin was found by peel.py).
+
+## Round 40 (wwm2)
+
+**Peel by hand on the `continue` loops: does not apply.**
+- f6b7c8 (score 1280) and f6f2a8 (713), and their gb twins f446d0 and f481b0, start their loops with an item allocation or a table read, not a wait call.
+- f6b7c8 inner loop, peeling `t = func_001bc4e0() + ...` with the continue sending it to the end of the pass: 1430/1436. Outer loop, peeling `it = func_00f6a480()`: 1328. Both worse than 1280.
+- These drafts are 60-90 bytes short, so their structure is off well beyond the loop shape.
+
+**Pad scan (r40/padscan.py, r40/padscan2.py):**
+- It finds nops that are not in a delay slot and sit right before an 8-aligned branch target, in the target and in our build, using the fd.py columns.
+- Counting every such pad (padscan.py) gives 96 hits, mostly layout noise: a loop or after-jump label can land on an 8-aligned address without needing a pad.
+- With ODD=1, padscan2.py keeps only odd pads: no backward branch to the label and no unconditional jump before it, which means a loop note with no back edge. The old f5d498 draft shows up as a hit.
+- Over all 139 wm and 70 gb drafts, the only odd-pad hit is wm f2dc50.
+
+**f2dc50: score 10 -> 8.** The original's padded label sits just before the loop's `b test`, so the loop note follows the ok: inits directly. `ok: done = 0; sm = s->m; cnt = 0;` gives 8, and so does `for (cnt = 0; ...)` with done and sm before it. What is left: the original computes s+32 inside the loop. With sm set only in the loop, the s2/s3 swap comes back (30).
+
+**f72f40 (still 11):** b38/two/c temps and a pointer to D_00FB4B38 leave the v0/v1 swap in the second func_00f6b6a0 call unchanged.
+
+**f42ce0 (still 16):** scheduling only, untouched.
+
+**f7ecd8 (still 17):**
+- The body matches. What differs is the back branch: the original has beqzl with the next pass's `lw v0,16(v1)` stolen into its delay slot, and then `jal func_0011d768; li a0,2; sw s1,52(s2)`, so the call comes before `m->x34 = sel`.
+- Swapping those two statements alone gives 19.
+- The goto/do-while form has no VTOP note, so reorg predicts the EQ branch not taken. Every rotated while/for form (w, f, wb, fw) gets the VTOP note, but loop opt then hoists the full D_002C5AD0 address into s0, and the loop top can no longer be stolen (45-49).
+- So the original needs a rotated loop in which only the %hi is hoisted. I found no such form.
+
+## Round 41 (wwm2)
+
+**f7ecd8: score 17 -> 11.** Following the coordinator's hint, the loop test reads the next pass's first load: `test: v = D_002C5AD0.x10; } while (!(D_002C5AD0.x8 & 0x2000));` with `u32 v;` and the top check written `if (((v >> 24) | v) & 0x10)`. What is left: the srl operand registers are swapped, and the original's back branch is beqzl.
+
+**Small wins:**
+- f41990: 27 -> 23. Loop 1's colour word is `c | ((c << 16) | (c << 8))`.
+- f632e8: 35 -> 29. The packed word is `((u64)(y + h * 32) << 16) | (x + w * 16) | 0x100000000`.
+- f79868: 37 -> 25. It indexes `g[i].offset / g[i].count` instead of stepping g, and divides in place (`sx /= f->n; ... *ox = sx;`).
+- f5dfd8: 38 -> 30. This is the gb f37270 copy family: `tex = base; o = tex; tex = o + 208; f = tex; s.p0 = tex; tex = o + 480;` with the call taking (o, tex). The 255.0f chain is written `f[6] = f[5] = f[4]`.
+- f5e368: 40 -> 26. This is a port of gb f37270.
+
+**orsweep (r41/orsweep.py):**
+- It tries every order of the `|` terms on packed GS-word lines that contain `<< 16`.
+- Results:
+
+  | Overlay | Function | Score |
+  |---|---|---|
+  | wm | f5f940 | 188 -> 162 |
+  | wm | f60cf0 | 136 -> 95 |
+  | gb | f38848 | 171 -> 159 |
+  | gb | f39bf8 | 52 -> 42 |
+  | gb | f3c1f0 | 35 -> 29 |
+
+- The best order usually puts the y/v `<< 16` half first.
+
+**twins (r41/twins.py, r41/applytw.py):**
+- twins.py pairs wm and gb drafts whose target mnemonic sequences are identical. It ports the better draft onto its twin with tools/ovl/port.py and scores the port.
+- applytw.py commits each port that improves the score and has no unmapped symbols. Each committed draft gets a new header and keeps its old header.
+- Results: 31 gb drafts and 6 wm drafts improved. The biggest gains were wm f55d78 (223 -> 27), wm f696a0 (166 -> 35), wm f79700 (84 -> 41), wm f60cf0 (95 -> 42), gb f39eb0 (1270 -> 1062), gb f4de38 (290 -> 190), gb f51360 (11 -> 3) and gb f20518 (13 -> 4).
+- Rerun twins.py after improving either side of a pair.
+- gb f3fa40 (draft does not build) did not take the wm port.
+- Skipped for unmapped symbols: gb f2ac20, gb f446d0 and wm f66bd0.
+
+**No gain:**
+- f30d48 and f20d08: skipped.
+- f7f628 (21): a goto count loop scored 24, and the arg0 copy variants stayed the same. The `move s8,a0` in the bnez delay slot is a sched2 ordering difference.
+- f33270: 16 fx/fy orders.
+- f651d0: pt/root variants (94 and 90); an s6/s7 swap remains.
+- f37770: an s5/s6 swap.
+- f4fba0: packet variants.
+- f72f40: arg temps.
+- f56780 and f71748: scheduling/FP.
+- f3a860 and f72a70: scheduling inside the cases.
+- gb f51360 (3): moving any of the ten stores and removing or swapping the duplicate `D_00F829E0 = 8` does not improve it. The t6/t5 stores stay swapped.
+- f78978 (39):
+  - The original keeps `lw D_0108FA74; li a0,66` but not the compare, so the 66 test went dead only after reload, when jump2 dropped the branch.
+  - I tried a switch with one case, an if/else with identical arms, goto-to-next, a col/x self-assignment, `x = 66; ... == x`, and the test as an expression. Each one either deletes the loads or makes no change.
+- wm f55d78 and wm f696a0 after their ports: what remains is register swaps (s3/s4, s6/s7) and scheduling.
+
+## Round 42 (wwm2)
+
+**Matches: wm f60cf0 and its gb twin f39bf8.**
+- The diff showed no `addiu a2,a2,16` in the target's flip branch.
+- The flip UV word is `(u1 << 4) | ((u64)((v1 << 4) + 16) << 16)`: u1 has no +16, and the u half comes first.
+- The port of the wm match onto gb f39bf8 matched as it was.
+
+**Instruction multiset scan (r42/msd.py, r42/msdscan.py):**
+- For each draft, it lists the instructions that only the target has and the ones that only our build has, as mnemonic plus immediate, with nops ignored.
+- Output: r42/msd_wm.txt and r42/msd_gb.txt.
+- A small difference that is not a move points at an expression to change; a list of only moves means register allocation.
+- Hits followed up:
+  - f584d0 (wm) and its gb twin f313d8: score 99 -> 74. The target has addiu 2272 where we had addiu 142. 2272 is 142 << 4, so the original shifts h first and adds 142 << 4 afterwards: `y1 = D.h; ... ((y1 << 4) + 2272)`. Then hill3o reordered the setup lines.
+  - f29dc0: score 41 -> 37. The target has bc1t where we had bc1f. The tail is `lod = 1; if (!(z < rad * 1.5f)) lod = 0;`, and the outer `lod = 1` has to sit only in the else arm of `D_00F8C23C != 0`. Otherwise cse drops the second `lod = 1`. What is left is FP register numbering (rad, z and 1.0f each one register off). A separate temp for z - rad and inlining 1/z did not change it.
+  - f2ba68: case 43 needs sltiu where we get xori. `== 0`, `? 0 : 1`, if/else, `^ 1`, `(u32)... < 1` and every type for ok all stay at xori (91).
+  - f3a030, f3ba08, f7cb60, f3f998: the differences are known ones already described in their headers.
+
+**hill3o (r42/hill3o.py):**
+- It hill-climbs statement order and accepts moves that keep the same score.
+- Dependencies are kept; distinct array elements, such as `xs[1]` and `ys[0]`, may swap.
+- Results:
+  - f696a0: score 35 -> 31, also ported to gb f425a8.
+  - f79700 (SETQ expanded into plain statements): score 41 -> 37, also ported to gb f42180.
+
+**No gain:**
+- gb f51360 (3):
+  - Neither hill3o over the ten stores nor every position of one or two `D_00F829E0 = 8` stores helped.
+  - With a single `= 8` store the score is 13. The dead first store only helps when it also stores 8, so it shares the constant pseudo for 8.
+  - Other values for the dead store score 17-39.
+- gb f20518 (4): the target forms the second loop store's address from s2 (base + 20), not from the s0 = s2 + 16 giv. `v16.e[i].w[1]` and `v8.e[i].w[3]` give the same code as `v0.e[i].w[5]`.
+- wm f55d78 (27):
+  - x1 and x3 swap s3/s4, and x2 and y3 swap s6/s7. The lreg dump shows x1's tied pseudos ranked above x3's.
+  - Swapping any two declarations, using x1 forms, using x3 forms with or without t, and inlining x3/y3 into the call made no difference or were worse.
+- f60cf0's packet-word orders in the flip branch: nothing beyond the match.
+
+**drafttwins (tools/ovl/drafttwins.py):**
+- This is r41/twins.py plus applytw.py, now in the repo with a note in docs/overlays.md. tools/ovl/twins.py already exists for matched code, so the new tool has its own name.
+- The rerun improved gb f3cc20 (102 -> 100).
+- I then fixed some unmapped symbols by hand, using the mappings recorded in the draft headers:
+
+  | Overlay | Function | Score | Mapping |
+  |---|---|---|---|
+  | gb | f2ac20 | 544 -> 460 | D_00FA5B38/5B60 = D_00F613B8/13E0 |
+  | gb | f446d0 | 1324 -> 1280 | D_00FB4AFC = D_00F7037C |
+  | gb | f46718 | 230 -> 228 | D_00FB4C7C = D_00F704FC |
+  | wm | f66bd0 | 102 -> 96 | the gb declaration of D_00F56DC0 was unused and is dropped |
+
+## Round 43 (wwm2)
+
+**msdscan over every draft (r42/msd2_wm.txt, r42/msd2_gb.txt, filtered with r42/msdfilt.py).**
+Each hit below names the instruction difference the scan showed, then what came of it.
+
+- **f7c510: score 86 -> 78.**
+  - The scan showed srl where we had sra, so the qword count is unsigned: `((((u32)p - (u32)top) >> 4) - 1) | 0x10000000`.
+  - Per-arm `X = x; Y = y;` copies plus `y4 = Y + 4` before the second flag test bring back the arm copies.
+  - Left: the Y copy is still coalesced into the load register, and x0 goes to a2 instead of the x temp.
+- **wm f69278: score 41 -> 37.** The drafttwins rerun ported gb f42180 onto it; f42180 is the twin of f79700 from round 42.
+- **False positives:** f72a70 (lui 0x0) and f6ae68 (lui 0xa) only differ in our unrelocated jump-table address. msd should mask `lui X; addu; lw; jr` sequences.
+- **No gain:**
+  - **f465a8 (10):** I tried every pair of access forms for the two x10 reads. The base address is always built as a full address.
+  - **f78d50 (59):** the target leaves nops after the soft-double libcalls (`jal; nop; move a0,v0`). Mode .nofill gives 45 in the loop but breaks the prologue. Something stops reorg filling the libcall arg moves.
+  - **f23628 (81):** the one-call forms of the f23018 call (`!= 0`, ternary, flag variable) score 136.
+  - **f5a4f0 (196):**
+    - The target computes i * 15 / 30 as /2 too, but it keeps a leftover `li v1,30; beqzl; break 7` divide-by-zero check.
+    - So the divisor 30 was a register that only later became known as a constant, maybe through an inline helper's parameter.
+    - A variable n and a temp t are both worse.
+  - **f4bdf8 (179):** all orders of the three field stores in each of the six blocks were worse or equal.
+  - **f4b338 (112):**
+    - The target has `xori r,r,0` before movn/movz, so the result is compared against a value that only later becomes known as 0.
+    - Return types u8 through s64, `!= ret` and `!= flags` all leave the score at 112.
+  - **f36bc0 (6):** an inline bound `(s32)(o->f20 / D)` is worse (78-101).
+  - **f2ba68, f3a030, f2dc50, f60af0, f66bd0, f69fd0:** as described in round 42 or in their headers.
+
+## Round 44 (wwm2)
+
+**Inline-helper test (r44/t.c, t2.c, t3.c).**
+
+- **Orphan divide-by-zero check:**
+  - An inline helper that divides by its parameter and uses the quotient keeps a real `div` (t.c f1).
+  - When the quotient is dead, gcc 2.96 leaves `li 30; beqzl; break 7` without the div (t.c f2), which is exactly the target's signature. See docs/overlays.md.
+- **The `xori r,r,0` signature: not reproduced.**
+  - Inline compare helpers, a ternary, a zero variable and cross-block zeros all fold to a plain movz (f4b338 stays at 112).
+  - Comparing against a real register gives `xor r,r,rs`.
+
+**Results:**
+- **wm f5a4f0 and gb f333f8:** score 196 -> 174. A dead `t / n` helper in the else arm.
+- **wm f25918:** score 530 -> 382, and the size now matches. The orphan `beqzl n` sits next to the float fade, so I used an inline float lerp with a dead `i / n`.
+- **wm f78d50:** score 59 -> 5. Once the jump tables were masked, the scan showed a single `li a0,1`, so the call is `func_001fd720(1)`. The nops after the soft-double libcalls mean nofill mode. hill3o reordered both global-store blocks, and Mode.f8 returns s32. Left: the lui for D_0108F6B4 is in v1, where the original has v0. Casting the second call to void fixes it, but the function pointer then lands in a3.
+
+**msd.py now masks jump-table loads.** It drops the lw/addu/sll/addiu/lui chain that feeds a `jr` other than `jr ra`. The f72a70 and f6ae68 false positives are gone, and f78d50's real difference (the `li 1`) showed up.
+
+### Round 44: build-mode scan (r44/modescan.py)
+
+Scored every draft without a mode suffix under nofill, norlo and nostrict. 11 drafts improved and were renamed to the mode suffix:
+wm f3a640 94->86 nostrict, f3e988 776->770 nostrict, f42f20 104->84 norlo, f51d18 460->430 norlo, f5e8a8 901->891 norlo,
+f625f0 215->183 nostrict, f7ad38 628->616 nofill, f7de08 807->805 nostrict; gb f2ac20 460->430 norlo, f377b0 901->891 norlo,
+f3b4f8 217->185 nostrict. The gb hits are the twins of wm f51d18, f5e8a8 and f625f0, so the mode follows the function. drafttwins --apply afterwards found no new ports.
+
+## Round 45
+
+- **wm func_00f78d50 matched (nofill).** In the .greg dispositions, the lui pseudo for the last store (193) was in 3 (v1). It is born on the insn right after the second vtable call, which sets v0 with REG_UNUSED, and local-alloc appears to keep v0 busy through that next insn. `t = arg + k; D_0108F6B4 = t;` puts the add first, so the lui gets v0. Note in docs/overlays.md.
+- **hill3o (200 iters) after the round 44 mode changes:** wm f3a640 86->78, f625f0 183->181, f3e988 770->750, f5e8a8 891->879, f7ad38 616->600, f7de08 805->799; gb f3b4f8 185->179, f377b0 891->879. f42f20 did not move. My f51d18/f2ac20 gains (430->426) were dropped in the rebase, because wgb's round 36 hill3 versions upstream score 408.
+- **modescan over dkmovie, dktitle, xs_*, xl_limit:** dkmovie f23750 132->130, f23ae8 629->624, f245c0 538->524, f25288 103->97, f26d90 200->193, f270c8 30->22 (all nofill); dktitle f21808 45->39 (nostrict -> nofill); xs_dh_break f20288 57->55 (nofill; scored with shard.h pasted in). The session136 xs_dh_break f20288 draft (in drafts.tsv) also gains under nofill (173->171), but the session141 copy is better, so I left the drafts.tsv file alone. Nothing for xs_dumbo, xs_genie, xs_tink or xl_limit.
+- **hill3o on those:** dkmovie f23750 130->84, f23ae8 624->596. The others did not move.
+- **Tools:** tools/ovl/msd.py and tools/ovl/modescan.py are committed, with a line each in docs/overlays.md.
+- **drafttwins --apply** after the rebase: gb f37618 81->69 (from wm f5e710) and wm f62440 98->96 (from gb f3b348), both coming from wgb's round 36 changes.
+
+## Round 46
+
+- **v0/v1 sweep (r46/v01scan.py).** I scanned every wm/gb draft for a differing line that is a pure v0<->v1 swap within 4 insns after a jal/jalr. No draft has that as its only difference. The real cases were the reverse of f78d50: the target avoids v0 after a call because the callee returns a value the caller ignores.
+- **Return-type flips (r46/retflip.py).** Flipping each statement-called prototype void <-> s32, greedily, improved 21 drafts:
+  - wm: f28ed8 75->67, f69fd0 127->107, f58f98 176->168, f6cfa0 180->178, f3ac48 56->52, f6dfd8 77->71, f3a640 78->76, f23018 91->89, f47b60 211->207, f47f40 249->245, f34998 318->316 (a void flip), f51d18 408->400, f6f2a8 713->709.
+  - gb: f42ed8 127->107, f31ea0 176->168, f45ea8 180->178, f46ee0 77->71, f20a68 211->207, f20e48 249->245, f2ac20 408->400, f481b0 713->709.
+  - func_00f4b338 / gb func_00f24240, the xori-0 helper from round 44, returns a value.
+- **hill3o on those:** f28ed8 ->65, f58f98 ->152, f31ea0 ->158, f6cfa0/f45ea8 ->170, f3a640 ->70, f23018 ->85, f47f40/f20e48 ->215, f34998 ->310, f51d18/f2ac20 ->396.
+- **wm f28448 matched.** `i = D.b; w = z + i;` (a fresh result variable) keeps z first in the addu. `i = z + i` gets swapped by expand_binop because the target is the second operand. Note in docs/overlays.md.
+- **Swapped-commutative-operand scan (r46/swapscan.py):** wm f71748 / gb f4a650 38->36 (`(Ent *)(j * sizeof(Ent) + (u32)base)`), then 34 with hill3o. gb f367e8 100->92 (`*(f32 *)((u32)b + (i << 2))`), then 84 with hill3o. wm f632e8: no OR operand order helps.
+- **wm f72a70 / gb f4b978 39->37:** the outer goto loop written as `while (!((a = D_002C5AD0.x8) & 0x4000))`. That is 8 bytes bigger, but scores lower.
+- **hill3o (300 iters) on the untouched drafts at score 40 or less:** f42ce0 16->14 and f28448 7->5 (then matched). No change for f38630, f47610, f74440, f639c0, f36bc0, f72f40, f74a28, f7f628, f69278, f3a860, f72a70, gb f4b978.
+
+## Round 47
+
+- **Tools:** tools/ovl/retflip.py and tools/ovl/swapscan.py are committed, with a docs line each.
+- **retflip over all 135 wm drafts:** nothing new beyond round 46.
+- **swapscan:** wm f6e278 202->200 with `(It *)(D_0108F288 * sizeof(It) + (u32)items)`, ported to gb f47180. f632e8 is still the only open swap.
+- **hill3o (150 iters, seed 2) over all 87 wm drafts above 40:** 41 improved. The biggest were f75d80 2412->1758, f26e80 722->472, f25918 382->172, f7d0a8 331->265, f22358 188->123, f4d9c0 58->20, f4b338 112->84, f53758 102->84 and f7c880 48->36.
+- **wm f4d9c0 matched**, and gb f268c8 followed through twins.py. `w2 = x + w; h2 = y + h;` uses fresh sums (the original's addu has x first), and the 0xC0 store comes before 0xE0.
+- **drafttwins --apply:** 16 gb twins took the wm gains.
+- **Shared prototypes:** include/sce/libgraph.h declares `void sceGsPutDrawEnv(...)`, but src/sdk/gcc991111/text_00260000_s2.c defines it returning s32. No other include/ prototype is void for a function defined with a value. Many file-local declarations in src/ and ovl/*/hand declare func_001f9438 or func_001c0310 void, while their definitions (src/text/wintext.c, src/util/task.nostrict.c) return s32. Those files match as written, so they cannot be changed blindly. The overlay callees whose s32 flip helped (func_00f29500, f4a000, f55190 and others) are void in ovl/*/auto. So the original callers probably used implicit-int declarations, not real int returns. func_0020be10 is genuinely void (src/menu/pointer.c), and its s32 flip in wm f6f2a8 / gb f481b0 helped only as a perturbation.
+
+## Round 48
+
+- **Fresh-sum sweep (`v = a + v` -> `t = a + v`):** the only hit was f26810, and it gives no gain once the type is right (u64 *). f28448 and f4d9c0 already had the fix.
+- **hill3o was unsafe.** It fixed only lines with `{`/`}`. So it moved break/return/goto/case/default/labels, and statements across one-line `if (c) return/continue;`. It also did not count `x++`, `&x` or one-line-if assignments as writes. 37 commits on 31 drafts were wrong. All 30 drafts still affected were reverted to their last valid order (wm f3a640's current order was valid again), plus 6 gb drafts ported from them. Each repaired file is byte-identical to its last valid version, except that later preamble-only prototype changes are kept. wwm1's tools/ovl/ordcheck.py now reports zero. The scores that were lost are listed in the "revert invalid hill3o order" commits. The biggest losses: f75d80/gb f4ec88 back to 2412/2430 (the bad order built 2296 bytes against 6344), f26e80 722, f7c880 48, f4b338/gb f24240 112, f22358 188.
+- **r35 hill3.py and wwm1's w3/w4 copies:** they keep control lines and labels in place, so they don't have hill3o's main hole. They do miss chained assignments, `x++` inside an expression, `L: stmt;`, the last line of a multi-line statement, calls to names other than func_/sce/Plat, and pointer-vs-global aliasing. tools/ovl/hill3.py now also covers chained assignments, labelled lines and multi-line statements. The round 35-36 hill3 commits all pass the field-aware dependency check.
+- **Size rule:** reject a candidate whose built size moves further from the target's. Under it, the nogcse renames of f26e80, f75d80 and gb f4ec88 were reverted. gb f4aa70 keeps norlo (660->619). My nogcse renames of f5e540 and gb f37448 (55->49) were dropped at rebase in favour of wgb's round 43 rewrites, which reach 49 in the default mode. In wgb's size trace, the remaining gaps (gb f20a68, f20e48/f47f40, f39eb0/f60fa8, f3cc20/f63d18, f5f940/f38848) come from constant folding and register or stack differences. msd shows no dropped calls or stores.
+- **tools/ovl/hill3.py, seed 3, 90 s, over 72 drafts:** f387a8 12->6, f22358 188->186. The f5e540 words gain, 77->71, was dropped at rebase because it was made on the old draft. No change for the others, including f7c880, f4b338, f53758, gb f24240 and gb f2c660.
+- **drafttwins --apply:** gb f4aa70 619->595, f4de38 290->190 and f4ec88 2430->2412 now take the valid wm orders.
+
+## Round 49 (hand work on the wm drafts at score 12 or less; no matches)
+
+- **f32770 (2 words).** The sched2 dump (`-dS -dR -fsched-verbose=4`) shows that the fy load has alias set 0, because fy is address-taken. So it depends on the int store `c[cnt].id` as well as on the f32 stores, while fx is loaded ahead of everything.
+  - Reading fy after `c[cnt].x` gives the target's load order, but fy then gets $f0, where the original has $f1, and the id/x stores swap (8). That held for all 24 store orders × {x copy or not} × {cnt++ before or after}, and for fx/fy as a `f32[2]` or a struct.
+  - The original's $f1 means x and y overlapped at local-alloc (after sched1), and that sched2 then put the y load after the x store. I have not found a source form that does both.
+- **f387a8 (6) and f38630 (4).** hill3 runs (400 s seed 5, 300 s seed 7) found no score gain. A static inline helper for the k-> init block gives identical code.
+- **f465a8 (10).** The target loads D_00F9B2E0 twice through one shared lui with %lo each.
+  - Any volatile access (`*(volatile s32 *)&D_00F9B2E0`, or an `extern volatile` declaration) puts the full address in a register, so you get lui/addiu, then 0(a0).
+  - Mixing D_00F9B2E0 with D_00F9B2D0.x10 gives two luis (16).
+- **f36bc0 (6).** Putting the trunc expression in the loop condition, with or without n, is much worse (78-115), because the calls in the loop make it non-invariant.
+- **f7cb60 (4).** Duplicated per-arm tails, a goto tail, or a ternary EC0 all come out at 14-24.
+- **Already worked heavily:** f43430, f78458 and f30d48. Their headers list what has been tried.
+
+## Round 50 (latescan leads; no matches)
+
+- **latescan wm** gives the same hits as wgb's r44 list, except f4b338 and f77648, which round 48 reverted.
+- **f344f0 89 -> 87.** The MORE `lbu 9` is a reload of md->x9 for the func_00f200c8 argument. Only a volatile view reproduces it: a u8 pointer read, ternary/else forms and callee prototypes u8/s8/u16/s16/u32 do not.
+- **f78978 (13).** The MORE loads are a dead `if (D_00FB5ED0 && D_00FB5EC4 == 0 && D_0108FA74 == 66) x = 1;`. The target keeps its loads, the `li a0,66` and the branch over the empty block, but not the compare branch. So the body only became empty after reload (jump2), probably a move that turned into a no-op once registers were allocated. In our build the RTL dumps show life1 (flow) deleting the whole if when x is reused, and cse deleting it when the flag is a separate unused variable. I have not found the body yet.
+- **f7f628 (21).** The extra `lw 128` loads are delay-slot fills (bgezl/beqzl stealing the next pad read), not a missing alias barrier.
+- **f45e68 (36).** The target forms &D_00F9B330[idx] twice (base+off and off+base) and loads w/u/v through copies of the first, h through the second. Every mix of e-> and D_00F9B330[idx]. reads for w/h/u/v, in four orders, plus inline accessors, scores 36 or worse.
+- **f3a860 (39).** hill3, strict and --noalias, 400 s: no gain. The `*a`/`*b` stores are pointer stores, so strict mode cannot move them past the global f loads.
+- **f24380 (48) and f28258 (85):** register allocation or a size difference comes first. Not worked further.
+- **f58f98 168 -> 108 (2032 -> 1984 bytes).** Hand port of wgb's gb f31ea0 round 45 fix (the three loop-top reads through `*(World **)0x00F9B540`). port.py mapped the symbols except D_00FA5D50/D_00FA5D78 and the fixed address, which I mapped by hand.
+- **f3bc48 89 -> 30, now at the exact size (416).** The target's loops walk the flags words with their own pointer giv (base + 160, step 192) next to an i*192 offset giv.
+  - Loop 1 reads flags through `p = &D_01067FE0[i].flags` (id stays D_01067FE0[i].id) and returns `i * sizeof + (u32)b`.
+  - Loop 2 reaches flags/mask/id/conds/cnt through a struct view `H3bc48 { flags, mask, id, conds, cnt }` of &D_01067FE0[i].flags. That view alone took it from 71 to 32.
+  - Left: the base is CSEd across the two loops (the target recomputes it), and bne vs bnel at the id test.
+
+## Round 51 (asm-label aliases, register priority; no matches)
+
+- **Asm-label second declaration.** `extern T *D_Xb __asm__("D_X");` names the same symbol (the reloc is against D_X), but CSE and loop.c see a different symbol_ref, so its address is neither hoisted nor shared with D_X. Caveat: gcc assumes the two names do not alias, so treat it as a stand-in wherever the global is also stored through the other name.
+- **0x00F9B540:** no distinct symbol exists for this address; D_00F9B540 itself is the symbol. f58f98 now reaches it through `D_00F9B540b __asm__("D_00F9B540")` instead of the fixed-address cast: 108 -> 74 at the exact size. The gb twin f31ea0 got the same treatment (D_00F56DC0b/D_00F61560b): 108 -> 76 at the exact size.
+- **f3bc48 30 -> 8 (416).** Loop 2 goes through `D_01067FE0b` (asm-label alias) with `b2 = D_01067FE0b` for the return. Left: bne vs bnel at the loop 1 id test, and one store pair (conds vs v80[3]).
+- **f3ac48 52 -> 4 (784).**
+  - The search loops are inlined into the body, so `if (k < 0) return;` threads straight to the epilogue.
+  - The q walk is an index loop `for (i = 0; q[i] != 1; i += 12)`: strength reduction gives the target's fresh q giv and fresh `li 1`.
+  - i/e swap: the global.c priority is floor_log2(refs)*refs/live_length. e (15 refs/53 insns) outranked i (18/86) by a hair. Splitting `e = f(i++, ..)` into `e = f(i, ..); i++;` adds one i ref and flips them.
+  - Left: one store pair, x10C vs xE8.
+- **f3a640 70 -> 42, now at the exact size (544, was 528).** Same index q walk, plus `tp = &D_00FCE390[id].t`, a local for the func_00f64c38 result, and sp->f8 before the call. Left: the target builds each sub-struct base as (id*272 + off) + D.
+- **f46070 (51):** the bits/c copy order ignores the source order (c first still emits bits first), so it is a scheduler choice. **f24380 (48):** pure register permutation, not reworked. **f28258, f7a350, f73eb0, f625f0, f31430, f549d0:** not reached or no new idea; all heavily worked before.
+
+## Round 52 (f3ac48 matched)
+
+- **f3ac48 matched.** The last store pair was caused by x10C's pointer type. Declaring `s32 x10C` (stored from the s32 global, cast to s32 * at the q read) lets the scheduler put the x10C store right after xF4. After that, one store order (xE4, xF4, x10C, xE0, xEC, xE8, xF0) gave the match. Takeaway: when a store pair is scheduler-chosen, try the field's type (its alias set) before trying more orders. twins.py found no gb twin.
+- **f3bc48 (8), no change.**
+  - Loop 1: the target fills bne's slot with i++ (not likely), and its latch has no i++ of its own. Our pre-reorg latch is `i++; a1 += 192; slt; s0 += 192`, and reorg takes bnel because i is live on the fallthrough.
+  - Tried for loop 1 (all 8 or worse): do-while, while, `++i < 256`, nested ifs, continue, goto, an id temp, flags-first, i++ before the test, every build mode.
+  - Tried for the conds/v80[3] pair (no change): conds as s32/u32/f32 * and other v80/v90 bases.
+- **f3a640 (42), no change.** Neither the s32 list field nor a flat f3ac48-style struct helps: the flat struct CSEs (D+4)/(D+12) bases (168).
+- **Leads with score ≤ 40, cheapest first:**
+  - f74440.nofill (4): eight compare/inline forms tried, no change.
+  - f639c0 (5): hill3 for 240 s found nothing.
+  - f72f40 (11): an asm alias, volatile, a temp and an array view of D_00FB4B38 changed nothing.
+  - f69aa8 (5), f7ecd8 (11), f74a28 (12): already exhausted in earlier rounds (wgb's analysis, my round 41 analysis, the c[] register choice).
+
+## Round 53 (field-type lever sweep; no matches)
+
+- **f3bc48 (8).** The swapped store is v90[3] (swc1 at -4(s1), with s1 = &flags at 160), not v80[3]. Nothing helped:
+  - retyping H3bc48 fields (u32, all u32, void * mask) or the vector fields (OvlVec, a struct of 4 floats, f32[2][4]);
+  - nostrict mode (12);
+  - every position of the v90[3] line;
+  - chained 1.0f stores, a `one` local, a loop.
+- **Store/load-pair drafts in 4-20.**
+  - f78458 (3): two plain-global stores; retyping any of five globals changes nothing (distinct globals never alias).
+  - f38630 (4): x00 as void *, s16 * or u32 at every one of 20 store positions stays at 4.
+  - f66b38 (28): the reloads already match under every element type and nostrict; it is the a1/a2/a3 choice; the best statement order is 26 (not kept, still registers).
+  - Others are not store pairs: f7cb60 (branch), f21260 and f74440 (arg-move order), f3a030 (giv offset), f2dc50 (likely), f3ba08 (constant register).
+- **24-37 group.**
+  - Guarded hill3, 200 s each: no gain on f67c60, f79868, f5e368, f55d78, f696a0, f632e8, f71748. f651d0 has no movable statements.
+  - Not changed after a look: f56780, f69278, f72a70, f79700 (headers list what is left; all were climbed in rounds 41-46).
+- **docs/overlays.md:** new entry "Field type as a store-order lever".
+
+## Round 54 (small overlays; no matches)
+
+Unmatched functions, from the layout minus the hand and auto files:
+- xs_dumbo: f20570, f222f8
+- xs_genie: f218f8, f22078
+- xs_tink: f20818
+- xl_limit: f225b0
+- xs_dh_break: f20288
+- dktitle: f21808, f21ca0, f228c8, f23aa8, f241c8, f24b60, f26710
+
+None of the drafts below changed.
+
+- **xs_genie f218f8 (3).**
+  - In our RTL, gcse PRE inserts %hi(D_00FC1DD0) at the end of the preheader, after `p = a`; the target has the lui first. With -fno-gcse the lui moves into the loop.
+  - Tried, no change: the asm alias (20), a local base (9/13), a label or block before `p = a`, for/while forms (9), n/m init placement (11-13), and every build mode.
+- **dktitle f241c8 (3).** Seven spellings of pos/reg (u64 dy, operand order, s64 reg/pos, pos placement) stay at 3 or get worse. No matched twin exists (no other 0x10000004 packet builder).
+- **dktitle f26710 (5).**
+  - Declaring func_0011ef10 void moves li v0,-1 early; s32 gives lui v1 after the call.
+  - Tried: f32/f64/u64/u8/s16/void * returns, a (void) cast, assigning the result, a function pointer, all 15 positions of the -1 store, D_00F2C894 as u32, and hill3 on the s32 draft. All stay at 5.
+- **dktitle f21808 (31):** a 25-store order puzzle, already climbed by wwm1 (w3/w4).
+- **xs_tink f20818 (35).**
+  - The target reads D_00F20E90 directly for the tail null check, puts that load in each arm's branch delay slot, and threads the success path past it.
+  - The asm alias, direct reads, and an early `return 0` tail all score 41-67. No build mode helps.
+- **xl_limit f225b0 (41):** hill3 for 200 s found nothing.
+- **xs_dumbo f20570 (47).**
+  - Only the s1/s2 choice of two %hi pseudos differs. The -dl dump shows %hi(D_00F23214) as reg 165 (13 refs, priority 3*13/100352) beating %hi(D_00F2320C) as reg 166 (14 refs, 3*14/131072). Each is set once per path by gcse PRE (11 and 12 sets).
+  - Tried: all 720 case orders (best is the current order, 47), asm aliases (86-88), a tail temp, a case-3 pointer.
+
+## Round 55 (xs_dumbo f20570 matched)
+
+- **xs_dumbo f20570: matched** (ovl/xs_dumbo/hand/func_00f20570.c; make ovl OVL=xs_dumbo byte-identical, 53/53 in src).
+  - Priority was not the cause. The two %hi pseudos get their numbers in gcse's pre_delete, which walks the expression hash table bucket by bucket. The bucket is (content hash of the expression) mod table size, and the table size is max_cuid / 2 | 1. With 53 buckets %hi(D_00F23214) sits in bucket 0 and %hi(D_00F2320C) in bucket 45, so D_00F23214 gets the lower pseudo and takes s1. With 55 buckets it is 52 against 48, which is the original's order.
+  - The original therefore had 3 to 6 more insns at gcse time. An empty asm gives the hint (+3 to +6 asms give 0 words), but the docs rule it out as a match. Three zero locals do the same in plain C: `ret = 0; clr = 0; none = 0;` set after the early return and used only in the closing join block (`!= none`, `= clr`, `return ret`). cse1 cannot fold them across the join, so they survive to gcse. gcse's cprop then folds them, and flow deletes the sets.
+  - Locals declared before the early return give v0 instead of a0 for the first lui (5 points).
+  - How to check: `-dG` prints "Expression hash table (N buckets" and each expression's "hash value". /tmp/claude-0/s141/r55/cnt.py prints both.
+- **xs_dumbo f222f8: 119 -> 93 -> 47** (size unchanged, 1548 vs 1560).
+  - Step 1: func_00249988 now uses its real signature from src/hud/hudmath.c, (out, a, b, f32 t), which gives the original's argument setup order.
+  - Step 2: two f32 zero locals in the last loop apply the same hash-table lever. The gcse copies now get the original's stack slots 76-96.
+  - Left: r2 has to come after i+1 and j < 9 in pseudo order (slot 72); the start label's alignment nop; the end-of-row increment order. hill3 for 420 s and the loop-shape variants gave nothing.
+- **xs_dh_break f20288:** the draft compiles with shard.h's struct pasted in place of the include (55). hill3 for 300 s and modescan gave nothing. Any empty asm before the return reaches the exact size (1048) but scores 62.
+- **xs_genie f22078: stays at 74.**
+  - The original keeps i*416 as shifts each pass (no strength reduction), hoists `li 1` and the D_00FC0DA0 base, and places the found body inside the loop.
+  - Best variants: the goto loop g1 (76, exact size 296) and a while(1)/break form (76).
+  - Body-in-loop forms are strength-reduced (101-113). Every build mode was tried on a/b/g1/w1, and the hash-table lever changes nothing.
+- **dktitle f228c8 (374) and f24b60 (358):** both differ structurally (prologue and schedule from the first block on). hill3 for 240 s and 300 s gave nothing.
+- **Missed by the layout method:** dktitle f24330 (123, a session132 drafts.tsv file). xs_dh_break f20820 showed only because its status was stale; after make ovl it is matched (8/9).
+
+## Round 56 (bucket lever write-up; dkmovie f260c0/f25978 restructured)
+
+- **docs/overlays.md:** new entry "gcse's hash table size as a register lever". **tools/ovl/gcsebucket.py** prints the bucket count, the implied max_cuid range, and each symbol expression's bucket.
+- **Bucket lever on the 3-5 point drafts:** /tmp/claude-0/s141/r56/asmscan3.py puts 1-7 empty asms before every top-level statement.
+  - gb f425a8 and wm f696a0 never go below 3 (252 tries each). The swapped cw/size zeros are user pseudos, not gcse pseudos.
+  - dktitle f241c8 stays at 3 at best and f26710 at 9. Neither moves.
+  - xs_genie f218f8 reaches 0 with an odd count (1, 3, 5, 7) of empty asms right before `p = a`, and stays at 3 with an even count. The bucket count stays at 31 throughout, so this is a sched2 tie between `lui s4` and `move s0,sp` in that block, not the bucket lever. It is only a hint. Zero locals (return value, loop starts) leave it at 3.
+- **dkmovie f260c0: 360 -> 207 -> 89** (1156 vs 1152 bytes).
+  - The target is one switch with case 0 inside it, body order 0x40, 0x50/0x51, 0x1C30, 0x3860, 0x6400, 0xC800, 0x8000/0x8700, 0x3830/0x3F30. After it comes `if (t == 0) present; else f3DF34++` (an unknown type also advances the clock).
+  - The f3DED8 test is nested ifs (`!= 0`, then `== 1`), and `p = 0` sits above the switch.
+  - Left: p in its own register, f3DF38[1] in s0 with slti/sltiu for `>= 0`, and plain versus likely branches into the three epilogue entries. Early returns and an inner switch made no difference.
+- **dkmovie f25978: 256 -> 226 -> 224** (1568 vs 1576 bytes).
+  - Types 1 and 2 test IPU_CTRL bit 14 after func_00f26848 and, on a clear bit, read IPU_CTRL again and discard it. With that test, both paths cross-jump into one call, and valaudit's callee sequence matches. hill3 (360 s) gave 2 more points.
+  - Left: the s-register choice for n/mx/my and the IPU pointers.
+- **xs_dumbo f222f8 (47):** do-while, while, label-loop and inner-loop forms of the row loop score 47-55. Moving the r2 step to the end of the row is a loop.c loop (271). The start label's alignment and r2's slot are unchanged.
+
+## Round 57 (dkmovie f260c0 matched)
+
+- **dkmovie f260c0: matched** (ovl/dkmovie/hand/func_00f260c0.c; dkmovie 108, byte-identical). After round 56 (89):
+  - CONTEXT_ONLY definitions of every callee changed nothing.
+  - The likely branches came from &D_00F28460 being held in s0 from the start of the present path. `if (n < 2) sync = n & 1; else sync = func_001ed920();` fixed that (57).
+  - Using one pointer p for both the 0x40/0x50 buffer and the aux argument gave the target's v1 copy into a3/a1 (39).
+  - `if (x >= 0) i = 1;` in place of `i = x >= 0` (35).
+  - `len = h[1]` read before the f3DED8 test, in its own local, not shared with n (21).
+  - `p = 0` at the top of each arm instead of above the switch (0).
+- **valaudit --scan dkmovie** (f23ae8 skipped):
+  - f26d90: 192 -> 103. Read D_00F28460 directly in place of the cached m (a2 of func_00f23598).
+  - f245c0: 524 -> 380. Same change: all `m = D_00F28460` copies removed (the a0 of func_00f23620 is the freshly loaded pointer). The call 15 flag is still open.
+  - f275e0, f23750, f25288: no callee or argument-source flags.
+- **dkmovie f25978: 224 -> 112.** The motion vectors are `mx = IPU_CMD << 4; my = IPU_CMD << 4; mx += IPU_CMD; my += IPU_CMD;` on s16 (sll 20/sra 16, then sll 16/sra 16). The extra refs move mx/my/n into the target's s3/s2/s5.
+  - A second hill3 run (110) swapped the volatile IPU_CMD/IPU_CTRL writes in case 2. I rejected it: that order is hardware-visible. Restored, it scores 116.
+  - Left: the prologue order (h, first, base, size, qs, fcode).
+- **xs_genie f218f8:** `&a[0]`, a switch, if/else forms, an inner-block declaration of p, and a volatile read of D_00FC0E48 all stay at 3 or get worse. No natural plain-C barrier found.
+- **wm f3a640 audit (1bd518ad):** func_00f64c38 is a 5-insn leaf, `return ((s32 *)tbl->f14)[i * 2];`, so it does not read sp->f8 and the f8 move is safe. The same commit moved `D_00FCE390[id].s.on = 0;` after a `return 0;`, which was a real behaviour change (dead store). Round 51's version already has it back before the return, so nothing to revert now.
+
+## Round 58 (hill3 volatile barrier, dkmovie f25180 matched)
+
+- **hill3: volatile accesses are now ordered barriers against each other.**
+  - A line counts as volatile if it says `volatile` (a `*(volatile T *)0x...` cast) or names a volatile macro or object. Names come from `#define NAME ...volatile...` and file-scope declarations with `volatile`, collected from the draft and its `#include "..."` headers recursively.
+  - Two such lines never swap, and a plain statement can still move past one.
+  - tools/ovl/hill3_test.py checks f25978's case 2 swap, which `--check` now rejects, plus three control cases.
+- **dkmovie f25180: matched** (ovl/dkmovie/hand/func_00f25180.c; dkmovie byte-identical, objdiff 100%). func_00f279f8 takes the height * 16 as a second argument, which puts it in a1 (func_00f23750 already declared it with two).
+- **f26d90: 103 -> 32** (824 vs 824 bytes).
+  - The reload after the f3DD48 store is not aliasing. Each arm of the f3DF51 test stores its own result to f3DD48. The two store tails cross-jump, and the join reloads D and f3DD48 for the `< 0` test.
+  - The target also passes D_00F28460 in a2 to func_00f27de8, so the draft declares a third argument (the definition takes two).
+  - Left: the f3DD74/f3DD40 block takes D in a1 and the 2 in a2, the other way round from the target. Post-increment, `%=`, a cached m and temp-index forms all stay at 32. hill3 has no movable statements here, because every line stores through D.
+- **f25978: 112 -> 65** (1572 bytes; the target's 1576 includes one alignment nop).
+  - The function returns 0 (`move v0,zero` before the epilogue).
+  - The IPU_CTRL bit 14 test is unsigned (srl).
+  - base sums `((bF >> 1) << 16)` first, and hill3 reordered the prologue.
+  - Left: the target materialises `first = 1` after the h load (`li v0,1`). Here sched1 puts the 1 first and it takes a0, which shifts h and the IPU_CTRL address into a1/a2.
+  - Also left: the closing `IPU_CTRL = (IPU_CTRL | 0x40000000) + base` allocates the load and the or result separately in the target. f25658 has the same tail, and five tail forms leave it unchanged.
+- **f245c0: 380 -> 309 -> 252 -> 224 -> 182** (2592 vs 2592 bytes).
+  - **Call 15 was a false flag.** Its a0 is D_00F28460 already in a0. valaudit read the `lw a0,0(s6)` in a nullified beqzl delay slot as the argument source.
+  - **The real differences were control flow:**
+    - The last-frame case breaks out of the decode loop (its branches go straight to the func_00f25010 call).
+    - The flag-4 wait loop tests 0x40, then 8.
+    - The restart test is two ifs (not folded to `& 0x88`).
+    - The 0x100 wait is a do-while whose first test is flag 8, to the end of the pass (a goto), and which loops on 0x100. A `while` gets its exit test copied in front.
+  - **Then statement shapes:**
+    - func_00f279f8 takes `(w, ht * 16)`.
+    - The header fields are stored in the target's order. h is a u8 pointer, so the loads stay after earlier stores.
+    - `f3DDD0 |= 0x200`.
+    - The packet advance goes through n (`n = size; n += 0x10; f3DD90 += n` gives s0).
+    - `f3DD44++`.
+  - **Not kept:** /tmp/claude-0/s141/r58/f245c0_c2.nofill.c scores 118. It drops n around `++f3DD2C` (tests f3DD50[f3DD40] twice) and adds an empty `case 2:`, which gives the target's switch tree. It builds 2584 bytes because reorg fills a branch-likely slot from the target label. The only remaining instruction difference is the &D_00F28460 copy in s0 versus s1 at that branch. I rejected it under the size rule.
+- **f25658: 70 -> 52** (800 vs 800 bytes). The "dead reload" of size is func_00f269c0's second argument, `(D->f3DD90, size)`, as in f25978, and base is summed in the same order.
+- **f212c0: 93 -> 89.** c1 is read before c0. The target's pointer copy for c0 is still missing (four forms tried).
+- **f275e0 (15):** the target is a rolled loop (`b test`, with the loop-invariant D copied in the delay slot). Every while/for/`||`/`?:` form is rotated by jump.c's duplicate_loop_exit_test (LOOP_VTOP in the jump dump, 184 bytes). The goto form has no loop notes, so D is reloaded.
+- **Not worked:** f207a0, f20b48, f22d28 (register-only, already permuted), f23750, f25288.
+
+## Round 59
+
+- **f245c0: the 118 candidate is now the main draft** (func_00f245c0.nofill.c, 2584 vs 2592 bytes), as the coordinator decided.
+  - The 8-byte gap is a delay-slot fill, not missing code. One &D_00F28460 copy lands in s1 where the target has s0, so reorg moves the target label's `lw a2,0(s1)` into a bnel slot: one instruction and one nop fewer.
+  - The size-exact 182 version stays next to it as func_00f245c0.exact.nofill.c.
+- **The last-frame break is confirmed against the target.** At 0xf24a14 the target branches to the switch when f3DD50[f3DD40] != f3DD4C. On the last-frame path, the 0x2000 test (0xf24a3c beqzl), the wait loop's flag-8 exit (0xf24a68 bnezl) and its fall-through (0xf24a9c b) all go to 0xf24f0c, the `jal func_00f25010` after the decode loop. They skip the loop-bottom flag-8 test, the f3DD74[n] != 2 check and the flag-4 block. The old draft's fall-through into that tail was the bug.
+- **Second-argument lever (func_00f279f8 / func_00f269c0):** every dkmovie caller already passes two arguments: f23750, f245c0, f25180 (matched), f25658, f25978, f25288 and the matched f26be0. Nothing else to apply.
+- **f23750: 130 -> 110, 816 -> 808 bytes (size exact).**
+  - The search keeps `p = &tbl[k]`, and done reads `p[-1] - b`, with `b = tbl[idx] + rem` set inside the loop. In the target, done reuses the loop's sum and reads tbl[k - 1] as -4 off the loop's address. hill3 then reordered the set-up.
+  - Left: the target spills tbl to 0(sp), ours spills cur. The greg dump shows cur at 7 uses over 258 insns against tbl at 9 over 100, so cur has the lowest priority. Declaration order changes nothing.
+- **f275e0 (15):** the coordinator's two shapes, tried:
+  - `if (c) do {} while (c)` gives 66.
+  - goto into a do-while gives 43: the right shape, but the goto in from outside the loop stops loop.c from treating it as a loop (no hoist, no alignment). A while/for with the test on top gets its test copied in front, and moving the 16 hoist only goes from 20 back to 64.
+  - The closest, at 20, is the goto loop through a local `Strm *d`: no reload at the test, but no loop alignment nop and no v0 -> a1 copy.
+  - gcse cannot remove the reload in the plain goto form. Each D_00F28460 read is high/lo_sum/mem on fresh pseudos, and the single gcse pass PREs only the high part.
+- **f25288 (97):** loop.c hoists `b.f14 = 16`'s constant into s7, which pushes started to 48(sp). The target materialises `li v1,16` in the block and keeps started in s8. A goto loop scores 123, and no build mode changes it.
+- **f207a0 (14):** all 24 orders of the four -1 stores, a chain assignment and spreading them out give 14 every time; sched2 normalises the store order. In lreg, the -1 (5 refs over 22 insns) outranks both %hi pseudos and takes v0. The target gives it a1.
+
+## Round 60
+
+- **f20b48: 14 -> 4.**
+  - The two-buffer path ends in its own `return 1;`. Its `f3DF38[i] = f3DF34` store no longer shares a tail with the plain-call path, and its registers now match.
+  - Left: in the plain func_00f209d0 call, the target sets `a0 = pic` before loading `a3 = f3DF34`. These are tied for scheduling.
+  - No change from: no else, `a` as a variable, either ternary order, a void * prototype. hill3 has no movable statements.
+- **f22d28: 21 -> 17** with the default value grouped as `(dbw<<48 | psm<<56) | (psm<<24 | dbp<<32)`.
+  - The target's `move t4,t1` is a gcse copy of dbw<<48 for the flag branch, which means cse did not merge the two dbw<<48. Ours merges them through cse.
+- **f207a0:** a local `n = -1` for the four stores (also shared with func_001ed8c8(-1)), in four placements, stays at 14.
+- **f25288:** setting f14 = 16 earlier or through `Blk *bp = &b` gives 97-103. The 16 stays hoisted.
+- **f23750:** `cur++; cur %= n;` in place of `cur = (cur + 1) % n` fixes the spill. tbl goes to 0(sp) and cur to a register, as in the target: score 110 -> 84.
+  - It builds 816 vs 808 bytes, so it is not committed (/tmp/claude-0/s141/r58/f23750_cm_84.nofill.c).
+  - Cause of the 8 bytes: sched1 puts `idx = k - 2` and the D_00F28460 reload first in the done block. The search loop's last test then becomes `bnez done` with that reload in the delay slot plus `b again`, where the target has `beqzl again; k++` and falls into done.
+  - Moving cur = 0 or tbl = ..., or rewriting the test as `if (f3DF1C >= k) { k++; goto again; }`, gives 112-118. hill3 on the 84 version finds nothing.
+- **f26d90 (32):**
+  - The lreg dump gives D_00F28460 (9 uses over 50 insns) priority over the constant 2 (2 uses over 20 insns). So D gets a1 and 2 gets a2. The target's order needs sched1 to put `li 2` next to its store.
+  - Swapping the f3DD74/f3DD90 statements, a `two` variable, an (s16) cast and an index local all score 32-69.
+
+## Round 61 (wwm2)
+
+- **Policy (from the coordinator, standing):** a better-scoring draft that is off by size only because of branch layout or delay-slot filling (no missing or extra statements) is landed. The header records the cause, and the size-exact version is kept alongside as NAME.exact.<mode>.c.
+- **f23750: landed at 84** (816 vs 808 bytes) as func_00f23750.nofill.c, with the 110 size-exact version as func_00f23750.exact.nofill.c. The cause is in the header: the branch layout of the search loop's last test.
+- **f25658: 52 -> 40, and f25978: 65 -> 51.**
+  - Both IPU_CTRL `(IPU_CTRL | 0x40000000) + base` updates go through a spare local: `c = IPU_CTRL | 0x40000000; IPU_CTRL = c + base;`. This fixes the closing update's registers in both functions.
+  - In f25978 the temp is needed at both sites; one site alone does nothing. Making the temp the sum (`m = (...) + base; IPU_CTRL = m;`) or holding only the load (`m = IPU_CTRL`) does nothing or is worse.
+  - Left in both: the prologue registers. The target has h in a0, bE/b9 in a2 and the IPU_CTRL address in a1, one register off from ours.
+  - These are unchanged by: reading the header through D_00F28460->f3DD90 directly, a MovieWork *w local, the header read order (six orders), k = 0 / n = -1 placement, and hill3 (360 s, 1990 tries).
+- **f20b48 stays at 4.**
+  - These score 4: the 4th argument computed into a local first, pic into a local first, and prototype parameter types u8 * for arg0 or arg1, s32 for the MovieWork * argument, or u32 for arg3.
+  - These are worse: s16 arg3 gives 8, s8 sync gives 22.
+  - The callee types do not change the a0/a3 order.
+- **f22d28 stays at 17.**
+  - These score 17: a named `u64 hw = (u64)dbw << 48` read by both branches (u64 or s64, any OR position), a second copy `hx = hw` for the flag branch, `v = hw; v |= ...` in the branch, and a shared zero-extended psm local.
+  - These are worse (19-26): `hw |= psm << 56` in the branch and an if/else form.
+  - None produces the `move t4,t1` copy. The remaining difference is mostly which pairs of ORs combine: the target gives (psm<<24 | dbp<<32) and (dbw<<48 | psm<<56), and ours gives (psm<<56 | dbp<<32) and (dbw<<48 | psm<<24).
+
+## Round 62 (wwm2): dktitle
+
+- **f24330: matched** (ovl/dktitle/hand/func_00f24330.c; drafts.tsv row removed; the session132 draft is left in place, as earlier matches did). Three keys:
+  - ad()/ad2() store the data word before the register word.
+  - The pk index is reached by `i = 1` after pk[0] and `i += 8` after pk[8]. cse1 then does not know i in the fbmsk branches, so the 160/144 offsets come from gcse as in the target. A plain `i = 9` lets cse1 fold everything.
+  - `cb = tbp + cbp` goes into its own local. Reusing cbp flips the addu operands.
+- **f228c8: 374 -> 3** (3556 vs 3560; the 4 bytes are the trailing alignment nop). The callee sequence matches.
+  - The trig test is `(t & 0x20000020) ? 1 : (t & 0x80000080) != 0`. A plain `||` is folded into one 0xA00000A0 mask.
+  - In the menu, a and b are set before func_0020bc48, and `if (!E10) 23; else 18`.
+  - Cases 19, 20 and 21 are three written-out copies of the menu. Cross-jumping merges them as in the target. One copy reached by goto with a msg variable puts the D_002C5AD0 high part in the wrong place.
+  - case 4/9/14 sits between cases 13 and 15.
+  - case 18 tests `S0 == 2 || S1 == 2` first and ends with a shared `D_00F2C708 = 23`.
+  - case 27 decrements before the D_002BC07C test, and case 31 reads D_003F720C into a local.
+  - Callee types:
+    - func_00111600 takes 3 arguments, as in src/game/progress.c.
+    - func_00111830 is declared s32, as in src/game/gamestate.c.
+    - func_00f21068 stays void. wwm1's s32 helped the older layout but costs case 27 here.
+  - Left: one switch-dispatch `beqz v0; li v0,2` that we fill as beqzl. These do not change it: default:, case order, return types, switching on a local, and every build mode.
+- **f24b60: 358 -> 281** (2460 vs 2464, was 2472). The callee sequence matches.
+  - `i--; while (...) i--;` for the blank scan.
+  - `goto fail` with `fail: D_00F2C894 = 0;` after the last return.
+  - The switch is ordered case 2, 4, 3.
+  - The fade-loop clamps are inside the loops (`if ((x += 4) >= 128) { x = 128; break; }`). Otherwise flow deletes the 128 store, because both stores use the same address pseudo.
+  - The pool pointers are chained through p.
+  - Left: p is in s2 where the target has s4, the prologue high parts, and &D_00F26E28 kept in an s-register in the target.
+- **f23aa8: 138 -> 124** with the c[] stores one per line, reordered by hill3. Left: the target spills a/2<<24 and reloads it from c[6][0], where ours keeps it in s4.
+- **f21ca0 stays at 187** (1428 vs 1432, the trailing nop).
+  - Every remaining difference is which register each hoisted global high part (lui 0xf3) gets, and the zero-store that goes with it.
+  - The target's allocation order is 870, 7E8, 818, 7D8, 860, 7B8, 7A8, 808. Ours is 870, 7B8, 860, 7A8, 7E8, 818, 7D8, 808.
+  - hill3 (520 s, 2469 tries) finds nothing. The order probably comes from ref counts, so some statement in the original differs.
+
+## Round 63 (wwm2)
+
+- **f228c8: matched** (ovl/dktitle/hand/func_00f228c8.c; drafts.tsv row removed; session141 draft removed).
+  - The last word was the case 27 switch dispatch `beqz v0; li v0,2` (ours beqzl). It is the nothrow rule: a CONTEXT_ONLY definition of func_00f21ca0, the first call after the switch, fixes it.
+  - These one at a time do not help: func_0011d768 gives 9, func_00109558 gives 5, func_00f21928 gives 3.
+- **f24b60 stays at 281.**
+  - Splitting p into separate locals barely moves it. Splitting the first part or the pool part gives 281-285. Splitting the part from lines 121-130 gives 235, but builds 2468 bytes, so it is not kept.
+  - Swapping the i/j declaration order does nothing.
+  - Declaring func_00f26648 as returning void * makes every store address come before its call, as in the target, but gives 353.
+  - The target materialises &D_00F26E28 into fresh s-registers per loop (addiu then 0(reg)). Ours keeps lo_sum addressing.
+- **f23aa8 stays at 124.**
+  - Moving `c[6][0] = a / 2 << 24` to the top gives 163. Just before the c[] loads or before the ORs gives 134. Splitting the shift gives 124.
+  - The target spills c6, c[1][0], c[2][0], c[3] and c[4][1]. Ours spills a different set, so it is a priority difference.
+- **f21ca0:** not reached again. It has no calls, so the nothrow lever does not apply.
+
+## Round 64 (wwm2): tools/ovl/nothrow.py
+
+- New tool tools/ovl/nothrow.py. It aligns the target and draft opcodes with the `l` dropped and finds branches where plain and -likely differ. It then collects the callees in nearby blocks (it follows b/conditional targets) and tries a CONTEXT_ONLY definition of each one after its prototype: singles first, then pairs of the best 4. It only reports and never writes drafts.
+- Batch over every overlay (session141 plus copies of the drafts.tsv-listed drafts): 61 drafts have mismatches, and 13 of them gain. Nothing gains in dkmovie, dktitle or xs_*.
+- Applied in wm: f3bc48 6 -> 0 (MATCH, func_00f3bbf8), f31430 368 -> 366, f53af0 194 -> 192, f58f98 60 -> 54, f71b68 584 -> 581, f72a70 37 -> 35, f77648 166 -> 164.
+- gb gains sent to the coordinator for routing: f2c9f8 194 -> 192 (func_00f2c300), f31ea0 76 -> 70 (func_00f31208 + func_00f30d80), f446d0 1280 -> 1278 (func_0024e468), f4b978 37 -> 35 (func_0024e468), f50550 166 -> 164 (func_0011d768), f4aa70.norlo 595 -> 592 (func_00f4a048 + func_00f444d8).
+- No new idea for dktitle f21ca0 (187) or f24b60 (281).
+
+## Round 65 (wwm2)
+
+- Added a line to the f3bc48 hand header: the D_01067FE0b asm-label name is what stops loop.c from reusing loop 1's base address, and we don't know a natural source form for it yet.
+- nothrow.py extended:
+  - Mismatches now carry a direction tag (T-likely or O-likely). Both directions were already searched in round 64; across all drafts there are 61 T-likely and 70 O-likely mismatches.
+  - Every existing CONTEXT_ONLY definition is now also tried removed.
+  - `--wide` adds every callee with a matched definition in ovl/OVL/{hand,auto}, not only the ones near a mismatched branch.
+  - Candidates are tagged matched, earlier or ext.
+  - The `--wide --all` batch (/tmp/claude-0/s141/r65/all.txt) finds no new gains. The only gains are the six gb ones from round 64; the wm ones are already applied. No removal of an existing definition gains.
+  - The func_0024e468 and func_0011d768 gains (gb f446d0, f4b978, f50550 and wm f72a70, f77648) are `ext`: those callees are in the main ELF and cannot be defined in the overlay's source file, so they stand in for some other cause.
+- wm f72a70: score 35, size 1244 -> 1236 (target 1232). The change is `goto test; top: ... test: if (!(...)) goto top;`.
+  - The 4 bytes left come from sched1 moving the hoisted `lui 0x2c` above the last two calls, into s6.
+  - gb f4b978 looks like the same function (same score and sizes), so the same change should carry over.
+  - Checked: the copy at /tmp/claude-0/s141/r65/gb/func_00f4b978.c (goto form plus CONTEXT_ONLY func_0024e468) scores 35 at 1236 vs 1232, down from 37 at 1252.
+
+## Round 67 (wwm2): small overlays and dktitle
+
+- **modescan** with every mode (nofill, norlo, nostrict*, nogcse*, nosi*, nosib, nogcse_nosib, nostrict_nosib, faddr, nostrict_norcse, fmam) on the round's 11 drafts: no draft improves under any other mode. No nosib signal: none of them merges two per-arm calls into one jal.
+- **Control-flow skeleton diff** (/tmp/claude-0/s141/r67/cf.py: the branch and call sequence with delay slots, target vs ours): the skeleton already matches for xs_dh_break f20288, xs_dumbo f222f8, dktitle f23aa8 and xl_limit f225b0. In those the only differences are delay-slot contents and registers. In f225b0 that is the second loop's bnezl vs our bnez, plus the `move s3,s1` copy.
+- **xs_genie f22078: 74 -> 39** (292 vs 296).
+  - The search is written as a do-while with the found path inside the loop, and `g = D_00FC1DE0; g = &g[i++];`. Setting g twice keeps loop.c from making g a pointer giv.
+  - Left: the original also leaves i*416 unreduced (its base address hoisted into a2), which -fno-strength-reduce does not reproduce either.
+  - nostrict_norcse scores 33, but no overlay file uses that mode, so the draft stays in the default mode.
+- **dktitle f24b60**: in the original, the first func_00f26648 result is stored through `addiu s0` (address first) and D_00F2C8BC is then reloaded. A `(u8 *)(void *)` cast on the call reproduces that block, but the function as a whole gets worse (281 -> 361, 482 -> 439 kept insns). Not kept.
+- **No progress** on xs_tink f20818 (tail-variant and gcse/sibcall flag sweeps all 35 or worse), xl_limit f225b0 (rp giv forms and second-loop forms are 41 or worse), xs_genie f218f8, dktitle f241c8, f26710 (sched ties), f23aa8 (registers) or xs_dumbo f222f8 (stack slots).
+- **dktitle f21808**: a 15-minute hill3 run (4,927 tries) stays at 31.
+
+## Round 68 (wwm2): permuter batch, stopped at wrap-up
+
+- The batch used wgb's batch.py and evalout.py with my paths (/tmp/claude-0/s141/r68/). Each run was 35 min at -j1, three at a time. Two of five waves finished before wrap-up stopped it (6 of 13 drafts run, 3 cut short). Rescored with hand.py:
+  - xs_genie f218f8 and dktitle f241c8: no outputs.
+  - dktitle f26710: best 5, no change.
+  - dktitle f21808: best 31, no change.
+  - xs_tink f20818: no output both compiled and improved. Most outputs call the permuter's `inline_fn` helper, which isn't in the output.
+  - xl_limit f225b0: two outputs scored better, both rejected as unnatural.
+    - output-1185-1 scores 37 by adding an unused `int pad;`.
+    - output-1290-1 scores 38 at the exact size by moving `return 4;` dead after `return 0` and dropping the second path's return.
+- Never run: xs_genie f22078, xs_dumbo f222f8, xs_dh_break f20288, dkmovie f275e0, f25658, f25978, f26d90.
+- xs_genie f22078: 39 -> 37 by hand, with the element address from an inline helper `{ GG *g = D_00FC1DE0; g += i; return g; }`. A plain `return &D_00FC1DE0[i];` helper or a macro is 101-111. The i*416 step is still strength-reduced.

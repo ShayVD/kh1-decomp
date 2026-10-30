@@ -1,0 +1,84 @@
+/* drafttwins.py: score 157 -> 90, port.py of the gb twin func_00f38848 draft. Earlier header below. */
+/* drafttwins.py: score 159 -> 157, port.py of the gb twin func_00f38848 draft. Earlier header below. */
+typedef struct { u8 pad0[0x2200]; u64 tex[1]; } GbWorld;
+typedef struct { s16 idx; s16 pad2; s32 u; s32 v; s32 w; s32 h; } GbTbl;
+extern GbWorld *D_00F9B540;
+extern GbTbl D_00FA6000[];
+void sceVu0RotTransPers(int *v0, float (*m0)[4], float *v1, int mode);
+u64 *func_00f66b78(u64 *);
+void func_00f66b90(u64 *);
+
+u64 *func_00f5f940(OvlVec *a, OvlVec *b, u64 color, s32 idx, f32 (*mtx)[4], u64 *p) {
+    OvlVec v;
+    s32 out[8][4];
+    s32 i, x, y;
+    s32 (*o)[4];
+    v[3] = 1.0f;
+    v[0] = (*a)[0];
+    v[1] = (*a)[1];
+    o = out;
+    v[2] = (*a)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    v[0] = (*b)[0];
+    v[2] = (*a)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    v[0] = (*a)[0];
+    v[2] = (*b)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    v[0] = (*b)[0];
+    v[2] = (*b)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    v[0] = (*a)[0];
+    v[1] = (*b)[1];
+    v[2] = (*a)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    v[0] = (*b)[0];
+    v[2] = (*a)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    v[0] = (*a)[0];
+    v[2] = (*b)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    v[0] = (*b)[0];
+    v[2] = (*b)[2];
+    sceVu0RotTransPers(*o++, mtx, v, 0);
+    p = func_00f66b78(p);
+    p[1] = 20;
+    p[0] = 0;
+    p += 2;
+    func_00f66b90(p);
+    for (i = 0; i < 8; i++) {
+        x = (out[i][0] + 8) & ~15;
+        y = (out[i][1] + 8) & ~15;
+        p = func_00f66b78(p);
+        x -= 48;
+        y -= 48;
+        p[0] = D_00F9B540->tex[idx];
+        p[1] = 6;
+        p += 2;
+        p[0] = 342;
+        p[1] = 0;
+        p += 2;
+        p[0] = color;
+        p[1] = 1;
+        p += 2;
+        p[0] = (D_00FA6000[idx].u << 4) | ((u64)(D_00FA6000[idx].v << 4) << 16);
+        p[1] = 3;
+        p += 2;
+        p[0] = x | 0x100000000 | ((u64)y << 16);
+        p[1] = 5;
+        p += 2;
+        p[0] = ((u64)(((D_00FA6000[idx].v + D_00FA6000[idx].h) << 4) + 16) << 16) | (((D_00FA6000[idx].u + D_00FA6000[idx].w) << 4) + 16);
+        p[1] = 3;
+        p += 2;
+        p[0] = (x + 96) | ((u64)(y + 96) << 16) | 0x100000000;
+        p[1] = 5;
+        p += 2;
+        func_00f66b90(p);
+    }
+    p = func_00f66b78(p);
+    p[0] = 96;
+    p[1] = 20;
+    p += 2;
+    func_00f66b90(p);
+    return p;
+}

@@ -1,0 +1,75 @@
+/* gb.x func_00f22d00: matched by hand. */
+#include "ovl.h"
+
+void func_001bc4d0();
+void func_001bc4e0();
+void func_001bc500();
+void func_001bc510();
+void func_00f39330();
+void func_00f39340();
+void func_001ba870();
+void func_001ba7e0();
+void func_001b9ec0();
+void func_001ba1e0();
+void func_001bb558();
+void func_00f32668();
+void func_00f39450();
+void func_00f397a0();
+void func_001be5b0();
+void func_001be010();
+void func_00f399f8();
+void func_001be3c0();
+void func_001be430();
+void func_001bb740();
+void func_001bb658();
+void func_001be5c8();
+void func_001be5d0();
+extern void (*D_003772E0)();
+extern void (*D_003772E4)();
+extern void (*D_003772E8)();
+extern void (*D_003772EC)();
+extern void (*D_003772F0)();
+extern void (*D_003772F4)();
+extern void (*D_003772F8)();
+extern void (*D_003772FC)();
+extern void (*D_00377300)();
+extern void (*D_00377304)();
+extern void (*D_00377308)();
+extern void (*D_0037730C)();
+extern void (*D_00377310)();
+extern void (*D_00377314)();
+extern void (*D_00377318)();
+extern void (*D_0037731C)();
+extern void (*D_00377320)();
+extern void (*D_00377324)();
+extern void (*D_00377328)();
+extern void (*D_0037732C)();
+extern void (*D_00377330)();
+extern void (*D_00377334)();
+extern void (*D_00377338)();
+
+void func_00f22d00(void) {
+    D_003772E0 = func_001bc4d0;
+    D_003772E4 = func_001bc4e0;
+    D_003772E8 = func_001bc500;
+    D_003772EC = func_001bc510;
+    D_003772F0 = func_00f39330;
+    D_003772F4 = func_00f39340;
+    D_003772F8 = func_001ba870;
+    D_003772FC = func_001ba7e0;
+    D_00377300 = func_001b9ec0;
+    D_00377304 = func_001ba1e0;
+    D_00377308 = func_001bb558;
+    D_0037730C = func_00f32668;
+    D_00377310 = func_00f39450;
+    D_00377314 = func_00f397a0;
+    D_00377318 = func_001be5b0;
+    D_0037731C = func_001be010;
+    D_00377320 = func_00f399f8;
+    D_00377324 = func_001be3c0;
+    D_00377328 = func_001be430;
+    D_0037732C = func_001bb740;
+    D_00377330 = func_001bb658;
+    D_00377334 = func_001be5c8;
+    D_00377338 = func_001be5d0;
+}
