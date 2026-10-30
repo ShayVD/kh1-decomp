@@ -1,3 +1,4 @@
+/* Round 27 wwm1: score 538 -> 508, storeperm rerun on the 538 version (f3DD9C after f3DD98 past f3DDA0/f3DF68, and the 0x12345678 guard word stored before f3DD14). Earlier header below. */
 /* Round 27 wwm1: score 620 -> 538. valaudit showed 7 more D_00F28460 loads in the target (lw -31648): the second, third and fourth `m = D_00F28460` copies are gone and those blocks read D_00F28460 directly (wwm2's round 57 lever from f26d90/f245c0). Keeping the first copy (the f3DD9C..f3DDA0 stores) is best (removing it too: 548). Earlier header below. */
 /* Round 27 wwm1: score 624 -> 620, storeperm on the valid order (f3DD9C, f3DD94, f3DD98 stores off one m, distinct fields). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from d6d14605 (dkmovie func_00f23ae8 near miss, score 624 -> 596, hill3o order under the new bu) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 596 was not valid. Restored the last valid statement order: score 624. Earlier header below. */
@@ -63,11 +64,11 @@ void func_00f23ae8(void) {
         }
     }
     m = D_00F28460;
-    m->f3DD9C = (s32)m->f1E900;
     m->f3DD94 = (s32)m->pic[0];
     m->f3DD98 = (s32)m->pic[1];
-    m->f3DF68 = 0;
+    m->f3DD9C = (s32)m->f1E900;
     m->f3DDA0 = (s32)m->f24D00;
+    m->f3DF68 = 0;
     D_00F28460->f3DF69 = 0;
     D_00F28460->f3DF6A = 0;
     D_00F28460->f3DF6B = 0;
@@ -83,8 +84,8 @@ void func_00f23ae8(void) {
     buf1 = (buf0 + (sz + 0x3F) / 64 * 256 + 0x3F) & ~0x3F;
     buf2 = (buf1 + mbw * ((ht + 15) / 16) * 1024 + 0x3F) & ~0x3F;
     D_00F28460->f3DDA8 = 0;
-    *(s32 *)(buf2 + 0x40) = 0x12345678;
     D_00F28460->f3DD14 = buf2 + 0x40;
+    *(s32 *)(buf2 + 0x40) = 0x12345678;
     if ((u32)(D_00F28460->f3DD14 + 4) >= (u32)((s32)D_00F28460 + D_00F28460->f3DF48)) {
         __asm__ volatile("break");
     }
