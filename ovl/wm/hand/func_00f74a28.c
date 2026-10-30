@@ -1,6 +1,8 @@
-/* score 12 (1288 vs 1288). Same family as gb f4d930. Both loops set the pointer inside the body (`p = &e[k + 1]`). D_0108F1F4 is written as an if/else, and the double store as `D_00FB4A58 = D_00FB4A5C = sel + 1`. Left: only the colour constants' registers. The target keeps 21 in v0 and 1 in a1; this draft swaps them. Tried: every store order of the c[] pairs, chained assignment, an if/else-if chain, a ?: temporary and a 10-minute -j1 permuter run; none fixed it. */
+/* wm.x func_00f74a28: matched by hand. Round 47 (wgb), the twin of gb func_00f4d930. The a8 field of Ent is s8. Four reads are (u8)p->a8 and one is (p->a8 & 0xFF), so loop.c and reload keep the colour constants in the target's registers. */
+#include "ovl.h"
+
 typedef struct { u8 pad[176]; s32 x; s32 y; u8 pad2[6]; s16 hbe; s16 pad3; s16 hc2; } Obj;
-typedef struct { u8 a0; u8 pad1[7]; u8 a8; u8 pad9; u8 aA; u8 padb[41]; u8 s34[44]; } Ent;
+typedef struct { u8 a0; u8 pad1[7]; s8 a8; u8 pad9; u8 aA; u8 padb[41]; u8 s34[44]; } Ent;
 extern s32 D_002C5AD8;
 extern s32 D_00FB4A58;
 extern s32 D_00FB4A5C;
@@ -61,7 +63,7 @@ void func_00f74a28(Obj *o)
     sel = func_001fd548(o);
     for (k = 0; k < i; k++) {
         p = &e[k + 1];
-        if (p->a0 == 0 && p->a8 == 0) num++;
+        if (p->a0 == 0 && (u8)p->a8 == 0) num++;
     }
     o->hc2 = 2240;
     selx = 0;
@@ -72,7 +74,7 @@ void func_00f74a28(Obj *o)
             p = &e[i + 1];
             s3 = sel == i;
             if (!s3) {
-                if (p->a8 == 0) {
+                if ((u8)p->a8 == 0) {
                     c[0] = 9;
                     c[1] = 9;
                 } else {
@@ -83,7 +85,7 @@ void func_00f74a28(Obj *o)
                 c[0] = 0;
                 c[1] = 1;
             }
-            if (p->a0 == 0 && p->a8 == 0) {
+            if (p->a0 == 0 && (u8)p->a8 == 0) {
                 func_001efb18(func_00f60428(), func_00f60438());
                 func_002078f0(o, c[s3], 2, 0, 0, y, D_00FB4D30, D_00FB4B48, num + 196);
                 num++;
@@ -94,11 +96,11 @@ void func_00f74a28(Obj *o)
                 col = 128;
                 selx = (o->x >> 4) + D_00FB4D30 - 1792;
                 sely = (o->y >> 4) + y - 1856;
-                if (D_0108F538) { if (p->a8 == 0) D_0108F1F4 = 0; else D_0108F1F4 = 1; }
+                if (D_0108F538) { if ((u8)p->a8 == 0) D_0108F1F4 = 0; else D_0108F1F4 = 1; }
             } else {
                 col = 64;
             }
-            if (p->a8 == 0)
+            if ((p->a8 & 0xFF) == 0)
                 func_00208280(o, 10, y + 4, 18, 46, col);
             else
                 func_00208280(o, 10, y + 4, 18, 47, col);
