@@ -1,7 +1,6 @@
-/* Round 50 (wgb): score 73 -> 28, size exact (704 = 704), instruction multiset exact. The 6th argument to func_00f41dc8 is the power-of-two loop result p, not h (as in the sibling func_00f425a8); the target runs that loop in t1, the 6th argument register, which was the extra move and the 4-byte gap. Left: register choice only: the target copies img into t1 (move t1,a0) and keeps w * h in v1; ours has w * h in t1 and img in t5. Earlier header below. */
-/* Round 36 (wgb): gb.x func_00f422e8 near miss: 65 -> 65 words, score 77 -> 73 (aligned diff 46 -> 42). Statement order from tools/ovl/hill3.py (score-ranked, strict dependency rules). Tried: hill3 sweep of every gb RANKING row and wm RANKING rows 1-100 (85-90 s, seed 1; strict rules; the order kept passes hill3.py --check against the previous draft), and port.py from the twin (not better). Earlier header below. */
-/* Round 35 (wgb): gb.x func_00f422e8 near miss: 71 -> 65 words, score 89 -> 77. Statement order from a dependency-safe statement-order hill climb (round 35 hill3.py: only orders that keep every read/write conflict in place) (size and psm computed after the defaults, y before x for the shifts, xs/ys/qs/us/vs store order). Left: scheduling in the vertex block and the 708 vs 704 size. Tried: ctx2 (no change). Earlier header below. */
-/* gb.x func_00f422e8 near miss: 71 words differ, score 89 (ours 708 bytes, original 704). Port of wm func_00f693e0's near miss (port.py), not worked further this round. Its notes apply: y and h swap s3/s4, img lands in t5 instead of t1, and store order. */
+/* gb.x func_00f422e8: matched by hand. The 6th argument to func_00f41dc8 is the power-of-two loop result p, and the bpp == 8 branch has its own w * h temporary t2 (wgb round 50). */
+#include "ovl.h"
+
 extern void *D_00F82A88;
 extern s32 D_00F82A9C;
 void *func_00f42180(void *, void *, s32, s32, s32, s32, s32, s32, s32, s32);
@@ -18,6 +17,7 @@ void func_00f422e8(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     s32 cw, ch, size;
     s32 p;
     s32 t;
+    s32 t2;
     unsigned long nv;
     s32 x1, y1;
     f32 v;
@@ -31,11 +31,11 @@ void func_00f422e8(void *img, void *clut, s32 x, s32 y, s32 w, s32 h, s32 bpp, s
     if (bpp != 4) {
         if ((nv = bpp) == 8) {
             cw = 16;
-            t = w * h;
+            t2 = w * h;
             psm = 19;
-            t /= 64;
+            t2 /= 64;
             ch = 16;
-            size = t;
+            size = t2;
         } else {
             ch = 0;
             psm = 0;
