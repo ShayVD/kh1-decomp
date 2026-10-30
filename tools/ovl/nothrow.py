@@ -37,8 +37,21 @@ prototype), since an extra nothrow call can just as well cause a wrong plain bra
 is tagged `matched` when the callee has a matched definition in ovl/OVL/hand or ovl/OVL/auto,
 `earlier` when its address is below the function's (so it can really be defined above it in the
 original file), and `ext` when it lies outside the overlays (below 0xf00000). An `ext` callee
-cannot be defined in the original's file, so a gain from it is a stand-in for some other cause and
-is worth a closer look. Read the candidate before keeping it, and land it the usual way
+cannot be defined in the original's file. In C, a call is nothrow only when its callee was compiled
+earlier in the file, and no declaration form does the same (docs/overlays.md "What makes a call
+nothrow"), so a gain from an `ext` callee stands in for some other cause.
+
+Every try also prints `kept N`: how many of the original's insns line up exactly (opcode and
+registers, branch targets ignored) with ours. A score gain whose `kept` count drops is a scoring
+artifact: the definition fixed a branch opcode but filled a slot the original leaves alone, or it
+filled the slot with the wrong insn. GAIN lines with a lower `kept` count than the base end in
+`CHECK`. Round 66 examples:
+- wm func_00f72a70 and gb func_00f4b978 with func_0024e468 are CHECK. The definition fills the
+  loop-top `beqz` slot with `li a0,2` where the original keeps a nop.
+- gb func_00f50550 and wm func_00f77648 with func_0011d768 gain one kept insn, the branch opcode,
+  but they are not right either. The original fills that slot with a `move` from before the
+  branch, while ours steals the target's first insn, so the original reached the plain branch by a
+  different source shape. Read the candidate before keeping it, and land it the usual way
 (ordcheck, size rule, hand.py keep for a match).
 """
 import itertools
@@ -188,6 +201,17 @@ def defined(text, name):
     return re.search(r'\b%s\s*\([^;{]*\)\s*\{' % re.escape(name), text) is not None
 
 
+def norm(ins):
+    op, _, rest = ins.partition(' ')
+    return op + ' ' + ','.join(x for x in rest.split(',') if not x.startswith('0x'))
+
+
+def kept(a, b):
+    """original insns (a) that line up exactly with ours (b), branch targets ignored"""
+    sm = SequenceMatcher(None, [norm(x) for x in a], [norm(x) for x in b], autojunk=False)
+    return sum(i2 - i1 for tag, i1, i2, _, _ in sm.get_opcodes() if tag == 'equal')
+
+
 def worker(files):
     sys.path.insert(0, str(ROOT / 'tools'))
     os.chdir(ROOT)
@@ -206,6 +230,10 @@ def worker(files):
         m = re.search(r'score (\d+)', why)
         return (int(m.group(1)) if m else 99999), AD.LAST_BYTES
 
+    def score(f, sym, text):
+        sc, by = build(f, sym, text)
+        return sc, (kept(a, AD.disasm(by, f.addr)) if by else 0)
+
     for path in files:
         fn = Path(path).name.split('.')[0]
         text = Path(path).read_text()
@@ -223,6 +251,8 @@ def worker(files):
         mis = likely_mismatches(a, b)
         if not mis:
             continue
+        base_kept = kept(a, b)
+        kepts = {}
         def tag(name):
             addr = int(name[5:], 16)
             ts = []
@@ -250,8 +280,8 @@ def worker(files):
                     name = 'func_%08x' % int(rest.strip(), 16)
                     if name in matched and name not in cands and ok(name):
                         cands.append(name)
-        print('== %s %s %s: base %d, %d likely/plain mismatch(es) (%s), candidates %s, defined %s' % (
-            ovl, fn, path, base, len(mis),
+        print('== %s %s %s: base %d (kept %d), %d likely/plain mismatch(es) (%s), candidates %s, defined %s' % (
+            ovl, fn, path, base, base_kept, len(mis),
             ', '.join('%s/%s %s' % (ra, rb, 'T-likely' if LIKELY.match(ra) else 'O-likely')
                       for _, ra, rb in mis[:6]),
             ' '.join(c + tag(c) for c in cands) or '-', ' '.join(ctx_defs(text)) or '-'), flush=True)
@@ -260,16 +290,18 @@ def worker(files):
             t = with_defs(text, [name])
             if t is None:
                 continue
-            sc, _ = build(f, sym, t)
+            sc, kp = score(f, sym, t)
+            kepts['+' + name] = kp
             singles.append((sc, '+' + name))
-            print('   +%s%s: %d (gain %d)' % (name, tag(name), sc, base - sc), flush=True)
+            print('   +%s%s: %d (gain %d) kept %d' % (name, tag(name), sc, base - sc, kp), flush=True)
         for name in ctx_defs(text):
             t = without_def(text, name)
             if t is None:
                 continue
-            sc, _ = build(f, sym, t)
+            sc, kp = score(f, sym, t)
+            kepts['-' + name] = kp
             singles.append((sc, '-' + name))
-            print('   -%s: %d (gain %d)' % (name, sc, base - sc), flush=True)
+            print('   -%s: %d (gain %d) kept %d' % (name, sc, base - sc, kp), flush=True)
         singles.sort()
         best = (base, ())
         for sc, name in singles:
@@ -287,13 +319,16 @@ def worker(files):
             t = apply(text, [x, y])
             if t is None:
                 continue
-            sc, _ = build(f, sym, t)
-            print('   %s %s: %d (gain %d)' % (x, y, sc, base - sc), flush=True)
+            sc, kp = score(f, sym, t)
+            kepts[(x, y)] = kp
+            print('   %s %s: %d (gain %d) kept %d' % (x, y, sc, base - sc, kp), flush=True)
             if sc < best[0]:
                 best = (sc, (x, y))
         if best[0] < base:
-            print('GAIN %s %s %s %d -> %d with %s' % (ovl, fn, path, base, best[0],
-                  ' '.join(n[1:] if n[0] == '+' else n for n in best[1])), flush=True)
+            kb = kepts[best[1] if len(best[1]) == 2 else best[1][0]]
+            print('GAIN %s %s %s %d -> %d with %s (kept %d -> %d%s)' % (
+                ovl, fn, path, base, best[0], ' '.join(n[1:] if n[0] == '+' else n for n in best[1]),
+                base_kept, kb, ', CHECK' if kb < base_kept else ''), flush=True)
 
 
 def run(ovl, files):
