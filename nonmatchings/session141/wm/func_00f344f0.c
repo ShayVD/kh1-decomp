@@ -1,3 +1,4 @@
+/* Round 50 wwm2: score 89 -> 87 (same size). The target reloads md->x9 for the func_00f200c8 argument (a latescan MORE hit). Reading the argument through a volatile view, ((volatile Md34 *)md)->x9, reproduces the reload. A u8 pointer read, ternary/else forms and other prototypes for the callee do not. The original probably had a real alias barrier here; this is a stand-in. Earlier header below. */
 /* wm f344f0 near miss: 113 words differ, score 89 (1012 vs 1008 bytes). Logic is complete: model draw loop like f4e738, with a dead struct copy of D_00FB6FC0 and unused rot vec kept on the stack. Left: the order of the local init stores, the packet pointer temps (the original uses v0+16 and v0+32 bases), the loop invariant (the original keeps buf = sp+64 in s8, ours hoists %hi(D_00F8C224)), and the md->x9 reload. Tried: p[2]/p[3] vs q = p + 2 forms, buf types, and the tail packet form. */
 typedef struct { u64 *p; u8 *w; u8 x8[1]; } Cx34;
 typedef struct { u8 pad0[4]; u16 h4; u16 h6; u8 b8; u8 pad9[3]; } En34;
@@ -122,7 +123,7 @@ void func_00f344f0(s32 id) {
         }
         func_00f5dd78(cx->w + 144, cx->w + 80, m, D_00FBDAB0, e);
         a = 0;
-        if (md->x9 != 255) a = func_00f200c8(md->x9);
+        if (md->x9 != 255) a = func_00f200c8(((volatile Md34 *)md)->x9);
         b = func_00f200a8(md->x8);
         *(f32 *)(cx->w + 76) = al;
         c = func_00f35798(md->x8);
