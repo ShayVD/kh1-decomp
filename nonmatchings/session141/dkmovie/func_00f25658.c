@@ -1,3 +1,4 @@
+/* Round 61 (wwm2): score 52 -> 40 (800 vs 800 bytes). Both IPU_CTRL updates go through the spare local m (m = IPU_CTRL | 0x40000000; IPU_CTRL = m + base;), which fixes the closing update's registers and the prologue's v1 sum. Left: the prologue registers (the target has h in a0, bE/b9 in a2 and the IPU_CTRL address in a1) and k = 0 scheduled after the f3DD90 + 16 add. Tried: k = 0 and n = -1 moved, base term orders, a bF temp. */
 /* Round 58 (wwm2): score 70 -> 52 (800 vs 800 bytes). The "dead reload" of size after the first IPU wait is func_00f269c0's second argument: it is called with the advanced f3DD90 and size, as in the sibling func_00f25978; the bF terms of base are summed (bF >> 1) << 16 first. Left: the prologue registers (the target has h in a0 and the IPU_CTRL address in a1) and the closing IPU_CTRL update (the target loads into a0 with 0x40000000 in a1; ours ties the load to the or). Tail forms tried without change: base + (...), a temp before or after the or, a u32 cast, the constant first. Earlier header below. */
 /* dkmovie.x func_00f25658: near miss (session 141), 800 vs 800 bytes, 46 words differ, score 72 (m2c draft was 236). IPU decode task. Keys: off as n * 768 giv (n starts -1, n++ at loop top), k == 0 ? 0x2C000000 : 0x28000000 (gives bnezl), cont = !(CTRL>>14&1) && !(CTRL>>15&1). Left: the original has a dead reload lw a1,0(sp) of size after the first IPU wait loop (ours has no such insn, so a nop shifts), the 0x10002010 pointer is a1 (ours a2) and the header pointer a0 (ours a1), and the bF bit terms are computed andi-first. Tried: volatile size, base term orders, if/else for the CMD value. Round 21 (wwm1): score 72 -> 70 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). */
 typedef struct { s32 f0; u8 pad4[5]; u8 b9; u8 padA[4]; u8 bE; u8 bF; } MvHdr;
@@ -34,7 +35,8 @@ s32 func_00f25658(void) {
     b9 = h->b9;
     base = (h->bE << 20) + base;
     IPU_CTRL = base + 0x1200000;
-    IPU_CTRL = (IPU_CTRL | 0x40000000) + base;
+    m = IPU_CTRL | 0x40000000;
+    IPU_CTRL = m + base;
     while (IPU_CTRL < 0) {
     }
     n = -1;
@@ -63,7 +65,8 @@ s32 func_00f25658(void) {
         cont = !(((u32)IPU_CTRL >> 14) & 1) && !(((u32)IPU_CTRL >> 15) & 1);
     } while (cont);
     D4_CHCR = 0;
-    IPU_CTRL = (IPU_CTRL | 0x40000000) + base;
+    m = IPU_CTRL | 0x40000000;
+    IPU_CTRL = m + base;
     while (IPU_CTRL < 0) {
     }
     while ((D4_CHCR >> 8) & 1) {
