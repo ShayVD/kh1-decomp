@@ -52,7 +52,9 @@ def main() -> int:
             if own:
                 res[""] = score(ovl, func, body, "")
             best = min(res, key=res.get)
-            if res[best] < base:
+            if base == 99999 and res[best] == 99999:
+                print(func, f"{d}/{p.name}", "ERR (no score in any mode; is out/ovl/%s.elf built?)" % ovl, flush=True)
+            elif res[best] < base:
                 print(func, f"{d}/{p.name}", base, best or "(none)", "MATCH" if res[best] == 0 else res[best],
                       flush=True)
     return 0
