@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 104 -> 84 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* 166 words, score 104 (1016 vs 976; was 205 words, score 118). Round 32 wwm2: a CONTEXT_ONLY func_00f42ce0 (ctx2) took it to 170, hill2 (D_00F9B1E0 = 1 before D_00F9B1DC = 1.0f) to 166. Earlier header: 205 words left (round 12): main world-map loop. Target hoists the plain D_00F86500 base and +128/+1216/+192 offsets into s5..s7 and keeps a/b on the stack. The ssf() helper for the x branch helps (from 228); a local W pointer or wb() helper for the D_00F850E0 accesses is worse. */
 #include "ovl.h"
 typedef struct { s32 id; s32 a; s32 b; f32 val; f32 v2; s32 dir; } Sub;
