@@ -346,6 +346,11 @@ static int watchdog(SceSize args, void *argp) {
             snd_ticks0 = kh1_snd_ticks;
             snd_insns0 = kh1_iop_insns;
         }
+        if (frames == last && kh1_gsq_on) { /* session 149: no frame in the window: the queues' state */
+            char qb[256];
+            kh1_gsq_state(qb, sizeof qb);
+            vlog("kh1-vita: stalled: %s\n", qb);
+        }
         { /* session 137v: the game's threads (host/null/threads.c): which one a stalled load waits on */
             char tb[192];
             kh1_null_threads_state(tb, sizeof tb);

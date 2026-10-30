@@ -63,6 +63,8 @@ extern int kh1_recq_on;
 int kh1_recq_start(u32 bytes);
 void kh1_recq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw);
 void kh1_recq_sync(void);
+/* session 149: the three queues' positions, waits and sleeps as a line (the Vita's watchdog, at a stall) */
+void kh1_gsq_state(char *b, int n);
 /* microseconds the thread ran the queue's ops, microseconds the producer waited for it (room, syncs), the
  * waits that had to wait */
 extern volatile u32 kh1_recq_us_busy, kh1_recq_us_wait, kh1_recq_waits;

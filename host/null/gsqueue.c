@@ -36,6 +36,7 @@ typedef struct {
     void (*cwake)(void);       /* posts the consumer's semaphore */
     void (*pwait)(void), (*pwake)(void);
     volatile u32 *us_wait, *waits;
+    volatile u32 waiting, want; /* session 149: the producer is in q_wait_tail, for want (the watchdog's) */
 } KH1Q;
 
 static KH1Q gsq = { 0, 0, 0, ~0u };
@@ -197,6 +198,8 @@ static void q_wait_tail(KH1Q *q, u32 want) {
     q_publish(q);
     t0 = clock_us();
     (*q->waits)++;
+    q->want = want;
+    q->waiting = 1;
     for (;;) {
         for (spin = 0; spin < SPINS && (s32)(LOAD(q->tail) - want) < 0; spin++) ;
         if ((s32)(LOAD(q->tail) - want) >= 0) break;
@@ -204,6 +207,7 @@ static void q_wait_tail(KH1Q *q, u32 want) {
         if ((s32)(LOAD(q->tail) - want) < 0) q->pwait();
         STORE(q->psleeps, 0);
     }
+    q->waiting = 0;
     *q->us_wait += clock_us() - t0;
 }
 
@@ -336,7 +340,7 @@ volatile u32 kh1_gpuq_us_busy, kh1_gpuq_us_wait, kh1_gpuq_waits;
 static KH1GsqFn gq_fn[2];
 static u32 gq_args[2][KH1_GPUQ_ARGS];
 static volatile u32 gq_posted, gq_done;
-static volatile int gq_worker_sleeps, gq_waiter_sleeps;
+static volatile int gq_worker_sleeps, gq_waiter_sleeps, gq_waiting;
 
 int kh1_recq_on;
 volatile u32 kh1_recq_us_busy, kh1_recq_us_wait, kh1_recq_waits;
@@ -377,6 +381,7 @@ static void gq_wait_left(u32 left) {
     if (LOAD(gq_posted) - LOAD(gq_done) <= left) return;
     t0 = clock_us();
     kh1_gpuq_waits++;
+    gq_waiting = 1;
     for (;;) {
         for (spin = 0; spin < SPINS && LOAD(gq_posted) - LOAD(gq_done) > left; spin++) ;
         if (LOAD(gq_posted) - LOAD(gq_done) <= left) break;
@@ -384,6 +389,7 @@ static void gq_wait_left(u32 left) {
         if (LOAD(gq_posted) - LOAD(gq_done) > left) gq_sem_wait(1);
         STORE(gq_waiter_sleeps, 0);
     }
+    gq_waiting = 0;
     kh1_gpuq_us_wait += clock_us() - t0;
 }
 
@@ -441,4 +447,16 @@ void kh1_recq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 
 
 void kh1_recq_sync(void) {
     if (kh1_recq_on) q_wait_tail(&recq, recq.wpos);
+}
+
+/* session 149: the queues' state, for the Vita's watchdog when no frame has ended in its window (3d-zq froze at a
+ * scene change with the game thread's time all "the rest": a wait that never ends is counted only when it does) */
+int snprintf(char *, __SIZE_TYPE__, const char *, ...);
+void kh1_gsq_state(char *b, int n) {
+    snprintf(b, (__SIZE_TYPE__)n, "gsq head %x tail %x wpos %x%s%x, worker %s; gpu jobs %u posted %u ended%s, "
+             "thread %s; recq head %x tail %x wpos %x%s%x",
+             LOAD(gsq.head), LOAD(gsq.tail), gsq.wpos, gsq.waiting ? ", waited for until " : " ", gsq.waiting ? gsq.want : 0,
+             LOAD(worker_sleeps) ? "asleep" : "awake", LOAD(gq_posted), LOAD(gq_done), gq_waiting ? " (waited for)" : "",
+             LOAD(gq_worker_sleeps) ? "asleep" : "awake", LOAD(recq.head), LOAD(recq.tail), recq.wpos,
+             recq.waiting ? ", waited for until " : " ", recq.waiting ? recq.want : 0);
 }
