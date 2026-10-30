@@ -1,5 +1,5 @@
+/* drafttwins.py: score 102 -> 100, port.py of the wm twin func_00f63d18 draft. Earlier header below. */
 /* Round 41 wwm2: score 127 -> 102, port.py of the wm twin func_00f63d18 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
-/* 92 words / score 127 (740 vs 744). An inline gs_xyz(x, y, z) helper reproduces the hoisted 1<<32 constant in an s-reg. Left: the original does not strength-reduce (y+1920)<<4 / (y+1944)<<4 (ours makes lui 0x7800 givs), hoists p[1]=1 into s8, and list is s2 not s3; inline gs_put helper, i*28, u64 temporaries tried */
 typedef struct { char buf[15]; } Str15;
 typedef struct { u8 pad[80]; char name[3872]; } Item;
 extern u64 **D_00F61F58;
@@ -42,10 +42,10 @@ void func_00f3cc20(s32 mode, Item *it, s32 cur)
         p[0] = 70;
         p[1] = 0;
         p += 2;
-        if (i == cur) {
-            p[0] = 0x3F800000802020FFLL;
-        } else {
+        if (i != cur) {
             p[0] = 0x3F80000080202020LL;
+        } else {
+            p[0] = 0x3F800000802020FFLL;
         }
         p[1] = 1;
         p += 2;
