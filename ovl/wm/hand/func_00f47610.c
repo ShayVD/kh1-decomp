@@ -1,6 +1,9 @@
-/* 2 words. Inline alloc(&global, size, align) helper gives the s-reg addresses; loop fields need mixed views of W (union of offset 0/8/16 rows; searched all 243). Left: field b is addressed as W+s2+20, target W+(s2+16)+4. 10-min permuter run as well. */
+/* wm.x func_00f47610: matched by hand. */
+#include "ovl.h"
+
+/* wm.x func_00f47610: matched by hand (wgb round 37), the same fix as gb func_00f20518: the second loop store goes through a union view with a 4-byte prefix (v4.e[i].w[4]), so its address is (base + 4) + (i * 24 + 16). */
 typedef struct { s32 w[6]; } E47610;
-typedef union { struct { u8 p0[0]; E47610 e[4]; } v0; struct { u8 p8[8]; E47610 e[4]; } v8; struct { u8 p16[16]; E47610 e[4]; } v16; } W47610;
+typedef union { struct { u8 p0[0]; E47610 e[4]; } v0; struct { u8 p4[4]; E47610 e[4]; } v4; struct { u8 p8[8]; E47610 e[4]; } v8; struct { u8 p16[16]; E47610 e[4]; } v16; } W47610;
 s32 func_001bb500(s32, s32);
 extern W47610 *D_00F9B540;
 extern s32 D_00F9B544;
@@ -26,7 +29,7 @@ void func_00f47610(void) {
     alloc47610(&D_00F9B544, 0x13008, 16);
     for (i = 0; i < 2; i++) {
         D_00F9B540->v0.e[i].w[4] = func_001bb500(0xC0000, 128);
-        D_00F9B540->v0.e[i].w[5] = func_001bb500(0x4E000, 16);
+        D_00F9B540->v4.e[i].w[4] = func_001bb500(0x4E000, 16);
         D_00F9B540->v8.e[i].w[4] = func_001bb500(0xA000, 16);
         D_00F9B540->v16.e[i].w[3] = func_001bb500(0xA000, 16);
         D_00F9B540->v8.e[i + 1].w[0] = func_001bb500(0xA000, 16);
