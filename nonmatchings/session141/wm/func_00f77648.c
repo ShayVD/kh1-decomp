@@ -1,3 +1,4 @@
+/* Round 64 wwm2: score 166 -> 164 with CONTEXT_ONLY definitions of func_0011d768 (tools/ovl/nothrow.py: the call becomes nothrow, so reorg picks the original's plain/-likely branch next to it). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 4ea501d2 (wm func_00f77648 near miss, score 166 -> 158, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 158 was not valid. Restored the last valid statement order: score 166. Earlier header below. */
 /* score 168 (first draft); round 30 wgb: 228 words, score 166, 1192 vs 1192 bytes with func_00f6b5b0 declared (Win *, f32, f32) and called (*pw++, 256.0f, ...) like its matched callers, plus a CONTEXT_ONLY definition so the call is nothrow; was 253/168). Confirm dialog: builds a title, a box and three option windows with func_00f6b6a0 (19 args), fades them in, then loops on pad input (0x4000 cancel returns, 0x2000 confirm calls func_00f4d528(sel) and never returns, 0x10/0x40 move the selection with wraparound). Two S3 copies (D_00FBA218 -> sp+112, D_00FBA220 -> sp+128); declare w[3] first. Left: gcc CSEs the 256 constant into s6 across calls (the original reloads it with li each time); sel/k/loop registers are shifted from that. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
@@ -19,7 +20,7 @@ s32 func_00f47110(void);
 void func_00f74978(Win *, s32);
 CONTEXT_ONLY void func_00f6b5b0(Win *a0, f32 a1, f32 a2) {}
 void func_0024e468(s32);
-void func_0011d768(s32);
+void func_0011d768(s32); CONTEXT_ONLY void func_0011d768(s32 a0) {}
 void func_00f6ade8(s32);
 void func_00106880(s32);
 void func_00f4d528(s32);
