@@ -1,3 +1,4 @@
+/* Round 58 (wwm2): score 70 -> 52 (800 vs 800 bytes). The "dead reload" of size after the first IPU wait is func_00f269c0's second argument: it is called with the advanced f3DD90 and size, as in the sibling func_00f25978; the bF terms of base are summed (bF >> 1) << 16 first. Left: the prologue registers (the target has h in a0 and the IPU_CTRL address in a1) and the closing IPU_CTRL update (the target loads into a0 with 0x40000000 in a1; ours ties the load to the or). Tail forms tried without change: base + (...), a temp before or after the or, a u32 cast, the constant first. Earlier header below. */
 /* dkmovie.x func_00f25658: near miss (session 141), 800 vs 800 bytes, 46 words differ, score 72 (m2c draft was 236). IPU decode task. Keys: off as n * 768 giv (n starts -1, n++ at loop top), k == 0 ? 0x2C000000 : 0x28000000 (gives bnezl), cont = !(CTRL>>14&1) && !(CTRL>>15&1). Left: the original has a dead reload lw a1,0(sp) of size after the first IPU wait loop (ours has no such insn, so a nop shifts), the 0x10002010 pointer is a1 (ours a2) and the header pointer a0 (ours a1), and the bF bit terms are computed andi-first. Tried: volatile size, base term orders, if/else for the CMD value. Round 21 (wwm1): score 72 -> 70 with the dependency-checked reorderer (w3.py, from wwm2 r35 hill3). */
 typedef struct { s32 f0; u8 pad4[5]; u8 b9; u8 padA[4]; u8 bE; u8 bF; } MvHdr;
 typedef struct {
@@ -8,7 +9,7 @@ typedef struct {
 } MovieWork;
 extern MovieWork *D_00F28460;
 extern u8 *D_00F28464;
-void func_00f269c0(void);
+void func_00f269c0(MvHdr *, s32);
 void func_00f26a20(u8 *, s32);
 void func_00f26af0(u8 *, u8 *, s32);
 void func_00f26848(s32, s32, s32, s32);
@@ -28,7 +29,7 @@ s32 func_00f25658(void) {
     s32 off, n, k, cont, m;
 
     h = D_00F28460->f3DD90;
-    base = ((h->bF & 1) << 22) + ((h->bF >> 1) << 16);
+    base = ((h->bF >> 1) << 16) + ((h->bF & 1) << 22);
     size = h->f0;
     b9 = h->b9;
     base = (h->bE << 20) + base;
@@ -39,7 +40,7 @@ s32 func_00f25658(void) {
     n = -1;
     D_00F28460->f3DD90 = (MvHdr *)((u8 *)D_00F28460->f3DD90 + 16);
     k = 0;
-    func_00f269c0();
+    func_00f269c0(D_00F28460->f3DD90, size);
     do {
         IPU_CMD = 0x30000000;
         n++;
