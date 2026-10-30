@@ -1,3 +1,4 @@
+/* Round 62b (wwm2): score 259 -> 177, 3564 vs 3560 bytes; the callee sequence now matches. case 4/9/14 moved between cases 13 and 15 (the target's block order). case 18 tests `S[0] == 2 || S[1] == 2` first and only then the both-2 case, and the 19/20 arms are swapped. func_00111600 takes three arguments (as in src/game/progress.c), so no & args are computed. case 31 reads D_003F720C once into a local. case 27 decrements D_00F2C6FC before the D_002BC07C == 128 test. Left: the case 18 jump threading (the target reuses the loaded S[0] and S[1]) and the placement of the D_002C5AD0 high part (s3). */
 /* Round 62 (wwm2): score 374 -> 259, size 3464 -> 3604 vs 3560 bytes (the gap goes from 96 to 44). (1) func_00f21068 returns s32, from wwm1's rettype.py: 374 -> 370. (2) The trig test is `(trig & 0x20000020) ? 1 : (trig & 0x80000080) != 0`, so fold does not merge the two masks into one 0xA00000A0 test. Gives the target's two tests. (3) In both menu copies, a and b are set before the func_0020bc48 call (they live across it in s0/s1, as in the target). Cross-jumping then stops at the D_00F26E10 test, and case 22 keeps its own func_001f1ed8 / trig / xor copy, so the callee sequence matches the target's. Left: the extra bytes are in small hunks across the function. */
 /* dktitle.x func_00f228c8: near-miss draft (session 132), not byte-identical; the port runs it (ovl/dktitle/drafts.tsv). Session 141 round 21 (wwm1): score 408 -> 398 with sclimb.py. Round 22 (wwm1): the if/else at line(s) 149,357 with the arms swapped and the test negated (ifswap.py): score 398 -> 378. Round 23 (wwm1): score 378 -> 374 with w4.py (dependency-checked statement order plus if/else polarity flips). */
 
@@ -12,7 +13,7 @@ void func_00106b18(void *);
 void func_00109268(void);
 void func_00109558(s32);
 void func_00110448(s32);
-void func_00111600(s32, s32, s32, s32 *, s32 *, s32 *);
+void func_00111600(s32, s32, s32);
 s32 func_001117e0(void); CONTEXT_ONLY s32 func_001117e0() { return 0; }
 void func_00111830(void); CONTEXT_ONLY void func_00111830() {}
 void func_0011c5e8(void);
@@ -115,19 +116,20 @@ s32 func_00f228c8(void) {
             break;
         }
         D_00F26E18 = 1;
-        if (D_003F8370[0] == 2 && D_003F8370[1] == 2) {
-            D_00F2C708 = 21;
-            goto c21;
-        } else if (D_003F8370[0] == 2 || D_003F8370[1] == 2) {
+        if (D_003F8370[0] == 2 || D_003F8370[1] == 2) {
+            if (D_003F8370[0] == 2 && D_003F8370[1] == 2) {
+                D_00F2C708 = 21;
+                goto c21;
+            }
             if (!(D_003F8370[0] == 4 || D_003F8370[1] == 4)) {
                 D_00F2C708 = 23;
             } else {
-                if (D_003F8370[0] != 2) {
-                    D_00F2C708 = 20;
-                    goto c20;
-                } else {
+                if (D_003F8370[0] == 2) {
                     D_00F2C708 = 19;
                     goto c19;
+                } else {
+                    D_00F2C708 = 20;
+                    goto c20;
                 }
             }
         } else {
@@ -212,11 +214,6 @@ s32 func_00f228c8(void) {
         func_00106780(10);
         D_00F2C708++;
         break;
-    case 4:
-    case 9:
-    case 14:
-        func_00233168();
-        break;
     case 5:
         func_00233168();
         func_00f208a8();
@@ -272,6 +269,11 @@ s32 func_00f228c8(void) {
         func_00233168();
         func_00120748(D_00F27318, D_009A0000, func_00f227e0, 0);
         D_00F2C708++;
+        break;
+    case 4:
+    case 9:
+    case 14:
+        func_00233168();
         break;
     case 15:
         func_00233168();
@@ -355,10 +357,9 @@ s32 func_00f228c8(void) {
         break;
     case 27:
         func_00f21068();
-        if (D_002BC07C != 128) {
-            --D_00F2C6FC;
-        } else {
-            if (--D_00F2C6FC == 0) {
+        --D_00F2C6FC;
+        if (D_002BC07C == 128) {
+            if (D_00F2C6FC == 0) {
                 func_00109558(11);
                 func_00f21ca0();
                 func_00f21928();
@@ -411,14 +412,15 @@ s32 func_00f228c8(void) {
     case 31:
         func_00f227b0();
         if (D_003F34A4 == 0) {
-            if (D_003F720C != 1) {
+            a = D_003F720C;
+            if (a != 1) {
                 D_00F2C708 = 27;
                 D_00F2C6FC = 2505;
             } else {
                 func_0011c5e8();
                 func_00109558(2);
                 func_00111830();
-                D_002B6480 = D_003F720C;
+                D_002B6480 = a;
                 func_00f20198();
             }
         }
@@ -443,7 +445,7 @@ s32 func_00f228c8(void) {
                 D_002BC130 = 0;
                 D_002BC134 = 2;
                 D_002BCDA8 = 0;
-                func_00111600(0, 0, 2, &D_002BCDA8, &D_002BC128, &D_002BC130);
+                func_00111600(0, 0, 2);
             } else {
                 D_00F2C708 = 27;
                 D_00F2C6FC = 2505;
