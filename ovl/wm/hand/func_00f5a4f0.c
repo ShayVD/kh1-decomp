@@ -1,6 +1,16 @@
-/* drafttwins.py: score 172 -> 120, port.py of the gb twin func_00f333f8 draft. Earlier header below. */
-/* drafttwins.py: score 174 -> 172, port.py of the gb twin func_00f333f8 draft. Earlier header below. */
+/* wm.x func_00f5a4f0: matched by hand. */
+#include "ovl.h"
+
+/* Port of gb func_00f333f8 (wgb round 43). The dead divide by n inside the inline helper is what leaves the target's li 30 / beqzl / break 7 checks. The frame count n keeps 30 out of s8. The bitfield read of the word at +88 (Wm333.fb) has the struct's alias set, so it cannot move above the f32 stores before it; that is what puts the target's ld 88 late in the setup block. */
 typedef struct { OvlVec v[4]; OvlVec pos; OvlVec rot; } GbXf;
+typedef struct {
+    u8 pad0[88];
+    u64 lo : 32;
+    u64 fa : 4;
+    u64 fb : 28;
+    u8 pad96[40];
+    f32 f136;
+} Wm333;
 typedef struct { u8 pad[4]; u16 ax : 4; u32 ay : 4; u32 az : 4; u32 ar : 4; u32 bx : 4; u32 by : 4; u32 bz : 4; u32 br : 4; } Box;
 extern u8 *D_00F9B540;
 extern Box *D_00F9B544;
@@ -49,36 +59,36 @@ void func_00f5a4f0(s32 arg) {
         D_0108D120.v[0][2] += *(u16 *)(D_00F9B540 + 166) * 100;
     }
     xf = D_0108D120;
-    v[2][1] = *(s32 *)(D_00F9B540 + 4312) * 3.1415926f * 0.00048828125f;
     v[0][0] = (s32)D_00F9B544->ax;
-    v[4][3] = 0.0f;
-    v[2][3] = 0.0f;
-    v[2][0] = *(s32 *)(D_00F9B540 + 4308) * 3.1415926f * 0.00048828125f;
     v[0][1] = (s32)D_00F9B544->ay;
-    v[3][1] = ((u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF) * 200.0f;
     v[0][2] = (s32)D_00F9B544->az;
-    v[1][0] = (s32)D_00F9B544->bx;
     v[2][2] = 0.0f;
-    v[3][2] = -(*(u16 *)(D_00F9B540 + 170) * 200.0f) * 0.5f;
+    v[1][0] = (s32)D_00F9B544->bx;
+    v[1][1] = (s32)D_00F9B544->by;
+    v[1][2] = (s32)D_00F9B544->bz;
+    v[2][0] = *(s32 *)(D_00F9B540 + 4308) * 3.1415926f * 0.00048828125f;
+    v[3][0] = -(*(u16 *)(D_00F9B540 + 166) * 200.0f) * 0.5f;
+    v[2][1] = *(s32 *)(D_00F9B540 + 4312) * 3.1415926f * 0.00048828125f;
+    v[2][3] = 0.0f;
+    v[3][1] = ((u16)((Wm333 *)D_00F9B540)->fb & 0xF) * 200.0f;
     v[3][3] = 0.0f;
     v[4][0] = 0.0f;
-    v[1][2] = (s32)D_00F9B544->bz;
     v[4][1] = 0.0f;
-    v[1][1] = (s32)D_00F9B544->by;
+    v[3][2] = -(*(u16 *)(D_00F9B540 + 170) * 200.0f) * 0.5f;
     v[4][2] = *(f32 *)(D_00F9B540 + 136);
-    v[3][0] = -(*(u16 *)(D_00F9B540 + 166) * 200.0f) * 0.5f;
+    v[4][3] = 0.0f;
     D_0108D120.v[1][0] = 0.0f;
     D_0108D120.v[1][1] = 0.0f;
     D_0108D120.v[1][2] = 1.0f;
-    D_0108D120.v[2][1] = 1.0f;
-    D_0108D120.v[2][0] = 0.0f;
     D_0108D120.v[1][3] = 1.0f;
-    D_0108D120.v[3][3] = 0.0f;
+    D_0108D120.v[2][0] = 0.0f;
+    D_0108D120.v[2][1] = 1.0f;
+    D_0108D120.v[2][3] = 1.0f;
     D_0108D120.v[2][2] = 0.0f;
     D_0108D120.v[3][0] = 0.0f;
     D_0108D120.v[3][1] = 0.0f;
     D_0108D120.v[3][2] = 0.0f;
-    D_0108D120.v[2][3] = 1.0f;
+    D_0108D120.v[3][3] = 0.0f;
     for (i = 0; i < 3; i++) {
         ra[i] = 0.0f;
         rb[i] = 0.0f;
