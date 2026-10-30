@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 62 -> 54, hill3o statement order. Earlier header below. */
 /* score 62 (1360 bytes, same size). Builds a 128-byte option flag block: clear with p = f + 127 counting down, fields from func_00f2ac38(func_00f2ab98(n)), three 2/3/4 switches (case 4 falls into case 2) and bit tests of options 34..38. Left: in the case 4 -> case 2 fallthrough ours keeps an extra li v0,5 and the switch trees differ slightly; f[a] = 5; f[b] = 5 inside case 4 is worse. Round 27 wwm2. */
 s32 func_00f2ab98(s32);
 s8 func_00f2ac38(s32);
@@ -5,8 +6,8 @@ s8 func_00f2ac38(s32);
 void func_00f2ac98(u8 *f)
 {
     s32 i;
-    s32 v;
     u8 *p;
+    s32 v;
 
     p = f + 127;
     for (i = 127; i >= 0; i--) {
@@ -30,12 +31,12 @@ void func_00f2ac98(u8 *f)
     f[17] = 0;
     f[18] = 0;
     switch (v) {
+        break;
     case 2:
         f[17] = 5;
         break;
     case 3:
         f[18] = 5;
-        break;
     }
     v = func_00f2ab98(11);
     f[19] = 0;
@@ -55,11 +56,11 @@ void func_00f2ac98(u8 *f)
     case 3:
         f[22] = 5;
         break;
+        break;
     case 4:
-        f[22] = 5;
     case 2:
         f[21] = 5;
-        break;
+        f[22] = 5;
     }
     v = func_00f2ab98(13);
     f[23] = 0;
@@ -81,11 +82,11 @@ void func_00f2ac98(u8 *f)
     case 3:
         f[26] = 5;
         break;
+        break;
     case 4:
         f[26] = 5;
     case 2:
         f[25] = 5;
-        break;
     }
     v = func_00f2ab98(34);
     if (v & 0x80) f[30] = 1;
@@ -121,8 +122,8 @@ void func_00f2ac98(u8 *f)
     if (v & 0x10) f[57] = 1;
     if (v & 8) f[58] = 1;
     if (v & 4) f[59] = 1;
-    if (v & 2) f[60] = 1;
     if (v & 1) f[61] = 1;
+    if (v & 2) f[60] = 1;
     v = func_00f2ab98(38);
     if (v & 0x80) f[62] = 1;
     if (v & 0x40) f[63] = 1;
