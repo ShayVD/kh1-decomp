@@ -3,7 +3,7 @@
 /* score 660 (3904 vs 3848 bytes): full structure (empty-case wait, mode1 swap-select, mode2 delete, back/re-find, end cleanup); remaining diffs are block placement (wait loop, end block). Round 25 draft wwm2. Round 19 (wwm1): score 660 -> 584 with sclimb.py (CONTEXT_ONLY toggles plus dependency-checked statement moves). */
 typedef struct { s16 v[2]; } S2;
 typedef struct { u8 pad[16]; s32 x10; } Win;
-typedef struct { u8 pad[8]; u32 x8; u32 x10; } Pad;
+typedef struct { u8 pad[8]; u32 x8; u32 xc; u32 x10; } Pad;
 typedef struct { u8 pad[4]; s8 x4; } Ic4;
 typedef struct { u8 pad[9]; s8 x9; } Ic9;
 extern Pad D_002C5AD0;
