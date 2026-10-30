@@ -1,4 +1,4 @@
-/* Round 45 (wgb): score 168 -> 108. The three loop-top reads (prev = ...->x4C, rx, ry) go through the fixed address (*(World **)0x00F56DC0) in place of D_00F56DC0. This is a stand-in for whatever the original used there, perhaps a different symbol or expression with the same address. The point is that it is a different address constant. With it, loop.c no longer hoists &D_00F56DC0 out of the for (;;), so every other access becomes lui + lw %lo as in the target and the D_00F56DC0 part of the 40-byte excess goes away (1984 vs 1992). Left: CSE still keeps &D_00F61560 in s0 from the if (D_00F61560 == 0) test through its three stores, where the target does a fresh lui at each one. Putting the same fixed-address form on the D_00F61560 = 0 store at the else-if (b & 0xC000) arm gives score 88 at exact size, but there it assembles to lui $at + sw, which the target does not use, so it is not kept. Struct-field or array aliases (D_00F6155C.b, D_00F56DBC.w) come out as base + offset and score worse; a goto loop lets GCSE hoist instead. */
+/* Round 51 wwm2: score 108 -> 76, now at the exact size (1992). Port of wm func_00f58f98. The fixed address 0x00F56DC0 is replaced by a second declaration, `extern World *D_00F56DC0b __asm__("D_00F56DC0")`, which relocates against the real symbol. The D_00F61560 test and its `= 1` store use `D_00F61560b __asm__("D_00F61560")`. This is a stand-in: gcc assumes the two names do not alias, and D_00F61560 is stored. Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 6bd50b7b (gb func_00f31ea0 near miss, score 168 -> 158, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 158 was not valid. Restored the last valid statement order: score 168. Earlier header below. */
 /* Round 46 wwm2: score 176 -> 168, func_00f2e098 and func_00f27300 declared s32. Earlier header below. */
 /* gb.x func_00f31ea0 near miss: 464 words differ, score 176 (ours 2032 bytes, original 1992). Free-camera / map-view input loop: pad direction rotates the World x10D4/x10D8 angles over 15 eased frames (func_001befc8 on D_00F615D0 / D_00F615F8, / 22.5 and / 90, with +-4096 wrap); buttons drive func_00f20170 / func_00f219b0 / func_00f31208 / func_00f3b4f8 and the D_00F61560 sub-mode; palette refresh into D_00F806D0 (RGBAQ(r/2, g/2, b/2, 102), as in func_00f31208); then the func_00f30bf8 / func_00f30d80 shortcuts and the World x4C change handler. Logic is complete. An unused s32[4] local gives the 160-byte frame. Left: every D_00F56DC0 access comes out as lui/addiu + lw 0 (the outer for (;;) loop hoists &D_00F56DC0, and reload rematerializes it), where the original uses lw %lo directly; that is the 40-byte excess. A goto loop gets the size close (1984, 366 words) but GCSE then keeps &D_00F56DC0 and &D_00F61560 in s-registers (score 196). Modes nogcse/nosi/nofill/nostrict/norlo/faddr/fmam/nosib and nostrict_norcse do not help. */
@@ -28,8 +28,10 @@ typedef struct {
 } World;
 typedef struct { u8 pad[4]; u32 x4; u32 x8; } Pad;
 extern World *D_00F56DC0;
+extern World *D_00F56DC0b __asm__("D_00F56DC0");
 extern void *D_00F56DC4;
 extern s32 D_00F61560;
+extern s32 D_00F61560b __asm__("D_00F61560");
 extern s32 D_00F56D8C;
 extern s32 D_00F615C8;
 extern u8 D_00F615D0[];
@@ -87,10 +89,10 @@ void func_00f31ea0(void) {
         flag = 0;
         pad = func_001ba488(0);
         dir = func_00f25418(pad);
-        prev = (*(World **)0x00F56DC0)->x4C;
+        prev = D_00F56DC0b->x4C;
         if (dir != 0) {
-            rx = (*(World **)0x00F56DC0)->x10D4;
-            ry = (*(World **)0x00F56DC0)->x10D8;
+            rx = D_00F56DC0b->x10D4;
+            ry = D_00F56DC0b->x10D8;
             dx = 0;
             if (rx < 1024) {
                 dx = (dir & 0x4000) ? 256 : 0;
@@ -131,7 +133,7 @@ void func_00f31ea0(void) {
             }
             goto tail;
         }
-        if (D_00F61560 == 0) {
+        if (D_00F61560b == 0) {
             b = pad->x8;
             if (b & 0x4008) {
                 if (func_00f20060() == 0) {
@@ -150,7 +152,7 @@ void func_00f31ea0(void) {
                     func_00f22338(2, 164, 0x80077328, 0);
                     D_00F56D8C = 0;
                     D_00F615C8 = 0;
-                    D_00F61560 = 1;
+                    D_00F61560b = 1;
                     func_00f27300(1);
                     func_00f31048();
                 }
