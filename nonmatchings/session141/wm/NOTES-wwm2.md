@@ -1230,3 +1230,10 @@ None of the drafts below changed.
 - **f212c0: 93 -> 89.** c1 is read before c0. The target's pointer copy for c0 is still missing (four forms tried).
 - **f275e0 (15):** the target is a rolled loop (`b test`, with the loop-invariant D copied in the delay slot). Every while/for/`||`/`?:` form is rotated by jump.c's duplicate_loop_exit_test (LOOP_VTOP in the jump dump, 184 bytes). The goto form has no loop notes, so D is reloaded.
 - **Not worked:** f207a0, f20b48, f22d28 (register-only, already permuted), f23750, f25288.
+
+## Round 59
+
+- **f245c0: the 118 candidate is now the main draft** (func_00f245c0.nofill.c, 2584 vs 2592 bytes), as the coordinator decided.
+  - The 8-byte gap is a delay-slot fill, not missing code. One &D_00F28460 copy lands in s1 where the target has s0, so reorg moves the target label's `lw a2,0(s1)` into a bnel slot: one instruction and one nop fewer.
+  - The size-exact 182 version stays next to it as func_00f245c0.exact.nofill.c.
+- **The last-frame break is confirmed against the target.** At 0xf24a14 the target branches to the switch when f3DD50[f3DD40] != f3DD4C. On the last-frame path, the 0x2000 test (0xf24a3c beqzl), the wait loop's flag-8 exit (0xf24a68 bnezl) and its fall-through (0xf24a9c b) all go to 0xf24f0c, the `jal func_00f25010` after the decode loop. They skip the loop-bottom flag-8 test, the f3DD74[n] != 2 check and the flag-4 block. The old draft's fall-through into that tail was the bug.

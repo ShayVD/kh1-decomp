@@ -1,3 +1,4 @@
+/* Round 59 (wwm2): score 182 -> 118, building 2584 vs 2592 bytes. The 8-byte gap is not missing code. n is dropped around ++f3DD2C: f3DD50[f3DD40] is tested twice, as the target compares the loaded a1 both times. An empty case 2 gives the target's switch tree (== 1, then < 2, then != 0). Every remaining instruction matches except one copy of &D_00F28460, which lands in s1 where the target has s0, at the bnel after the f3DD2C compare. Because of that copy, reorg fills the branch-likely delay slot with the target label's lw a2,0(s1) and branches past it, which removes one instruction and one nop. The size-exact version (182) is func_00f245c0.exact.nofill.c. The last-frame break is the target's control flow: its 0x2000 test, its wait loop and its fall-through all branch to 0xf24f0c (jal func_00f25010) and skip the f3DD74[n] != 2 check and the flag-4 block. */
 /* Round 58 (wwm2): score 380 -> 309 -> 252 -> 224 -> 182 (2592 vs 2592 bytes). The packet advance goes through n (n = size; n += 0x10; f3DD90 += n gives the target's s0), and the read slot is advanced with f3DD44++. The header fields are stored in the target's order (h is a u8 pointer, so each h[] load stays after the stores before it), and the 0x200 flag is set with |= and tested by re-reading f3DDD0. The 0x100 wait before playing is a do-while whose first test is flag 8 (to the end of the pass, so a goto) and whose loop test is 0x100, as the target lays it out (no copied exit test), and func_00f279f8 takes the height * 16 as a second argument (func_00f23750 passes two as well). The last-frame case (f3DD50[f3DD40] == f3DD4C) leaves the decode loop with a break: in the target its 0x2000 test and its wait loop both branch straight to the func_00f25010 call. The 0x40 wait loop after flag 4 tests 0x40 then 8 each pass, the restart test is two ifs (the target tests 8 and 0x80 separately instead of folding them to & 0x88), and f3DD74[n] = 0 is stored before f3DD40 is re-read. valaudit's call 15 flag is not a value difference: the target's a0 is D_00F28460 already, and the lw 0(s6) it reads is a nullified beqzl delay slot. Not taken: dropping n around ++f3DD2C (testing f3DD50[f3DD40] twice) scores 259 but builds 2572 bytes, because reorg then fills the branch-likely slots differently. Left: the gcse copies of &D_00F28460 (s0/s1/s8 placement) and the register choice. */
 /* Round 57 wwm2: score 524 -> 380 at the same size. The cached `m = D_00F28460` copies are gone and every access reads D_00F28460 directly: the target reloads the pointer for each statement and passes the loaded value straight to func_00f23620 (valaudit's call 11/12 a0 flags). Left: call 15 (func_00f208b8) still takes a copy where the target loads, plus the register choice. Earlier header below. */
 /* Round 45 wwm2: score 538 -> 524 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
@@ -100,9 +101,9 @@ void func_00f245c0(void) {
                     }
                 }
             }
-            n = ++D_00F28460->f3DD2C;
-            if (D_00F28460->f3DD50[D_00F28460->f3DD40] == n) {
-                if (n == D_00F28460->f3DD4C) {
+            D_00F28460->f3DD2C++;
+            if (D_00F28460->f3DD50[D_00F28460->f3DD40] == D_00F28460->f3DD2C) {
+                if (D_00F28460->f3DD50[D_00F28460->f3DD40] == D_00F28460->f3DD4C) {
                     f = D_00F28460->f3DDD0 | 0x1000;
                     D_00F28460->f3DDD0 = f;
                     if (f & 0x2000) {
@@ -130,6 +131,8 @@ void func_00f245c0(void) {
                     case 1:
                         func_00f23598(D_00F28460->f3DD48, 1, D_00F28460);
                         D_00F28460->f3DD74[D_00F28460->f3DD40] = 2;
+                        break;
+                    case 2:
                         break;
                     }
                     if (D_00F28460->f3DD44 == D_00F28460->f3DD40) {
