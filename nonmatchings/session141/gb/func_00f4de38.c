@@ -1,5 +1,5 @@
+/* drafttwins.py: score 290 -> 190, port.py of the wm twin func_00f74f30 draft. Earlier header below. */
 /* Round 48 wwm2: the hill3o order from a482da1b (gb func_00f4de38 near miss, score 290 -> 190, port of wm func_00f74f30 (wwm2 rou) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 182 was not valid. Restored the last valid statement order: score 290. Earlier header below. */
-/* score 290 (2168 vs 2184). Port of the wm func_00f74f30 near miss (same score), with symbols mapped by portmap2.py plus D_00F829D4 by hand. Same remaining issue as wm: the window clamp compiles to movn where the original uses a branch-likely; see nonmatchings/session141/wm/func_00f74f30.c. */
 typedef struct { s32 x0, x4; u32 x8; u32 xC; u32 x10; } Pad;
 typedef struct { u8 pad[12]; u16 xc; u16 xe; u16 x10; u16 x12; u8 pad2[10]; s16 x1e; } Lay;
 typedef struct { u8 pad[208]; u16 hd0; u16 hd2; } Obj;
@@ -78,8 +78,8 @@ void func_00f4de38(void)
     s32 t, n, cnt, i, v, s, res;
     u32 b;
 
-    t = D_00F702F0;
     c = D_00F74148;
+    t = D_00F702F0;
     D_00F702D0 = 10;
     func_00f445a8(16, 3, 0, 2, 0, 0, 0, 0, 0, D_00F703BC + 12, 0, D_00F703B8, 2, D_00F70538, D_00F7053C, D_00F70540, D_00F70544, 256, t);
     func_00f445a8(16, 0, 2, 1, 0, 15, 155, 7, D_00F703B8, D_00F703BC, 0, D_00F703F0, 0, 0, 0, 0, 0, 256, t);
@@ -98,12 +98,12 @@ void func_00f4de38(void)
         v = cnt;
         if (n < v + 8) v = n - 8;
     }
-    D_00F82D84 = v * 16;
-    D_00F82D88 = (cnt - v) * 16;
-    D_00F82D74 = -999;
-    D_00F82D80 = 1;
-    D_00F82D78 = 1;
     D_00F82D7C = 0;
+    D_00F82D78 = 1;
+    D_00F82D80 = 1;
+    D_00F82D74 = -999;
+    D_00F82D88 = (cnt - v) * 16;
+    D_00F82D84 = v * 16;
     D_00F71320.x1e = func_001bc510() - 1;
     D_00F71320.xc = D_00F705A8;
     D_00F71320.xe = D_00F705AC;
@@ -146,11 +146,11 @@ void func_00f4de38(void)
         }
         if (D_00F82D7C == 2 || D_00F82D7C == 3) {
             o->hd0 = D_00F82D84;
-            s = D_00F82D7C == 2 ? 39 : 233;
-            res = 1;
             o->hd2 = D_00F82D88;
             D_00F82D78 = 0;
+            s = D_00F82D7C == 2 ? 39 : 233;
             D_00F829E4 = 1;
+            res = 1;
             func_001f3dc0(D_00F829CC);
             w2 = func_00f445a8(6, 9, 2, 4, 0, 15, s, 4, 160, 208, 0, D_00F70634, 0, 0, 0, 0, 0, 256, D_00F702F0);
             w2->x10 = s;
@@ -209,8 +209,8 @@ void func_00f4de38(void)
         D_00F82A34 = 0;
         func_00106880(30);
         func_0024e468(60);
-        D_00F7073A = 2;
         D_00F829C4 = 0;
+        D_00F7073A = 2;
         if (D_00F829F8 > 0) D_00F829F8 = -1;
         for (;;) func_0024e468(1);
     }
