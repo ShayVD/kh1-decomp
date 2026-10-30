@@ -1,3 +1,4 @@
+/* Round 44 wwm2: score 460 -> 430 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* Round 42 wwm2: score 544 -> 460, port.py of the wm twin func_00f51d18 draft, with its ease tables mapped by hand (wm D_00FA5B38 / D_00FA5B60 = gb D_00F613B8 / D_00F613E0). Earlier header below. */
 /* NEAR MISS 567 words, score 544 (3008 vs 3040 bytes). Grid-cursor edit loop (sibling of func_00f31ea0): camera rotation on dir&0xF000, mode 0 = move cursor (x5C nibble bitfields clamped to sub xA6/xA8/xAA) / reset from x60 nibbles, mode 1 = menu actions (func_00f51258 confirm, func_00f24d00 layer step, fade D_00F6137C). Tried: World 8-aligned (u64 pad, gives the ld/sd bitfields), buf[20]+s16 sv[8] for the 256 frame, switch vs if on mode, dz and bitfield-order spellings. Left: dz comes out sra/andi instead of andi/sltu, D_00F56DC0 address-reg choices, and the mode-1 movement block ordering. */
 typedef struct {
