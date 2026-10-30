@@ -1,3 +1,4 @@
+/* Round 47 wwm2: score 152 -> 150, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 168 -> 152, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 176 -> 168, func_00f55190 and func_00f4e3f8 declared s32. Earlier header below. */
 /* wm.x func_00f58f98 near miss: 463 words differ, score 176 (ours 2032 bytes, original 1992). Port of gb func_00f31ea0 (nonmatchings/session141/gb) via tools/ovl/port.py, with the ease tables mapped by hand (D_00FA5D50 / D_00FA5D78 = gb D_00F615D0 / D_00F615F8); same diff, see the gb file for notes. */
@@ -66,18 +67,18 @@ void func_00f4b338(void *, s32);
 #define RGBAQ(r, g, b, a) ((u64)(r) | ((u64)(g) << 8) | ((u64)(b) << 16) | ((u64)(a) << 24) | ((u64)0x3F800000 << 32))
 
 void func_00f58f98(void) {
-    s32 unused[4];
-    s32 dy;
-    s32 rx;
-    s32 prev;
-    Pad *pad;
-    s32 dir;
-    s32 r;
-    u32 b;
-    s32 flag;
-    s32 dx;
-    s32 ry;
     s32 i;
+    s32 dir;
+    s32 rx;
+    s32 dx;
+    s32 r;
+    Pad *pad;
+    s32 ry;
+    s32 dy;
+    u32 b;
+    s32 unused[4];
+    s32 prev;
+    s32 flag;
     func_00f55190();
     D_00F9B540->x5E = D_00F9B540->x60;
     D_00FA5CE0 = 0;
@@ -146,20 +147,20 @@ void func_00f58f98(void) {
             } else if (b & 0x8000) {
                 if (D_00F9B540->x94 > 0) {
                     func_00f49430(2, 164, 0x80077328, 0);
-                    D_00F9B50C = 0;
                     D_00FA5D48 = 0;
+                    D_00F9B50C = 0;
                     D_00FA5CE0 = 1;
-                    flag = 1;
                     func_00f4e3f8(1);
                     func_00f58140();
+                    flag = 1;
                 }
             } else if (pad->x4 & 0x80) {
                 func_00f57db0(1);
-                flag = 1;
                 func_00f49430(1, D_00F9B540->x82, 0x801FA64C, 0x80077328);
-            } else if (pad->x4 & 0x20) {
                 flag = 1;
+            } else if (pad->x4 & 0x20) {
                 func_00f57db0(0);
+                flag = 1;
                 func_00f49430(1, D_00F9B540->x82, 0x801FA64C, 0x80077328);
             }
             func_00f59820(7, 0);
@@ -198,11 +199,11 @@ void func_00f58f98(void) {
                 func_00f49430(2, 164, 0x80077328, 0);
             }
         } else if (b & 0xC000) {
+            flag = 1;
             func_00f58300();
             func_00f4e3f8(0);
-            D_00FA5CE0 = 0;
-            flag = 1;
             D_00F9B50C = flag;
+            D_00FA5CE0 = 0;
             func_00f49430(1, D_00F9B540->x82, 0x801FA64C, 0x80077328);
         } else if (b & 0x80) {
             if (func_00f4cad0(D_00F9B540->x82)) {
@@ -223,9 +224,9 @@ void func_00f58f98(void) {
         }
         for (i = 0; i < 8; i++) {
             s32 k = func_00f58128(D_0108CE88 + i);
-            u8 b2 = D_00379F28[k][2];
-            u8 g = D_00379F28[k][1];
             u8 rr = D_00379F28[k][0];
+            u8 g = D_00379F28[k][1];
+            u8 b2 = D_00379F28[k][2];
             D_0108CE90[i] = RGBAQ(rr / 2, g / 2, b2 / 2, 102);
         }
     tail:
