@@ -811,3 +811,16 @@ hit the stub callee sits at a lower address than the function.
   inside the guard) hoists the literal out of the outer loop (18-22). f465a8 with D_00F9B2E0 in either read keeps
   two lui (16), and volatile still builds the full address (10). f43430's buf-loop moves do not change with
   count-down, do-while or for-init loops.
+- dkmovie f23ae8 (storeperm, task 3): 624 -> 620 from storeperm (f3DD9C, f3DD94, f3DD98 store order), then 620 -> 538
+  by dropping the 2nd-4th `m = D_00F28460;` copies: the target reloads the global in those blocks (valaudit's
+  repeated target-only lw D_00F28460), so they read D_00F28460-> directly, func_00f208b8(D_00F28460) included.
+  A storeperm rerun on the 538 version is in the round report.
+- wm f23018 85 -> 47 -> 19 (1332 vs 1336): the valaudit flag was a storage form. D_00FBAA78..8C are separate s32
+  globals, not an array, and the target stores the first two through pointer locals (pa = &D_00FBAA78 before
+  func_001bb7c8, pb = &D_00FBAA7C right before the stores). Then xc/x10 stored before `if (id == 0) id = 2;`,
+  x98 before xac (the target stores xac after the jal; ordcheck flags both moves, deliberate), p = *D_00F85160
+  before D_00F873F0 = 1, and D_00F878F0 cleared a, b, c, d. Left: one word of size and the lim[] store pair.
+- wm f23628 (71, not saved): the target makes one func_00f23018 call with a1 set 1/0 by if/else; ours makes two
+  (596 vs 568). Six single-call forms (`!= 0`, ternaries, `!!`, a local set by if/else or default-then-if) all
+  give 576 bytes and score 142, worse in the aligned diff too (83 vs 51 lines). A lead, not a fix: the shape is
+  right but the prologue and registers move.
