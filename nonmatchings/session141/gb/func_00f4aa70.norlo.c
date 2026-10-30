@@ -1,3 +1,4 @@
+/* Round 48 wwm2: score 660 -> 619 under the norlo build mode (tools/ovl/modescan.py). Earlier header below. */
 /* Round 48 wwm2: the hill3o order from 0657d46c (gb func_00f4aa70 near miss, score 660 -> 584, port of wm func_00f71b68 (wwm2 rou) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 551 was not valid. Restored the last valid statement order: score 660. Earlier header below. */
 /* score 660: gb port of wm f71b68 via portmap2; same remaining block-placement diffs. Round 25 draft wwm2. */
 typedef struct { s16 v[2]; } S2;
