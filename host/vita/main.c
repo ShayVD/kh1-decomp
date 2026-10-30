@@ -48,6 +48,13 @@
  *                             null server (silence)
  *       sndcore=N             pins the sound's tick thread and mixer to core N (0, 1 or 2); the default, -1, lets
  *                             them run on any core below the game's threads
+ *       wide=N                how the picture fills the 960 x 544 screen (docs/vita-build.md "Wide screen"): 1 (the
+ *                             default) a 16:9 view, hor+ (the 3D sees more at the sides, host/port/view.c), the HUD's
+ *                             gauges and command menu at the screen's edges, menus and text in the centred 4:3
+ *                             canvas; needs the GPU picture (else 2); 2 the 4:3 picture stretched to the whole
+ *                             screen; 0 the 4:3 picture in black bars, as before (widescreen=N: the same)
+ *       strip=1               keeps the status strip (the alive square, the read / frame bars) over a full-screen
+ *                             picture; by default it shows there only while no picture is
  *   ux0:data/kh1/kh1.log      stdout and stderr
  *
  * Not part of the PS2 build. */
@@ -81,6 +88,8 @@ int kh1_spu2_voices_on(void);
 #include "platform/cmdbuf.h"
 #include "platform/vu1.h"
 #include "platform/costack.h"
+#include "platform/view.h"
+void kh1_null_hud_wide(s32 margin16); /* host/null/plat_null.c: the HUD anchors, full-screen stretch, scissor rule */
 
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
@@ -116,6 +125,8 @@ static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
 static int late_wait;    /* session 145: config.txt's latewait= */
 #define CATCH_UP 4 /* session 149: the vblanks late frames may still make up (kh1_host_vblank) */
 static int use_recq = 1; /* session 146: config.txt's recq= */
+static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
+static int strip_always;  /* config.txt's strip= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
  * out) of each 2 s */
@@ -532,6 +543,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
         else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
         else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
+        else if (strcmp(line, "wide") == 0 || strcmp(line, "widescreen") == 0) wide = atoi(v);
+        else if (strcmp(line, "strip") == 0) strip_always = atoi(v);
     }
     fclose(f);
 }
@@ -638,6 +651,16 @@ int main(int argc, char **argv) {
      * pixels for the picture (no flat sprites); else the software picture as before */
     gpu_on = use_gpu && kh1_vita_gxm_init() == 0;
     vlog("kh1-vita: picture: %s\n", gpu_on ? "the GPU (gxm.c)" : "the GS model's, by the CPU");
+    /* the wide screen: the 16:9 view needs the GPU's targets (the GS model's buffers stay the PS2's 512), so without
+     * the GPU it falls back to the stretch; set before the game's first frame and the GS worker */
+    if (wide == 1 && !gpu_on) wide = 2;
+    if (wide == 1) {
+        kh1_view_init(960.0f / 544.0f);
+        kh1_null_hud_wide(kh1_view_side16);
+    }
+    kh1_vita_display_mode(wide == 1 || wide == 2 ? wide : 0, strip_always);
+    vlog("kh1-vita: screen: %s\n", wide == 1 ? "16:9, the wide view (wide=1)" : wide == 2 ? "4:3 stretched to 16:9 (wide=2)"
+                                                                               : "4:3 in black bars (wide=0)");
     if (gpu_on) {
         kh1_pipes_start();
         kh1_gs_prim_hook = timed_prim;

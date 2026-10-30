@@ -1072,6 +1072,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                              !s || !s->mem ? "not made" : "the scene's own target");
                     break;
                 }
+                if (c->wtex && s->w <= s->stride) w = s->w; /* wide screen: its whole width, as cmdbuf.c took its s */
                 if (sceGxmTextureInitLinearStrided(&t, s->mem, SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR, w, h, s->stride * 4) < 0) {
                     snprintf(tex_why, sizeof tex_why, "target %u as a %u x %u texture (stride %u): refused", c->src, w, h,
                              s->stride);

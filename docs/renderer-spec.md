@@ -2958,7 +2958,7 @@ bars of 117 / 118 pixels.
    and 3D (they share the target and the keys) stays as it is. The glyph and window-font textures are
    small (18-pixel cells, a 256 x 256 sheet): bilinear at 1.42 is soft but readable; a later step can
    swap in a higher-resolution font sheet keyed by the same cells.
-2. **Option: a wide 3D view with the HUD anchored** (after the real-disc run). The 3D gets a hor+
+2. **Option: a wide 3D view with the HUD anchored** (after the real-disc run; *on the Vita since 2026-10-30, config.txt `wide=1`, docs/vita-build.md "Wide screen"*). The 3D gets a hor+
    projection over the whole 960 x 544. *Corrected in session 90 (§5.4):* the projection
    (`D_002E26C0`, `D_002BBF60` x `D_002BC020`) stays as it is (hor+ keeps the vertical view, and the wide
    view, GS x 1709-2387, is already inside renderer A's guard box `D_002BC020`); **no CPU cull reads
