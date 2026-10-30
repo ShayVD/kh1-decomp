@@ -1,3 +1,4 @@
+/* Round 45 wwm2: score 130 -> 84, hill3o statement order under this build mode. Earlier header below. */
 /* Round 45 wwm2: score 132 -> 130 under the nofill build mode (tools/ovl/modescan.py). Earlier header below. */
 /* dkmovie.x func_00f23750: near miss (session 141, wwm1), 824 vs 808 bytes (175 words shown, mostly shift): structure complete; the inner tbl[] search is a goto loop (no alignment nop in the original); left: tbl local is spilled to sp[0] in the original while ours spills cur, and the inner loop computes idx*4 once before its label. */
 #include "ovl.h"
@@ -38,13 +39,13 @@ void func_00f28208(MovieWork *);
 
 void func_00f23750(void) {
     s32 n, i, k, lim;
+    s32 *tbl;
     s32 cur, len, rem, idx, size;
     u8 *off;
-    s32 *tbl;
-    D_00F28460->f3DF52 = 0;
-    n = D_00F28460->f3DF50;
     len = 0;
     cur = 0;
+    D_00F28460->f3DF52 = 0;
+    n = D_00F28460->f3DF50;
     for (i = 0; i < n; i++) {
         D_00F28460->st[i] = 0;
         D_00F28460->ptr[i] = 0;
@@ -52,9 +53,9 @@ void func_00f23750(void) {
     }
     off = 0;
     idx = 0;
-    rem = 0;
     func_00f26d30(&D_00F28460->f3DDD4);
     func_00f279f8(D_00F28460->f3DD20, D_00F28460->f3DD24);
+    rem = 0;
     D_00F284A0 = D_00F28460->f3DF1C;
     D_00F28460->f3DF67 = 0;
     tbl = D_00F28460->tbl;
@@ -70,16 +71,16 @@ void func_00f23750(void) {
             lim = D_00F28460->f3DF0C - 2048;
         }
         k = idx;
-    again:
         size = tbl[k] - (tbl[idx] + rem);
+        goto again;
         if (size > lim) goto done;
         if (D_00F28460->f3DF1C < k) goto done;
-        k++;
-        goto again;
-    done:
         size = tbl[k - 1] - (tbl[idx] + rem);
-        off = D_00F28460->buf[cur];
+        k++;
         idx = k - 2;
+    done:
+    again:
+        off = D_00F28460->buf[cur];
         if (rem == 0) {
             D_00F28460->ptr[cur] = off;
         } else {
@@ -95,9 +96,9 @@ void func_00f23750(void) {
         } else {
             func_00f28198(off, len);
         }
+        rem = len - size;
         D_00F28460->a[cur] = idx++;
         D_00F28460->st[cur] = 2;
-        rem = len - size;
         if (!((u32)idx < (u32)D_00F28460->f3DF1C)) {
             break;
         }
