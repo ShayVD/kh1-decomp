@@ -211,13 +211,17 @@ void func_00f6f2a8(void)
                 func_0020be10(16);
                 w = func_00f6b6a0(6, 8, 2, 4, 0, 15, 0x3A, 4, 0xA0, 0xD8, 0, 0, 0, 0, 0, 0, 0, 256, D_00FB4A70);
                 func_0024e468(D_00FB4A70);
-                while (!(D_002C5AD0.x8 & 0x6000)) {
+                for (;;) {
+                    t = D_002C5AD0.x8;
+                    if (t & 0x6000) {
+                        if (t & 0x2000) {
+                            func_0011d768(2);
+                            break;
+                        }
+                        func_0011d768(3);
+                        break;
+                    }
                     func_0024e468(1);
-                }
-                if (!(D_002C5AD0.x8 & 0x2000)) {
-                    func_0011d768(3);
-                } else {
-                    func_0011d768(2);
                 }
                 func_0020bda8(16);
                 func_00f6b5d0(6, 0, D_00FB4A70);
