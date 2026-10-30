@@ -1,3 +1,4 @@
+/* Round 27 wwm1: score 84 -> 26 at exact size (976). Value bug found by valaudit: func_00f29aa0 takes the packet-pointer cell (u64 **, as in f23018), and the draft passed *D_00F85160. Also D_002C5958 is u32 (srl, as in f33270/f3e988), and s.a for the D_00F850E0 calls is read through ssf() (direct D_00F86500[..].s.a folded +4 into the symbol). Left: v0/v1 for the 15032 index and a1/v1 for a in the else test (bne vs bnel). Earlier header below. */
 /* Round 44 wwm2: score 104 -> 84 under the norlo build mode (r44/modescan.py). Earlier header below. */
 /* 166 words, score 104 (1016 vs 976; was 205 words, score 118). Round 32 wwm2: a CONTEXT_ONLY func_00f42ce0 (ctx2) took it to 170, hill2 (D_00F9B1E0 = 1 before D_00F9B1DC = 1.0f) to 166. Earlier header: 205 words left (round 12): main world-map loop. Target hoists the plain D_00F86500 base and +128/+1216/+192 offsets into s5..s7 and keeps a/b on the stack. The ssf() helper for the x branch helps (from 228); a local W pointer or wb() helper for the D_00F850E0 accesses is worse. */
 #include "ovl.h"
@@ -7,12 +8,13 @@ typedef struct { s32 w0; s32 w4; s32 w8; } J;
 extern W D_00F86500[];
 extern f32 D_00F9B1DC, D_00F9B1D8, D_00F9B1D0, D_00F9B1D4;
 extern s32 D_00F9B1E0, D_00F850BC, D_00F850C0, D_00F9B2F0, D_00F87028, D_00F850E0;
-extern s32 D_00F9B1C8, D_00F87038, D_00F850F4, D_00F850AC, D_002C5958, D_00F9B1CC, D_00F87024;
+extern u32 D_002C5958;
+extern s32 D_00F9B1C8, D_00F87038, D_00F850F4, D_00F850AC, D_00F9B1CC, D_00F87024;
 extern u64 **D_00F85160;
 J *func_001ba488(s32);
 CONTEXT_ONLY void func_00f42ce0(s32 a0) {}
 void func_00f294a0(s32, s32, s32);
-void func_00f29aa0(s32, u64 *, s32, f32 (*)[4], f32 (*)[4], f32 (*)[4], f32);
+void func_00f29aa0(s32, u64 **, s32, f32 (*)[4], f32 (*)[4], f32 (*)[4], f32);
 s32 func_00f40c98(void);
 s32 func_00f66ac8(u64 *);
 s32 func_00f66ae0(u64 *);
@@ -59,15 +61,15 @@ void func_00f42f20(void) {
             a = 0;
             s = ssf(x);
             func_00f294a0(15000, 10752, s->b);
-            func_00f29aa0(15001, *D_00F85160, s->a, D_00F86500[x].m3[0], D_00F86500[x].m4[0], D_00F86500[x].m2, 1.0f);
+            func_00f29aa0(15001, D_00F85160, s->a, D_00F86500[x].m3[0], D_00F86500[x].m4[0], D_00F86500[x].m2, 1.0f);
             func_00f294a0(15032, 10752, D_00F86500[D_00F850E0].s.b);
-            func_00f29aa0(15033, *D_00F85160, D_00F86500[D_00F850E0].s.a, D_00F86500[D_00F850E0].m3[0], D_00F86500[D_00F850E0].m4[0], D_00F86500[D_00F850E0].m2, D_00F9B1D8);
+            func_00f29aa0(15033, D_00F85160, ssf(D_00F850E0)->a, D_00F86500[D_00F850E0].m3[0], D_00F86500[D_00F850E0].m4[0], D_00F86500[D_00F850E0].m2, D_00F9B1D8);
         } else {
             if (a == 0 || D_00F850BC != 0) {
                 func_00f294a0(15000, 10752, D_00F86500[D_00F850E0].s.b);
             }
             a = 1;
-            func_00f29aa0(15001, *D_00F85160, D_00F86500[D_00F850E0].s.a, D_00F86500[D_00F850E0].m3[0], D_00F86500[D_00F850E0].m4[0], D_00F86500[D_00F850E0].m2, 1.0f);
+            func_00f29aa0(15001, D_00F85160, ssf(D_00F850E0)->a, D_00F86500[D_00F850E0].m3[0], D_00F86500[D_00F850E0].m4[0], D_00F86500[D_00F850E0].m2, 1.0f);
         }
         p = func_00f66b78(func_00f66ac8(*D_00F85160));
         p[0] = 0x31000070;
