@@ -1,8 +1,7 @@
+/* drafttwins.py: score 174 -> 172, port.py of the gb twin func_00f333f8 draft. Earlier header below. */
 /* Round 44 wwm2: score 196 -> 174. The target's leftover li 30; beqzl; break 7 next to an i/2 shift is what gcc 2.96 leaves for a division whose result is dead, inside an inline helper that gets the divisor 30 as a parameter: the trap_if survives flow, the div does not (r44/t.c f2 reproduces it). Here the helper is part5a4f0(t, n) { s32 q = t / n; return t * 15 / 30; }, used in the else arm. Using it in both arms gives both checks but scores 196 because of setup differences elsewhere. The real helper is probably something more natural that computes and drops t / n. */
-/* Round 36 (wwm2): wm.x func_00f5a4f0 near miss: score 220 -> 196 (280 -> 276 words, 1360 vs 1392); statement order from the score-ranked dependency-safe hill3 (r35/hill3.py, 120 s, seed 363). Earlier header below. */
-/* wm.x func_00f5a4f0 near miss: 280 words differ, score 220 (ours 1360 bytes, original 1392). Port of gb func_00f333f8 (nonmatchings/session141/gb) via tools/ovl/port.py, with the same diff; see the gb file for notes. */
 typedef struct { OvlVec v[4]; OvlVec pos; OvlVec rot; } GbXf;
-typedef struct { u8 pad[4]; u32 ax : 4; u32 ay : 4; u32 az : 4; u32 ar : 4; u32 bx : 4; u32 by : 4; u32 bz : 4; u32 br : 4; } Box;
+typedef struct { u8 pad[4]; u16 ax : 4; u32 ay : 4; u32 az : 4; u32 ar : 4; u32 bx : 4; u32 by : 4; u32 bz : 4; u32 br : 4; } Box;
 extern u8 *D_00F9B540;
 extern Box *D_00F9B544;
 extern u8 D_00F9B548[];
@@ -49,36 +48,36 @@ void func_00f5a4f0(s32 arg) {
         D_0108D120.v[0][2] += *(u16 *)(D_00F9B540 + 166) * 100;
     }
     xf = D_0108D120;
-    v[1][2] = (s32)D_00F9B544->bz;
+    v[2][1] = *(s32 *)(D_00F9B540 + 4312) * 3.1415926f * 0.00048828125f;
+    v[4][3] = 0.0f;
     v[0][0] = (s32)D_00F9B544->ax;
-    v[2][3] = 0.0f;
-    v[4][1] = 0.0f;
-    v[0][1] = (s32)D_00F9B544->ay;
-    v[1][0] = (s32)D_00F9B544->bx;
-    v[3][3] = 0.0f;
-    v[1][1] = (s32)D_00F9B544->by;
+    v[0][2] = (s32)D_00F9B544->az;
+    v[1][2] = (s32)D_00F9B544->bz;
+    v[2][0] = *(s32 *)(D_00F9B540 + 4308) * 3.1415926f * 0.00048828125f;
     v[3][1] = ((u16)(*(u64 *)(D_00F9B540 + 88) >> 36) & 0xF) * 200.0f;
     v[2][2] = 0.0f;
-    v[2][1] = *(s32 *)(D_00F9B540 + 4312) * 3.1415926f * 0.00048828125f;
+    v[2][3] = 0.0f;
+    v[3][3] = 0.0f;
     v[4][0] = 0.0f;
-    v[2][0] = *(s32 *)(D_00F9B540 + 4308) * 3.1415926f * 0.00048828125f;
-    v[3][0] = -(*(u16 *)(D_00F9B540 + 166) * 200.0f) * 0.5f;
-    v[0][2] = (s32)D_00F9B544->az;
-    v[4][2] = *(f32 *)(D_00F9B540 + 136);
-    v[4][3] = 0.0f;
+    v[1][0] = (s32)D_00F9B544->bx;
+    v[1][1] = (s32)D_00F9B544->by;
     v[3][2] = -(*(u16 *)(D_00F9B540 + 170) * 200.0f) * 0.5f;
+    v[0][1] = (s32)D_00F9B544->ay;
+    v[4][1] = 0.0f;
+    v[4][2] = *(f32 *)(D_00F9B540 + 136);
+    v[3][0] = -(*(u16 *)(D_00F9B540 + 166) * 200.0f) * 0.5f;
+    D_0108D120.v[1][0] = 0.0f;
+    D_0108D120.v[1][1] = 0.0f;
     D_0108D120.v[1][2] = 1.0f;
     D_0108D120.v[2][1] = 1.0f;
-    D_0108D120.v[2][3] = 1.0f;
-    D_0108D120.v[1][0] = 0.0f;
-    D_0108D120.v[1][3] = 1.0f;
-    D_0108D120.v[1][1] = 0.0f;
-    D_0108D120.v[2][2] = 0.0f;
     D_0108D120.v[2][0] = 0.0f;
-    D_0108D120.v[3][1] = 0.0f;
+    D_0108D120.v[2][3] = 1.0f;
     D_0108D120.v[3][3] = 0.0f;
+    D_0108D120.v[2][2] = 0.0f;
     D_0108D120.v[3][0] = 0.0f;
+    D_0108D120.v[3][1] = 0.0f;
     D_0108D120.v[3][2] = 0.0f;
+    D_0108D120.v[1][3] = 1.0f;
     for (i = 0; i < 3; i++) {
         ra[i] = 0.0f;
         rb[i] = 0.0f;
@@ -102,7 +101,7 @@ void func_00f5a4f0(s32 arg) {
             func_001be988(D_0108D120.rot, v[2], xf.rot, i, 30);
             func_001be988(D_0108D120.pos, v[3], xf.pos, i, 30);
             func_001be988(D_0108D120.v[0], v[4], xf.v[0], i, 30);
-            k = base + i * 15 / 30;
+            k = base + part5a4f0(i, 30);
             func_00f59820(5, k);
         } else {
             func_001be988(D_0108D120.rot, xf.rot, v[2], i, 30);
