@@ -58,6 +58,11 @@ with `gputime=1`, and the frame rate without it; `present=0` if the picture flic
 the game thread (expected to be the limit at ~18-20 pictures/s). Native P0 was done the same night
 (native-renderer.md "Stage 3 first", `renderer=native`, host-checked only): the Vita run with it on is the other
 thing to log; P13 is next.
+Later that night, also host-checked only: native P4, P11 and P10 on the GPU with renderer=native (`natp0=0`,
+`natp11=0`, `natp10=0` turn them off one by one), and P12 as hand-written NEON on every path (vita-build.md "P12 as
+hand-written C"; `vu1nat=2` checks every NEON program against its translation while it runs, so a Vita run with
+it is a cheap first check). What is left on the game thread's VU1 side with renderer=native: P13 (the biggest),
+then P12, P2 and P1.
 
 ## Where we stopped before (end of session 140, 2026-10-27)
 

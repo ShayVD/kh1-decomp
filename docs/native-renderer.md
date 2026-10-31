@@ -203,6 +203,9 @@ Checked on the host (as for P11): 11 of 14 Dive pictures identical to the P11 bu
 46, 72 and 98 pixels along the shadows' edges. In the qemu-arm timing P10 was 6.6 s of ~75 s of VU1 run time.
 Not checked on a Vita.
 
+Host instructions with everything above native (P0, P4, P10, P11, P18; callgrind over frames 5000-5060, one thread,
+trace 5, as for P0): 1.75 G, against 2.09 G with P0 alone native and 3.69 G on the GS path.
+
 ## The stages after
 
 2. **P13 (skinned, flat, cull)** (next: P0 went first, above): the same flow with the bone palette: op 0 with w = 1 marks the palette record,
