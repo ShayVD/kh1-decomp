@@ -73,6 +73,16 @@ table above, plus the stage's own host checks. Expected gains are per 2.4 s wind
   GPU thread and the sound threads sharing a core shows as the GPU thread's busy time above its run time and its
   preemptions.
 
+**The host's split (2026-10-31, the stage 5 / 6 thread; callgrind, game thread only, renderer=native, GSQ / GPUQ / RECQ
+on, en.iso, dive_en.txt, the host's trace prints and per-send GS syncs removed)**: frames 5000-5060, ~1.0 G
+instructions: P12's translated program ~730 M, P2 ~50 M, nd_0 62 M, unpack 55 M, the rest of the walk (vif_word, the
+skim, the ring's put, dma_walk) ~25 M. Frames 7000-7060, ~0.33 G: nd_13 113 M (11.5 K instructions a run, ~270 a
+vertex, in line with the Vita's ~1.3 us a vertex), unpack and vif1_data ~40 M, the rest of the walk ~15 M. So with the
+native programs on, the walk's own tag / VIF / ring work is under 10 % of the game thread; the costs are the unpack
+into VU memory, the nd_* parse and P12. On the Vita P12 runs as hand-written NEON (vita-build.md "P12 as
+hand-written C"), so the host's translated count overstates it there: the Vita's `vu1 programs:` line decides
+whether stage 2 (P12 on the GPU) moves up.
+
 **The run**: the stage 0 VPK, config.txt `pad=ux0:data/kh1/dive_en.txt`, `renderer=native`, `latewait=0`,
 `frames=8000`, the rest default (sndprio -4, recframe 1); then the same with `gputime=1`. Frames 5000-8000 of the
 first log fill the table at the top of this file.
