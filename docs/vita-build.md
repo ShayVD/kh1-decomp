@@ -1852,6 +1852,67 @@ likely limit. That is an estimate from the host's counts and the old log, not a 
 **For the next Vita run**: `gputime=1` once (the split by target kind, and how much is in 1-2 draw scenes), and
 one run without it for the frame rate; if the picture flickers or shows an old frame, `present=0`.
 
+## The frame op on the GPU thread, and the native payload's copy (2026-10-31, step 2 of gpu-cut/plan-30fps.md)
+
+Shay's renderer=native Vita log (PR 194's build, the Dive, frames 5000-8000): the GS worker was busy ~2.2 s of every
+2.4 s, the limit. Its op times by function (the log's `gs worker ops:` addresses, mapped with that build's symbols:
+a local build of the same commit sits 0x5d001 below them) were, per window: the frame op `w_gpu_frame` 350-590 ms,
+`w_native` 160-520 ms, `w_block` 360-460, `w_load_big` 280, `w_load` 200-230, `w_qwords` 125-230, `w_kick` 45-700
+(GS path). Of the frame op, "the passes" (pipes.c `frame_begin`: kh1_cmd_frame, its log, and a GXM call recording)
+took 200-500 ms, the waits for the recording 30-250 ms.
+
+**The frame op is a recording op now** (host/null/pipes.c `rq_frame` / `r_frame`, config.txt `recframe=1`, the
+default; `KH1_HOST_RECFRAME` on the host). With the recording on the GPU frame's thread (recq=1), the worker puts one
+more op on that queue at the frame's end; on the GPU thread it runs `frame_begin`, then the frame's GPU work (the
+hook) straight on the recorder, then the recorder's reset. Nothing else writes the recorder while it runs, so the
+commands, passes and targets are no longer copied. The worker keeps what it owns:
+
+- It copies GS memory (gsmem.h's snapshot) and the texels and palettes the frame's commands name. It no longer reads
+  the recorder's commands for that list: it marks each texture cache entry it hands on decoded and each palette slot
+  it hands on filled (`fr_tex`, `fr_pal`), the same set the commands name.
+- It waits for the last frame op only when it must change those copies (the frame wrote GS memory, decoded or filled
+  an entry); a frame that did none (the Dive's every other frame) puts its op and goes on. It never waits for the
+  frame's recording.
+- The caches' frame counters (`kh1_palcache_frame`, `kh1_texcache_frame`) stay on the worker.
+- gsqueue.h gains `kh1_recq_pos` / `_wait` / `_flush`; the frame op is published at once and never joined.
+
+`recframe=0` keeps the old order (the passes on the worker, then the hook posted to the GPU thread from a copy).
+On a copy failure (no memory) it falls back to the worker for good, as before.
+
+**The Vita no longer counts GXM calls on the worker** (`kh1_pipes_gxm_count = 0`): `frame_begin` recorded the
+frame's GXM calls (gxmrec.c) for the host's report only, and gxm.c records them again for the real calls. The host
+keeps the count (its report prints it).
+
+**The native payload's staging copy moved to the GPU thread** (pipes.c `r_nat_open` / `r_nat_rec` / `r_nat_end`):
+the worker copied every record of a native run into `nat_op`, then `nat_op` into the queue, two passes over each
+payload on the busiest core (the Dive's native runs are ~25 MB a window, estimated). Now it puts the op's start
+(header and matrices), each record (joined into one queue op while unpublished) and the end; the GPU thread
+assembles `nat_op` exactly as before and calls r_native, so the draws are the same. The worker still counts the
+op's size (`nat_rq`), so an op ends where it did.
+
+The watchdog line `gs worker's frame op:` gains `N the passes on the GPU thread` (kh1_pipes_frame_us[6]); with
+recframe=1 "the passes" and "waiting for the recording" on the worker should read ~0.
+
+### Checked (host only)
+
+- The Dive on the English disc (dive_en.txt, 7,000 frames, `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50
+  KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1`, the gxmcheck binary), recframe 0 against 1,
+  on the GS path and with `KH1_HOST_NATIVE=1`: all 140 GS digests and 280 GPU target hashes identical. The host's
+  clock (`KH1_HOST_CLOCK=1`, native): the worker's "passes" 168 ms -> 2 ms, its copies 100 -> 54 ms; the passes on
+  the GPU thread 174 ms.
+- The w_native change: the same native run (7,000 frames) gives the same 140 GS digests and 280 GPU target hashes as
+  both runs above.
+- ARM (qemu-arm, `tools/vita/build.py --linux-arm --gxm`, native, before the w_native change): recframe 0 and 1 give
+  the same digests and target hashes to frame 800 only (the title: qemu runs ~20 frames a minute with the GPU
+  stand-in, so the Dive was out of reach in the session). Its memory order is the queue's own (the op is published
+  after the copies; the worker's wait reads the queue's tail).
+- `make test` passes (kh1.elf byte-identical); the Vita build compiles (out/vita/kh1-decomp.vpk).
+
+**Not checked**: anything on a Vita. Expected there: the worker loses the passes (200-500 ms a window), most of the
+recording wait (30-250 ms) and part of w_native (one of its two copies), so roughly 0.4-0.8 s of its ~2.2 s; the GPU
+thread gains the passes less the GXM count (it had ~0.8 s free). If the GPU thread becomes the limit, `recframe=0`
+gives the old split.
+
 ## What next, in order
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,

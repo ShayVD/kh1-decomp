@@ -449,6 +449,18 @@ void kh1_recq_sync(void) {
     if (kh1_recq_on) q_wait_tail(&recq, recq.wpos);
 }
 
+/* 2026-10-31: the queue's position after the ops put so far, a wait until the ops before a position have run, and
+ * the ops put so far handed to the thread (pipes.c's frame op on the GPU thread) */
+u32 kh1_recq_pos(void) { return recq.wpos; }
+
+void kh1_recq_wait(u32 pos) {
+    if (kh1_recq_on) q_wait_tail(&recq, pos);
+}
+
+void kh1_recq_flush(void) {
+    if (kh1_recq_on) q_publish(&recq);
+}
+
 /* session 149: the queues' state, for the Vita's watchdog when no frame has ended in its window (3d-zq froze at a
  * scene change with the game thread's time all "the rest": a wait that never ends is counted only when it does) */
 int snprintf(char *, __SIZE_TYPE__, const char *, ...);

@@ -63,6 +63,12 @@ extern int kh1_recq_on;
 int kh1_recq_start(u32 bytes);
 void kh1_recq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw);
 void kh1_recq_sync(void);
+/* 2026-10-31 (pipes.c's frame op as a recording op): the queue's position after the ops put so far, a wait until
+ * the thread has run every op before a position, and the ops put so far handed to the thread (an op put after a
+ * flush never joins one before it) */
+u32 kh1_recq_pos(void);
+void kh1_recq_wait(u32 pos);
+void kh1_recq_flush(void);
 /* session 149: the three queues' positions, waits and sleeps as a line (the Vita's watchdog, at a stall) */
 void kh1_gsq_state(char *b, int n);
 /* microseconds the thread ran the queue's ops, microseconds the producer waited for it (room, syncs), the

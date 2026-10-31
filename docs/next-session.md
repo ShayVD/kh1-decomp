@@ -48,6 +48,14 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
+## Latest (2026-10-31, later): the frame op off the GS worker
+
+vita-build.md "The frame op on the GPU thread, and the native payload's copy": with recq=1 the GS worker's frame op
+(kh1_cmd_frame's passes and the frame's GPU work) is a recording op on the GPU thread (`recframe=1`, the default;
+`recframe=0` the old order), the Vita no longer counts GXM calls on the worker, and the native payload's staging copy
+is the GPU thread's. Host-checked only (Dive hashes identical). **First thing next time**: the Vita log's `gs worker`,
+`gpu thread` and `gs worker's frame op` lines against Shay's 2026-10-31 log (worker ~2.2 s busy per 2.4 s).
+
 ## After the 30 fps steps: docs/native-plan.md (2026-10-31)
 
 Once the three current steps (P13 on the GPU, the GS worker's frame op and native parse to the GPU thread, the
