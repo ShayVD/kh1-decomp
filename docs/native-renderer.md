@@ -221,13 +221,62 @@ Not checked on a Vita.
 Host instructions with everything above native (P0, P4, P10, P11, P18; callgrind over frames 5000-5060, one thread,
 trace 5, as for P0): 1.75 G, against 2.09 G with P0 alone native and 3.69 G on the GS path.
 
+### P13 too: the skinned models (2026-10-31, host only)
+
+P13 (renderer B's skinned, flat-coloured, back-face-culled program, and the
+biggest VU1 program on the Vita's game thread in the Dive: 542 ms per 2.4 s in the floor-fix log; in dive_en.txt's
+pictures it draws Sora in the stretches around frames 3000-4000 and 6700-7500) goes over in P18's
+payload as program 13 (vu1_draw.h `nd_13`, from 006). `natp13=0` / `KH1_HOST_NATP13=0` keeps it on the VU.
+
+- **The stream** is P18's plus the skinning records (renderer-spec 2.3 "g & 1"): op 0 with w 1 sets the palette's base
+  (vi06), w 2 or more loads nothing, op 2 starts the index stream (vi08 / vi09: the word to read next, which carries
+  across groups and runs). A vertex is (-, -, -, k), k pre-weighted positions and STQ; each position's matrix is the
+  next index (0 / 1 / 2 a slot, 0x100 + j the palette's entry j, which the program loads into slot 2, so a later
+  index 2 means that entry). nd_13 walks it the way nat_13 does, on copies of the slots, and writes back what the
+  run leaves: the slots, vi06 / vi08 / vi09, I (2046) and the idle PC.
+- **One bone** (69 % of the Dive's P13 vertices): the position (xyz / weight) and its matrix go to the GPU, as P18's.
+- **More than one bone** (31 %): summed on the CPU in plain float (c = sum M_i x p_i, the clip-space point the
+  program divides), then handed over in its first bone's space: v = M_a^-1 x c (M_a^-1 in double, made once per
+  matrix and run), position v.xyz / v.w with matrix a. The GPU's M_a x (v / v.w, 1) is c / v.w, the same screen
+  place; v.w is the weights' sum (1) because every bone matrix of a model shares its projection, so the GPU's w and
+  the perspective-correct STQ are the program's too.
+- **The ADC**: P13's back-face rule is P18's (the parity from the record's w), so `kh1_nat_tris` lists it and the
+  GPU's cull mode does the rest. Its guard band (a vertex off x / y 0..4092 or z / 4096 off 0..4092 drops the
+  triangles that end at it) is the GPU's clipping instead: pipes.c draws program 13 as P11 (mi's bit 7, KH1_NAT_LIN, z
+  not clamped).
+- **Joined draws** (pipes.c `nat_hook`): a P13 run whose colour, F and cull match the open P13 op's joins it, its
+  matrices appended (up to 32 in all) and its vertices' indices moved past the op's; a new PRIM, any state change or
+  a full op still ends it. Without this each run was its own draw: the Dive's pictures went from 52 / 139 draws (GS
+  path) to 264 / 350; joined, 94 / 180, with identical pictures.
+- **Falls back to the program** for an influence count of 0 or over 8, more than 32 matrices, a matrix with no
+  inverse, v.w not positive or a full buffer (none seen in the Dive).
+
+Checked on the host:
+
+- `KH1_HOST_NATCHECK=1` now covers P13 (`nd_13_check`): the program runs, and each vertex's screen position from the
+  payload (its matrix x its position, divided) is compared with the program's XYZF2, and each triangle's ADC with the
+  cull rule on the program's own 12.4 positions. To Dive frame 8000 (dive_en.txt, en.iso): 196,000 runs, 8,685,473
+  vertices (2,760,075 summed on the CPU); every drawn vertex within 1.01 sixteenths of a pixel of the program's
+  (the FTOI4 truncation), Z within one step; triangles drawn by both 2,541,733, by neither 2,207,319, by the program
+  only 5,314 (slivers: cross products of 1-27 in 12.4 units, whose sign the rounding decides), by the native lists only
+  6,743 (off the guard band: the GPU clips them). The ARM build under qemu-arm prints the same counts.
+- Pictures (gxmcheck, renderer=native, a picture every 250 frames to 7499): the 22 without P13 are identical with
+  natp13 on and off; the 8 with it (frames 3249-3999 and 6749-7499, Sora) differ in 721-8,489 pixels, 17-125 of them
+  by more than 32 levels, scattered along edges (positions no longer truncated to 12.4). By eye the same.
+- Host instructions (callgrind over frames 7000-7060, one thread, trace 5, renderer=native, Sora on P13): 2.35 G with
+  natp13=0, 1.04 G with it on. P13's translated program was 0.49 G of that and its share of fin / fo ~0.4 G; nd_13
+  costs 0.10 G. On the Vita P13 already runs as hand-written NEON (vu1_nat.h nat_13, ~40 % fewer instructions than
+  the translation), so its saving there is smaller than the host's; the GS worker's kick decode for it goes too.
+
+Not checked on a Vita: the frame rate, and the GPU's cost of one draw a P13 run (each with up to 32 matrices) where
+the GS path batched them; the Vita log's `native renderer:` line now also counts P13's vertices and the summed ones.
+If Sora looks wrong with renderer=native, `natp13=0` is the switch to try first.
+
 ## The stages after
 
-2. **P13 (skinned, flat, cull)** (next: P0 went first, above): the same flow with the bone palette: op 0 with w = 1 marks the palette record,
-   op 2 the bone index lists, each vertex a weighted sum of up to 4 bones (renderer-spec 2.3, "g & 1"). The
-   palette goes to `u_m` (more rows, or a second uniform buffer: GXM's vertex default buffer allows 4 KiB, so 64
-   matrices); the vertex carries its bone indices and weights (`p_i = xyz_i / w_i`). Late in the Dive this is
-   the biggest single program (~740 ms per 2 s).
+2. **P13 (skinned, flat, cull)**: done (above, "P13 too"). Not as planned here (the palette in `u_m` and the bone
+   indices and weights in the vertex): one-bone vertices go to the GPU as P18's, the rest are summed on the CPU and
+   handed over in their first bone's space, so the vertex format and shaders are unchanged.
 3. **P0 (map strips)**: renderer A's flags in the vertex w (strip restart, winding) become the triangle list, and
    its clipping becomes the GPU's. Over half of the Dive's VU1 time. The map's chains do not change between
    frames; once the CPU side parses a chain the triangle list can be cached by the chain's address and the

@@ -436,6 +436,7 @@ static const u32 *nat_hdr, *nat_mats;
  * one op (a map object's batches), so the op can stay open past its payload */
 static u32 nat_hs[8], nat_ms[KH1_NAT_MATS * 16];
 static u32 nat_rq, nat_nrec, nat_prim, nat_gen;
+static u32 nat_moff; /* 2026-10-31: the open op's matrix index of the current run's first matrix (a joined P13 run's) */
 static int nat_open;
 static KH1GpuVert nat_v[KH1_NAT_VERTS];
 static f32 nat_m[KH1_NAT_MATS * 16];
@@ -457,9 +458,10 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
                 kh1_pipes_nat_tris += n / 3;
             }
         } else if (!d[6]) { /* not every vertex ADC */
-            u32 lin = (d[0] & 0xFF) == 11 ? KH1_NAT_LIN : 0, i;
+            u32 lin = (d[0] & 0xFF) == 11 || (d[0] & 0xFF) == 13 ? KH1_NAT_LIN : 0, i;
             n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
-            /* 2026-10-31: P11 with z not clamped, so the GPU clips where P11 dropped what crossed its near plane */
+            /* 2026-10-31: P11 (and P13) with z not clamped, so the GPU clips where P11 dropped what crossed its near plane
+             * (P13: what left its guard band) */
             if (lin) for (i = 0; i < n; i++) nat_v[i].pad[0] |= (u8)KH1_NAT_LIN;
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
             kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | lin);
@@ -501,8 +503,13 @@ static void nat_rec(u32 prim, const u32 *r) {
         nat_gen = kh1_gs_gen;
         nat_rq = 2;
         nat_nrec = 0;
+        nat_moff = 0;
     }
     memcpy(nat_op[nat_rq], r, nq * 16);
+    if (nat_moff) { /* a joined run's vertices: its matrices follow the op's earlier ones */
+        u32 j;
+        for (j = 0; j < r[2]; j++) nat_op[nat_rq + 1 + j * 2][3] += nat_moff;
+    }
     nat_rq += nq;
     nat_nrec++;
 }
@@ -513,6 +520,14 @@ static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
          * state); anything else ends it */
         if (nat_open && (a[0] & 0xFF) == 0 && (nat_hs[0] & 0xFF) == 0 && a[2] == nat_hs[2] &&
             !memcmp(a + 4, nat_hs + 4, 16) && !memcmp(b, nat_ms, a[2] * 64)) {
+        } else if (nat_open && (a[0] & 0xFF) == 13 && a[0] == nat_hs[0] && !memcmp(a + 4, nat_hs + 4, 16) &&
+                   nat_hs[2] + a[2] <= KH1_NAT_MATS) {
+            /* 2026-10-31: a P13 run with the open P13 op's colour, F and cull joins it, its matrices after the op's
+             * (its vertices' indices moved by nat_rec); a new PRIM, state or a full op still ends it (P13 is one
+             * run a model part, ~200 a Dive picture) */
+            memcpy(nat_ms + nat_hs[2] * 16, b, a[2] * 64);
+            nat_moff = nat_hs[2];
+            nat_hs[2] += a[2];
         } else {
             nat_flush();
         }
@@ -520,7 +535,7 @@ static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
         nat_mats = b;
     } else if (what == 1) {
         nat_rec(prim, a);
-    } else if ((nat_hdr[0] & 0xFF) != 0) {
+    } else if ((nat_hdr[0] & 0xFF) != 0 && (nat_hdr[0] & 0xFF) != 13) {
         nat_flush();
     }
 }

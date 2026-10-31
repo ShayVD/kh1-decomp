@@ -421,6 +421,7 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATCHECK")) kh1_vu1_natcheck = atoi(getenv("KH1_HOST_NATCHECK")); /* vu1_draw.h */
         if (getenv("KH1_HOST_NATP0")) kh1_vu1_draw_p0 = atoi(getenv("KH1_HOST_NATP0")); /* 2026-10-31: 0 P0 / P4 on the VU */
         if (getenv("KH1_HOST_NATP11")) kh1_vu1_draw_p11 = atoi(getenv("KH1_HOST_NATP11")); /* 2026-10-31: 0 P11 on the VU */
+        if (getenv("KH1_HOST_NATP13")) kh1_vu1_draw_p13 = atoi(getenv("KH1_HOST_NATP13")); /* 2026-10-31: 0 P13 on the VU */
         if (getenv("KH1_HOST_NATP10")) kh1_vu1_draw_p10 = atoi(getenv("KH1_HOST_NATP10")); /* 2026-10-31: 0 P10 on the VU */
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
         if (getenv("KH1_HOST_CLOCK")) { /* 2026-10-31: kh1_vu1_clock on the host (the frame op's parts at the end) */
