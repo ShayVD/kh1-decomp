@@ -60,6 +60,23 @@ table above, plus the stage's own host checks. Expected gains are per 2.4 s wind
 - **Gain**: none. **Why first**: picks the order of stages 1-3 from measurements, not these estimates.
 - **Tested by**: the log itself; nothing in code changes beyond log lines.
 
+**The log lines for it (2026-10-31, host/vita/main.c's watchdog, every 2 s)**, added to what the log already had:
+
+- `vu1 programs:` now lists every program over 1 ms, not the top four.
+- `walk split:` the DMA walks' time by channel (VIF0, VIF1, GIF) and their sends; of VIF1, the time its data words
+  take into VU memory (dmawalk.c `vif1_feed`: UNPACK, MPG, STROW..., the programs they start not counted); the ops
+  and KiB the game thread copied into the GS worker's ring (gsqueue.c `kh1_gsq_puts`, `kh1_gsq_put_bytes_n`).
+  VIF1's time less the feed and the `vu1:` line is the walk itself (tags, VIF codes, DIRECT's skim).
+- `threads:` each port thread's CPU time in the window from the kernel's run clock (the game, the GS worker, the
+  GPU thread, the three sound threads, the watchdog), the core it last ran on, its affinity mask, its priority and
+  how often it was preempted. Unlike the busy counters this does not count time another thread took from it, so the
+  GPU thread and the sound threads sharing a core shows as the GPU thread's busy time above its run time and its
+  preemptions.
+
+**The run**: the stage 0 VPK, config.txt `pad=ux0:data/kh1/dive_en.txt`, `renderer=native`, `latewait=0`,
+`frames=8000`, the rest default (sndprio -4, recframe 1); then the same with `gputime=1`. Frames 5000-8000 of the
+first log fill the table at the top of this file.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
