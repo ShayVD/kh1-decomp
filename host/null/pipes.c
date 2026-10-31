@@ -49,6 +49,9 @@ void *malloc(__SIZE_TYPE__);
 void *calloc(__SIZE_TYPE__, __SIZE_TYPE__);
 void free(void *);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
+char *getenv(const char *);
+unsigned long strtoul(const char *, char **, int);
+char *strchr(const char *, int);
 
 /* session 127: the recorder's caches (what a port's renderer would hold) */
 static KH1PalCache *pal;
@@ -513,6 +516,35 @@ static void frame_begin(void) {
         for (i = 0; i < rec->npass; i++)
             printf("kh1-host:   pass %u: %s\n", i + 1, kh1_cmd_pass_str(&rec->pass[i]));
     }
+    { /* KH1_HOST_CMDDUMP=A[:B]: frames A .. B's commands and passes in full (the GPU cost study, vita-build.md) */
+        static int dump_set;
+        static u32 dump_a, dump_b;
+        if (!dump_set) {
+            const char *e = getenv("KH1_HOST_CMDDUMP");
+            dump_set = 1;
+            if (e) {
+                dump_a = (u32)strtoul(e, 0, 0);
+                dump_b = strchr(e, ':') ? (u32)strtoul(strchr(e, ':') + 1, 0, 0) : dump_a;
+            } else {
+                dump_a = 1;
+            }
+        }
+        if (rec->b.frames >= dump_a && rec->b.frames <= dump_b) {
+            u32 pi = ~0u;
+            printf("kh1-host: frame %u's commands: %u passes, %u commands\n", rec->b.frames, rec->npass, rec->ncmd);
+            for (i = 0; i < rec->ncmd; i++) {
+                const KH1Cmd *c = &rec->cmd[i];
+                if (c->kind == KH1_CMD_DRAW && c->pass != pi && c->pass < rec->npass) {
+                    pi = c->pass;
+                    printf("kh1-host:  pass %u: %s\n", pi + 1, kh1_cmd_pass_str(&rec->pass[pi]));
+                }
+                printf("kh1-host:   %u: %s", i, kh1_cmd_str(rec, c));
+                if (c->kind == KH1_CMD_DRAW)
+                    printf(" tex0 %08x | %s", c->d.tex0_lo, c->d.n ? kh1_pipekey_str(&c->d.pipe[0]) : "nothing");
+                printf("\n");
+            }
+        }
+    }
     kh1_gxm_frame(gxm, rec);
     if (gxm->frame.calls > gxm_max_calls) gxm_max_calls = gxm->frame.calls;
     if (gxm->frame.scenes > gxm_max_scenes) gxm_max_scenes = gxm->frame.scenes;
@@ -722,8 +754,9 @@ static void report_cmds(void) {
            t->dpasses, t->dloads, t->dstores, t->ddiscards, t->dopen);
     /* session 127: the transfers between the draws */
     printf("kh1-host:   transfers: %u uploads, %u copies, %u CLUT loads (%u palette fills), %u texture decodes (%u texels); "
-           "%u read a render target, %u write one; %u scenes split by a transfer on their own target\n", t->uploads,
-           t->copies, t->cluts, t->pal_fills, t->textures, t->texels, t->tgt_reads, t->tgt_writes, t->splits);
+           "%u read a render target, %u write one; %u scenes split by a transfer on their own target, %u uploads into "
+           "another target inside a scene\n", t->uploads, t->copies, t->cluts, t->pal_fills, t->textures, t->texels,
+           t->tgt_reads, t->tgt_writes, t->splits, t->xfer_joins);
     {   /* session 128: the GXM calls (include/platform/gxmrec.h) */
         const KH1GxmCount *g = &gxm->total;
         printf("kh1-host:   gxm: %u frames, %u calls (a frame at most %u, %u scenes), %u scenes (%u load, %u store), %u draws, "
@@ -760,7 +793,6 @@ typedef struct _IO_FILE FILE;
 FILE *fopen(const char *, const char *);
 int fclose(FILE *);
 __SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, FILE *);
-char *getenv(const char *);
 int sprintf(char *, const char *, ...);
 
 static void put_file(const char *dir, const char *name, u32 n, const char *text, u32 len) {

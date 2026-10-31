@@ -103,6 +103,14 @@ gain, as expected while the GPU is the limit (the start-of-frame wait ~540 ms pe
 worker was busy ~2.27 s of 2.4 s there and waited 627 ms on the recording (the GPU thread). The picture looked right
 (Shay, by eye: the default natcull=1 is GXM's matching cull mode).
 
+**The GPU's frame cut (2026-10-31, host-measured only)**: vita-build.md "The GPU's work in the Dive". The ~31 ms
+was mostly the SGX's tile loads and stores: 21 scenes a picture on the 3D target, one for each particle draw
+(their texture uploads split the scene), ~70 MB of tile traffic. On the host's stand-in that is now 6 scenes and
+~13 MB with the same pictures, and the present no longer copies or clears. With the GPU off the critical path the
+Dive should become CPU-bound at ~18-20 pictures/s (the game thread's ~51 ms of work a picture in native1's log),
+so the stages below, P0 first, are what is left between that and 30. The native path's own draw count matters
+less now that scenes, not draws, were the cost.
+
 ## The stages after
 
 2. **P13 (skinned, flat, cull)**: the same flow with the bone palette: op 0 with w = 1 marks the palette record,

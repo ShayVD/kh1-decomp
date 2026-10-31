@@ -50,6 +50,10 @@
  *                             default) keeps the GS path
  *       natcull=N             with renderer=native, the cull mode of P18's back-face-culled runs: 1 (the default)
  *                             CCW in the window, 2 CW, 0 none (if Sora shows his inside, try 2)
+ *       present=0             copy each picture into a surface of its own and present it every frame (as before
+ *                             2026-10-31); 1, the default: each new picture presented once, from the display target
+ *       gputime=1             log each 2 s how long the GPU spent on each kind of scene (gxm.c; a polling thread, so
+ *                             the frame rate of such a run is a little lower: for the split, not the speed)
  *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
  *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
  *                             the command menu's cursor)
@@ -458,6 +462,28 @@ static int watchdog(SceSize args, void *argp) {
                 for (i = 0; i < KH1_VU1_PROGS; i++)
                     if (kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs)) { p_us[i] = us; p_runs[i] = runs; p_pairs[i] = pairs; }
             }
+            if (kh1_vita_gputime) { /* 2026-10-31: the scenes' GPU time (gxm.c), by target kind */
+                static const char *const kn[KH1_GT_KINDS] = { "display", "Z as colour", "movie", "3D target", "slot capture",
+                                                              "off-screen", "CLUT pass", "other", "?" };
+                static u32 us0[KH1_GT_KINDS], n0[KH1_GT_KINDS], sus0, sn0, polls0;
+                char line[512];
+                u32 i, all = 0;
+                int len;
+                for (i = 0; i < KH1_GT_KINDS; i++) all += kh1_vita_gt_us[i] - us0[i];
+                len = snprintf(line, sizeof line, "kh1-vita: gpu time: %u ms busy;", all / 1000);
+                for (i = 0; i < KH1_GT_KINDS; i++) {
+                    if (kh1_vita_gt_n[i] != n0[i])
+                        len += snprintf(line + len, sizeof line - len, " %s %u ms (%u scenes),", kn[i],
+                                        (kh1_vita_gt_us[i] - us0[i]) / 1000, kh1_vita_gt_n[i] - n0[i]);
+                    us0[i] = kh1_vita_gt_us[i];
+                    n0[i] = kh1_vita_gt_n[i];
+                }
+                vlog("%s of them %u ms in %u scenes of 1-2 draws; %u polls\n", line, (kh1_vita_gt_small_us - sus0) / 1000,
+                     kh1_vita_gt_small_n - sn0, kh1_vita_gt_polls - polls0);
+                sus0 = kh1_vita_gt_small_us;
+                sn0 = kh1_vita_gt_small_n;
+                polls0 = kh1_vita_gt_polls;
+            }
             if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
                 static u32 n0, d0, t0;
                 vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles\n", kh1_vu1_drawn - n0,
@@ -568,6 +594,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
         else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
         else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
+        else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
+        else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -745,6 +773,11 @@ int main(int argc, char **argv) {
         /* session 141: on the third core, out of the game's and the GS worker's way */
         SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
         if (t >= 0) sceKernelStartThread(t, 0, 0);
+    }
+    if (gpu_on && kh1_vita_gputime) { /* 2026-10-31: the scenes' GPU time (gxm.c), a poll on any core above the game's */
+        SceUID t = sceKernelCreateThread("kh1_gputime", kh1_vita_gputime_thread, 0x10000100 - 8, 0x2000, 0, 0, 0);
+        if (t >= 0) sceKernelStartThread(t, 0, 0);
+        vlog("kh1-vita: gputime=1: each scene's GPU time polled (the frame rate is lower for it)\n");
     }
     kh1_vita_audio_init();
     vlog("kh1-vita: func_00100558 (the game's main)\n");

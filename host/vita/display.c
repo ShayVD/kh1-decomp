@@ -81,13 +81,19 @@ static void strip(void) {
  * 512 x 384: NTSC's taller pixels), the strip, shown */
 static void draw(void) {
     int pic = 0;
+    /* 2026-10-31 (gxm.c, present=1): with the picture over the whole screen and no status strip, only a new
+     * picture is presented, and the opaque present needs no clear under it */
+    int full = gpu && mode && strip_on <= 1 && kh1_vita_present_direct;
+    if (full && !kh1_vita_gxm_fresh()) return;
     vita2d_start_drawing();
-    vita2d_clear_screen();
+    if (!full) vita2d_clear_screen();
     if (gpu) {
         if (mode ? kh1_vita_gxm_present(0.0f, 0.0f, (f32)FB_W, (f32)FB_H)
                  : kh1_vita_gxm_present(canvas.ox, canvas.oy, 512.0f * canvas.s, 384.0f * canvas.s)) {
             shown++;
             pic = 1;
+        } else if (full) {
+            vita2d_clear_screen();
         }
         kh1_vita_shown = shown;
     } else if (pic_w && pic_lines) {

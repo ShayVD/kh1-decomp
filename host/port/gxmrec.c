@@ -189,6 +189,13 @@ static void draw(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 ci) {
     }
 }
 
+/* the next draw after command i is in pass p (the recorder did not end the pass at i) */
+static int same_pass_next(const KH1CmdRec *r, u32 i, u32 p) {
+    for (i++; i < r->ncmd; i++)
+        if (r->cmd[i].kind == KH1_CMD_DRAW) return r->cmd[i].pass == p;
+    return 0;
+}
+
 void kh1_gxm_frame(KH1GxmRec *g, const KH1CmdRec *r) {
     Bound b;
     u32 i;
@@ -233,7 +240,8 @@ void kh1_gxm_frame(KH1GxmRec *g, const KH1CmdRec *r) {
         case KH1_CMD_UPLOAD:
         case KH1_CMD_COPY:
             if (!x->src && !x->dst) break; /* GS memory only: the CPU's */
-            end_scene(g, r, &b);
+            if (k->kind == KH1_CMD_COPY || x->src || !b.open || !same_pass_next(r, i, (u32)b.open - 1))
+                end_scene(g, r, &b); /* cmdbuf.h 2026-10-31: an upload into another target leaves the scene open */
             c = emit(g, k->kind == KH1_CMD_UPLOAD ? KH1_GXM_TARGET_UPLOAD : KH1_GXM_BLIT, i);
             if (c) {
                 c->tgt = x->dst;

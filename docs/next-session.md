@@ -48,7 +48,16 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Where we stopped (end of session 140, 2026-10-27)
+## Latest (2026-10-31): the Dive's GPU work
+
+The sections below are older; the Vita renderer's state is in docs/vita-build.md and docs/native-renderer.md.
+The Dive was GPU-bound at ~16 pictures/s; vita-build.md "The GPU's work in the Dive" cut its scenes from 21 to 6
+a picture (particle uploads no longer split the 3D scene; the depth clear is seen across the wide view's strips)
+and the present's copy and clears, all measured on the host only. **First thing next time**: Shay's Vita log
+with `gputime=1`, and the frame rate without it; `present=0` if the picture flickers. Then native P0 / P13 for
+the game thread (expected to be the limit at ~18-20 pictures/s).
+
+## Where we stopped before (end of session 140, 2026-10-27)
 
 - **Session 140** (the Mac for staging only; en.iso SHA-256 c8ee8c77... checked): **the cloth, and the
   first walk into another room** (docs/native-overlays.md "Session 140").

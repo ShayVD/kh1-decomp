@@ -788,6 +788,56 @@ static SceGxmNotification scene_note(void) {
     return n;
 }
 static int scene_done(u32 n) { return n <= finish_seen || (note && (int)(*note - n) >= 0); }
+
+/* 2026-10-31 (vita-build.md "The GPU's work in the Dive"): config.txt's gputime=1, each scene's time on the GPU.  GXM
+ * has no timer queries, so a thread polls the scene notifications above: a scene's time runs from the later of the
+ * previous scene's end and its own submit (sceGxmEndScene) to the poll that sees it done, so it is good to the poll's
+ * period (~0.1 ms) and counts the GPU's idle gaps only up to its submit.  By the scene's target kind (target.h's
+ * KH1_RT_*), and the scenes with at most 2 draws apart (their time is mostly the tile loads and stores).  The poll
+ * costs CPU, so a run with it is for the split, not the frame rate.  The vita2d scene (the present) and the frame
+ * copy's are not tracked: their time lands on the next tracked scene. */
+int kh1_vita_gputime;
+#define GT_RING 1024
+static struct { SceUInt64 sub; u8 kind, small; } gt_ring[GT_RING];
+volatile u32 kh1_vita_gt_us[KH1_GT_KINDS], kh1_vita_gt_n[KH1_GT_KINDS], kh1_vita_gt_small_us, kh1_vita_gt_small_n,
+    kh1_vita_gt_polls;
+static void gt_submit(u32 n, u32 kind, u32 ndraw) {
+    if (!kh1_vita_gputime) return;
+    gt_ring[n % GT_RING].kind = (u8)(kind < KH1_GT_KINDS ? kind : KH1_GT_KINDS - 1);
+    gt_ring[n % GT_RING].small = ndraw <= 2;
+    gt_ring[n % GT_RING].sub = sceKernelGetProcessTimeWide();
+}
+int kh1_vita_gputime_thread(SceSize args, void *argp) {
+    volatile u32 *nt = sceGxmGetNotificationRegion() + NOTE_SLOT;
+    u32 last = *nt;
+    SceUInt64 prev = sceKernelGetProcessTimeWide();
+    (void)args; (void)argp;
+    for (;;) {
+        u32 cur = *nt;
+        kh1_vita_gt_polls++;
+        if ((int)(cur - last) > 0) {
+            SceUInt64 now = sceKernelGetProcessTimeWide(), start;
+            u32 n = cur - last, i, each;
+            if (n > GT_RING / 2) { last = cur; prev = now; continue; }
+            start = gt_ring[(last + 1) % GT_RING].sub;
+            if (start < prev) start = prev;
+            each = now > start ? (u32)(now - start) / n : 0;
+            for (i = last + 1; i != cur + 1; i++) {
+                u32 k = gt_ring[i % GT_RING].kind;
+                kh1_vita_gt_us[k] += each;
+                kh1_vita_gt_n[k]++;
+                if (gt_ring[i % GT_RING].small) {
+                    kh1_vita_gt_small_us += each;
+                    kh1_vita_gt_small_n++;
+                }
+            }
+            last = cur;
+            prev = now;
+        }
+        sceKernelDelayThread(100);
+    }
+    return 0;
+}
 volatile u32 kh1_vita_scene_waits; /* the watchdog's: waits that were for one scene, not a sceGxmFinish */
 /* the GPU done with scene n (and so with those before it); `at` as finish_at's */
 static void wait_scene(u32 n, int at) {
@@ -964,12 +1014,18 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     Target *cur = 0;
     SceGxmTexture t;
     int have_tex = 0, open = 0, bad_pipe = 0, zbound = 0; /* zbound: the scene's depth buffer is a GS one */
+    u32 open_rt = 0, scene_draws = 0;
     u32 i, vi = 0, pal_rb_slot = ~0u;
     SceUInt64 t0;
     if (!ready) return;
     t0 = sceKernelGetProcessTimeWide();
     kh1_gxm_frame(&rec, r);
     kh1_vita_us_part[0] += (u32)(sceKernelGetProcessTimeWide() - t0);
+    if (!rec.n && kh1_vita_present_direct) { /* 2026-10-31: a frame with no calls (the Dive's every other one) waits for */
+        frames++;                           /* nothing: the next frame's start waits for the GPU before it writes */
+        kh1_vita_us_gpu += (u32)(sceKernelGetProcessTimeWide() - t0);
+        return;
+    }
     finish_at(0); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
     pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
     if (r->vring.head > vbuf_bytes) {
@@ -1057,6 +1113,8 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 }
             }
             open = 1;
+            open_rt = c->rt;
+            scene_draws = draws;
             zbound = c->depth != KH1_DS_NONE;
             scenes++;
             cur->drawn = 1;
@@ -1077,6 +1135,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         case KH1_GXM_END_SCENE:
             if (open) {
                 SceGxmNotification fn = scene_note();
+                gt_submit(scene_no, cur ? c->rt : KH1_GT_KINDS - 1, draws - scene_draws);
                 sceGxmEndScene(ctx, 0, &fn);
             }
             open = 0;
@@ -1244,6 +1303,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     }
     if (open) {
         SceGxmNotification fn = scene_note();
+        gt_submit(scene_no, open_rt, draws - scene_draws);
         sceGxmEndScene(ctx, 0, &fn);
     }
     if (display >= 0 && tgt[display].pend) pend_flush(&tgt[display]); /* the present reads it; the rest wait for
@@ -1253,14 +1313,32 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
 }
 
 /* session 136: the display target copied (by the GPU, after the frame's scenes) into its own surface at a
- * frame copy, so the present shows a whole picture; until the first one the display target itself */
+ * frame copy, so the present shows a whole picture; until the first one the display target itself.
+ *
+ * 2026-10-31 (vita-build.md "The GPU's work in the Dive"): with present=1 (config.txt, the default) there is no
+ * copy.  The picture is presented once, right after the frame copy's frame, from the display target itself: the
+ * GPU runs the scenes in the order they are sent, so the present reads the display target as that frame left it,
+ * before the next frame's scenes draw it again (and a CPU write into it waits for the next frame's start, which
+ * waits for the GPU).  The frames between copies present nothing (the screen keeps the last picture), so the
+ * Dive's empty frame no longer costs a full-screen clear and present, and a picture no longer costs the copy:
+ * ~0.3 M fragments and 2.4 MB of tile traffic for the copy, ~1 M fragments and 4 MB for each skipped present.
+ * present=0 is the copy as before. */
+int kh1_vita_present_direct = 1;
+static int fresh; /* present=1: a picture since the last present */
 static Target shown_tgt;
 static f32 *latch_v; /* the copy's quad (LPDDR) */
-static int latched;
+static int latched; /* 1 the copy holds a picture, 2 the display target does (present=1) */
+int kh1_vita_gxm_fresh(void) { return !latched || fresh; }
 void kh1_vita_gxm_latch(void) {
     Target *d = display >= 0 ? &tgt[display] : 0, *s = &shown_tgt;
     SceGxmTexture t;
-    if (!ready || !d || !d->mem || !latch_v) return;
+    if (!ready || !d || !d->mem) return;
+    if (kh1_vita_present_direct) {
+        latched = 2;
+        fresh = 1;
+        return;
+    }
+    if (!latch_v) return;
     if (!s->mem || s->w != d->w || s->h != d->h) {
         if (s->mem) heap_free(s->heap, s->mem, s->bytes);
         memset(s, 0, sizeof *s);
@@ -1304,10 +1382,11 @@ void kh1_vita_gxm_latch(void) {
 
 /* the display target into vita2d's open scene: the 4:3 picture over the canvas's rectangle (screen pixels) */
 int kh1_vita_gxm_present(f32 x, f32 y, f32 w, f32 h) {
-    Target *d = latched ? &shown_tgt : display >= 0 ? &tgt[display] : 0;
+    Target *d = latched == 1 ? &shown_tgt : display >= 0 ? &tgt[display] : 0;
     SceGxmTexture t;
     f32 *v;
     if (!ready || !d || !d->mem) return 0;
+    fresh = 0;
     v = (f32 *)vita2d_pool_memalign(4 * 16, 16);
     if (!v) return 0;
     {   /* screen pixels to clip space under GXM's default viewport (y up), the texture's rows 0 .. h */

@@ -109,13 +109,38 @@ static void new_pass(KH1CmdRec *r, const KH1BatchKey *k, const KH1RenderPass *rp
     }
 }
 
+/* the target a draw samples (1 + its index; 0 none: no texture, or GS memory's texels through the texture cache) */
+static u32 sampled(KH1CmdRec *r, const KH1DrawState *d, u8 *wtex) {
+    *wtex = 0;
+    if (d->pipe[0].shader.tex) {
+        u32 tbp = d->tex0_lo & 0x3FFF, tbw = d->tex0_lo >> 14 & 63, psm = d->tex0_lo >> 20 & 63, t;
+        /* session 137v: not when an upload wrote its pages since the target's last draw (cpu_pages) */
+        if (!(tbp & 31)) {
+            t = tgt_find(r, tgt_key(kh1_target_id(tbp / 32, tbw, psm), tbp / 32, tbw), 0);
+            if (t != ~0u) { /* the texture's rows inside the target (a 512-row binding of a 384-row target) */
+                u32 th = 1u << ((d->tex0_lo >> 30 | d->tex0_hi << 2) & 15), rows = r->tpages[t] / (tbw ? tbw : 1) * 32;
+                if (!cpu_pages(r, tbp, tbw, psm, 0, 0, 1u << (d->tex0_lo >> 26 & 15), th < rows || !rows ? th : rows, 2)) {
+                    *wtex = r->tsw[t] > 0.0f;
+                    return t + 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 static void new_cmd(KH1CmdRec *r, const KH1BatchKey *k, const KH1DrawState *d, const KH1RenderPass *rp) {
     KH1Cmd *c;
-    u8 *u;
+    u8 *u, wtex;
+    u32 smp = sampled(r, d, &wtex);
     int same = r->npass && same_pass(&r->pass[r->npass - 1], k);
+    if (same && !r->split && smp && (r->pwrote >> (smp - 1) & 1)) r->split = 1; /* a target written in this pass */
     if (same && r->split) r->frame.splits++;
-    if (!same || r->split) new_pass(r, k, rp);
-    else if (r->pass[r->npass - 1].depth != k->depth && k->depth != KH1_DS_NONE) {
+    if (!same || r->split) {
+        new_pass(r, k, rp);
+        r->pwrote = 0;
+        smp = sampled(r, d, &wtex); /* new_pass gave the target's pages back to the GPU (cpu_pages) */
+    } else if (r->pass[r->npass - 1].depth != k->depth && k->depth != KH1_DS_NONE) {
         r->pass[r->npass - 1].depth = k->depth; /* the scene binds the depth buffer from its start */
         r->frame.depth_joins++;
     } else if (r->pass[r->npass - 1].depth != k->depth) {
@@ -144,31 +169,22 @@ static void new_cmd(KH1CmdRec *r, const KH1BatchKey *k, const KH1DrawState *d, c
     } else {
         c->lost = 1;
     }
-    if (d->pipe[0].shader.tex) {
-        u32 tbp = d->tex0_lo & 0x3FFF, tbw = d->tex0_lo >> 14 & 63, psm = d->tex0_lo >> 20 & 63, t;
-        /* session 137v: not when an upload wrote its pages since the target's last draw (cpu_pages) */
-        if (!(tbp & 31)) {
-            t = tgt_find(r, tgt_key(kh1_target_id(tbp / 32, tbw, psm), tbp / 32, tbw), 0);
-            if (t != ~0u) { /* the texture's rows inside the target (a 512-row binding of a 384-row target) */
-                u32 th = 1u << ((d->tex0_lo >> 30 | d->tex0_hi << 2) & 15), rows = r->tpages[t] / (tbw ? tbw : 1) * 32;
-                if (!cpu_pages(r, tbp, tbw, psm, 0, 0, 1u << (d->tex0_lo >> 26 & 15), th < rows || !rows ? th : rows, 2)) {
-                    c->samples = (u8)(t + 1);
-                    c->wtex = r->tsw[t] > 0.0f;
-                }
-            }
-        }
+    if (smp) {
+        c->samples = (u8)smp;
+        c->wtex = wtex;
     }
 }
 
 /* Clears (the GS has none): the pass's leading draws that write every channel without reading the target
  * (no blend, no partial mask, no frame fetch, no DATE), as axis-aligned rectangles (sprites) clipped to their
  * command's final scissor (a column group's union), covering the target: the game clears in 32-pixel strips.
- * Coverage is kept on an 8 x 8 cell grid (a cell counts when every pixel of it inside the target is covered),
+ * Coverage is kept on an 8 x 8 cell grid (a cell counts when every pixel of it inside the target is covered:
+ * cell[] holds a bit per column),
  * so a pass of strips counts as cleared.  For depth the same with the draws that write Z under ALWAYS,
  * before the first draw that tests Z. */
 #define CELL 8
 #define CELLS_W 128 /* targets up to 1024 x 1024 at the cell size */
-static u8 cell[CELLS_W][CELLS_W];
+static u8 cell[CELLS_W][CELLS_W], cmask[CELLS_W];
 
 static int reads_dst(const KH1DrawState *d, u32 psm) {
     const KH1PipeKey *k = &d->pipe[0];
@@ -209,15 +225,23 @@ static int cover_cmd(const KH1CmdRec *r, const KH1CmdPass *p, const KH1Cmd *c) {
          * rising with it), not the whole grid for every rectangle (Dive to the Heart: 133M of the GS worker's
          * 1,978M host instructions over 60 frames, now 6M) */
         /* session 147d: the columns once, the same for every row (a full-screen rectangle was ~60K instructions) */
-        cx0 = px0 > 0 ? (px0 + CELL - 1) / CELL : 0;
-        for (cx = cx0; cx * CELL < (s32)p->w && cx < CELLS_W; cx++) {
-            s32 ex = cx * CELL + CELL < (s32)p->w ? cx * CELL + CELL : (s32)p->w;
-            if (px1 < ex) break;
+        /* 2026-10-31: a cell keeps which of its 8 columns are covered (a bit each, the ones past the target's
+         * edge set), so strips that do not meet on the cell grid still add up: the wide view scales the game's
+         * 32-pixel strips to 42.3 target pixels (the Dive's depth clear, vita-build.md "The GPU's work in the
+         * Dive").  Rows still count whole cells only. */
+        if (px1 > CELLS_W * CELL) px1 = CELLS_W * CELL;
+        if (px0 >= px1) continue;
+        cx0 = px0 / CELL;
+        for (cx = cx0; cx * CELL < px1; cx++) {
+            s32 a = px0 > cx * CELL ? px0 - cx * CELL : 0, b = px1 < cx * CELL + CELL ? px1 - cx * CELL : CELL;
+            u32 m = (0xFFu << a) & (0xFFu >> (CELL - b));
+            if (cx * CELL + CELL > (s32)p->w) m |= 0xFFu << ((s32)p->w - cx * CELL);
+            cmask[cx] = (u8)m;
         }
-        for (cy = py0 > 0 ? (py0 + CELL - 1) / CELL : 0; cx > cx0 && cy * CELL < (s32)p->h && cy < CELLS_W; cy++) {
-            s32 ey = cy * CELL + CELL < (s32)p->h ? cy * CELL + CELL : (s32)p->h;
+        for (cy = py0 > 0 ? (py0 + CELL - 1) / CELL : 0; cy * CELL < (s32)p->h && cy < CELLS_W; cy++) {
+            s32 ey = cy * CELL + CELL < (s32)p->h ? cy * CELL + CELL : (s32)p->h, i2;
             if (py1 < ey) break;
-            memset(&cell[cy][cx0], 1, (u32)(cx - cx0));
+            for (i2 = cx0; i2 < cx; i2++) cell[cy][i2] |= cmask[i2];
         }
     }
     return 1;
@@ -228,7 +252,7 @@ static int all_cells(const KH1CmdPass *p) {
     if (!p->w || !p->h || p->w > CELL * CELLS_W || p->h > CELL * CELLS_W) return 0;
     for (cy = 0; cy * CELL < (s32)p->h; cy++)
         for (cx = 0; cx * CELL < (s32)p->w; cx++)
-            if (!cell[cy][cx]) return 0;
+            if (cell[cy][cx] != 0xFF) return 0;
     return 1;
 }
 
@@ -417,7 +441,17 @@ void kh1_cmd_upload(KH1CmdRec *r, u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32
     c->x.h = (u16)(reg_hi & 0xFFF);
     c->x.dst = tgt_at(r, bb_hi & 0x3FFF, bb_hi >> 16 & 63, c->x.dx, c->x.dy, c->x.w, c->x.h);
     if (dir == 2) c->x.src = tgt_at(r, bb_lo & 0x3FFF, bb_lo >> 16 & 63, c->x.sx, c->x.sy, c->x.w, c->x.h);
-    if (c->x.src || c->x.dst) r->split = 1;
+    if (c->x.src || dir == 2) {
+        if (c->x.src || c->x.dst) r->split = 1;
+    } else if (c->x.dst) { /* an upload: only into the open pass's own target (cmdbuf.h, 2026-10-31) */
+        u32 t = c->x.dst - 1u;
+        if (!r->npass || r->pass[r->npass - 1].tgt == t) {
+            r->split = 1;
+        } else {
+            r->pwrote |= 1u << t;
+            r->frame.xfer_joins++;
+        }
+    }
     if (dir == 0 || dir == 2) cpu_pages(r, bb_hi & 0x3FFF, bb_hi >> 16 & 63, bb_hi >> 24 & 63, c->x.dx, c->x.dy, c->x.w, c->x.h, !c->x.src);
 }
 
@@ -648,6 +682,7 @@ void kh1_cmd_reset_frame(KH1CmdRec *r) {
     r->held = -1;
     r->cur = -1;
     r->split = 0;
+    r->pwrote = 0;
     r->open_pending = 0;
     memset(&r->frame, 0, sizeof r->frame);
     kh1_ring_frame(&r->vring);
