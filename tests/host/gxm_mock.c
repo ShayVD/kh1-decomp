@@ -147,7 +147,7 @@ const SceGxmProgramParameter *sceGxmProgramFindParameterByName(const SceGxmProgr
 }
 unsigned int sceGxmProgramParameterGetResourceIndex(const SceGxmProgramParameter *p) { return (unsigned)p->index; }
 
-typedef struct { MockProg *p; int nattr; SceGxmVertexAttribute a[8]; u32 stride; } MockVP;
+typedef struct { MockProg *p; int nattr; SceGxmVertexAttribute a[8]; u32 stride; int colclamp; } MockVP;
 typedef struct { MockProg *p; int blend; SceGxmBlendInfo bi; int fetch; } MockFP;
 
 int sceGxmShaderPatcherRegisterProgram(SceGxmShaderPatcher *sp, const SceGxmProgram *h, SceGxmShaderPatcherId *id) {
@@ -160,6 +160,7 @@ int sceGxmShaderPatcherCreateVertexProgram(SceGxmShaderPatcher *sp, SceGxmShader
     MockVP *v = (MockVP *)calloc(1, sizeof *v);
     (void)sp; (void)ns;
     v->p = (MockProg *)id;
+    v->colclamp = strstr(v->p->text, "ocol : COLOR") != 0; /* 2026-10-31: clamped as on the Vita (vertex() below) */
     v->nattr = (int)n;
     memcpy(v->a, a, n * sizeof *a);
     v->stride = s->stride;
@@ -542,6 +543,9 @@ static void vertex(u32 idx, Vary *o) {
     o->y = (f32)(s32)((r.v[KH1_SV_OPOS][1] * g.vy[1] + g.vy[0]) * 256.0f + 0.5f + 65536.0f * 256.0f) / 256.0f - 65536.0f;
     o->z = r.v[KH1_SV_OPOS][2] * g.vz[1] + g.vz[0];
     memcpy(o->col, r.v[KH1_SV_OCOL], 16);
+    if (g.vp->colclamp) /* 2026-10-31: a COLOR varying is clamped to 0 .. 1 on the Vita's GPU (a native draw's col x w
+                         * there drew P0's floor and P11's Keyblade black, shadergen.c) */
+        for (i = 0; i < 4; i++) o->col[i] = o->col[i] < 0.0f ? 0.0f : o->col[i] > 1.0f ? 1.0f : o->col[i];
     memcpy(o->tc, r.v[KH1_SV_OTC], 16);
     o->fog = r.v[KH1_SV_OFOG][0];
 }

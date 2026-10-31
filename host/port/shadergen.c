@@ -239,7 +239,9 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
     if (k->setup == 2) {} /* the clear: stencil only (its colour mask is 0) */
     else if (k->setup) put(&g, "    float4 pos : WPOS,\n    uniform sampler2D tex,\n    uniform float4 u_xf,\n");
     else {
-        put(&g, "    float4 col : COLOR0,\n");
+        /* 2026-10-31: a lin draw's colour is col x w (the native vertex shader's, below), far past 1.0: a TEXCOORD,
+         * as a COLOR varying is clamped to 0 .. 1 on the Vita's GPU (P0's floor and P11's Keyblade drew black) */
+        put(&g, k->lin && k->tex ? "    float4 col : TEXCOORD3,\n" : "    float4 col : COLOR0,\n");
         if (k->tex) put(&g, "    float4 tc : TEXCOORD0,\n");
         if (k->fog) put(&g, "    float fog : TEXCOORD1,\n");
         if (k->tex) put(&g, "    uniform sampler2D tex,\n");
@@ -413,7 +415,9 @@ u32 kh1_shader_vert_cg(u32 index, char *buf, u32 cap) {
     if (fog) put(&g, "    float fog : TEXCOORD1,\n");
     if (nat) put(&g, "    float mi : TEXCOORD2,\n    uniform float4 u_m[128],\n    out float4 opos : POSITION");
     else put(&g, "    uniform float4 u_xf,\n    out float4 opos : POSITION");
-    if (index) put(&g, ",\n    out float4 ocol : COLOR0");
+    /* 2026-10-31: a native textured variant's colour is col x w (with mi's bit 7), and its fragment shader is always
+     * lin (cmdbuf.c kh1_cmd_native): a TEXCOORD, never clamped; the lin fragment shader's col matches it */
+    if (index) put(&g, nat && tex ? ",\n    out float4 ocol : TEXCOORD3" : ",\n    out float4 ocol : COLOR0");
     if (tex) put(&g, ",\n    out float4 otc : TEXCOORD0");
     if (fog) put(&g, ",\n    out float ofog : TEXCOORD1");
     put(&g, ")\n{\n");

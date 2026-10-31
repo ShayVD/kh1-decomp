@@ -389,10 +389,13 @@ void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
     KH1Cmd *c;
     u8 *u;
     u32 bytes = nmat * 64;
-    static KH1DrawState nd; /* 2026-10-31: KH1_NAT_LIN with a texture, the shader's lin (drawstate.h): r->in_d here */
+    static KH1DrawState nd; /* 2026-10-31: a texture, the shader's lin (drawstate.h): r->in_d here */
     u32 i;
     if (!n || !nmat || nmat > 255) return;
-    if (cull & KH1_NAT_LIN && d->pipe[0].shader.tex) {
+    /* 2026-10-31: every native textured draw is lin, not only KH1_NAT_LIN's: the native textured vertex shader hands
+     * its colour over in a TEXCOORD (shadergen.c; a COLOR varying is clamped on the Vita), which only the lin
+     * fragment shader reads.  Without mi's bit 7 its w is 1, so the divide changes nothing */
+    if (d->pipe[0].shader.tex) {
         nd = *d;
         for (i = 0; i < 2; i++) nd.pipe[i].shader.lin = 1;
         d = &nd;

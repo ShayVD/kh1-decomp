@@ -756,8 +756,19 @@ static void vertex(void) {
             d = fog ? run.v[KH1_SV_OFOG][0] - 0.5f * w : 0.0f;
             if (d < -1e-3f || d > 1e-3f) lb++;
             if (run.bad) lb++;
+            /* 2026-10-31: col x w goes past 1.0, so never in a COLOR varying (clamped on the Vita) */
+            if (b && tex && (!strstr(text, "out float4 ocol : TEXCOORD3") || strstr(text, "ocol : COLOR"))) lb++;
         }
         CHECK("vertex: native with mi's bit 7: z as computed, colour / fog times w and w in tc.w with a texture", !lb);
+        {
+            KH1ShaderKey k;
+            memset(&k, 0, sizeof k);
+            k.tex = 1;
+            k.lin = 1;
+            kh1_shader_frag_cg(&k, text, sizeof text);
+            CHECK("fragment: a lin shader reads its colour from TEXCOORD3 (the native vertex shader's)",
+                  strstr(text, "float4 col : TEXCOORD3") && !strstr(text, "COLOR0"));
+        }
     }
     CHECK("vertex: the 14 vertex shaders (7 native: F x position, z clamped) map to clip space and pass the attributes on "
           "(native, mi's bit 7 clear: as before)", !bad);
