@@ -165,6 +165,10 @@ produced.
 
 ### Stage 8: sound on the Vita natively
 
+**Steps 1 and 2 done 2026-10-31** (sound-spec 6, "The driver as C and the mix in passes"): the whole driver is
+translated to C at build time rather than function by function, and the mix runs in passes with NEON sums; host
+output byte-identical, ~2.5x fewer ARM instructions. Waiting on a Vita log for the real numbers.
+
 Three steps, cheapest first; each stops if the sound line shows no short buffers and its threads' time is small:
 
 1. **More of the driver as C**: profile the IOP instructions per function on the Vita (the interpreter counts

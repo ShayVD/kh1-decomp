@@ -306,9 +306,30 @@ def host_defs(undefined, cc):
     return obj
 
 
+def iop_flags():
+    """host/port/iop.c: the user's sound driver as C (tools/host/iop_translate.py), made from LIBSSL.IRX (copied
+    from their own disc into the repo's root, never committed) into out/gen/iop_rec.c; without it the
+    interpreter runs the driver (docs/sound-spec.md "The driver as C")."""
+    irx = next((os.path.join(ROOT, n) for n in ("LIBSSL.IRX", "libssl.irx") if os.path.exists(os.path.join(ROOT, n))), None)
+    gen = os.path.join(ROOT, "out", "gen", "iop_rec.c")
+    tool = os.path.join(ROOT, "tools", "host", "iop_translate.py")
+    if not irx:
+        return []
+    if not os.path.exists(gen) or os.path.getmtime(gen) < max(os.path.getmtime(irx), os.path.getmtime(tool)):
+        os.makedirs(os.path.dirname(gen), exist_ok=True)
+        p = subprocess.run([sys.executable, "-I", tool, irx, gen], cwd=ROOT, capture_output=True, text=True)
+        if p.returncode:
+            print("iop_translate failed, the interpreter runs the sound driver:\n" + p.stderr)
+            return []
+        print(p.stdout.strip())
+    return ["-DKH1_IOP_REC", "-I" + os.path.join(ROOT, "out", "gen")]
+
+
 def platform_flags(d, f):
     """host/port/vu1.c: the user's VU1 programs as C (session 137v, tools/vu/vu1_translate.py), made from
     the ELF into out/gen/vu1_tr.c (never committed); without the ELF the interpreter runs them all."""
+    if (d, f) == ("port", "iop.c"):
+        return iop_flags()
     if (d, f) != ("port", "vu1.c"):
         return []
     elf = os.path.join(ROOT, "SLPS_251.98")
