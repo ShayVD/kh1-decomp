@@ -37,9 +37,11 @@ extern int kh1_snd_wanted;
 int kh1_vita_snd = 1;       /* config.txt's snd= (0: the null server, no sound) */
 int kh1_vita_snd_core = -1; /* config.txt's sndcore= (-1: any core; 0, 1 or 2 pins the mixer) */
 /* 2026-10-31: config.txt's sndprio=, the tick thread's and the mixer's priority against the game's threads
- * (0x10000100): 16, the default, below them; negative, above them (the Dive with renderer=native left the sound
- * short in about half its buffers: the three cores busy, the sound got too little of what was left) */
-int kh1_vita_snd_prio = 16;
+ * (0x10000100): negative above them, positive below.  -4, the default since Shay's Vita run of the Dive with
+ * renderer=native: at 16 (below, as before) the three cores were busy and about a third of the buffers came out
+ * short (garbled sound); at -4 the sound played clean.  The two threads are paced by the output (the mixer stops
+ * 64 ms ahead), so above the game they take only what the sound needs */
+int kh1_vita_snd_prio = -4;
 u32 kh1_vita_snd_us;        /* the mixer's time mixing (the watchdog's sound line) */
 u32 kh1_vita_snd_tick_us;   /* the tick thread's time in the driver */
 u32 kh1_vita_snd_bufs;      /* buffers played */
