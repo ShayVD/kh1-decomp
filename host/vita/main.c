@@ -43,6 +43,10 @@
  *                             states, the primitives' GPU vertices, the batches and commands) on the GPU frame's
  *                             thread, between its frames, while the GS worker goes on (gsqueue.h's kh1_recq); 0
  *                             keeps it on the worker
+ *       recframe=N            2026-10-31: 1 (the default, with recq=1) runs the frame op's passes and the frame's GPU
+ *                             work as one more recording op on the GPU frame's thread; the GS worker only copies GS
+ *                             memory and the frame's texels for it (host/null/pipes.c kh1_pipes_rq_frame); 0 keeps
+ *                             the passes on the worker, as before
  *       gsstrip=N             session 151: 1 (the default, with recq=1) hands the VU1 programs' strips to the recorder
  *                             whole (host/null/gsregs.c's kh1_gs_strip_hook): one op a strip, each vertex turned
  *                             into the GPU's form once; 0 one op a triangle, as before
@@ -162,6 +166,7 @@ static int use_gpuq = 1; /* session 142: config.txt's gpuq= */
 static int late_wait;    /* session 145: config.txt's latewait= */
 #define CATCH_UP 4 /* session 149: the vblanks late frames may still make up (kh1_host_vblank) */
 static int use_recq = 1; /* session 146: config.txt's recq= */
+extern int kh1_pipes_rq_frame, kh1_pipes_gxm_count; /* 2026-10-31: config.txt's recframe= (host/null/pipes.c) */
 static int use_gsstrip = 1; /* session 151: config.txt's gsstrip= */
 static int use_native;      /* config.txt's renderer=native (docs/native-renderer.md) */
 extern int kh1_dma_native, kh1_vita_gxm_native_ok;
@@ -521,10 +526,16 @@ static int watchdog(SceSize args, void *argp) {
                 polls0 = kh1_vita_gt_polls;
             }
             if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
-                static u32 n0, d0, t0, v0, m0;
+                static u32 n0, d0, t0, v0, m0, h0, h13, f0, fu0;
                 vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles; P13 %u vertices "
-                     "(%u summed on the CPU)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
-                     kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0);
+                     "(%u summed on the CPU); handing them to the GS worker %u ms (P13's %u ms; the rest of each program's "
+                     "time is its parse); %u P13 runs handed back to the program (%u ms)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
+                     kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0, (kh1_vu1_nd_hand_us - h0) / 1000,
+                     (kh1_vu1_nd13_hand_us - h13) / 1000, kh1_vu1_nd13_fail - f0, (kh1_vu1_nd13_fail_us - fu0) / 1000);
+                f0 = kh1_vu1_nd13_fail;
+                fu0 = kh1_vu1_nd13_fail_us;
+                h0 = kh1_vu1_nd_hand_us;
+                h13 = kh1_vu1_nd13_hand_us;
                 v0 = kh1_vu1_nd13_verts;
                 m0 = kh1_vu1_nd13_multi;
                 n0 = kh1_vu1_drawn;
@@ -549,16 +560,17 @@ static int watchdog(SceSize args, void *argp) {
                     if (us[i] >= 1000) o += snprintf(ob + o, sizeof ob - o, " %08x %u ms (%u),", fn[i], us[i] / 1000, nn[i]);
                 vlog("kh1-vita: gs worker ops:%s\n", o ? ob : " none over 1 ms");
                 { /* 2026-10-31: the frame op (w_gpu_frame) by part (pipes.c kh1_pipes_frame_us) */
-                    extern volatile u32 kh1_pipes_frame_us[6];
-                    static u32 pf0[6];
-                    u32 d[6], j;
-                    for (j = 0; j < 6; j++) {
+                    extern volatile u32 kh1_pipes_frame_us[7];
+                    static u32 pf0[7];
+                    u32 d[7], j;
+                    for (j = 0; j < 7; j++) {
                         d[j] = kh1_pipes_frame_us[j] - pf0[j];
                         pf0[j] += d[j];
                     }
                     vlog("kh1-vita: gs worker's frame op: %u ms the native flush, %u waiting for the recording, %u the "
-                         "passes, %u waiting for the GPU thread, %u the copies for it, %u the rest\n", d[0] / 1000,
-                         d[1] / 1000, d[2] / 1000, d[3] / 1000, d[4] / 1000, d[5] / 1000);
+                         "passes, %u waiting for the GPU thread, %u the copies for it, %u the rest; %u the passes on the "
+                         "GPU thread\n", d[0] / 1000, d[1] / 1000, d[2] / 1000, d[3] / 1000, d[4] / 1000, d[5] / 1000,
+                         d[6] / 1000);
                 }
             }
             /* session 147: of the rest, the large LoadImages the game thread stores itself (gsimage.c LOAD_HERE) */
@@ -665,6 +677,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
         else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
         else if (strcmp(line, "recq") == 0) use_recq = atoi(v);
+        else if (strcmp(line, "recframe") == 0) kh1_pipes_rq_frame = atoi(v);
         else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
         else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
         else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
@@ -793,6 +806,7 @@ int main(int argc, char **argv) {
         kh1_pipes_start();
         kh1_gs_prim_hook = timed_prim;
         kh1_pipes_frame_hook = vita_frame;
+        kh1_pipes_gxm_count = 0; /* gxm.c records the frame's GXM calls itself: no second count on the worker */
         kh1_vita_present_gpu();
         /* session 141: the GS side on the second core, the game (and the VIF1 / VU1 programs) on the first */
         if (use_gsq) {
@@ -813,8 +827,9 @@ int main(int argc, char **argv) {
                     kh1_gs_prim_hook = kh1_pipes_prim;
                     if (use_gsstrip) kh1_gs_strip_hook = kh1_pipes_strip;
                 }
-                vlog("kh1-vita: the recording: %s%s\n", kh1_recq_on ? "on the GPU frame's thread" : "the GS worker's",
-                     kh1_gs_strip_hook ? ", the VU1 strips whole" : "");
+                vlog("kh1-vita: the recording: %s%s%s\n", kh1_recq_on ? "on the GPU frame's thread" : "the GS worker's",
+                     kh1_gs_strip_hook ? ", the VU1 strips whole" : "",
+                     kh1_recq_on && kh1_pipes_rq_frame ? ", the frame op's passes there too (recframe=1)" : "");
             }
         }
         /* the native renderer: P18's runs transformed by the GPU (its vertex variants compiled in gxm.c) */

@@ -13,6 +13,18 @@ int kh1_vu1_draw_p0 = 1;
 int kh1_vu1_draw_p11 = 1;
 int kh1_vu1_draw_p10 = 1;
 
+/* 2026-10-31: the time the game thread spends handing payloads over (dmawalk.c's queue put: the copy, and a full
+ * ring's wait), all programs' and P13's, kh1_vu1_clock's microseconds; the rest of a native program's time in
+ * the Vita's `vu1 programs:` line is its parse */
+u32 kh1_vu1_nd_hand_us, kh1_vu1_nd13_hand_us;
+static void nd_hand(const u32 *q, u32 nqw) {
+    u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, dt;
+    kh1_vu1_draw(q, nqw);
+    dt = kh1_vu1_clock ? kh1_vu1_clock() - t0 : 0;
+    kh1_vu1_nd_hand_us += dt;
+    if ((q[0] & 0xFF) == 13) kh1_vu1_nd13_hand_us += dt;
+}
+
 #define ND_QW 4096 /* a payload's qwords: VU1's data memory is 1024, a vertex 3 there and 2 here */
 static u32 nd_buf[ND_QW][4];
 static u32 nd_mat[KH1_NAT_MATS][4][4];
@@ -78,7 +90,7 @@ static int nd_18(u32 pc, u32 num) {
     nd_buf[1][2] = vi[12] >> 15 & 1;
     nd_buf[1][3] = vi[13] >> 15 & 1;
     memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
     for (k = 0; k < 3; k++) /* the slots as the program's loads leave them */
         if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
     kh1_vu1_drawn++;
@@ -148,7 +160,7 @@ static int nd_10(u32 pc) {
     nd_buf[1][2] = 0;
     nd_buf[1][3] = 0;
     memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
     for (k = 0; k < 3; k++)
         if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
     kh1_vu1_drawn++;
@@ -216,7 +228,7 @@ static int nd_0(u32 pc, int p4) {
     nd_buf[0][3] = rq - 2;
     nd_buf[1][1] = nd_buf[1][2] = nd_buf[1][3] = 0;
     for (k = 0; k < 4; k++) memcpy(nd_buf[rq + k], m[k], 16);
-    kh1_vu1_draw(nd_buf[0], rq + 4);
+    nd_hand(nd_buf[0], rq + 4);
     if (!p4) mem[48][1] = h[3]; /* P4 leaves the template as it is */
     kh1_vu1_drawn++;
     tpc = (p4 ? 0x45 : 0x4e) & (MICRO_N - 1);
@@ -292,7 +304,7 @@ static void nd_0_check(void) {
  * note above).  Anything unexpected (an influence count of 0 or over 8, more than 32 matrices, a matrix that cannot
  * be inverted, v.w not positive, a full buffer) returns 0 and the program runs */
 int kh1_vu1_draw_p13 = 1;
-u32 kh1_vu1_nd13_multi, kh1_vu1_nd13_verts; /* the vertices summed here, and all of P13's handed over */
+u32 kh1_vu1_nd13_multi, kh1_vu1_nd13_verts, kh1_vu1_nd13_fail, kh1_vu1_nd13_fail_us; /* the vertices summed here, and all of P13's handed over */
 static int nd13_built;
 static double nd13_inv[KH1_NAT_MATS][4][4]; /* M^-1 as rows, for the matrices a summed vertex is put in */
 static f32 nd13_f[KH1_NAT_MATS][4][4];     /* the payload's matrices as floats (fin()'d once), for the sums */
@@ -303,6 +315,27 @@ static void nd13_add(u32 id, const u32 (*m)[4]) {
         for (r = 0; r < 4; r++) nd13_f[id][c][r] = fin(m[c][r]);
 }
 static u32 nd13_have_inv;
+/* 2026-10-31 (the Vita measured nd_13 at ~1.4 us a vertex): a summed vertex goes in one reference matrix's space for
+ * the whole run, through Q_i = M_ref^-1 x M_i made once per matrix (in double, kept as floats), so a vertex costs
+ * k float matrix products and one reciprocal, and no double arithmetic */
+static f32 nd13_q[KH1_NAT_MATS][4][4]; /* Q_i, columns as nd13_f */
+static u32 nd13_have_q;
+static s32 nd13_ref;
+static const f32 (*nd13_getq(u32 id))[4] {
+    if (!(nd13_have_q >> id & 1)) {
+        u32 r, c, k;
+        for (c = 0; c < 4; c++)
+            for (r = 0; r < 4; r++) {
+                double a = 0.0;
+                if (id == (u32)nd13_ref) a = r == c;
+                else
+                    for (k = 0; k < 4; k++) a += nd13_inv[nd13_ref][r][k] * (double)nd13_f[id][c][k];
+                nd13_q[id][c][r] = (f32)a;
+            }
+        nd13_have_q |= 1u << id;
+    }
+    return (const f32 (*)[4])nd13_q[id];
+}
 static int nd13_invert(u32 id) {
     double a[4][8];
     u32 r, c, k;
@@ -338,6 +371,7 @@ static int nd_13(u32 pc) {
     u16 i6 = vi[6], i8 = vi[8], i9 = vi[9];
     u32 sl[3][4][4];               /* the slots as the run's loads leave them (written back on success) */
     s32 cur[3] = { -1, -1, -1 };   /* each slot's matrix in this payload, -1 not listed yet */
+    u32 at2 = ~0u;                 /* the palette entry slot 2 holds, ~0 when a stream load (or nothing) put it there */
     u32 pal[KH1_NAT_MATS];         /* a palette entry's address for each matrix listed from one, else ~0 */
     static const int base[3] = { 5, 12, 19 };
     nd13_built = 0;
@@ -346,6 +380,8 @@ static int nd_13(u32 pc) {
     if (l9 != 0x21 && l9 != 0x25 && l9 != 0x29 && l9 != 0x2d) return 0;
     for (k = 0; k < 3; k++) memcpy(sl[k], vf[base[k]], 64);
     nd13_have_inv = 0;
+    nd13_have_q = 0;
+    nd13_ref = -1;
     for (;;) {
         const u32 *h = mem[i2 & (DATA_QW - 1)];
         u32 op = h[0] & 0xFFFF, nv, j;
@@ -356,6 +392,7 @@ static int nd_13(u32 pc) {
                 u32 r = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
                 for (k = 0; k < 4; k++) memcpy(sl[r][k], mem[(i2 + 1 + k) & (DATA_QW - 1)], 16);
                 cur[r] = -1;
+                if (r == 2) at2 = ~0u;
             } else if (w == 1)
                 i6 = (u16)i2;
             i2 += 8;
@@ -380,6 +417,9 @@ static int nd_13(u32 pc) {
         for (j = 0; j < nv; j++) {
             u32 nb = mem[i2 & (DATA_QW - 1)][3] & 0xFFFF, b, first = 0;
             const u32 *t;
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+            float32x4_t acc = vdupq_n_f32(0.0f);
+#endif
             f32 c[4] = { 0, 0, 0, 0 };
             if (!nb || nb > 8) return 0;
             if (rq + 2 > ND_QW - KH1_NAT_MATS * 4) return 0;
@@ -392,16 +432,18 @@ static int nd_13(u32 pc) {
                 if (lane == 3) { i8 = (u16)(i8 + 1); i9 = 0x21; }
                 else i9 = (u16)(0x21 + 4 * (lane + 1));
                 if ((s16)(u16)(ix - 0x100) >= 0) { /* the palette's entry: loaded into slot 2 */
-                    u16 at = (u16)((u16)(ix - 0x100) + i6);
-                    u32 m;
-                    for (k = 0; k < 4; k++) memcpy(sl[2][k], mem[(at + 1 + k) & (DATA_QW - 1)], 16);
-                    cur[2] = -1;
-                    for (m = 0; m < nmat; m++)
-                        if (pal[m] == (at & (DATA_QW - 1))) { cur[2] = (s32)m; break; }
+                    u32 at = (u16)((u16)(ix - 0x100) + i6) & (DATA_QW - 1), m;
+                    if (at != at2) { /* 2026-10-31: the same entry again (most of a model's runs) is already there */
+                        for (k = 0; k < 4; k++) memcpy(sl[2][k], mem[(at + 1 + k) & (DATA_QW - 1)], 16);
+                        at2 = at;
+                        cur[2] = -1;
+                        for (m = 0; m < nmat; m++)
+                            if (pal[m] == at) { cur[2] = (s32)m; break; }
+                    }
                     if (cur[2] < 0) {
                         if (nmat == KH1_NAT_MATS) return 0;
                         nd13_add(nmat, (const u32 (*)[4])sl[2]);
-                        pal[nmat] = at & (DATA_QW - 1);
+                        pal[nmat] = at;
                         cur[2] = (s32)nmat++;
                     }
                     r = 2;
@@ -413,7 +455,13 @@ static int nd_13(u32 pc) {
                     pal[nmat] = ~0u;
                     cur[r] = (s32)nmat++;
                 }
-                if (!b) first = (u32)cur[r];
+                if (!b) {
+                    first = (u32)cur[r];
+                    if (nb > 1 && nd13_ref < 0) { /* the run's reference matrix: the first summed vertex's first */
+                        if (!nd13_invert(first)) return 0;
+                        nd13_ref = (s32)first;
+                    }
+                }
                 if (nb == 1 && p[3] == 0x3F800000u) { /* weight 1 (most): the position as it is */
                     nd_buf[rq][0] = p[0];
                     nd_buf[rq][1] = p[1];
@@ -425,21 +473,32 @@ static int nd_13(u32 pc) {
                     nd_buf[rq][1] = fo(fin(p[1]) / pw);
                     nd_buf[rq][2] = fo(fin(p[2]) / pw);
                 } else {
-                    const f32 (*mm)[4] = nd13_f[cur[r]];
+                    const f32 (*mm)[4] = nd13_getq((u32)cur[r]);
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+                    /* 2026-10-31: the Vita's VFP is slow at a chain of scalar products; NEON's multiply-accumulate
+                     * (not fused: a multiply's rounding, then an add's, as the scalar sum) does a column at once */
+                    float32x4_t v = vfin(VU_LD(p));
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[0]), vget_low_f32(v), 0);
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[1]), vget_low_f32(v), 1);
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[2]), vget_high_f32(v), 0);
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[3]), vget_high_f32(v), 1);
+#else
                     f32 x = fin(p[0]), y = fin(p[1]), z = fin(p[2]), w = fin(p[3]);
                     for (k = 0; k < 4; k++) c[k] += mm[0][k] * x + mm[1][k] * y + mm[2][k] * z + mm[3][k] * w;
+#endif
                 }
             }
-            if (nb > 1) { /* c in the first influence's space */
-                double v[4];
-                if (!nd13_invert(first)) return 0;
-                for (k = 0; k < 4; k++)
-                    v[k] = nd13_inv[first][k][0] * c[0] + nd13_inv[first][k][1] * c[1] + nd13_inv[first][k][2] * c[2] +
-                           nd13_inv[first][k][3] * c[3];
-                if (!(v[3] > 1e-6)) return 0;
-                nd_buf[rq][0] = fo((f32)(v[0] / v[3]));
-                nd_buf[rq][1] = fo((f32)(v[1] / v[3]));
-                nd_buf[rq][2] = fo((f32)(v[2] / v[3]));
+            if (nb > 1) { /* c is already in the reference's space (Q_i): v = c, the position v.xyz / v.w */
+                f32 iw;
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+                vst1q_f32(c, acc);
+#endif
+                if (!(c[3] > 1e-6f)) return 0;
+                iw = 1.0f / c[3];
+                nd_buf[rq][0] = fo(c[0] * iw);
+                nd_buf[rq][1] = fo(c[1] * iw);
+                nd_buf[rq][2] = fo(c[2] * iw);
+                first = (u32)nd13_ref;
                 kh1_vu1_nd13_multi++;
             }
             nd_buf[rq][3] = first;
@@ -465,7 +524,7 @@ static int nd_13(u32 pc) {
     nd13_built = 1;
     if (!kh1_vu1_draw) return 0;
     memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
     for (k = 0; k < 3; k++) memcpy(vf[base[k]], sl[k], 64);
     vi[6] = i6;
     vi[8] = i8;

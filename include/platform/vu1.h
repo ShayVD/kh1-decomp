@@ -41,6 +41,11 @@ extern int kh1_vu1_draw_p10;
  * hands over and those of them with more than one bone (summed on the CPU) */
 extern int kh1_vu1_draw_p13;
 extern u32 kh1_vu1_nd13_verts, kh1_vu1_nd13_multi;
+/* microseconds (kh1_vu1_clock's) the game thread spent handing native payloads to the GS worker's queue (the copy and
+ * a full ring's wait), all programs' and P13's (vu1_draw.h nd_hand) */
+extern u32 kh1_vu1_nd_hand_us, kh1_vu1_nd13_hand_us;
+/* P13's runs the native renderer handed back to the program (its time: the parse that gave up, then the program) */
+extern u32 kh1_vu1_nd13_fail, kh1_vu1_nd13_fail_us;
 extern int kh1_vu1_natcheck; /* host: KH1_HOST_NATCHECK=1, P0 run and checked against its payload (vu1_draw.h) */
 /* 1: a line per program run */
 extern int kh1_vu1_verbose;

@@ -236,10 +236,16 @@ payload as program 13 (vu1_draw.h `nd_13`, from 006). `natp13=0` / `KH1_HOST_NAT
   run leaves: the slots, vi06 / vi08 / vi09, I (2046) and the idle PC.
 - **One bone** (69 % of the Dive's P13 vertices): the position (xyz / weight) and its matrix go to the GPU, as P18's.
 - **More than one bone** (31 %): summed on the CPU in plain float (c = sum M_i x p_i, the clip-space point the
-  program divides), then handed over in its first bone's space: v = M_a^-1 x c (M_a^-1 in double, made once per
-  matrix and run), position v.xyz / v.w with matrix a. The GPU's M_a x (v / v.w, 1) is c / v.w, the same screen
+  program divides), then handed over in a bone's space: v = M_a^-1 x c, position v.xyz / v.w with matrix a (since
+  the first Vita log, a = one reference a run: below). The GPU's M_a x (v / v.w, 1) is c / v.w, the same screen
   place; v.w is the weights' sum (1) because every bone matrix of a model shares its projection, so the GPU's w and
   the perspective-correct STQ are the program's too.
+- **One reference a run (2026-10-31, after the first Vita log)**: the summed vertices of a run are all handed over in
+  one matrix's space, the first summed vertex's first bone (M_r), through Q_i = M_r^-1 x M_i made once per matrix a
+  run (in double, kept as floats): a vertex is then k float matrix products and one reciprocal, with no double
+  arithmetic (it was M_a^-1 x c in double, three double divides, per vertex). In the Dive a run has ~6 matrices,
+  ~3.4 of them used by summed vertices, and ~0.5 new references (KH1_HOST_NATCHECK: the same counts and positions as
+  before, worst 1.01 sixteenths).
 - **The ADC**: P13's back-face rule is P18's (the parity from the record's w), so `kh1_nat_tris` lists it and the
   GPU's cull mode does the rest. Its guard band (a vertex off x / y 0..4092 or z / 4096 off 0..4092 drops the
   triangles that end at it) is the GPU's clipping instead: pipes.c draws program 13 as P11 (mi's bit 7, KH1_NAT_LIN, z
@@ -268,7 +274,33 @@ Checked on the host:
   costs 0.10 G. On the Vita P13 already runs as hand-written NEON (vu1_nat.h nat_13, ~40 % fewer instructions than
   the translation), so its saving there is smaller than the host's; the GS worker's kick decode for it goes too.
 
-Not checked on a Vita: the frame rate, and the GPU's cost of one draw a P13 run (each with up to 32 matrices) where
+**On a Vita (2026-10-31, Shay's logs, renderer=native, latewait=0)**: Sora looked right. Where P13 draws (Dive frames
+~4,900-5,450) the GS worker was busy ~1,650-1,900 ms per 2.4 s with nothing else changed (2,200 before) and the game
+no longer waited for it; but P13's own time on the game thread was still ~470-740 ms per 2.4 s (the program's, NEON,
+was ~740), ~60 us a run where the qemu-arm timing gives ~20 (P0 ~37 on the Vita, ~21 in qemu). So the parse costs far
+more on the A9 than qemu suggests; the change above takes the double arithmetic out of the vertex loop, and the
+`native renderer:` line now gives the time spent handing payloads to the GS worker (`handing them to the GS worker N
+ms (P13's M ms)`), the rest of P13's time in `vu1 programs:` being the parse. Under qemu-arm (frames 0-7300, one
+thread, KH1_HOST_CLOCK=1) P13 native was 6.2 s in all (2.5 s of it the hand-off, which on the host runs the GS worker's
+side inline) against 19.8 s for the NEON program with its kicks.
+
+**The hand-off line on a Vita (2026-10-31, PR #200's build, Dive frames ~3,700-7,700)**: P13 ~600-720 ms per 2.6 s
+window, of it only ~40-60 ms handing payloads over: the parse is ~640 ms (~55 us a run of ~42 vertices, ~1.3 us a
+vertex, ~580 A9 cycles), the one-reference-matrix change no faster there. Not the sound threads taking the game's
+core: with `sndcore=2` (sound pinned to the third core) P13 was the same 600-680 ms, and the frame recording on that
+core then made the GS worker wait 0.9-1.8 s a window (10-14 pictures a second): leave sndcore unset. Then (same date):
+the summed vertices' products in NEON (`vmlaq_lane_f32`, not fused: the scalar sum's roundings in another order; NATCHECK
+to frame 8000 gives the counts above unchanged on the host's scalar path and on qemu-arm's NEON one), a palette entry
+loaded into slot 2 not copied again when it is the one there already, and the `native renderer:` line's `N P13 runs
+handed back to the program (M ms)`: the runs nd_13 gave up on, and their time (the parse that gave up, then the
+program's), so the parse's own share of `vu1 programs:` P13 is that line's P13 time less the hand-off and this.
+
+**latewait (2026-10-31)**: two of those runs had `latewait=1` in config.txt (the mod menu's "Frame catch-up: Off",
+saved there before the first of them; the menu writes only the values it shows, so it was set from the menu at some
+point, not by a bug): the game thread then waits for a vblank every frame, ~700-800 ms per 2.4 s in the Dive, ~13
+pictures a second where latewait=0 gives ~15-16. Keep it at 0.
+
+Not checked on a Vita: the GPU's cost of one draw a P13 run (each with up to 32 matrices) where
 the GS path batched them; the Vita log's `native renderer:` line now also counts P13's vertices and the summed ones.
 If Sora looks wrong with renderer=native, `natp13=0` is the switch to try first.
 
