@@ -175,6 +175,16 @@ to Dive frame 7000, 22,876 P4 runs, no triangle drawn by P4 alone, colours / ST 
 clips at z <= w as the stand-in does (if it clamps instead, geometry right at the camera would show where P0 clipped
 it), the frame rate. If the map looks wrong with renderer=native, `natp0=0` is the first switch to try.
 
+**First Vita report (2026-10-31, renderer=native with gputime=1): the Dive's floor did not show.** Not reproduced
+on the host: the stand-in draws it, the fragment shader table holds under 32 variants, and two guesses modelled in
+the stand-in changed no pixel (a COLOR varying clamped to 0 .. 1, and one rounded to 8 bits, for the lin draws'
+col x w). Next: the run's log (`kh1-gxm: first skip` lines name a refused shader or a skipped draw), and
+`python3 -I tools/vita/build.py --linux-arm --gxm`, the stand-in built for ARM (out/armlinux/kh1-arm-gxm, run under
+qemu-arm), to compare the native path's pictures on ARM with the x86 ones: over 7,000 Dive frames the ARM build
+draws the floor too (of 84 pictures, 48 differ from x86's by float rounding, frame 4999's 3D target in 4,121 pixels, 11
+by more than 32 levels). So the CPU side is not it on ARM; the cause is in the Vita's GPU or its shader compiler.
+`natp0=0` is the workaround.
+
 ### P11 too (2026-10-31, host only)
 
 P11 (renderer B's unlit models with a near-plane cull and a guard band: the Keyblade and other held or field

@@ -506,6 +506,42 @@ static void passes(void) {
             kh1_cmd_reset_frame(&pr);
         }
     }
+    {
+        /* frame 5 (2026-10-31, the hoist): the 3D target, then a small target drawn without reading the 3D one,
+         * then the 3D target again, sampling the small one: the small pass is drawn first and the 3D target is one
+         * pass, never stored and reloaded in between; with kh1_cmd_hoist off it stays 3 passes */
+        int on;
+        for (on = 1; on >= 0; on--) {
+            kh1_cmd_hoist = on;
+            psprite(F_MAIN, Z_ALWAYS_W, 0, 0x6, 0, S_MAIN, 0, 0, 512, 384);
+            psprite(F_MAIN, Z_GEQUAL, 0, 0x46, 0, S_MAIN, 10, 10, 100, 100);
+            psprite(F_SLOT, 0, 1, 0x6, 0, S_SLOT, 0, 0, 64, 64);
+            psprite(F_MAIN, Z_GEQUAL, 0, 0x156, T_SLOT, S_MAIN, 20, 20, 60, 60);
+            kh1_cmd_frame(&pr);
+            printf("cmdbuf_test: hoist %d: %u passes, %u hoisted; pass 1 %s\n", on, pr.npass, pr.frame.hoists,
+                   kh1_cmd_pass_str(&pr.pass[0]));
+            if (on)
+                CHECK("passes: a small pass between two 3D passes is drawn first, the 3D target one cleared pass",
+                      pr.npass == 2 && pr.frame.hoists == 1 && pr.pass[0].rt == KH1_RT_SLOT &&
+                      pr.pass[0].ncmd == 1 && pr.pass[1].ncmd == 3 && pr.pass[1].cleared &&
+                      pr.pass[1].load == KH1_LOAD_DONT_CARE && pr.cmd[0].pass == 0 && pr.cmd[1].pass == 1 &&
+                      pr.cmd[3].pass == 1);
+            else
+                CHECK("passes: with the hoist off it is 3 passes, the 3D target reloaded",
+                      pr.npass == 3 && pr.frame.hoists == 0 && pr.pass[2].load == KH1_LOAD_LOAD);
+            kh1_gxm_frame(&gxp, &pr);
+            CHECK("passes: and its GXM calls match its passes", gxm_scenes_match(&pr, &gxp));
+            kh1_cmd_reset_frame(&pr);
+        }
+        kh1_cmd_hoist = 1;
+        /* frame 6: the small pass samples the 3D target: not moved */
+        psprite(F_MAIN, Z_ALWAYS_W, 0, 0x6, 0, S_MAIN, 0, 0, 512, 384);
+        psprite(F_SLOT, 0, 1, 0x116, T_MAIN, S_SLOT, 0, 0, 64, 64);
+        psprite(F_MAIN, Z_GEQUAL, 0, 0x46, 0, S_MAIN, 20, 20, 60, 60);
+        kh1_cmd_frame(&pr);
+        CHECK("passes: a small pass that samples the 3D target is not moved", pr.npass == 3 && pr.frame.hoists == 0);
+        kh1_cmd_reset_frame(&pr);
+    }
     kh1_cmd_finish(&pr);
     printf("cmdbuf_test: passes: %u passes, %u load, %u don't care, %u store, %u discard, %u open; depth %u load, %u "
            "store, %u discard\n", pr.total.passes, pr.total.loads, pr.total.dont_care, pr.total.stores,

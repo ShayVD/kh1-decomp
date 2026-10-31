@@ -792,8 +792,8 @@ static void report_cmds(void) {
     /* session 127: the transfers between the draws */
     printf("kh1-host:   transfers: %u uploads, %u copies, %u CLUT loads (%u palette fills), %u texture decodes (%u texels); "
            "%u read a render target, %u write one; %u scenes split by a transfer on their own target, %u uploads into "
-           "another target inside a scene\n", t->uploads, t->copies, t->cluts, t->pal_fills, t->textures, t->texels,
-           t->tgt_reads, t->tgt_writes, t->splits, t->xfer_joins);
+           "another target inside a scene; %u times passes drawn ahead of a scene they split\n", t->uploads, t->copies,
+           t->cluts, t->pal_fills, t->textures, t->texels, t->tgt_reads, t->tgt_writes, t->splits, t->xfer_joins, t->hoists);
     {   /* session 128: the GXM calls (include/platform/gxmrec.h) */
         const KH1GxmCount *g = &gxm->total;
         printf("kh1-host:   gxm: %u frames, %u calls (a frame at most %u, %u scenes), %u scenes (%u load, %u store), %u draws, "

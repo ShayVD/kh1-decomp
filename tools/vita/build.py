@@ -80,6 +80,10 @@ def vita_platform_flags(d, f):
 def armlinux_platform_flags(d, f):
     return census_platform_flags(d, f) + platform_opt(d, f)
 
+# --gxm's flags for host/vita/gxm.c and its stand-in (as tools/vita/gxmcheck.sh's, for ARM)
+CFLAGS_GXM = ["-std=gnu99", "-w", "-DKH1_HOST", "-fno-pic", "-fno-stack-protector", "-mfpu=neon", "-Iinclude", "-Isrc",
+              "-Ihost/null", "-Ihost/vita"]
+
 # the two targets: the Vita, and 32-bit ARM Linux for qemu-arm (the host's null runner as it is,
 # with host/vita's context switch and host/armlinux's overlay answer)
 TARGETS = {
@@ -253,6 +257,9 @@ def package(b, out, elf):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--linux-arm", action="store_true", help="build out/armlinux/kh1-arm for qemu-arm instead")
+    ap.add_argument("--gxm", action="store_true",
+                    help="with --linux-arm: also out/armlinux/kh1-arm-gxm, the Vita's GPU renderer on the sceGxm "
+                         "stand-in (tools/vita/gxmcheck.sh's, compiled for ARM)")
     ap.add_argument("--opt", choices=sorted(OPTS), default=os.environ.get("KH1_VITA_OPT", DEFAULT_OPT),
                     help="the optimisation (default %s; KH1_VITA_OPT sets it too)" % DEFAULT_OPT)
     a = ap.parse_args()
@@ -321,6 +328,19 @@ def main():
             print("vita: %s missing from the link (dropped by LTO?)" % " ".join(lost))
             return 1
     print("%s: %s linked (%d objects, --opt %s)" % (name, os.path.relpath(elf, ROOT), len(objs), a.opt))
+    if name == "linux-arm" and a.gxm:
+        # 2026-10-31: tools/vita/gxmcheck.sh's run on ARM (NEON, the Vita's float and struct layout), so the
+        # native renderer's pictures can be compared with the x86 stand-in's (vita-build.md)
+        sdk = os.environ.get("VITASDK", "/usr/local/vitasdk")
+        cf = CFLAGS_GXM + opt_c + ["-I" + os.path.join(sdk, "arm-vita-eabi", "include")]
+        gobjs = []
+        for src in ("host/vita/gxm.c", "tests/host/gxm_mock.c"):
+            o = os.path.join(out, os.path.basename(src) + ".gxm.o")
+            run([cc] + cf + ["-c", src, "-o", o], src)
+            gobjs.append(o)
+        gelf = elf + "-gxm"
+        run([cc] + t["link"] + ["-o", gelf] + objs + gobjs + extra + t["libs"], "the gxm link")
+        print("linux-arm: %s linked (the GPU renderer on its stand-in)" % os.path.relpath(gelf, ROOT))
     if name == "linux-arm":
         print("linux-arm: run it as the host runner: KH1_HOST_ISO=... QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf "
               "qemu-arm %s" % os.path.relpath(elf, ROOT))

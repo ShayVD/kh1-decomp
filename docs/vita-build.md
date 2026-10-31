@@ -1734,6 +1734,31 @@ Per picture this saves the copy (~0.3 M fragments, ~2.4 MB of tiles), one 960 x 
 fragments, ~4 MB), the second clear, and one full sceGxmFinish on the empty frame. `present=0` is the copy and the
 present every frame as before, the fallback if the picture tears or flickers.
 
+### Cut 4: the shadow's passes drawn ahead of the 3D scene (cmdbuf.c `hoist`; hoist=1)
+
+After cuts 1-3 a Dive picture was 6 scenes: the overlay band, the display copy, the main 3D scene (33 draws), the
+shadow (256 x 256 into target 3, bp 3600), the 256 x 192 sprite into target 2, and a 3-draw tail on the 3D target
+again. The shadow's two scenes split the 3D target, so its colour (~1 MB) and depth were stored and reloaded.
+
+`hoist` (kh1_cmd_frame, before the loads and stores are worked out) moves passes G that sit between two passes of
+the same target T (M, then a tail with matching target, size and a compatible depth) to before M, and joins M and
+the tail. It moves them only when that cannot change a pixel:
+
+- G draws into other targets only, samples nothing of T and transfers nothing to or from T; its depth buffer is
+  not M's or the tail's.
+- Nothing in M samples or copies from what G draws or samples. An upload in M into a target G draws (the Dive's:
+  the shadow buffer's base image, 64 x 128 into bp 3600) moves ahead with G, in order; any other transfer into G's
+  targets refuses the move.
+- No texture slot or CLUT slot that G fills is read or refilled by M (`slot_clash`), and the gap before the tail
+  touches nothing of T.
+
+Frame 5101 (KH1_HOST_GXM_COST): 6 scenes to 5; colour 4,685 KiB loaded and stored to 3,668; depth loaded 1,273 KiB
+to 256, stored 2,290 to 1,273: ~3 MB less tile traffic a picture. `hoist=0` (config.txt) / `KH1_HOST_HOIST=0`
+turns it off. Checked: cmdbuf_test (a small pass between two 3D passes moves and the 3D target is one cleared
+pass; one that samples the 3D target does not move; hoist=0 keeps 3 passes; the GXM calls match), every 50th
+frame's targets hashed over 7,000 Dive frames identical to main's (280 hashes), and renderer=native's 84
+pictures identical to the build before. Host only.
+
 ### Checked
 
 - `make test`: cmdbuf_test 53 checks (the two new ones above), kh1.elf byte-identical.

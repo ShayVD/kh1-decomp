@@ -319,6 +319,7 @@ static FragShader *frag_of(const KH1ShaderKey *k) {
         if (!memcmp(&frag[i].k, k, sizeof *k)) return frag[i].state > 0 ? &frag[i] : 0;
     if (nfrag == FRAGS) return 0;
     f = &frag[nfrag++];
+    if (!(nfrag & 31)) kh1_vita_log("kh1-gxm: %u fragment shader variants of %u\n", nfrag, FRAGS);
     memset(f, 0, sizeof *f);
     f->k = *k;
     f->state = -1;
@@ -433,6 +434,7 @@ static SceGxmFragmentProgram *prog_of(const KH1PipeKey *p, u32 vi, FragShader **
         }
     }
     nprog++;
+    if (!(nprog & 63)) kh1_vita_log("kh1-gxm: %u fragment programs of %u\n", nprog, PROGS);
     return e->fp;
 }
 

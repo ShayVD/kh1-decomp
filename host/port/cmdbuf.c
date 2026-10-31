@@ -598,6 +598,126 @@ static void xfer_walk(KH1CmdRec *r, const KH1Cmd *c, const s32 *w, u8 *xw) {
     }
 }
 
+int kh1_cmd_hoist = 1;
+
+/* 2026-10-31: kh1_cmd_hoist.  A pass on target T, then passes on other targets (the group G), then T again with the
+ * same depth buffer: the GPU ends T's scene for G and loads T's colour and depth again after it (the Dive: the
+ * shadow's two small passes between the 3D scene and its tail, ~2 MiB of tile loads and stores a picture).  When G
+ * and T's first pass do not touch each other's work, G's commands (with the transfers just before them) go ahead of
+ * T's first pass and the two T passes become one.  Not touching: G samples, reads or writes neither T nor T's depth
+ * buffer; T's first pass samples no target G draws or samples and copies from none; neither side's texture or
+ * palette uploads land in a slot the other side's draws use or uploads into (their order would change what a draw
+ * sees).  An upload T's first pass made into a target G draws or samples (the Dive: the shadow buffer's base image,
+ * sent during the 3D scene since it no longer ends it) is G's: it goes ahead with G, in its order */
+static int g_upload(const KH1Cmd *c, u32 g, u8 T) {
+    return (c->kind == KH1_CMD_UPLOAD || c->kind == KH1_CMD_COPY) && c->x.dst && c->x.dst - 1u != T &&
+           (g >> (c->x.dst - 1u) & 1) && (!c->x.src || c->x.src - 1u != T);
+}
+static void cmd_swap(KH1Cmd *a, KH1Cmd *b) {
+    KH1Cmd t = *a;
+    *a = *b;
+    *b = t;
+}
+static void cmd_rev(KH1CmdRec *r, u32 a, u32 b) { /* [a, b) reversed */
+    while (a + 1 < b) cmd_swap(&r->cmd[a++], &r->cmd[--b]);
+}
+static int slot_clash(const KH1Cmd *x, const KH1Cmd *y) { /* x's upload against y's draw or upload */
+    if (x->kind == KH1_CMD_TEXTURE && x->x.slot >= 0)
+        return (y->kind == KH1_CMD_DRAW && y->tslot == x->x.slot) || (y->kind == KH1_CMD_TEXTURE && y->x.slot == x->x.slot);
+    if (x->kind == KH1_CMD_CLUT && x->x.slot >= 0 && x->x.fill)
+        return (y->kind == KH1_CMD_DRAW && y->pslot == x->x.slot) ||
+               (y->kind == KH1_CMD_CLUT && y->x.fill && y->x.slot == x->x.slot);
+    return 0;
+}
+static u32 hoist_g; /* hoist_ok's G targets (drawn, written or sampled) */
+static int hoist_ok(const KH1CmdRec *r, u32 a, u32 b) {
+    const KH1CmdPass *m = &r->pass[a], *t = &r->pass[b];
+    u32 s = m->cmd0, mid = m->cmd0 + m->ncmd, e = r->pass[b - 1].cmd0 + r->pass[b - 1].ncmd, i, j, gt = 0, gs = 0;
+    u8 T = m->tgt;
+    if (T >= KH1_CMD_TARGETS || t->w != m->w || t->h != m->h) return 0;
+    for (i = a + 1; i < b; i++) {
+        const KH1CmdPass *g = &r->pass[i];
+        if (g->tgt >= KH1_CMD_TARGETS || g->tgt == T) return 0;
+        if (g->depth != KH1_DS_NONE && (g->depth == m->depth || g->depth == t->depth)) return 0;
+        gt |= 1u << g->tgt;
+    }
+    for (i = mid; i < e; i++) { /* G (and the transfers before it) */
+        const KH1Cmd *c = &r->cmd[i];
+        if (c->kind == KH1_CMD_DRAW && c->samples) {
+            if (c->samples - 1u == T) return 0;
+            gs |= 1u << (c->samples - 1u);
+        }
+        if (c->kind != KH1_CMD_DRAW && ((c->x.src && c->x.src - 1u == T) || (c->x.dst && c->x.dst - 1u == T))) return 0;
+        if (c->kind != KH1_CMD_DRAW && c->x.dst) gt |= 1u << (c->x.dst - 1u);
+    }
+    for (i = s; i < mid; i++) { /* T's first pass */
+        const KH1Cmd *c = &r->cmd[i];
+        if (c->kind == KH1_CMD_DRAW && c->samples && ((gt | gs) >> (c->samples - 1u) & 1)) return 0;
+        if (c->kind != KH1_CMD_DRAW && c->x.src && ((gt | gs) >> (c->x.src - 1u) & 1)) return 0;
+        if (c->kind != KH1_CMD_DRAW && c->x.dst && ((gt | gs) >> (c->x.dst - 1u) & 1) && !g_upload(c, gt | gs, T)) return 0;
+        for (j = mid; j < e; j++)
+            if (slot_clash(c, &r->cmd[j]) || slot_clash(&r->cmd[j], c)) return 0;
+    }
+    /* the T passes' join: the transfers between them leave T alone */
+    for (i = e; i < t->cmd0; i++) {
+        const KH1Cmd *c = &r->cmd[i];
+        if (c->kind != KH1_CMD_DRAW && ((c->x.src && c->x.src - 1u == T) || (c->x.dst && c->x.dst - 1u == T))) return 0;
+    }
+    hoist_g = gt | gs;
+    return 1;
+}
+static void hoist(KH1CmdRec *r) {
+    u32 a, b, i, j, k;
+    if (r->dropped) return;
+    for (a = 0; a + 2 < r->npass; a++) {
+        KH1CmdPass *m = &r->pass[a], keep;
+        u32 s, mid, e, n;
+        for (b = a + 1; b < r->npass && r->pass[b].tgt != m->tgt; b++) ;
+        if (b == r->npass || b == a + 1) continue;
+        if (r->pass[b].rt != m->rt || r->pass[b].psm != m->psm || r->pass[b].fbp != m->fbp || r->pass[b].fbw != m->fbw)
+            continue;
+        if (m->depth != KH1_DS_NONE && r->pass[b].depth != KH1_DS_NONE && m->depth != r->pass[b].depth) continue;
+        if (m->cmd0 + m->ncmd > r->pass[a + 1].cmd0 || !hoist_ok(r, a, b)) continue;
+        s = m->cmd0;
+        mid = m->cmd0 + m->ncmd;
+        e = r->pass[b - 1].cmd0 + r->pass[b - 1].ncmd;
+        /* the commands: [s, mid) [mid, e) -> [mid, e) [s, mid) */
+        cmd_rev(r, s, mid);
+        cmd_rev(r, mid, e);
+        cmd_rev(r, s, e);
+        n = e - mid;
+        /* G's uploads from T's first pass ahead of G, in their order: [s, s + k) */
+        for (i = s + n, k = 0; i < e; i++)
+            if (g_upload(&r->cmd[i], hoist_g, m->tgt)) {
+                for (j = i; j > s + k; j--) cmd_swap(&r->cmd[j], &r->cmd[j - 1]);
+                k++;
+            }
+        keep = *m;
+        for (i = a; i + 1 < b; i++) {
+            r->pass[i] = r->pass[i + 1];
+            r->pass[i].cmd0 -= mid - s;
+            r->pass[i].cmd0 += k;
+        }
+        /* T's first pass now runs to its tail's end, the tail's draws and the transfers before it included */
+        keep.cmd0 += n + k;
+        keep.ncmd = r->pass[b].cmd0 + r->pass[b].ncmd - keep.cmd0;
+        keep.ndraw += r->pass[b].ndraw;
+        if (keep.depth == KH1_DS_NONE) keep.depth = r->pass[b].depth;
+        keep.ztest |= r->pass[b].ztest;
+        keep.zwrite |= r->pass[b].zwrite;
+        keep.zseen |= r->pass[b].zseen;
+        keep.feedback |= r->pass[b].feedback;
+        r->pass[b - 1] = keep;
+        for (i = b; i + 1 < r->npass; i++) r->pass[i] = r->pass[i + 1];
+        r->npass--;
+        for (i = 0; i < r->npass; i++)
+            for (j = r->pass[i].cmd0; j < r->pass[i].cmd0 + r->pass[i].ncmd && j < r->ncmd; j++)
+                if (r->cmd[j].kind == KH1_CMD_DRAW) r->cmd[j].pass = i;
+        r->frame.hoists++;
+        a = b - 2; /* the joined pass again (a++ next): its new tail may follow */
+    }
+}
+
 void kh1_cmd_frame(KH1CmdRec *r) {
     s32 w[KH1_CMD_TARGETS], dw[3];
     u32 i, j, *f, *t, next = 0;
@@ -605,6 +725,7 @@ void kh1_cmd_frame(KH1CmdRec *r) {
     KH1CmdCount *fc = &r->frame;
     kh1_batch_frame(&r->b); /* a repeat cut short is replayed first */
     r->held = -1;
+    if (kh1_cmd_hoist) hoist(r);
     for (i = 0; i < KH1_CMD_TARGETS; i++) w[i] = -1;
     dw[0] = dw[1] = dw[2] = -1;
     memset(xw, 0, sizeof xw);

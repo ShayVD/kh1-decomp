@@ -154,6 +154,7 @@ typedef struct {
     u32 tgt_reads, tgt_writes;             /* transfers reading / writing a render target (GPU work) */
     u32 splits;                            /* scenes split by a transfer touching their own target */
     u32 xfer_joins;                        /* uploads into another target that no longer end the scene (below) */
+    u32 hoists;                            /* 2026-10-31: passes moved ahead of a scene they interrupted (cmdbuf.c hoist) */
     u32 max_passes, max_cmds;
 } KH1CmdCount;
 
@@ -200,6 +201,9 @@ typedef struct {
 } KH1CmdRec;
 
 /* a recorder over two rings' memory (KH1_RING_FRAMES x vslot / uslot bytes, 32-byte aligned) */
+/* 2026-10-31: 1 (the default): passes that split a scene on one target are drawn ahead of it when they do not touch
+ * it, and its two parts joined (cmdbuf.c hoist); config.txt hoist=0 / KH1_HOST_HOIST=0 keeps the game's order */
+extern int kh1_cmd_hoist;
 void kh1_cmd_init(KH1CmdRec *r, void *vmem, u32 vslot, void *umem, u32 uslot);
 /* a primitive drawn in d / p: its n GPU vertices (v 0: counted, not written), sig as batch.h's */
 void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, u32 sig);
