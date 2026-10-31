@@ -696,10 +696,29 @@ const u32 *kh1_pipes_frame_pal(s32 slot) {
     return pal->slot[slot].col;
 }
 
+/* 2026-10-31 (the native renderer's Vita run: the GS worker's frame op ~7 ms a frame, the game waiting ~0.7 s per
+ * 2.4 s for the worker): the frame op's time by part, on kh1_vu1_clock (the Vita's watchdog prints them): 0 the
+ * native op's flush, 1 the wait for the frame's recording, 2 the passes (frame_begin: kh1_cmd_frame and its log),
+ * 3 the wait for the GPU thread's last frame, 4 the copies for the GPU thread (snap_frame), 5 the rest */
+volatile u32 kh1_pipes_frame_us[6];
+extern u32 (*kh1_vu1_clock)(void);
+static u32 pf_t;
+static void pf_mark(int part) {
+    u32 t;
+    if (!kh1_vu1_clock) return;
+    t = kh1_vu1_clock();
+    if (part >= 0) kh1_pipes_frame_us[part] += t - pf_t;
+    pf_t = t;
+}
+
 void kh1_pipes_frame(void) {
+    pf_mark(-1);
     nat_flush();
+    pf_mark(0);
     kh1_recq_sync(); /* session 146: the frame's recording done */
+    pf_mark(1);
     frame_begin();
+    pf_mark(2);
     if (kh1_pipes_frame_hook && kh1_pipes_snap) {
         u32 a = kh1_pipes_frame_arg;
         if (kh1_pipes_gpu_put && empty_frame() && (snap_empty || (snap_empty = (KH1CmdRec *)calloc(1, sizeof *snap_empty)))) {
@@ -715,6 +734,7 @@ void kh1_pipes_frame(void) {
             return;
         }
         if (kh1_pipes_gpu_wait) kh1_pipes_gpu_wait(); /* the last frame's hook is done with the copies */
+        pf_mark(3);
         empty_posted = 0;
         if (snap_frame()) {
             printf("kh1-host: pipes: the frame's copy failed (no memory): the GPU frame on this thread from now\n");
@@ -722,8 +742,10 @@ void kh1_pipes_frame(void) {
             kh1_pipes_job_arg = a;
             kh1_pipes_frame_hook(rec);
         } else if (kh1_pipes_gpu_put) {
+            pf_mark(4);
             kh1_pipes_gpu_put(w_hook, &a, 1);
         } else {
+            pf_mark(4);
             w_hook(&a, 0, 0);
         }
     } else if (kh1_pipes_frame_hook) {
@@ -731,6 +753,7 @@ void kh1_pipes_frame(void) {
         kh1_pipes_frame_hook(rec);
     }
     frame_end();
+    pf_mark(5);
 }
 
 void kh1_pipes_draw(const KH1GsDraw *g) {

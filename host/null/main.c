@@ -92,6 +92,20 @@
 #include "platform/ovl.h"
 #include "platform/vu1.h"
 #include "platform/cmdbuf.h"
+#include <time.h>
+extern u32 (*kh1_vu1_clock)(void);
+extern volatile u32 kh1_pipes_frame_us[6];
+static u32 host_us(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (u32)(t.tv_sec * 1000000u + t.tv_nsec / 1000);
+}
+static void host_clock_report(void) {
+    printf("kh1-host: the frame op: %u ms the native flush, %u waiting for the recording, %u the passes, %u waiting "
+           "for the GPU thread, %u the copies for it, %u the rest\n", kh1_pipes_frame_us[0] / 1000,
+           kh1_pipes_frame_us[1] / 1000, kh1_pipes_frame_us[2] / 1000, kh1_pipes_frame_us[3] / 1000,
+           kh1_pipes_frame_us[4] / 1000, kh1_pipes_frame_us[5] / 1000);
+}
 #include "gsregs.h"
 #include "gsmem.h"
 #include "gsqueue.h"
@@ -409,6 +423,10 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATP11")) kh1_vu1_draw_p11 = atoi(getenv("KH1_HOST_NATP11")); /* 2026-10-31: 0 P11 on the VU */
         if (getenv("KH1_HOST_NATP10")) kh1_vu1_draw_p10 = atoi(getenv("KH1_HOST_NATP10")); /* 2026-10-31: 0 P10 on the VU */
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
+        if (getenv("KH1_HOST_CLOCK")) { /* 2026-10-31: kh1_vu1_clock on the host (the frame op's parts at the end) */
+            kh1_vu1_clock = host_us;
+            atexit(host_clock_report);
+        }
         if (getenv("KH1_HOST_GSQ_CHECK") && kh1_host_trace >= 2 && kh1_host_trace < 5) {
             gsq_check = strtoul(getenv("KH1_HOST_GSQ_CHECK"), 0, 0);
             if (gsq_check) {

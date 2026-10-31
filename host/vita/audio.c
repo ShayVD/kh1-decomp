@@ -36,6 +36,10 @@ extern int kh1_snd_wanted;
 
 int kh1_vita_snd = 1;       /* config.txt's snd= (0: the null server, no sound) */
 int kh1_vita_snd_core = -1; /* config.txt's sndcore= (-1: any core; 0, 1 or 2 pins the mixer) */
+/* 2026-10-31: config.txt's sndprio=, the tick thread's and the mixer's priority against the game's threads
+ * (0x10000100): 16, the default, below them; negative, above them (the Dive with renderer=native left the sound
+ * short in about half its buffers: the three cores busy, the sound got too little of what was left) */
+int kh1_vita_snd_prio = 16;
 u32 kh1_vita_snd_us;        /* the mixer's time mixing (the watchdog's sound line) */
 u32 kh1_vita_snd_tick_us;   /* the tick thread's time in the driver */
 u32 kh1_vita_snd_bufs;      /* buffers played */
@@ -142,12 +146,12 @@ static void start_output(void) {
     mixed = sceKernelCreateSema("kh1_snd_mixed", 0, 0, 64, 0);
     kh1_snd_threads_begin();
     /* the game's threads run at 0x10000100: the tick thread and the mixer below them, the output above */
-    t = sceKernelCreateThread("kh1_snd_iop", tick_thread, 0x10000100 + 16, 0x8000, 0, mix_mask, 0);
+    t = sceKernelCreateThread("kh1_snd_iop", tick_thread, 0x10000100 + kh1_vita_snd_prio, 0x8000, 0, mix_mask, 0);
     if (t < 0 || sceKernelStartThread(t, 0, 0) < 0) {
         vlog("kh1-vita: sound: no tick thread (0x%08x)\n", t);
         return;
     }
-    t = sceKernelCreateThread("kh1_snd_mix", mix_thread, 0x10000100 + 16, 0x8000, 0, mix_mask, 0);
+    t = sceKernelCreateThread("kh1_snd_mix", mix_thread, 0x10000100 + kh1_vita_snd_prio, 0x8000, 0, mix_mask, 0);
     if (t < 0 || sceKernelStartThread(t, 0, 0) < 0) {
         vlog("kh1-vita: sound: no mixer thread (0x%08x)\n", t);
         return;
@@ -161,8 +165,9 @@ static void start_output(void) {
         vlog("kh1-vita: sound: the disc's driver ticking and mixing on core %d, %d ms ahead, 48 kHz\n",
              kh1_vita_snd_core, LEAD * 1000 / 48000);
     else
-        vlog("kh1-vita: sound: the disc's driver ticking and mixing on any cores below the game's threads, %d ms "
-             "ahead, 48 kHz\n", LEAD * 1000 / 48000);
+        vlog("kh1-vita: sound: the disc's driver ticking and mixing on any cores %s the game's threads (sndprio=%d), "
+             "%d ms ahead, 48 kHz\n", kh1_vita_snd_prio > 0 ? "below" : kh1_vita_snd_prio < 0 ? "above" : "level with",
+             kh1_vita_snd_prio, LEAD * 1000 / 48000);
 }
 
 /* from main(), before the game runs: the lock, and the output started when snd.c starts the driver */

@@ -71,6 +71,8 @@
  *                             null server (silence)
  *       sndcore=N             pins the sound's tick thread and mixer to core N (0, 1 or 2); the default, -1, lets
  *                             them run on any core below the game's threads
+ *       sndprio=N             the sound's tick thread and mixer's priority against the game's threads (2026-10-31):
+ *                             16, the default, below them; -4 above them (try it if the sound breaks up)
  *       wide=N                how the picture fills the 960 x 544 screen (docs/vita-build.md "Wide screen"): 1 (the
  *                             default) a 16:9 view, hor+ (the 3D sees more at the sides, host/port/view.c), the HUD's
  *                             gauges and command menu at the screen's edges, menus and text in the centred 4:3
@@ -95,7 +97,7 @@
 #include <string.h>
 #include "common.h"
 /* host/vita/audio.c: the sound */
-extern int kh1_vita_snd, kh1_vita_snd_core;
+extern int kh1_vita_snd, kh1_vita_snd_core, kh1_vita_snd_prio;
 extern u32 kh1_vita_snd_us, kh1_vita_snd_tick_us, kh1_vita_snd_bufs, kh1_vita_snd_under, kh1_vita_snd_queued;
 void kh1_vita_audio_init(void);
 int kh1_snd_active(void);
@@ -518,6 +520,18 @@ static int watchdog(SceSize args, void *argp) {
                 for (i = 0; i < k && o < (int)sizeof ob - 40; i++)
                     if (us[i] >= 1000) o += snprintf(ob + o, sizeof ob - o, " %08x %u ms (%u),", fn[i], us[i] / 1000, nn[i]);
                 vlog("kh1-vita: gs worker ops:%s\n", o ? ob : " none over 1 ms");
+                { /* 2026-10-31: the frame op (w_gpu_frame) by part (pipes.c kh1_pipes_frame_us) */
+                    extern volatile u32 kh1_pipes_frame_us[6];
+                    static u32 pf0[6];
+                    u32 d[6], j;
+                    for (j = 0; j < 6; j++) {
+                        d[j] = kh1_pipes_frame_us[j] - pf0[j];
+                        pf0[j] += d[j];
+                    }
+                    vlog("kh1-vita: gs worker's frame op: %u ms the native flush, %u waiting for the recording, %u the "
+                         "passes, %u waiting for the GPU thread, %u the copies for it, %u the rest\n", d[0] / 1000,
+                         d[1] / 1000, d[2] / 1000, d[3] / 1000, d[4] / 1000, d[5] / 1000);
+                }
             }
             /* session 147: of the rest, the large LoadImages the game thread stores itself (gsimage.c LOAD_HERE) */
             vlog("kh1-vita: large uploads: %u ms on the game thread, %u of them (%u unchanged), %u KiB\n",
@@ -625,6 +639,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
         else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
         else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
+        else if (strcmp(line, "sndprio") == 0) kh1_vita_snd_prio = atoi(v);
         else if (strcmp(line, "wide") == 0 || strcmp(line, "widescreen") == 0) wide = atoi(v);
         else if (strcmp(line, "strip") == 0) strip_always = atoi(v);
     }
