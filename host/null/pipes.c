@@ -53,6 +53,8 @@ char *getenv(const char *);
 unsigned long strtoul(const char *, char **, int);
 char *strchr(const char *, int);
 
+static void nat_flush(void); /* the native renderer's open op (below) */
+
 /* session 127: the recorder's caches (what a port's renderer would hold) */
 static KH1PalCache *pal;
 static KH1TexCache *tex;
@@ -103,6 +105,7 @@ static void on_xfer(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 r
     a[4] = pos_hi;
     a[5] = reg_lo;
     a[6] = reg_hi;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_upload, a, 7, 0, 0);
     tex_look = 1;
 }
@@ -143,6 +146,7 @@ static void on_clut(u32 lo, u32 hi) {
     a[1] = hi;
     a[2] = (u32)slot;
     a[3] = (u32)fill;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_clut, a, 4, 0, 0);
     a_pslot = (s16)slot;
     tex_look = 1;
@@ -180,6 +184,7 @@ static void tex_lookup(u32 lo, u32 hi) {
     a[2] = (u32)slot;
     a[3] = (u32)decoded;
     a[4] = decoded && slot >= 0 ? tex->slot[slot].n : 0;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_texture, a, 5, 0, 0);
     /* session 136: an indexed draw reads the CLUT buffer at its own CSA, loaded or not (the GS's rule, and
      * present.c's pal_for): when its entries are not the bound slot's, bind theirs */
@@ -193,6 +198,7 @@ static void tex_lookup(u32 lo, u32 hi) {
             slot = pal_get(pal_draw, pal_n, &fill);
             a[2] = (u32)slot;
             a[3] = (u32)fill;
+            nat_flush(); /* a joined native op first (2026-10-31) */
             kh1_recq_put(r_palette, a, 4, 0, 0);
             a_pslot = (s16)slot;
         }
@@ -233,10 +239,12 @@ int memcmp(const void *, const void *, __SIZE_TYPE__);
 
 /* session 146: the recorder's own state is read once its queue is done */
 const KH1Batcher *kh1_pipes_batcher(void) {
+    nat_flush();
     kh1_recq_sync();
     return &recorder()->b;
 }
 const KH1CmdRec *kh1_pipes_recorder(void) {
+    nat_flush();
     kh1_recq_sync();
     return recorder();
 }
@@ -376,6 +384,7 @@ static void prim_state(u32 prim) {
         w[k + 2] = c->xyoffset.lo;
         w[k + 3] = c->xyoffset.hi;
         for (k += 4; k < STATE_QW * 4; k++) w[k] = 0;
+        nat_flush(); /* a joined native op first (2026-10-31) */
         kh1_recq_put(r_state, 0, 0, w, STATE_QW);
         last_r = r;
         last_scissor[0] = c->scissor.lo;
@@ -397,6 +406,7 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     prim_state(prim);
     a[0] = prim;
     a[1] = n;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_prim, a, 2, (const u32 *)v, n * (u32)(sizeof *v / 16));
 }
 
@@ -407,6 +417,7 @@ void kh1_pipes_strip(u32 prim, const u32 *d, u32 n, u32 nq) {
     prim_state(prim);
     a[0] = prim;
     a[1] = n;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_strip, a, 2, d, KH1_GS_STRIP_MASK / 4 + n * (u32)(sizeof(KH1GsVert) / 16));
 }
 
@@ -421,6 +432,9 @@ u32 kh1_pipes_nat_draws, kh1_pipes_nat_tris; /* the recorder's native commands a
 #define NAT_QW 4096
 static u32 nat_op[NAT_QW][4];
 static const u32 *nat_hdr, *nat_mats;
+/* the open op's header (2 qwords) and matrices, kept: 2026-10-31, P0's runs with the same matrix and header join
+ * one op (a map object's batches), so the op can stay open past its payload */
+static u32 nat_hs[8], nat_ms[KH1_NAT_MATS * 16];
 static u32 nat_rq, nat_nrec, nat_prim, nat_gen;
 static int nat_open;
 static KH1GpuVert nat_v[KH1_NAT_VERTS];
@@ -431,7 +445,18 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
     while (nqw >= 2) {
         u32 nrec = d[1], nmat = d[2], rq = d[3], len = 2 + rq + nmat * 4, n, lost;
         if (len > nqw || nmat > KH1_NAT_MATS) break;
-        if (!d[6]) { /* not every vertex ADC */
+        if ((d[0] & 0xFF) == 0) { /* 2026-10-31: P0 (natdraw.h): the culled triangles, then the double-sided ones */
+            u32 pass;
+            kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            for (pass = 0; pass < 2; pass++) {
+                n = kh1_nat_tris0(d + 8, nrec, d[4], !pass, nat_v, KH1_NAT_VERTS, &lost);
+                if (!n) continue;
+                kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat,
+                               (!pass ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | KH1_NAT_LIN);
+                kh1_pipes_nat_draws++;
+                kh1_pipes_nat_tris += n / 3;
+            }
+        } else if (!d[6]) { /* not every vertex ADC */
             n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
             kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE);
@@ -448,23 +473,25 @@ static void nat_flush(void) {
     if (!nat_open) return;
     nat_open = 0;
     if (!nat_nrec) return;
-    nat_op[0][0] = nat_hdr[0];
+    nat_op[0][0] = nat_hs[0];
     nat_op[0][1] = nat_nrec;
-    nat_op[0][2] = nat_hdr[2];
+    nat_op[0][2] = nat_hs[2];
     nat_op[0][3] = nat_rq - 2;
-    memcpy(nat_op[1], nat_hdr + 4, 16);
-    memcpy(nat_op[nat_rq], nat_mats, nat_hdr[2] * 64);
+    memcpy(nat_op[1], nat_hs + 4, 16);
+    memcpy(nat_op[nat_rq], nat_ms, nat_hs[2] * 64);
     a = (u32)kh1_gs_xshift_of();
-    kh1_recq_put(r_native, &a, 1, nat_op[0], nat_rq + nat_hdr[2] * 4);
+    kh1_recq_put(r_native, &a, 1, nat_op[0], nat_rq + nat_hs[2] * 4);
 }
 
 /* the GS worker's side (gsregs.h's kh1_gs_native_hook): a payload starts (its header, its matrices), each record with
  * the PRIM in force, the end */
 static void nat_rec(u32 prim, const u32 *r) {
     u32 nq = 1 + r[2] * 2;
-    if (nat_open && (prim != nat_prim || kh1_gs_gen != nat_gen || nat_rq + nq + nat_hdr[2] * 4 > NAT_QW)) nat_flush();
-    if (nat_rq + nq + nat_hdr[2] * 4 > NAT_QW && !nat_open && 2 + nq + nat_hdr[2] * 4 > NAT_QW) return; /* cannot fit */
+    if (nat_open && (prim != nat_prim || kh1_gs_gen != nat_gen || nat_rq + nq + nat_hs[2] * 4 > NAT_QW)) nat_flush();
+    if (!nat_open && 2 + nq + nat_hdr[2] * 4 > NAT_QW) return; /* cannot fit */
     if (!nat_open) {
+        memcpy(nat_hs, nat_hdr, 32);
+        memcpy(nat_ms, nat_mats, nat_hdr[2] * 64);
         prim_state(prim);
         nat_open = 1;
         nat_prim = prim;
@@ -479,12 +506,18 @@ static void nat_rec(u32 prim, const u32 *r) {
 
 static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
     if (what == 0) {
+        /* 2026-10-31: a P0 run with the open op's header and matrix joins it (nat_rec still ends it at a new PRIM or
+         * state); anything else ends it */
+        if (nat_open && (a[0] & 0xFF) == 0 && (nat_hs[0] & 0xFF) == 0 && a[2] == nat_hs[2] &&
+            !memcmp(a + 4, nat_hs + 4, 16) && !memcmp(b, nat_ms, a[2] * 64)) {
+        } else {
+            nat_flush();
+        }
         nat_hdr = a;
         nat_mats = b;
-        nat_open = 0;
     } else if (what == 1) {
         nat_rec(prim, a);
-    } else {
+    } else if ((nat_hdr[0] & 0xFF) != 0) {
         nat_flush();
     }
 }
@@ -661,6 +694,7 @@ const u32 *kh1_pipes_frame_pal(s32 slot) {
 }
 
 void kh1_pipes_frame(void) {
+    nat_flush();
     kh1_recq_sync(); /* session 146: the frame's recording done */
     frame_begin();
     if (kh1_pipes_frame_hook && kh1_pipes_snap) {
@@ -824,6 +858,7 @@ static void report_shaders(u32 vmask) {
 
 void kh1_pipes_report(void) {
     u32 i, vmask, nv;
+    nat_flush();
     kh1_recq_sync();
     if (rec) {
         if (batcher.frame.prims) kh1_pipes_frame(); /* the last frame's primitives */

@@ -6,6 +6,7 @@
  * static packets (tools/host/drawpipes.py --passes).  Not part of the PS2 build (it lives outside src/). */
 #include "common.h"
 #include "platform/cmdbuf.h"
+#include "platform/natdraw.h"
 #include "platform/shadergen.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
@@ -388,7 +389,14 @@ void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
     KH1Cmd *c;
     u8 *u;
     u32 bytes = nmat * 64;
+    static KH1DrawState nd; /* 2026-10-31: KH1_NAT_LIN with a texture, the shader's lin (drawstate.h): r->in_d here */
+    u32 i;
     if (!n || !nmat || nmat > 255) return;
+    if (cull & KH1_NAT_LIN && d->pipe[0].shader.tex) {
+        nd = *d;
+        for (i = 0; i < 2; i++) nd.pipe[i].shader.lin = 1;
+        d = &nd;
+    }
     kh1_batch_break(&r->b); /* nothing before joins it */
     r->in_d = d;
     r->in_p = p;
@@ -400,7 +408,7 @@ void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
     }
     c = &r->cmd[r->cur];
     c->nmat = (u8)nmat;
-    c->cull = (u8)cull;
+    c->cull = (u8)(cull & ~KH1_NAT_LIN);
     u = (u8 *)kh1_ring_alloc(&r->uring, bytes, KH1_RING_UNIFORM_SLOT);
     if (u) {
         memcpy(u, mats, bytes);

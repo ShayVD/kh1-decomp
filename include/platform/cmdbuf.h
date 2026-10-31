@@ -205,7 +205,7 @@ void kh1_cmd_init(KH1CmdRec *r, void *vmem, u32 vslot, void *umem, u32 uslot);
 void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, u32 sig);
 /* the native renderer (natdraw.h): a run's n GPU vertices (triangles; position, the matrix index in pad[0]) and its
  * nmat matrices (4 x 4 floats each, already folded with the screen mapping) as one draw command of its own (nothing
- * batched with it), culled by `cull` (KH1_NAT_CULL_*) */
+ * batched with it), culled by `cull` (KH1_NAT_CULL_*, with natdraw.h's KH1_NAT_LIN for P0's: the shader's lin) */
 void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                     u32 nmat, u32 cull);
 /* a transfer or CLUT load, not recorded (batch.h's break only) */

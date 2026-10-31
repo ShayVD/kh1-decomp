@@ -1719,13 +1719,20 @@ ms of work a picture, which caps the Dive near **18-20 pictures/s**, not 30; the
 plus ~0.8 s recording. Reaching 30 needs the game thread's VU1 time cut (native P0, the map's strips, ~600 ms per
 2.4 s; then P13) and the recording's per-vertex work, native-renderer.md's stages 2-5.
 
+**Native P0 (later the same night, native-renderer.md "Stage 3 first")** takes P0's ~600 ms per 2.4 s off the game
+thread (a ~0.1 of it parse instead, by the host's instruction counts), which would put the game thread near ~37 ms
+a picture; the GS worker (~42 ms of work a picture in native1's log, less now its P0 kicks are gone) is then the
+likely limit. That is an estimate from the host's counts and the old log, not a measurement: with
+`renderer=native` the expectation is somewhere around 20-25 pictures/s.
+
 **For the next Vita run**: `gputime=1` once (the split by target kind, and how much is in 1-2 draw scenes), and
 one run without it for the frame rate; if the picture flickers or shows an old frame, `present=0`.
 
 ## What next, in order
 
-0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without;
-   then native P0 and P13 (native-renderer.md) for the game thread, the limit once the GPU is not.
+0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
+   then the same with `renderer=native` (native P0 since 2026-10-31, native-renderer.md "Stage 3 first": host-only
+   so far; `natp0=0` turns P0 alone off). Next for the game thread: P13.
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
    with pad scripts, and look for more overruns of the allarea.nam kind (a disc file's length
    copied into a name the host sizes from its PS2 neighbour).

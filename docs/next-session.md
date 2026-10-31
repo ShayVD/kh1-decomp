@@ -55,7 +55,9 @@ The Dive was GPU-bound at ~16 pictures/s; vita-build.md "The GPU's work in the D
 a picture (particle uploads no longer split the 3D scene; the depth clear is seen across the wide view's strips)
 and the present's copy and clears, all measured on the host only. **First thing next time**: Shay's Vita log
 with `gputime=1`, and the frame rate without it; `present=0` if the picture flickers. Then native P0 / P13 for
-the game thread (expected to be the limit at ~18-20 pictures/s).
+the game thread (expected to be the limit at ~18-20 pictures/s). Native P0 was done the same night
+(native-renderer.md "Stage 3 first", `renderer=native`, host-checked only): the Vita run with it on is the other
+thing to log; P13 is next.
 
 ## Where we stopped before (end of session 140, 2026-10-27)
 

@@ -731,19 +731,31 @@ static void lerp_vary(const Vary *a, const Vary *b, f32 t, Vary *o) {
     }
     o->fog = a->fog + (b->fog - a->fog) * t;
 }
-/* a triangle whose w is not 1: clipped to w >= a small epsilon and z >= 0 (GXM's near plane), divided, drawn as a
+/* a triangle whose w is not 1: clipped to w >= a small epsilon and 0 <= z <= w (GXM's near and far planes), divided, drawn as a
  * fan with perspective-correct attributes */
 static void persp(const Vary *v) {
-    Vary a[9], b[9], *in = a, *out = b, *t;
+    Vary a[12], b[12], *in = a, *out = b, *t;
     int n = 3, m, i, pl;
     memcpy(a, v, 3 * sizeof *v);
-    for (pl = 0; pl < 2; pl++) {
+    /* 2026-10-31: and to z <= w and a guard band of 4 x the viewport in x and y (a GPU's own; window()'s fixed point would
+     * overflow on a vertex just past w = 0: native P0's floor in front of the camera) */
+    static const f32 gb = 4.0f;
+    for (pl = 0; pl < 7; pl++) {
         m = 0;
         for (i = 0; i < n; i++) {
             const Vary *p = &in[i], *q = &in[(i + 1) % n];
-            f32 dp = pl ? p->c[2] : p->c[3] - 1e-5f, dq = pl ? q->c[2] : q->c[3] - 1e-5f;
+            f32 dp, dq;
+            switch (pl) {
+            case 0: dp = p->c[3] - 1e-5f; dq = q->c[3] - 1e-5f; break;
+            case 1: dp = p->c[2]; dq = q->c[2]; break;
+            case 2: dp = gb * p->c[3] - p->c[0]; dq = gb * q->c[3] - q->c[0]; break;
+            case 3: dp = gb * p->c[3] + p->c[0]; dq = gb * q->c[3] + q->c[0]; break;
+            case 4: dp = gb * p->c[3] - p->c[1]; dq = gb * q->c[3] - q->c[1]; break;
+            case 5: dp = gb * p->c[3] + p->c[1]; dq = gb * q->c[3] + q->c[1]; break;
+            default: dp = p->c[3] - p->c[2]; dq = q->c[3] - q->c[2]; break; /* z <= w: the far plane */
+            }
             if (dp >= 0) out[m++] = *p;
-            if ((dp >= 0) != (dq >= 0) && m < 9) lerp_vary(p, q, dp / (dp - dq), &out[m++]);
+            if ((dp >= 0) != (dq >= 0) && m < 12) lerp_vary(p, q, dp / (dp - dq), &out[m++]);
         }
         n = m;
         t = in; in = out; out = t;

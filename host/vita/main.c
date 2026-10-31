@@ -50,6 +50,8 @@
  *                             default) keeps the GS path
  *       natcull=N             with renderer=native, the cull mode of P18's back-face-culled runs: 1 (the default)
  *                             CCW in the window, 2 CW, 0 none (if Sora shows his inside, try 2)
+ *       natp0=0               with renderer=native, P0 (the map's strips) on the VU1 program as before (2026-10-31; 1,
+ *                             the default, draws it natively too)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
  *                             2026-10-31); 1, the default: each new picture presented once, from the display target
  *       gputime=1             log each 2 s how long the GPU spent on each kind of scene (gxm.c; a polling thread, so
@@ -594,6 +596,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
         else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
         else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
+        else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */

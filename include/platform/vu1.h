@@ -30,6 +30,10 @@ extern void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
  * kh1_vu1_drawn counts them */
 extern void (*kh1_vu1_draw)(const u32 *q, u32 nqw);
 extern u32 kh1_vu1_drawn;
+/* 2026-10-31: P0 (the map's strips) drawn that way too (1, the default; config.txt natp0=0 / KH1_HOST_NATP0=0 keeps
+ * it on the VU1 program with the rest native) */
+extern int kh1_vu1_draw_p0;
+extern int kh1_vu1_natcheck; /* host: KH1_HOST_NATCHECK=1, P0 run and checked against its payload (vu1_draw.h) */
 /* 1: a line per program run */
 extern int kh1_vu1_verbose;
 /* with kh1_vu1_verbose: the program run (from 1) whose start state is written to vu1_snap.bin */

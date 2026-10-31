@@ -404,6 +404,8 @@ int main(int argc, char **argv) {
          * (the recorder's, so trace 5; KH1_HOST_NATCULL=0 / 1 / 2 the cull mode: none, CCW, CW) */
         if (kh1_host_trace >= 5 && getenv("KH1_HOST_NATIVE")) kh1_dma_native = atoi(getenv("KH1_HOST_NATIVE"));
         if (getenv("KH1_HOST_NATCULL")) kh1_pipes_nat_cull = (u32)atoi(getenv("KH1_HOST_NATCULL"));
+        if (getenv("KH1_HOST_NATCHECK")) kh1_vu1_natcheck = atoi(getenv("KH1_HOST_NATCHECK")); /* vu1_draw.h */
+        if (getenv("KH1_HOST_NATP0")) kh1_vu1_draw_p0 = atoi(getenv("KH1_HOST_NATP0")); /* 2026-10-31: 0 P0 on the VU */
         if (getenv("KH1_HOST_GSQ_CHECK") && kh1_host_trace >= 2 && kh1_host_trace < 5) {
             gsq_check = strtoul(getenv("KH1_HOST_GSQ_CHECK"), 0, 0);
             if (gsq_check) {

@@ -1240,7 +1240,17 @@ static void start_run(u32 pc) {
         int ran;
         tr_lost = 0;
         /* the native renderer (vu1_draw.h): the run's records handed to the GPU instead */
-        ran = kh1_vu1_draw && tr_progs[prog].num == 18 && nd_18(pc);
+        ran = kh1_vu1_draw && ((tr_progs[prog].num == 18 && nd_18(pc)) ||
+                                (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc)));
+        if (!ran && kh1_vu1_natcheck && tr_progs[prog].num == 0) { /* KH1_HOST_NATCHECK (vu1_draw.h) */
+            void (*sv)(const u32 *, u32) = kh1_vu1_draw;
+            kh1_vu1_draw = 0;
+            if (!nd_0(pc)) {
+                ran = tr_go(prog, pc);
+                nd_0_check();
+            }
+            kh1_vu1_draw = sv;
+        }
         if (!ran) ran = tr_go(prog, pc);
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
             tr_us[prog] += kh1_vu1_clock() - t0;
