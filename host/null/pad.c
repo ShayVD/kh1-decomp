@@ -377,3 +377,10 @@ int PlatPadRead(int socket, u8 *data) {
     return 6;
 }
 int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data) { return 0; }
+#ifndef KH1_VITA
+/* the free camera (platform/pad.h): none on the host (its pad scripts turn the camera with L2 / R2) */
+int PlatCamStick(f32 *yaw, f32 *pitch) {
+    *yaw = *pitch = 0.0f;
+    return 0;
+}
+#endif

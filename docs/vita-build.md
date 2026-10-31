@@ -63,6 +63,9 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
      screen" below); `wide=2` stretches the 4:3 picture to fill the screen; `wide=0` keeps the 4:3 picture in black
      bars, as before (`widescreen=` is read the same). `strip=1` keeps the status strip over a full-screen picture.
    - `renderer=native` (off by default, 2026-10-30): the native renderer's first stage, Sora's VU1 program (P18) drawn from its records by the GPU's vertex shader instead of run on the CPU (docs/native-renderer.md); `natcull=0/1/2` picks its back-face cull (none / CCW, the default / CW).
+   - `fps=1` shows the FPS counter, `swapox=1` swaps circle and cross,
+     `reartouch=0` turns the rear pad's L2 / R2 / L3 / R3 off, `volume=N` sets the sound's level (0-100). All four
+     are the mod menu's ("The mod menu" below), which also writes the keys above it changes.
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
@@ -162,6 +165,59 @@ left edge and the HP / MP gauge at the right; `KH1_HOST_GXM_PPM` writes the whol
 `gpu_wide_*`). The ARM build under qemu-arm gives the x86 log exactly with `KH1_HOST_WIDE=1` (2,500 frames at trace
 5). **Not checked**: a real Vita or Vita3K; the pause menu's blur and the depth blur under the GPU path (no run
 reached them); a target sampled with a shader REGION_CLAMP under the wide view (the clamp's texels are still TW's).
+
+## The mod menu (2026-10-31)
+
+A tap in the middle of the front touch screen (the middle third each way, let go within 0.6 s) pauses the game and
+opens the port's options (host/vita/menu.c). The PS2 had no touch screen, so the game never reads the front one.
+D-pad up / down picks a row, left / right / circle / cross change it, Start or Triangle closes; on the screen a tap
+on a row changes it (its left third steps back) and a tap outside the panel closes. Closing writes config.txt: each
+key the menu owns (`wide rcam rcaminv fps swapox reartouch volume latewait renderer strip`) is rewritten in place, every
+other line (comments included) kept as it was.
+
+| Row | config.txt | Live? |
+| --- | --- | --- |
+| Widescreen: 16:9 wide view / 4:3 stretched / 4:3 black bars | `wide=1/2/0` | yes (the wide view needs the GPU picture) |
+| Right stick camera: free / left-right only / off | `rcam=1/2/0` (`-1`: free, left / right flipped) | yes |
+| Camera up / down: normal / inverted | `rcaminv=1` | yes |
+| FPS counter: off / on | `fps=1` | yes |
+| Swap circle / cross | `swapox=1` | yes |
+| Rear touch as L2 / R2 / L3 / R3 | `reartouch=0` turns it off | yes |
+| Volume, 0-100% in tens | `volume=N` | yes (sceAudioOutSetVolume) |
+| Frame catch-up | `latewait=1` turns it off | yes |
+| Renderer: GS path / native | `renderer=gs/native` | after a restart |
+| Status strip | `strip=1` | yes |
+| Restart game / Quit game | | sceAppMgrLoadExec("app0:eboot.bin") / exit; unsaved progress is lost |
+
+How the pause works: main.c's vblank (`kh1_host_vblank`) polls the tap once a frame; on one it waits for the GS
+worker, the recorder and the GPU frame's thread to finish their queues (`menu_pause`), then the game thread stays in
+`kh1_vita_menu_run`, which draws the last picture with the menu over it (display.c's draw) each vblank. Everything
+the options change is then the game thread's to change. The sound's threads keep running. After closing, the
+menu's buttons are kept from the game until every button is let go (pad.c), so Start or circle does not reach it.
+
+The wide view live: `kh1_view_init`, `kh1_null_hud_wide`, the full-screen stretch and the recorder's view margin
+are parameters read each frame or send (host/port/view.c, host/null/plat_null.c), so the menu sets them again
+(4 / 3 and margin 0 for the 4:3 modes, the identity stretch). Not yet checked on a Vita.
+
+The FPS counter counts whole pictures (a frame copy, the GPU path's latch or the software present) each half
+second.
+
+**The free camera** (`rcam=1`, the default from 2026-10-31). The game turns its field camera with L2 / R2 only
+(fieldcam.c `func_00178e10`: `D_00362680.y`, the yaw, 2 degrees a time step) and never lets the player pitch it:
+`D_00362680.x`, the pitch, is the room's (`D_00362660.x`), raised by the wall / ceiling checks in `func_00177ef8`
+and pulled back to the room's 3 % a step. On the port (`#ifndef KH1_PS2`, so the PS2 build is unchanged),
+`func_00178e10` asks `PlatCamStick` (platform/pad.h) for the right stick's turn: x turns the yaw (full tilt 2
+degrees a step, the L2 / R2 speed), y the pitch (1.5 a step, between -20 and 80 degrees). The pitch is kept as an
+offset from the room's, which the pull-back then returns to instead (so the camera stays where you put it), and
+reset with the camera. The stick is kept from the game, so it no longer moves the command menu's cursor (the
+d-pad still does). It works wherever the game's own L2 / R2 turn does (not during lock-on or events: the same
+gates). `rcam=2` keeps the older L2 / R2 emulation, left / right only.
+
+Not added: a frame-rate cap (the game's logic is one vblank a frame, so a cap would slow the game down rather than
+smooth it; frame catch-up is the related switch). `sndprio=` stays a config.txt key for now. With `present=1`
+(the default), display.c's draw skips frames with no new picture; while the menu is up
+(`kh1_vita_menu_overlay()`) it draws every vblank instead. The FPS counter alone needs no extra draws: it is drawn
+again with each new picture.
 
 ## Memory card (session 140)
 

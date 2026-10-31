@@ -83,7 +83,8 @@ static void draw(void) {
     int pic = 0;
     /* 2026-10-31 (gxm.c, present=1): with the picture over the whole screen and no status strip, only a new
      * picture is presented, and the opaque present needs no clear under it */
-    int full = gpu && mode && strip_on <= 1 && kh1_vita_present_direct;
+    /* the mod menu (menu.c) is redrawn every vblank while it is up, the game paused: no skip then */
+    int full = gpu && mode && strip_on <= 1 && kh1_vita_present_direct && !kh1_vita_menu_overlay();
     if (full && !kh1_vita_gxm_fresh()) return;
     vita2d_start_drawing();
     if (!full) vita2d_clear_screen();
@@ -106,6 +107,7 @@ static void draw(void) {
         pic = 1;
     }
     if (!mode || !pic || strip_on > 1) strip();
+    kh1_vita_menu_draw(); /* the FPS counter, the mod menu (menu.c) */
     vita2d_end_drawing();
     vita2d_swap_buffers();
     drawn_at = status_frames;
@@ -132,6 +134,7 @@ static void present_buffer(u32 bp, u32 bw, u32 psm, u32 lines) {
     pic_w = w;
     pic_lines = lines;
     shown++;
+    kh1_vita_pictures++;
     kh1_vita_shown = shown;
     draw();
     kh1_vita_us_present += (u32)(sceKernelGetProcessTimeWide() - t0);

@@ -63,9 +63,10 @@
  *                             2026-10-31); 1, the default: each new picture presented once, from the display target
  *       gputime=1             log each 2 s how long the GPU spent on each kind of scene (gxm.c; a polling thread, so
  *                             the frame rate of such a run is a little lower: for the split, not the speed)
- *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
- *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
- *                             the command menu's cursor)
+ *       rcam=N                1 (the default) a free camera on the right stick, left / right and up / down (host/vita/
+ *                             pad.c, fieldcam.c; rcaminv=1 flips up / down); -1 the same with left / right the other
+ *                             way; 2 the stick's x only, sent as R2 / L2 (the game's own turn); 0 sends the right
+ *                             stick as it is (the PS2's: the command menu's cursor)
  *       snd=N                 1 (the default) plays the game's sound: the disc's own sound driver (LIBSSL.IRX) in
  *                             host/port/iop.c's IOP and spu2.c's SPU2, out through host/vita/audio.c; 0 keeps the
  *                             null server (silence)
@@ -79,6 +80,10 @@
  *                             gauges and command menu at the screen's edges, menus and text in the centred 4:3
  *                             canvas; needs the GPU picture (else 2); 2 the 4:3 picture stretched to the whole
  *                             screen; 0 the 4:3 picture in black bars, as before (widescreen=N: the same)
+ *       fps=1                 the mod menu's FPS counter (host/vita/menu.c), the pictures a second; 0 (the default)
+ *                             off
+ *       swapox=1              swaps circle and cross (cross confirms); reartouch=0 turns the rear pad's L2 / R2 /
+ *                             L3 / R3 off; volume=N the sound's level, 0-100 (all three: the mod menu's, menu.c)
  *       strip=1               keeps the status strip (the alive square, the read / frame bars) over a full-screen
  *                             picture; by default it shows there only while no picture is
  *   ux0:data/kh1/kh1.log      stdout and stderr
@@ -257,7 +262,10 @@ static void vita_frame(const KH1CmdRec *r) {
     kh1_vita_gxm_frame(r);
     /* only a whole picture is shown: the display target as the frame copy left it (the software
      * present's rule); between copies the game may be part-way through the next one */
-    if (kh1_pipes_job_arg) kh1_vita_gxm_latch();
+    if (kh1_pipes_job_arg) {
+        kh1_vita_gxm_latch();
+        kh1_vita_pictures++; /* the FPS counter's (menu.c) */
+    }
     t1 = sceKernelGetProcessTimeWide();
     kh1_vita_draw();
     us_frame += (u32)(t1 - t0);
@@ -276,6 +284,15 @@ static void gpu_frame(int copied) {
  * game wait for the worker's whole frame, so the game's next frame and the worker never overlapped */
 static void w_gpu_frame(const u32 *a, const u32 *d, u32 n) { gpu_frame((int)a[0]); }
 static u32 frame_end[2]; /* the queue's position after the last frame's op [0] and the one before [1] */
+
+/* the mod menu, the game paused: the GS worker, the recorder and the GPU frame's thread finish their queues
+ * first, so the menu's options may change the GS side's parameters and the menu draws the last picture itself */
+static void menu_pause(void) {
+    if (gpu_on && kh1_gsq_on) kh1_gsq_sync();
+    if (kh1_recq_on) kh1_recq_sync();
+    if (kh1_gpuq_on) kh1_gpuq_wait();
+    kh1_vita_menu_run(kh1_vita_draw);
+}
 
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
@@ -298,6 +315,10 @@ void kh1_host_vblank(void) {
     } else if (gpu_on) /* session 136: the frame's GS draws on the GPU */
         gpu_frame(kh1_vita_frame_copied());
     kh1_vita_status(frames, kh1_host_cd_reads);
+    if (kh1_vita_menu_poll()) { /* the mod menu (menu.c): the game waits here until it is closed */
+        menu_pause();
+        woke = 0; /* the paused time is not made up */
+    }
     {
         /* session 145: a frame that ends after the next vblank has begun goes on at once.  Session 149: and so do
          * the frames after it until they have caught up with the vblanks they fell behind (at most CATCH_UP of
@@ -643,6 +664,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "sndprio") == 0) kh1_vita_snd_prio = atoi(v);
         else if (strcmp(line, "wide") == 0 || strcmp(line, "widescreen") == 0) wide = atoi(v);
         else if (strcmp(line, "strip") == 0) strip_always = atoi(v);
+        else kh1_vita_menu_config(line, v); /* the mod menu's own keys (menu.c) */
     }
     fclose(f);
 }
@@ -757,6 +779,7 @@ int main(int argc, char **argv) {
         kh1_null_hud_wide(kh1_view_side16);
     }
     kh1_vita_display_mode(wide == 1 || wide == 2 ? wide : 0, strip_always);
+    kh1_vita_menu_init(&wide, &late_wait, &use_native, &strip_always, gpu_on);
     vlog("kh1-vita: screen: %s\n", wide == 1 ? "16:9, the wide view (wide=1)" : wide == 2 ? "4:3 stretched to 16:9 (wide=2)"
                                                                                : "4:3 in black bars (wide=0)");
     if (gpu_on) {

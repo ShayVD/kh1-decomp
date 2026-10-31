@@ -37,8 +37,21 @@ int kh1_vita_gputime_thread(unsigned int args, void *argp);
 
 /* pad.c: the buttons as sceCtrl read them this frame (for main.c's own screens) */
 unsigned int kh1_vita_buttons(void);
-/* pad.c: config.txt's rcam= (1 the right stick's x turns the camera, -1 the other way, 0 the stick as it is) */
-extern int kh1_vita_rcam;
+/* pad.c: config.txt's rcam= (1 the right stick a free camera, -1 with x the other way, 2 its x as L2 / R2, 0 the
+ * stick as it is) and rcaminv= (the free camera's up / down the other way) */
+extern int kh1_vita_rcam, kh1_vita_rcam_inv;
+
+/* menu.c: the mod menu (a tap in the middle of the front touch screen; docs/vita-build.md "The mod menu") */
+void kh1_vita_menu_init(int *wide, int *late_wait, int *native, int *strip, int gpu_on);
+int kh1_vita_menu_config(const char *key, const char *value); /* config.txt's fps= swapox= reartouch= volume= */
+int kh1_vita_menu_poll(void);                     /* each vblank: 1 when the menu was asked for */
+void kh1_vita_menu_run(void (*redraw)(void));     /* the menu, the game paused, until it is closed */
+void kh1_vita_menu_draw(void);                    /* display.c's draw: the FPS counter and the menu */
+int kh1_vita_menu_overlay(void);                  /* the menu is up: draw even with no new picture */
+int kh1_vita_menu_swallow(unsigned int held);     /* pad.c: the game sees no buttons while 1 */
+extern int kh1_vita_swap_ox, kh1_vita_rear_touch;  /* config.txt's swapox= / reartouch= (pad.c) */
+extern int kh1_vita_volume;                       /* config.txt's volume= (audio.c) */
+extern volatile u32 kh1_vita_pictures;            /* whole pictures made (the FPS counter's) */
 
 /* main.c: the data directory, "ux0:data/kh1" */
 extern const char kh1_vita_dir[];
