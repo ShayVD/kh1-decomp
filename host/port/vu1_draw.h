@@ -10,13 +10,16 @@
 void (*kh1_vu1_draw)(const u32 *q, u32 nqw);
 u32 kh1_vu1_drawn; /* runs handed over so far */
 int kh1_vu1_draw_p0 = 1;
+int kh1_vu1_draw_p11 = 1;
 
 #define ND_QW 4096 /* a payload's qwords: VU1's data memory is 1024, a vertex 3 there and 2 here */
 static u32 nd_buf[ND_QW][4];
 static u32 nd_mat[KH1_NAT_MATS][4][4];
 
-/* P18 from 007 (vu1_nat.h nat_18 is the arithmetic this replaces): 1 when handed over, 0 to run it */
-static int nd_18(u32 pc) {
+/* P18 from 007 (vu1_nat.h nat_18 is the arithmetic this replaces): 1 when handed over, 0 to run it.  2026-10-31: P11
+ * too (num 11): P18's stream and output, with a near-plane cull (w < 1) and the guard band, which the GPU's own
+ * clipping replaces (pipes.c draws it with z not clamped) */
+static int nd_18(u32 pc, u32 num) {
     u32 i2 = top, rq = 2, nrec = 0, nmat = 0, k;
     s32 cur[3] = { -1, -1, -1 }, last[3] = { -1, -1, -1 }; /* each slot's matrix in this payload; the last one loaded */
     static const int base[3] = { 5, 12, 19 };
@@ -65,7 +68,7 @@ static int nd_18(u32 pc) {
         nrec++;
     }
     if (!kh1_vu1_draw) return 0;
-    nd_buf[0][0] = KH1_NAT_MAGIC | 18;
+    nd_buf[0][0] = KH1_NAT_MAGIC | num;
     nd_buf[0][1] = nrec;
     nd_buf[0][2] = nmat;
     nd_buf[0][3] = rq - 2;

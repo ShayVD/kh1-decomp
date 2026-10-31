@@ -457,9 +457,12 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
                 kh1_pipes_nat_tris += n / 3;
             }
         } else if (!d[6]) { /* not every vertex ADC */
+            u32 lin = (d[0] & 0xFF) == 11 ? KH1_NAT_LIN : 0, i;
             n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
+            /* 2026-10-31: P11 with z not clamped, so the GPU clips where P11 dropped what crossed its near plane */
+            if (lin) for (i = 0; i < n; i++) nat_v[i].pad[0] |= (u8)KH1_NAT_LIN;
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
-            kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE);
+            kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | lin);
             kh1_pipes_nat_draws++;
             kh1_pipes_nat_tris += n / 3;
         }

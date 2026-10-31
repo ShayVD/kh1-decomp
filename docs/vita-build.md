@@ -1767,6 +1767,7 @@ one run without it for the frame rate; if the picture flickers or shows an old f
    then the same with `renderer=native` (native P0 since 2026-10-31, native-renderer.md "Stage 3 first": host-only
    so far; `natp0=0` turns P0 and P4 off). P12 is native on the CPU too ("P12 as hand-written C"). Next for the
    game thread: P13 on the GPU (native-renderer.md), then P1 / P2, the last programs run as their translation.
+   With renderer=native P11 goes to the GPU too (native-renderer.md "P11 too"; `natp11=0` turns it off).
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
    with pad scripts, and look for more overruns of the allarea.nam kind (a disc file's length
    copied into a name the host sizes from its PS2 neighbour).

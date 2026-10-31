@@ -1288,7 +1288,8 @@ static void start_run(u32 pc) {
         int ran;
         tr_lost = 0;
         /* the native renderer (vu1_draw.h): the run's records handed to the GPU instead */
-        ran = kh1_vu1_draw && ((tr_progs[prog].num == 18 && nd_18(pc)) ||
+        ran = kh1_vu1_draw && ((tr_progs[prog].num == 18 && nd_18(pc, 18)) ||
+                                (tr_progs[prog].num == 11 && kh1_vu1_draw_p11 && nd_18(pc, 11)) ||
                                 (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc, 0)) ||
                                 (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)));
         if (!ran && kh1_vu1_natcheck && (tr_progs[prog].num == 0 || tr_progs[prog].num == 4)) { /* KH1_HOST_NATCHECK */

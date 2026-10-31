@@ -406,6 +406,7 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATCULL")) kh1_pipes_nat_cull = (u32)atoi(getenv("KH1_HOST_NATCULL"));
         if (getenv("KH1_HOST_NATCHECK")) kh1_vu1_natcheck = atoi(getenv("KH1_HOST_NATCHECK")); /* vu1_draw.h */
         if (getenv("KH1_HOST_NATP0")) kh1_vu1_draw_p0 = atoi(getenv("KH1_HOST_NATP0")); /* 2026-10-31: 0 P0 / P4 on the VU */
+        if (getenv("KH1_HOST_NATP11")) kh1_vu1_draw_p11 = atoi(getenv("KH1_HOST_NATP11")); /* 2026-10-31: 0 P11 on the VU */
         if (getenv("KH1_HOST_GSQ_CHECK") && kh1_host_trace >= 2 && kh1_host_trace < 5) {
             gsq_check = strtoul(getenv("KH1_HOST_GSQ_CHECK"), 0, 0);
             if (gsq_check) {

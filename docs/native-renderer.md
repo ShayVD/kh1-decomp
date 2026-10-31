@@ -175,6 +175,20 @@ to Dive frame 7000, 22,876 P4 runs, no triangle drawn by P4 alone, colours / ST 
 clips at z <= w as the stand-in does (if it clamps instead, geometry right at the camera would show where P0 clipped
 it), the frame rate. If the map looks wrong with renderer=native, `natp0=0` is the first switch to try.
 
+### P11 too (2026-10-31, host only)
+
+P11 (renderer B's unlit models with a near-plane cull and a guard band: the Keyblade and other held or field
+objects in the Dive) has P18's record stream and output word for word, so `nd_18(pc, 11)` hands its runs over in
+P18's payload with program number 11. The recorder (pipes.c r_native) draws it as P18 but with mi's bit 7 and
+KH1_NAT_LIN, so z is not clamped and the GPU clips where P11 dropped every triangle with a vertex in front of its
+near plane (w < 1) or off the guard band. The run's colour and F are constant, so the screen-linear colour of
+KH1_NAT_LIN changes nothing there. `natp11=0` / `KH1_HOST_NATP11=0` keeps P11 on the VU (with the rest native).
+
+Checked on the host (gxmcheck, renderer=native, dive_en.txt, a picture every 500 frames to 6999): 12 of the 14
+pictures are identical to the P0 / P4 native build's; 6499 and 6999 differ in 201 and 276 pixels, along the
+Keyblade's edges (the GPU's own rasterisation of the triangles the GS path drew). Not checked on a Vita. In the
+qemu-arm timing of the Dive (vita-build.md "P12 as hand-written C") P11 was 4.2 s of ~75 s of VU1 run time.
+
 ## The stages after
 
 2. **P13 (skinned, flat, cull)** (next: P0 went first, above): the same flow with the bone palette: op 0 with w = 1 marks the palette record,
@@ -186,9 +200,8 @@ it), the frame rate. If the map looks wrong with renderer=native, `natp0=0` is t
    its clipping becomes the GPU's. Over half of the Dive's VU1 time. The map's chains do not change between
    frames; once the CPU side parses a chain the triangle list can be cached by the chain's address and the
    matrices' change alone uploaded, which removes most of the game thread's work for it.
-4. **P11, P10, P4**: P11 is P18 plus a near-plane cull and a guard band (the GPU clips; the near cull is a
-   z test in the shader), P10 the lit variant (3 lights and ambient in the shader with the same clamps), P4 the
-   lit A program.
+4. **P10, P12**: P11 and P4 are done (above), P10 positions only, P12 the lit variant (3 lights and ambient in the shader with the same
+   clamps).
 5. **Batching and threads**: native runs of one pipeline and texture joined into one draw (the matrices
    indexed per vertex already allow it), and `nd_*`'s parse moved off the game thread to the GS worker (the
    payload would then be the VU memory image).
