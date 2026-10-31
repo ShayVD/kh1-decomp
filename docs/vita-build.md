@@ -1396,6 +1396,39 @@ for vf23 / vf24, no stack saves of those), a SUB.xyz where P0 has SUB.xyzw in 12
 without the back-face test. P4 is ~115-150 ms per 2 s in the busy stretches, so it is the next VU1 program worth
 doing after this.
 
+## P12 as hand-written C, and vu1nat=2 (2026-10-31)
+
+P12 (renderer B's lit models, docs/renderer-spec.md 2.3) was the largest VU1 program still run as its translation
+(~7% of the game thread's instructions on a Vita, "Clocks and compiler flags" above). `nat_12` in vu1_nat.h runs it
+from 007 the way nat_11 / nat_13 do: P18's record stream, with matrix records of seven qwords (the slot's matrix and
+then its three light rows, vf09-11 / vf16-18 / vf23-25) and per vertex:
+
+- the light rows times the normal, w from vf04.w (MOVE.w), MAX 0 on all four fields; vf01-03 times that plus vf04
+  (xyz), MINI 255 (I), FTOI0: the RGBA written after STQ;
+- Q = 1 / w, STQ and xyzw times Q; the guard band vector (x + 0, y + 0, z through FTOI0 / ITOF12, then xyz - 2048)
+  CLIPW against 2048 (vf29.w = vf00.w * I);
+- the screen edge and the cross product's z sign as in P18; the ADC when FCAND 0x3FFFF (any of the last three
+  vertices off the band) or that sign is negative; XYZ to 12.4.
+
+The run's MAC flag is the last vertex's OPMSUB in full, CLIP the band bits, I 2048, vi07 0x20, vi09 the vertex's
+count in its group & 3 (before vi10's increment), vi13 0x8000 once a vertex ran. Stalls: 19 cycles a vertex (05e,
+063, 064, 06d, 06e, 06f and the OPMULA), none elsewhere.
+
+**`vu1nat=2` / `KH1_HOST_VU1NAT=2`** (vu1.c `nat_check`, committed): every run that has a native form runs it and
+then the translation from the same state, and compares the registers, Q / I / MAC / clip, VU memory, the kicks'
+hash and also the pairs and cycles (the `vu1 frame` line's "checked (N differ)", `kh1-vu1: native P.. differs`
+lines). The translation's run is the one kept. It needs a NEON build (the Vita, or `make vita-armcheck` and
+qemu-arm; `apt install gcc-arm-linux-gnueabihf` gives the compiler); on x86 there is no native form to check.
+
+Checked: the ARM Linux build under qemu-arm, the English disc's Dive (dive_en.txt), 7,000 frames with
+`KH1_HOST_VU1NAT=2`: 608,784 native runs of all the native programs (P12 13,530 of them), none different. A build
+with nat_12's cycle count off by one on runs of more than 40 vertices reports "differs ... cycles" (20 lines and the
+counts), so the check sees a one-cycle slip. qemu-arm wall time of P12 over those frames (a timer around each run,
+so its kicks are in it): 1.95 s native against 2.12 s translated (92%); P11 and P18 measure 90% / 89% the same way,
+and they came out 20-36% faster on a Vita, so P12 is expected to be about as much faster there. P12 is a small share
+of the Dive as a whole (2.0 s of ~75 s of VU1 run time on qemu over the 7,000 frames); the stretches with the lit
+models are where it shows. **Not measured on a Vita.**
+
 ## The GS worker after the native VU1 programs (session 150)
 
 zv on the Vita (P0's main loop native): 15.8 pictures a second over frames 1,500-13,000, flat on zu's 15.75,
@@ -1732,7 +1765,8 @@ one run without it for the frame rate; if the picture flickers or shows an old f
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
    then the same with `renderer=native` (native P0 since 2026-10-31, native-renderer.md "Stage 3 first": host-only
-   so far; `natp0=0` turns P0 and P4 off). Next for the game thread: P13.
+   so far; `natp0=0` turns P0 and P4 off). P12 is native on the CPU too ("P12 as hand-written C"). Next for the
+   game thread: P13 on the GPU (native-renderer.md), then P1 / P2, the last programs run as their translation.
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
    with pad scripts, and look for more overruns of the allarea.nam kind (a disc file's length
    copied into a name the host sizes from its PS2 neighbour).

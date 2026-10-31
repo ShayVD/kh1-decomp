@@ -24,7 +24,8 @@
  *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
  *                             interpreter only; 2 both, compared (slow; differences go to the log)
  *       vu1nat=N              session 150: 1 (the default) runs the programs written by hand as C
- *                             (host/port/vu1_nat.h, P18 so far) in place of their translation; 0 the translation
+ *                             (host/port/vu1_nat.h: P0, P4, P10-P13, P18) in place of their translation; 0 the
+ *                             translation; 2 runs both and compares them (kh1-vu1 lines, vu1 "checked" counts)
  *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
  *                             ("kh1-gxm: shadertest" lines; gxm.c)
  *       shacc_restart=1       session 137v: restart the shader compiler when a shader fails (off: hangs Vita3K)
