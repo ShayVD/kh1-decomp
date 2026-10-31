@@ -1167,3 +1167,50 @@ Shay's goal: **Dive to the Heart fully working on the Vita.** Host work serves t
 5. End with `make progress-update SESSION=134`, refresh docs/progress.md's tables, commit, open a PR, and
    refresh this prompt.
 6. **Once the PR is merged, message the coordinator to start the next session** (session 135) with this prompt.
+
+## Next, toward 30 fps in the Dive (2026-10-31, from Shay's Vita log with renderer=native)
+
+Measured on Shay's Vita: `renderer=native`, the floor-fix build, Dive frames 5000-8000, averaged over 35 log
+windows. The figures are per 2.4 s of wall time.
+
+**Now:** about 18 pictures/s (43 per 2.4 s). **30 fps is 72 per 2.4 s**, so each busy thread needs roughly 40 % less
+work on the path a picture waits for.
+
+| Thread | Busy | Biggest parts |
+|---|---|---|
+| GS worker (core 1) | **2,259 ms: the limit** | GS-path kicks 510, GIF blocks 443, frame op 427 (passes and GXM calls 230-570, copies ~57, recording wait ~40), big uploads 268, small uploads 199, image qwords 181, native payload parse 259 |
+| Game thread (core 0) | ~1,960 ms + 437 waiting for the worker | DMA walks 1,303 (VU1 714 of it: **P13 542**, P0 83), game code 658 |
+| GPU thread (core 2) | 792 frame jobs + 726 recording | room for ~0.8 s more |
+| Sound | 149 of 454 buffers short | starved at its default priority (`sndprio=16`); `sndprio=-4` is not yet tried |
+
+### 1. P13 (skinned models) on the GPU, as P0/P11/P10 went
+
+- P13 is now the biggest VU1 program in the Dive: 542 ms a window on the game thread.
+- Its output also reaches the GS worker as GS-path kicks, most of the worker's 510 ms of kicks.
+- Same route as nd_0 / nd_18 / nd_10: a payload for the native renderer, then the GPU's transform. Checked with
+  NATCHECK-style batch compares and the gxmcheck pictures. The stand-in now clamps COLOR varyings, as the Vita does.
+- Expected: game thread −0.5 s and GS worker −0.4 s a window, the biggest single step. Probably about 22-24 fps
+  on its own.
+
+### 2. The GS worker's frame op and native parse to the GPU thread
+
+- The frame op (pipes.c `kh1_pipes_frame`: kh1_cmd_frame, the GXM call recording in frame_begin, the snapshot)
+  costs 230-570 ms a window on the worker. The Vita log now splits it ("gs worker's frame op").
+- The native payload parse (`w_native`: kh1_nat_tris / fold) costs 259 ms.
+- Both only read the recorder, so they can run as recording ops on the GPU thread, which has ~0.8 s free.
+- Expected: GS worker −0.5 to −0.7 s a window.
+
+### 3. The GS memory model's upload work on the worker
+
+- GIF blocks (443), big uploads (268, 83 a window: the game sees them unchanged, but the worker still re-stores
+  them because their pages were drawn since), small uploads (199) and image qwords (181): ~1.1 s a window.
+- Find which uploads the GPU path really reads back from GS memory, and skip, defer or cheapen the rest. Examples:
+  keep an upload's texture cache entry valid without storing its pixels, or store the pixels lazily when a CLUT
+  pass or a read needs them.
+- Expected: GS worker −0.4 to −0.7 s a window.
+
+Together, these three should put the worker near ~1.0-1.3 s and the game thread near ~1.4 s a window, which is
+30 fps territory. The order is P13 first (the largest single step), then 2 and 3, which can run in parallel.
+
+**Sound** (small, can go with any of these): try `sndprio=-4`. If the frame rate drops, the next options are a
+longer mix lead (LEAD, now 64 ms) or the IOP driver's hot functions as C.
