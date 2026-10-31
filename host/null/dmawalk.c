@@ -819,14 +819,18 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
  * CPU time goes to); the VU1 programs and the recorder's work run inside it */
 u32 kh1_dma_walk_us;
 u32 kh1_dma_ch_us[3], kh1_dma_ch_sends[3]; /* native-plan.md stage 0: the same by channel (VIF0, VIF1, GIF) */
+/* and of the walks' time, the puts' waits for room in the GS worker's ring (also in kh1_gsq_us_wait) */
+u32 kh1_dma_walk_ring_us;
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
-    u32 t0, d;
+    u32 t0, d, w0;
     int r;
     if (ch >= 0 && ch <= 2) kh1_dma_ch_sends[ch]++;
     if (!kh1_vu1_clock) return dma_walk(ch, chcr, tadr, where);
+    w0 = kh1_gsq_us_wait;
     t0 = kh1_vu1_clock();
     r = dma_walk(ch, chcr, tadr, where);
     d = kh1_vu1_clock() - t0;
+    kh1_dma_walk_ring_us += kh1_gsq_us_wait - w0;
     kh1_dma_walk_us += d;
     if (ch >= 0 && ch <= 2) kh1_dma_ch_us[ch] += d;
     return r;

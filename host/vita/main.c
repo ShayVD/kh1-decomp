@@ -618,17 +618,25 @@ static int watchdog(SceSize args, void *argp) {
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
                 /* session 141: and the waits for the GS side's worker (at the vblank, LoadImage / StoreImage) */
                 u32 gw = kh1_gsq_us_wait - gwait0;
-                u32 known = walk + (kh1_gsq_on ? 0 : (us_frame - frame0) + (us_draw - draw0)) + (kh1_vita_us_wait - wait0) + gw;
-                vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them), %u the "
-                     "frame's commands, %u present (with the GS worker: the worker's), %u the vblank wait, %u waiting for the GS worker, %u the rest "
-                     "(the game's code)\n", all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
+                /* stage 0: a put that waits for room in the ring waits inside a walk, counted in both: once here */
+                extern u32 kh1_dma_walk_ring_us;
+                static u32 ring0;
+                u32 rw = kh1_dma_walk_ring_us - ring0;
+                u32 known;
+                ring0 = kh1_dma_walk_ring_us;
+                if (rw > walk) rw = walk;
+                walk -= rw;
+                known = walk + (kh1_gsq_on ? 0 : (us_frame - frame0) + (us_draw - draw0)) + (kh1_vita_us_wait - wait0) + gw;
+                vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them; not counting %u ms "
+                     "waiting for room in the GS worker's ring, which is in the GS worker wait), %u the frame's commands, %u present (with the GS worker: the worker's), %u the vblank wait, %u waiting for the GS worker, %u the rest "
+                     "(the game's code)\n", all / 1000, walk / 1000, rw / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
                      (kh1_vita_us_wait - wait0) / 1000, gw / 1000, all > known ? (all - known) / 1000 : 0);
             }
             { /* native-plan.md stage 0: the walks by channel, VIF1's data into VU memory, the ring's copies */
                 extern u32 kh1_dma_ch_us[3], kh1_dma_ch_sends[3], kh1_dma_feed_us, kh1_dma_feed_words, kh1_gsq_puts,
                     kh1_gsq_put_bytes_n;
                 static u32 cu0[3], cs0[3], fu0, fw0, gp0, gb0;
-                vlog("kh1-vita: walk split: VIF0 %u ms (%u sends), VIF1 %u ms (%u sends; VU1 programs and their hand-off "
+                vlog("kh1-vita: walk split (ring waits included): VIF0 %u ms (%u sends), VIF1 %u ms (%u sends; VU1 programs and their hand-off "
                      "in the vu1 lines, %u ms feeding %u K words into VU memory), GIF %u ms (%u sends); %u ops, %u KiB "
                      "into the GS worker's ring\n", (kh1_dma_ch_us[0] - cu0[0]) / 1000, kh1_dma_ch_sends[0] - cs0[0],
                      (kh1_dma_ch_us[1] - cu0[1]) / 1000, kh1_dma_ch_sends[1] - cs0[1], (kh1_dma_feed_us - fu0) / 1000,
