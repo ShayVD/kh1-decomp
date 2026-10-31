@@ -36,6 +36,16 @@ int PlatPadRead(int socket, u8 *data);
 int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data);
 #endif
 
+/* The port's free camera (no PS2 counterpart: the game turns the camera with L2 / R2 only): this frame's turn
+ * from the right stick in radians per time step, yaw (right as R2) and pitch (+ raises the camera, looking down);
+ * 0 when the stick is centred or the free camera is off (fieldcam.c func_00178e10 adds them).  The Vita's
+ * (host/vita/pad.c, config.txt's rcam=1); the host's answers 0 */
+#ifdef KH1_PS2
+#define PlatCamStick(yaw, pitch) 0
+#else
+int PlatCamStick(f32 *yaw, f32 *pitch);
+#endif
+
 /* The game's decoded buttons (src/pad/padread*.c, session 57): libpad2's
  * digital bits made active high (bytes 0-1 xor 0xffff), the right stick's
  * directions in bits 20-23 and the left stick's in bits 28-31 (the d-pad

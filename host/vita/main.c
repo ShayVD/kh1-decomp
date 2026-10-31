@@ -50,9 +50,10 @@
  *                             default) keeps the GS path
  *       natcull=N             with renderer=native, the cull mode of P18's back-face-culled runs: 1 (the default)
  *                             CCW in the window, 2 CW, 0 none (if Sora shows his inside, try 2)
- *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
- *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
- *                             the command menu's cursor)
+ *       rcam=N                1 (the default) a free camera on the right stick, left / right and up / down (host/vita/
+ *                             pad.c, fieldcam.c; rcaminv=1 flips up / down); -1 the same with left / right the other
+ *                             way; 2 the stick's x only, sent as R2 / L2 (the game's own turn); 0 sends the right
+ *                             stick as it is (the PS2's: the command menu's cursor)
  *       snd=N                 1 (the default) plays the game's sound: the disc's own sound driver (LIBSSL.IRX) in
  *                             host/port/iop.c's IOP and spu2.c's SPU2, out through host/vita/audio.c; 0 keeps the
  *                             null server (silence)
@@ -63,8 +64,8 @@
  *                             gauges and command menu at the screen's edges, menus and text in the centred 4:3
  *                             canvas; needs the GPU picture (else 2); 2 the 4:3 picture stretched to the whole
  *                             screen; 0 the 4:3 picture in black bars, as before (widescreen=N: the same)
- *       fps=N                 the mod menu's FPS counter (host/vita/menu.c): 0 (the default) off, 1 the pictures a
- *                             second, 2 and the game's frames a second
+ *       fps=1                 the mod menu's FPS counter (host/vita/menu.c), the pictures a second; 0 (the default)
+ *                             off
  *       swapox=1              swaps circle and cross (cross confirms); reartouch=0 turns the rear pad's L2 / R2 /
  *                             L3 / R3 off; volume=N the sound's level, 0-100 (all three: the mod menu's, menu.c)
  *       strip=1               keeps the status strip (the alive square, the read / frame bars) over a full-screen

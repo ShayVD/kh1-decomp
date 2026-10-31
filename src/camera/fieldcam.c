@@ -45,6 +45,15 @@
 #include "data/types/text_00160000_c04.h"
 #include "data/types/text_00170000_b06.h"
 #include "data/pieces/D_002E31B0.h"
+#ifndef KH1_PS2
+#include "platform/pad.h"
+/* the port's free camera (platform/pad.h PlatCamStick, docs/vita-build.md "The mod menu"): the right stick's
+ * pitch, kept as an offset from the room's own (D_00362660.x) so the camera's drift back to it (func_00177ef8)
+ * drifts back to the player's pitch instead; reset with the camera (func_00178ef8) */
+static f32 kh1_cam_pitch_off;
+#define KH1_CAM_PITCH_MIN -0.35f /* 20 degrees under the horizon: the camera low, looking up */
+#define KH1_CAM_PITCH_MAX 1.40f  /* 80 degrees: nearly overhead (the game's own clamp is 85) */
+#endif
 
 /* func_00176f08 (from hand/text_00170000_h61.c). */
 extern s32 D_002E27A8;
@@ -422,7 +431,12 @@ s32 func_00177ef8(void) {
     } else {
         if (func_00177168()) D_003624C0 -= D_002BBDFC * 0.2999999896f;
         if (D_003624C0 < 0.0f) D_003624C0 = 0.0f;
+#ifdef KH1_PS2
         if (D_003624C0 <= 0.0f) D_00362680.x += func_00120c88(D_00362660.x - D_00362680.x) * 0.0299999998f;
+#else
+        if (D_003624C0 <= 0.0f)
+            D_00362680.x += func_00120c88(D_00362660.x + kh1_cam_pitch_off - D_00362680.x) * 0.0299999998f;
+#endif
     }
     PlatVu0SubVector(&r.b, &D_005758E0, &D_005758D0);
     r.b.y -= 100.0f;
@@ -581,6 +595,22 @@ void func_00178e10(void) {
     if (func_001375d8(D_00575894)) return;
     if (0.0f < D_005758C4) return;
     if (0.0f < D_0057590C) return;
+#ifndef KH1_PS2
+    { /* the port's free camera: the right stick turns (right: as R2) and pitches it, per time step */
+        f32 yaw, pitch, p;
+        if (PlatCamStick(&yaw, &pitch)) {
+            D_00362680.y = func_00120c88(D_00362680.y + yaw * D_002BBDFC);
+            p = (*(f32 *)&D_00362660) + kh1_cam_pitch_off + pitch * D_002BBDFC;
+            if (p < KH1_CAM_PITCH_MIN) p = KH1_CAM_PITCH_MIN;
+            if (p > KH1_CAM_PITCH_MAX) p = KH1_CAM_PITCH_MAX;
+            kh1_cam_pitch_off = p - (*(f32 *)&D_00362660);
+            p = D_00362680.x + pitch * D_002BBDFC;
+            if (p < KH1_CAM_PITCH_MIN) p = KH1_CAM_PITCH_MIN;
+            if (p > KH1_CAM_PITCH_MAX) p = KH1_CAM_PITCH_MAX;
+            D_00362680.x = p;
+        }
+    }
+#endif
     if (D_002C5BB0.x4 & 0x1000)
         D_00362680.y = func_00120c88(D_00362680.y + D_002BBDFC * 0.034906583f);
     if (D_002C5BB0.x4 & 0x2000)
@@ -620,6 +650,9 @@ void func_00178ef8(void) {
     if (D_00575890 & 2) {
         D_00575890 &= ~2;
         D_00362680.x = D_00362660.x;
+#ifndef KH1_PS2
+        kh1_cam_pitch_off = 0.0f;
+#endif
         D_00362680.y = func_00124d28(&D_002E2780, &D_002E2790);
         D_00362680.w = D_00362660.w;
         func_00124c68(53.0f);

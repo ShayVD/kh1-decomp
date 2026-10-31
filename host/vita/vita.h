@@ -26,8 +26,9 @@ void kh1_vita_gxm_stats(unsigned int *frames, unsigned int *draws, unsigned int 
 
 /* pad.c: the buttons as sceCtrl read them this frame (for main.c's own screens) */
 unsigned int kh1_vita_buttons(void);
-/* pad.c: config.txt's rcam= (1 the right stick's x turns the camera, -1 the other way, 0 the stick as it is) */
-extern int kh1_vita_rcam;
+/* pad.c: config.txt's rcam= (1 the right stick a free camera, -1 with x the other way, 2 its x as L2 / R2, 0 the
+ * stick as it is) and rcaminv= (the free camera's up / down the other way) */
+extern int kh1_vita_rcam, kh1_vita_rcam_inv;
 
 /* menu.c: the mod menu (a tap in the middle of the front touch screen; docs/vita-build.md "The mod menu") */
 void kh1_vita_menu_init(int *wide, int *late_wait, int *native, int *strip, int gpu_on);

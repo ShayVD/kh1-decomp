@@ -5,8 +5,10 @@
  *
  *   Widescreen          wide=: the 16:9 wide view (1), 4:3 stretched (2), 4:3 in black bars (0); live (the view,
  *                       the HUD's anchors and the present are only parameters: host/port/view.c, plat_null.c)
- *   Right stick camera  rcam=: on (1), inverted (-1), off (0, the PS2's right stick); live (pad.c)
- *   FPS counter         fps=: off (0), the pictures a second (1), and the game's frames a second (2); live
+ *   Right stick camera  rcam=: free (1: left / right and up / down), left / right only (2: as L2 / R2), off (0,
+ *                       the PS2's right stick); live (pad.c, fieldcam.c)
+ *   Camera up / down    rcaminv=1: the free camera's up / down the other way; live
+ *   FPS counter         fps=1: the pictures a second, top right; live
  *   Swap circle / cross swapox=1: the Japanese disc's circle-confirms swapped to cross-confirms; live (pad.c)
  *   Rear touch L2/R2/L3/R3 reartouch=0: the rear pad's quarters off (no presses from the hands holding it); live
  *   Volume              volume=0..100: the sound's output level (audio.c); live
@@ -50,13 +52,13 @@ static volatile int open_; /* the menu is up (display.c draws it) */
 static int sel, dirty, swallow;
 static vita2d_pgf *font;
 
-enum { I_WIDE, I_RCAM, I_FPS, I_SWAP, I_REAR, I_VOL, I_PACE, I_REND, I_STRIP, I_RESTART, I_QUIT, I_CLOSE, I_N };
-static const char *const names[I_N] = { "Widescreen", "Right stick camera", "FPS counter", "Swap circle / cross",
+enum { I_WIDE, I_RCAM, I_RINV, I_FPS, I_SWAP, I_REAR, I_VOL, I_PACE, I_REND, I_STRIP, I_RESTART, I_QUIT, I_CLOSE, I_N };
+static const char *const names[I_N] = { "Widescreen", "Right stick camera", "Camera up / down", "FPS counter", "Swap circle / cross",
                                         "Rear touch as L2 / R2 / L3 / R3", "Volume", "Frame catch-up", "Renderer",
                                         "Status strip", "Restart game", "Quit game", "Close" };
 
 /* config.txt's keys the menu writes (the menu's own and main.c's it changes); widescreen= is wide='s other name */
-static const char *const keys[] = { "wide", "rcam", "fps", "swapox", "reartouch", "volume", "latewait", "renderer", "strip" };
+static const char *const keys[] = { "wide", "rcam", "rcaminv", "fps", "swapox", "reartouch", "volume", "latewait", "renderer", "strip" };
 #define NKEYS (int)(sizeof keys / sizeof keys[0])
 
 void kh1_vita_menu_init(int *wide, int *late_wait, int *native, int *strip, int gpu_on) {
@@ -71,7 +73,8 @@ void kh1_vita_menu_init(int *wide, int *late_wait, int *native, int *strip, int 
 
 /* main.c's config(): the menu's own keys; 1 when the key was one */
 int kh1_vita_menu_config(const char *k, const char *v) {
-    if (strcmp(k, "fps") == 0) kh1_vita_fps_osd = atoi(v);
+    if (strcmp(k, "fps") == 0) kh1_vita_fps_osd = atoi(v) != 0;
+    else if (strcmp(k, "rcaminv") == 0) kh1_vita_rcam_inv = atoi(v);
     else if (strcmp(k, "swapox") == 0) kh1_vita_swap_ox = atoi(v);
     else if (strcmp(k, "reartouch") == 0) kh1_vita_rear_touch = atoi(v);
     else if (strcmp(k, "volume") == 0) {
@@ -86,12 +89,13 @@ static void value_of(int k, char *b, int n) {
     switch (k) {
     case 0: snprintf(b, n, "%d", *p_wide); break;
     case 1: snprintf(b, n, "%d", kh1_vita_rcam); break;
-    case 2: snprintf(b, n, "%d", kh1_vita_fps_osd); break;
-    case 3: snprintf(b, n, "%d", kh1_vita_swap_ox); break;
-    case 4: snprintf(b, n, "%d", kh1_vita_rear_touch); break;
-    case 5: snprintf(b, n, "%d", kh1_vita_volume); break;
-    case 6: snprintf(b, n, "%d", *p_late); break;
-    case 7: snprintf(b, n, "%s", *p_native ? "native" : "gs"); break;
+    case 2: snprintf(b, n, "%d", kh1_vita_rcam_inv); break;
+    case 3: snprintf(b, n, "%d", kh1_vita_fps_osd); break;
+    case 4: snprintf(b, n, "%d", kh1_vita_swap_ox); break;
+    case 5: snprintf(b, n, "%d", kh1_vita_rear_touch); break;
+    case 6: snprintf(b, n, "%d", kh1_vita_volume); break;
+    case 7: snprintf(b, n, "%d", *p_late); break;
+    case 8: snprintf(b, n, "%s", *p_native ? "native" : "gs"); break;
     default: snprintf(b, n, "%d", *p_strip); break;
     }
 }
@@ -163,7 +167,7 @@ static void apply_wide(int w) {
 }
 
 static void change(int i, int dir) {
-    static const int wides[3] = { 1, 2, 0 }, rcams[3] = { 1, -1, 0 };
+    static const int wides[3] = { 1, 2, 0 }, rcams[3] = { 1, 2, 0 };
     int j;
     switch (i) {
     case I_WIDE:
@@ -176,7 +180,8 @@ static void change(int i, int dir) {
         for (j = 0; j < 3 && rcams[j] != kh1_vita_rcam; j++) {}
         kh1_vita_rcam = rcams[(j + (dir < 0 ? 2 : 1)) % 3];
         break;
-    case I_FPS: kh1_vita_fps_osd = (kh1_vita_fps_osd + (dir < 0 ? 2 : 1)) % 3; break;
+    case I_RINV: kh1_vita_rcam_inv = !kh1_vita_rcam_inv; break;
+    case I_FPS: kh1_vita_fps_osd = !kh1_vita_fps_osd; break;
     case I_SWAP: kh1_vita_swap_ox = !kh1_vita_swap_ox; break;
     case I_REAR: kh1_vita_rear_touch = !kh1_vita_rear_touch; break;
     case I_VOL:
@@ -209,8 +214,11 @@ static void change(int i, int dir) {
 static const char *shown_value(int i, char *b, int n) {
     switch (i) {
     case I_WIDE: return *p_wide == 1 ? "16:9 wide view" : *p_wide == 2 ? "4:3 stretched" : "4:3 black bars";
-    case I_RCAM: return kh1_vita_rcam > 0 ? "On" : kh1_vita_rcam < 0 ? "Inverted" : "Off (PS2 layout)";
-    case I_FPS: return kh1_vita_fps_osd == 2 ? "FPS + game speed" : kh1_vita_fps_osd ? "On" : "Off";
+    case I_RCAM:
+        return kh1_vita_rcam == 1 ? "Free" : kh1_vita_rcam == -1 ? "Free, left / right flipped"
+             : kh1_vita_rcam == 2 ? "Left / right only" : "Off (PS2 layout)";
+    case I_RINV: return kh1_vita_rcam_inv ? "Inverted" : "Normal";
+    case I_FPS: return kh1_vita_fps_osd ? "On" : "Off";
     case I_SWAP: return kh1_vita_swap_ox ? "Cross confirms" : "Circle confirms";
     case I_REAR: return kh1_vita_rear_touch ? "On" : "Off";
     case I_VOL: snprintf(b, n, "%d%%", kh1_vita_volume); return b;
@@ -228,9 +236,9 @@ static const char *shown_value(int i, char *b, int n) {
 /* the panel's layout, screen pixels */
 #define PX 150
 #define PW 660
-#define TOP 40
-#define ROW 36
-#define RY(i) (TOP + 56 + (i) * ROW)
+#define TOP 16
+#define ROW 33
+#define RY(i) (TOP + 54 + (i) * ROW)
 
 /* one tap: a touch let go within 0.6 s, moved under 40 px (front touch's 1920 x 1088 halved) */
 static int tap(int *tx, int *ty) {
@@ -318,28 +326,22 @@ void kh1_vita_menu_run(void (*redraw)(void)) {
     kh1_vita_log("kh1-vita: menu: closed\n");
 }
 
-/* the FPS counter: whole pictures a second (what the eye sees) and the game's own frames a second, measured over
- * each half second */
+/* the FPS counter: whole pictures a second (what the eye sees), measured over each half second */
 static void fps_osd(void) {
     static SceUInt64 t0;
     static u32 pics0;
-    static unsigned long frames0;
-    static float fps, game;
-    char b[64];
+    static float fps;
+    char b[32];
     SceUInt64 t = sceKernelGetProcessTimeWide();
     if (!t0 || t - t0 > 2000000) {
         t0 = t;
         pics0 = kh1_vita_pictures;
-        frames0 = kh1_host_frame();
     } else if (t - t0 >= 500000) {
         fps = (float)(kh1_vita_pictures - pics0) * 1e6f / (float)(t - t0);
-        game = (float)(kh1_host_frame() - frames0) * 1e6f / (float)(t - t0);
         t0 = t;
         pics0 = kh1_vita_pictures;
-        frames0 = kh1_host_frame();
     }
-    if (kh1_vita_fps_osd == 2) snprintf(b, sizeof b, "%.0f fps  game %.0f/60", fps, game);
-    else snprintf(b, sizeof b, "%.0f fps", fps);
+    snprintf(b, sizeof b, "%.0f fps", fps);
     {
         int w = vita2d_pgf_text_width(font, 0.9f, b);
         vita2d_draw_rectangle((float)(960 - w - 20), 6.0f, (float)(w + 14), 26.0f, RGBA8(0, 0, 0, 160));
