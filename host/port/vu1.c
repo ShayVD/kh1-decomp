@@ -1241,11 +1241,12 @@ static void start_run(u32 pc) {
         tr_lost = 0;
         /* the native renderer (vu1_draw.h): the run's records handed to the GPU instead */
         ran = kh1_vu1_draw && ((tr_progs[prog].num == 18 && nd_18(pc)) ||
-                                (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc)));
-        if (!ran && kh1_vu1_natcheck && tr_progs[prog].num == 0) { /* KH1_HOST_NATCHECK (vu1_draw.h) */
+                                (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc, 0)) ||
+                                (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)));
+        if (!ran && kh1_vu1_natcheck && (tr_progs[prog].num == 0 || tr_progs[prog].num == 4)) { /* KH1_HOST_NATCHECK */
             void (*sv)(const u32 *, u32) = kh1_vu1_draw;
             kh1_vu1_draw = 0;
-            if (!nd_0(pc)) {
+            if (!nd_0(pc, tr_progs[prog].num == 4)) {
                 ran = tr_go(prog, pc);
                 nd_0_check();
             }

@@ -92,14 +92,17 @@ static int nd_18(u32 pc) {
  * the run leaves: the clipped fans' template PRIM (qw48.y, from the tag's w) and the idle PC; not the kick's
  * output, the registers, Q, clip or MAC flags (nothing in the Dive reads them before the next run writes them).
  * The program's own clipper (a triangle crossing the guard box) is the GPU's clipping here: natdraw.h's notes */
-static int nd0_built; /* the last nd_0 call filled nd_buf (KH1_HOST_NATCHECK's) */
-static int nd_0(u32 pc) {
+static int nd0_built, nd0_p4; /* the last nd_0 call filled nd_buf, and for P4 (KH1_HOST_NATCHECK's) */
+/* 2026-10-31: p4 1 for P4 (vu1_nat.h nat_4: entered at 00c or its idle 045), P0's batch with no back-face test:
+ * every flag word that draws goes to the double-sided list (bit 0x20 cleared, natdraw.h) */
+static int nd_0(u32 pc, int p4) {
     const u32 *h = mem[top & (DATA_QW - 1)];
     u32 nv = h[0] & 0x7FFF, rq = 2, j, k, i2 = top + 1;
     f32 sc[4], m[4][4];
     nd0_built = 0;
-    if (pc != 0xc && pc != 0x4e) return 0;
-    if (!nv || 3 + nv * 2 + 4 > ND_QW) return 0;
+    nd0_p4 = p4;
+    if (pc != 0xc && pc != (p4 ? 0x45u : 0x4eu)) return 0;
+    if (!nv || 3 + nv * 2 + 4 > ND_QW || nv * 7u + 8 > DATA_QW) return 0;
     for (k = 0; k < 4; k++) sc[k] = fin(vf[31][k]);
     for (k = 0; k < 4; k++) { /* column k of P x W: P (vf01-04) applied to W's column k (vf13-16) */
         f32 w0 = fin(vf[13 + k][0]), w1 = fin(vf[13 + k][1]), w2 = fin(vf[13 + k][2]), w3 = fin(vf[13 + k][3]);
@@ -123,7 +126,7 @@ static int nd_0(u32 pc) {
         nd_buf[rq][0] = p[0];
         nd_buf[rq][1] = p[1];
         nd_buf[rq][2] = p[2];
-        nd_buf[rq][3] = p[3]; /* the strip flag word (natdraw.h) */
+        nd_buf[rq][3] = p4 && p[3] & 0xFFFF ? (p[3] & ~0x20u) | 1 : p[3]; /* the strip flag word (natdraw.h) */
         nd_buf[rq + 1][0] = fo((f32)(s32)t[0] * (1.0f / 4096.0f));
         nd_buf[rq + 1][1] = fo((f32)(s32)t[1] * (1.0f / 4096.0f));
         nd_buf[rq + 1][2] = 0x3F800000u;
@@ -140,9 +143,9 @@ static int nd_0(u32 pc) {
     nd_buf[1][1] = nd_buf[1][2] = nd_buf[1][3] = 0;
     for (k = 0; k < 4; k++) memcpy(nd_buf[rq + k], m[k], 16);
     kh1_vu1_draw(nd_buf[0], rq + 4);
-    mem[48][1] = h[3];
+    if (!p4) mem[48][1] = h[3]; /* P4 leaves the template as it is */
     kh1_vu1_drawn++;
-    tpc = 0x4e & (MICRO_N - 1);
+    tpc = (p4 ? 0x45 : 0x4e) & (MICRO_N - 1);
     return 1;
 }
 
@@ -151,7 +154,7 @@ static int nd_0(u32 pc) {
  * kh1_nat_tris0's rule on the same positions.  "the program only" must stay 0; "native only" are the triangles
  * the program drops or clips for the guard box (the GPU clips those itself) */
 int kh1_vu1_natcheck;
-static u32 nc_runs, nc_both, nc_none, nc_vu, nc_nat, nc_zero;
+static u32 nc_runs, nc_both, nc_none, nc_vu, nc_nat, nc_zero, nc_p4, nc_p4vu;
 static void nd_0_check(void) {
     const u32 *h = mem[top & (DATA_QW - 1)];
     u32 nv = h[0] & 0x7FFF, o = top + 1 + 4 * nv + 1, j; /* the output: its tag at top + 1 + 4n (nat_0 i2) */
@@ -159,7 +162,7 @@ static void nd_0_check(void) {
     for (j = 2; j < nv; j++) {
         const u32 *a = mem[(o + 3 * (j - 2) + 2) & (DATA_QW - 1)], *b = mem[(o + 3 * (j - 1) + 2) & (DATA_QW - 1)];
         const u32 *c = mem[(o + 3 * j + 2) & (DATA_QW - 1)];
-        u32 fl = mem[(top + 1 + 3 * j) & (DATA_QW - 1)][3];
+        u32 fl = nd_buf[3 + 2 * j][3]; /* the payload's (P4's with 0x20 cleared) */
         int vu = !(c[3] & 0x8000), nat = (fl & 0xFFFF) != 0;
         long long cr = (long long)((s32)b[0] - (s32)a[0]) * ((s32)c[1] - (s32)a[1]) -
                        (long long)((s32)b[1] - (s32)a[1]) * ((s32)c[0] - (s32)a[0]);
@@ -183,13 +186,15 @@ static void nd_0_check(void) {
         if (vu && nat) nc_both++;
         else if (!vu && !nat) nc_none++;
         else if (vu) {
+            nc_p4vu += nd0_p4;
             if (nc_vu++ < 12)
                 printf("kh1-vu1: natcheck: program only: flag %08x cross %lld, xy %d,%d %d,%d %d,%d (12.4, the offset in)\n", fl, cr,
                        (s32)a[0], (s32)a[1], (s32)b[0], (s32)b[1], (s32)c[0], (s32)c[1]);
         }
         else nc_nat++;
     }
+    nc_p4 += nd0_p4;
     if (!(++nc_runs % 20000))
-        printf("kh1-vu1: natcheck P0: %u runs; triangles drawn by both %u, by neither %u, the program only %u, native only "
-               "%u (%u with no area)\n", nc_runs, nc_both, nc_none, nc_vu, nc_nat, nc_zero);
+        printf("kh1-vu1: natcheck P0 / P4: %u runs (%u P4); triangles drawn by both %u, by neither %u, the program only %u "
+               "(%u P4), native only %u (%u with no area)\n", nc_runs, nc_p4, nc_both, nc_none, nc_vu, nc_p4vu, nc_nat, nc_zero);
 }

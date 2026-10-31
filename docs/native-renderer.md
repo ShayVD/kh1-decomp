@@ -115,8 +115,8 @@ less now that scenes, not draws, were the cost.
 
 Moved ahead of P13: P0 is the game thread's biggest program in the Dive (~570-700 ms per 2.4 s on a Vita, native1's
 log), and with the GPU's frame cut (vita-build.md "The GPU's work in the Dive") the game thread is expected to be
-the limit. On with `renderer=native` (config.txt), `natp0=0` keeps P0 on the VU1 program with P18 still native;
-host `KH1_HOST_NATIVE=1`, `KH1_HOST_NATP0=0`.
+the limit. On with `renderer=native` (config.txt), `natp0=0` keeps P0 (and P4) on the VU1 programs with P18 still native;
+host `KH1_HOST_NATIVE=1`, `KH1_HOST_NATP0=0`. P4 (below) goes with it.
 
 **The flow** is P18's (above) with a payload of its own (natdraw.h, program 0):
 
@@ -147,6 +147,11 @@ host `KH1_HOST_NATIVE=1`, `KH1_HOST_NATP0=0`.
   the GPU clips at 0 <= z <= w, the nearest P0's Z can be. The GPU's frustum clipping stands in for P0's clipper
   (Sutherland-Hodgman over its guard box, as fans): the triangles P0 drops or clips are drawn whole and clipped by
   the GPU.
+
+**P4** (renderer A without the back-face test: the double-sided map meshes and the sky, ~120-160 ms per 2.4 s)
+takes the same path (`nd_0(pc, 1)`: entered at 00c or its idle 045, every drawing flag word to the double-sided
+list, the clipped fans' template left alone as P4 leaves it). `natp0=0` turns both off. KH1_HOST_NATCHECK covers it:
+to Dive frame 7000, 22,876 P4 runs, no triangle drawn by P4 alone, colours / ST / F equal.
 
 **Checked on the host**:
 

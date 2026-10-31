@@ -1732,7 +1732,7 @@ one run without it for the frame rate; if the picture flickers or shows an old f
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
    then the same with `renderer=native` (native P0 since 2026-10-31, native-renderer.md "Stage 3 first": host-only
-   so far; `natp0=0` turns P0 alone off). Next for the game thread: P13.
+   so far; `natp0=0` turns P0 and P4 off). Next for the game thread: P13.
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
    with pad scripts, and look for more overruns of the allarea.nam kind (a disc file's length
    copied into a name the host sizes from its PS2 neighbour).
