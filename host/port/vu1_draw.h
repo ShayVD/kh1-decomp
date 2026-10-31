@@ -11,6 +11,7 @@ void (*kh1_vu1_draw)(const u32 *q, u32 nqw);
 u32 kh1_vu1_drawn; /* runs handed over so far */
 int kh1_vu1_draw_p0 = 1;
 int kh1_vu1_draw_p11 = 1;
+int kh1_vu1_draw_p10 = 1;
 
 #define ND_QW 4096 /* a payload's qwords: VU1's data memory is 1024, a vertex 3 there and 2 here */
 static u32 nd_buf[ND_QW][4];
@@ -82,6 +83,76 @@ static int nd_18(u32 pc, u32 num) {
         if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
     kh1_vu1_drawn++;
     tpc = 7 & (MICRO_N - 1);
+    return 1;
+}
+
+/* 2026-10-31: P10 from 006 (vu1_nat.h nat_10), the shadow pass's untextured strips: matrix records of 4 qwords, op 1
+ * a GIF tag and z positions of one qword (w the slot; the position's own w is not read, as the shader's 1), XYZ2
+ * only and no ADC.  Handed over in P18's payload as program 10: the colour is the RGBAQ P10's set-up run (from 000,
+ * which the program still runs) kicks from qw1, kept by nd_10_setup; every triangle drawn, ST 0 (the tag's PRIM has
+ * no TME).  Fewer than 3 positions (the program's count wraps) is left to the program */
+static u32 nd10_rgba = 0x80808080u;
+static void nd_10_setup(void) {
+    nd10_rgba = (mem[1][0] & 0xFF) | (mem[1][1] & 0xFF) << 8 | (mem[1][2] & 0xFF) << 16 | (mem[1][3] & 0xFF) << 24;
+}
+static int nd_10(u32 pc) {
+    u32 i2 = top, rq = 2, nrec = 0, nmat = 0, k;
+    s32 cur[3] = { -1, -1, -1 }, last[3] = { -1, -1, -1 };
+    static const int base[3] = { 5, 12, 19 };
+    if (pc != 6 || !kh1_vu1_draw) return 0;
+    for (;;) {
+        const u32 *h = mem[i2 & (DATA_QW - 1)];
+        u32 op = h[0] & 0xFFFF, nv, j;
+        if (!op) {
+            u32 sl = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
+            if (nmat == KH1_NAT_MATS) return 0;
+            for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], mem[(i2 + 1 + k) & (DATA_QW - 1)], 16);
+            cur[sl] = last[sl] = (s32)nmat++;
+            i2 += 5;
+            continue;
+        }
+        if (op != 1) break;
+        nv = h[2] & 0xFFFF;
+        if (nv < 3) return 0;
+        if (rq + 1 + nv * 2 + 2 > ND_QW - KH1_NAT_MATS * 4) return 0;
+        nd_buf[rq][0] = mem[(i2 + 1) & (DATA_QW - 1)][0];
+        nd_buf[rq][1] = mem[(i2 + 1) & (DATA_QW - 1)][1];
+        nd_buf[rq][2] = nv;
+        nd_buf[rq][3] = 0;
+        rq++;
+        i2 += 2;
+        for (j = 0; j < nv; j++, i2++) {
+            const u32 *p = mem[i2 & (DATA_QW - 1)];
+            u32 sl = (p[3] & 0xFFFF) == 0 ? 0 : (p[3] & 0xFFFF) == 1 ? 1 : 2;
+            if (cur[sl] < 0) {
+                if (nmat == KH1_NAT_MATS) return 0;
+                for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], vf[base[sl] + k], 16);
+                cur[sl] = (s32)nmat++;
+            }
+            nd_buf[rq][0] = p[0];
+            nd_buf[rq][1] = p[1];
+            nd_buf[rq][2] = p[2];
+            nd_buf[rq][3] = (u32)cur[sl];
+            nd_buf[rq + 1][0] = nd_buf[rq + 1][1] = nd_buf[rq + 1][3] = 0;
+            nd_buf[rq + 1][2] = 0x3F800000u;
+            rq += 2;
+        }
+        nrec++;
+    }
+    nd_buf[0][0] = KH1_NAT_MAGIC | 10;
+    nd_buf[0][1] = nrec;
+    nd_buf[0][2] = nmat;
+    nd_buf[0][3] = rq - 2;
+    nd_buf[1][0] = nd10_rgba;
+    nd_buf[1][1] = 0;
+    nd_buf[1][2] = 0;
+    nd_buf[1][3] = 0;
+    memcpy(nd_buf[rq], nd_mat, nmat * 64);
+    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    for (k = 0; k < 3; k++)
+        if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
+    kh1_vu1_drawn++;
+    tpc = 6 & (MICRO_N - 1);
     return 1;
 }
 

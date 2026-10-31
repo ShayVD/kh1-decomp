@@ -35,6 +35,8 @@ extern u32 kh1_vu1_drawn;
 extern int kh1_vu1_draw_p0;
 /* 2026-10-31: P11 (renderer B's unlit models with the near-plane cull) too (1, the default; natp11=0 / KH1_HOST_NATP11=0) */
 extern int kh1_vu1_draw_p11;
+/* 2026-10-31: P10 (the shadow pass's untextured strips) too (1, the default; natp10=0 / KH1_HOST_NATP10=0) */
+extern int kh1_vu1_draw_p10;
 extern int kh1_vu1_natcheck; /* host: KH1_HOST_NATCHECK=1, P0 run and checked against its payload (vu1_draw.h) */
 /* 1: a line per program run */
 extern int kh1_vu1_verbose;

@@ -189,6 +189,20 @@ pictures are identical to the P0 / P4 native build's; 6499 and 6999 differ in 20
 Keyblade's edges (the GPU's own rasterisation of the triangles the GS path drew). Not checked on a Vita. In the
 qemu-arm timing of the Dive (vita-build.md "P12 as hand-written C") P11 was 4.2 s of ~75 s of VU1 run time.
 
+### P10 too (2026-10-31, host only)
+
+P10 (the shadow pass's untextured strips under the characters) goes over in the same payload as program 10
+(vu1_draw.h `nd_10`): matrix records of 4 qwords, a position a qword (w the slot), no back-face test or ADC, so
+every triangle is drawn with no cull, ST 0 (the PRIM has no TME). The colour is not in the run's VU memory (TOPS is
+at 0 every other run, over qw0-1): it is the RGBAQ P10's set-up run (from 000, still run by the program) kicks from
+qw1, so start_run keeps qw1 then (`nd_10_setup`). The first try read qw1 at the strip run and drew Sora's shadow in
+the floor's colour. Runs of fewer than 3 positions are left to the program. `natp10=0` / `KH1_HOST_NATP10=0` keeps
+P10 on the VU.
+
+Checked on the host (as for P11): 11 of 14 Dive pictures identical to the P11 build's; 4999, 5499 and 6999 differ in
+46, 72 and 98 pixels along the shadows' edges. In the qemu-arm timing P10 was 6.6 s of ~75 s of VU1 run time.
+Not checked on a Vita.
+
 ## The stages after
 
 2. **P13 (skinned, flat, cull)** (next: P0 went first, above): the same flow with the bone palette: op 0 with w = 1 marks the palette record,
@@ -200,7 +214,7 @@ qemu-arm timing of the Dive (vita-build.md "P12 as hand-written C") P11 was 4.2 
    its clipping becomes the GPU's. Over half of the Dive's VU1 time. The map's chains do not change between
    frames; once the CPU side parses a chain the triangle list can be cached by the chain's address and the
    matrices' change alone uploaded, which removes most of the game thread's work for it.
-4. **P10, P12**: P11 and P4 are done (above), P10 positions only, P12 the lit variant (3 lights and ambient in the shader with the same
+4. **P12**: P11, P10 and P4 are done (above); P12 the lit variant (3 lights and ambient in the shader with the same
    clamps).
 5. **Batching and threads**: native runs of one pipeline and texture joined into one draw (the matrices
    indexed per vertex already allow it), and `nd_*`'s parse moved off the game thread to the GS worker (the

@@ -1290,8 +1290,10 @@ static void start_run(u32 pc) {
         /* the native renderer (vu1_draw.h): the run's records handed to the GPU instead */
         ran = kh1_vu1_draw && ((tr_progs[prog].num == 18 && nd_18(pc, 18)) ||
                                 (tr_progs[prog].num == 11 && kh1_vu1_draw_p11 && nd_18(pc, 11)) ||
+                                (tr_progs[prog].num == 10 && kh1_vu1_draw_p10 && nd_10(pc)) ||
                                 (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc, 0)) ||
                                 (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)));
+        if (tr_progs[prog].num == 10 && pc == 0) nd_10_setup(); /* the RGBAQ its kick sets, for nd_10's payload */
         if (!ran && kh1_vu1_natcheck && (tr_progs[prog].num == 0 || tr_progs[prog].num == 4)) { /* KH1_HOST_NATCHECK */
             void (*sv)(const u32 *, u32) = kh1_vu1_draw;
             kh1_vu1_draw = 0;
