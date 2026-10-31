@@ -1705,8 +1705,8 @@ present every frame as before, the fallback if the picture tears or flickers.
 
 - `make test`: cmdbuf_test 53 checks (the two new ones above), kh1.elf byte-identical.
 - The picture: every 50th frame's targets hashed (`KH1_HOST_GXM_HASH=1`) over 7,000 Dive frames with main
-  2f80e41, cut 1, and cuts 1 + 2: identical (280 hashes each), and frames 5096-5103 of every build hashed
-  alike. Cut 3 is Vita-only code (gxm.c, display.c); it compiles with vitasdk and is not exercised by the host.
+  2f80e41, cut 1 (two versions), and cuts 1 + 2: identical (280 hashes each), and frames 5096-5103 of every
+  build hashed alike. Cut 3 is Vita-only code (gxm.c, display.c); it compiles with vitasdk and is not exercised by the host.
 - **Not checked**: anything on a Vita: the frame rate, gputime's numbers, present=1's picture (tearing, a stale
   frame).
 
