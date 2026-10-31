@@ -1644,6 +1644,16 @@ a FIFO; the RPCs whose answer the game reads wait on the tick thread's lock.
   playing the driver does about 60% more work in Dive on the host (1.30 G IOP instructions over the first
   20,000 frames instead of 0.80 G); watch the "short" count on the sound line in busy rooms.
 
+
+### The sound's priority (2026-10-31: sndprio=-4, the default)
+
+With renderer=native the Dive keeps all three cores busy (the GS worker ~2.26 s of 2.4), and the sound's tick and
+mix threads, below the game's threads, got too little: ~150 of ~450 buffers a window came out short (silence in the
+gap), heard as garbled sound. config.txt `sndprio=N` sets their priority against the game's (0x10000100 + N).
+Shay's Vita run with `sndprio=-4` (above the game) played clean, so -4 is the default; `sndprio=16` is the old
+setting. The threads are paced by the output (the mixer stops 64 ms ahead), so above the game they take only the
+time the sound needs. Its cost to the frame rate is not measured yet.
+
 ## The GPU's work in the Dive (2026-10-31)
 
 The Dive ran at ~15.7-16 pictures/s on a Vita, GPU-bound: ~31 ms of GPU a picture, every thread waiting on it

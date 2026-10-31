@@ -70,9 +70,10 @@
  *                             host/port/iop.c's IOP and spu2.c's SPU2, out through host/vita/audio.c; 0 keeps the
  *                             null server (silence)
  *       sndcore=N             pins the sound's tick thread and mixer to core N (0, 1 or 2); the default, -1, lets
- *                             them run on any core below the game's threads
+ *                             them run on any core (at sndprio's priority)
  *       sndprio=N             the sound's tick thread and mixer's priority against the game's threads (2026-10-31):
- *                             16, the default, below them; -4 above them (try it if the sound breaks up)
+ *                             -4, the default, above them; 16 below them, as before (the sound then breaks up
+ *                             when the cores are busy)
  *       wide=N                how the picture fills the 960 x 544 screen (docs/vita-build.md "Wide screen"): 1 (the
  *                             default) a 16:9 view, hor+ (the 3D sees more at the sides, host/port/view.c), the HUD's
  *                             gauges and command menu at the screen's edges, menus and text in the centred 4:3
