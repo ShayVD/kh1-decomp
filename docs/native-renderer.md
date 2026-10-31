@@ -284,6 +284,17 @@ ms (P13's M ms)`), the rest of P13's time in `vu1 programs:` being the parse. Un
 thread, KH1_HOST_CLOCK=1) P13 native was 6.2 s in all (2.5 s of it the hand-off, which on the host runs the GS worker's
 side inline) against 19.8 s for the NEON program with its kicks.
 
+**The hand-off line on a Vita (2026-10-31, PR #200's build, Dive frames ~3,700-7,700)**: P13 ~600-720 ms per 2.6 s
+window, of it only ~40-60 ms handing payloads over: the parse is ~640 ms (~55 us a run of ~42 vertices, ~1.3 us a
+vertex, ~580 A9 cycles), the one-reference-matrix change no faster there. Not the sound threads taking the game's
+core: with `sndcore=2` (sound pinned to the third core) P13 was the same 600-680 ms, and the frame recording on that
+core then made the GS worker wait 0.9-1.8 s a window (10-14 pictures a second): leave sndcore unset. Then (same date):
+the summed vertices' products in NEON (`vmlaq_lane_f32`, not fused: the scalar sum's roundings in another order; NATCHECK
+to frame 8000 gives the counts above unchanged on the host's scalar path and on qemu-arm's NEON one), a palette entry
+loaded into slot 2 not copied again when it is the one there already, and the `native renderer:` line's `N P13 runs
+handed back to the program (M ms)`: the runs nd_13 gave up on, and their time (the parse that gave up, then the
+program's), so the parse's own share of `vu1 programs:` P13 is that line's P13 time less the hand-off and this.
+
 **latewait (2026-10-31)**: two of those runs had `latewait=1` in config.txt (the mod menu's "Frame catch-up: Off",
 saved there before the first of them; the menu writes only the values it shows, so it was set from the menu at some
 point, not by a bug): the game thread then waits for a vblank every frame, ~700-800 ms per 2.4 s in the Dive, ~13
