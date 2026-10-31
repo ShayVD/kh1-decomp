@@ -272,3 +272,267 @@ static void nd_0_check(void) {
         printf("kh1-vu1: natcheck P0 / P4: %u runs (%u P4); triangles drawn by both %u, by neither %u, the program only %u "
                "(%u P4), native only %u (%u with no area)\n", nc_runs, nc_p4, nc_both, nc_none, nc_vu, nc_p4vu, nc_nat, nc_zero);
 }
+
+/* 2026-10-31 (docs/native-renderer.md "P13"): P13 from 006 (vu1_nat.h nat_13), renderer B's skinned, flat-coloured,
+ * back-face-culled program: the Dive's big skinned models.  Its stream is P18's with two more kinds of record (op 0
+ * with w 1 marks the bone palette's base, vi06; w 2 or more is a palette entry and loads nothing; op 2 is the index
+ * stream, vi08 / vi09 the next index), and a vertex is (?, ?, ?, k), k positions each pre-weighted (xyz x weight,
+ * w the weight) whose matrices come one by one from the index stream (0 / 1 / 2 a slot, 0x100 + j the palette's
+ * entry j, which the program loads into slot 2), then STQ.  The program sums M_i x p_i in ACC, divides and maps as
+ * P18 does, and sets the ADC for a back face (P18's rule) or for a vertex off its guard band.
+ *
+ * Handed over in P18's payload as program 13.  A vertex with one influence carries its position (p.xyz / p.w) and
+ * its matrix, as P18's do, for the GPU to transform.  A vertex with more is summed here (c = sum M_i x p_i, the
+ * clip-space point the VU would divide) and handed over in its first influence's space: v = M_a^-1 x c (in double;
+ * every bone matrix of a model shares one projection, so v.w is the weights' sum, 1), the position v.xyz / v.w with
+ * matrix a.  The GPU's transform of that gives c / v.w: the same place on the screen, and the same w.  The guard
+ * band is the GPU's clipping (pipes.c draws P13 with z not clamped, as P11).  What the run leaves: the slots (as
+ * the stream's loads and the palette's loads into slot 2 leave them), vi06, vi08 / vi09 (the index stream's place),
+ * I as the program sets it, the idle PC; not the output area, vf26-31, ACC, Q, the other integer registers (P18's
+ * note above).  Anything unexpected (an influence count of 0 or over 8, more than 32 matrices, a matrix that cannot
+ * be inverted, v.w not positive, a full buffer) returns 0 and the program runs */
+int kh1_vu1_draw_p13 = 1;
+u32 kh1_vu1_nd13_multi, kh1_vu1_nd13_verts; /* the vertices summed here, and all of P13's handed over */
+static int nd13_built;
+static double nd13_inv[KH1_NAT_MATS][4][4]; /* M^-1 as rows, for the matrices a summed vertex is put in */
+static f32 nd13_f[KH1_NAT_MATS][4][4];     /* the payload's matrices as floats (fin()'d once), for the sums */
+static void nd13_add(u32 id, const u32 (*m)[4]) {
+    u32 r, c;
+    memcpy(nd_mat[id], m, 64);
+    for (c = 0; c < 4; c++)
+        for (r = 0; r < 4; r++) nd13_f[id][c][r] = fin(m[c][r]);
+}
+static u32 nd13_have_inv;
+static int nd13_invert(u32 id) {
+    double a[4][8];
+    u32 r, c, k;
+    if (nd13_have_inv >> id & 1) return 1;
+    for (r = 0; r < 4; r++) /* M's row r from its columns: c_r = sum_k M[k][r] x_k */
+        for (c = 0; c < 4; c++) {
+            a[r][c] = nd13_f[id][c][r];
+            a[r][4 + c] = r == c;
+        }
+    for (c = 0; c < 4; c++) { /* Gauss-Jordan with partial pivoting */
+        u32 p = c;
+        double d;
+        for (r = c + 1; r < 4; r++)
+            if ((a[r][c] < 0 ? -a[r][c] : a[r][c]) > (a[p][c] < 0 ? -a[p][c] : a[p][c])) p = r;
+        if (a[p][c] == 0.0) return 0;
+        if (p != c)
+            for (k = 0; k < 8; k++) { double t = a[p][k]; a[p][k] = a[c][k]; a[c][k] = t; }
+        d = 1.0 / a[c][c];
+        for (k = 0; k < 8; k++) a[c][k] *= d;
+        for (r = 0; r < 4; r++)
+            if (r != c && a[r][c] != 0.0) {
+                double f = a[r][c];
+                for (k = 0; k < 8; k++) a[r][k] -= f * a[c][k];
+            }
+    }
+    for (r = 0; r < 4; r++)
+        for (c = 0; c < 4; c++) nd13_inv[id][r][c] = a[r][4 + c];
+    nd13_have_inv |= 1u << id;
+    return 1;
+}
+static int nd_13(u32 pc) {
+    u32 i2 = top, rq = 2, nrec = 0, nmat = 0, k, l9;
+    u16 i6 = vi[6], i8 = vi[8], i9 = vi[9];
+    u32 sl[3][4][4];               /* the slots as the run's loads leave them (written back on success) */
+    s32 cur[3] = { -1, -1, -1 };   /* each slot's matrix in this payload, -1 not listed yet */
+    u32 pal[KH1_NAT_MATS];         /* a palette entry's address for each matrix listed from one, else ~0 */
+    static const int base[3] = { 5, 12, 19 };
+    nd13_built = 0;
+    if (pc != 6) return 0;
+    l9 = i9 & (MICRO_N - 1);
+    if (l9 != 0x21 && l9 != 0x25 && l9 != 0x29 && l9 != 0x2d) return 0;
+    for (k = 0; k < 3; k++) memcpy(sl[k], vf[base[k]], 64);
+    nd13_have_inv = 0;
+    for (;;) {
+        const u32 *h = mem[i2 & (DATA_QW - 1)];
+        u32 op = h[0] & 0xFFFF, nv, j;
+        if (op == 0 || op > 0x8000) { /* 0 (and above 0x8000, as the program's s16 test reads it): w 0 a matrix into
+                                        * slot z; w 1 the palette's base; else nothing */
+            u32 w = h[3] & 0xFFFF;
+            if (w == 0) {
+                u32 r = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
+                for (k = 0; k < 4; k++) memcpy(sl[r][k], mem[(i2 + 1 + k) & (DATA_QW - 1)], 16);
+                cur[r] = -1;
+            } else if (w == 1)
+                i6 = (u16)i2;
+            i2 += 8;
+            continue;
+        }
+        if (op == 2) { /* the index stream: z qwords from the next */
+            i8 = (u16)(i2 + 1);
+            i9 = 0x21;
+            i2 = (u16)(i2 + 1 + (h[2] & 0xFFFF));
+            continue;
+        }
+        if (op != 1) break;
+        nv = h[2] & 0xFFFF;
+        if (!nv) return 0; /* 65536 vertices: none seen */
+        if (rq + 1 > ND_QW - KH1_NAT_MATS * 4) return 0;
+        nd_buf[rq][0] = mem[(i2 + 1) & (DATA_QW - 1)][0]; /* the GIF tag's low words */
+        nd_buf[rq][1] = mem[(i2 + 1) & (DATA_QW - 1)][1];
+        nd_buf[rq][2] = nv;
+        nd_buf[rq][3] = h[3] & 0xFFFF;
+        rq++;
+        i2 += 2;
+        for (j = 0; j < nv; j++) {
+            u32 nb = mem[i2 & (DATA_QW - 1)][3] & 0xFFFF, b, first = 0;
+            const u32 *t;
+            f32 c[4] = { 0, 0, 0, 0 };
+            if (!nb || nb > 8) return 0;
+            if (rq + 2 > ND_QW - KH1_NAT_MATS * 4) return 0;
+            i2++;
+            for (b = 0; b < nb; b++, i2++) {
+                const u32 *p = mem[i2 & (DATA_QW - 1)], *w = mem[i8 & (DATA_QW - 1)];
+                u16 ix;
+                u32 r, lane = (i9 & (MICRO_N - 1)) >> 2 & 3;
+                ix = (u16)w[lane];
+                if (lane == 3) { i8 = (u16)(i8 + 1); i9 = 0x21; }
+                else i9 = (u16)(0x21 + 4 * (lane + 1));
+                if ((s16)(u16)(ix - 0x100) >= 0) { /* the palette's entry: loaded into slot 2 */
+                    u16 at = (u16)((u16)(ix - 0x100) + i6);
+                    u32 m;
+                    for (k = 0; k < 4; k++) memcpy(sl[2][k], mem[(at + 1 + k) & (DATA_QW - 1)], 16);
+                    cur[2] = -1;
+                    for (m = 0; m < nmat; m++)
+                        if (pal[m] == (at & (DATA_QW - 1))) { cur[2] = (s32)m; break; }
+                    if (cur[2] < 0) {
+                        if (nmat == KH1_NAT_MATS) return 0;
+                        nd13_add(nmat, (const u32 (*)[4])sl[2]);
+                        pal[nmat] = at & (DATA_QW - 1);
+                        cur[2] = (s32)nmat++;
+                    }
+                    r = 2;
+                } else
+                    r = ix == 0 ? 0 : ix == 1 ? 1 : 2;
+                if (cur[r] < 0) {
+                    if (nmat == KH1_NAT_MATS) return 0;
+                    nd13_add(nmat, (const u32 (*)[4])sl[r]);
+                    pal[nmat] = ~0u;
+                    cur[r] = (s32)nmat++;
+                }
+                if (!b) first = (u32)cur[r];
+                if (nb == 1 && p[3] == 0x3F800000u) { /* weight 1 (most): the position as it is */
+                    nd_buf[rq][0] = p[0];
+                    nd_buf[rq][1] = p[1];
+                    nd_buf[rq][2] = p[2];
+                } else if (nb == 1) {
+                    f32 pw = fin(p[3]);
+                    if (!(pw > 0.0f)) return 0;
+                    nd_buf[rq][0] = fo(fin(p[0]) / pw);
+                    nd_buf[rq][1] = fo(fin(p[1]) / pw);
+                    nd_buf[rq][2] = fo(fin(p[2]) / pw);
+                } else {
+                    const f32 (*mm)[4] = nd13_f[cur[r]];
+                    f32 x = fin(p[0]), y = fin(p[1]), z = fin(p[2]), w = fin(p[3]);
+                    for (k = 0; k < 4; k++) c[k] += mm[0][k] * x + mm[1][k] * y + mm[2][k] * z + mm[3][k] * w;
+                }
+            }
+            if (nb > 1) { /* c in the first influence's space */
+                double v[4];
+                if (!nd13_invert(first)) return 0;
+                for (k = 0; k < 4; k++)
+                    v[k] = nd13_inv[first][k][0] * c[0] + nd13_inv[first][k][1] * c[1] + nd13_inv[first][k][2] * c[2] +
+                           nd13_inv[first][k][3] * c[3];
+                if (!(v[3] > 1e-6)) return 0;
+                nd_buf[rq][0] = fo((f32)(v[0] / v[3]));
+                nd_buf[rq][1] = fo((f32)(v[1] / v[3]));
+                nd_buf[rq][2] = fo((f32)(v[2] / v[3]));
+                kh1_vu1_nd13_multi++;
+            }
+            nd_buf[rq][3] = first;
+            t = mem[i2 & (DATA_QW - 1)];
+            i2++;
+            nd_buf[rq + 1][0] = t[0];
+            nd_buf[rq + 1][1] = t[1];
+            nd_buf[rq + 1][2] = t[2];
+            nd_buf[rq + 1][3] = 0;
+            rq += 2;
+        }
+        kh1_vu1_nd13_verts += nv;
+        nrec++;
+    }
+    nd_buf[0][0] = KH1_NAT_MAGIC | 13;
+    nd_buf[0][1] = nrec;
+    nd_buf[0][2] = nmat;
+    nd_buf[0][3] = rq - 2;
+    nd_buf[1][0] = (vf[1][0] & 0xFF) | (vf[1][1] & 0xFF) << 8 | (vf[1][2] & 0xFF) << 16 | (vf[1][3] & 0xFF) << 24;
+    nd_buf[1][1] = vi[12] >> 4 & 0xFF;
+    nd_buf[1][2] = vi[12] >> 15 & 1;
+    nd_buf[1][3] = vi[13] >> 15 & 1;
+    nd13_built = 1;
+    if (!kh1_vu1_draw) return 0;
+    memcpy(nd_buf[rq], nd_mat, nmat * 64);
+    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    for (k = 0; k < 3; k++) memcpy(vf[base[k]], sl[k], 64);
+    vi[6] = i6;
+    vi[8] = i8;
+    vi[9] = i9;
+    if (nrec) i_reg = 0x44ffc000u; /* 2046, the guard band's (the program's LOI) */
+    kh1_vu1_drawn++;
+    tpc = 6 & (MICRO_N - 1);
+    return 1;
+}
+
+/* 2026-10-31: KH1_HOST_NATCHECK=1 for P13 too: the program runs, and its output (from top + 0x1E0: per record the GIF
+ * tag, then ST, RGBAQ, XYZF2 a vertex) is compared with what nd_13's payload gives: each vertex's screen position
+ * (the payload's matrix x its position, divided, in sixteenths: the program's FTOI4) and each triangle's ADC against
+ * the cull rule kh1_nat_tris uses, on the program's own 12.4 positions.  "the program only" must stay 0 (but for
+ * slivers whose sign the 12.4 rounding decides); "native only" are those the program drops off its guard band (the
+ * GPU clips them) */
+static u32 n13_runs, n13_verts, n13_far, n13_zfar, n13_both, n13_none, n13_vu, n13_nat, n13_multi_far;
+static f32 n13_worst;
+static void nd_13_check(void) {
+    u32 o = top + 0x1E0, r, j, q = 2, nrec = nd_buf[0][1], cull = nd_buf[1][3];
+    if (!nd13_built) return;
+    for (r = 0; r < nrec; r++) {
+        u32 nv = nd_buf[q][2], par = nd_buf[q][3];
+        q++;
+        o++; /* the tag */
+        for (j = 0; j < nv; j++, q += 2, o += 3) {
+            const u32 *x = mem[(o + 2) & (DATA_QW - 1)], *v = nd_buf[q];
+            f32 pos[3], ref[3], dx, dy, dz;
+            pos[0] = fin(v[0]);
+            pos[1] = fin(v[1]);
+            pos[2] = fin(v[2]);
+            kh1_nat_ref_xyz(nd_mat[v[3]][0], pos, ref);
+            dx = ref[0] * 16.0f - (f32)(s32)x[0];
+            dy = ref[1] * 16.0f - (f32)(s32)x[1];
+            dz = ref[2] * 16.0f - (f32)(s32)x[2];
+            if (dx < 0) dx = -dx;
+            if (dy < 0) dy = -dy;
+            if (dz < 0) dz = -dz;
+            n13_verts++;
+            if (!(x[3] & 0x8000) && (dx > 2.0f || dy > 2.0f)) { /* a drawn vertex more than 1/8 pixel away */
+                static u32 shown;
+                n13_far++;
+                if (shown++ < 8)
+                    printf("kh1-vu1: natcheck P13: vertex %u of record %u: program %d,%d (12.4), payload %.2f,%.2f, matrix %u\n", j,
+                           r, (s32)x[0], (s32)x[1], ref[0] * 16.0f, ref[1] * 16.0f, v[3]);
+            }
+            if (!(x[3] & 0x8000) && dz > 64.0f + (f32)(s32)x[2] * 1e-5f) n13_zfar++;
+            if (!(x[3] & 0x8000) && (dx > n13_worst || dy > n13_worst)) n13_worst = dx > dy ? dx : dy;
+            if (j >= 2) {
+                const u32 *a = mem[(o - 6 + 2) & (DATA_QW - 1)], *b = mem[(o - 3 + 2) & (DATA_QW - 1)];
+                int vu = !(x[3] & 0x8000), nat;
+                long long cr = (long long)((s32)b[0] - (s32)a[0]) * ((s32)x[1] - (s32)a[1]) -
+                               (long long)((s32)b[1] - (s32)a[1]) * ((s32)x[0] - (s32)a[0]);
+                nat = !cull || ((par + j) & 1 ? cr >= 0 : cr <= 0);
+                if (vu && nat) n13_both++;
+                else if (!vu && !nat) n13_none++;
+                else if (vu) {
+                    if (n13_vu++ < 12)
+                        printf("kh1-vu1: natcheck P13: program only: parity %u cross %lld, xy %d,%d %d,%d %d,%d\n", (par + j) & 1,
+                               cr, (s32)a[0], (s32)a[1], (s32)b[0], (s32)b[1], (s32)x[0], (s32)x[1]);
+                } else n13_nat++;
+            }
+        }
+    }
+    if (!(++n13_runs % 2000))
+        printf("kh1-vu1: natcheck P13: %u runs, %u vertices (%u summed here), %u drawn ones over 1/8 pixel off (worst %.2f "
+               "sixteenths), %u z off; triangles drawn by both %u, by neither %u, the program only %u, native only %u\n",
+               n13_runs, n13_verts, kh1_vu1_nd13_multi, n13_far, n13_worst, n13_zfar, n13_both, n13_none, n13_vu, n13_nat);
+    (void)n13_multi_far;
+}

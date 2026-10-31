@@ -76,8 +76,8 @@ thing to log; P13 is next.
 Later that night, also host-checked only: native P4, P11 and P10 on the GPU with renderer=native (`natp0=0`,
 `natp11=0`, `natp10=0` turn them off one by one), and P12 as hand-written NEON on every path (vita-build.md "P12 as
 hand-written C"; `vu1nat=2` checks every NEON program against its translation while it runs, so a Vita run with
-it is a cheap first check). What is left on the game thread's VU1 side with renderer=native: P13 (the biggest),
-then P12, P2 and P1.
+it is a cheap first check). What is left on the game thread's VU1 side with renderer=native: P12, P2 and P1
+(P13 went native after that, native-renderer.md "P13 too", host-checked only).
 
 ## Where we stopped before (end of session 140, 2026-10-27)
 
@@ -1199,6 +1199,9 @@ work on the path a picture waits for.
 | Sound | 149 of 454 buffers short | starved at its default priority (`sndprio=16`); `sndprio=-4` is not yet tried |
 
 ### 1. P13 (skinned models) on the GPU, as P0/P11/P10 went
+
+**Done on the host (2026-10-31, `natp13`, native-renderer.md "P13 too")**; the Vita log with renderer=native (and
+natp13=0 for the comparison) is what is left of this step.
 
 - P13 is now the biggest VU1 program in the Dive: 542 ms a window on the game thread.
 - Its output also reaches the GS worker as GS-path kicks, most of the worker's 510 ms of kicks.

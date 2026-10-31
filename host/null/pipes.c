@@ -450,6 +450,7 @@ static const u32 *nat_hdr, *nat_mats;
  * one op (a map object's batches), so the op can stay open past its payload */
 static u32 nat_hs[8], nat_ms[KH1_NAT_MATS * 16];
 static u32 nat_rq, nat_nrec, nat_prim, nat_gen;
+static u32 nat_moff; /* 2026-10-31: the open op's matrix index of the current run's first matrix (a joined P13 run's) */
 static int nat_open;
 static KH1GpuVert nat_v[KH1_NAT_VERTS];
 static f32 nat_m[KH1_NAT_MATS * 16];
@@ -471,9 +472,10 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
                 kh1_pipes_nat_tris += n / 3;
             }
         } else if (!d[6]) { /* not every vertex ADC */
-            u32 lin = (d[0] & 0xFF) == 11 ? KH1_NAT_LIN : 0, i;
+            u32 lin = (d[0] & 0xFF) == 11 || (d[0] & 0xFF) == 13 ? KH1_NAT_LIN : 0, i;
             n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
-            /* 2026-10-31: P11 with z not clamped, so the GPU clips where P11 dropped what crossed its near plane */
+            /* 2026-10-31: P11 (and P13) with z not clamped, so the GPU clips where P11 dropped what crossed its near plane
+             * (P13: what left its guard band) */
             if (lin) for (i = 0; i < n; i++) nat_v[i].pad[0] |= (u8)KH1_NAT_LIN;
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
             kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | lin);
@@ -492,14 +494,22 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
  * nat_op as before, so r_native sees the same ops as before (the same draws).  nat_rq and nat_nrec still count on the
  * worker, so an op ends where it did */
 static u32 nat_crq, nat_cnrec; /* the recorder's side: the op being assembled in nat_op, its matrices */
-static u32 nat_cms[KH1_NAT_MATS * 16];
+static u32 nat_cms[KH1_NAT_MATS * 16], nat_cmoff;
 static void r_nat_open(const u32 *a, const u32 *d, u32 nqw) {
     (void)a;
     memcpy(nat_op[0], d, 32);
     memcpy(nat_cms, d + 8, d[2] * 64);
     nat_crq = 2;
     nat_cnrec = 0;
+    nat_cmoff = 0;
     (void)nqw;
+}
+/* a joined P13 run's matrices (argument their first index in the op), after the op's earlier ones */
+static void r_nat_mats(const u32 *a, const u32 *d, u32 nqw) {
+    if (a[0] + nqw / 4 > KH1_NAT_MATS) return;
+    memcpy(nat_cms + a[0] * 16, d, nqw * 16);
+    nat_op[0][2] = a[0] + nqw / 4;
+    nat_cmoff = a[0];
 }
 static void r_nat_rec(const u32 *a, const u32 *d, u32 nqw) {
     (void)a;
@@ -507,6 +517,10 @@ static void r_nat_rec(const u32 *a, const u32 *d, u32 nqw) {
         u32 nq = 1 + d[2] * 2;
         if (nq > nqw || nat_crq + nq > NAT_QW) break;
         memcpy(nat_op[nat_crq], d, nq * 16);
+        if (nat_cmoff) { /* a joined run's vertices: its matrices follow the op's earlier ones (nat_rec's rule) */
+            u32 j;
+            for (j = 0; j < d[2]; j++) nat_op[nat_crq + 1 + j * 2][3] += nat_cmoff;
+        }
         nat_crq += nq;
         nat_cnrec++;
         d += nq * 4;
@@ -549,11 +563,14 @@ static void nat_rec(u32 prim, const u32 *r) {
         nat_gen = kh1_gs_gen;
         nat_rq = 2;
         nat_nrec = 0;
+        nat_moff = 0;
         memcpy(w, nat_hs, 32);
         memcpy(w + 8, nat_ms, nat_hs[2] * 64);
         kh1_recq_put(r_nat_open, 0, 0, w, 2 + nat_hs[2] * 4);
     }
-    kh1_recq_put(r_nat_rec, 0, 0, r, nq); /* joins the records before it while the queue holds them unpublished */
+    /* joins the records before it while the queue holds them unpublished; a joined P13 run's matrix indices are
+     * moved on the recorder's side (r_nat_mats, r_nat_rec) */
+    kh1_recq_put(r_nat_rec, 0, 0, r, nq);
     nat_rq += nq;
     nat_nrec++;
 }
@@ -564,6 +581,15 @@ static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
          * state); anything else ends it */
         if (nat_open && (a[0] & 0xFF) == 0 && (nat_hs[0] & 0xFF) == 0 && a[2] == nat_hs[2] &&
             !memcmp(a + 4, nat_hs + 4, 16) && !memcmp(b, nat_ms, a[2] * 64)) {
+        } else if (nat_open && (a[0] & 0xFF) == 13 && a[0] == nat_hs[0] && !memcmp(a + 4, nat_hs + 4, 16) &&
+                   nat_hs[2] + a[2] <= KH1_NAT_MATS) {
+            /* 2026-10-31: a P13 run with the open P13 op's colour, F and cull joins it, its matrices after the op's
+             * (its vertices' indices moved by nat_rec); a new PRIM, state or a full op still ends it (P13 is one
+             * run a model part, ~200 a Dive picture) */
+            memcpy(nat_ms + nat_hs[2] * 16, b, a[2] * 64);
+            nat_moff = nat_hs[2];
+            nat_hs[2] += a[2];
+            kh1_recq_put(r_nat_mats, &nat_moff, 1, b, a[2] * 4); /* the recorder's side of the join */
         } else {
             nat_flush();
         }
@@ -571,7 +597,7 @@ static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
         nat_mats = b;
     } else if (what == 1) {
         nat_rec(prim, a);
-    } else if ((nat_hdr[0] & 0xFF) != 0) {
+    } else if ((nat_hdr[0] & 0xFF) != 0 && (nat_hdr[0] & 0xFF) != 13) {
         nat_flush();
     }
 }
