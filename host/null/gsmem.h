@@ -53,6 +53,9 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes);
  * kh1_gsmem_image_same then matches the generation the rectangle's kept bytes came with instead of comparing the
  * bytes, and kh1_gsmem_image_kept keeps it */
 extern u32 kh1_gsmem_image_gen;
+/* 2026-10-31: kh1_gsmem_image_same's part stores (the same bytes again over a rectangle some of whose pages were
+ * stored to since: only those pages stored): the pages stored, and the rectangle's pages left as they were */
+extern u32 kh1_gsmem_part_pages, kh1_gsmem_part_skipped;
 /* a TEX0 (or the TEX0 a TEX2 write leaves) written: loads the CLUT buffer as its CLD says */
 void kh1_gsmem_tex0(u32 lo, u32 hi);
 

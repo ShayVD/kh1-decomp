@@ -78,6 +78,12 @@ static struct {
     int key;               /* session 137: their at_key entry, -1 for none */
 } trx;
 
+/* 2026-10-31 (kh1_gsmem_image_same's part store): while only_on, an upload's stores reach only the pages set in
+ * only_pg; the others already hold the upload's bytes */
+static int only_on;
+static u32 only_pg[16];
+#define SKIP_PG(pg) (only_on && !(only_pg[((pg) & 511) >> 5] >> ((pg) & 31) & 1))
+
 /* Session 135: an upload's addresses kept (the title uploads the same rectangles, ~800,000 pixels,
  * every frame: kh1_gsmem_addr's swizzle per pixel was a fifth of the frame), each pixel's in the
  * transfer's order; the store starts again when full */
@@ -86,7 +92,8 @@ static struct {
 static u32 at_pool[AT_POOL], at_used, at_n;
 /* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
  * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
-static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16], gen; } at_key[AT_KEYS];
+static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16], gen, nob; } at_key[AT_KEYS];
+/* 2026-10-31: nob 1 when the entry's bytes are not in same_pool (a large upload's, matched by gen alone) */
 /* session 146: pg, the pages the rectangle's pixels lie in (bit p of pg[p >> 5]) */
 #define SAME_POOL (4u << 20)
 static u8 same_pool[SAME_POOL] __attribute__((aligned(16))); /* session 147: each run at 16 (bytesame.h) */
@@ -575,21 +582,52 @@ static u32 psm_bits(u32 psm);
  * pixels through kh1_gsmem_image, then kh1_gsmem_image_kept */
 u32 kh1_gsmem_image_gen;
 
+/* 2026-10-31 (the Dive's large uploads on the GS worker, ~0.2 s of every 2.4 s on a Vita): the same bytes again
+ * while some of the rectangle's pages were stored to since (the textures streamed through the same GS memory)
+ * store only those pages; the others still hold the bytes.  A word-aligned source only (the callers' are) */
+u32 kh1_gsmem_part_pages, kh1_gsmem_part_skipped; /* the pages a part store stored and left */
+
 int kh1_gsmem_image_same(const void *src, u32 bytes) {
-    u32 p, bits;
+    u32 p, bits, k, newer = 0, kept;
     if (!trx.active || trx.key < 0 || trx.ai || trx.nacc || flat_raw) return 0;
-    if (at_key[trx.key].dlen != bytes || at_key[trx.key].plo > at_key[trx.key].phi) return 0;
-    for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
-        if (wr_pg[p] > at_key[trx.key].stamp) return 0;
-    if (kh1_gsmem_image_gen ? at_key[trx.key].gen != kh1_gsmem_image_gen
-                            : !kh1_bytes_same(same_pool + at_key[trx.key].doff, src, bytes))
+    k = (u32)trx.key;
+    if (at_key[k].dlen != bytes || at_key[k].plo > at_key[k].phi) return 0;
+    memset(only_pg, 0, sizeof only_pg);
+    for (p = at_key[k].plo; p <= at_key[k].phi; p++)
+        if (wr_pg[p] > at_key[k].stamp && at_key[k].pg[p >> 5] >> (p & 31) & 1) {
+            only_pg[p >> 5] |= 1u << (p & 31);
+            newer++;
+        }
+    if (newer && (((unsigned long)src & 3) || !trx.at)) return 0;
+    if (kh1_gsmem_image_gen ? at_key[k].gen != kh1_gsmem_image_gen
+                            : at_key[k].nob || !kh1_bytes_same(same_pool + at_key[k].doff, src, bytes))
         return 0;
     bits = psm_bits(trx.psm);
-    for (p = at_key[trx.key].plo; p <= at_key[trx.key].phi; p++)
-        if (at_key[trx.key].pg[p >> 5] >> (p & 31) & 1 && page_drawn[p] & bits) {
+    for (p = at_key[k].plo; p <= at_key[k].phi; p++)
+        if (at_key[k].pg[p >> 5] >> (p & 31) & 1 && !(only_pg[p >> 5] >> (p & 31) & 1) && page_drawn[p] & bits) {
             page_drawn[p] &= ~bits;
             marks++;
         }
+    if (newer) {
+        /* the pixels as kh1_gsmem_image takes them (load_image's pieces: the whole words, then the tail) */
+        u32 words = bytes / 4, tail = 0;
+        kept = 0;
+        for (p = at_key[k].plo; p <= at_key[k].phi; p++) kept += at_key[k].pg[p >> 5] >> (p & 31) & 1;
+        kh1_gsmem_part_pages += newer;
+        kh1_gsmem_part_skipped += kept - newer;
+        only_on = 1;
+        if (words) kh1_gsmem_image((const u32 *)src, words);
+        if (bytes & 3) {
+            __builtin_memcpy(&tail, (const u8 *)src + words * 4, bytes & 3);
+            kh1_gsmem_image(&tail, 1);
+        }
+        only_on = 0;
+        if (trx.active) return 1; /* never: the rectangle's bytes are all there */
+        at_key[k].stamp = seq; /* the rectangle holds the bytes again, as kh1_gsmem_image_kept leaves it */
+        seq++;
+        trx.key = -1;
+        return 1;
+    }
     st.pixels += trx.w * trx.h;
     if (trx.log) trx.log->pixels += trx.w * trx.h;
     trx.ai = trx.w * trx.h;
@@ -602,17 +640,25 @@ int kh1_gsmem_image_same(const void *src, u32 bytes) {
 /* the upload's bytes kept for the next kh1_gsmem_image_same, once all its pixels came */
 void kh1_gsmem_image_kept(const void *src, u32 bytes) {
     if (trx.active || trx.key < 0 || !trx.at || trx.ai != trx.w * trx.h || bytes > SAME_POOL) return;
-    if (at_key[trx.key].dlen != bytes) {
-        u32 i;
-        if (same_used + bytes > SAME_POOL) {
-            for (i = 0; i < at_n; i++) at_key[i].dlen = 0;
-            same_used = 0;
-        }
-        at_key[trx.key].doff = same_used;
+    if (kh1_gsmem_image_gen) {
+        /* 2026-10-31: a large upload is matched by its generation alone (gsimage.c load_big), so its bytes are
+         * not copied (on a Vita, 256 KiB a drawn frame through the worker's caches) */
         at_key[trx.key].dlen = bytes;
-        same_used += (bytes + 15) & ~15u;
+        at_key[trx.key].nob = 1;
+    } else {
+        if (at_key[trx.key].dlen != bytes || at_key[trx.key].nob) {
+            u32 i;
+            if (same_used + bytes > SAME_POOL) {
+                for (i = 0; i < at_n; i++) at_key[i].dlen = 0;
+                same_used = 0;
+            }
+            at_key[trx.key].doff = same_used;
+            at_key[trx.key].dlen = bytes;
+            at_key[trx.key].nob = 0;
+            same_used += (bytes + 15) & ~15u;
+        }
+        memcpy(same_pool + at_key[trx.key].doff, src, bytes);
     }
-    memcpy(same_pool + at_key[trx.key].doff, src, bytes);
     at_key[trx.key].gen = kh1_gsmem_image_gen;
     at_key[trx.key].stamp = seq;
     seq++; /* session 146: a later store's wr_pg is newer than the stamp, whatever op makes it */
@@ -620,7 +666,10 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes) {
 }
 
 static void trx_pixel(u32 v) {
-    if (trx.at) put_at(trx.psm, trx.at[trx.ai++], v);
+    if (trx.at) {
+        u32 a = trx.at[trx.ai++];
+        if (!SKIP_PG(page_of(trx.psm, a))) put_at(trx.psm, a, v);
+    }
     else if (known(trx.psm)) put(trx.psm, trx.bp, trx.bw, trx.x, trx.y, v);
     st.pixels++;
     if (trx.log) trx.log->pixels++;
@@ -818,7 +867,8 @@ static int trx_bulk(const u32 *w, u32 n) {
             /* session 148: whole blocks, 8 rows at a time, from a row start */
             if (x == 0 && band_here(trx.ai + j, k - j, 8, 8) && band_blocks(at + j, 8, 6)) {
                 u32 bx, any = 0;
-                for (bx = 0; bx < trx.w; bx += 8) any |= band_mark(at[j + bx] >> 11, band_c32(at[j + bx], w + j + bx, trx.w));
+                for (bx = 0; bx < trx.w; bx += 8)
+                    if (!SKIP_PG(at[j + bx] >> 11)) any |= band_mark(at[j + bx] >> 11, band_c32(at[j + bx], w + j + bx, trx.w));
                 marks += any != 0;
                 j += 8 * trx.w;
                 continue;
@@ -827,6 +877,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             x = e - j + x == trx.w ? 0 : e - j + x;
             for (; j < e; j++) {
                 a = at[j];
+                if (SKIP_PG(a >> 11)) continue;
                 v = w[j];
                 o = ld32(a);
                 if (o != v) {
@@ -861,7 +912,8 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (x == 0 && band_here(trx.ai + j, k - j, 16, 16) && band_blocks(at + j, 16, 8)) {
                 u32 bx;
                 for (bx = 0; bx < trx.w; bx += 16)
-                    moved |= band_mark(at[j + bx] >> 13, band_t8(at[j + bx], (const u8 *)w + j + bx, trx.w));
+                    if (!SKIP_PG(at[j + bx] >> 13))
+                        moved |= band_mark(at[j + bx] >> 13, band_t8(at[j + bx], (const u8 *)w + j + bx, trx.w));
                 run = 16 * trx.w;
                 continue;
             }
@@ -870,6 +922,11 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (run > k - j) run = k - j;
             pg = at[j] >> 13;
             if (at[j + run - 1] >> 13 != pg) run = 1; /* never for the block layout: a pixel alone */
+            if (SKIP_PG(pg)) {
+                x += run;
+                if (x == trx.w) x = 0;
+                continue;
+            }
             d = 0;
             for (i = j; i < j + run; i++) {
                 a = at[i];
@@ -899,6 +956,7 @@ static int trx_bulk(const u32 *w, u32 n) {
         for (j = 0; j < k; j++) {
             u32 pg, nv;
             a = at[j];
+            if (SKIP_PG(a >> 14)) continue;
             v = w[j >> 3] >> (j & 7) * 4 & 15;
             o = vm[a >> 1];
             nv = (o & (0xF0 >> (a & 1) * 4)) | v << (a & 1) * 4;
@@ -942,6 +1000,7 @@ static void trx_bulk24(const u32 *w, u32 n) {
 #define PUT24(px)                                                                    \
     do {                                                                             \
         a = trx.at[trx.ai++];                                                        \
+        if (SKIP_PG(a >> 11)) break;                                                 \
         o = ld32(a);                                                                 \
         v = (o & 0xFF000000u) | (px);                                                \
         pg = a >> 11;                                                                \

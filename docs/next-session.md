@@ -79,6 +79,11 @@ hand-written C"; `vu1nat=2` checks every NEON program against its translation wh
 it is a cheap first check). What is left on the game thread's VU1 side with renderer=native: P12, P2 and P1
 (P13 went native after that, native-renderer.md "P13 too", host-checked only).
 
+**2026-10-31, the GS worker's uploads** (vita-build.md "The GS worker's upload stores"): the same bytes again
+over a rectangle now store only the pages written since, and the large uploads' bytes are no longer copied a second
+time; host-checked only (digests and GPU hashes the same). For the next Vita log: the `gs worker ops:` line's
+w_load_big / w_load / w_block / w_qwords against that section's numbers.
+
 ## Where we stopped before (end of session 140, 2026-10-27)
 
 - **Session 140** (the Mac for staging only; en.iso SHA-256 c8ee8c77... checked): **the cloth, and the

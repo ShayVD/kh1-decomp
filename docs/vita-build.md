@@ -1852,6 +1852,66 @@ likely limit. That is an estimate from the host's counts and the old log, not a 
 **For the next Vita run**: `gputime=1` once (the split by target kind, and how much is in 1-2 draw scenes), and
 one run without it for the frame rate; if the picture flickers or shows an old frame, `present=0`.
 
+## The GS worker's upload stores (2026-10-31, step 3 of gpu-cut/plan-30fps.md)
+
+Shay's renderer=native Vita log (frames ~5000-8000 of the Dive, per 2.4 s; addresses mapped with an
+out/vita/kh1.elf of the same code, offset 0x5d000 from this build's): the GS worker was busy ~2.2 s, of it w_kick
+~600 ms, w_gpu_frame ~440, **w_block ~385 (4,660 ops), w_qwords ~215 (1,700), w_load_big ~213 (71), w_load ~168
+(1,450)**, w_native ~200. The upload side (the last four) is ~1.0 s.
+
+**What the Dive uploads** (host, en.iso, dive_en.txt, a temporary log of every upload, CLUT load and texture
+lookup in one drawn frame, 5001; the game draws on every other frame): ~950 KB stored a drawn frame, nearly all
+into the slot capture's pages at 0x3600-0x3A00, where Sora's textures stream:
+
+- PATH2 (w_qwords): CT32 pieces of 64-128 x 64-128 at 0x3600, each with a 16 x 16 CLUT at 0x3A00 (~200 KB);
+- the GIF channel (w_block): ~11 T8 128 x 128 at 0x3600 bw 4, each followed by its CLUT load (0x3700) and a
+  texture lookup (~180 KB);
+- PlatGsExecLoadImage (w_load): ~18 T8 of 32-256 pixels at 0x3600-0x37e0 and 19 CLUT-sized CT32 (~230 KB);
+- the large uploads (w_load_big), the frame's last: a 256 x 256 T8 at 0x3980 and **a 256 x 256 CT32 at 0x3600**
+  (256 KB), the same bytes every drawn frame (the game thread's compare: the `large uploads:` line's "N of them
+  unchanged" is all of them), into the pages the next frame's streams overwrite again.
+
+Every streamed texture is read right after its upload (its CLUT load and texture lookup), so their stores are
+needed as the model works now. On x86 (thread CPU time, frames 5000-5500) the stores (kh1_gsmem_image) are ~65% of
+those four ops; the rest is the GIF decode, the compares and the copies kept for them.
+
+**The change** (host/null/gsmem.c `kh1_gsmem_image_same`, `kh1_gsmem_image_kept`):
+
+- **The same bytes again store only the pages written since.** kh1_gsmem_image_same refused an upload whose
+  rectangle had any page stored to since its last upload (`wr_pg` newer than the kept stamp), so the frame-end
+  CT32 and every texture streamed again into the same rectangle with the same bytes were stored whole. Now, when the
+  bytes (or, for a large upload, the generation) match, only the rectangle's pages stored to since are stored (a
+  page filter, `only_pg` / `SKIP_PG`, in every store path: the CT32 / T8 block bands, the T8 runs, the CT32 / T4 /
+  CT24 loops and trx_pixel); the other pages still hold those bytes, and their drawn bits are cleared as before.
+  The rectangle's stamp is then moved as kh1_gsmem_image_kept moves it. On the host, ~47 uploads a drawn frame
+  take this path (`kh1_gsmem_part_pages` / `_skipped` count the pages stored and left).
+- **A large upload's bytes are not copied a second time.** Its match is by the game thread's generation
+  (session 147d), so kh1_gsmem_image_kept no longer copies its 256 KiB into same_pool (`nob`: an entry with no
+  bytes kept, which a byte compare then refuses).
+
+x86, frames 5000-5500, the four ops' CPU time: 357 -> 274 ms (w_load_big 52 -> 29, w_load 127 -> 102, w_block
+126 -> 103, w_qwords 52 -> 40; the kept copies 20 -> 3). The large uploads were the slowest per byte on the Vita
+(~3 ms each against ~0.12 on x86, memory-bound), so the Vita's gain may be larger than x86's. **Not yet measured
+on a Vita**: the `gs worker ops:` line's w_load_big / w_load / w_block / w_qwords against the numbers above. My
+guess is -0.15 to -0.3 s a window on the worker, less than the plan's -0.4 to -0.7: the streamed textures' stores
+remain, since each is read right after its upload.
+
+**Checked**: tests/host/gsfast_test.c's same-skip runs now take the odd rectangles as large uploads (by
+generation) and check the pixels, drawn bits, stamps and targets after every op against uploads sent whole; part
+stores happen there (~85 pages), and a filter that skips the wrong pages is caught; it passes on x86 and as ARM
+NEON under qemu (`gsfast_test` and `gsfast_test up`). The gxmcheck run in the Vita's order (`KH1_HOST_TRACE=2
+KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1`, en.iso, dive_en.txt, to frame 6500) gives the same 130 GS digests and 260 GPU
+target hashes as before, with `KH1_HOST_NATIVE=1` and without.
+
+**What would cut more** (not done): the streamed textures' stores, ~600-700 KB a drawn frame. Each is read only by
+its CLUT load and the texture lookup right after it, and then by the frame's copy for the GPU (the slot capture's
+pages are a target's, `uploads into targets:`). An upload could stay pending, its texture-cache entry found from
+its own bytes (a texture whose rectangle is the upload's is those bytes in order), and be stored only when another
+reader or a partial overwrite needs the pages, or at the frame op. That is a larger change of gsmem.c's readers.
+A worker profile on ARM (qemu with an instruction-count plugin, as session 143) would show what else the GIF
+decode costs; this container's qemu has no plugin support.
+
 ## The frame op on the GPU thread, and the native payload's copy (2026-10-31, step 2 of gpu-cut/plan-30fps.md)
 
 Shay's renderer=native Vita log (PR 194's build, the Dive, frames 5000-8000): the GS worker was busy ~2.2 s of every

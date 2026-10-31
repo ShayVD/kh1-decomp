@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
     {
         static const u32 ups[] = { KH1_PSMCT24, KH1_PSMCT32, KH1_PSMT8, KH1_PSMT4, KH1_PSMT8H, KH1_PSMCT16 };
         static u8 bytes[6][128 * 64 * 4];
-        u32 run, op, skips = 0, marked = 0;
+        u32 run, op, skips = 0, marked = 0, gens[6], gen_next = 1, part0 = kh1_gsmem_part_pages;
         for (run = 0; run < 8; run++) {
             u32 ha[120], hb[120], k, rect[6][5];
             for (k = 0; k < 6; k++) {
@@ -347,13 +347,18 @@ int main(int argc, char **argv) {
                 for (j = 0; j < 6; j++) {
                     u32 n;
                     for (n = 0; n < sizeof bytes[j]; n++) bytes[j][n] = (u8)R();
+                    gens[j] = gen_next++;
                 }
                 for (op = 0; op < 120; op++) {
                     u32 c = R() % 10, j = R() % 6, psm = ups[j], *q = rect[j];
                     u32 n = psm == KH1_PSMT4 ? (q[3] * q[4] + 1) / 2 : q[3] * q[4] * (psm == KH1_PSMCT32 ? 4 : psm == KH1_PSMCT24 ? 3 : psm == KH1_PSMCT16 ? 2 : 1);
                     if (c < 6) {
-                        int was = kh1_gsmem_drawn(psm, q[0], q[1], q[2], 0);
-                        if (up(k == 0, psm, q[0], q[1], q[2], 0, q[3], q[4], bytes[j], n)) {
+                        int was = kh1_gsmem_drawn(psm, q[0], q[1], q[2], 0), sk;
+                        /* 2026-10-31: the odd rectangles as gsimage.c's large uploads, matched by a generation */
+                        kh1_gsmem_image_gen = j & 1 ? gens[j] : 0;
+                        sk = up(k == 0, psm, q[0], q[1], q[2], 0, q[3], q[4], bytes[j], n);
+                        kh1_gsmem_image_gen = 0;
+                        if (sk) {
                             skips++;
                             marked += was;
                         }
@@ -362,7 +367,10 @@ int main(int argc, char **argv) {
                         kh1_gsmem_draw((q[0] >> 5) | q[1] << 16 | (R() % 2 ? 1u : 0) << 24, 0, (rect[R() % 6][0] >> 5) | 1u << 24, 0,
                                        (R() % 256) << 16, (R() % 128) << 16, R() % 2 ? 0x10000 : 0);
                     else if (c < 9) kh1_gsmem_write_pixel(psm, q[0], q[1], q[2] + R() % q[3], R() % q[4], R());
-                    else bytes[j][R() % n] ^= 1 + R() % 255; /* new bytes for the next upload */
+                    else {
+                        bytes[j][R() % n] ^= 1 + R() % 255; /* new bytes for the next upload */
+                        gens[j] = gen_next++;
+                    }
                     (k ? hb : ha)[op] = op % 8 == 7 || op == 119 ? state_hash() : 0; /* stamps compared hash to hash */
                 }
             }
@@ -375,6 +383,8 @@ int main(int argc, char **argv) {
         }
         CHECK("uploads were skipped", skips > 100);
         CHECK("some of them over a draw's marks", marked > 20);
+        CHECK("some stored only the pages written since (2026-10-31)", kh1_gsmem_part_pages > part0);
+        printf("gsfast_test: %u pages stored by part stores, %u left\n", kh1_gsmem_part_pages - part0, kh1_gsmem_part_skipped);
         printf("gsfast_test: %u uploads skipped, %u of them over a draw's marks\n", skips, marked);
     }
     /* tex_scan's memo: a write into the texture's pages, or a draw into them, is seen at once */
