@@ -1586,5 +1586,13 @@ int kh1_vita_gxm_init(void) {
     kh1_gxm_clear(&rec);
     ready = 1;
     kh1_vita_log("kh1-gxm: ready: %u shaders compiled now, %u from the cache\n", compiled, cached);
+    { /* 2026-10-31: which native shaders this build has (a log names its build by them): the colour of a native
+       * textured draw in TEXCOORD3 since the floor fix (shadergen.c), and the variant's text hash */
+        u32 n = kh1_shader_vert_cg(KH1_VERT_VARIANTS - 1, text, sizeof text);
+        u64 h = fnv64(text, n);
+        kh1_vita_log("kh1-gxm: build %s %s: native textured colour in %s (vertex text %08x)\n", __DATE__, __TIME__,
+                     strstr(text, "ocol : TEXCOORD3") ? "TEXCOORD3 (the floor fix)" : "COLOR0 (before the floor fix)",
+                     (u32)h);
+    }
     return 0;
 }
