@@ -304,7 +304,7 @@ static void nd_0_check(void) {
  * note above).  Anything unexpected (an influence count of 0 or over 8, more than 32 matrices, a matrix that cannot
  * be inverted, v.w not positive, a full buffer) returns 0 and the program runs */
 int kh1_vu1_draw_p13 = 1;
-u32 kh1_vu1_nd13_multi, kh1_vu1_nd13_verts; /* the vertices summed here, and all of P13's handed over */
+u32 kh1_vu1_nd13_multi, kh1_vu1_nd13_verts, kh1_vu1_nd13_fail, kh1_vu1_nd13_fail_us; /* the vertices summed here, and all of P13's handed over */
 static int nd13_built;
 static double nd13_inv[KH1_NAT_MATS][4][4]; /* M^-1 as rows, for the matrices a summed vertex is put in */
 static f32 nd13_f[KH1_NAT_MATS][4][4];     /* the payload's matrices as floats (fin()'d once), for the sums */
@@ -371,6 +371,7 @@ static int nd_13(u32 pc) {
     u16 i6 = vi[6], i8 = vi[8], i9 = vi[9];
     u32 sl[3][4][4];               /* the slots as the run's loads leave them (written back on success) */
     s32 cur[3] = { -1, -1, -1 };   /* each slot's matrix in this payload, -1 not listed yet */
+    u32 at2 = ~0u;                 /* the palette entry slot 2 holds, ~0 when a stream load (or nothing) put it there */
     u32 pal[KH1_NAT_MATS];         /* a palette entry's address for each matrix listed from one, else ~0 */
     static const int base[3] = { 5, 12, 19 };
     nd13_built = 0;
@@ -391,6 +392,7 @@ static int nd_13(u32 pc) {
                 u32 r = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
                 for (k = 0; k < 4; k++) memcpy(sl[r][k], mem[(i2 + 1 + k) & (DATA_QW - 1)], 16);
                 cur[r] = -1;
+                if (r == 2) at2 = ~0u;
             } else if (w == 1)
                 i6 = (u16)i2;
             i2 += 8;
@@ -415,6 +417,9 @@ static int nd_13(u32 pc) {
         for (j = 0; j < nv; j++) {
             u32 nb = mem[i2 & (DATA_QW - 1)][3] & 0xFFFF, b, first = 0;
             const u32 *t;
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+            float32x4_t acc = vdupq_n_f32(0.0f);
+#endif
             f32 c[4] = { 0, 0, 0, 0 };
             if (!nb || nb > 8) return 0;
             if (rq + 2 > ND_QW - KH1_NAT_MATS * 4) return 0;
@@ -427,16 +432,18 @@ static int nd_13(u32 pc) {
                 if (lane == 3) { i8 = (u16)(i8 + 1); i9 = 0x21; }
                 else i9 = (u16)(0x21 + 4 * (lane + 1));
                 if ((s16)(u16)(ix - 0x100) >= 0) { /* the palette's entry: loaded into slot 2 */
-                    u16 at = (u16)((u16)(ix - 0x100) + i6);
-                    u32 m;
-                    for (k = 0; k < 4; k++) memcpy(sl[2][k], mem[(at + 1 + k) & (DATA_QW - 1)], 16);
-                    cur[2] = -1;
-                    for (m = 0; m < nmat; m++)
-                        if (pal[m] == (at & (DATA_QW - 1))) { cur[2] = (s32)m; break; }
+                    u32 at = (u16)((u16)(ix - 0x100) + i6) & (DATA_QW - 1), m;
+                    if (at != at2) { /* 2026-10-31: the same entry again (most of a model's runs) is already there */
+                        for (k = 0; k < 4; k++) memcpy(sl[2][k], mem[(at + 1 + k) & (DATA_QW - 1)], 16);
+                        at2 = at;
+                        cur[2] = -1;
+                        for (m = 0; m < nmat; m++)
+                            if (pal[m] == at) { cur[2] = (s32)m; break; }
+                    }
                     if (cur[2] < 0) {
                         if (nmat == KH1_NAT_MATS) return 0;
                         nd13_add(nmat, (const u32 (*)[4])sl[2]);
-                        pal[nmat] = at & (DATA_QW - 1);
+                        pal[nmat] = at;
                         cur[2] = (s32)nmat++;
                     }
                     r = 2;
@@ -467,12 +474,25 @@ static int nd_13(u32 pc) {
                     nd_buf[rq][2] = fo(fin(p[2]) / pw);
                 } else {
                     const f32 (*mm)[4] = nd13_getq((u32)cur[r]);
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+                    /* 2026-10-31: the Vita's VFP is slow at a chain of scalar products; NEON's multiply-accumulate
+                     * (not fused: a multiply's rounding, then an add's, as the scalar sum) does a column at once */
+                    float32x4_t v = vfin(VU_LD(p));
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[0]), vget_low_f32(v), 0);
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[1]), vget_low_f32(v), 1);
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[2]), vget_high_f32(v), 0);
+                    acc = vmlaq_lane_f32(acc, vld1q_f32(mm[3]), vget_high_f32(v), 1);
+#else
                     f32 x = fin(p[0]), y = fin(p[1]), z = fin(p[2]), w = fin(p[3]);
                     for (k = 0; k < 4; k++) c[k] += mm[0][k] * x + mm[1][k] * y + mm[2][k] * z + mm[3][k] * w;
+#endif
                 }
             }
             if (nb > 1) { /* c is already in the reference's space (Q_i): v = c, the position v.xyz / v.w */
                 f32 iw;
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+                vst1q_f32(c, acc);
+#endif
                 if (!(c[3] > 1e-6f)) return 0;
                 iw = 1.0f / c[3];
                 nd_buf[rq][0] = fo(c[0] * iw);

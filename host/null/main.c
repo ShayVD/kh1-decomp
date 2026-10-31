@@ -108,12 +108,13 @@ static void host_clock_report(void) {
     { /* 2026-10-31: each VU1 program's time (a native one's parse and hand-off), and the hand-offs' */
         extern int kh1_vu1_prog_stats(int i, int *num, u32 *us, u32 *runs, u32 *pairs);
         extern u32 kh1_vu1_nd_hand_us, kh1_vu1_nd13_hand_us;
+        extern u32 kh1_vu1_nd13_fail, kh1_vu1_nd13_fail_us;
         int i, num;
         u32 us, runs, pairs;
         for (i = 0; kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs); i++)
             if (runs) printf("kh1-host: P%d %u ms (%u runs)\n", num, us / 1000, runs);
-        printf("kh1-host: native payloads handed to the GS worker: %u ms (P13's %u)\n", kh1_vu1_nd_hand_us / 1000,
-               kh1_vu1_nd13_hand_us / 1000);
+        printf("kh1-host: native payloads handed to the GS worker: %u ms (P13's %u); %u P13 runs handed back (%u ms)\n",
+               kh1_vu1_nd_hand_us / 1000, kh1_vu1_nd13_hand_us / 1000, kh1_vu1_nd13_fail, kh1_vu1_nd13_fail_us / 1000);
     }
 }
 #include "gsregs.h"

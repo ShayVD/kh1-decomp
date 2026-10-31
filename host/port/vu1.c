@@ -1315,6 +1315,10 @@ static void start_run(u32 pc) {
         }
         if (!ran && kh1_vu1_native == 2) ran = nat_check(prog, pc);
         if (!ran) ran = tr_go(prog, pc);
+        if (tr_progs[prog].num == 13 && kh1_vu1_draw && kh1_vu1_draw_p13 && !nd13_built) { /* handed back */
+            kh1_vu1_nd13_fail++;
+            if (kh1_vu1_clock) kh1_vu1_nd13_fail_us += kh1_vu1_clock() - t0;
+        }
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
             tr_us[prog] += kh1_vu1_clock() - t0;
             tr_runs[prog]++;
