@@ -13,6 +13,18 @@ int kh1_vu1_draw_p0 = 1;
 int kh1_vu1_draw_p11 = 1;
 int kh1_vu1_draw_p10 = 1;
 
+/* 2026-10-31: the time the game thread spends handing payloads over (dmawalk.c's queue put: the copy, and a full
+ * ring's wait), all programs' and P13's, kh1_vu1_clock's microseconds; the rest of a native program's time in
+ * the Vita's `vu1 programs:` line is its parse */
+u32 kh1_vu1_nd_hand_us, kh1_vu1_nd13_hand_us;
+static void nd_hand(const u32 *q, u32 nqw) {
+    u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, dt;
+    kh1_vu1_draw(q, nqw);
+    dt = kh1_vu1_clock ? kh1_vu1_clock() - t0 : 0;
+    kh1_vu1_nd_hand_us += dt;
+    if ((q[0] & 0xFF) == 13) kh1_vu1_nd13_hand_us += dt;
+}
+
 #define ND_QW 4096 /* a payload's qwords: VU1's data memory is 1024, a vertex 3 there and 2 here */
 static u32 nd_buf[ND_QW][4];
 static u32 nd_mat[KH1_NAT_MATS][4][4];
@@ -78,7 +90,7 @@ static int nd_18(u32 pc, u32 num) {
     nd_buf[1][2] = vi[12] >> 15 & 1;
     nd_buf[1][3] = vi[13] >> 15 & 1;
     memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
     for (k = 0; k < 3; k++) /* the slots as the program's loads leave them */
         if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
     kh1_vu1_drawn++;
@@ -148,7 +160,7 @@ static int nd_10(u32 pc) {
     nd_buf[1][2] = 0;
     nd_buf[1][3] = 0;
     memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
     for (k = 0; k < 3; k++)
         if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
     kh1_vu1_drawn++;
@@ -216,7 +228,7 @@ static int nd_0(u32 pc, int p4) {
     nd_buf[0][3] = rq - 2;
     nd_buf[1][1] = nd_buf[1][2] = nd_buf[1][3] = 0;
     for (k = 0; k < 4; k++) memcpy(nd_buf[rq + k], m[k], 16);
-    kh1_vu1_draw(nd_buf[0], rq + 4);
+    nd_hand(nd_buf[0], rq + 4);
     if (!p4) mem[48][1] = h[3]; /* P4 leaves the template as it is */
     kh1_vu1_drawn++;
     tpc = (p4 ? 0x45 : 0x4e) & (MICRO_N - 1);
@@ -303,6 +315,27 @@ static void nd13_add(u32 id, const u32 (*m)[4]) {
         for (r = 0; r < 4; r++) nd13_f[id][c][r] = fin(m[c][r]);
 }
 static u32 nd13_have_inv;
+/* 2026-10-31 (the Vita measured nd_13 at ~1.4 us a vertex): a summed vertex goes in one reference matrix's space for
+ * the whole run, through Q_i = M_ref^-1 x M_i made once per matrix (in double, kept as floats), so a vertex costs
+ * k float matrix products and one reciprocal, and no double arithmetic */
+static f32 nd13_q[KH1_NAT_MATS][4][4]; /* Q_i, columns as nd13_f */
+static u32 nd13_have_q;
+static s32 nd13_ref;
+static const f32 (*nd13_getq(u32 id))[4] {
+    if (!(nd13_have_q >> id & 1)) {
+        u32 r, c, k;
+        for (c = 0; c < 4; c++)
+            for (r = 0; r < 4; r++) {
+                double a = 0.0;
+                if (id == (u32)nd13_ref) a = r == c;
+                else
+                    for (k = 0; k < 4; k++) a += nd13_inv[nd13_ref][r][k] * (double)nd13_f[id][c][k];
+                nd13_q[id][c][r] = (f32)a;
+            }
+        nd13_have_q |= 1u << id;
+    }
+    return (const f32 (*)[4])nd13_q[id];
+}
 static int nd13_invert(u32 id) {
     double a[4][8];
     u32 r, c, k;
@@ -346,6 +379,8 @@ static int nd_13(u32 pc) {
     if (l9 != 0x21 && l9 != 0x25 && l9 != 0x29 && l9 != 0x2d) return 0;
     for (k = 0; k < 3; k++) memcpy(sl[k], vf[base[k]], 64);
     nd13_have_inv = 0;
+    nd13_have_q = 0;
+    nd13_ref = -1;
     for (;;) {
         const u32 *h = mem[i2 & (DATA_QW - 1)];
         u32 op = h[0] & 0xFFFF, nv, j;
@@ -413,7 +448,13 @@ static int nd_13(u32 pc) {
                     pal[nmat] = ~0u;
                     cur[r] = (s32)nmat++;
                 }
-                if (!b) first = (u32)cur[r];
+                if (!b) {
+                    first = (u32)cur[r];
+                    if (nb > 1 && nd13_ref < 0) { /* the run's reference matrix: the first summed vertex's first */
+                        if (!nd13_invert(first)) return 0;
+                        nd13_ref = (s32)first;
+                    }
+                }
                 if (nb == 1 && p[3] == 0x3F800000u) { /* weight 1 (most): the position as it is */
                     nd_buf[rq][0] = p[0];
                     nd_buf[rq][1] = p[1];
@@ -425,21 +466,19 @@ static int nd_13(u32 pc) {
                     nd_buf[rq][1] = fo(fin(p[1]) / pw);
                     nd_buf[rq][2] = fo(fin(p[2]) / pw);
                 } else {
-                    const f32 (*mm)[4] = nd13_f[cur[r]];
+                    const f32 (*mm)[4] = nd13_getq((u32)cur[r]);
                     f32 x = fin(p[0]), y = fin(p[1]), z = fin(p[2]), w = fin(p[3]);
                     for (k = 0; k < 4; k++) c[k] += mm[0][k] * x + mm[1][k] * y + mm[2][k] * z + mm[3][k] * w;
                 }
             }
-            if (nb > 1) { /* c in the first influence's space */
-                double v[4];
-                if (!nd13_invert(first)) return 0;
-                for (k = 0; k < 4; k++)
-                    v[k] = nd13_inv[first][k][0] * c[0] + nd13_inv[first][k][1] * c[1] + nd13_inv[first][k][2] * c[2] +
-                           nd13_inv[first][k][3] * c[3];
-                if (!(v[3] > 1e-6)) return 0;
-                nd_buf[rq][0] = fo((f32)(v[0] / v[3]));
-                nd_buf[rq][1] = fo((f32)(v[1] / v[3]));
-                nd_buf[rq][2] = fo((f32)(v[2] / v[3]));
+            if (nb > 1) { /* c is already in the reference's space (Q_i): v = c, the position v.xyz / v.w */
+                f32 iw;
+                if (!(c[3] > 1e-6f)) return 0;
+                iw = 1.0f / c[3];
+                nd_buf[rq][0] = fo(c[0] * iw);
+                nd_buf[rq][1] = fo(c[1] * iw);
+                nd_buf[rq][2] = fo(c[2] * iw);
+                first = (u32)nd13_ref;
                 kh1_vu1_nd13_multi++;
             }
             nd_buf[rq][3] = first;
@@ -465,7 +504,7 @@ static int nd_13(u32 pc) {
     nd13_built = 1;
     if (!kh1_vu1_draw) return 0;
     memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) kh1_vu1_draw(nd_buf[0], rq + nmat * 4);
+    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
     for (k = 0; k < 3; k++) memcpy(vf[base[k]], sl[k], 64);
     vi[6] = i6;
     vi[8] = i8;
