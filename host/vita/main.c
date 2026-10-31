@@ -526,10 +526,14 @@ static int watchdog(SceSize args, void *argp) {
                 polls0 = kh1_vita_gt_polls;
             }
             if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
-                static u32 n0, d0, t0, v0, m0;
+                static u32 n0, d0, t0, v0, m0, h0, h13;
                 vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles; P13 %u vertices "
-                     "(%u summed on the CPU)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
-                     kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0);
+                     "(%u summed on the CPU); handing them to the GS worker %u ms (P13's %u ms; the rest of each program's "
+                     "time is its parse)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
+                     kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0, (kh1_vu1_nd_hand_us - h0) / 1000,
+                     (kh1_vu1_nd13_hand_us - h13) / 1000);
+                h0 = kh1_vu1_nd_hand_us;
+                h13 = kh1_vu1_nd13_hand_us;
                 v0 = kh1_vu1_nd13_verts;
                 m0 = kh1_vu1_nd13_multi;
                 n0 = kh1_vu1_drawn;
