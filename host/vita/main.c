@@ -57,6 +57,9 @@
  *                             program as before (2026-10-31; 1, the default, draws it natively, the GPU clipping it)
  *       natp10=0              with renderer=native, P10 (the shadow pass's untextured strips) on its VU1 program
  *                             (2026-10-31; 1, the default, draws it natively)
+ *       natp13=0              with renderer=native, P13 (renderer B's skinned models) on its VU1 program (2026-10-31;
+ *                             1, the default, draws it natively: one-bone vertices transformed by the GPU, the others
+ *                             summed on the CPU)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
@@ -518,9 +521,12 @@ static int watchdog(SceSize args, void *argp) {
                 polls0 = kh1_vita_gt_polls;
             }
             if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
-                static u32 n0, d0, t0;
-                vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles\n", kh1_vu1_drawn - n0,
-                     kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0);
+                static u32 n0, d0, t0, v0, m0;
+                vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles; P13 %u vertices "
+                     "(%u summed on the CPU)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
+                     kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0);
+                v0 = kh1_vu1_nd13_verts;
+                m0 = kh1_vu1_nd13_multi;
                 n0 = kh1_vu1_drawn;
                 d0 = kh1_pipes_nat_draws;
                 t0 = kh1_pipes_nat_tris;
@@ -642,6 +648,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
         else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
         else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
+        else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);

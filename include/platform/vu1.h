@@ -37,6 +37,10 @@ extern int kh1_vu1_draw_p0;
 extern int kh1_vu1_draw_p11;
 /* 2026-10-31: P10 (the shadow pass's untextured strips) too (1, the default; natp10=0 / KH1_HOST_NATP10=0) */
 extern int kh1_vu1_draw_p10;
+/* 2026-10-31: P13 (renderer B's skinned models) too (1, the default; natp13=0 / KH1_HOST_NATP13=0); the vertices it
+ * hands over and those of them with more than one bone (summed on the CPU) */
+extern int kh1_vu1_draw_p13;
+extern u32 kh1_vu1_nd13_verts, kh1_vu1_nd13_multi;
 extern int kh1_vu1_natcheck; /* host: KH1_HOST_NATCHECK=1, P0 run and checked against its payload (vu1_draw.h) */
 /* 1: a line per program run */
 extern int kh1_vu1_verbose;

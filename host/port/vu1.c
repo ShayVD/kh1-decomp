@@ -1291,6 +1291,7 @@ static void start_run(u32 pc) {
         ran = kh1_vu1_draw && ((tr_progs[prog].num == 18 && nd_18(pc, 18)) ||
                                 (tr_progs[prog].num == 11 && kh1_vu1_draw_p11 && nd_18(pc, 11)) ||
                                 (tr_progs[prog].num == 10 && kh1_vu1_draw_p10 && nd_10(pc)) ||
+                                (tr_progs[prog].num == 13 && kh1_vu1_draw_p13 && nd_13(pc)) ||
                                 (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc, 0)) ||
                                 (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)));
         if (tr_progs[prog].num == 10 && pc == 0) nd_10_setup(); /* the RGBAQ its kick sets, for nd_10's payload */
@@ -1300,6 +1301,15 @@ static void start_run(u32 pc) {
             if (!nd_0(pc, tr_progs[prog].num == 4)) {
                 ran = tr_go(prog, pc);
                 nd_0_check();
+            }
+            kh1_vu1_draw = sv;
+        }
+        if (!ran && kh1_vu1_natcheck && tr_progs[prog].num == 13) { /* KH1_HOST_NATCHECK for P13 (vu1_draw.h) */
+            void (*sv)(const u32 *, u32) = kh1_vu1_draw;
+            kh1_vu1_draw = 0;
+            if (!nd_13(pc)) {
+                ran = tr_go(prog, pc);
+                nd_13_check();
             }
             kh1_vu1_draw = sv;
         }
