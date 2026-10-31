@@ -1,0 +1,237 @@
+# Past 30 fps: emulating less, using the Vita natively (plan, 2026-10-31)
+
+A plan only: nothing here is implemented yet. **Work on it starts once the three current steps are merged**
+(the 30 fps plan's three: P13 on the GPU, the GS worker's frame op and native parse moved to the GPU thread, and
+the GS memory model's upload work cut). Every figure below is an estimate from the Vita logs and host counts
+named in each stage, not a measurement, until a Vita log says otherwise.
+
+Port code only, as for the native renderer: kh1.elf and src/ stay byte-identical and matching. Everything here
+lives in host/port, host/null and host/vita, behind a config.txt switch with today's path as the fallback, so a
+wrong guess costs speed, not a picture.
+
+Read with: native-renderer.md (the native path so far), renderer-spec.md sections 2 (the VU1 programs), 4 (the
+per-frame packet flow) and 5 (mapping to a modern API), vita-build.md (the timings), sound-spec.md section 6.
+
+## Where it starts
+
+The 30 fps plan's table (Shay's Vita, `renderer=native`, the floor-fix build, Dive frames 5000-8000, per 2.4 s of
+wall time; 30 fps is 72 pictures in that window):
+
+| Thread | Busy now | After the three steps (their estimates) |
+|---|---|---|
+| GS worker (core 1) | 2,259 ms: the limit | ~1.0-1.3 s |
+| Game thread (core 0) | ~1,960 ms + 437 waiting | ~1.4 s |
+| GPU thread (core 2) | 792 frame jobs + 726 recording | **~2.0-2.2 s**: it takes the frame op and the native parse (~0.5-0.7 s) |
+| Sound | sndprio=-4 since 2026-10-31 | unmeasured cost |
+
+So after the three steps the Dive should sit near 25-30 pictures/s, with **the GPU thread as the likely next
+limit** (it gains the worker's frame op and parse while still converting and recording every GS-path vertex) and
+no core with real headroom. The plan below is ordered to take work off whichever thread limits next, and to end
+with the GS model and worker mostly gone, which is what gives headroom past 30.
+
+What still runs as emulation after the three steps:
+
+- **VU1**: every program but P0, P4, P10, P11, P13 and P18 (native on the GPU) and P12 (hand-written NEON on the
+  CPU). Left as translated programs: P1, P2, P3, P5, P6, P7, P8 (renderer A), P12, P14-P17, P19, P20 (renderer B),
+  and gb.x / wm.x's five Gummi programs (renderer-spec 2.5).
+- **DMA / VIF**: dmawalk.c walks every chain the game sends: tags, VIF codes, UNPACKs into VU memory, DIRECT and
+  the GIF path into the GS worker's ring. ~1.3 s of the game thread's 2.4 s before P13 (VU1 714 ms of it, so ~0.6
+  s of walk, unpack and ring copies alone).
+- **GS**: the register file (gsregs.c), the 4 MB memory model (gsmem.c) with its uploads, CLUT and target
+  bookkeeping, the GS-path primitive assembly (pipes.c), batch.c's per-vertex conversion.
+- **IOP / SPU2**: the disc's LIBSSL.IRX on a MIPS interpreter (five hot functions already C), the SPU2 mixed in
+  C.
+- **Game math**: the game's own C as compiled for the A9; libvu0.c's sceVu0 calls in plain C.
+
+## The stages
+
+Each stage is about one thread's worth of work, lands behind its own switch, and is measured the same way at
+the end: a Vita log of the Dive (`renderer=native`, dive_en.txt's route, frames 5000-8000) with the per-thread
+table above, plus the stage's own host checks. Expected gains are per 2.4 s window.
+
+### Stage 0: the baseline after the three PRs (small, first)
+
+- One Vita run with all three merged: the per-thread table, `gputime=1` once and once without, the `vu1:` and
+  `native renderer:` lines, the sound line's short buffers.
+- One census of what is left: each VU1 program's runs and time, the walk's split (tags / unpack / DIRECT / ring),
+  the GS worker's parts, the GPU thread's split (recording / frame jobs / GPU waits). Also a short run of Destiny
+  Islands (dive_en.txt past 77,000), which uses programs the Dive does not (P2 / P3's fog and UV scroll, P12 / P14
+  lit models).
+- **Gain**: none. **Why first**: picks the order of stages 1-3 from measurements, not these estimates.
+- **Tested by**: the log itself; nothing in code changes beyond log lines.
+
+### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
+
+The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
+
+- **Static vertex buffers**: renderer A's map chains do not change between frames (native-renderer.md stage 3).
+  Cache each native batch's triangle list and vertices in GPU memory keyed by the chain's source address and a
+  hash of its records; a frame then uploads only matrices. The same for renderer B's rigid models (P11 / P18 /
+  P10's records are the model's own data) and P13's skinned meshes (only the bone palette changes).
+- **Batching**: native runs with the same pipeline, texture and blend state joined into one draw (the per-vertex
+  matrix index already allows it), so the recording makes a few dozen GXM calls a frame, not one a run.
+- **Gain**: GPU thread −0.4 to −0.8 s (the native share of recording and payload conversion); fewer draws on the
+  SGX. **Risk**: a cache keyed wrong draws a stale mesh: the key includes the record hash, and `natcache=0` turns
+  it off.
+- **Tested by**: `KH1_HOST_NATCHECK` with the cache on (each cached batch compared with a fresh parse every N
+  frames), gxmcheck pictures of the Dive identical with `natcache=0` and `=1`, the GPU thread's line on a Vita.
+
+### Stage 2: the rest of renderer B on the GPU (P12, P14, P15-P17, P19, P20)
+
+- **P12 / P14 (lit, rigid / skinned)**: the native vertex shader gains renderer B's lighting: 3 parallel lights +
+  ambient with the same clamps (saturate before scaling, renderer-spec 5). P14 reuses P13's bone palette and
+  weights. P12's hand-written NEON form stays as the CPU fallback.
+- **P15-P17 (full clipping)**: the same records as P11 / P12 / P13 with the VU's clipper; the GPU's clipping
+  replaces it, as it did for P0.
+- **P19 / P20 (special)**: census first (renderer-spec 2.3); native only if they show up in the logs.
+- **Gain**: small in the Dive (most of its B models are P11 / P13 / P18); the main gain is in lit rooms (Destiny
+  Islands and later: P12 was 140 M of the game thread's ~800 M instructions under qemu in session 147). Expect
+  game thread −0.1 to −0.3 s where they are used.
+- **Tested by**: NATCHECK per program (each batch's output compared with the program's GIF output: colours, ST,
+  F, triangles drawn by one side only), natdraw_test / shadergen_test cases for the lighting clamps, gxmcheck
+  pictures of Destiny Islands against the GS path, `natp12=0` style switches.
+
+### Stage 3: the rest of renderer A on the GPU (P1, P2, P3, P5, P6, P7, P8)
+
+- **P2 / P7** (P0 + per-vertex fog): F = clamp(A + B / w) in the vertex shader (renderer-spec 5, within 2 levels
+  of the GS's step; the exact form in 4.13 "Session 122").
+- **P3** (env map, UV scroll): the scroll table and env matrix as uniforms.
+- **P1** (float STQ, no cull; the projected-shadow receivers) and **P6** (point light), **P5** (single-colour
+  silhouettes), **P8** (the lens grid, smallest of all).
+- **Gain**: like stage 2, mostly outside the Dive; it finishes the list so no 3D draw needs the translated VU1
+  programs. Game thread −0.1 to −0.4 s in fogged rooms.
+- **Tested by**: as stage 2, with the fog compared value for value against the program's F.
+- Stages 2 and 3 are independent and can run as two threads in parallel.
+
+### Stage 4: textures from the source, not from GS memory
+
+The upload half of retiring the GS memory model (the third current step starts this; this stage finishes it).
+
+- At the walk, an IMAGE transfer whose source is in EE memory is recognised (BITBLTBUF / TRXPOS / TRXREG and the
+  data's address) and the texture cache keyed by **source pointer + CLUT** (renderer-spec 5) decodes from there
+  when a draw first reads it. gsmem stores the pixels only when something reads GS memory back: a target read as
+  a texture ("target N"), a local-to-local copy, the font in the Z buffer's top byte, a CLUT load from a region an
+  upload just wrote.
+- The CLUT cross-fades (renderer-spec 4.13) stay as palette textures with a per-frame palette upload.
+- **Gain**: GS worker −0.3 to −0.6 s beyond what step 3 takes (GIF image blocks, big and small uploads, image
+  qwords: ~1.1 s today).
+- **Tested by**: gxmcheck pictures with `gsstore=lazy` and `gsstore=all` identical over the Dive and the menus;
+  a debug mode that does both and compares every texture the GPU reads against gsmem's decode.
+
+### Stage 5: renderer B's draws as native calls (no chain, no walk)
+
+The biggest structural step: the game's draw list hands its renderer B nodes to the native renderer directly.
+
+- Today the game's C (func_00160370 and func_0015fc00, renderer-spec 4.1) builds each object's VIF1 chain;
+  dmawalk.c walks it, unpacks the records into VU memory, and `nd_*` parses VU memory back out. In the port, a
+  platform hook at the chain's send (the `sceDmaSend` wrapper on channel 1) recognises renderer B's chain shape
+  (MPG, then REF to the model's packet, the matrix and palette uploads) and passes the model's EE pointer, its
+  matrices and its bone palette to the native renderer, with stage 1's vertex buffer cache keyed by that pointer.
+  Chains it does not recognise go to the walk as now.
+- No game function changes; the hook is in the platform layer (portability.md's wrappers), so the same shape can
+  later become a direct call in phase 4's shiftable code.
+- **Gain**: the walk's share for these chains (tags, unpacks into VU memory, the parse) and their GS worker
+  kicks: game thread −0.3 to −0.5 s, GS worker −0.1 to −0.2 s.
+- **Tested by**: a check mode that both walks and calls natively and compares the payloads (same matrices, same
+  vertices, same order in the draw list); the worker-order digests (`KH1_HOST_GSQ_CHECK`) unchanged for the
+  draws that stay on the GS path; gxmcheck pictures.
+
+### Stage 6: renderer A's object chains as native calls, and the walk's fast path for the rest
+
+- The same for renderer A: per-object chains start with the program's REF (renderer-spec 2.1) and REF the map's
+  batches, which stage 1 already caches by address. The hook passes the batches' addresses and the object's
+  matrix block (VU qw 0-39: model, params, viewProj, scroll / light / env).
+- What still goes through the walk (2D, HUD, text, full-screen passes, P8, the overlays' own programs) gets a
+  fast path: DIRECT / PATH3 GIF data handed to the GS side as a pointer and length, not copied qword by qword into
+  the ring.
+- **Gain**: game thread −0.3 to −0.5 s (the remaining walk is mostly 2D); GS worker −0.1 s.
+- **Tested by**: as stage 5, plus the menus and the title (dktitle.x) run with the hooks on, since their chains
+  are the ones that must still fall through.
+
+### Stage 7: the GS worker retired
+
+After stages 4-6 the GS worker's remaining work is the 2D GIF traffic and the frame's GS-side bookkeeping
+(registers, targets, the frame copies of renderer-spec 4.15-4.17). That is small enough to run where it is
+produced.
+
+- The register file and target bookkeeping move into the recording (the GPU thread) as ops, and the GS worker
+  thread is removed. Core 1 is then free: the sound's tick and mix threads move there (`sndcore=1`), and the
+  game thread no longer waits on the worker.
+- The GS memory model stays for what reads it back (stage 4's lazy stores, the frame copies), as a library the
+  recording calls, not a thread.
+- **Gain**: the game thread's ~0.4 s of waiting for the worker; one whole core for sound and headroom.
+- **Tested by**: worker-order digests replaced by recording-order digests over the Dive, the title, the menus
+  and Destiny Islands; every gxmcheck picture identical to stage 6's.
+
+### Stage 8: sound on the Vita natively
+
+Three steps, cheapest first; each stops if the sound line shows no short buffers and its threads' time is small:
+
+1. **More of the driver as C**: profile the IOP instructions per function on the Vita (the interpreter counts
+   them), and turn the hot ones into C the way func_00150 / 00434 / 004f0 / 0d8dc were (patched only on a
+   matching hash, `KH1_HOST_IOP=nonative` turns them off). The per-tick sequencer and voice loop are the
+   candidates. Gain: the tick thread's time roughly halved.
+2. **The mix in NEON**: spu2.c's ADPCM decode, the 4-point interpolation and the volume mix four or eight
+   samples at a time, and the reverb's taps. Gain: the mixer thread's time roughly halved (the title's music kept
+   it busy ~1.2 s per 2 s).
+3. **The Vita's own voices (optional)**: sceNgs plays PS-ADPCM (VAG) voices and has a reverb, so the SPU2's voices
+   could map to NGS voices and the mix leave the A9. It does not match the SPU2 exactly (ADSR rates, the reverb
+   algorithm, no pitch modulation), so it is a choice to make only if 1 and 2 are not enough.
+
+- The driver itself (sequences, banks, the SE table) stays the disc's: rewriting it from its formats is not
+  planned (sound-spec 6 explains why the port runs it).
+- **Tested by**: tools/host/sndplay.c's WAV over music110 and the Dive run's WAV byte-identical for steps 1-2 (a
+  NEON mix may differ by rounding: then within one LSB, checked by a sample compare); the Vita's sound line.
+
+### Stage 9: NEON in the game's hot math
+
+Last, because it only matters once the game thread's own code (~0.66 s per 2.4 s in the Dive) is the limit.
+
+- First a profile of game code on the A9 (the qemu instruction counter of session 143 per function, then a Vita
+  log): matrix and vector helpers (libvu0.c's sceVu0 calls, port code already), the skeleton build
+  (func_00163490 and P21's Euler to matrix, renderer-spec 2.4), collision (mapcoll / colobj), particles (ppp).
+- libvu0.c is port code: NEON it directly. For game functions, a **port override table**: the Vita build links a
+  hand-written NEON function in place of the matching C by name, listed in one file, with the matching C kept
+  and a host test comparing both on recorded inputs (bit-exact, or within the tolerance the caller allows, as
+  vu1nat=2 does for the VU1 programs).
+- **Gain**: game thread −0.1 to −0.2 s; more in busy rooms with many skeletons.
+- **Tested by**: per-function differential tests on inputs captured from a Dive run; the census and pad
+  scripts reaching the same frames with the same positions (dive_en.txt to 91,000).
+
+## Where that should end
+
+If the estimates hold: the game thread near 0.8-1.0 s per 2.4 s window (the game's own code and a little 2D
+walk), the GS worker gone, the GPU thread near 1.2-1.5 s with static buffers and batching, sound on the freed
+core. That is a steady 30 pictures/s in the Dive with roughly a third of each core spare, which is the room
+busier scenes (Traverse Town, battles with many skinned enemies) will need. 60 is not the goal: in rooms the
+game paces itself to two fields a frame (`D_002BBE0C` = 1, renderer-spec 4.15). Its time step scales with the
+fields passed, so a 60 fps mod (that interval 0 in rooms) is possible in principle once there is that much
+headroom, but whether the game's logic behaves at half the step is untested; it is not part of this plan.
+
+| Stage | Main thread helped | Expected gain (per 2.4 s) | Size |
+|---|---|---|---|
+| 0 Baseline | (measurement) | none | small |
+| 1 Static buffers, batching | GPU thread | −0.4 to −0.8 s | one thread |
+| 2 Renderer B's rest | game (lit rooms) | −0.1 to −0.3 s | one thread |
+| 3 Renderer A's rest | game (fogged rooms) | −0.1 to −0.4 s | one thread, parallel with 2 |
+| 4 Textures from source | GS worker | −0.3 to −0.6 s | one thread |
+| 5 Renderer B as native calls | game, GS worker | −0.4 to −0.7 s | one to two threads |
+| 6 Renderer A as native calls, fast 2D walk | game | −0.3 to −0.5 s | one thread |
+| 7 GS worker retired | game (no waits), a free core | ~−0.4 s of waiting | one thread |
+| 8 Sound native | sound threads | about half their time | one thread |
+| 9 NEON game math | game | −0.1 to −0.2 s | one thread |
+
+Stages 2 / 3 and 8 can run alongside the others. Stage 1 waits for stage 0's numbers; 5 and 6 build on 1's
+cache; 7 needs 4-6.
+
+## Hard parts (be direct)
+
+- **Draw order**: the draw list's key order is the painter's order (renderer-spec 4.2). Native calls in stages
+  5-6 must record into the same place in the frame as the chain would have; batching (stage 1) only joins
+  consecutive draws with the same state.
+- **Things that read VU memory or GS memory back**: native-renderer.md lists what `nd_*` leaves unwritten; a
+  native call skips VU memory entirely, so any later reader of it must be found first (the check modes above are
+  for this). The same for GS memory in stage 4.
+- **The overlays' programs** (gb.x / wm.x's five Gummi programs) are not in any stage: they are needed only once
+  the Gummi ship runs natively, and should follow stage 3's pattern then.
+- **Sound exactness**: steps 1-2 of stage 8 keep the output identical or within an LSB; NGS would not.

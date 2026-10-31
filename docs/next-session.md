@@ -48,6 +48,13 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
+## After the 30 fps steps: docs/native-plan.md (2026-10-31)
+
+Once the three current steps (P13 on the GPU, the GS worker's frame op and native parse to the GPU thread, the
+GS upload cut) are all merged, the next work is docs/native-plan.md: a staged plan to emulate less (the remaining
+VU1 programs on the GPU, the DMA / VIF walk replaced by native calls, the GS worker retired, sound and game math
+native). Start with its stage 0 (a Vita baseline); do not start it before all three are merged.
+
 ## Latest (2026-10-31): the Dive's GPU work
 
 The sections below are older; the Vita renderer's state is in docs/vita-build.md and docs/native-renderer.md.
