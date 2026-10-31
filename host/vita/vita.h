@@ -23,6 +23,17 @@ int kh1_vita_gxm_init(void);
 int kh1_vita_gxm_ready(void);
 int kh1_vita_gxm_present(float x, float y, float w, float h);
 void kh1_vita_gxm_stats(unsigned int *frames, unsigned int *draws, unsigned int *skipped, unsigned int *scenes);
+/* gxm.c (2026-10-31): config.txt's gputime=1, the scenes' GPU time by target kind (target.h's KH1_RT_*, the last
+ * one untracked), polled by its own thread */
+#define KH1_GT_KINDS 9
+/* gxm.c (2026-10-31): config.txt's present= (1, the default: each picture presented once from the display target;
+ * 0 the copy as before), and whether there is a picture to present */
+extern int kh1_vita_present_direct;
+int kh1_vita_gxm_fresh(void);
+extern int kh1_vita_gputime;
+extern volatile unsigned int kh1_vita_gt_us[KH1_GT_KINDS], kh1_vita_gt_n[KH1_GT_KINDS], kh1_vita_gt_small_us,
+    kh1_vita_gt_small_n, kh1_vita_gt_polls;
+int kh1_vita_gputime_thread(unsigned int args, void *argp);
 
 /* pad.c: the buttons as sceCtrl read them this frame (for main.c's own screens) */
 unsigned int kh1_vita_buttons(void);
@@ -36,7 +47,7 @@ int kh1_vita_menu_config(const char *key, const char *value); /* config.txt's fp
 int kh1_vita_menu_poll(void);                     /* each vblank: 1 when the menu was asked for */
 void kh1_vita_menu_run(void (*redraw)(void));     /* the menu, the game paused, until it is closed */
 void kh1_vita_menu_draw(void);                    /* display.c's draw: the FPS counter and the menu */
-int kh1_vita_menu_overlay(void);                  /* something is drawn over the picture */
+int kh1_vita_menu_overlay(void);                  /* the menu is up: draw even with no new picture */
 int kh1_vita_menu_swallow(unsigned int held);     /* pad.c: the game sees no buttons while 1 */
 extern int kh1_vita_swap_ox, kh1_vita_rear_touch;  /* config.txt's swapox= / reartouch= (pad.c) */
 extern int kh1_vita_volume;                       /* config.txt's volume= (audio.c) */

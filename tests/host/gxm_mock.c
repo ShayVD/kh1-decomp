@@ -62,6 +62,7 @@ int sceKernelGetMemBlockBase(SceUID uid, void **base) {
 }
 int sceKernelFreeMemBlock(SceUID uid) { (void)uid; return 0; }
 SceUInt64 sceKernelGetProcessTimeWide(void) { return 0; }
+int sceKernelDelayThread(SceUInt delay) { (void)delay; return 0; } /* gxm.c's gputime poll (never started here) */
 SceUID sceIoOpen(const char *f, int fl, SceMode m) { (void)f; (void)fl; (void)m; return -1; } /* no shader cache */
 int sceIoClose(SceUID fd) { (void)fd; return 0; }
 int sceIoRead(SceUID fd, void *d, SceSize n) { (void)fd; (void)d; (void)n; return -1; }
@@ -146,8 +147,8 @@ const SceGxmProgramParameter *sceGxmProgramFindParameterByName(const SceGxmProgr
 }
 unsigned int sceGxmProgramParameterGetResourceIndex(const SceGxmProgramParameter *p) { return (unsigned)p->index; }
 
-typedef struct { MockProg *p; int nattr; SceGxmVertexAttribute a[8]; u32 stride; } MockVP;
-typedef struct { MockProg *p; int blend; SceGxmBlendInfo bi; } MockFP;
+typedef struct { MockProg *p; int nattr; SceGxmVertexAttribute a[8]; u32 stride; int colclamp; } MockVP;
+typedef struct { MockProg *p; int blend; SceGxmBlendInfo bi; int fetch; } MockFP;
 
 int sceGxmShaderPatcherRegisterProgram(SceGxmShaderPatcher *sp, const SceGxmProgram *h, SceGxmShaderPatcherId *id) {
     (void)sp;
@@ -159,6 +160,7 @@ int sceGxmShaderPatcherCreateVertexProgram(SceGxmShaderPatcher *sp, SceGxmShader
     MockVP *v = (MockVP *)calloc(1, sizeof *v);
     (void)sp; (void)ns;
     v->p = (MockProg *)id;
+    v->colclamp = strstr(v->p->text, "ocol : COLOR") != 0; /* 2026-10-31: clamped as on the Vita (vertex() below) */
     v->nattr = (int)n;
     memcpy(v->a, a, n * sizeof *a);
     v->stride = s->stride;
@@ -171,6 +173,7 @@ int sceGxmShaderPatcherCreateFragmentProgram(SceGxmShaderPatcher *sp, SceGxmShad
     MockFP *p = (MockFP *)calloc(1, sizeof *p);
     (void)sp; (void)f; (void)m; (void)vp;
     p->p = (MockProg *)id;
+    p->fetch = p->p && p->p->text && strstr(p->p->text, "__nativecolor") != 0; /* a frame read (gxm.c) */
     if (bi) { p->blend = 1; p->bi = *bi; }
     *out = (SceGxmFragmentProgram *)p;
     return 0;
@@ -274,7 +277,13 @@ static struct {
     SceGxmCullMode cull;
     u32 draws, tris, pixels, lost;
     u32 n_in, n_disc, n_zfail; /* KH1_HOST_GXM_CALLS: a draw's covered, discarded and depth-failed pixels */
+    /* KH1_HOST_GXM_COST: the scene's work, as a tiled GPU spends it (vita-build.md "The GPU's work in the Dive") */
+    u32 c_frag, c_fetch, c_blend, c_tex, c_tris, c_draws, c_verts, c_zload, c_zstore;
 } g;
+static int cost;          /* KH1_HOST_GXM_COST */
+static u32 frame;
+static struct { u32 scenes, px, zl, zs, frag, fetch, blend, draws, verts, tris; } cf; /* the frame's totals */
+static u32 cscene;
 
 SceGxmContext *vita2d_get_context(void) { static int c; return (SceGxmContext *)&c; }
 SceGxmShaderPatcher *vita2d_get_shader_patcher(void) { static int p; return (SceGxmShaderPatcher *)&p; }
@@ -322,7 +331,10 @@ static void flush(void) {
             SceGxmDepthStencilSurface *dsf = g.ds;
             u32 draws = g.draws, tris = g.tris, pixels = g.pixels, lost = g.lost, a = g.n_in, b = g.n_disc, c = g.n_zfail;
             int raster = g.raster;
+            u32 cc[9] = { g.c_frag, g.c_fetch, g.c_blend, g.c_tex, g.c_tris, g.c_draws, g.c_verts, g.c_zload, g.c_zstore };
             memcpy(&g, q->st, sizeof g);
+            g.c_frag = cc[0]; g.c_fetch = cc[1]; g.c_blend = cc[2]; g.c_tex = cc[3]; g.c_tris = cc[4]; g.c_draws = cc[5];
+            g.c_verts = cc[6]; g.c_zload = cc[7]; g.c_zstore = cc[8];
             g.col = col; g.cstride = cs; g.cw = cw; g.ch = ch; g.z = z; g.zstride = zs; g.zsave = zsave; g.ds = dsf;
             g.draws = draws; g.tris = tris; g.pixels = pixels; g.lost = lost; g.n_in = a; g.n_disc = b; g.n_zfail = c;
             g.raster = raster;
@@ -350,6 +362,9 @@ static void do_begin(const SceGxmColorSurface *cs, const SceGxmDepthStencilSurfa
     g.ds = (SceGxmDepthStencilSurface *)ds;
     g.z = (u32 *)ds->depthData;
     g.zstride = ds->backgroundControl;
+    g.c_frag = g.c_fetch = g.c_blend = g.c_tex = g.c_tris = g.c_draws = g.c_verts = 0;
+    g.c_zload = (ds->zlsControl & 2) != 0;
+    g.c_zstore = (ds->zlsControl & 4) != 0;
     if (!(ds->zlsControl & 4)) { /* not to be stored: the memory as it is, put back at the end */
         g.zsave = realloc(g.zsave, (size_t)g.ch * g.zstride * 4);
         memcpy(g.zsave, g.z, (size_t)g.ch * g.zstride * 4);
@@ -373,6 +388,23 @@ static void do_end(void) {
      * (session 137v: the mock used to scribble it, which a later scene's load of that earlier store, past a scene
      * that only tests depth, does not see on the GPU) */
     if (g.ds && !(g.ds->zlsControl & 4)) memcpy(g.z, g.zsave, (size_t)g.ch * g.zstride * 4);
+    if (cost && g.raster && g.col) {
+        printf("kh1-gxm-cost: frame %u scene %u: %u x %u at %p, depth load %u store %u; %u draws, %u vertices, %u triangles; "
+               "%u fragments (%.2f screens), %u blended, %u textured, %u reading the frame\n", frame, cscene, g.cw, g.ch,
+               (void *)g.col, g.c_zload, g.c_zstore, g.c_draws, g.c_verts, g.c_tris, g.c_frag,
+               (double)g.c_frag / ((double)g.cw * g.ch), g.c_blend, g.c_tex, g.c_fetch);
+        cf.scenes++;
+        cf.px += g.cw * g.ch;
+        cf.zl += g.c_zload ? g.cw * g.ch : 0;
+        cf.zs += g.c_zstore ? g.cw * g.ch : 0;
+        cf.frag += g.c_frag;
+        cf.fetch += g.c_fetch;
+        cf.blend += g.c_blend;
+        cf.draws += g.c_draws;
+        cf.verts += g.c_verts;
+        cf.tris += g.c_tris;
+    }
+    cscene++;
     g.col = 0;
 }
 void sceGxmSetViewport(SceGxmContext *c, float xo, float xs, float yo, float ys, float zo, float zs) {
@@ -511,6 +543,9 @@ static void vertex(u32 idx, Vary *o) {
     o->y = (f32)(s32)((r.v[KH1_SV_OPOS][1] * g.vy[1] + g.vy[0]) * 256.0f + 0.5f + 65536.0f * 256.0f) / 256.0f - 65536.0f;
     o->z = r.v[KH1_SV_OPOS][2] * g.vz[1] + g.vz[0];
     memcpy(o->col, r.v[KH1_SV_OCOL], 16);
+    if (g.vp->colclamp) /* 2026-10-31: a COLOR varying is clamped to 0 .. 1 on the Vita's GPU (a native draw's col x w
+                         * there drew P0's floor and P11's Keyblade black, shadergen.c) */
+        for (i = 0; i < 4; i++) o->col[i] = o->col[i] < 0.0f ? 0.0f : o->col[i] > 1.0f ? 1.0f : o->col[i];
     memcpy(o->tc, r.v[KH1_SV_OTC], 16);
     o->fog = r.v[KH1_SV_OFOG][0];
 }
@@ -571,6 +606,10 @@ static void pixel(s32 x, s32 y, const Vary *v) {
     kh1_shader_run(fp->text, &r);
     if (r.bad) g.lost++;
     g.n_in++;
+    g.c_frag++;
+    if (g.fp->fetch) g.c_fetch++;
+    if (sp) g.c_tex++;
+    if (g.fp->blend && g.fp->bi.colorFunc != SCE_GXM_BLEND_FUNC_NONE) g.c_blend++;
     if (r.discarded) { g.n_disc++; return; }
     if (!stest(g.sfunc, g.sref & g.smask, st & g.smask)) {
         *z = (*z & 0xFFFFFF) | (((st & ~g.swmask) | (sop(g.sfail, st) & g.swmask)) & 0xFF) << 24;
@@ -635,6 +674,7 @@ static void triangle(const Vary *a, const Vary *b, const Vary *c) {
         if (y1 > (s32)g.cy1) y1 = (s32)g.cy1;
     }
     g.tris++;
+    g.c_tris++;
     for (y = y0; y <= y1; y++)
         for (x = x0; x <= x1; x++) {
             f32 px = (f32)x + 0.5f, py = (f32)y + 0.5f, w[3];
@@ -695,19 +735,31 @@ static void lerp_vary(const Vary *a, const Vary *b, f32 t, Vary *o) {
     }
     o->fog = a->fog + (b->fog - a->fog) * t;
 }
-/* a triangle whose w is not 1: clipped to w >= a small epsilon and z >= 0 (GXM's near plane), divided, drawn as a
+/* a triangle whose w is not 1: clipped to w >= a small epsilon and 0 <= z <= w (GXM's near and far planes), divided, drawn as a
  * fan with perspective-correct attributes */
 static void persp(const Vary *v) {
-    Vary a[9], b[9], *in = a, *out = b, *t;
+    Vary a[12], b[12], *in = a, *out = b, *t;
     int n = 3, m, i, pl;
     memcpy(a, v, 3 * sizeof *v);
-    for (pl = 0; pl < 2; pl++) {
+    /* 2026-10-31: and to z <= w and a guard band of 4 x the viewport in x and y (a GPU's own; window()'s fixed point would
+     * overflow on a vertex just past w = 0: native P0's floor in front of the camera) */
+    static const f32 gb = 4.0f;
+    for (pl = 0; pl < 7; pl++) {
         m = 0;
         for (i = 0; i < n; i++) {
             const Vary *p = &in[i], *q = &in[(i + 1) % n];
-            f32 dp = pl ? p->c[2] : p->c[3] - 1e-5f, dq = pl ? q->c[2] : q->c[3] - 1e-5f;
+            f32 dp, dq;
+            switch (pl) {
+            case 0: dp = p->c[3] - 1e-5f; dq = q->c[3] - 1e-5f; break;
+            case 1: dp = p->c[2]; dq = q->c[2]; break;
+            case 2: dp = gb * p->c[3] - p->c[0]; dq = gb * q->c[3] - q->c[0]; break;
+            case 3: dp = gb * p->c[3] + p->c[0]; dq = gb * q->c[3] + q->c[0]; break;
+            case 4: dp = gb * p->c[3] - p->c[1]; dq = gb * q->c[3] - q->c[1]; break;
+            case 5: dp = gb * p->c[3] + p->c[1]; dq = gb * q->c[3] + q->c[1]; break;
+            default: dp = p->c[3] - p->c[2]; dq = q->c[3] - q->c[2]; break; /* z <= w: the far plane */
+            }
             if (dp >= 0) out[m++] = *p;
-            if ((dp >= 0) != (dq >= 0) && m < 9) lerp_vary(p, q, dp / (dp - dq), &out[m++]);
+            if ((dp >= 0) != (dq >= 0) && m < 12) lerp_vary(p, q, dp / (dp - dq), &out[m++]);
         }
         n = m;
         t = in; in = out; out = t;
@@ -724,6 +776,8 @@ static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
     if (!g.raster || !g.col || !g.vp || !g.fp) return;
     if (!g.vp->p->kh1 || !g.fp->p->kh1) return; /* the present's own pair: not interpreted */
     if (t != SCE_GXM_PRIMITIVE_TRIANGLES) { g.lost++; return; }
+    g.c_draws++;
+    g.c_verts += n;
     for (i = 0; i + 2 < n; i += 3) {
         Vary v[3];
         vertex(idx[i], &v[0]);
@@ -744,7 +798,7 @@ static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
 /* ---- the check ---- */
 static int every;
 static const char *ppm;
-static u32 frame, checks, bad_frames;
+static u32 checks, bad_frames;
 
 static void write_ppm(const char *name, const u32 *pix, u32 w, u32 h, u32 stride) {
     char path[512];
@@ -819,8 +873,14 @@ static void hook(const KH1CmdRec *r) {
     if (from && frame >= from) n = (u32)every - 1; /* KH1_HOST_GXM_FROM: every frame from there */
     g.raster = n >= (u32)every - 2;
     g.draws = g.tris = g.pixels = 0;
+    memset(&cf, 0, sizeof cf);
+    cscene = 0;
     kh1_vita_gxm_frame(r);
     flush(); /* the GPU done (gxm.c's next frame waits for it) */
+    if (cost && g.raster && cf.scenes)
+        printf("kh1-gxm-cost: frame %u: %u scenes, %u KiB colour loaded and as much stored, %u KiB depth loaded, %u stored; "
+               "%u draws, %u vertices, %u triangles; %u fragments, %u blended, %u reading the frame\n", frame, cf.scenes,
+               cf.px * 4 / 1024, cf.zl * 4 / 1024, cf.zs * 4 / 1024, cf.draws, cf.verts, cf.tris, cf.frag, cf.blend, cf.fetch);
     if (n == (u32)every - 1 && getenv("KH1_HOST_GXM_CALLS")) { /* the frame's calls and pipelines */
         static KH1GxmRec gr;
         u32 i;
@@ -857,6 +917,7 @@ __attribute__((constructor)) static void start(void) {
     hash_only = getenv("KH1_HOST_GXM_HASH") != 0;
     from = getenv("KH1_HOST_GXM_FROM") ? (u32)atoi(getenv("KH1_HOST_GXM_FROM")) : 0;
     ppm = getenv("KH1_HOST_GXM_PPM");
+    cost = getenv("KH1_HOST_GXM_COST") != 0;
     if (kh1_vita_gxm_init()) {
         printf("kh1-gxm-mock: gxm.c did not start\n");
         exit(1);

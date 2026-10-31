@@ -68,6 +68,17 @@
  * writes a render target does: the next draw starts a new pass (`splits` when it is the same target),
  * the target's last pass is stored (sampled by a read, redrawn by a write) and its next pass loads.
  * A pass's commands are its range (cmd0, ncmd: the transfers between its draws included, ndraw draws).
+ *
+ * 2026-10-31 (vita-build.md "The GPU's work in the Dive"): an UPLOAD into another target than the open pass's no
+ * longer ends the pass.  The Dive's fog and light particles upload their 128 x 128 textures into the slot capture's
+ * pages (0x3600) before each draw, which split the 3D target's scene ~14 times a picture (each a colour and depth
+ * load and store on a tiled GPU).  The draws read those texels from GS memory (texcache, cpu_pages), and the GPU
+ * target's copy (gxm.c's pend) is written from the frame's end state before the target's next scene anyway, so
+ * nothing between the two draws needs the scene to end.  A draw of the pass that sampled that target earlier is
+ * safe too: gxm.c writes an upload into a target (pend_flush) only between scenes, after the last scene that used
+ * the target is done, so the whole scene sees the target as before the upload.  The pass still ends when a later
+ * draw of it samples a target written that way (pwrote: it needs the new texels), as before for a copy, a CLUT
+ * read-back, or an upload into the pass's own target (its later draws go over the texels).
  * Not part of the PS2 build. */
 #ifndef KH1_PS2
 #define KH1_CMD_MAX 4096     /* commands a frame (session 141: 1,024 dropped a third of a Destiny Islands frame) */
@@ -142,6 +153,8 @@ typedef struct {
     u32 pal_fills, texels;                 /* CLUT loads that filled a palette slot; texels the decodes upload */
     u32 tgt_reads, tgt_writes;             /* transfers reading / writing a render target (GPU work) */
     u32 splits;                            /* scenes split by a transfer touching their own target */
+    u32 xfer_joins;                        /* uploads into another target that no longer end the scene (below) */
+    u32 hoists;                            /* 2026-10-31: passes moved ahead of a scene they interrupted (cmdbuf.c hoist) */
     u32 max_passes, max_cmds;
 } KH1CmdCount;
 
@@ -177,6 +190,8 @@ typedef struct {
     s32 cur;                    /* session 127: the open draw command, -1 none */
     s16 tslot, pslot;           /* the texture entry / palette slot the next draw binds */
     u8 split;                   /* a transfer touched a target: the next draw starts a pass */
+    u32 pwrote;                 /* the targets (bit = index) an upload wrote since the open pass began (a later draw
+                                 * of it sampling one starts a pass) */
     /* the previous frame's last pass on each target / depth buffer, its store still open */
     KH1CmdPass prev[KH1_CMD_PASSES];
     u32 nprev;
@@ -186,12 +201,15 @@ typedef struct {
 } KH1CmdRec;
 
 /* a recorder over two rings' memory (KH1_RING_FRAMES x vslot / uslot bytes, 32-byte aligned) */
+/* 2026-10-31: 1 (the default): passes that split a scene on one target are drawn ahead of it when they do not touch
+ * it, and its two parts joined (cmdbuf.c hoist); config.txt hoist=0 / KH1_HOST_HOIST=0 keeps the game's order */
+extern int kh1_cmd_hoist;
 void kh1_cmd_init(KH1CmdRec *r, void *vmem, u32 vslot, void *umem, u32 uslot);
 /* a primitive drawn in d / p: its n GPU vertices (v 0: counted, not written), sig as batch.h's */
 void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, u32 sig);
 /* the native renderer (natdraw.h): a run's n GPU vertices (triangles; position, the matrix index in pad[0]) and its
  * nmat matrices (4 x 4 floats each, already folded with the screen mapping) as one draw command of its own (nothing
- * batched with it), culled by `cull` (KH1_NAT_CULL_*) */
+ * batched with it), culled by `cull` (KH1_NAT_CULL_*, with natdraw.h's KH1_NAT_LIN for P0's: the shader's lin) */
 void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                     u32 nmat, u32 cull);
 /* a transfer or CLUT load, not recorded (batch.h's break only) */

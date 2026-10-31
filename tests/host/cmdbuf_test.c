@@ -482,22 +482,65 @@ static void passes(void) {
     kh1_cmd_reset_frame(&pr);
     {
         /* frame 4: the 3D target cleared in 16 strips of 32 pixels, each a full-screen sprite under its column
-         * SCISSOR (merged into one command), then the same with column 9 missing */
+         * SCISSOR (merged into one command), then the same with column 9 missing; then 12 strips of 42 or 43
+         * pixels, off the 8-pixel cells (2026-10-31: the wide view's strips) */
         u32 k, miss;
-        for (miss = 0; miss < 2; miss++) {
+        for (miss = 0; miss < 3; miss++) {
             for (k = 0; k < 16; k++)
-                if (!miss || k != 9) psprite(F_MAIN, 0, 1, 0x6, 0, 32 * k | (32 * k + 31) << 16, 383u << 16, 0, 0, 512, 384);
+                if (miss == 2) {
+                    if (k < 12) psprite(F_MAIN, 0, 1, 0x6, 0, 512 * k / 12 | (512 * (k + 1) / 12 - 1) << 16, 383u << 16, 0, 0, 512, 384);
+                } else if (!miss || k != 9) psprite(F_MAIN, 0, 1, 0x6, 0, 32 * k | (32 * k + 31) << 16, 383u << 16, 0, 0, 512, 384);
             psprite(F_MAIN, 0, 1, 0x46, 0, S_MAIN, 10, 10, 50, 50);
             kh1_cmd_frame(&pr);
-            printf("cmdbuf_test: strips%s: %u passes %u commands, cmd 1 scissor %d..%d, %s\n", miss ? " (one missing)" : "",
+            printf("cmdbuf_test: strips%s: %u passes %u commands, cmd 1 scissor %d..%d, %s\n",
+                   miss == 2 ? " (off the cells)" : miss ? " (one missing)" : "",
                    pr.npass, pr.ncmd, pr.cmd[0].k.sx0, pr.cmd[0].k.sx1, kh1_cmd_pass_str(&pr.pass[0]));
             if (!miss)
                 CHECK("passes: 16 strips under column scissors clear the 3D target (one command)", pr.npass == 1 &&
                       pr.ncmd == 2 && pr.pass[0].cleared && pr.pass[0].load == KH1_LOAD_DONT_CARE);
+            else if (miss == 2)
+                CHECK("passes: 12 strips off the 8-pixel cells clear it too", pr.npass == 1 && pr.ncmd == 2 &&
+                      pr.pass[0].cleared && pr.pass[0].load == KH1_LOAD_DONT_CARE);
             else
                 CHECK("passes: 15 strips do not", pr.npass == 1 && !pr.pass[0].cleared && pr.pass[0].load == KH1_LOAD_LOAD);
             kh1_cmd_reset_frame(&pr);
         }
+    }
+    {
+        /* frame 5 (2026-10-31, the hoist): the 3D target, then a small target drawn without reading the 3D one,
+         * then the 3D target again, sampling the small one: the small pass is drawn first and the 3D target is one
+         * pass, never stored and reloaded in between; with kh1_cmd_hoist off it stays 3 passes */
+        int on;
+        for (on = 1; on >= 0; on--) {
+            kh1_cmd_hoist = on;
+            psprite(F_MAIN, Z_ALWAYS_W, 0, 0x6, 0, S_MAIN, 0, 0, 512, 384);
+            psprite(F_MAIN, Z_GEQUAL, 0, 0x46, 0, S_MAIN, 10, 10, 100, 100);
+            psprite(F_SLOT, 0, 1, 0x6, 0, S_SLOT, 0, 0, 64, 64);
+            psprite(F_MAIN, Z_GEQUAL, 0, 0x156, T_SLOT, S_MAIN, 20, 20, 60, 60);
+            kh1_cmd_frame(&pr);
+            printf("cmdbuf_test: hoist %d: %u passes, %u hoisted; pass 1 %s\n", on, pr.npass, pr.frame.hoists,
+                   kh1_cmd_pass_str(&pr.pass[0]));
+            if (on)
+                CHECK("passes: a small pass between two 3D passes is drawn first, the 3D target one cleared pass",
+                      pr.npass == 2 && pr.frame.hoists == 1 && pr.pass[0].rt == KH1_RT_SLOT &&
+                      pr.pass[0].ncmd == 1 && pr.pass[1].ncmd == 3 && pr.pass[1].cleared &&
+                      pr.pass[1].load == KH1_LOAD_DONT_CARE && pr.cmd[0].pass == 0 && pr.cmd[1].pass == 1 &&
+                      pr.cmd[3].pass == 1);
+            else
+                CHECK("passes: with the hoist off it is 3 passes, the 3D target reloaded",
+                      pr.npass == 3 && pr.frame.hoists == 0 && pr.pass[2].load == KH1_LOAD_LOAD);
+            kh1_gxm_frame(&gxp, &pr);
+            CHECK("passes: and its GXM calls match its passes", gxm_scenes_match(&pr, &gxp));
+            kh1_cmd_reset_frame(&pr);
+        }
+        kh1_cmd_hoist = 1;
+        /* frame 6: the small pass samples the 3D target: not moved */
+        psprite(F_MAIN, Z_ALWAYS_W, 0, 0x6, 0, S_MAIN, 0, 0, 512, 384);
+        psprite(F_SLOT, 0, 1, 0x116, T_MAIN, S_SLOT, 0, 0, 64, 64);
+        psprite(F_MAIN, Z_GEQUAL, 0, 0x46, 0, S_MAIN, 20, 20, 60, 60);
+        kh1_cmd_frame(&pr);
+        CHECK("passes: a small pass that samples the 3D target is not moved", pr.npass == 3 && pr.frame.hoists == 0);
+        kh1_cmd_reset_frame(&pr);
     }
     kh1_cmd_finish(&pr);
     printf("cmdbuf_test: passes: %u passes, %u load, %u don't care, %u store, %u discard, %u open; depth %u load, %u "
@@ -907,9 +950,11 @@ static void transfers(void) {
     CHECK("transfers: the indexed draw binds the loaded palette", d8 > clut && xc[d8].pslot == xc[clut].x.slot);
     CHECK("transfers: the palette read back from the CLUT pass is the palette cache's (gsmem.c's CLUT)", xpal_ok &&
           !xpal_bad);
-    CHECK("transfers: counted (5 uploads, 1 CLUT load and fill, 1 target read, 1 target write, 1 split scene)",
+    /* 2026-10-31: the upload into the off-screen buffer no longer splits the 3D target's scene (upload_join) */
+    CHECK("transfers: counted (5 uploads, 1 CLUT load and fill, 1 target read, 1 target write, inside the scene)",
           snap_hdr.frame.uploads == 5 && snap_hdr.frame.cluts == 1 && snap_hdr.frame.pal_fills == 1 &&
-          snap_hdr.frame.tgt_reads == 1 && snap_hdr.frame.tgt_writes == 1 && snap_hdr.frame.splits == 1 &&
+          snap_hdr.frame.tgt_reads == 1 && snap_hdr.frame.tgt_writes == 1 && snap_hdr.frame.splits == 0 &&
+          snap_hdr.frame.xfer_joins == 1 &&
           snap_hdr.frame.textures == ntex);
     for (y = 0; y < XH; y++)
         for (x = 0; x < 80; x++) {
@@ -924,6 +969,57 @@ static void transfers(void) {
           "CLUT pass's palette)", !bad);
 }
 
+/* 2026-10-31 (cmdbuf.h): an upload into another target between draws on the 3D target leaves one pass (the Dive's
+ * particle textures in the slot capture's pages); a draw that then samples that target reads GS memory's texels
+ * (the upload marked its pages the CPU's, cpu_pages), so it stays in the pass too */
+static void upload_join(void) {
+    static u32 a[256], cc[64];
+    u32 i, x, y, bad = 0, main_passes = 0, ndraw = 0;
+    for (i = 0; i < 256; i++) a[i] = 0x80000000u | (i * 3) << 16 | (255 - i) << 8 | (i * 7 & 0xFF);
+    for (i = 0; i < 64; i++) cc[i] = 0x7F000000u | (i * 4) << 16 | 0x40 << 8 | (i * 3);
+    kh1_gsmem_reset();
+    memset(img, 0, sizeof img);
+    memset(offimg, 0, sizeof offimg);
+    env();
+    W(0x08, 5, 0);
+    xupload(0x2800, 1, KH1_PSMCT32, 0, 0, 16, 16, a, 256);       /* texture A */
+    W(0x06, TEX16(0x2800, 1, KH1_PSMCT32), TEX16_HI);
+    W(0x4C, 0x1D0 | 4 << 16, 0);                                   /* the off-screen buffer: a target this frame */
+    W(0x40, 255u << 16, 255u << 16);
+    xsprite(0, 16);
+    W(0x4C, 0xD0 | 8 << 16, 0);                                    /* the 3D target */
+    W(0x40, 511u << 16, 383u << 16);
+    xsprite(0, 16);
+    xupload(0x3A00, 4, KH1_PSMCT32, 4, 4, 8, 8, cc, 64);         /* into the off-screen buffer */
+    xsprite(16, 32);                                               /* the same scene */
+    xupload(0x3A00, 4, KH1_PSMCT32, 0, 0, 8, 8, cc, 64);
+    W(0x06, TEX16(0x3A00, 4, KH1_PSMCT32), TEX16_HI);
+    xsprite(32, 48);                                               /* samples what the upload wrote (GS memory's) */
+    do_replay = 2;
+    kh1_pipes_frame();
+    do_replay = 0;
+    for (i = 0; i < nxp; i++) {
+        printf("cmdbuf_test: upload join: pass %u: %s\n", i + 1, kh1_cmd_pass_str(&xp[i]));
+        if (xp[i].rt == KH1_RT_MAIN) main_passes++;
+    }
+    for (i = 0; i < nxc; i++)
+        if (xc[i].kind == KH1_CMD_DRAW && xc[i].k.rt == KH1_RT_MAIN) ndraw++;
+    CHECK("upload join: 3 draws on the 3D target in one pass, the last reading the uploaded texels from GS memory",
+          ndraw == 3 && main_passes == 1 && nxp == 2 && xp[1].ndraw == 3 && !xc[nxc - 1].samples);
+    CHECK("upload join: counted (two uploads inside the scene, no split)", snap_hdr.frame.xfer_joins == 2 &&
+          snap_hdr.frame.splits == 0);
+    for (y = 0; y < XH; y++)
+        for (x = 0; x < 48; x++) {
+            u32 g = kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, x, y), c = img[y][x];
+            g = (g & 0xFFFFFF) | kh1_blend_store_alpha(g >> 24) << 24;
+            if (g != c) {
+                if (!bad) printf("cmdbuf_test: upload join: pixel (%u, %u) GS %08x, commands %08x\n", x, y, g, c);
+                bad++;
+            }
+        }
+    CHECK("upload join: the list replayed gives gsmem.c's pixels", !bad);
+}
+
 int main(void) {
     kh1_gs_reset();
     kh1_gsmem_reset();
@@ -935,6 +1031,7 @@ int main(void) {
     bevel();
     passes();
     transfers();
+    upload_join();
     gxm();
     date();
     printf("cmdbuf_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);

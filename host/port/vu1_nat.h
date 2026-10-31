@@ -7,7 +7,8 @@
  * vertex instead of stored and reloaded for every instruction, the per-instruction counting, and the
  * branches the VU needed to pick a matrix that C picks once.
  *
- * kh1_vu1_native: 1 (the default) runs these where there is one; 0 the translation */
+ * kh1_vu1_native: 1 (the default) runs these where there is one; 0 the translation; 2 each run of one compared with
+ * the translation from the same state (vu1.c nat_check) */
 int kh1_vu1_native = 1;
 
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
@@ -620,6 +621,176 @@ static int nat_11(u32 pc) {
             mem[(i3 - 1) & (DATA_QW - 1)][3] = i1;
             if (!i4) break;
             np += 4;
+        }
+    }
+}
+
+/* P12, from 007: P18's record stream and output with the lighting and a guard band.  A matrix record is seven
+ * qwords (the slot's matrix, then its three light rows: vf09-11, vf16-18, vf23-25); per vertex the light rows
+ * times the normal, max 0, times vf01-03 plus vf04 (w: vf04.w, max 0), min 255, FTOI0 is the RGBA.  Then as
+ * P18, plus a CLIPW of (x - 2048, y - 2048, z through 20.12 - 2048) against 2048: the ADC also when any of the
+ * last three vertices is off it */
+static int nat_12(u32 pc) {
+    u32 np = 3, nv = 0, q = 0, cl = clip_last;
+    int grp = 0;
+    uint32x4_t v26, v27, v28 = VU_LD(vf[28]), v29 = VU_LD(vf[29]);
+    uint32x4_t v30 = VU_LD(vf[30]), v31 = VU_LD(vf[31]), a = VU_LD(acc);
+    uint32x4_t xyz = VU_LD(vu_lanes[0xe]), xy = VU_LD(vu_lanes[0xc]), lx, ly, zero = vdupq_n_u32(0);
+    float32x4_t c0 = vdupq_n_f32(0), c1 = c0, c2 = c0, c3 = c0, l0 = c0, l1 = c0, l2 = c0;
+    float32x4_t f1 = vfin(VU_LD(vf[1])), f2 = vfin(VU_LD(vf[2])), f3 = vfin(VU_LD(vf[3])), f4 = vfin(VU_LD(vf[4]));
+    float32x4_t k255 = vdupq_n_f32(255.0f), k2048 = vdupq_n_f32(2048.0f), one = vdupq_n_f32(1.0f);
+    u32 w4 = vf[4][3];
+    u16 i1, i2, i3, i4, i5, i7 = vi[7], i9 = vi[9], i10 = vi[10], i13 = vi[13], s = 0xFFFF;
+    if (pc != 7) return 0;
+    v26 = nat_u(vfin(VU_LD(vf[26])));
+    v27 = nat_u(vfin(VU_LD(vf[27])));
+    lx = ly = v26;
+    i2 = (u16)top;
+    i3 = (u16)(i2 + 0x1E0);
+    vi[11] = i3;
+    for (;;) {
+        const u32 *h = mem[i2 & (DATA_QW - 1)];
+        u16 op = (u16)h[0];
+        i4 = (u16)h[2];
+        i5 = (u16)h[3];
+        i1 = (u16)(op - 1);
+        np += 5;
+        if (!op) { /* a matrix and its light rows into slot z (0, 1, else 2): vf05-11, vf12-18, vf19-25 */
+            int r = i4 == 0 ? 5 : i4 == 1 ? 12 : 19, k;
+            np += i4 == 0 ? 11 : 14;
+            i4 = (u16)(i4 - 1);
+            i2 = (u16)(i2 + 8);
+            for (k = 0; k < 7; k++) memcpy(vf[r + k], mem[(i2 - 7 + k) & (DATA_QW - 1)], 16);
+            if (s == (u16)r) s = 0xFFFF;
+            continue;
+        }
+        i2 = (u16)(i2 + 1);
+        v31 = VU_LD(mem[i2 & (DATA_QW - 1)]);
+        i2 = (u16)(i2 + 1);
+        np += 3;
+        if (op != 1) { /* the end: the EOP word, the kick */
+            if (grp) {
+                mac_now = nat_cross_last(lx, ly, a, xyz, &v30);
+                clip_now = cl;
+                q_reg = q;
+                i_reg = 0x45000000u;
+                VU_ST(vf[26], v26);
+                VU_ST(vf[27], v27);
+            }
+            clip_last = cl;
+            vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[5] = i5;
+            vi[7] = i7; vi[9] = i9; vi[10] = i10; vi[13] = i13;
+            if (grp) vi[14] = 1;
+            VU_ST(vf[28], v28); VU_ST(vf[29], v29);
+            VU_ST(vf[30], v30); VU_ST(vf[31], v31); VU_ST(acc, a);
+            mem[i3 & (DATA_QW - 1)][0] = i13;
+            np += 10;
+            st.insns += np;
+            st.cycles += np + nv * 19;
+            kick(vi[11]);
+            tpc = 7 & (MICRO_N - 1);
+            return 1;
+        }
+        /* 038-03e: a GIF tag and z vertices (at least one), CLIP 0 */
+        grp = 1;
+        i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
+        cl = 0;
+        i10 = 0;
+        VU_ST(mem[i3 & (DATA_QW - 1)], v31);
+        i3 = (u16)(i3 + 1);
+        np += 7;
+        for (;;) {
+            uint32x4_t n = VU_LD(mem[i2 & (DATA_QW - 1)]), p = VU_LD(mem[(i2 + 1) & (DATA_QW - 1)]);
+            uint32x4_t t = VU_LD(mem[(i2 + 2) & (DATA_QW - 1)]), v, col;
+            float32x4_t pf, nf, qq, cf;
+            u32 mm;
+            int sl = i7 == 0 ? 5 : i7 == 1 ? 12 : 19;
+            i2 = (u16)(i2 + 3);
+            np += sl == 5 ? 9 : 12;
+            if (s != (u16)sl) {
+                s = (u16)sl;
+                c0 = vfin(VU_LD(vf[sl]));
+                c1 = vfin(VU_LD(vf[sl + 1]));
+                c2 = vfin(VU_LD(vf[sl + 2]));
+                c3 = vfin(VU_LD(vf[sl + 3]));
+                l0 = vfin(VU_LD(vf[sl + 4]));
+                l1 = vfin(VU_LD(vf[sl + 5]));
+                l2 = vfin(VU_LD(vf[sl + 6]));
+            }
+            /* 044-04a (or the slot's): the light rows times the normal; w vf04's; the matrix */
+            nf = vfin(n);
+            a = vfo(vmulq_f32(l0, vdupq_lane_f32(vget_low_f32(nf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(l1, vdupq_lane_f32(vget_low_f32(nf), 1))));
+            v29 = vfo(vaddq_f32(nat_f(a), vmulq_f32(l2, vdupq_lane_f32(vget_high_f32(nf), 0))));
+            v29 = vsetq_lane_u32(w4, v29, 3);
+            i9 = (u16)(i10 & 3);
+            pf = vfin(p);
+            a = vfo(vmulq_f32(c0, vdupq_lane_f32(vget_low_f32(pf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c1, vdupq_lane_f32(vget_low_f32(pf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c2, vdupq_lane_f32(vget_high_f32(pf), 0))));
+            v28 = vfo(vaddq_f32(nat_f(a), vmulq_f32(c3, vdupq_lane_f32(vget_high_f32(pf), 1))));
+            i13 = 0x8000;
+            q = nat_rcp(vgetq_lane_u32(v28, 3));
+            /* 05d-064: max 0, the colour matrix plus vf04, min 255, FTOI0 */
+            cf = vfin(v29);
+            v29 = vfo(nat_f(vflush(vbslq_u32(vcgtq_f32(cf, vdupq_n_f32(0)), nat_u(cf), zero))));
+            cf = nat_f(v29);
+            col = vfo(vmulq_f32(f1, vdupq_lane_f32(vget_low_f32(cf), 0)));
+            col = vfo(vaddq_f32(nat_f(col), vmulq_f32(f2, vdupq_lane_f32(vget_low_f32(cf), 1))));
+            col = vfo(vaddq_f32(nat_f(col), vmulq_f32(f3, vdupq_lane_f32(vget_high_f32(cf), 0))));
+            a = vbslq_u32(xyz, col, a);
+            v29 = vbslq_u32(xyz, vfo(vaddq_f32(nat_f(col), vmulq_f32(f4, one))), v29);
+            cf = nat_f(v29);
+            v29 = vfo(nat_f(vflush(vbslq_u32(vcltq_f32(cf, k255), v29, nat_u(k255)))));
+            v29 = vreinterpretq_u32_s32(vcvtq_s32_f32(nat_f(v29)));
+            /* 065-06a: STQ and xyzw times Q, out with the colour */
+            qq = nat_f(vdupq_n_u32(q));
+            v30 = vfo(vmulq_f32(vfin(t), qq));
+            v28 = vfo(vmulq_f32(nat_f(v28), qq));
+            i1 = (u16)(i5 & 1);
+            i5 = (u16)(i5 + 1);
+            VU_ST(mem[i3 & (DATA_QW - 1)], v30);
+            VU_ST(mem[(i3 + 1) & (DATA_QW - 1)], v29);
+            /* 06a-06f: x y + 0, z through 20.12, xyz - 2048; CLIPW against 2048 */
+            v = vbslq_u32(xy, vfo(vaddq_f32(nat_f(v28), vdupq_n_f32(0))), v30);
+            {
+                int32x4_t zi = vcvtq_s32_f32(vmulq_n_f32(nat_f(v28), 1.0f));
+                uint32x4_t zf = vreinterpretq_u32_f32(vmulq_n_f32(vcvtq_f32_s32(zi), 1.0f / 4096.0f));
+                v = vbslq_u32(VU_LD(vu_lanes[0x2]), zf, v);
+            }
+            i10 = (u16)(i10 + 1);
+            v = vbslq_u32(xyz, vfo(vsubq_f32(nat_f(v), k2048)), v);
+            cl = ((cl << 6) | nat_clipbits(vsetq_lane_u32(0x45000000u, v, 3))) & 0xFFFFFF;
+            /* 070-075: the screen edge (zw 0), the cross product with the last one, operands by parity */
+            v29 = vbslq_u32(xy, vfo(vsubq_f32(nat_f(v28), nat_f(v27))), zero);
+            v30 = vbslq_u32(xyz, v, v30);
+            if (i1) { lx = v26; ly = v29; } else { lx = v29; ly = v26; }
+            mm = nat_cross_z(lx, ly, xyz, &a);
+            v27 = v28;
+            v26 = v29;
+            /* 076-083: the ADC when off the guard band or the cross product's z is negative; XYZ to 12.4 */
+            i7 = 0x20;
+            i4 = (u16)(i4 - 1);
+            if (cl & 0x3FFFF) {
+                i1 = (u16)(i13 | vi[12]);
+                np += 23 + 4 + 7 + 4;
+            } else {
+                i1 = (u16)((mm & 0x20 ? i13 : 0) | vi[12]);
+                np += 23 + 4 + (mm & 0x20 ? 10 : 9) + 4;
+            }
+            v28 = vbslq_u32(xyz, vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(nat_f(v28), 16.0f))), v28);
+            {
+                u32 *o = mem[(i3 + 2) & (DATA_QW - 1)];
+                o[3] = i1;
+                vst1q_lane_u32(o, v28, 0);
+                vst1q_lane_u32(o + 1, v28, 1);
+                vst1q_lane_u32(o + 2, v28, 2);
+            }
+            i3 = (u16)(i3 + 3);
+            nv++;
+            if (!i4) break;
+            np += 5;
+            i7 = (u16)mem[i2 & (DATA_QW - 1)][3];
         }
     }
 }
@@ -1689,6 +1860,7 @@ static int (*nat_run(int num))(u32) {
     if (num == 4) return nat_4;
     if (num == 10) return nat_10;
     if (num == 11) return nat_11;
+    if (num == 12) return nat_12;
     if (num == 13) return nat_13;
     if (num == 18) return nat_18;
 #endif

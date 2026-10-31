@@ -383,5 +383,6 @@ void kh1_vita_menu_draw(void) {
     }
 }
 
-/* display.c: whether something is drawn over the picture (each draw must then be a whole one) */
-int kh1_vita_menu_overlay(void) { return open_ || kh1_vita_fps_osd; }
+/* display.c: the menu is up, so each draw is a whole one even with no new picture (present=1 skips those; the FPS
+ * counter alone needs no such draw: it is drawn again with each new picture) */
+int kh1_vita_menu_overlay(void) { return open_; }

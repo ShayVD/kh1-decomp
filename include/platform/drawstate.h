@@ -60,6 +60,9 @@ typedef struct {
     u8 fabcd;     /* fetch 1: ALPHA's A / B / C / D byte (the shader runs the GS's formula with it) */
     u8 fpsm;      /* the frame: 0 CT32, 1 CT24 (Ad is 0x80, no alpha stored), 2 CT16 / CT16S */
     u8 fbm[4];    /* FBMSK's bytes R, G, B, A: the bits the shader keeps from the target */
+    u8 lin;       /* 2026-10-31: a native draw with a texture (natdraw.h): the colour and fog arrive multiplied by the
+                   * clip w and tc.w holds w, so the shader divides them back: interpolated straight across the
+                   * screen as the GS does, not with the perspective the GPU gives every varying */
 } KH1ShaderKey;
 
 /* one GPU pipeline */

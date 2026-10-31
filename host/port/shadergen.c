@@ -128,6 +128,7 @@ static void key_str(Gen *g, const KH1ShaderKey *k) {
         put(g, "flat");
     }
     if (k->fog) put(g, " fog");
+    if (k->lin) put(g, " lin");
     if (k->discard) {
         put(g, k->discard == KH1_DISCARD_FAIL ? " discard-fail " : " discard-pass ");
         put(g, at[k->atst & 7]);
@@ -238,7 +239,9 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
     if (k->setup == 2) {} /* the clear: stencil only (its colour mask is 0) */
     else if (k->setup) put(&g, "    float4 pos : WPOS,\n    uniform sampler2D tex,\n    uniform float4 u_xf,\n");
     else {
-        put(&g, "    float4 col : COLOR0,\n");
+        /* 2026-10-31: a lin draw's colour is col x w (the native vertex shader's, below), far past 1.0: a TEXCOORD,
+         * as a COLOR varying is clamped to 0 .. 1 on the Vita's GPU (P0's floor and P11's Keyblade drew black) */
+        put(&g, k->lin && k->tex ? "    float4 col : TEXCOORD3,\n" : "    float4 col : COLOR0,\n");
         if (k->tex) put(&g, "    float4 tc : TEXCOORD0,\n");
         if (k->fog) put(&g, "    float fog : TEXCOORD1,\n");
         if (k->tex) put(&g, "    uniform sampler2D tex,\n");
@@ -265,7 +268,12 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
         put(&g, "}\n");
         return g.over ? 0 : g.n;
     }
-    st(&g, "r0", F_ROUND, "col", "255.0", "0.5"); /* Cv, 0x80 = 1.0 */
+    if (k->lin && k->tex) { /* 2026-10-31 (drawstate.h): col x w / w, straight across the screen */
+        st(&g, "r0", F_DIV, "col", "tc.wwww", 0);
+        st(&g, "r0", F_ROUND, "r0", "255.0", "0.5");
+    } else {
+        st(&g, "r0", F_ROUND, "col", "255.0", "0.5"); /* Cv, 0x80 = 1.0 */
+    }
     if (k->tex) {
         if (k->fst) st(&g, "r1.xy", F_MOV, "tc.xy", 0, 0);
         else st(&g, "r1.xy", F_DIV, "tc.xy", "tc.zz", 0);
@@ -325,7 +333,12 @@ u32 kh1_shader_frag_cg(const KH1ShaderKey *k, char *buf, u32 cap) {
         st(&g, "r4", F_MOV, "r0", 0, 0);
     }
     if (k->fog) { /* (F x C + (0xFF - F) x FOGCOL) >> 8 (fog.h) */
-        st(&g, "r5.x", F_ROUND, "fog", "255.0", "0.5");
+        if (k->lin && k->tex) {
+            st(&g, "r5.x", F_DIV, "fog", "tc.w", 0);
+            st(&g, "r5.x", F_ROUND, "r5.x", "255.0", "0.5");
+        } else {
+            st(&g, "r5.x", F_ROUND, "fog", "255.0", "0.5");
+        }
         st(&g, "r5.y", F_SUB, "255.0", "r5.x", 0);
         st(&g, "r6.xyz", F_MUL, "r4.xyz", "r5.xxx", 0);
         st(&g, "r6.xyz", F_MAD, "u_b.yzw", "r5.yyy", "r6.xyz");
@@ -402,16 +415,23 @@ u32 kh1_shader_vert_cg(u32 index, char *buf, u32 cap) {
     if (fog) put(&g, "    float fog : TEXCOORD1,\n");
     if (nat) put(&g, "    float mi : TEXCOORD2,\n    uniform float4 u_m[128],\n    out float4 opos : POSITION");
     else put(&g, "    uniform float4 u_xf,\n    out float4 opos : POSITION");
-    if (index) put(&g, ",\n    out float4 ocol : COLOR0");
+    /* 2026-10-31: a native textured variant's colour is col x w (with mi's bit 7), and its fragment shader is always
+     * lin (cmdbuf.c kh1_cmd_native): a TEXCOORD, never clamped; the lin fragment shader's col matches it */
+    if (index) put(&g, nat && tex ? ",\n    out float4 ocol : TEXCOORD3" : ",\n    out float4 ocol : COLOR0");
     if (tex) put(&g, ",\n    out float4 otc : TEXCOORD0");
     if (fog) put(&g, ",\n    out float ofog : TEXCOORD1");
     put(&g, ")\n{\n");
     if (nat) {
-        /* natdraw.h: clip = F x (pos, 1), F the 4 rows at u_m[4 mi]; z clamped to 0 .. w (the GS clamps Z) */
+        /* natdraw.h: clip = F x (pos, 1), F the 4 rows at u_m[4 mi]; z clamped to 0 .. w (the GS clamps Z) but with
+         * mi's bit 7 */
         regs(&g);
         st(&g, "r0.xyz", F_MOV, "pos.xyz", 0, 0);
         st(&g, "r0.w", F_MOV, "1.0", 0, 0);
         st(&g, "r1.x", F_ROUND, "mi", "255.0", "0.5");
+        /* 2026-10-31: mi's bit 7 (natdraw.h, P0's vertices) leaves z as it is, for the GPU to clip at 0 and w as
+         * the VU's own clipper would at its near and far planes */
+        st(&g, "r3.y", F_STEP, "128.0", "r1.x", 0);
+        st(&g, "r1.x", F_MAD, "r3.y", "-128.0", "r1.x");
         st(&g, "r1.x", F_MUL, "r1.x", "4.0", 0);
         st(&g, "r1.y", F_ADD, "r1.x", "1.0", 0);
         st(&g, "r1.z", F_ADD, "r1.x", "2.0", 0);
@@ -421,7 +441,9 @@ u32 kh1_shader_vert_cg(u32 index, char *buf, u32 cap) {
         st(&g, "r2.z", F_DOTM, "r1.z", "r0", 0);
         st(&g, "r2.w", F_DOTM, "r1.w", "r0", 0);
         st(&g, "opos.xy", F_MOV, "r2.xy", 0, 0);
-        st(&g, "opos.z", F_CLAMP, "r2.z", "0.0", "r2.w");
+        st(&g, "r3.x", F_CLAMP, "r2.z", "0.0", "r2.w");
+        st(&g, "r3.z", F_SUB, "r2.z", "r3.x", 0);
+        st(&g, "opos.z", F_MAD, "r3.y", "r3.z", "r3.x");
         st(&g, "opos.w", F_MOV, "r2.w", 0, 0);
     } else {
         /* target pixels to clip space (vertex.h): x x 2 / w - 1, y x 2 / h - 1, w 1 */
@@ -429,13 +451,24 @@ u32 kh1_shader_vert_cg(u32 index, char *buf, u32 cap) {
         st(&g, "opos.z", F_MOV, "pos.z", 0, 0);
         st(&g, "opos.w", F_MOV, "1.0", 0, 0);
     }
-    if (index) st(&g, "ocol", F_MOV, "col", 0, 0);
-    if (tex) {
+    if (nat && tex) { /* 2026-10-31: with mi's bit 7, colour and fog times w and w in otc.w (the fragment's lin
+                       * divides them back); else times 1 and 1 */
+        st(&g, "r3.w", F_SUB, "r2.w", "1.0", 0);
+        st(&g, "r3.w", F_MAD, "r3.y", "r3.w", "1.0");
+        if (index) st(&g, "ocol", F_MUL, "col", "r3.wwww", 0);
         st(&g, "otc.xy", F_MOV, "tc.xy", 0, 0);
         st(&g, "otc.z", F_MOV, tex == KH1_VTX_STQ ? "tc.z" : "1.0", 0, 0);
-        st(&g, "otc.w", F_MOV, "1.0", 0, 0);
+        st(&g, "otc.w", F_MOV, "r3.w", 0, 0);
+        if (fog) st(&g, "ofog", F_MUL, "fog", "r3.w", 0);
+    } else {
+        if (index) st(&g, "ocol", F_MOV, "col", 0, 0);
+        if (tex) {
+            st(&g, "otc.xy", F_MOV, "tc.xy", 0, 0);
+            st(&g, "otc.z", F_MOV, tex == KH1_VTX_STQ ? "tc.z" : "1.0", 0, 0);
+            st(&g, "otc.w", F_MOV, "1.0", 0, 0);
+        }
+        if (fog) st(&g, "ofog", F_MOV, "fog", 0, 0);
     }
-    if (fog) st(&g, "ofog", F_MOV, "fog", 0, 0);
     put(&g, "}\n");
     return g.over ? 0 : g.n;
 }

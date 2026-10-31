@@ -49,6 +49,11 @@ void *malloc(__SIZE_TYPE__);
 void *calloc(__SIZE_TYPE__, __SIZE_TYPE__);
 void free(void *);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
+char *getenv(const char *);
+unsigned long strtoul(const char *, char **, int);
+char *strchr(const char *, int);
+
+static void nat_flush(void); /* the native renderer's open op (below) */
 
 /* session 127: the recorder's caches (what a port's renderer would hold) */
 static KH1PalCache *pal;
@@ -100,6 +105,7 @@ static void on_xfer(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 r
     a[4] = pos_hi;
     a[5] = reg_lo;
     a[6] = reg_hi;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_upload, a, 7, 0, 0);
     tex_look = 1;
 }
@@ -140,6 +146,7 @@ static void on_clut(u32 lo, u32 hi) {
     a[1] = hi;
     a[2] = (u32)slot;
     a[3] = (u32)fill;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_clut, a, 4, 0, 0);
     a_pslot = (s16)slot;
     tex_look = 1;
@@ -177,6 +184,7 @@ static void tex_lookup(u32 lo, u32 hi) {
     a[2] = (u32)slot;
     a[3] = (u32)decoded;
     a[4] = decoded && slot >= 0 ? tex->slot[slot].n : 0;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_texture, a, 5, 0, 0);
     /* session 136: an indexed draw reads the CLUT buffer at its own CSA, loaded or not (the GS's rule, and
      * present.c's pal_for): when its entries are not the bound slot's, bind theirs */
@@ -190,6 +198,7 @@ static void tex_lookup(u32 lo, u32 hi) {
             slot = pal_get(pal_draw, pal_n, &fill);
             a[2] = (u32)slot;
             a[3] = (u32)fill;
+            nat_flush(); /* a joined native op first (2026-10-31) */
             kh1_recq_put(r_palette, a, 4, 0, 0);
             a_pslot = (s16)slot;
         }
@@ -230,10 +239,12 @@ int memcmp(const void *, const void *, __SIZE_TYPE__);
 
 /* session 146: the recorder's own state is read once its queue is done */
 const KH1Batcher *kh1_pipes_batcher(void) {
+    nat_flush();
     kh1_recq_sync();
     return &recorder()->b;
 }
 const KH1CmdRec *kh1_pipes_recorder(void) {
+    nat_flush();
     kh1_recq_sync();
     return recorder();
 }
@@ -373,6 +384,7 @@ static void prim_state(u32 prim) {
         w[k + 2] = c->xyoffset.lo;
         w[k + 3] = c->xyoffset.hi;
         for (k += 4; k < STATE_QW * 4; k++) w[k] = 0;
+        nat_flush(); /* a joined native op first (2026-10-31) */
         kh1_recq_put(r_state, 0, 0, w, STATE_QW);
         last_r = r;
         last_scissor[0] = c->scissor.lo;
@@ -394,6 +406,7 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     prim_state(prim);
     a[0] = prim;
     a[1] = n;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_prim, a, 2, (const u32 *)v, n * (u32)(sizeof *v / 16));
 }
 
@@ -404,6 +417,7 @@ void kh1_pipes_strip(u32 prim, const u32 *d, u32 n, u32 nq) {
     prim_state(prim);
     a[0] = prim;
     a[1] = n;
+    nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_strip, a, 2, d, KH1_GS_STRIP_MASK / 4 + n * (u32)(sizeof(KH1GsVert) / 16));
 }
 
@@ -418,6 +432,9 @@ u32 kh1_pipes_nat_draws, kh1_pipes_nat_tris; /* the recorder's native commands a
 #define NAT_QW 4096
 static u32 nat_op[NAT_QW][4];
 static const u32 *nat_hdr, *nat_mats;
+/* the open op's header (2 qwords) and matrices, kept: 2026-10-31, P0's runs with the same matrix and header join
+ * one op (a map object's batches), so the op can stay open past its payload */
+static u32 nat_hs[8], nat_ms[KH1_NAT_MATS * 16];
 static u32 nat_rq, nat_nrec, nat_prim, nat_gen;
 static int nat_open;
 static KH1GpuVert nat_v[KH1_NAT_VERTS];
@@ -428,10 +445,24 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
     while (nqw >= 2) {
         u32 nrec = d[1], nmat = d[2], rq = d[3], len = 2 + rq + nmat * 4, n, lost;
         if (len > nqw || nmat > KH1_NAT_MATS) break;
-        if (!d[6]) { /* not every vertex ADC */
-            n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
+        if ((d[0] & 0xFF) == 0) { /* 2026-10-31: P0 (natdraw.h): the culled triangles, then the double-sided ones */
+            u32 pass;
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
-            kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE);
+            for (pass = 0; pass < 2; pass++) {
+                n = kh1_nat_tris0(d + 8, nrec, d[4], !pass, nat_v, KH1_NAT_VERTS, &lost);
+                if (!n) continue;
+                kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat,
+                               (!pass ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | KH1_NAT_LIN);
+                kh1_pipes_nat_draws++;
+                kh1_pipes_nat_tris += n / 3;
+            }
+        } else if (!d[6]) { /* not every vertex ADC */
+            u32 lin = (d[0] & 0xFF) == 11 ? KH1_NAT_LIN : 0, i;
+            n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
+            /* 2026-10-31: P11 with z not clamped, so the GPU clips where P11 dropped what crossed its near plane */
+            if (lin) for (i = 0; i < n; i++) nat_v[i].pad[0] |= (u8)KH1_NAT_LIN;
+            kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | lin);
             kh1_pipes_nat_draws++;
             kh1_pipes_nat_tris += n / 3;
         }
@@ -445,23 +476,25 @@ static void nat_flush(void) {
     if (!nat_open) return;
     nat_open = 0;
     if (!nat_nrec) return;
-    nat_op[0][0] = nat_hdr[0];
+    nat_op[0][0] = nat_hs[0];
     nat_op[0][1] = nat_nrec;
-    nat_op[0][2] = nat_hdr[2];
+    nat_op[0][2] = nat_hs[2];
     nat_op[0][3] = nat_rq - 2;
-    memcpy(nat_op[1], nat_hdr + 4, 16);
-    memcpy(nat_op[nat_rq], nat_mats, nat_hdr[2] * 64);
+    memcpy(nat_op[1], nat_hs + 4, 16);
+    memcpy(nat_op[nat_rq], nat_ms, nat_hs[2] * 64);
     a = (u32)kh1_gs_xshift_of();
-    kh1_recq_put(r_native, &a, 1, nat_op[0], nat_rq + nat_hdr[2] * 4);
+    kh1_recq_put(r_native, &a, 1, nat_op[0], nat_rq + nat_hs[2] * 4);
 }
 
 /* the GS worker's side (gsregs.h's kh1_gs_native_hook): a payload starts (its header, its matrices), each record with
  * the PRIM in force, the end */
 static void nat_rec(u32 prim, const u32 *r) {
     u32 nq = 1 + r[2] * 2;
-    if (nat_open && (prim != nat_prim || kh1_gs_gen != nat_gen || nat_rq + nq + nat_hdr[2] * 4 > NAT_QW)) nat_flush();
-    if (nat_rq + nq + nat_hdr[2] * 4 > NAT_QW && !nat_open && 2 + nq + nat_hdr[2] * 4 > NAT_QW) return; /* cannot fit */
+    if (nat_open && (prim != nat_prim || kh1_gs_gen != nat_gen || nat_rq + nq + nat_hs[2] * 4 > NAT_QW)) nat_flush();
+    if (!nat_open && 2 + nq + nat_hdr[2] * 4 > NAT_QW) return; /* cannot fit */
     if (!nat_open) {
+        memcpy(nat_hs, nat_hdr, 32);
+        memcpy(nat_ms, nat_mats, nat_hdr[2] * 64);
         prim_state(prim);
         nat_open = 1;
         nat_prim = prim;
@@ -476,12 +509,18 @@ static void nat_rec(u32 prim, const u32 *r) {
 
 static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
     if (what == 0) {
+        /* 2026-10-31: a P0 run with the open op's header and matrix joins it (nat_rec still ends it at a new PRIM or
+         * state); anything else ends it */
+        if (nat_open && (a[0] & 0xFF) == 0 && (nat_hs[0] & 0xFF) == 0 && a[2] == nat_hs[2] &&
+            !memcmp(a + 4, nat_hs + 4, 16) && !memcmp(b, nat_ms, a[2] * 64)) {
+        } else {
+            nat_flush();
+        }
         nat_hdr = a;
         nat_mats = b;
-        nat_open = 0;
     } else if (what == 1) {
         nat_rec(prim, a);
-    } else {
+    } else if ((nat_hdr[0] & 0xFF) != 0) {
         nat_flush();
     }
 }
@@ -512,6 +551,35 @@ static void frame_begin(void) {
                rec->ncmd, nseq);
         for (i = 0; i < rec->npass; i++)
             printf("kh1-host:   pass %u: %s\n", i + 1, kh1_cmd_pass_str(&rec->pass[i]));
+    }
+    { /* KH1_HOST_CMDDUMP=A[:B]: frames A .. B's commands and passes in full (the GPU cost study, vita-build.md) */
+        static int dump_set;
+        static u32 dump_a, dump_b;
+        if (!dump_set) {
+            const char *e = getenv("KH1_HOST_CMDDUMP");
+            dump_set = 1;
+            if (e) {
+                dump_a = (u32)strtoul(e, 0, 0);
+                dump_b = strchr(e, ':') ? (u32)strtoul(strchr(e, ':') + 1, 0, 0) : dump_a;
+            } else {
+                dump_a = 1;
+            }
+        }
+        if (rec->b.frames >= dump_a && rec->b.frames <= dump_b) {
+            u32 pi = ~0u;
+            printf("kh1-host: frame %u's commands: %u passes, %u commands\n", rec->b.frames, rec->npass, rec->ncmd);
+            for (i = 0; i < rec->ncmd; i++) {
+                const KH1Cmd *c = &rec->cmd[i];
+                if (c->kind == KH1_CMD_DRAW && c->pass != pi && c->pass < rec->npass) {
+                    pi = c->pass;
+                    printf("kh1-host:  pass %u: %s\n", pi + 1, kh1_cmd_pass_str(&rec->pass[pi]));
+                }
+                printf("kh1-host:   %u: %s", i, kh1_cmd_str(rec, c));
+                if (c->kind == KH1_CMD_DRAW)
+                    printf(" tex0 %08x | %s", c->d.tex0_lo, c->d.n ? kh1_pipekey_str(&c->d.pipe[0]) : "nothing");
+                printf("\n");
+            }
+        }
     }
     kh1_gxm_frame(gxm, rec);
     if (gxm->frame.calls > gxm_max_calls) gxm_max_calls = gxm->frame.calls;
@@ -628,9 +696,29 @@ const u32 *kh1_pipes_frame_pal(s32 slot) {
     return pal->slot[slot].col;
 }
 
+/* 2026-10-31 (the native renderer's Vita run: the GS worker's frame op ~7 ms a frame, the game waiting ~0.7 s per
+ * 2.4 s for the worker): the frame op's time by part, on kh1_vu1_clock (the Vita's watchdog prints them): 0 the
+ * native op's flush, 1 the wait for the frame's recording, 2 the passes (frame_begin: kh1_cmd_frame and its log),
+ * 3 the wait for the GPU thread's last frame, 4 the copies for the GPU thread (snap_frame), 5 the rest */
+volatile u32 kh1_pipes_frame_us[6];
+extern u32 (*kh1_vu1_clock)(void);
+static u32 pf_t;
+static void pf_mark(int part) {
+    u32 t;
+    if (!kh1_vu1_clock) return;
+    t = kh1_vu1_clock();
+    if (part >= 0) kh1_pipes_frame_us[part] += t - pf_t;
+    pf_t = t;
+}
+
 void kh1_pipes_frame(void) {
+    pf_mark(-1);
+    nat_flush();
+    pf_mark(0);
     kh1_recq_sync(); /* session 146: the frame's recording done */
+    pf_mark(1);
     frame_begin();
+    pf_mark(2);
     if (kh1_pipes_frame_hook && kh1_pipes_snap) {
         u32 a = kh1_pipes_frame_arg;
         if (kh1_pipes_gpu_put && empty_frame() && (snap_empty || (snap_empty = (KH1CmdRec *)calloc(1, sizeof *snap_empty)))) {
@@ -646,6 +734,7 @@ void kh1_pipes_frame(void) {
             return;
         }
         if (kh1_pipes_gpu_wait) kh1_pipes_gpu_wait(); /* the last frame's hook is done with the copies */
+        pf_mark(3);
         empty_posted = 0;
         if (snap_frame()) {
             printf("kh1-host: pipes: the frame's copy failed (no memory): the GPU frame on this thread from now\n");
@@ -653,8 +742,10 @@ void kh1_pipes_frame(void) {
             kh1_pipes_job_arg = a;
             kh1_pipes_frame_hook(rec);
         } else if (kh1_pipes_gpu_put) {
+            pf_mark(4);
             kh1_pipes_gpu_put(w_hook, &a, 1);
         } else {
+            pf_mark(4);
             w_hook(&a, 0, 0);
         }
     } else if (kh1_pipes_frame_hook) {
@@ -662,6 +753,7 @@ void kh1_pipes_frame(void) {
         kh1_pipes_frame_hook(rec);
     }
     frame_end();
+    pf_mark(5);
 }
 
 void kh1_pipes_draw(const KH1GsDraw *g) {
@@ -722,8 +814,9 @@ static void report_cmds(void) {
            t->dpasses, t->dloads, t->dstores, t->ddiscards, t->dopen);
     /* session 127: the transfers between the draws */
     printf("kh1-host:   transfers: %u uploads, %u copies, %u CLUT loads (%u palette fills), %u texture decodes (%u texels); "
-           "%u read a render target, %u write one; %u scenes split by a transfer on their own target\n", t->uploads,
-           t->copies, t->cluts, t->pal_fills, t->textures, t->texels, t->tgt_reads, t->tgt_writes, t->splits);
+           "%u read a render target, %u write one; %u scenes split by a transfer on their own target, %u uploads into "
+           "another target inside a scene; %u times passes drawn ahead of a scene they split\n", t->uploads, t->copies,
+           t->cluts, t->pal_fills, t->textures, t->texels, t->tgt_reads, t->tgt_writes, t->splits, t->xfer_joins, t->hoists);
     {   /* session 128: the GXM calls (include/platform/gxmrec.h) */
         const KH1GxmCount *g = &gxm->total;
         printf("kh1-host:   gxm: %u frames, %u calls (a frame at most %u, %u scenes), %u scenes (%u load, %u store), %u draws, "
@@ -760,7 +853,6 @@ typedef struct _IO_FILE FILE;
 FILE *fopen(const char *, const char *);
 int fclose(FILE *);
 __SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, FILE *);
-char *getenv(const char *);
 int sprintf(char *, const char *, ...);
 
 static void put_file(const char *dir, const char *name, u32 n, const char *text, u32 len) {
@@ -792,6 +884,7 @@ static void report_shaders(u32 vmask) {
 
 void kh1_pipes_report(void) {
     u32 i, vmask, nv;
+    nat_flush();
     kh1_recq_sync();
     if (rec) {
         if (batcher.frame.prims) kh1_pipes_frame(); /* the last frame's primitives */

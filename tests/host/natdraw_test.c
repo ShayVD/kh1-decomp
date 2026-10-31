@@ -204,10 +204,53 @@ static void tris(void) {
     CHECK("tris: out full: 1 triangle written, 2 lost", n == 3 && lost == 2);
 }
 
+/* 2026-10-31: P0's records (natdraw.h kh1_nat_tris0): one triangle at a time with each flag word P0's meshes use,
+ * drawn natively (the double-sided list, or the culled list with the winding rule) exactly when P0 draws it:
+ * its flag's low half not 0, and with 0x20 the Z sign flag of -cross(p1 - p0, p2 - p0) x the flag clear */
+static void tris0(void) {
+    static const u32 flags[5] = { 0, 0x3F800020u, 0xBF800020u, 0x3F800002u, 0xBF800002u };
+    u32 r[4 + 3 * 8], t, j, bad = 0, drawn = 0, total = 0, n, lost;
+    KH1GpuVert out[8];
+    for (t = 0; t < 2000; t++) {
+        f32 s[3][2], z;
+        u32 fl = flags[t % 5];
+        int p0, nat;
+        memset(r, 0, sizeof r);
+        r[2] = 3;
+        for (j = 0; j < 3; j++) {
+            u32 *v = r + 4 + j * 8;
+            s[j][0] = rnd(1800.0f, 2300.0f);
+            s[j][1] = rnd(1800.0f, 2300.0f);
+            v[0] = bits_of(s[j][0]);
+            v[1] = bits_of(s[j][1]);
+            v[2] = bits_of(1.0f);
+            v[3] = j == 2 ? fl : 0;
+            v[7] = 0x80402010u;
+        }
+        z = -((s[1][0] - s[0][0]) * (s[2][1] - s[0][1]) - (s[1][1] - s[0][1]) * (s[2][0] - s[0][0]));
+        if (z > -1e-3f && z < 1e-3f) continue;
+        if (fl >> 31) z = -z;
+        p0 = (fl & 0xFFFF) && !((fl & 0x20) && z < 0.0f);
+        n = kh1_nat_tris0(r, 1, 0x77, 0, out, 8, &lost);
+        nat = n == 3;
+        if (!nat) {
+            n = kh1_nat_tris0(r, 1, 0x77, 1, out, 8, &lost);
+            nat = n == 3 && (out[1].x - out[0].x) * (out[2].y - out[0].y) - (out[1].y - out[0].y) * (out[2].x - out[0].x) >= 0.0f;
+        }
+        if (n == 3 && (out[0].rgba[0] != 0x10 || out[0].rgba[3] != 0x80 || out[0].f != 0x77 || out[0].pad[0] != 0x80)) bad++;
+        total++;
+        drawn += p0;
+        if (nat != p0) bad++;
+    }
+    printf("natdraw_test: tris0: %u triangles, %u drawn by P0's rule\n", total, drawn);
+    CHECK("tris0: P0's flags and back-face test as the culled / double-sided lists and the winding rule", !bad && drawn && drawn < total);
+}
+
 int main(void) {
     fold();
     cull();
     tris();
+    tris0();
     if (fails) { printf("natdraw_test: %d of %d checks failed\n", fails, checks); return 1; }
     printf("natdraw_test: PASS (%d checks)\n", checks);
     return 0;

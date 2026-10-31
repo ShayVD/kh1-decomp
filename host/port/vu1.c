@@ -1190,6 +1190,54 @@ static void tr_check(int prog, u32 pc) {
     }
 }
 
+/* kh1_vu1_native == 2 (KH1_HOST_VU1NAT=2 / vu1nat=2): a program written by hand runs, then the translation from
+ * the same state, every result compared as tr_check() does, the pairs and cycles too (the counts tr_checked /
+ * tr_differ); the translation's run is the one kept.  Answers 0 where there is no native form or it gave the run up */
+static int nat_check(int prog, u32 pc) {
+    static const char *names[11] = { "Q", "P", "I", "R", "MAC", "clip", "clip_last", "tpc", "top", "itop", "the kicks" };
+    static char buf[32];
+    int (*f)(u32) = nat_run(tr_progs[prog].num);
+    void (*out)(const u32 *, u32) = kh1_vu1_kick;
+    KH1Vu1Stats keep = st, got;
+    const char *what = 0;
+    u32 i, k;
+    if (!f) return 0;
+    tr_hash = 2166136261u;
+    tr_save(&tr_a);
+    kh1_vu1_kick = tr_hash_kick;
+    tr_out = 0;
+    if (!f(pc)) {
+        kh1_vu1_kick = out;
+        st = keep;
+        return 0;
+    }
+    tr_save(&tr_b);
+    got = st;
+    st = keep;
+    tr_load(&tr_a);
+    tr_out = out;
+    tr_hash = 2166136261u;
+    tr_lost = 0;
+    tr_progs[prog].run(pc);
+    kh1_vu1_kick = out;
+    tr_save(&tr_a);
+    if (got.insns != st.insns) what = "pairs";
+    else if (got.cycles != st.cycles) what = "cycles";
+    for (i = 0; !what && i < 11; i++) if (tr_a.r[i] != tr_b.r[i]) what = names[i];
+    for (i = 0; !what && i < 16; i++) if (tr_a.vi[i] != tr_b.vi[i]) { sprintf(buf, "vi%02u", i); what = buf; }
+    for (i = 0; !what && i < 32; i++)
+        for (k = 0; k < 4; k++) if (!what && tr_a.vf[i][k] != tr_b.vf[i][k]) { sprintf(buf, "vf%02u%c", i, "xyzw"[k]); what = buf; }
+    for (k = 0; !what && k < 4; k++) if (tr_a.acc[k] != tr_b.acc[k]) what = "ACC";
+    for (i = 0; !what && i < DATA_QW; i++)
+        for (k = 0; k < 4; k++) if (!what && tr_a.mem[i][k] != tr_b.mem[i][k]) { sprintf(buf, "mem %03x", i); what = buf; }
+    st.tr_checked++;
+    if (what) {
+        st.tr_differ++;
+        if (tr_bad++ < 20) printf("kh1-vu1: native P%d from %03x differs from the translation: %s\n", tr_progs[prog].num, pc, what);
+    }
+    return 1;
+}
+
 static void start_run(u32 pc);
 static void start(u32 pc) {
     u32 t0;
@@ -1240,7 +1288,22 @@ static void start_run(u32 pc) {
         int ran;
         tr_lost = 0;
         /* the native renderer (vu1_draw.h): the run's records handed to the GPU instead */
-        ran = kh1_vu1_draw && tr_progs[prog].num == 18 && nd_18(pc);
+        ran = kh1_vu1_draw && ((tr_progs[prog].num == 18 && nd_18(pc, 18)) ||
+                                (tr_progs[prog].num == 11 && kh1_vu1_draw_p11 && nd_18(pc, 11)) ||
+                                (tr_progs[prog].num == 10 && kh1_vu1_draw_p10 && nd_10(pc)) ||
+                                (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc, 0)) ||
+                                (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)));
+        if (tr_progs[prog].num == 10 && pc == 0) nd_10_setup(); /* the RGBAQ its kick sets, for nd_10's payload */
+        if (!ran && kh1_vu1_natcheck && (tr_progs[prog].num == 0 || tr_progs[prog].num == 4)) { /* KH1_HOST_NATCHECK */
+            void (*sv)(const u32 *, u32) = kh1_vu1_draw;
+            kh1_vu1_draw = 0;
+            if (!nd_0(pc, tr_progs[prog].num == 4)) {
+                ran = tr_go(prog, pc);
+                nd_0_check();
+            }
+            kh1_vu1_draw = sv;
+        }
+        if (!ran && kh1_vu1_native == 2) ran = nat_check(prog, pc);
         if (!ran) ran = tr_go(prog, pc);
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
             tr_us[prog] += kh1_vu1_clock() - t0;

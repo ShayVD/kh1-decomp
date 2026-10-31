@@ -6,6 +6,7 @@
  * static packets (tools/host/drawpipes.py --passes).  Not part of the PS2 build (it lives outside src/). */
 #include "common.h"
 #include "platform/cmdbuf.h"
+#include "platform/natdraw.h"
 #include "platform/shadergen.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
@@ -109,13 +110,38 @@ static void new_pass(KH1CmdRec *r, const KH1BatchKey *k, const KH1RenderPass *rp
     }
 }
 
+/* the target a draw samples (1 + its index; 0 none: no texture, or GS memory's texels through the texture cache) */
+static u32 sampled(KH1CmdRec *r, const KH1DrawState *d, u8 *wtex) {
+    *wtex = 0;
+    if (d->pipe[0].shader.tex) {
+        u32 tbp = d->tex0_lo & 0x3FFF, tbw = d->tex0_lo >> 14 & 63, psm = d->tex0_lo >> 20 & 63, t;
+        /* session 137v: not when an upload wrote its pages since the target's last draw (cpu_pages) */
+        if (!(tbp & 31)) {
+            t = tgt_find(r, tgt_key(kh1_target_id(tbp / 32, tbw, psm), tbp / 32, tbw), 0);
+            if (t != ~0u) { /* the texture's rows inside the target (a 512-row binding of a 384-row target) */
+                u32 th = 1u << ((d->tex0_lo >> 30 | d->tex0_hi << 2) & 15), rows = r->tpages[t] / (tbw ? tbw : 1) * 32;
+                if (!cpu_pages(r, tbp, tbw, psm, 0, 0, 1u << (d->tex0_lo >> 26 & 15), th < rows || !rows ? th : rows, 2)) {
+                    *wtex = r->tsw[t] > 0.0f;
+                    return t + 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 static void new_cmd(KH1CmdRec *r, const KH1BatchKey *k, const KH1DrawState *d, const KH1RenderPass *rp) {
     KH1Cmd *c;
-    u8 *u;
+    u8 *u, wtex;
+    u32 smp = sampled(r, d, &wtex);
     int same = r->npass && same_pass(&r->pass[r->npass - 1], k);
+    if (same && !r->split && smp && (r->pwrote >> (smp - 1) & 1)) r->split = 1; /* a target written in this pass */
     if (same && r->split) r->frame.splits++;
-    if (!same || r->split) new_pass(r, k, rp);
-    else if (r->pass[r->npass - 1].depth != k->depth && k->depth != KH1_DS_NONE) {
+    if (!same || r->split) {
+        new_pass(r, k, rp);
+        r->pwrote = 0;
+        smp = sampled(r, d, &wtex); /* new_pass gave the target's pages back to the GPU (cpu_pages) */
+    } else if (r->pass[r->npass - 1].depth != k->depth && k->depth != KH1_DS_NONE) {
         r->pass[r->npass - 1].depth = k->depth; /* the scene binds the depth buffer from its start */
         r->frame.depth_joins++;
     } else if (r->pass[r->npass - 1].depth != k->depth) {
@@ -144,31 +170,22 @@ static void new_cmd(KH1CmdRec *r, const KH1BatchKey *k, const KH1DrawState *d, c
     } else {
         c->lost = 1;
     }
-    if (d->pipe[0].shader.tex) {
-        u32 tbp = d->tex0_lo & 0x3FFF, tbw = d->tex0_lo >> 14 & 63, psm = d->tex0_lo >> 20 & 63, t;
-        /* session 137v: not when an upload wrote its pages since the target's last draw (cpu_pages) */
-        if (!(tbp & 31)) {
-            t = tgt_find(r, tgt_key(kh1_target_id(tbp / 32, tbw, psm), tbp / 32, tbw), 0);
-            if (t != ~0u) { /* the texture's rows inside the target (a 512-row binding of a 384-row target) */
-                u32 th = 1u << ((d->tex0_lo >> 30 | d->tex0_hi << 2) & 15), rows = r->tpages[t] / (tbw ? tbw : 1) * 32;
-                if (!cpu_pages(r, tbp, tbw, psm, 0, 0, 1u << (d->tex0_lo >> 26 & 15), th < rows || !rows ? th : rows, 2)) {
-                    c->samples = (u8)(t + 1);
-                    c->wtex = r->tsw[t] > 0.0f;
-                }
-            }
-        }
+    if (smp) {
+        c->samples = (u8)smp;
+        c->wtex = wtex;
     }
 }
 
 /* Clears (the GS has none): the pass's leading draws that write every channel without reading the target
  * (no blend, no partial mask, no frame fetch, no DATE), as axis-aligned rectangles (sprites) clipped to their
  * command's final scissor (a column group's union), covering the target: the game clears in 32-pixel strips.
- * Coverage is kept on an 8 x 8 cell grid (a cell counts when every pixel of it inside the target is covered),
+ * Coverage is kept on an 8 x 8 cell grid (a cell counts when every pixel of it inside the target is covered:
+ * cell[] holds a bit per column),
  * so a pass of strips counts as cleared.  For depth the same with the draws that write Z under ALWAYS,
  * before the first draw that tests Z. */
 #define CELL 8
 #define CELLS_W 128 /* targets up to 1024 x 1024 at the cell size */
-static u8 cell[CELLS_W][CELLS_W];
+static u8 cell[CELLS_W][CELLS_W], cmask[CELLS_W];
 
 static int reads_dst(const KH1DrawState *d, u32 psm) {
     const KH1PipeKey *k = &d->pipe[0];
@@ -209,15 +226,23 @@ static int cover_cmd(const KH1CmdRec *r, const KH1CmdPass *p, const KH1Cmd *c) {
          * rising with it), not the whole grid for every rectangle (Dive to the Heart: 133M of the GS worker's
          * 1,978M host instructions over 60 frames, now 6M) */
         /* session 147d: the columns once, the same for every row (a full-screen rectangle was ~60K instructions) */
-        cx0 = px0 > 0 ? (px0 + CELL - 1) / CELL : 0;
-        for (cx = cx0; cx * CELL < (s32)p->w && cx < CELLS_W; cx++) {
-            s32 ex = cx * CELL + CELL < (s32)p->w ? cx * CELL + CELL : (s32)p->w;
-            if (px1 < ex) break;
+        /* 2026-10-31: a cell keeps which of its 8 columns are covered (a bit each, the ones past the target's
+         * edge set), so strips that do not meet on the cell grid still add up: the wide view scales the game's
+         * 32-pixel strips to 42.3 target pixels (the Dive's depth clear, vita-build.md "The GPU's work in the
+         * Dive").  Rows still count whole cells only. */
+        if (px1 > CELLS_W * CELL) px1 = CELLS_W * CELL;
+        if (px0 >= px1) continue;
+        cx0 = px0 / CELL;
+        for (cx = cx0; cx * CELL < px1; cx++) {
+            s32 a = px0 > cx * CELL ? px0 - cx * CELL : 0, b = px1 < cx * CELL + CELL ? px1 - cx * CELL : CELL;
+            u32 m = (0xFFu << a) & (0xFFu >> (CELL - b));
+            if (cx * CELL + CELL > (s32)p->w) m |= 0xFFu << ((s32)p->w - cx * CELL);
+            cmask[cx] = (u8)m;
         }
-        for (cy = py0 > 0 ? (py0 + CELL - 1) / CELL : 0; cx > cx0 && cy * CELL < (s32)p->h && cy < CELLS_W; cy++) {
-            s32 ey = cy * CELL + CELL < (s32)p->h ? cy * CELL + CELL : (s32)p->h;
+        for (cy = py0 > 0 ? (py0 + CELL - 1) / CELL : 0; cy * CELL < (s32)p->h && cy < CELLS_W; cy++) {
+            s32 ey = cy * CELL + CELL < (s32)p->h ? cy * CELL + CELL : (s32)p->h, i2;
             if (py1 < ey) break;
-            memset(&cell[cy][cx0], 1, (u32)(cx - cx0));
+            for (i2 = cx0; i2 < cx; i2++) cell[cy][i2] |= cmask[i2];
         }
     }
     return 1;
@@ -228,7 +253,7 @@ static int all_cells(const KH1CmdPass *p) {
     if (!p->w || !p->h || p->w > CELL * CELLS_W || p->h > CELL * CELLS_W) return 0;
     for (cy = 0; cy * CELL < (s32)p->h; cy++)
         for (cx = 0; cx * CELL < (s32)p->w; cx++)
-            if (!cell[cy][cx]) return 0;
+            if (cell[cy][cx] != 0xFF) return 0;
     return 1;
 }
 
@@ -364,7 +389,17 @@ void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
     KH1Cmd *c;
     u8 *u;
     u32 bytes = nmat * 64;
+    static KH1DrawState nd; /* 2026-10-31: a texture, the shader's lin (drawstate.h): r->in_d here */
+    u32 i;
     if (!n || !nmat || nmat > 255) return;
+    /* 2026-10-31: every native textured draw is lin, not only KH1_NAT_LIN's: the native textured vertex shader hands
+     * its colour over in a TEXCOORD (shadergen.c; a COLOR varying is clamped on the Vita), which only the lin
+     * fragment shader reads.  Without mi's bit 7 its w is 1, so the divide changes nothing */
+    if (d->pipe[0].shader.tex) {
+        nd = *d;
+        for (i = 0; i < 2; i++) nd.pipe[i].shader.lin = 1;
+        d = &nd;
+    }
     kh1_batch_break(&r->b); /* nothing before joins it */
     r->in_d = d;
     r->in_p = p;
@@ -376,7 +411,7 @@ void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
     }
     c = &r->cmd[r->cur];
     c->nmat = (u8)nmat;
-    c->cull = (u8)cull;
+    c->cull = (u8)(cull & ~KH1_NAT_LIN);
     u = (u8 *)kh1_ring_alloc(&r->uring, bytes, KH1_RING_UNIFORM_SLOT);
     if (u) {
         memcpy(u, mats, bytes);
@@ -417,7 +452,17 @@ void kh1_cmd_upload(KH1CmdRec *r, u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32
     c->x.h = (u16)(reg_hi & 0xFFF);
     c->x.dst = tgt_at(r, bb_hi & 0x3FFF, bb_hi >> 16 & 63, c->x.dx, c->x.dy, c->x.w, c->x.h);
     if (dir == 2) c->x.src = tgt_at(r, bb_lo & 0x3FFF, bb_lo >> 16 & 63, c->x.sx, c->x.sy, c->x.w, c->x.h);
-    if (c->x.src || c->x.dst) r->split = 1;
+    if (c->x.src || dir == 2) {
+        if (c->x.src || c->x.dst) r->split = 1;
+    } else if (c->x.dst) { /* an upload: only into the open pass's own target (cmdbuf.h, 2026-10-31) */
+        u32 t = c->x.dst - 1u;
+        if (!r->npass || r->pass[r->npass - 1].tgt == t) {
+            r->split = 1;
+        } else {
+            r->pwrote |= 1u << t;
+            r->frame.xfer_joins++;
+        }
+    }
     if (dir == 0 || dir == 2) cpu_pages(r, bb_hi & 0x3FFF, bb_hi >> 16 & 63, bb_hi >> 24 & 63, c->x.dx, c->x.dy, c->x.w, c->x.h, !c->x.src);
 }
 
@@ -556,6 +601,126 @@ static void xfer_walk(KH1CmdRec *r, const KH1Cmd *c, const s32 *w, u8 *xw) {
     }
 }
 
+int kh1_cmd_hoist = 1;
+
+/* 2026-10-31: kh1_cmd_hoist.  A pass on target T, then passes on other targets (the group G), then T again with the
+ * same depth buffer: the GPU ends T's scene for G and loads T's colour and depth again after it (the Dive: the
+ * shadow's two small passes between the 3D scene and its tail, ~2 MiB of tile loads and stores a picture).  When G
+ * and T's first pass do not touch each other's work, G's commands (with the transfers just before them) go ahead of
+ * T's first pass and the two T passes become one.  Not touching: G samples, reads or writes neither T nor T's depth
+ * buffer; T's first pass samples no target G draws or samples and copies from none; neither side's texture or
+ * palette uploads land in a slot the other side's draws use or uploads into (their order would change what a draw
+ * sees).  An upload T's first pass made into a target G draws or samples (the Dive: the shadow buffer's base image,
+ * sent during the 3D scene since it no longer ends it) is G's: it goes ahead with G, in its order */
+static int g_upload(const KH1Cmd *c, u32 g, u8 T) {
+    return (c->kind == KH1_CMD_UPLOAD || c->kind == KH1_CMD_COPY) && c->x.dst && c->x.dst - 1u != T &&
+           (g >> (c->x.dst - 1u) & 1) && (!c->x.src || c->x.src - 1u != T);
+}
+static void cmd_swap(KH1Cmd *a, KH1Cmd *b) {
+    KH1Cmd t = *a;
+    *a = *b;
+    *b = t;
+}
+static void cmd_rev(KH1CmdRec *r, u32 a, u32 b) { /* [a, b) reversed */
+    while (a + 1 < b) cmd_swap(&r->cmd[a++], &r->cmd[--b]);
+}
+static int slot_clash(const KH1Cmd *x, const KH1Cmd *y) { /* x's upload against y's draw or upload */
+    if (x->kind == KH1_CMD_TEXTURE && x->x.slot >= 0)
+        return (y->kind == KH1_CMD_DRAW && y->tslot == x->x.slot) || (y->kind == KH1_CMD_TEXTURE && y->x.slot == x->x.slot);
+    if (x->kind == KH1_CMD_CLUT && x->x.slot >= 0 && x->x.fill)
+        return (y->kind == KH1_CMD_DRAW && y->pslot == x->x.slot) ||
+               (y->kind == KH1_CMD_CLUT && y->x.fill && y->x.slot == x->x.slot);
+    return 0;
+}
+static u32 hoist_g; /* hoist_ok's G targets (drawn, written or sampled) */
+static int hoist_ok(const KH1CmdRec *r, u32 a, u32 b) {
+    const KH1CmdPass *m = &r->pass[a], *t = &r->pass[b];
+    u32 s = m->cmd0, mid = m->cmd0 + m->ncmd, e = r->pass[b - 1].cmd0 + r->pass[b - 1].ncmd, i, j, gt = 0, gs = 0;
+    u8 T = m->tgt;
+    if (T >= KH1_CMD_TARGETS || t->w != m->w || t->h != m->h) return 0;
+    for (i = a + 1; i < b; i++) {
+        const KH1CmdPass *g = &r->pass[i];
+        if (g->tgt >= KH1_CMD_TARGETS || g->tgt == T) return 0;
+        if (g->depth != KH1_DS_NONE && (g->depth == m->depth || g->depth == t->depth)) return 0;
+        gt |= 1u << g->tgt;
+    }
+    for (i = mid; i < e; i++) { /* G (and the transfers before it) */
+        const KH1Cmd *c = &r->cmd[i];
+        if (c->kind == KH1_CMD_DRAW && c->samples) {
+            if (c->samples - 1u == T) return 0;
+            gs |= 1u << (c->samples - 1u);
+        }
+        if (c->kind != KH1_CMD_DRAW && ((c->x.src && c->x.src - 1u == T) || (c->x.dst && c->x.dst - 1u == T))) return 0;
+        if (c->kind != KH1_CMD_DRAW && c->x.dst) gt |= 1u << (c->x.dst - 1u);
+    }
+    for (i = s; i < mid; i++) { /* T's first pass */
+        const KH1Cmd *c = &r->cmd[i];
+        if (c->kind == KH1_CMD_DRAW && c->samples && ((gt | gs) >> (c->samples - 1u) & 1)) return 0;
+        if (c->kind != KH1_CMD_DRAW && c->x.src && ((gt | gs) >> (c->x.src - 1u) & 1)) return 0;
+        if (c->kind != KH1_CMD_DRAW && c->x.dst && ((gt | gs) >> (c->x.dst - 1u) & 1) && !g_upload(c, gt | gs, T)) return 0;
+        for (j = mid; j < e; j++)
+            if (slot_clash(c, &r->cmd[j]) || slot_clash(&r->cmd[j], c)) return 0;
+    }
+    /* the T passes' join: the transfers between them leave T alone */
+    for (i = e; i < t->cmd0; i++) {
+        const KH1Cmd *c = &r->cmd[i];
+        if (c->kind != KH1_CMD_DRAW && ((c->x.src && c->x.src - 1u == T) || (c->x.dst && c->x.dst - 1u == T))) return 0;
+    }
+    hoist_g = gt | gs;
+    return 1;
+}
+static void hoist(KH1CmdRec *r) {
+    u32 a, b, i, j, k;
+    if (r->dropped) return;
+    for (a = 0; a + 2 < r->npass; a++) {
+        KH1CmdPass *m = &r->pass[a], keep;
+        u32 s, mid, e, n;
+        for (b = a + 1; b < r->npass && r->pass[b].tgt != m->tgt; b++) ;
+        if (b == r->npass || b == a + 1) continue;
+        if (r->pass[b].rt != m->rt || r->pass[b].psm != m->psm || r->pass[b].fbp != m->fbp || r->pass[b].fbw != m->fbw)
+            continue;
+        if (m->depth != KH1_DS_NONE && r->pass[b].depth != KH1_DS_NONE && m->depth != r->pass[b].depth) continue;
+        if (m->cmd0 + m->ncmd > r->pass[a + 1].cmd0 || !hoist_ok(r, a, b)) continue;
+        s = m->cmd0;
+        mid = m->cmd0 + m->ncmd;
+        e = r->pass[b - 1].cmd0 + r->pass[b - 1].ncmd;
+        /* the commands: [s, mid) [mid, e) -> [mid, e) [s, mid) */
+        cmd_rev(r, s, mid);
+        cmd_rev(r, mid, e);
+        cmd_rev(r, s, e);
+        n = e - mid;
+        /* G's uploads from T's first pass ahead of G, in their order: [s, s + k) */
+        for (i = s + n, k = 0; i < e; i++)
+            if (g_upload(&r->cmd[i], hoist_g, m->tgt)) {
+                for (j = i; j > s + k; j--) cmd_swap(&r->cmd[j], &r->cmd[j - 1]);
+                k++;
+            }
+        keep = *m;
+        for (i = a; i + 1 < b; i++) {
+            r->pass[i] = r->pass[i + 1];
+            r->pass[i].cmd0 -= mid - s;
+            r->pass[i].cmd0 += k;
+        }
+        /* T's first pass now runs to its tail's end, the tail's draws and the transfers before it included */
+        keep.cmd0 += n + k;
+        keep.ncmd = r->pass[b].cmd0 + r->pass[b].ncmd - keep.cmd0;
+        keep.ndraw += r->pass[b].ndraw;
+        if (keep.depth == KH1_DS_NONE) keep.depth = r->pass[b].depth;
+        keep.ztest |= r->pass[b].ztest;
+        keep.zwrite |= r->pass[b].zwrite;
+        keep.zseen |= r->pass[b].zseen;
+        keep.feedback |= r->pass[b].feedback;
+        r->pass[b - 1] = keep;
+        for (i = b; i + 1 < r->npass; i++) r->pass[i] = r->pass[i + 1];
+        r->npass--;
+        for (i = 0; i < r->npass; i++)
+            for (j = r->pass[i].cmd0; j < r->pass[i].cmd0 + r->pass[i].ncmd && j < r->ncmd; j++)
+                if (r->cmd[j].kind == KH1_CMD_DRAW) r->cmd[j].pass = i;
+        r->frame.hoists++;
+        a = b - 2; /* the joined pass again (a++ next): its new tail may follow */
+    }
+}
+
 void kh1_cmd_frame(KH1CmdRec *r) {
     s32 w[KH1_CMD_TARGETS], dw[3];
     u32 i, j, *f, *t, next = 0;
@@ -563,6 +728,7 @@ void kh1_cmd_frame(KH1CmdRec *r) {
     KH1CmdCount *fc = &r->frame;
     kh1_batch_frame(&r->b); /* a repeat cut short is replayed first */
     r->held = -1;
+    if (kh1_cmd_hoist) hoist(r);
     for (i = 0; i < KH1_CMD_TARGETS; i++) w[i] = -1;
     dw[0] = dw[1] = dw[2] = -1;
     memset(xw, 0, sizeof xw);
@@ -648,6 +814,7 @@ void kh1_cmd_reset_frame(KH1CmdRec *r) {
     r->held = -1;
     r->cur = -1;
     r->split = 0;
+    r->pwrote = 0;
     r->open_pending = 0;
     memset(&r->frame, 0, sizeof r->frame);
     kh1_ring_frame(&r->vring);
