@@ -717,15 +717,61 @@ static void vertex(void) {
             if (dx < -1e-3f || dx > 1e-3f || dy < -1e-3f || dy > 1e-3f || o[2] != g.z || o[3] != 1.0f) bad++;
         }
         {
-            if (b && run.v[KH1_SV_OCOL][3] != g.rgba[3] / 255.0f) bad++;
+            /* 2026-10-31: colour and fog times 1, 1 in otc.w (without mi's bit 7: below) */
+            f32 wv = 1.0f, d;
+            d = b ? run.v[KH1_SV_OCOL][3] - g.rgba[3] / 255.0f * wv : 0.0f;
+            if (d < -1e-5f || d > 1e-5f) bad++;
             if (tex && (run.v[KH1_SV_OTC][0] != g.s || run.v[KH1_SV_OTC][1] != g.t ||
-                        run.v[KH1_SV_OTC][2] != (tex == 2 ? g.q : 1.0f)))
+                        run.v[KH1_SV_OTC][2] != (tex == 2 ? g.q : 1.0f) || run.v[KH1_SV_OTC][3] != wv))
                 bad++;
-            if (fog && run.v[KH1_SV_OFOG][0] != g.f / 255.0f) bad++;
+            d = fog ? run.v[KH1_SV_OFOG][0] - g.f / 255.0f * wv : 0.0f;
+            if (d < -1e-5f || d > 1e-5f) bad++;
             if (run.bad) bad++;
         }
     }
-    CHECK("vertex: the 14 vertex shaders (7 native: F x position, z clamped) map to clip space and pass the attributes on", !bad);
+    { /* 2026-10-31: mi's bit 7 (P0's vertices): z not clamped, and with a texture colour and fog times w, w in tc.w */
+        u32 lb = 0;
+        for (i = KH1_VERT_NAT; i < KH1_VERT_VARIANTS; i++) {
+            u32 b = i - KH1_VERT_NAT, tex = b >= 5 ? 2 : b >= 3 ? 1 : 0, fog = b && !(b & 1);
+            const f32 *m = um + 16;
+            f32 e[4], w, d;
+            u32 k;
+            kh1_shader_vert_cg(i, text, sizeof text);
+            memset(&run, 0, sizeof run);
+            set4(run.v[KH1_SV_POS], 100.5f, 300.25f, -40.0f, 0.0f); /* z far below 0: clamped without the bit */
+            set4(run.v[KH1_SV_COL], 0.5f, 0.25f, 0.125f, 0.75f);
+            set4(run.v[KH1_SV_TC], 0.125f, 0.625f, 1.0f, 0.0f);
+            run.v[KH1_SV_FOG][0] = 0.5f;
+            run.v[KH1_SV_MI][0] = 129.0f / 255.0f; /* matrix 1, the bit */
+            run.um = um;
+            run.um_rows = 8;
+            exec(text);
+            for (k = 0; k < 4; k++) e[k] = m[k * 4] * 100.5f + m[k * 4 + 1] * 300.25f + m[k * 4 + 2] * -40.0f + m[k * 4 + 3];
+            for (k = 0; k < 4; k++)
+                if (run.v[KH1_SV_OPOS][k] - e[k] < -1e-3f || run.v[KH1_SV_OPOS][k] - e[k] > 1e-3f) lb++;
+            w = tex ? e[3] : 1.0f;
+            d = b ? run.v[KH1_SV_OCOL][3] - 0.75f * w : 0.0f;
+            if (d < -1e-3f || d > 1e-3f) lb++;
+            if (tex && (run.v[KH1_SV_OTC][3] - w < -1e-3f || run.v[KH1_SV_OTC][3] - w > 1e-3f)) lb++;
+            d = fog ? run.v[KH1_SV_OFOG][0] - 0.5f * w : 0.0f;
+            if (d < -1e-3f || d > 1e-3f) lb++;
+            if (run.bad) lb++;
+            /* 2026-10-31: col x w goes past 1.0, so never in a COLOR varying (clamped on the Vita) */
+            if (b && tex && (!strstr(text, "out float4 ocol : TEXCOORD3") || strstr(text, "ocol : COLOR"))) lb++;
+        }
+        CHECK("vertex: native with mi's bit 7: z as computed, colour / fog times w and w in tc.w with a texture", !lb);
+        {
+            KH1ShaderKey k;
+            memset(&k, 0, sizeof k);
+            k.tex = 1;
+            k.lin = 1;
+            kh1_shader_frag_cg(&k, text, sizeof text);
+            CHECK("fragment: a lin shader reads its colour from TEXCOORD3 (the native vertex shader's)",
+                  strstr(text, "float4 col : TEXCOORD3") && !strstr(text, "COLOR0"));
+        }
+    }
+    CHECK("vertex: the 14 vertex shaders (7 native: F x position, z clamped) map to clip space and pass the attributes on "
+          "(native, mi's bit 7 clear: as before)", !bad);
 }
 
 /* ---- the GXM vertex stream (vertex.h kh1_vertex_attrs) ---- */

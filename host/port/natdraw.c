@@ -54,6 +54,55 @@ u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVer
     return n;
 }
 
+/* P0's vertex: (x, y, z, flags), (s, t, 1, rgba) */
+static void put0(KH1GpuVert *o, const u32 *v, u32 f) {
+    o->x = nf(v[0]);
+    o->y = nf(v[1]);
+    o->z = nf(v[2]);
+    o->s = nf(v[4]);
+    o->t = nf(v[5]);
+    o->q = nf(v[6]);
+    o->rgba[0] = (u8)v[7];
+    o->rgba[1] = (u8)(v[7] >> 8);
+    o->rgba[2] = (u8)(v[7] >> 16);
+    o->rgba[3] = (u8)(v[7] >> 24);
+    o->f = (u8)f;
+    o->pad[0] = 0x80; /* matrix 0, z not clamped (shadergen.c: the GPU clips it at P0's near and far planes) */
+    o->pad[1] = o->pad[2] = 0;
+}
+/* 2026-10-31: P0's records (natdraw.h): the triangle ending at vertex j is drawn when its flag word's low half is
+ * not 0; with bit 0x20 (the Z sign flag of P0's cross product times the flag as a float) it is dropped when the
+ * product is negative.  P0's product is -cross(p1 - p0, p2 - p0) in screen space (y down), so with a positive flag
+ * the triangle is kept when that cross is <= 0 (listed with its first two vertices swapped, to the one winding rule
+ * the cull mode keeps), with a negative flag when >= 0 (as it is).  Without 0x20 (0x02: only a zero product, a
+ * triangle with no area, which draws nothing anyway) it is not culled.  culled 1 lists the first kind, 0 the
+ * second */
+u32 kh1_nat_tris0(const u32 *data, u32 nrec, u32 f, int culled, KH1GpuVert *out, u32 max, u32 *lost) {
+    u32 r, j, n = 0;
+    *lost = 0;
+    for (r = 0; r < nrec; r++) {
+        u32 nv = data[2];
+        const u32 *v = data + 4;
+        for (j = 2; j < nv; j++) {
+            const u32 *a = v + (j - 2) * 8, *b = v + (j - 1) * 8, *c = v + j * 8;
+            u32 fl = c[3] & 0xFFFF;
+            if (!fl || ((fl & 0x20) != 0) != (culled != 0)) continue;
+            if (n + 3 > max) { (*lost)++; continue; }
+            if (culled && !(c[3] >> 31)) {
+                put0(&out[n], b, f);
+                put0(&out[n + 1], a, f);
+            } else {
+                put0(&out[n], a, f);
+                put0(&out[n + 1], b, f);
+            }
+            put0(&out[n + 2], c, f);
+            n += 3;
+        }
+        data += 4 + nv * 8;
+    }
+    return n;
+}
+
 void kh1_nat_fold(const KH1RenderPass *p, u32 zbuf_lo, s32 xshift16, const u32 *mats, u32 nmat, f32 *out) {
     /* vertex.h's x: ((X - OFX + 8) / 16 + ox) x scale with X = 16 x gx (+ the shift), then x 2 / w - 1 */
     f32 ax = p->w ? 2.0f * p->scale / (f32)p->w : 0.0f, ay = p->h ? 2.0f * p->scale / (f32)p->h : 0.0f;

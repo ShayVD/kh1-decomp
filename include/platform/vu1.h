@@ -30,6 +30,14 @@ extern void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
  * kh1_vu1_drawn counts them */
 extern void (*kh1_vu1_draw)(const u32 *q, u32 nqw);
 extern u32 kh1_vu1_drawn;
+/* 2026-10-31: P0 and P4 (the map's strips) drawn that way too (1, the default; config.txt natp0=0 / KH1_HOST_NATP0=0 keeps
+ * them on the VU1 programs with the rest native) */
+extern int kh1_vu1_draw_p0;
+/* 2026-10-31: P11 (renderer B's unlit models with the near-plane cull) too (1, the default; natp11=0 / KH1_HOST_NATP11=0) */
+extern int kh1_vu1_draw_p11;
+/* 2026-10-31: P10 (the shadow pass's untextured strips) too (1, the default; natp10=0 / KH1_HOST_NATP10=0) */
+extern int kh1_vu1_draw_p10;
+extern int kh1_vu1_natcheck; /* host: KH1_HOST_NATCHECK=1, P0 run and checked against its payload (vu1_draw.h) */
 /* 1: a line per program run */
 extern int kh1_vu1_verbose;
 /* with kh1_vu1_verbose: the program run (from 1) whose start state is written to vu1_snap.bin */
@@ -62,7 +70,7 @@ int kh1_vu1_prog_stats(int i, int *num, u32 *us, u32 *runs, u32 *pairs);
 
 /* 1 (the default): a program out/gen/vu1_tr.c has runs as its C; 0: the interpreter only; 2: both, compared */
 extern int kh1_vu1_tr;
-extern int kh1_vu1_native; /* session 150: 1 (the default) the programs written as C where there is one (vu1_nat.h) */
+extern int kh1_vu1_native; /* session 150: 1 (the default) the programs written as C where there is one (vu1_nat.h); 2 each one checked against the translation */
 
 /* every kh1_vu1_dump_every-th run's start state to kh1_vu1_dump_dir/vuNNNNN.bin (offline replays; scratch) */
 extern const char *kh1_vu1_dump_dir;

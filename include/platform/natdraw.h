@@ -41,11 +41,24 @@
 #define KH1_NAT_MATS 32            /* matrices a native draw command reads (u_m's 128 rows) */
 #define KH1_NAT_VERTS 16384        /* GPU vertices a native run lists at most (3 a triangle) */
 enum { KH1_NAT_CULL_NONE, KH1_NAT_CULL_CCW, KH1_NAT_CULL_CW };
+/* 2026-10-31: or'd into kh1_cmd_native's cull: the vertices carry mi's bit 7 (P0's): colour and fog straight across
+ * the screen (drawstate.h lin) and z not clamped */
+#define KH1_NAT_LIN 0x80u
 
 /* the GPU vertices of a run's records (data: the records as above, nrec of them; mats: the run's matrix count, a
  * record's index past it is dropped as ADC), with the run's rgba / f: the number written (at most max), and the
  * triangles dropped in *lost when out was full */
 u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVert *out, u32 max, u32 *lost);
+
+/* 2026-10-31: P0's payload (program 0, docs/native-renderer.md stage 3): one record a run (its batch), one matrix (the
+ * screen matrix times the clip one, the VU's columns), qword 1's word 0 the F all vertices get (P0's I register);
+ * a vertex is (x, y, z, the strip flag word), (s, t, 1.0, RGBA: ST already / 4096 and the colour already scaled as
+ * P0 scales it).  kh1_nat_tris0 lists the triangles P0 back-face culls (culled 1, for a draw with the cull mode) or
+ * those it does not (culled 0, a draw with none), in the winding kh1_nat_tris uses.  P0's clipper (a triangle
+ * across the guard box, split into a fan on the VU) is not reproduced: the GPU clips at its own frustum, with z
+ * clamped as for P18, so a triangle across the guard box's near or far plane is drawn whole (z clamped) where the
+ * VU drew its inside part */
+u32 kh1_nat_tris0(const u32 *data, u32 nrec, u32 f, int culled, KH1GpuVert *out, u32 max, u32 *lost);
 
 /* F = N x M for each of nmat matrices (VU column order, raw floats) into out (4 rows of 4 floats a matrix, the
  * vertex shader's u_m), for a pass and the draw's ZBUF (its PSM picks depth.h's scale) and the GS's X shift in

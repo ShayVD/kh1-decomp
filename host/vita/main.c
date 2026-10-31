@@ -24,7 +24,8 @@
  *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
  *                             interpreter only; 2 both, compared (slow; differences go to the log)
  *       vu1nat=N              session 150: 1 (the default) runs the programs written by hand as C
- *                             (host/port/vu1_nat.h, P18 so far) in place of their translation; 0 the translation
+ *                             (host/port/vu1_nat.h: P0, P4, P10-P13, P18) in place of their translation; 0 the
+ *                             translation; 2 runs both and compares them (kh1-vu1 lines, vu1 "checked" counts)
  *       shadertest=1          session 137v: at start, which part of the REGION_REPEAT shader SceShaccCg refuses
  *                             ("kh1-gxm: shadertest" lines; gxm.c)
  *       shacc_restart=1       session 137v: restart the shader compiler when a shader fails (off: hangs Vita3K)
@@ -50,6 +51,18 @@
  *                             default) keeps the GS path
  *       natcull=N             with renderer=native, the cull mode of P18's back-face-culled runs: 1 (the default)
  *                             CCW in the window, 2 CW, 0 none (if Sora shows his inside, try 2)
+ *       natp0=0               with renderer=native, P0 and P4 (the map's strips) on the VU1 programs as before
+ *                             (2026-10-31; 1, the default, draws them natively too)
+ *       natp11=0              with renderer=native, P11 (renderer B's unlit models with a near-plane cull) on its VU1
+ *                             program as before (2026-10-31; 1, the default, draws it natively, the GPU clipping it)
+ *       natp10=0              with renderer=native, P10 (the shadow pass's untextured strips) on its VU1 program
+ *                             (2026-10-31; 1, the default, draws it natively)
+ *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
+ *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
+ *       present=0             copy each picture into a surface of its own and present it every frame (as before
+ *                             2026-10-31); 1, the default: each new picture presented once, from the display target
+ *       gputime=1             log each 2 s how long the GPU spent on each kind of scene (gxm.c; a polling thread, so
+ *                             the frame rate of such a run is a little lower: for the split, not the speed)
  *       rcam=N                1 (the default) turns the camera with the right stick's x (sent as R2 / L2, host/vita/
  *                             pad.c); -1 the same the other way round; 0 sends the right stick as it is (the PS2's:
  *                             the command menu's cursor)
@@ -58,6 +71,8 @@
  *                             null server (silence)
  *       sndcore=N             pins the sound's tick thread and mixer to core N (0, 1 or 2); the default, -1, lets
  *                             them run on any core below the game's threads
+ *       sndprio=N             the sound's tick thread and mixer's priority against the game's threads (2026-10-31):
+ *                             16, the default, below them; -4 above them (try it if the sound breaks up)
  *       wide=N                how the picture fills the 960 x 544 screen (docs/vita-build.md "Wide screen"): 1 (the
  *                             default) a 16:9 view, hor+ (the 3D sees more at the sides, host/port/view.c), the HUD's
  *                             gauges and command menu at the screen's edges, menus and text in the centred 4:3
@@ -82,7 +97,7 @@
 #include <string.h>
 #include "common.h"
 /* host/vita/audio.c: the sound */
-extern int kh1_vita_snd, kh1_vita_snd_core;
+extern int kh1_vita_snd, kh1_vita_snd_core, kh1_vita_snd_prio;
 extern u32 kh1_vita_snd_us, kh1_vita_snd_tick_us, kh1_vita_snd_bufs, kh1_vita_snd_under, kh1_vita_snd_queued;
 void kh1_vita_audio_init(void);
 int kh1_snd_active(void);
@@ -458,6 +473,28 @@ static int watchdog(SceSize args, void *argp) {
                 for (i = 0; i < KH1_VU1_PROGS; i++)
                     if (kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs)) { p_us[i] = us; p_runs[i] = runs; p_pairs[i] = pairs; }
             }
+            if (kh1_vita_gputime) { /* 2026-10-31: the scenes' GPU time (gxm.c), by target kind */
+                static const char *const kn[KH1_GT_KINDS] = { "display", "Z as colour", "movie", "3D target", "slot capture",
+                                                              "off-screen", "CLUT pass", "other", "?" };
+                static u32 us0[KH1_GT_KINDS], n0[KH1_GT_KINDS], sus0, sn0, polls0;
+                char line[512];
+                u32 i, all = 0;
+                int len;
+                for (i = 0; i < KH1_GT_KINDS; i++) all += kh1_vita_gt_us[i] - us0[i];
+                len = snprintf(line, sizeof line, "kh1-vita: gpu time: %u ms busy;", all / 1000);
+                for (i = 0; i < KH1_GT_KINDS; i++) {
+                    if (kh1_vita_gt_n[i] != n0[i])
+                        len += snprintf(line + len, sizeof line - len, " %s %u ms (%u scenes),", kn[i],
+                                        (kh1_vita_gt_us[i] - us0[i]) / 1000, kh1_vita_gt_n[i] - n0[i]);
+                    us0[i] = kh1_vita_gt_us[i];
+                    n0[i] = kh1_vita_gt_n[i];
+                }
+                vlog("%s of them %u ms in %u scenes of 1-2 draws; %u polls\n", line, (kh1_vita_gt_small_us - sus0) / 1000,
+                     kh1_vita_gt_small_n - sn0, kh1_vita_gt_polls - polls0);
+                sus0 = kh1_vita_gt_small_us;
+                sn0 = kh1_vita_gt_small_n;
+                polls0 = kh1_vita_gt_polls;
+            }
             if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
                 static u32 n0, d0, t0;
                 vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles\n", kh1_vu1_drawn - n0,
@@ -483,6 +520,18 @@ static int watchdog(SceSize args, void *argp) {
                 for (i = 0; i < k && o < (int)sizeof ob - 40; i++)
                     if (us[i] >= 1000) o += snprintf(ob + o, sizeof ob - o, " %08x %u ms (%u),", fn[i], us[i] / 1000, nn[i]);
                 vlog("kh1-vita: gs worker ops:%s\n", o ? ob : " none over 1 ms");
+                { /* 2026-10-31: the frame op (w_gpu_frame) by part (pipes.c kh1_pipes_frame_us) */
+                    extern volatile u32 kh1_pipes_frame_us[6];
+                    static u32 pf0[6];
+                    u32 d[6], j;
+                    for (j = 0; j < 6; j++) {
+                        d[j] = kh1_pipes_frame_us[j] - pf0[j];
+                        pf0[j] += d[j];
+                    }
+                    vlog("kh1-vita: gs worker's frame op: %u ms the native flush, %u waiting for the recording, %u the "
+                         "passes, %u waiting for the GPU thread, %u the copies for it, %u the rest\n", d[0] / 1000,
+                         d[1] / 1000, d[2] / 1000, d[3] / 1000, d[4] / 1000, d[5] / 1000);
+                }
             }
             /* session 147: of the rest, the large LoadImages the game thread stores itself (gsimage.c LOAD_HERE) */
             vlog("kh1-vita: large uploads: %u ms on the game thread, %u of them (%u unchanged), %u KiB\n",
@@ -568,6 +617,12 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
         else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
         else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
+        else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
+        else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
+        else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
+        else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
+        else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
+        else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -584,6 +639,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
         else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
         else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
+        else if (strcmp(line, "sndprio") == 0) kh1_vita_snd_prio = atoi(v);
         else if (strcmp(line, "wide") == 0 || strcmp(line, "widescreen") == 0) wide = atoi(v);
         else if (strcmp(line, "strip") == 0) strip_always = atoi(v);
     }
@@ -745,6 +801,11 @@ int main(int argc, char **argv) {
         /* session 141: on the third core, out of the game's and the GS worker's way */
         SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
         if (t >= 0) sceKernelStartThread(t, 0, 0);
+    }
+    if (gpu_on && kh1_vita_gputime) { /* 2026-10-31: the scenes' GPU time (gxm.c), a poll on any core above the game's */
+        SceUID t = sceKernelCreateThread("kh1_gputime", kh1_vita_gputime_thread, 0x10000100 - 8, 0x2000, 0, 0, 0);
+        if (t >= 0) sceKernelStartThread(t, 0, 0);
+        vlog("kh1-vita: gputime=1: each scene's GPU time polled (the frame rate is lower for it)\n");
     }
     kh1_vita_audio_init();
     vlog("kh1-vita: func_00100558 (the game's main)\n");

@@ -1396,6 +1396,39 @@ for vf23 / vf24, no stack saves of those), a SUB.xyz where P0 has SUB.xyzw in 12
 without the back-face test. P4 is ~115-150 ms per 2 s in the busy stretches, so it is the next VU1 program worth
 doing after this.
 
+## P12 as hand-written C, and vu1nat=2 (2026-10-31)
+
+P12 (renderer B's lit models, docs/renderer-spec.md 2.3) was the largest VU1 program still run as its translation
+(~7% of the game thread's instructions on a Vita, "Clocks and compiler flags" above). `nat_12` in vu1_nat.h runs it
+from 007 the way nat_11 / nat_13 do: P18's record stream, with matrix records of seven qwords (the slot's matrix and
+then its three light rows, vf09-11 / vf16-18 / vf23-25) and per vertex:
+
+- the light rows times the normal, w from vf04.w (MOVE.w), MAX 0 on all four fields; vf01-03 times that plus vf04
+  (xyz), MINI 255 (I), FTOI0: the RGBA written after STQ;
+- Q = 1 / w, STQ and xyzw times Q; the guard band vector (x + 0, y + 0, z through FTOI0 / ITOF12, then xyz - 2048)
+  CLIPW against 2048 (vf29.w = vf00.w * I);
+- the screen edge and the cross product's z sign as in P18; the ADC when FCAND 0x3FFFF (any of the last three
+  vertices off the band) or that sign is negative; XYZ to 12.4.
+
+The run's MAC flag is the last vertex's OPMSUB in full, CLIP the band bits, I 2048, vi07 0x20, vi09 the vertex's
+count in its group & 3 (before vi10's increment), vi13 0x8000 once a vertex ran. Stalls: 19 cycles a vertex (05e,
+063, 064, 06d, 06e, 06f and the OPMULA), none elsewhere.
+
+**`vu1nat=2` / `KH1_HOST_VU1NAT=2`** (vu1.c `nat_check`, committed): every run that has a native form runs it and
+then the translation from the same state, and compares the registers, Q / I / MAC / clip, VU memory, the kicks'
+hash and also the pairs and cycles (the `vu1 frame` line's "checked (N differ)", `kh1-vu1: native P.. differs`
+lines). The translation's run is the one kept. It needs a NEON build (the Vita, or `make vita-armcheck` and
+qemu-arm; `apt install gcc-arm-linux-gnueabihf` gives the compiler); on x86 there is no native form to check.
+
+Checked: the ARM Linux build under qemu-arm, the English disc's Dive (dive_en.txt), 7,000 frames with
+`KH1_HOST_VU1NAT=2`: 608,784 native runs of all the native programs (P12 13,530 of them), none different. A build
+with nat_12's cycle count off by one on runs of more than 40 vertices reports "differs ... cycles" (20 lines and the
+counts), so the check sees a one-cycle slip. qemu-arm wall time of P12 over those frames (a timer around each run,
+so its kicks are in it): 1.95 s native against 2.12 s translated (92%); P11 and P18 measure 90% / 89% the same way,
+and they came out 20-36% faster on a Vita, so P12 is expected to be about as much faster there. P12 is a small share
+of the Dive as a whole (2.0 s of ~75 s of VU1 run time on qemu over the 7,000 frames); the stretches with the lit
+models are where it shows. **Not measured on a Vita.**
+
 ## The GS worker after the native VU1 programs (session 150)
 
 zv on the Vita (P0's main loop native): 15.8 pictures a second over frames 1,500-13,000, flat on zu's 15.75,
@@ -1611,8 +1644,156 @@ a FIFO; the RPCs whose answer the game reads wait on the tick thread's lock.
   playing the driver does about 60% more work in Dive on the host (1.30 G IOP instructions over the first
   20,000 frames instead of 0.80 G); watch the "short" count on the sound line in busy rooms.
 
+## The GPU's work in the Dive (2026-10-31)
+
+The Dive ran at ~15.7-16 pictures/s on a Vita, GPU-bound: ~31 ms of GPU a picture, every thread waiting on it
+(the start-of-frame wait ~540 ms per 2 s; native-renderer.md "The GPU is now the limit"). This section is what the
+GPU spends a picture on, measured on the host, and the three cuts that came out of it. **Everything here is
+measured on the host's GPU stand-in (gxmcheck) with the English disc; nothing in it has run on a Vita yet.**
+
+### Measuring: KH1_HOST_GXM_COST and gputime=1
+
+- **Host: `KH1_HOST_GXM_COST=1`** (gxmcheck, tests/host/gxm_mock.c) prints each scene of each checked frame
+  (`KH1_HOST_GXM_FROM=` / `KH1_HOST_GXM=`): its target and size, whether colour and depth are loaded and stored
+  (an SGX scene loads and stores whole tiles: the "colour / depth KiB" columns are that traffic), draws,
+  vertices, triangles, fragments, of them blended, textured and reading the frame, then a frame total. It
+  counts what the mock rasterises, so it is the GPU's work, not its time.
+- **Host: `KH1_HOST_CMDDUMP=A[:B]`** (host/null/pipes.c) prints the recorder's commands and passes for frames
+  A..B (`kh1_cmd_str`, `kh1_pipekey_str`): which command split which pass.
+- **Vita: `gputime=1`** (config.txt; gxm.c `kh1_vita_gputime_thread`). GXM has no timer queries, so a thread
+  polls the scene notifications every 0.1 ms and gives each completed scene the time since the later of the
+  previous scene's end and its own submit. Every 2 s the log has `kh1-vita: gpu time: N ms busy; 3D target N
+  ms (S scenes), display ..., of them N ms in S scenes of 1-2 draws; P polls`. The scenes of 1-2 draws are
+  where the time is mostly tile loads and stores. The vita2d scene (the present) is not tracked: its time
+  lands on the next tracked scene. The poll costs some CPU, so such a run is for the split, not the frame rate.
+
+### What a Dive picture cost (frame 5101, main 2f80e41)
+
+21 scenes on the 3D target alone, for 41 draws: **19.9 MB of colour tiles loaded and 19.9 MB stored, 15.5 MB of
+depth loaded and 14.5 MB stored** (678 x 384 x 4 bytes = 1 MB a full load or store). The fragments were
+modest: 1.45 M (~5.6 times the target's 678 x 384), 650 K blended, 75 K reading the frame. ~70 MB of tile
+traffic a picture is likely most of the ~31 ms (an estimate from the memory's bandwidth, not measured: gputime=1
+on a Vita will say), so the scene count, not the shading, was the thing to cut.
+
+**Why 21 scenes**: the fog and light particles upload a 128 x 128 T8 texture and its CLUT before each of their
+draws, into GS pages that belong to other targets (the slot capture's 0x3600 and the off-screen buffer's 0x3A00).
+cmdbuf.c `kh1_cmd_upload` set `split` for every upload that touched any target, and gxmrec.c ended the scene at
+every upload, so each particle draw got a scene of its own on the 3D target: load the whole colour and depth,
+draw ~20-100 fragments, store both. The draws read those texels from GS memory (cpu_pages marks the pages the
+CPU's), not from the target, and gxm.c writes uploads into a target from the frame's end state between scenes
+(`pend_add` / `pend_flush`), so nothing needed the split.
+
+### Cut 1: an upload into another target does not end the pass (cmdbuf.c, gxmrec.c)
+
+- `kh1_cmd_upload`: an upload (not a copy, not a read-back) into a target other than the open pass's own sets a
+  bit in `pwrote` and counts `xfer_joins` instead of splitting. Into the open pass's own target it still splits
+  (the pass's draws after it must see it).
+- `new_cmd`: a draw in the same pass that samples a target in `pwrote` splits it (the GPU copy is stale until
+  the upload is flushed). In practice such a draw reads GS memory instead (cpu_pages), so it does not happen in
+  the Dive.
+- gxmrec.c: an UPLOAD command ends the scene only when the next draw is not in the same pass.
+- The transfers report (pipes.c) says `N uploads into another target inside a scene`.
+- tests/host/cmdbuf_test.c `upload_join`: three draws on the 3D target with two uploads into the off-screen
+  buffer between them stay one pass, the last draw reads the uploaded texels, and the list replayed gives
+  gsmem.c's pixels.
+
+Frame 5101: **21 scenes to 7; colour 5.7 + 5.7 MB, depth 3.3 + 2.3 MB.**
+
+### Cut 2: the depth clear across the wide view's strips (cmdbuf.c `cover_cmd`)
+
+The merged 3D scene still loaded depth: `zcleared` was false although the game clears depth over the whole
+target first. The game clears in 32-pixel strips; the wide view scales them to 42.3 target pixels, and the
+clear detection counted a cell of its 8 x 8 grid only when one rectangle covered all of it, so the cells
+straddling two strips never counted (the first hole at cell (5, 0), x 40-47). Before cut 1 the clear happened to
+sit in a scene of its own and the next scene loaded what it stored; with the scenes merged the load was the
+whole depth buffer every picture. Each cell now keeps a bit per column (`cell[]`, the columns past the target's
+edge set) and counts when all 8 are set, so strips add up wherever they meet. Rows still count whole cells (no
+clear seen in horizontal strips off the grid). cmdbuf_test "passes": 12 strips of 42-43 pixels clear the target.
+
+Frame 5101: **6 scenes; colour 4.7 + 4.7 MB, depth 1.3 MB loaded + 2.3 MB stored** (the 3D scene's depth no
+longer loaded; what is left is the shadow depth and the 3D target's second scene after the slot capture
+samples it, which must load). Over main: ~70 MB of tile traffic a picture to ~13 MB, the fragments unchanged.
+The six scenes, in order: the 3D target's fade (1 draw), the display copy, the 3D scene (33 draws), the shadow
+depth, the slot capture, the 3D target's last 3 draws.
+
+### Cut 3: present each picture once, from the display target (gxm.c, display.c; present=1)
+
+Before: every game frame (the Dive's empty every other frame too) ran a vita2d scene with a 960 x 544 clear and
+the present quad, after a full `sceGxmFinish`, and each frame copy also copied the display target (678 x 448)
+into `shown_tgt` so the present always had a whole picture. Now (config.txt `present=1`, the default):
+
+- `kh1_vita_gxm_latch` only marks a fresh picture; `kh1_vita_draw` with the picture over the whole screen and no
+  status strip draws only when there is one, and without the clear under the opaque quad. Between pictures the
+  screen keeps the last one (no swap).
+- The present reads the display target itself. GXM runs scenes in order on the one context (vita2d's), so the
+  present sees the target as that frame left it, before the next frame's scenes draw into it.
+- A frame with no GXM calls (the Dive's empty frame) returns before `finish_at(0)` and `pend_flush`: the next
+  frame's start does both.
+
+Per picture this saves the copy (~0.3 M fragments, ~2.4 MB of tiles), one 960 x 544 clear and present (~1 M
+fragments, ~4 MB), the second clear, and one full sceGxmFinish on the empty frame. `present=0` is the copy and the
+present every frame as before, the fallback if the picture tears or flickers.
+
+### Cut 4: the shadow's passes drawn ahead of the 3D scene (cmdbuf.c `hoist`; hoist=1)
+
+After cuts 1-3 a Dive picture was 6 scenes: the overlay band, the display copy, the main 3D scene (33 draws), the
+shadow (256 x 256 into target 3, bp 3600), the 256 x 192 sprite into target 2, and a 3-draw tail on the 3D target
+again. The shadow's two scenes split the 3D target, so its colour (~1 MB) and depth were stored and reloaded.
+
+`hoist` (kh1_cmd_frame, before the loads and stores are worked out) moves passes G that sit between two passes of
+the same target T (M, then a tail with matching target, size and a compatible depth) to before M, and joins M and
+the tail. It moves them only when that cannot change a pixel:
+
+- G draws into other targets only, samples nothing of T and transfers nothing to or from T; its depth buffer is
+  not M's or the tail's.
+- Nothing in M samples or copies from what G draws or samples. An upload in M into a target G draws (the Dive's:
+  the shadow buffer's base image, 64 x 128 into bp 3600) moves ahead with G, in order; any other transfer into G's
+  targets refuses the move.
+- No texture slot or CLUT slot that G fills is read or refilled by M (`slot_clash`), and the gap before the tail
+  touches nothing of T.
+
+Frame 5101 (KH1_HOST_GXM_COST): 6 scenes to 5; colour 4,685 KiB loaded and stored to 3,668; depth loaded 1,273 KiB
+to 256, stored 2,290 to 1,273: ~3 MB less tile traffic a picture. `hoist=0` (config.txt) / `KH1_HOST_HOIST=0`
+turns it off. Checked: cmdbuf_test (a small pass between two 3D passes moves and the 3D target is one cleared
+pass; one that samples the 3D target does not move; hoist=0 keeps 3 passes; the GXM calls match), every 50th
+frame's targets hashed over 7,000 Dive frames identical to main's (280 hashes), and renderer=native's 84
+pictures identical to the build before. Host only.
+
+### Checked
+
+- `make test`: cmdbuf_test 53 checks (the two new ones above), kh1.elf byte-identical.
+- The picture: every 50th frame's targets hashed (`KH1_HOST_GXM_HASH=1`) over 7,000 Dive frames with main
+  2f80e41, cut 1 (two versions), and cuts 1 + 2: identical (280 hashes each), and frames 5096-5103 of every
+  build hashed alike. Cut 3 is Vita-only code (gxm.c, display.c); it compiles with vitasdk and is not exercised by the host.
+- **Not checked**: anything on a Vita: the frame rate, gputime's numbers, present=1's picture (tearing, a stale
+  frame).
+
+### What to expect, and the next limit
+
+The GPU's frame should drop from ~31 ms to well under the CPU's: the host shows ~4-6x less tile traffic and the
+same fragments. The Dive is then CPU-bound. From the native1 log (2026-10-30): the game thread is ~84 % busy, ~51
+ms of work a picture, which caps the Dive near **18-20 pictures/s**, not 30; the GS worker is busy ~2.2 s of
+2.4 s (588 ms of it waiting on the recording) and the GPU thread ~1.4 s of frame jobs (546 ms of them GPU waits)
+plus ~0.8 s recording. Reaching 30 needs the game thread's VU1 time cut (native P0, the map's strips, ~600 ms per
+2.4 s; then P13) and the recording's per-vertex work, native-renderer.md's stages 2-5.
+
+**Native P0 (later the same night, native-renderer.md "Stage 3 first")** takes P0's ~600 ms per 2.4 s off the game
+thread (a ~0.1 of it parse instead, by the host's instruction counts), which would put the game thread near ~37 ms
+a picture; the GS worker (~42 ms of work a picture in native1's log, less now its P0 kicks are gone) is then the
+likely limit. That is an estimate from the host's counts and the old log, not a measurement: with
+`renderer=native` the expectation is somewhere around 20-25 pictures/s.
+
+**For the next Vita run**: `gputime=1` once (the split by target kind, and how much is in 1-2 draw scenes), and
+one run without it for the frame rate; if the picture flickers or shows an old frame, `present=0`.
+
 ## What next, in order
 
+0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
+   then the same with `renderer=native` (native P0 since 2026-10-31, native-renderer.md "Stage 3 first": host-only
+   so far; `natp0=0` turns P0 and P4 off). P12 is native on the CPU too ("P12 as hand-written C"). Next for the
+   game thread: P13 on the GPU (native-renderer.md), then P1 / P2, the last programs run as their translation.
+   With renderer=native P11 and P10 go to the GPU too (native-renderer.md "P11 too", "P10 too"; `natp11=0`,
+   `natp10=0` turn them off).
 1. Booted in Vita3K (above). Next real-disc checks: run the host runner on the ISO for longer and
    with pad scripts, and look for more overruns of the allarea.nam kind (a disc file's length
    copied into a name the host sizes from its PS2 neighbour).

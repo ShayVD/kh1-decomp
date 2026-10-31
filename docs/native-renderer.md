@@ -103,9 +103,127 @@ gain, as expected while the GPU is the limit (the start-of-frame wait ~540 ms pe
 worker was busy ~2.27 s of 2.4 s there and waited 627 ms on the recording (the GPU thread). The picture looked right
 (Shay, by eye: the default natcull=1 is GXM's matching cull mode).
 
+**The GPU's frame cut (2026-10-31, host-measured only)**: vita-build.md "The GPU's work in the Dive". The ~31 ms
+was mostly the SGX's tile loads and stores: 21 scenes a picture on the 3D target, one for each particle draw
+(their texture uploads split the scene), ~70 MB of tile traffic. On the host's stand-in that is now 6 scenes and
+~13 MB with the same pictures, and the present no longer copies or clears. With the GPU off the critical path the
+Dive should become CPU-bound at ~18-20 pictures/s (the game thread's ~51 ms of work a picture in native1's log),
+so the stages below, P0 first, are what is left between that and 30. The native path's own draw count matters
+less now that scenes, not draws, were the cost.
+
+## Stage 3 first: P0, the map's strips (2026-10-31, host only)
+
+Moved ahead of P13: P0 is the game thread's biggest program in the Dive (~570-700 ms per 2.4 s on a Vita, native1's
+log), and with the GPU's frame cut (vita-build.md "The GPU's work in the Dive") the game thread is expected to be
+the limit. On with `renderer=native` (config.txt), `natp0=0` keeps P0 (and P4) on the VU1 programs with P18 still native;
+host `KH1_HOST_NATIVE=1`, `KH1_HOST_NATP0=0`. P4 (below) goes with it.
+
+**The flow** is P18's (above) with a payload of its own (natdraw.h, program 0):
+
+- vu1_draw.h `nd_0`, at P0's batch entry (00c or its idle 04e): one batch is one record: the GIF tag (NLOOP n, PRE
+  PRIM), then per vertex the position and its strip flag word, ST already divided by 4096, and RGBA already
+  scaled by vf31 and truncated as P0's ITOF0 / MUL / FTOI0 do (a few operations a vertex, where P0 runs its whole
+  transform, clip test, divide and cross product). One matrix: the screen matrix (vf01-04) times the clip one
+  (vf13-16), so x / w, y / w and z / w are the VU's after its divide. F is the I register (P0's MULI.w). The run
+  leaves qw48.y (the clipped fans' PRIM, from the tag's w) and the idle PC, as P0 would.
+- pipes.c: consecutive P0 runs with the same matrix and header join one recorder op (a map object's batches;
+  any other recorder op, a new PRIM or a state change ends it), so the Dive's frame has ~57 draws instead of 253
+  (the GS path batches to 41).
+- natdraw.c `kh1_nat_tris0` lists each batch's triangles twice over: those P0 back-face culls (flag bit 0x20),
+  for a draw with the cull mode, in the one winding rule P18's use (P0's product is -cross(p1 - p0, p2 - p0) x the
+  flag's sign), and the double-sided ones (0x02 only) for a draw with none. A flag word whose low half is 0 draws
+  nothing (the strip's restart).
+
+**Two shader changes**, both only for native draws:
+
+- **Colour straight across the screen** (drawstate.h `lin`): the GS interpolates colour and fog linearly in
+  screen space; a GPU with a real w interpolates every varying with perspective, which brightened P0's lit floor
+  by up to ~13 levels. With a texture, the native vertex shader passes colour and fog times w and w in tc.w, and
+  the fragment shader divides them back (a perspective-correct interpolation of a x w, over one of w, is the
+  screen-linear a). P18's flat colour is unchanged by it.
+- **No z clamp for P0** (the matrix index's bit 7, `pad[0] = 0x80`): P18's z is clamped to 0 .. w (the GS clamps
+  Z). P0 clips at its near plane instead, and a clamp at a vertex behind the camera (w < 0) made z negative along
+  the clipped edge, which then lost the floor in front of the camera (a black wedge in the picture). Unclamped,
+  the GPU clips at 0 <= z <= w, the nearest P0's Z can be. The GPU's frustum clipping stands in for P0's clipper
+  (Sutherland-Hodgman over its guard box, as fans): the triangles P0 drops or clips are drawn whole and clipped by
+  the GPU.
+
+**P4** (renderer A without the back-face test: the double-sided map meshes and the sky, ~120-160 ms per 2.4 s)
+takes the same path (`nd_0(pc, 1)`: entered at 00c or its idle 045, every drawing flag word to the double-sided
+list, the clipped fans' template left alone as P4 leaves it). `natp0=0` turns both off. KH1_HOST_NATCHECK covers it:
+to Dive frame 7000, 22,876 P4 runs, no triangle drawn by P4 alone, colours / ST / F equal.
+
+**Checked on the host**:
+
+- `KH1_HOST_NATCHECK=1` (vu1_draw.h `nd_0_check`): P0 runs as the program and each batch's output is compared
+  with the payload. Over the Dive to frame 5200 (180,000 runs): every vertex's colour, ST and F equal; of 7.8 M
+  triangles, 1.97 M drawn by both, 5.15 M by neither, 625 by the program alone (each a sliver under 0.1 pixel
+  whose sign the 12.4 positions round the other way), 0.67 M by the native lists alone (those P0 drops or clips
+  at its guard box; the GPU clips them).
+- natdraw_test `tris0` (the rule on 2,000 random triangles with each flag), shadergen_test (the native variants'
+  w products), make test.
+- Pictures (gxmcheck, the GPU stand-in, which now also clips at z <= w and a guard band): frames 5101 / 5103 of
+  the Dive against the GS path's GPU picture: ~29 % of pixels differ, by ~6 levels on average, 306-355 pixels by
+  more than 32 (texel picks where the positions are not truncated to 12.4, and the floor's near edge where P0's
+  clipper interpolated colour in clip space). Frame counts the same: 5,652 triangles drawn against 5,294, the
+  fragments 1,450,868 against 1,450,846.
+- Host instructions, callgrind over frames 5000-5060 (one thread, trace 5): 3.69 G with the GS path, 2.09 G
+  native. P0's translated program was 1.74 G of it; nd_0 and the hand-off ~0.14 G. The GS worker's kick decode
+  (w_kick) 636 M to 310 M.
+
+**Not checked**: anything on a Vita. SceShaccCg compiling the new forms (`col / tc.wwww`, `step`), whether the SGX
+clips at z <= w as the stand-in does (if it clamps instead, geometry right at the camera would show where P0 clipped
+it), the frame rate. If the map looks wrong with renderer=native, `natp0=0` is the first switch to try.
+
+**First Vita runs (2026-10-31): the floor (P0) and the Keyblade (P11) did not show; fixed.** Their draws are the
+lin ones (mi's bit 7 with a texture): the vertex shader hands over colour x w for the fragment shader to divide by
+w, and that went through a COLOR0 varying, which the Vita's GPU clamps to 0 .. 1, so the divided colour came out
+near black. The logs refused no shader and skipped no draw; P18 (w 1) and P10 (untextured) drew right, P0 and P11
+did not, in the runs with each on. Now (shadergen.c) a native textured vertex shader writes its colour to TEXCOORD3
+and every native textured draw is lin (cmdbuf.c `kh1_cmd_native`; P18's w is 1, so its divide changes nothing).
+The stand-in (gxm_mock.c) now clamps a COLOR varying the same way: with that, the build before the fix draws the
+Dive's 3D target at frame 4999 without the floor, and the fixed build draws it identical to the unclamped picture,
+as are all 84 renderer=native pictures of the Dive (7,000 frames). shadergen_test checks that neither a native
+textured vertex shader nor a lin fragment shader uses a COLOR varying for it.
+
+The x86 stand-in had missed it, and so had an ARM build of it (`python3 -I tools/vita/build.py --linux-arm --gxm`,
+out/armlinux/kh1-arm-gxm under qemu-arm: 48 of 84 pictures differ from x86's by float rounding, frame 4999's 3D
+target in 4,121 pixels, 11 by more than 32 levels), as neither clamped.
+
+### P11 too (2026-10-31, host only)
+
+P11 (renderer B's unlit models with a near-plane cull and a guard band: the Keyblade and other held or field
+objects in the Dive) has P18's record stream and output word for word, so `nd_18(pc, 11)` hands its runs over in
+P18's payload with program number 11. The recorder (pipes.c r_native) draws it as P18 but with mi's bit 7 and
+KH1_NAT_LIN, so z is not clamped and the GPU clips where P11 dropped every triangle with a vertex in front of its
+near plane (w < 1) or off the guard band. The run's colour and F are constant, so the screen-linear colour of
+KH1_NAT_LIN changes nothing there. `natp11=0` / `KH1_HOST_NATP11=0` keeps P11 on the VU (with the rest native).
+
+Checked on the host (gxmcheck, renderer=native, dive_en.txt, a picture every 500 frames to 6999): 12 of the 14
+pictures are identical to the P0 / P4 native build's; 6499 and 6999 differ in 201 and 276 pixels, along the
+Keyblade's edges (the GPU's own rasterisation of the triangles the GS path drew). Not checked on a Vita. In the
+qemu-arm timing of the Dive (vita-build.md "P12 as hand-written C") P11 was 4.2 s of ~75 s of VU1 run time.
+
+### P10 too (2026-10-31, host only)
+
+P10 (the shadow pass's untextured strips under the characters) goes over in the same payload as program 10
+(vu1_draw.h `nd_10`): matrix records of 4 qwords, a position a qword (w the slot), no back-face test or ADC, so
+every triangle is drawn with no cull, ST 0 (the PRIM has no TME). The colour is not in the run's VU memory (TOPS is
+at 0 every other run, over qw0-1): it is the RGBAQ P10's set-up run (from 000, still run by the program) kicks from
+qw1, so start_run keeps qw1 then (`nd_10_setup`). The first try read qw1 at the strip run and drew Sora's shadow in
+the floor's colour. Runs of fewer than 3 positions are left to the program. `natp10=0` / `KH1_HOST_NATP10=0` keeps
+P10 on the VU.
+
+Checked on the host (as for P11): 11 of 14 Dive pictures identical to the P11 build's; 4999, 5499 and 6999 differ in
+46, 72 and 98 pixels along the shadows' edges. In the qemu-arm timing P10 was 6.6 s of ~75 s of VU1 run time.
+Not checked on a Vita.
+
+Host instructions with everything above native (P0, P4, P10, P11, P18; callgrind over frames 5000-5060, one thread,
+trace 5, as for P0): 1.75 G, against 2.09 G with P0 alone native and 3.69 G on the GS path.
+
 ## The stages after
 
-2. **P13 (skinned, flat, cull)**: the same flow with the bone palette: op 0 with w = 1 marks the palette record,
+2. **P13 (skinned, flat, cull)** (next: P0 went first, above): the same flow with the bone palette: op 0 with w = 1 marks the palette record,
    op 2 the bone index lists, each vertex a weighted sum of up to 4 bones (renderer-spec 2.3, "g & 1"). The
    palette goes to `u_m` (more rows, or a second uniform buffer: GXM's vertex default buffer allows 4 KiB, so 64
    matrices); the vertex carries its bone indices and weights (`p_i = xyz_i / w_i`). Late in the Dive this is
@@ -114,9 +232,8 @@ worker was busy ~2.27 s of 2.4 s there and waited 627 ms on the recording (the G
    its clipping becomes the GPU's. Over half of the Dive's VU1 time. The map's chains do not change between
    frames; once the CPU side parses a chain the triangle list can be cached by the chain's address and the
    matrices' change alone uploaded, which removes most of the game thread's work for it.
-4. **P11, P10, P4**: P11 is P18 plus a near-plane cull and a guard band (the GPU clips; the near cull is a
-   z test in the shader), P10 the lit variant (3 lights and ambient in the shader with the same clamps), P4 the
-   lit A program.
+4. **P12**: P11, P10 and P4 are done (above); P12 the lit variant (3 lights and ambient in the shader with the same
+   clamps).
 5. **Batching and threads**: native runs of one pipeline and texture joined into one draw (the matrices
    indexed per vertex already allow it), and `nd_*`'s parse moved off the game thread to the GS worker (the
    payload would then be the VU memory image).
