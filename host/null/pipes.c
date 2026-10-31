@@ -54,6 +54,17 @@ unsigned long strtoul(const char *, char **, int);
 char *strchr(const char *, int);
 
 static void nat_flush(void); /* the native renderer's open op (below) */
+/* 2026-10-31 (the frame op on the GPU thread, kh1_pipes_frame below): the texture cache entries this frame decoded
+ * and the palette slots it filled, marked on the GS worker as it hands them to the recorder: the copies the frame's
+ * GPU work reads (snap_frame's set, without reading the recorder's commands) */
+static u8 fr_tex[KH1_TEXCACHE_SLOTS], fr_pal[KH1_PALCACHE_SLOTS];
+static int fr_marks;
+static void mark_tex(s32 slot) {
+    if (slot >= 0 && slot < KH1_TEXCACHE_SLOTS) fr_tex[slot] = 1, fr_marks = 1;
+}
+static void mark_pal(s32 slot, int fill) {
+    if (fill && slot >= 0 && slot < KH1_PALCACHE_SLOTS) fr_pal[slot] = 1, fr_marks = 1;
+}
 
 /* session 127: the recorder's caches (what a port's renderer would hold) */
 static KH1PalCache *pal;
@@ -146,6 +157,7 @@ static void on_clut(u32 lo, u32 hi) {
     a[1] = hi;
     a[2] = (u32)slot;
     a[3] = (u32)fill;
+    mark_pal(slot, fill);
     nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_clut, a, 4, 0, 0);
     a_pslot = (s16)slot;
@@ -184,6 +196,7 @@ static void tex_lookup(u32 lo, u32 hi) {
     a[2] = (u32)slot;
     a[3] = (u32)decoded;
     a[4] = decoded && slot >= 0 ? tex->slot[slot].n : 0;
+    if (decoded) mark_tex(slot);
     nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_texture, a, 5, 0, 0);
     /* session 136: an indexed draw reads the CLUT buffer at its own CSA, loaded or not (the GS's rule, and
@@ -198,6 +211,7 @@ static void tex_lookup(u32 lo, u32 hi) {
             slot = pal_get(pal_draw, pal_n, &fill);
             a[2] = (u32)slot;
             a[3] = (u32)fill;
+            mark_pal(slot, fill);
             nat_flush(); /* a joined native op first (2026-10-31) */
             kh1_recq_put(r_palette, a, 4, 0, 0);
             a_pslot = (s16)slot;
@@ -471,19 +485,52 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
     }
 }
 
+/* 2026-10-31 (the Vita's renderer=native log: w_native 160-520 ms per 2.4 s on the GS worker): the op is built on
+ * the recorder's side.  The worker used to copy each record into nat_op and then nat_op into the queue, two passes
+ * over every payload's bytes on a core whose time is the frame rate's limit; now it puts the op's start (header and
+ * matrices), each record (joined into one queue op while unpublished) and its end, and the GPU thread assembles
+ * nat_op as before, so r_native sees the same ops as before (the same draws).  nat_rq and nat_nrec still count on the
+ * worker, so an op ends where it did */
+static u32 nat_crq, nat_cnrec; /* the recorder's side: the op being assembled in nat_op, its matrices */
+static u32 nat_cms[KH1_NAT_MATS * 16];
+static void r_nat_open(const u32 *a, const u32 *d, u32 nqw) {
+    (void)a;
+    memcpy(nat_op[0], d, 32);
+    memcpy(nat_cms, d + 8, d[2] * 64);
+    nat_crq = 2;
+    nat_cnrec = 0;
+    (void)nqw;
+}
+static void r_nat_rec(const u32 *a, const u32 *d, u32 nqw) {
+    (void)a;
+    while (nqw) {
+        u32 nq = 1 + d[2] * 2;
+        if (nq > nqw || nat_crq + nq > NAT_QW) break;
+        memcpy(nat_op[nat_crq], d, nq * 16);
+        nat_crq += nq;
+        nat_cnrec++;
+        d += nq * 4;
+        nqw -= nq;
+    }
+}
+static void r_nat_end(const u32 *a, const u32 *d, u32 nqw) {
+    u32 nmat = nat_op[0][2];
+    (void)d;
+    (void)nqw;
+    if (!nat_cnrec || nat_crq + nmat * 4 > NAT_QW) return;
+    nat_op[0][1] = nat_cnrec;
+    nat_op[0][3] = nat_crq - 2;
+    memcpy(nat_op[nat_crq], nat_cms, nmat * 64);
+    r_native(a, nat_op[0], nat_crq + nmat * 4);
+}
+
 static void nat_flush(void) {
     u32 a;
     if (!nat_open) return;
     nat_open = 0;
     if (!nat_nrec) return;
-    nat_op[0][0] = nat_hs[0];
-    nat_op[0][1] = nat_nrec;
-    nat_op[0][2] = nat_hs[2];
-    nat_op[0][3] = nat_rq - 2;
-    memcpy(nat_op[1], nat_hs + 4, 16);
-    memcpy(nat_op[nat_rq], nat_ms, nat_hs[2] * 64);
     a = (u32)kh1_gs_xshift_of();
-    kh1_recq_put(r_native, &a, 1, nat_op[0], nat_rq + nat_hs[2] * 4);
+    kh1_recq_put(r_nat_end, &a, 1, 0, 0);
 }
 
 /* the GS worker's side (gsregs.h's kh1_gs_native_hook): a payload starts (its header, its matrices), each record with
@@ -493,6 +540,7 @@ static void nat_rec(u32 prim, const u32 *r) {
     if (nat_open && (prim != nat_prim || kh1_gs_gen != nat_gen || nat_rq + nq + nat_hs[2] * 4 > NAT_QW)) nat_flush();
     if (!nat_open && 2 + nq + nat_hdr[2] * 4 > NAT_QW) return; /* cannot fit */
     if (!nat_open) {
+        u32 w[2 * 4 + KH1_NAT_MATS * 16];
         memcpy(nat_hs, nat_hdr, 32);
         memcpy(nat_ms, nat_mats, nat_hdr[2] * 64);
         prim_state(prim);
@@ -501,8 +549,11 @@ static void nat_rec(u32 prim, const u32 *r) {
         nat_gen = kh1_gs_gen;
         nat_rq = 2;
         nat_nrec = 0;
+        memcpy(w, nat_hs, 32);
+        memcpy(w + 8, nat_ms, nat_hs[2] * 64);
+        kh1_recq_put(r_nat_open, 0, 0, w, 2 + nat_hs[2] * 4);
     }
-    memcpy(nat_op[nat_rq], r, nq * 16);
+    kh1_recq_put(r_nat_rec, 0, 0, r, nq); /* joins the records before it while the queue holds them unpublished */
     nat_rq += nq;
     nat_nrec++;
 }
@@ -530,6 +581,10 @@ void (*kh1_pipes_frame_hook)(const KH1CmdRec *r);
 
 /* session 126: each distinct pass list (by targets, loads and stores) printed once, up to 32 */
 static u32 seq_sig[32], nseq, seq_frames[32];
+
+/* 2026-10-31: 1 (the default) also records the frame's GXM calls here for the run's report (gxmrec.h); the Vita sets
+ * 0: its GPU work (gxm.c) records them again itself, so here they were only counted, not drawn */
+int kh1_pipes_gxm_count = 1;
 
 /* the frame's commands ended (kh1_cmd_frame), its pass list logged and counted */
 static void frame_begin(void) {
@@ -581,9 +636,11 @@ static void frame_begin(void) {
             }
         }
     }
-    kh1_gxm_frame(gxm, rec);
-    if (gxm->frame.calls > gxm_max_calls) gxm_max_calls = gxm->frame.calls;
-    if (gxm->frame.scenes > gxm_max_scenes) gxm_max_scenes = gxm->frame.scenes;
+    if (kh1_pipes_gxm_count) {
+        kh1_gxm_frame(gxm, rec);
+        if (gxm->frame.calls > gxm_max_calls) gxm_max_calls = gxm->frame.calls;
+        if (gxm->frame.scenes > gxm_max_scenes) gxm_max_scenes = gxm->frame.scenes;
+    }
 }
 
 static void frame_end(void) {
@@ -699,8 +756,9 @@ const u32 *kh1_pipes_frame_pal(s32 slot) {
 /* 2026-10-31 (the native renderer's Vita run: the GS worker's frame op ~7 ms a frame, the game waiting ~0.7 s per
  * 2.4 s for the worker): the frame op's time by part, on kh1_vu1_clock (the Vita's watchdog prints them): 0 the
  * native op's flush, 1 the wait for the frame's recording, 2 the passes (frame_begin: kh1_cmd_frame and its log),
- * 3 the wait for the GPU thread's last frame, 4 the copies for the GPU thread (snap_frame), 5 the rest */
-volatile u32 kh1_pipes_frame_us[6];
+ * 3 the wait for the GPU thread's last frame, 4 the copies for the GPU thread (snap_frame), 5 the rest; 6 the passes
+ * when the frame op runs on the GPU thread (r_frame: that thread's time, not the worker's) */
+volatile u32 kh1_pipes_frame_us[7];
 extern u32 (*kh1_vu1_clock)(void);
 static u32 pf_t;
 static void pf_mark(int part) {
@@ -711,10 +769,98 @@ static void pf_mark(int part) {
     pf_t = t;
 }
 
+/* 2026-10-31 (docs/vita-build.md "The frame op on the GPU thread"): with the recording on the GPU frame's thread
+ * (kh1_recq), the frame op is one more recording op there: the passes (frame_begin), the frame's GPU work (the hook,
+ * on the recorder itself: nothing else writes it until the op ends) and the recorder's reset.  The GS worker only
+ * copies what the GPU work reads of its own state (GS memory, the texels and palettes the frame's commands name,
+ * marked as it handed them on: fr_tex, fr_pal) and goes on; it no longer waits for the frame's recording.  It waits
+ * for the last frame op only when it must change those copies.  kh1_pipes_rq_frame 0 (config.txt recframe=0,
+ * KH1_HOST_RECFRAME=0) keeps the frame op on the worker */
+int kh1_pipes_rq_frame = 1;
+static u32 rq_pos;   /* the queue's position after the last frame op put */
+static int rq_posted;
+
+static void r_frame(const u32 *a, const u32 *d, u32 n) {
+    u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
+    (void)d;
+    (void)n;
+    frame_begin();
+    if (kh1_vu1_clock) kh1_pipes_frame_us[6] += kh1_vu1_clock() - t0;
+    kh1_pipes_job_arg = a[0];
+    kh1_pipes_frame_hook(rec);
+    kh1_cmd_reset_frame(rec);
+}
+
+/* the copies of the marked entries (snap_frame's, from the marks) */
+static int snap_marked(void) {
+    u32 i, need = 0;
+    if (!snap_pal && !(snap_pal = (u32 (*)[256])malloc(KH1_PALCACHE_SLOTS * 1024))) return -1;
+    if (kh1_gsmem_snap_take() < 0) return -1;
+    memset(snap_hastex, 0, sizeof snap_hastex);
+    memset(snap_haspal, 0, sizeof snap_haspal);
+    for (i = 0; i < KH1_TEXCACHE_SLOTS; i++)
+        if (fr_tex[i] && tex_ok && tex->slot[i].tex) {
+            snap_texoff[i] = need;
+            snap_hastex[i] = 1;
+            need += tex->slot[i].n;
+        }
+    if (need > snap_texcap) {
+        free(snap_texbuf);
+        snap_texcap = need + (need >> 1);
+        if (!(snap_texbuf = (u32 *)malloc(snap_texcap * 4))) {
+            snap_texcap = 0;
+            return -1;
+        }
+    }
+    for (i = 0; i < KH1_TEXCACHE_SLOTS; i++)
+        if (snap_hastex[i]) memcpy(snap_texbuf + snap_texoff[i], tex->slot[i].tex, tex->slot[i].n * 4);
+    for (i = 0; i < KH1_PALCACHE_SLOTS; i++)
+        if (fr_pal[i]) {
+            memcpy(snap_pal[i], pal->slot[i].col, 1024);
+            snap_haspal[i] = 1;
+        }
+    return 0;
+}
+
+/* the frame op as a recording op; 0 when put, -1 when a copy failed (the frame op then stays on the worker) */
+static int rq_frame(void) {
+    u32 a = kh1_pipes_frame_arg;
+    /* the copies change only when the frame wrote GS memory or decoded or filled an entry: else the op reads the
+     * copies the last one does (the Dive's every other frame: nothing drawn) and nothing waits */
+    if (fr_marks || !kh1_gsmem_snap_same()) {
+        pf_mark(2);
+        if (rq_posted) kh1_recq_wait(rq_pos); /* the last frame op is done with the copies */
+        pf_mark(3);
+        if (snap_marked()) {
+            printf("kh1-host: pipes: the frame's copy failed (no memory): the GPU frame on the GS worker from now\n");
+            kh1_pipes_snap = 0;
+            return -1;
+        }
+        pf_mark(4);
+    }
+    memset(fr_tex, 0, sizeof fr_tex);
+    memset(fr_pal, 0, sizeof fr_pal);
+    fr_marks = 0;
+    kh1_recq_put(r_frame, &a, 1, 0, 0);
+    rq_pos = kh1_recq_pos();
+    rq_posted = 1;
+    kh1_recq_flush(); /* to the thread now (and the next frame op never joins this one) */
+    /* frame_end's worker side: the caches are the worker's */
+    kh1_palcache_frame(pal);
+    if (tex_ok) kh1_texcache_frame(tex);
+    tex_look = 1;
+    pf_mark(5);
+    return 0;
+}
+
 void kh1_pipes_frame(void) {
     pf_mark(-1);
     nat_flush();
     pf_mark(0);
+    if (kh1_pipes_rq_frame && kh1_pipes_snap && kh1_recq_on && kh1_pipes_frame_hook && rec && !rq_frame()) return;
+    memset(fr_tex, 0, sizeof fr_tex);
+    memset(fr_pal, 0, sizeof fr_pal);
+    fr_marks = 0;
     kh1_recq_sync(); /* session 146: the frame's recording done */
     pf_mark(1);
     frame_begin();
@@ -887,7 +1033,10 @@ void kh1_pipes_report(void) {
     nat_flush();
     kh1_recq_sync();
     if (rec) {
-        if (batcher.frame.prims) kh1_pipes_frame(); /* the last frame's primitives */
+        if (batcher.frame.prims) {
+            kh1_pipes_frame(); /* the last frame's primitives */
+            kh1_recq_sync();   /* on the GPU thread with kh1_pipes_rq_frame */
+        }
         report_batches();
         if (batcher.frames) report_cmds();
     }

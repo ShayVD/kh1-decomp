@@ -94,7 +94,7 @@
 #include "platform/cmdbuf.h"
 #include <time.h>
 extern u32 (*kh1_vu1_clock)(void);
-extern volatile u32 kh1_pipes_frame_us[6];
+extern volatile u32 kh1_pipes_frame_us[7];
 static u32 host_us(void) {
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
@@ -102,9 +102,10 @@ static u32 host_us(void) {
 }
 static void host_clock_report(void) {
     printf("kh1-host: the frame op: %u ms the native flush, %u waiting for the recording, %u the passes, %u waiting "
-           "for the GPU thread, %u the copies for it, %u the rest\n", kh1_pipes_frame_us[0] / 1000,
-           kh1_pipes_frame_us[1] / 1000, kh1_pipes_frame_us[2] / 1000, kh1_pipes_frame_us[3] / 1000,
-           kh1_pipes_frame_us[4] / 1000, kh1_pipes_frame_us[5] / 1000);
+           "for the GPU thread, %u the copies for it, %u the rest; %u the passes on the GPU thread\n",
+           kh1_pipes_frame_us[0] / 1000, kh1_pipes_frame_us[1] / 1000, kh1_pipes_frame_us[2] / 1000,
+           kh1_pipes_frame_us[3] / 1000, kh1_pipes_frame_us[4] / 1000, kh1_pipes_frame_us[5] / 1000,
+           kh1_pipes_frame_us[6] / 1000);
 }
 #include "gsregs.h"
 #include "gsmem.h"
@@ -422,6 +423,10 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATP0")) kh1_vu1_draw_p0 = atoi(getenv("KH1_HOST_NATP0")); /* 2026-10-31: 0 P0 / P4 on the VU */
         if (getenv("KH1_HOST_NATP11")) kh1_vu1_draw_p11 = atoi(getenv("KH1_HOST_NATP11")); /* 2026-10-31: 0 P11 on the VU */
         if (getenv("KH1_HOST_NATP10")) kh1_vu1_draw_p10 = atoi(getenv("KH1_HOST_NATP10")); /* 2026-10-31: 0 P10 on the VU */
+        if (getenv("KH1_HOST_RECFRAME")) { /* 2026-10-31: pipes.c's frame op on the GPU thread (the Vita's recframe=) */
+            extern int kh1_pipes_rq_frame;
+            kh1_pipes_rq_frame = atoi(getenv("KH1_HOST_RECFRAME"));
+        }
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
         if (getenv("KH1_HOST_CLOCK")) { /* 2026-10-31: kh1_vu1_clock on the host (the frame op's parts at the end) */
             kh1_vu1_clock = host_us;
