@@ -100,6 +100,7 @@ static void draw(void) {
         pic = 1;
     }
     if (!mode || !pic || strip_on > 1) strip();
+    kh1_vita_menu_draw(); /* the FPS counter, the mod menu (menu.c) */
     vita2d_end_drawing();
     vita2d_swap_buffers();
     drawn_at = status_frames;
@@ -126,6 +127,7 @@ static void present_buffer(u32 bp, u32 bw, u32 psm, u32 lines) {
     pic_w = w;
     pic_lines = lines;
     shown++;
+    kh1_vita_pictures++;
     kh1_vita_shown = shown;
     draw();
     kh1_vita_us_present += (u32)(sceKernelGetProcessTimeWide() - t0);

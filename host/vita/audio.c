@@ -126,11 +126,22 @@ static int out_thread(SceSize args, void *argp) {
     return 0;
 }
 
+/* the mod menu's volume (menu.c, config.txt's volume=): 0-100, of the output's 0 dB */
+int kh1_vita_volume = 100;
+void kh1_vita_audio_volume(int percent) {
+    int vol[2];
+    if (percent < 0) percent = 0;
+    if (percent > 100) percent = 100;
+    kh1_vita_volume = percent;
+    vol[0] = vol[1] = SCE_AUDIO_VOLUME_0DB * percent / 100;
+    if (port >= 0) sceAudioOutSetVolume(port, SCE_AUDIO_VOLUME_FLAG_L_CH | SCE_AUDIO_VOLUME_FLAG_R_CH, vol);
+}
+
 static void start_output(void) {
     static const SceUInt masks[3] = { SCE_KERNEL_CPU_MASK_USER_0, SCE_KERNEL_CPU_MASK_USER_1, SCE_KERNEL_CPU_MASK_USER_2 };
     SceUID t;
     SceUInt mix_mask = kh1_vita_snd_core >= 0 && kh1_vita_snd_core <= 2 ? masks[kh1_vita_snd_core] : SCE_KERNEL_CPU_MASK_USER_ALL;
-    int vol[2] = { SCE_AUDIO_VOLUME_0DB, SCE_AUDIO_VOLUME_0DB };
+    int vol[2] = { SCE_AUDIO_VOLUME_0DB * kh1_vita_volume / 100, SCE_AUDIO_VOLUME_0DB * kh1_vita_volume / 100 };
     port = sceAudioOutOpenPort(SCE_AUDIO_OUT_PORT_TYPE_MAIN, AUDIO_GRAIN, 48000, SCE_AUDIO_OUT_MODE_STEREO);
     if (port < 0) {
         vlog("kh1-vita: sound: no audio port (0x%08x)\n", port);

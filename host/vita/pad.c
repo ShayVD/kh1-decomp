@@ -10,7 +10,9 @@
  * degrees a step while held) and gives the right stick the d-pad's actions (the command menu's cursor;
  * docs/vita-port-plan.md 5.1ab), so its x past half way is sent as R2 (right) or L2 (left), held, and the x
  * itself as the centre; its y stays as it was.  Held, never pulsed: each L2 / R2 press also steps the lock-on
- * target.  config.txt's rcam=0 sends the stick as it is, rcam=-1 turns the other way.  Not part of the PS2
+ * target.  config.txt's rcam=0 sends the stick as it is, rcam=-1 turns the other way.  The mod menu (menu.c) adds
+ * swapox=1 (circle and cross swapped) and reartouch=0 (the rear pad's quarters off), and keeps its own presses
+ * from the game.  Not part of the PS2
  * build. */
 #include <psp2/ctrl.h>
 #include <psp2/touch.h>
@@ -53,7 +55,7 @@ static void sample(u8 *stick) {
     if (c.buttons & SCE_CTRL_LTRIGGER) b |= PAD_L1;
     if (c.buttons & SCE_CTRL_RTRIGGER) b |= PAD_R1;
     /* the rear pad: 1920 x 890 or so, its middle at (960, 500) */
-    if (sceTouchPeek(SCE_TOUCH_PORT_BACK, &t, 1) > 0)
+    if (kh1_vita_rear_touch && sceTouchPeek(SCE_TOUCH_PORT_BACK, &t, 1) > 0) /* reartouch=0: off (menu.c) */
         for (i = 0; i < t.reportNum && i < SCE_TOUCH_MAX_REPORT; i++) {
             int left = t.report[i].x < 960, top = t.report[i].y < 500;
             b |= top ? (left ? PAD_L2 : PAD_R2) : (left ? PAD_L3 : PAD_R3);
@@ -95,6 +97,12 @@ int PlatPadRead(int socket, u8 *data) {
     if (kh1_vita_pad_script) return kh1_script_PadRead(socket, data);
     sample(stick);
     b = cur | rcam(stick);
+    if (kh1_vita_swap_ox && (b & (PAD_CIRCLE | PAD_CROSS)) && (b & (PAD_CIRCLE | PAD_CROSS)) != (PAD_CIRCLE | PAD_CROSS))
+        b ^= PAD_CIRCLE | PAD_CROSS; /* swapox=1 (menu.c): cross confirms */
+    if (kh1_vita_menu_swallow(b)) { /* the mod menu's own presses, until let go */
+        b = 0;
+        stick[0] = stick[1] = stick[2] = stick[3] = 128;
+    }
     data[0] = ~b & 0xFF;
     data[1] = (~b >> 8) & 0xFF;
     data[2] = stick[0];
