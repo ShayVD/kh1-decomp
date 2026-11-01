@@ -116,6 +116,9 @@ static void host_clock_report(void) {
             if (runs) printf("kh1-host: P%d %u ms (%u runs)\n", num, us / 1000, runs);
         printf("kh1-host: native payloads handed to the GS worker: %u ms (P13's %u); %u P13 runs handed back (%u ms)\n",
                kh1_vu1_nd_hand_us / 1000, kh1_vu1_nd13_hand_us / 1000, kh1_vu1_nd13_fail, kh1_vu1_nd13_fail_us / 1000);
+        printf("kh1-host: natchain=%d: %u runs read from the chain (%u K qwords never unpacked), %u unpacks written late, "
+               "%u payloads differed\n", kh1_vu1_natchain, kh1_vu1_nc_runs, kh1_vu1_nc_qw / 1000, kh1_vu1_nc_flushed,
+               kh1_vu1_nc_bad);
     }
 }
 #include "gsregs.h"
@@ -435,6 +438,7 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATP11")) kh1_vu1_draw_p11 = atoi(getenv("KH1_HOST_NATP11")); /* 2026-10-31: 0 P11 on the VU */
         if (getenv("KH1_HOST_NATP13")) kh1_vu1_draw_p13 = atoi(getenv("KH1_HOST_NATP13")); /* 2026-10-31: 0 P13 on the VU */
         if (getenv("KH1_HOST_NATSKIN")) kh1_vu1_nat_skin = atoi(getenv("KH1_HOST_NATSKIN")); /* 2026-11-01: 0 the CPU's sums */
+        if (getenv("KH1_HOST_NATCHAIN")) kh1_vu1_natchain = atoi(getenv("KH1_HOST_NATCHAIN")); /* 2026-11-01: 0 the old path */
         if (getenv("KH1_HOST_NATP10")) kh1_vu1_draw_p10 = atoi(getenv("KH1_HOST_NATP10")); /* 2026-10-31: 0 P10 on the VU */
         if (getenv("KH1_HOST_RECFRAME")) { /* 2026-10-31: pipes.c's frame op on the GPU thread (the Vita's recframe=) */
             extern int kh1_pipes_rq_frame;

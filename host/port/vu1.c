@@ -33,6 +33,7 @@ f32 atanf(f32);
 f32 expf(f32);
 void *memset(void *, int, __SIZE_TYPE__);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
+int memcmp(const void *, const void *, __SIZE_TYPE__);
 
 void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
 u32 (*kh1_vu1_clock)(void);
@@ -84,6 +85,56 @@ static u32 dbuf[256 * 4 + 4]; /* an UNPACK's data words (at most 256 vectors of 
  * data came in one piece (kh1_vif1_data_n), so they are not copied to dbuf first */
 static const u32 *ds = dbuf;
 
+/* 2026-11-01 (docs/native-plan.md stage 5, "Records straight from the chain"; config.txt natchain=, host
+ * KH1_HOST_NATCHAIN): with the native renderer on, a TOPS-relative UNPACK whose data came in one piece (in the walk's
+ * own words, which stay put until the send ends) and that a native program's parse can read where it is (mode 0, no
+ * mask, CL >= WL; V4-32, V4-16, V4-8, V2-16) is held back instead of written into VU memory.  The next MSCAL / MSCNT
+ * of P18, P11, P10, P0 or P4 reads its records from the held words (vu1_draw.h nc_*); when it hands them over, the
+ * held unpacks are dropped unwritten: that buffer of VU memory keeps what it had (no program reads its TOPS buffer
+ * before an unpack fills it: natchain=2 fills the dropped addresses with a poison pattern to check that).  Anything
+ * else first writes what is held, in order, exactly as before (nc_flush): any other unpack, any other run, a parse
+ * that cannot read them, and the send's end (kh1_vif1_end).  0 (the A/B switch) writes every unpack at once;
+ * 3 (host) parses both ways and compares the payloads */
+int kh1_vu1_natchain = 1;
+typedef struct { const u32 *w; u32 cmd, imm, num, words, cl, wl, addr; } NcUp;
+#define NC_MAX 8
+static NcUp nc_q[NC_MAX];
+static u32 nc_n;
+u32 kh1_vu1_nc_runs, kh1_vu1_nc_flushed, kh1_vu1_nc_qw, kh1_vu1_nc_bad; /* the log's: runs read from the chain, unpacks
+                                                                         * written late, qwords never written, check
+                                                                         * mode's payloads that differed */
+static void unpack(void);
+static void nc_flush(void) {
+    u32 i, n = nc_n, s_cur = cur, s_imm = cur_imm, s_num = cur_num, s_cl = cl, s_wl = wl, s_got = got, s_mode = mode;
+    const u32 *s_ds = ds;
+    nc_n = 0;
+    for (i = 0; i < n; i++) {
+        const NcUp *e = &nc_q[i];
+        cur = e->cmd;
+        cur_imm = (e->imm & 0x4000) | (e->addr & 0x3FF); /* the address as it was, TOPS added then */
+        cur_num = e->num & 0xFF;
+        cl = e->cl;
+        wl = e->wl;
+        mode = 0;
+        ds = e->w;
+        got = e->words;
+        unpack();
+    }
+    kh1_vu1_nc_flushed += n;
+    cur = s_cur;
+    cur_imm = s_imm;
+    cur_num = s_num;
+    cl = s_cl;
+    wl = s_wl;
+    got = s_got;
+    mode = s_mode;
+    ds = s_ds;
+}
+/* the send ends: its words may change after it (host/null/dmawalk.c) */
+void kh1_vif1_end(void) {
+    if (nc_n) nc_flush();
+}
+
 void kh1_vu1_stats(KH1Vu1Stats *out) {
     *out = st;
     memset(&st, 0, sizeof st);
@@ -118,6 +169,7 @@ void kh1_vif1_reset(void) {
     cl = wl = 1;
     base = ofst = tops = top = itops = itop = dbf = tpc = 0;
     cur = need = got = 0;
+    nc_n = 0;
 }
 
 /* ------------------------------------------------------------------ floats */
@@ -467,6 +519,7 @@ static u32 lower_stall(u32 lo, u32 t) {
 }
 
 static void kick(u32 a);
+static u32 kick_smp;
 
 /* DIV / SQRT / RSQRT's Q from fs's and ft's chosen fields */
 static u32 qop(u32 x, u32 s, u32 t) {
@@ -707,10 +760,10 @@ static void kick(u32 a) {
         u32 k;
         for (k = 0; k < n; k++) printf("kh1-vu1:   %08x %08x %08x %08x\n", q[k * 4], q[k * 4 + 1], q[k * 4 + 2], q[k * 4 + 3]);
     }
-    if (kh1_vu1_kick && kh1_vu1_clock) {
+    if (kh1_vu1_kick && kh1_vu1_clock && KH1_TIME_THIS(kick_smp)) { /* (natchain=1: 1 kick in 8 timed) */
         u32 t0 = kh1_vu1_clock();
         kh1_vu1_kick(q, n);
-        kh1_vu1_kick_us += kh1_vu1_clock() - t0;
+        kh1_vu1_kick_us += (kh1_vu1_clock() - t0) * KH1_TIME_EVERY;
     } else if (kh1_vu1_kick) kh1_vu1_kick(q, n);
 }
 
@@ -1244,16 +1297,18 @@ static int nat_check(int prog, u32 pc) {
 static void start_run(u32 pc);
 /* 2026-11-01: a run's start and end times, read once each and shared by start and start_run's per-program time (the
  * Vita's clock is a system call: four reads a run were ~15,000 runs' worth of calls a window) */
-static u32 run_t0, run_t1, run_t1_set;
+static u32 run_t0, run_t1, run_t1_set, run_timed, run_smp;
 static void start(u32 pc) {
-    if (!kh1_vu1_clock) {
+    if (!kh1_vu1_clock || !KH1_TIME_THIS(run_smp)) { /* (natchain=1: 1 run in 8 timed, each program's runs all counted) */
+        run_timed = 0;
         start_run(pc);
         return;
     }
+    run_timed = 1;
     run_t0 = kh1_vu1_clock();
     run_t1_set = 0;
     start_run(pc);
-    kh1_vu1_us += (run_t1_set ? run_t1 : kh1_vu1_clock()) - run_t0;
+    kh1_vu1_us += ((run_t1_set ? run_t1 : kh1_vu1_clock()) - run_t0) * KH1_TIME_EVERY;
 }
 
 /* KH1_HOST_VU1DUMP=DIR:N (host/null/main.c): every Nth run's start (micro memory, then a TrSnap, then the
@@ -1285,6 +1340,7 @@ static void start_run(u32 pc) {
     settle();
     if (kh1_vu1_dump_dir && kh1_vu1_dump_every) dump_run(pc);
     prog = kh1_vu1_tr && !kh1_vu1_verbose ? tr_find() : -1;
+    if (nc_n && !(prog >= 0 && kh1_vu1_draw && nc_reader(tr_progs[prog].num))) nc_flush(); /* natchain: VU memory as before */
     if (prog >= 0 && kh1_vu1_tr == 2) {
         tr_check(prog, pc);
         return;
@@ -1300,6 +1356,7 @@ static void start_run(u32 pc) {
                                 (tr_progs[prog].num == 13 && kh1_vu1_draw_p13 && nd_13(pc)) ||
                                 (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc, 0)) ||
                                 (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)));
+        if (nc_n) nc_flush(); /* natchain: a parse that did not take them (or did not look): written before the run */
         if (tr_progs[prog].num == 10 && pc == 0) nd_10_setup(); /* the RGBAQ its kick sets, for nd_10's payload */
         if (!ran && kh1_vu1_natcheck && (tr_progs[prog].num == 0 || tr_progs[prog].num == 4)) { /* KH1_HOST_NATCHECK */
             void (*sv)(const u32 *, u32) = kh1_vu1_draw;
@@ -1321,16 +1378,16 @@ static void start_run(u32 pc) {
         }
         if (!ran && kh1_vu1_native == 2) ran = nat_check(prog, pc);
         if (!ran) ran = tr_go(prog, pc);
-        if (kh1_vu1_clock) {
+        if (run_timed) {
             t1 = run_t1 = kh1_vu1_clock();
             run_t1_set = 1;
         }
         if (tr_progs[prog].num == 13 && kh1_vu1_draw && kh1_vu1_draw_p13 && !nd13_built) { /* handed back */
             kh1_vu1_nd13_fail++;
-            if (kh1_vu1_clock) kh1_vu1_nd13_fail_us += t1 - t0;
+            if (run_timed) kh1_vu1_nd13_fail_us += (t1 - t0) * KH1_TIME_EVERY;
         }
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
-            tr_us[prog] += t1 - t0;
+            if (run_timed) tr_us[prog] += (t1 - t0) * KH1_TIME_EVERY;
             tr_runs[prog]++;
             tr_pairs[prog] += st.insns - n0;
         }
@@ -1511,6 +1568,7 @@ static void unpack(void) {
     u32 num = cur_num ? cur_num : 256, usn = cur_imm >> 14 & 1;
     u32 addr = (cur_imm & 0x3FF) + (cur_imm & 0x8000 ? tops : 0);
     u32 ebits = vl == 3 ? 16 : 32 >> vl, nel = vl == 3 ? 1 : vn + 1, cycle = 0, di = 0, i, f;
+    if (nc_n) nc_flush(); /* what is held first, in order (natchain) */
     st.unpacks++;
     if (!m && unpack_fast(vn, vl, num, usn, addr)) return;
     for (i = 0; i < num; i++) {
@@ -1589,6 +1647,15 @@ void kh1_vif1_code(u32 w) {
     cur = 0;
 }
 
+/* natchain: the current UNPACK (all its words here) may be held back: TOPS-relative, a format the parses read in
+ * place, and none of the modes that look at VU memory run by run (the checks, the dump, the interpreter) */
+static int nc_can_hold(void) {
+    u32 c = cur & 0x7F;
+    if (!kh1_vu1_natchain || !kh1_vu1_draw || nc_n >= NC_MAX || !(cur_imm & 0x8000) || mode || !wl || cl < wl) return 0;
+    if (c != 0x6C && c != 0x6D && c != 0x6E && c != 0x65) return 0; /* V4-32, V4-16, V4-8, V2-16; not masked (0x10) */
+    return kh1_vu1_tr == 1 && !kh1_vu1_verbose && !kh1_vu1_natcheck && kh1_vu1_native != 2 && !kh1_vu1_dump_dir;
+}
+
 /* session 137v: n of the current code's data words at once (the walk's run of them), as n calls of
  * kh1_vif1_data */
 void kh1_vif1_data_n(const u32 *w, u32 n) {
@@ -1615,6 +1682,20 @@ void kh1_vif1_data_n(const u32 *w, u32 n) {
         }
     }
     if ((cur & 0x60) == 0x60 && n == need && !got) { /* 2026-11-01: all of it here: unpacked from the walk's words */
+        if (nc_can_hold()) { /* natchain: or held there for a native parse */
+            NcUp *e = &nc_q[nc_n++];
+            e->w = w;
+            e->cmd = cur;
+            e->imm = cur_imm;
+            e->num = cur_num ? cur_num : 256;
+            e->words = n;
+            e->cl = cl;
+            e->wl = wl;
+            e->addr = ((cur_imm & 0x3FF) + tops) & (DATA_QW - 1);
+            got = n;
+            need = 0;
+            return;
+        }
         ds = w;
         got = n;
         need = 0;

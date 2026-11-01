@@ -22,6 +22,25 @@ void kh1_vif1_reset(void);
 void kh1_vif1_code(u32 w);
 void kh1_vif1_data(u32 w);
 void kh1_vif1_data_n(const u32 *w, u32 n); /* n data words at once */
+/* 2026-11-01: a VIF1 send's end (host/null/dmawalk.c): the unpacks natchain held back are written (the words they read
+ * belong to the send) */
+void kh1_vif1_end(void);
+/* 2026-11-01 (docs/native-plan.md "Records straight from the chain"; config.txt natchain=, host KH1_HOST_NATCHAIN): 1 (the
+ * default) lets the native parses of P18, P11, P10, P0 and P4 read their records from the walk's words without the
+ * unpack into VU memory, and write the payload straight into kh1_vu1_draw_room's room (handed over by
+ * kh1_vu1_draw_take(nqw)); 0 the old path; host only: 2 poisons the VU memory the dropped unpacks would have written,
+ * 3 parses both ways and compares.  Counts: runs read from the chain, unpacks written late, qwords never written, and
+ * natchain=3's payloads that differed */
+extern int kh1_vu1_natchain;
+extern u32 kh1_vu1_nc_runs, kh1_vu1_nc_flushed, kh1_vu1_nc_qw, kh1_vu1_nc_bad;
+/* with natchain=1 the timers of the game thread's hot calls (a VU1 run, an XGKICK, a feed into VU memory, a hand-off)
+ * read the clock on 1 call in 8, picked at random so that no repeating pattern of calls is always or never timed, and
+ * count that call's time 8 times: the Vita's clock is a system call (~0.7 us a read) and a fight's window makes a few
+ * hundred thousand of them.  s: the site's own state */
+#define KH1_TIME_EVERY (kh1_vu1_natchain ? 8u : 1u)
+#define KH1_TIME_THIS(s) (!kh1_vu1_natchain || ((s) = (s) * 1664525u + 1013904223u) >> 29 == 0)
+extern u32 *(*kh1_vu1_draw_room)(u32 maxqw);
+extern void (*kh1_vu1_draw_take)(u32 nqw);
 
 /* XGKICK: nqw qwords of whole GIF packets (the last one with EOP) copied out of VU1 memory */
 extern void (*kh1_vu1_kick)(const u32 *q, u32 nqw);
