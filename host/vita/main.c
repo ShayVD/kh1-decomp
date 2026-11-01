@@ -66,6 +66,11 @@
  *                             summed on the CPU)
  *       natspan=0             with renderer=native, the GS worker puts each native record to the recording queue as
  *                             its own op (as before 2026-11-01; 1, the default: a payload's records as one op)
+ *       natref=0              with renderer=native, a native payload is copied into the GS worker's queue and its
+ *                             records again into the recording queue (as before 2026-11-01); 1, the default: the
+ *                             payload is written once into a 4 MiB pool and both queues carry only a reference to it
+ *       natbulk=0             with natref=1, the GS worker counts each native record in the GS model on its own (1, the
+ *                             default: the records between PRIM changes in one count); natref=0 is always per record
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
@@ -174,6 +179,7 @@ static int use_native;      /* config.txt's renderer=native (docs/native-rendere
 extern int kh1_dma_native, kh1_vita_gxm_native_ok;
 extern u32 kh1_pipes_nat_cull, kh1_pipes_nat_draws, kh1_pipes_nat_tris;
 extern int kh1_pipes_nat_span; /* pipes.c: config.txt natspan= (2026-11-01) */
+extern int kh1_dma_natref, kh1_dma_natbulk; /* dmawalk.c: config.txt natref=, natbulk= (2026-11-01) */
 static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
 static int strip_always;  /* config.txt's strip= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
@@ -577,9 +583,18 @@ static int watchdog(SceSize args, void *argp) {
                 d0 = kh1_pipes_nat_draws;
                 t0 = kh1_pipes_nat_tris;
             }
-            if (kh1_gsq_on) /* session 141: the GS side's worker (the recording above is its time now) */
-                vlog("kh1-vita: gs worker: %u ms busy; the game waited %u ms for it (%u waits)\n",
-                     (kh1_gsq_us_busy - gbusy0) / 1000, (kh1_gsq_us_wait - gwait0) / 1000, kh1_gsq_waits - gwaits0);
+            if (kh1_gsq_on) { /* session 141: the GS side's worker (the recording above is its time now) */
+                static u32 pw0, pn0; /* 2026-11-01: natref's pool, its room waited for */
+                vlog("kh1-vita: gs worker: %u ms busy; the game waited %u ms for it (%u waits); native payloads %s, "
+                     "%u ms waiting for pool room (%u waits)\n",
+                     (kh1_gsq_us_busy - gbusy0) / 1000, (kh1_gsq_us_wait - gwait0) / 1000, kh1_gsq_waits - gwaits0,
+                     kh1_pool_on && kh1_dma_natref ? kh1_dma_natbulk ? "by reference, counted in bulk (natref=1)"
+                                                                     : "by reference (natref=1 natbulk=0)"
+                                                   : "copied (natref=0)",
+                     (kh1_pool_us_wait - pw0) / 1000, kh1_pool_waits - pn0);
+                pw0 = kh1_pool_us_wait;
+                pn0 = kh1_pool_waits;
+            }
             if (kh1_gpuq_on) /* session 142: the frame's GPU work on the third core (the commands and present above) */
                 vlog("kh1-vita: gpu thread: %u ms busy; the GS worker waited %u ms for it (%u waits); %u GS memory pages "
                      "copied\n", (kh1_gpuq_us_busy - qbusy0) / 1000, (kh1_gpuq_us_wait - qwait0) / 1000,
@@ -723,6 +738,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
         else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
+        else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
+        else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
@@ -881,6 +898,9 @@ int main(int argc, char **argv) {
         if (use_gsq) {
             int r = kh1_gsq_start(8u << 20);
             if (r == 0) sceKernelChangeThreadCpuAffinityMask(sceKernelGetThreadId(), SCE_KERNEL_CPU_MASK_USER_0);
+            /* 2026-11-01: the native payloads' pool (natref=1; dmawalk.c path1_draw), made even when renderer=native
+             * is off, so the menu's switch finds it */
+            if (r == 0 && kh1_dma_natref && kh1_pool_start(4u << 20)) vlog("kh1-vita: natref: no pool (payloads copied)\n");
             vlog("kh1-vita: GS side: %s\n", r == 0 ? "a worker thread on the second core" : "the game's thread (no worker)");
             /* session 142: the frame's GPU work on the third core, from a copy of the frame */
             if (r == 0 && use_gpuq) {

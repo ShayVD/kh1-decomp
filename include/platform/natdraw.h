@@ -40,6 +40,8 @@
 #define KH1_NAT_MAGIC 0x4E415400u /* "NAT" + the program's number */
 #define KH1_NAT_MATS 32            /* matrices a native draw command reads (u_m's 128 rows) */
 #define KH1_NAT_VERTS 16384        /* GPU vertices a native run lists at most (3 a triangle) */
+/* 2026-11-01: a record's length in qwords (r its first word): its qword, then n vertices of 2 */
+#define KH1_NAT_REC_QW(r) (1 + (r)[2] * 2)
 enum { KH1_NAT_CULL_NONE, KH1_NAT_CULL_CCW, KH1_NAT_CULL_CW };
 /* 2026-10-31: or'd into kh1_cmd_native's cull: the vertices carry mi's bit 7 (P0's): colour and fog straight across
  * the screen (drawstate.h lin) and z not clamped */

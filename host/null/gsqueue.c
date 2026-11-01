@@ -41,6 +41,10 @@ typedef struct {
 
 static KH1Q gsq = { 0, 0, 0, ~0u };
 static volatile int worker_sleeps;
+static KH1Q recq = { 0, 0, 0, ~0u }; /* session 146: the recording queue (below) */
+int kh1_recq_on;
+int kh1_pool_on;
+void (*kh1_gsq_idle_hook)(void);
 
 #define LOAD(p) __atomic_load_n(&(p), __ATOMIC_SEQ_CST)
 #define STORE(p, v) __atomic_store_n(&(p), (v), __ATOMIC_SEQ_CST)
@@ -51,6 +55,7 @@ static void worker(void);
 void kh1_vita_thread_note(int uid, const char *name); /* host/vita/main.c: the watchdog's `threads:` line */
 #include <psp2/kernel/cpu.h>
 #include <psp2/kernel/threadmgr.h>
+static void nap(void) { sceKernelDelayThread(50); }
 static SceUID sem[2];
 static void sem_wait(int i) { sceKernelWaitSema(sem[i], 1, 0); }
 static void sem_post(int i) { sceKernelSignalSema(sem[i], 1); }
@@ -98,6 +103,8 @@ static int thread_start(void) {
 #else
 #include <pthread.h>
 #include <semaphore.h>
+int usleep(unsigned);
+static void nap(void) { usleep(50); }
 static sem_t sem[2];
 static void sem_wait_(int i) {
     while (sem_wait(&sem[i])) ; /* EINTR */
@@ -282,6 +289,12 @@ static void worker(void) {
         if (t == h) {
             for (spin = 0; spin < SPINS && (h = LOAD(gsq.head)) == t; spin++) ;
             if (h == t) {
+                /* 2026-11-01: with the pool (natref), the recording ops put so far go to the GPU thread first: a pool
+                 * free among them may be what the game thread waits for */
+                if (kh1_pool_on) {
+                    if (kh1_gsq_idle_hook) kh1_gsq_idle_hook();
+                    if (LOAD(kh1_recq_on)) q_publish(&recq);
+                }
                 STORE(worker_sleeps, 1);
                 if (LOAD(gsq.head) == t) sem_wait(0);
                 STORE(worker_sleeps, 0);
@@ -354,9 +367,7 @@ static u32 gq_args[2][KH1_GPUQ_ARGS];
 static volatile u32 gq_posted, gq_done;
 static volatile int gq_worker_sleeps, gq_waiter_sleeps, gq_waiting;
 
-int kh1_recq_on;
 volatile u32 kh1_recq_us_busy, kh1_recq_us_wait, kh1_recq_waits;
-static KH1Q recq = { 0, 0, 0, ~0u };
 
 static void gq_worker(void) {
     u32 seen = 0, rt = 0;
@@ -483,4 +494,49 @@ void kh1_gsq_state(char *b, int n) {
              LOAD(worker_sleeps) ? "asleep" : "awake", LOAD(gq_posted), LOAD(gq_done), gq_waiting ? " (waited for)" : "",
              LOAD(gq_worker_sleeps) ? "asleep" : "awake", LOAD(recq.head), LOAD(recq.tail), recq.wpos,
              recq.waiting ? ", waited for until " : " ", recq.waiting ? recq.want : 0);
+}
+
+/* ---- 2026-11-01: the pool for data handed on by reference (gsqueue.h's kh1_pool_*) ---- */
+volatile u32 kh1_pool_us_wait, kh1_pool_waits;
+static u32 (*pool)[4], pool_mask, pool_w; /* qwords; the writer's position */
+static volatile u32 pool_freed;             /* the freer's: everything before it is free */
+
+int kh1_pool_start(u32 bytes) {
+    if (kh1_pool_on) return 0;
+    if (bytes & (bytes - 1) || bytes < 4096) return -1;
+    pool = (u32(*)[4])malloc(bytes);
+    if (!pool) return -1;
+    pool_mask = bytes / 16 - 1;
+    kh1_pool_on = 1;
+    return 0;
+}
+
+/* waits until the freer has passed want (the GS queue published first, so the worker can get there) */
+static void pool_wait(u32 want) {
+    u32 spin, t0;
+    if ((s32)(LOAD(pool_freed) - want) >= 0) return;
+    kh1_gsq_flush();
+    t0 = clock_us();
+    kh1_pool_waits++;
+    for (;;) {
+        for (spin = 0; spin < SPINS && (s32)(LOAD(pool_freed) - want) < 0; spin++) ;
+        if ((s32)(LOAD(pool_freed) - want) >= 0) break;
+        nap();
+    }
+    kh1_pool_us_wait += clock_us() - t0;
+}
+
+u32 *kh1_pool_get(u32 nqw, u32 *end) {
+    u32 size = pool_mask + 1, at = pool_w & pool_mask, *p;
+    if (!kh1_pool_on || !nqw || nqw > size / 4) return 0;
+    if (size - at < nqw) pool_w += size - at; /* never wraps: the rest of the ring is skipped (freed with what follows) */
+    pool_wait(pool_w + nqw - size);
+    p = pool[pool_w & pool_mask];
+    pool_w += nqw;
+    *end = pool_w;
+    return p;
+}
+
+void kh1_pool_free(u32 end) {
+    if ((s32)(end - LOAD(pool_freed)) > 0) STORE(pool_freed, end);
 }

@@ -256,15 +256,18 @@ static void w_send(const u32 *a, const u32 *d, u32 n) { /* a send starts: its ow
 /* the native renderer (include/platform/natdraw.h): one or more VU1 runs' payloads (host/port/vu1_draw.h; ops put one
  * after another join), each record's GIF tag (PRE PRIM) applied and its strip counted in the model, then recorded
  * (host/null/pipes.c) */
-static void w_native(const u32 *a, const u32 *d, u32 n) {
-    (void)a;
+static void native_run(const u32 *d, u32 n, int bulk) {
     while (n >= 2) {
         u32 len = 2 + d[3] + d[2] * 4;
         if (len > n) break;
-        path1_packets += kh1_gs_native_run(d);
+        path1_packets += kh1_gs_native_run(d, bulk);
         d += len * 4;
         n -= len;
     }
+}
+static void w_native(const u32 *a, const u32 *d, u32 n) {
+    (void)a;
+    native_run(d, n, 0);
 }
 static void w_xshift(const u32 *a, const u32 *d, u32 n) { kh1_gs_xshift((s32)a[0]); }
 static void w_xstretch(const u32 *a, const u32 *d, u32 n) { kh1_gs_xstretch((s32)a[0], (s32)a[1], a[2]); }
@@ -345,7 +348,37 @@ static void path1_kick(const u32 *q, u32 nqw) {
 /* the native renderer: a run's payload in place of its kicks (kh1_dma_native: config.txt renderer=native,
  * KH1_HOST_NATIVE=1) */
 int kh1_dma_native;
+/* 2026-11-01 (docs/native-plan.md "Native payloads by reference"; config.txt natref=, host KH1_HOST_NATREF): the
+ * payload is copied once, into the pool (gsqueue.h kh1_pool_*), and the GS worker's op carries only where it is
+ * (a qword: its address, its qwords, the pool position after it); the worker hands its records to the GPU thread
+ * by the same reference (pipes.c's r_nat_ref), which frees the pool up to there once it has read them.  0 copies
+ * the payload into the queue, the worker its records into the recording queue, and counts each record on its own,
+ * as before */
+int kh1_dma_natref = 1;
+/* and on that path the records' GS bookkeeping in bulk (gsregs.c kh1_gs_native_run's bulk; config.txt natbulk=,
+ * host KH1_HOST_NATBULK) */
+int kh1_dma_natbulk = 1;
+static void w_native_ref(const u32 *a, const u32 *d, u32 n) {
+    (void)a;
+    for (; n; n--, d += 4) {
+        kh1_gs_nat_pooled = 1;
+        kh1_gs_nat_free = d[2];
+        native_run((const u32 *)(unsigned long)d[0], d[1], kh1_dma_natbulk);
+        kh1_gs_nat_pooled = 0;
+        if (kh1_gs_nat_done) kh1_gs_nat_done(d[2]); /* (a payload the hook saw end has done so already) */
+        else kh1_pool_free(d[2]); /* no recorder: nothing reads it later */
+    }
+}
 static void path1_draw(const u32 *q, u32 nqw) {
+    u32 r[4], *p;
+    if (kh1_dma_natref && kh1_gsq_on && kh1_pool_on && (p = kh1_pool_get(nqw, &r[2])) != 0) {
+        memcpy(p, q, nqw * 16);
+        r[0] = (u32)(unsigned long)p;
+        r[1] = nqw;
+        r[3] = 0;
+        kh1_gsq_put(w_native_ref, 0, 0, r, 1);
+        return;
+    }
     kh1_gsq_put(w_native, 0, 0, q, nqw);
 }
 

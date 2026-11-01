@@ -2,7 +2,10 @@
  * the GPU frame's thread runs between its jobs (kh1_recq).  A producer puts ops of random sizes (joined runs of
  * the same op, ops past half the ring that run at once on the producer, wraps of a small ring) and jobs; the
  * consumer side checks each op's arguments and data and that the ops ran in the order put, and the syncs
- * return only once everything put has run.  Not part of the PS2 build. */
+ * return only once everything put has run.  2026-11-01: the pool (kh1_pool_*, natref) in the native payloads' pipeline:
+ * the producer writes payloads into a small pool and puts references to the worker, the worker hands each on to the
+ * recording queue, whose op checks the payload in place and frees the pool to its end (so the producer's waits for
+ * room depend on the worker publishing the recording queue before it sleeps).  Not part of the PS2 build. */
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
@@ -61,6 +64,41 @@ static void put_ops(int q, u32 n, u32 *words) {
     }
 }
 
+/* the pool's pipeline: a reference qword (address, qwords, the pool's end after it, its number) */
+static u32 pool_next, pool_bad, pool_qw;
+static void pool_rec(const u32 *a, const u32 *d, u32 nqw) {
+    (void)a;
+    for (; nqw; nqw--, d += 4) {
+        const u32 *p = (const u32 *)(unsigned long)d[0];
+        u32 i;
+        if (d[3] != pool_next) pool_bad++;
+        pool_next = d[3] + 1;
+        for (i = 0; i < d[1] * 4; i++)
+            if (p[i] != word(d[3] + 7, i)) pool_bad++;
+        pool_qw += d[1];
+        kh1_pool_free(d[2]);
+    }
+}
+static void pool_work(const u32 *a, const u32 *d, u32 nqw) {
+    (void)a;
+    for (; nqw; nqw--, d += 4) kh1_recq_put(pool_rec, 0, 0, d, 1); /* joined while unpublished */
+}
+static u32 put_pool(u32 n) {
+    u32 k, i, r[4], *p, qw = 0;
+    for (k = 0; k < n; k++) {
+        u32 nq = 1 + (rnd() % 8 == 0 ? rnd() % 1024 : rnd() % 64);
+        if (!(p = kh1_pool_get(nq, &r[2]))) return ~0u;
+        for (i = 0; i < nq * 4; i++) p[i] = word(k + 7, i);
+        r[0] = (u32)(unsigned long)p;
+        r[1] = nq;
+        r[3] = k;
+        kh1_gsq_put(pool_work, 0, 0, r, 1);
+        qw += nq;
+        if (rnd() % 64 == 0) kh1_gsq_flush();
+    }
+    return qw;
+}
+
 int main(void) {
     u32 w0 = 0, w1 = 0, fails = 0;
     if (kh1_gsq_start(1u << 16) || kh1_gpuq_start() || kh1_recq_start(1u << 16)) {
@@ -81,6 +119,21 @@ int main(void) {
         printf("gsqueue_test: the recording queue: %u bad, %u of %u words, %u ops\n", seen[1].bad, seen[1].words, w1,
                seen[1].next);
         fails++;
+    }
+    { /* a 64 KiB pool (4096 qwords): payloads up to 1024 qwords, so it wraps and waits often */
+        u32 qw;
+        if (kh1_pool_start(1u << 16)) {
+            printf("gsqueue_test: no pool\n");
+            return 1;
+        }
+        qw = put_pool(20000);
+        kh1_gsq_sync();
+        kh1_recq_sync();
+        if (qw == ~0u || pool_bad || pool_next != 20000 || pool_qw != qw) {
+            printf("gsqueue_test: the pool: %u bad, %u of %u qwords, %u payloads\n", pool_bad, pool_qw, qw, pool_next);
+            fails++;
+        }
+        printf("gsqueue_test: the pool: %u payloads (%u qwords), %u waits for room\n", pool_next, pool_qw, kh1_pool_waits);
     }
     printf("gsqueue_test: %s (%u + %u words through the two queues, %u jobs between)\n", fails ? "FAILED" : "ok", w0, w1,
            jobs_run);

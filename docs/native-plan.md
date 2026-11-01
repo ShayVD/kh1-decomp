@@ -140,6 +140,56 @@ a Vita**: the `gs worker ops:` line's w_native time (the address of `w_native` i
 offset) with natspan=1 against natspan=0. If it barely moves, the cost is elsewhere (the payload's cache misses
 crossing cores, or kh1_gs_native's per-record bookkeeping) and the next step is handing payloads by reference.
 
+### Native payloads by reference (2026-11-01, config.txt `natref=1` / `natbulk=1`, host-measured)
+
+Stage 0's Vita log had w_native at 785 ms per 2.4 s with natspan=0 and 734 with natspan=1, so the span cut barely
+moved it. Two changes, both on by default, both off with `natref=0` (the A/B switch):
+
+- **The payload by reference** (dmawalk.c `path1_draw` / `w_native_ref`, gsqueue.c `kh1_pool_*`, pipes.c `r_nat_ref`).
+  Before, a payload was copied three times: the game thread into the GS worker's ring, the worker its records into
+  the recording queue, the GPU thread those into its op (`nat_op`). Now the game thread writes it once into a 4 MiB
+  pool (a ring of qwords, the gsq's kind: one writer, freed in order) and puts the worker a one-qword reference
+  (address, qwords, the pool position after it). The worker reads only what it needs (the header, the matrices for
+  the join checks, each record's first qword) and puts each span of records to the recording queue as another
+  one-qword reference; r_nat_ref on the GPU thread reads the records in place (r_nat_rec, as before) and frees the
+  pool up to the payload's end. The free rides on the payload's last span; a payload whose records all went earlier
+  holds its free until the next span, or until the worker goes idle (gsqueue.c `kh1_gsq_idle_hook`). **The
+  deadlock the plan thread warned of**: the game thread waits for pool room only after publishing the gsq, and with
+  the pool on the worker publishes the recording queue before it sleeps, so a free never sits unpublished while the
+  game waits. tests/host/gsqueue_test.c runs that pipeline through a 64 KiB pool (20,000 payloads up to 1,024
+  qwords, ~450 waits for room). r_nat_open / r_nat_mats still copy the header and matrices by value (small, and the
+  op can outlive the payload), and the GPU thread still assembles `nat_op` (its own copy, same as before).
+- **The GS bookkeeping in bulk** (gsregs.c `kh1_gs_native_run(d, bulk)` / `gs_native_n`): the records of a payload
+  up to a PRE that writes another PRIM are counted with one gs_find and one kh1_gsmem_draw_n (kicks and triangles
+  summed). A PRE that writes the PRIM in force changes nothing a count reads (set() keeps the draw; the vertex
+  queue is emptied either way), and kh1_gsmem_draw_n's repeat calls only count, so the counts and marks are the
+  same. The hook (nat_rec) still sees every record with its PRIM. `natbulk=0` (host `KH1_HOST_NATBULK=0`) counts
+  each record with natref=1; natref=0 always does.
+
+Records' lengths go through natdraw.h's `KH1_NAT_REC_QW(r)` (the skinning thread's 3-qword vertices change only the
+macro's body).
+
+**Checked (host)**: the Dive to frame 7000 on en.iso (dive_en.txt, `KH1_HOST_TRACE=2 KH1_HOST_GSQ=1
+KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1 KH1_HOST_VU1=1
+KH1_HOST_VU1TR=1 KH1_HOST_NATIVE=1`, the gxmcheck binary): all 140 GS digests and 280 GPU target hashes identical
+with `KH1_HOST_NATREF=0`, `=1`, and `=1 KH1_HOST_NATBULK=0 KH1_HOST_NATPOOL=262144` (a 256 KiB pool, so it
+wraps often). tests/selftest.sh passes. **Worker profile** (callgrind as above, trace 5, frames 7000-7060, thread 3):
+
+| | natref=0 | natref=1 |
+|---|---|---|
+| the worker | 575 M | 549 M |
+| w_native (w_native_ref) | 72.0 M | 45.1 M |
+| kh1_gs_native (gs_native_n) | 26.8 M | 4.2 M |
+| span puts (copies into the recording queue) | 4.1 M | 1.5 M |
+| nat_rec | 30.3 M | 30.3 M (24.8 M of it prim_state: the state op and the texture lookup, once an op) |
+
+On the Vita the bigger part should be memory, not instructions: the worker no longer reads every byte of each
+payload (written on the game's core) or writes it again into the recording queue (~25 MB a window, the
+estimate in vita-build.md). **Not yet measured on a Vita**: the `gs worker ops:` line's `w_native_ref` time (this
+build's out/vita/kh1.elf has it at 0x810dce24, w_native at 0x810dce1c; add the log's offset) with natref=1 against
+w_native with natref=0, and the `gs worker:` line's pool waits (should be ~0). **Next on the worker's native path**:
+prim_state's texture lookup per op (~25 M here), then stage 4's uploads.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
