@@ -64,6 +64,8 @@
  *       natp13=0              with renderer=native, P13 (renderer B's skinned models) on its VU1 program (2026-10-31;
  *                             1, the default, draws it natively: one-bone vertices transformed by the GPU, the others
  *                             summed on the CPU)
+ *       natspan=0             with renderer=native, the GS worker puts each native record to the recording queue as
+ *                             its own op (as before 2026-11-01; 1, the default: a payload's records as one op)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
@@ -171,6 +173,7 @@ static int use_gsstrip = 1; /* session 151: config.txt's gsstrip= */
 static int use_native;      /* config.txt's renderer=native (docs/native-renderer.md) */
 extern int kh1_dma_native, kh1_vita_gxm_native_ok;
 extern u32 kh1_pipes_nat_cull, kh1_pipes_nat_draws, kh1_pipes_nat_tris;
+extern int kh1_pipes_nat_span; /* pipes.c: config.txt natspan= (2026-11-01) */
 static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
 static int strip_always;  /* config.txt's strip= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
@@ -719,6 +722,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
         else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
         else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
+        else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);

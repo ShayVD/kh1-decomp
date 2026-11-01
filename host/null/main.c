@@ -439,6 +439,10 @@ int main(int argc, char **argv) {
             extern int kh1_pipes_rq_frame;
             kh1_pipes_rq_frame = atoi(getenv("KH1_HOST_RECFRAME"));
         }
+        if (getenv("KH1_HOST_NATSPAN")) { /* 2026-11-01: 0 each native record its own recording op (pipes.c) */
+            extern int kh1_pipes_nat_span;
+            kh1_pipes_nat_span = atoi(getenv("KH1_HOST_NATSPAN"));
+        }
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
         if (getenv("KH1_HOST_CLOCK")) { /* 2026-10-31: kh1_vu1_clock on the host (the frame op's parts at the end) */
             kh1_vu1_clock = host_us;
