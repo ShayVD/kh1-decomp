@@ -220,6 +220,48 @@ The native renderer's stage 5 and P0's caching note, pulled ahead because the GP
 - **Tested by**: `KH1_HOST_NATCHECK` with the cache on (each cached batch compared with a fresh parse every N
   frames), gxmcheck pictures of the Dive identical with `natcache=0` and `=1`, the GPU thread's line on a Vita.
 
+**First cut (2026-11-01, config.txt `recfast=1`, the default; `recfast=0` / host `KH1_HOST_RECFAST=0` the old code)**.
+Before static buffers, the two biggest plain costs the host profile showed on the GPU thread (callgrind
+`--separate-threads=yes`, gxmcheck binary without KH1_HOST_GXM so the mock rasteriser stays out, renderer=native,
+VU1 / VU1TR / VU1NAT on, trace 5, GSQ / GPUQ / RECQ, en.iso, dive_en.txt; the env must include `KH1_HOST_VU1=1`, or
+the Dive has no 3D and the profile is empty):
+
+- **The frame op's passes** (Vita: ~550 ms of the GPU thread's ~2.8 s in a 3.2 s window): over frames 7000-7060
+  kh1_cmd_frame and its callees took ~50 M instructions, **38 M of it cmd_swap**: hoist (2026-10-31) moved a pass's
+  commands with three reversals of whole KH1Cmds (each with its KH1DrawState) and bubbled each of G's uploads down
+  one swap at a time. Now cmdbuf.c `cmd_rot` rotates through a scratch copy (memcpy / memmove, each command moved once
+  or twice) and the uploads are partitioned in one pass. Same command order: **50 M -> 12 M**.
+- **The native triangles** (natdraw.c, ~half the recording ops' instructions: put / put0 three times a strip vertex,
+  once for each triangle it is in): now each vertex is converted once into a scratch array and the triangles are
+  32-byte copies of it. On x86 this barely moves (39.9 M -> 39.1 M at 7000, 33.6 M -> 32.2 M at 5000: a struct copy is
+  not much cheaper than put there); on the A9 a copy is two ldm / stm pairs against put's float and byte stores, so
+  the Vita log decides whether it is worth keeping.
+
+Checked: all 60 GPU picture hashes (KH1_HOST_GXM=250, KH1_HOST_GXM_HASH=1, to frame 7500, KH1_HOST_WIDE=1) identical
+with the change and without; make test passes. **Not yet measured on a Vita**: the `gs worker's frame op:` line's "the
+passes on the GPU thread" and the `recording:` line, recfast=1 against recfast=0. Expected: the passes ~0.3 s lower per
+2.4 s if the A9 spends what x86 does in the swaps.
+
+**The Vita's A/B (2026-11-01, Shay's Vita, the recfast VPK, renderer=native, dive_en.txt, watchdog windows inside
+frames 5000-8000, scaled to 2.4 s)**:
+
+| | recfast=0 | recfast=1 |
+|---|---|---|
+| pictures/s | 20.1 | **21.3** |
+| the frame op's passes on the GPU thread | 635 ms | **119 ms** |
+| recording on the GPU thread (the passes and the GPU frame in it) | 1,985 | 1,867 |
+| GS worker (run clock) | 1,670 | 2,097 |
+| game (run clock) | 1,495 | 1,874 |
+
+The passes lost ~0.5 s, more than x86's share predicted. The recording total fell less, because with frames coming
+faster the GPU frame's submit (554 -> 849 ms) and the worker and game threads each do more work a second: the GS
+worker (~2.1 s) is now the busiest thread again. The watchdog's windows were 5.9 s long with recfast=0 and 3.6 s with
+1 (it shares core 2 with the GPU thread). Both runs were played by hand, so ~6 % is about the noise floor; the passes'
+drop is far outside it. Next on this thread, by the Vita's `gpu parts:` line: the vertex
+copy (~150 ms per 2.4 s: gxm.c memcpys the recorder's whole vertex slot into GPU memory each frame; recording into
+GPU-mapped memory needs the empty frames' early return to wait for the GPU before the slot is reused) and the
+uploads into targets (pend_flush, outside the parts' timers).
+
 ### Stage 2: the rest of renderer B on the GPU (P12, P14, P15-P17, P19, P20)
 
 - **P12 / P14 (lit, rigid / skinned)**: the native vertex shader gains renderer B's lighting: 3 parallel lights +

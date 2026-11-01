@@ -69,6 +69,9 @@
  *                             before; docs/native-renderer.md "P13's two-bone vertices on the GPU")
  *       natspan=0             with renderer=native, the GS worker puts each native record to the recording queue as
  *                             its own op (as before 2026-11-01; 1, the default: a payload's records as one op)
+ *       recfast=0             the GPU thread's recording as before 2026-11-01 (1, the default: each native strip
+ *                             vertex converted once, natdraw.c; the frame op's pass hoist moving commands in blocks,
+ *                             cmdbuf.c; the same draws either way)
  *       natref=0              with renderer=native, a native payload is copied into the GS worker's queue and its
  *                             records again into the recording queue (as before 2026-11-01); 1, the default: the
  *                             payload is written once into a 4 MiB pool and both queues carry only a reference to it
@@ -134,6 +137,7 @@ int kh1_spu2_voices_on(void);
 #include "vita.h"
 #include "dmawalk.h"
 #include "platform/cmdbuf.h"
+extern int kh1_nat_once; /* natdraw.c: config.txt recfast= (2026-11-01) */
 #include "platform/vu1.h"
 #include "platform/costack.h"
 #include "platform/view.h"
@@ -746,6 +750,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
         else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
+        else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */

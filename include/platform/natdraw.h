@@ -72,6 +72,8 @@ u32 kh1_nat_tris_skin(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, u32 
  * clamped as for P18, so a triangle across the guard box's near or far plane is drawn whole (z clamped) where the
  * VU drew its inside part */
 u32 kh1_nat_tris0(const u32 *data, u32 nrec, u32 f, int culled, KH1GpuVert *out, u32 max, u32 *lost);
+/* 2026-11-01: 1 (the default) each record vertex converted once, its triangles copies (config.txt recfast=) */
+extern int kh1_nat_once;
 
 /* F = N x M for each of nmat matrices (VU column order, raw floats) into out (4 rows of 4 floats a matrix, the
  * vertex shader's u_m), for a pass and the draw's ZBUF (its PSM picks depth.h's scale) and the GS's X shift in
