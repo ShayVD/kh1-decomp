@@ -15,37 +15,129 @@ int kh1_vu1_draw_p10 = 1;
 
 /* 2026-10-31: the time the game thread spends handing payloads over (dmawalk.c's queue put: the copy, and a full
  * ring's wait), all programs' and P13's, kh1_vu1_clock's microseconds; the rest of a native program's time in
- * the Vita's `vu1 programs:` line is its parse */
+ * the Vita's `vu1 programs:` line is its parse.  2026-11-01 (natchain=1): 1 hand-off in 8 timed (vu1.h KH1_TIME_THIS) */
 u32 kh1_vu1_nd_hand_us, kh1_vu1_nd13_hand_us;
-static void nd_hand(const u32 *q, u32 nqw) {
-    u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, dt;
-    kh1_vu1_draw(q, nqw);
-    dt = kh1_vu1_clock ? kh1_vu1_clock() - t0 : 0;
+static u32 nd_hand_smp;
+static void nd_time(u32 t0, u32 num) {
+    u32 dt = (kh1_vu1_clock() - t0) * KH1_TIME_EVERY;
     kh1_vu1_nd_hand_us += dt;
-    if ((q[0] & 0xFF) == 13) kh1_vu1_nd13_hand_us += dt;
+    if (num == 13) kh1_vu1_nd13_hand_us += dt;
+}
+static void nd_hand(const u32 *q, u32 nqw) {
+    u32 t0 = 0, timed = kh1_vu1_clock && KH1_TIME_THIS(nd_hand_smp);
+    if (timed) t0 = kh1_vu1_clock();
+    kh1_vu1_draw(q, nqw);
+    if (timed) nd_time(t0, q[0] & 0xFF);
 }
 
 #define ND_QW 4096 /* a payload's qwords: VU1's data memory is 1024, a vertex 3 there and 2 here */
 static u32 nd_buf[ND_QW][4];
 static u32 nd_mat[KH1_NAT_MATS][4][4];
 
+/* 2026-11-01 (natchain=1): the payload written where the GS worker reads it, not built here and copied there: room
+ * for ND_QW qwords in natref's pool (host/null/dmawalk.c path1_room; 0 when there is no pool), then the qwords
+ * written there handed over (path1_take: the same reference op path1_draw puts).  P13 still builds in nd_buf */
+u32 *(*kh1_vu1_draw_room)(u32 maxqw);
+void (*kh1_vu1_draw_take)(u32 nqw);
+static int nd_pooled;
+static u32 (*nd_out(void))[4] {
+    u32 *p;
+    nd_pooled = 0;
+    if (kh1_vu1_natchain && kh1_vu1_natchain != 3 && kh1_vu1_draw && kh1_vu1_draw_room &&
+        (p = kh1_vu1_draw_room(ND_QW)) != 0) {
+        nd_pooled = 1;
+        return (u32 (*)[4])p;
+    }
+    return nd_buf;
+}
+static void nd_give(u32 (*ob)[4], u32 nqw) {
+    u32 t0 = 0, timed;
+    if (!nd_pooled) {
+        nd_hand(ob[0], nqw);
+        return;
+    }
+    timed = kh1_vu1_clock && KH1_TIME_THIS(nd_hand_smp);
+    if (timed) t0 = kh1_vu1_clock();
+    kh1_vu1_draw_take(nqw);
+    if (timed) nd_time(t0, ob[0][0] & 0xFF);
+}
+
+/* natchain (vu1.c nc_*): the programs whose parse reads held unpacks, and the views they read them by */
+static int nc_reader(int num) { return num == 18 || num == 11 || num == 10 || num == 0 || num == 4; }
+/* renderer B's packets (renderer-spec 2.3: STCYCL 1,1; UNPACK V4-32 n -> 0 +TOPS; MSCNT): the one held unpack, at
+ * top, V4-32 with CL == WL, so VU address top + o is its qword o for o < *lim */
+static const u32 (*nc_b(u32 *lim))[4] {
+    const NcUp *e = &nc_q[0];
+    if (nc_n != 1 || (e->cmd & 0x7F) != 0x6C || e->addr != (top & (DATA_QW - 1)) || e->cl != e->wl) return 0;
+    *lim = e->num;
+    return (const u32 (*)[4])e->w;
+}
+/* renderer A's batches (renderer-spec 2.2.2: UNPACK V4-32 1 -> @0, STCYCL 3,1, V4-32 -> @1, V4-8 -> @2, V2-16 or
+ * V4-16 -> @3, MSCNT): exactly those four held, each once (so none writes over another) */
+static int nc_a(const NcUp **e) {
+    u32 i, a = top & (DATA_QW - 1);
+    e[0] = e[1] = e[2] = e[3] = 0;
+    if (nc_n != 4) return 0;
+    for (i = 0; i < 4; i++) {
+        const NcUp *x = &nc_q[i];
+        u32 c = x->cmd & 0x7F, d = (x->addr - a) & (DATA_QW - 1), k;
+        if (d == 0 && c == 0x6C && x->num == 1) k = 0;
+        else if (d == 1 && c == 0x6C) k = 1;
+        else if (d == 2 && c == 0x6E) k = 2;
+        else if (d == 3 && (c == 0x65 || c == 0x6D)) k = 3;
+        else return 0;
+        if (e[k] || (k && (x->cl != 3 || x->wl != 1))) return 0;
+        e[k] = x;
+    }
+    return 1;
+}
+/* the held unpacks were read and handed over: never written (natchain=2: their addresses poisoned instead) */
+static void nc_drop(void) {
+    u32 i, j, f;
+    for (i = 0; i < nc_n; i++) {
+        const NcUp *e = &nc_q[i];
+        kh1_vu1_nc_qw += e->num;
+        st.unpacks++;
+        if (kh1_vu1_natchain == 2)
+            for (j = 0; j < e->num; j++) {
+                u32 a = (e->addr + j / e->wl * e->cl + j % e->wl) & (DATA_QW - 1);
+                for (f = 0; f < 4; f++) mem[a][f] = 0xBAD00000u | a << 2 | f;
+            }
+    }
+    nc_n = 0;
+    kh1_vu1_nc_runs++;
+}
+static u32 nd_chk[ND_QW][4]; /* natchain=3: the payload parsed from VU memory, for the comparison */
+static void nc_compare(const u32 (*a)[4], u32 na, const u32 (*b)[4], u32 nb) {
+    if (na != nb || memcmp(a, b, na * 16)) {
+        if (!kh1_vu1_nc_bad++) printf("kh1-vu1: natchain: a payload read from the chain differs (P%u, %u / %u qwords)\n",
+                                       a[0][0] & 0xFF, na, nb);
+    }
+    kh1_vu1_nc_runs++;
+}
+
 /* P18 from 007 (vu1_nat.h nat_18 is the arithmetic this replaces): 1 when handed over, 0 to run it.  2026-10-31: P11
  * too (num 11): P18's stream and output, with a near-plane cull (w < 1) and the guard band, which the GPU's own
- * clipping replaces (pipes.c draws it with z not clamped) */
-static int nd_18(u32 pc, u32 num) {
-    u32 i2 = top, rq = 2, nrec = 0, nmat = 0, k;
-    s32 cur[3] = { -1, -1, -1 }, last[3] = { -1, -1, -1 }; /* each slot's matrix in this payload; the last one loaded */
+ * clipping replaces (pipes.c draws it with z not clamped).  2026-11-01: nd_18_build reads the stream from VU memory
+ * (s 0) or from the held unpack's words (s, lim qwords: anything past them fails, and the caller reads VU memory) */
+#define NQ(o) (s ? s[o] : mem[(top + (o)) & (DATA_QW - 1)])
+static __inline__ __attribute__((always_inline)) u32 nd_18_build(u32 num, u32 (*ob)[4], const u32 (*s)[4], u32 lim,
+                                                                 u32 *nrec_o, s32 *last) {
+    u32 o = 0, rq = 2, nrec = 0, nmat = 0, k;
+    s32 cur[3] = { -1, -1, -1 }; /* each slot's matrix in this payload */
     static const int base[3] = { 5, 12, 19 };
-    if (pc != 7) return 0;
     for (;;) {
-        const u32 *h = mem[i2 & (DATA_QW - 1)];
-        u32 op = h[0] & 0xFFFF, nv, j, par;
+        const u32 *h;
+        u32 op, nv, j, par;
+        if (s && o >= lim) return 0;
+        h = NQ(o);
+        op = h[0] & 0xFFFF;
         if (!op) { /* a matrix into slot z (0, 1, else 2): the slot's vertices that follow use it */
             u32 sl = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
-            if (nmat == KH1_NAT_MATS) return 0;
-            for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], mem[(i2 + 1 + k) & (DATA_QW - 1)], 16);
+            if (nmat == KH1_NAT_MATS || (s && o + 5 > lim)) return 0;
+            for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], NQ(o + 1 + k), 16);
             cur[sl] = last[sl] = (s32)nmat++;
-            i2 += 8;
+            o += 8;
             continue;
         }
         if (op != 1) break;
@@ -53,14 +145,15 @@ static int nd_18(u32 pc, u32 num) {
         par = h[3] & 0xFFFF;
         if (!nv) nv = 0x10000; /* z counts down to 0 after the first: 0 is 65536, which no stream has */
         if (rq + 1 + nv * 2 + 2 > ND_QW - KH1_NAT_MATS * 4) return 0;
-        nd_buf[rq][0] = mem[(i2 + 1) & (DATA_QW - 1)][0]; /* the GIF tag's low words */
-        nd_buf[rq][1] = mem[(i2 + 1) & (DATA_QW - 1)][1];
-        nd_buf[rq][2] = nv;
-        nd_buf[rq][3] = par;
+        if (s && o + 2 + nv * 3 > lim) return 0;
+        ob[rq][0] = NQ(o + 1)[0]; /* the GIF tag's low words */
+        ob[rq][1] = NQ(o + 1)[1];
+        ob[rq][2] = nv;
+        ob[rq][3] = par;
         rq++;
-        i2 += 2;
-        for (j = 0; j < nv; j++, i2 += 3) {
-            const u32 *n = mem[i2 & (DATA_QW - 1)], *p = mem[(i2 + 1) & (DATA_QW - 1)], *t = mem[(i2 + 2) & (DATA_QW - 1)];
+        o += 2;
+        for (j = 0; j < nv; j++, o += 3) {
+            const u32 *n = NQ(o), *p = NQ(o + 1), *t = NQ(o + 2);
             u32 sl = (n[3] & 0xFFFF) == 0 ? 0 : (n[3] & 0xFFFF) == 1 ? 1 : 2;
             if (p[3] != 0x3F800000u) return 0; /* w is 1 in every stream seen: else the program's own way */
             if (cur[sl] < 0) { /* the slot's matrix as the registers hold it now */
@@ -68,29 +161,52 @@ static int nd_18(u32 pc, u32 num) {
                 for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], vf[base[sl] + k], 16);
                 cur[sl] = (s32)nmat++;
             }
-            nd_buf[rq][0] = p[0];
-            nd_buf[rq][1] = p[1];
-            nd_buf[rq][2] = p[2];
-            nd_buf[rq][3] = (u32)cur[sl];
-            nd_buf[rq + 1][0] = t[0];
-            nd_buf[rq + 1][1] = t[1];
-            nd_buf[rq + 1][2] = t[2];
-            nd_buf[rq + 1][3] = 0;
+            ob[rq][0] = p[0];
+            ob[rq][1] = p[1];
+            ob[rq][2] = p[2];
+            ob[rq][3] = (u32)cur[sl];
+            ob[rq + 1][0] = t[0];
+            ob[rq + 1][1] = t[1];
+            ob[rq + 1][2] = t[2];
+            ob[rq + 1][3] = 0;
             rq += 2;
         }
         nrec++;
     }
-    if (!kh1_vu1_draw) return 0;
-    nd_buf[0][0] = KH1_NAT_MAGIC | num;
-    nd_buf[0][1] = nrec;
-    nd_buf[0][2] = nmat;
-    nd_buf[0][3] = rq - 2;
-    nd_buf[1][0] = (vf[1][0] & 0xFF) | (vf[1][1] & 0xFF) << 8 | (vf[1][2] & 0xFF) << 16 | (vf[1][3] & 0xFF) << 24;
-    nd_buf[1][1] = vi[12] >> 4 & 0xFF;
-    nd_buf[1][2] = vi[12] >> 15 & 1;
-    nd_buf[1][3] = vi[13] >> 15 & 1;
-    memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
+    ob[0][0] = KH1_NAT_MAGIC | num;
+    ob[0][1] = nrec;
+    ob[0][2] = nmat;
+    ob[0][3] = rq - 2;
+    ob[1][0] = (vf[1][0] & 0xFF) | (vf[1][1] & 0xFF) << 8 | (vf[1][2] & 0xFF) << 16 | (vf[1][3] & 0xFF) << 24;
+    ob[1][1] = vi[12] >> 4 & 0xFF;
+    ob[1][2] = vi[12] >> 15 & 1;
+    ob[1][3] = vi[13] >> 15 & 1;
+    memcpy(ob[rq], nd_mat, nmat * 64);
+    *nrec_o = nrec;
+    return rq + nmat * 4;
+}
+static int nd_18(u32 pc, u32 num) {
+    u32 (*ob)[4], n = 0, nrec = 0, k, lim;
+    s32 last[3] = { -1, -1, -1 }; /* the last matrix each slot loaded */
+    static const int base[3] = { 5, 12, 19 };
+    const u32 (*s)[4];
+    if (pc != 7 || !kh1_vu1_draw) return 0;
+    ob = nd_out();
+    if (nc_n && (s = nc_b(&lim)) != 0 && (n = nd_18_build(num, ob, s, lim, &nrec, last)) != 0) {
+        if (kh1_vu1_natchain == 3) { /* the same from VU memory */
+            u32 r2;
+            s32 l2[3] = { -1, -1, -1 };
+            nc_flush();
+            nc_compare((const u32 (*)[4])ob, n, (const u32 (*)[4])nd_chk, nd_18_build(num, nd_chk, 0, 0, &r2, l2));
+        } else nc_drop();
+    }
+    if (!n) {
+        if (nc_n) nc_flush();
+        last[0] = last[1] = last[2] = -1;
+        n = nd_18_build(num, ob, 0, 0, &nrec, last);
+        if (!n) return 0;
+    }
+    if (nrec) nd_give(ob, n);
     for (k = 0; k < 3; k++) /* the slots as the program's loads leave them */
         if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
     kh1_vu1_drawn++;
@@ -102,65 +218,94 @@ static int nd_18(u32 pc, u32 num) {
  * a GIF tag and z positions of one qword (w the slot; the position's own w is not read, as the shader's 1), XYZ2
  * only and no ADC.  Handed over in P18's payload as program 10: the colour is the RGBAQ P10's set-up run (from 000,
  * which the program still runs) kicks from qw1, kept by nd_10_setup; every triangle drawn, ST 0 (the tag's PRIM has
- * no TME).  Fewer than 3 positions (the program's count wraps) is left to the program */
+ * no TME).  Fewer than 3 positions (the program's count wraps) is left to the program.  2026-11-01: from VU memory or
+ * the held unpack, as nd_18_build */
 static u32 nd10_rgba = 0x80808080u;
 static void nd_10_setup(void) {
     nd10_rgba = (mem[1][0] & 0xFF) | (mem[1][1] & 0xFF) << 8 | (mem[1][2] & 0xFF) << 16 | (mem[1][3] & 0xFF) << 24;
 }
-static int nd_10(u32 pc) {
-    u32 i2 = top, rq = 2, nrec = 0, nmat = 0, k;
-    s32 cur[3] = { -1, -1, -1 }, last[3] = { -1, -1, -1 };
+static __inline__ __attribute__((always_inline)) u32 nd_10_build(u32 (*ob)[4], const u32 (*s)[4], u32 lim, u32 *nrec_o,
+                                                                 s32 *last) {
+    u32 o = 0, rq = 2, nrec = 0, nmat = 0, k;
+    s32 cur[3] = { -1, -1, -1 };
     static const int base[3] = { 5, 12, 19 };
-    if (pc != 6 || !kh1_vu1_draw) return 0;
     for (;;) {
-        const u32 *h = mem[i2 & (DATA_QW - 1)];
-        u32 op = h[0] & 0xFFFF, nv, j;
+        const u32 *h;
+        u32 op, nv, j;
+        if (s && o >= lim) return 0;
+        h = NQ(o);
+        op = h[0] & 0xFFFF;
         if (!op) {
             u32 sl = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
-            if (nmat == KH1_NAT_MATS) return 0;
-            for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], mem[(i2 + 1 + k) & (DATA_QW - 1)], 16);
+            if (nmat == KH1_NAT_MATS || (s && o + 5 > lim)) return 0;
+            for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], NQ(o + 1 + k), 16);
             cur[sl] = last[sl] = (s32)nmat++;
-            i2 += 5;
+            o += 5;
             continue;
         }
         if (op != 1) break;
         nv = h[2] & 0xFFFF;
         if (nv < 3) return 0;
         if (rq + 1 + nv * 2 + 2 > ND_QW - KH1_NAT_MATS * 4) return 0;
-        nd_buf[rq][0] = mem[(i2 + 1) & (DATA_QW - 1)][0];
-        nd_buf[rq][1] = mem[(i2 + 1) & (DATA_QW - 1)][1];
-        nd_buf[rq][2] = nv;
-        nd_buf[rq][3] = 0;
+        if (s && o + 2 + nv > lim) return 0;
+        ob[rq][0] = NQ(o + 1)[0];
+        ob[rq][1] = NQ(o + 1)[1];
+        ob[rq][2] = nv;
+        ob[rq][3] = 0;
         rq++;
-        i2 += 2;
-        for (j = 0; j < nv; j++, i2++) {
-            const u32 *p = mem[i2 & (DATA_QW - 1)];
+        o += 2;
+        for (j = 0; j < nv; j++, o++) {
+            const u32 *p = NQ(o);
             u32 sl = (p[3] & 0xFFFF) == 0 ? 0 : (p[3] & 0xFFFF) == 1 ? 1 : 2;
             if (cur[sl] < 0) {
                 if (nmat == KH1_NAT_MATS) return 0;
                 for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], vf[base[sl] + k], 16);
                 cur[sl] = (s32)nmat++;
             }
-            nd_buf[rq][0] = p[0];
-            nd_buf[rq][1] = p[1];
-            nd_buf[rq][2] = p[2];
-            nd_buf[rq][3] = (u32)cur[sl];
-            nd_buf[rq + 1][0] = nd_buf[rq + 1][1] = nd_buf[rq + 1][3] = 0;
-            nd_buf[rq + 1][2] = 0x3F800000u;
+            ob[rq][0] = p[0];
+            ob[rq][1] = p[1];
+            ob[rq][2] = p[2];
+            ob[rq][3] = (u32)cur[sl];
+            ob[rq + 1][0] = ob[rq + 1][1] = ob[rq + 1][3] = 0;
+            ob[rq + 1][2] = 0x3F800000u;
             rq += 2;
         }
         nrec++;
     }
-    nd_buf[0][0] = KH1_NAT_MAGIC | 10;
-    nd_buf[0][1] = nrec;
-    nd_buf[0][2] = nmat;
-    nd_buf[0][3] = rq - 2;
-    nd_buf[1][0] = nd10_rgba;
-    nd_buf[1][1] = 0;
-    nd_buf[1][2] = 0;
-    nd_buf[1][3] = 0;
-    memcpy(nd_buf[rq], nd_mat, nmat * 64);
-    if (nrec) nd_hand(nd_buf[0], rq + nmat * 4);
+    ob[0][0] = KH1_NAT_MAGIC | 10;
+    ob[0][1] = nrec;
+    ob[0][2] = nmat;
+    ob[0][3] = rq - 2;
+    ob[1][0] = nd10_rgba;
+    ob[1][1] = 0;
+    ob[1][2] = 0;
+    ob[1][3] = 0;
+    memcpy(ob[rq], nd_mat, nmat * 64);
+    *nrec_o = nrec;
+    return rq + nmat * 4;
+}
+static int nd_10(u32 pc) {
+    u32 (*ob)[4], n = 0, nrec = 0, k, lim;
+    s32 last[3] = { -1, -1, -1 };
+    static const int base[3] = { 5, 12, 19 };
+    const u32 (*s)[4];
+    if (pc != 6 || !kh1_vu1_draw) return 0;
+    ob = nd_out();
+    if (nc_n && (s = nc_b(&lim)) != 0 && (n = nd_10_build(ob, s, lim, &nrec, last)) != 0) {
+        if (kh1_vu1_natchain == 3) {
+            u32 r2;
+            s32 l2[3] = { -1, -1, -1 };
+            nc_flush();
+            nc_compare((const u32 (*)[4])ob, n, (const u32 (*)[4])nd_chk, nd_10_build(nd_chk, 0, 0, &r2, l2));
+        } else nc_drop();
+    }
+    if (!n) {
+        if (nc_n) nc_flush();
+        last[0] = last[1] = last[2] = -1;
+        n = nd_10_build(ob, 0, 0, &nrec, last);
+        if (!n) return 0;
+    }
+    if (nrec) nd_give(ob, n);
     for (k = 0; k < 3; k++)
         if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
     kh1_vu1_drawn++;
@@ -214,17 +359,19 @@ static __inline__ void nd0_vert(const u32 *c, const u32 *t, float32x4_t scv, con
 }
 #endif
 
-static int nd_0(u32 pc, int p4) {
-    const u32 *h = mem[top & (DATA_QW - 1)];
+/* 2026-11-01: nd_0_build reads the batch from VU memory (e 0) or from the four held unpacks (nc_a): the tag, the
+ * positions (V4-32), the colours (V4-8) and ST (V2-16 or V4-16), each element as the unpack would have written it;
+ * *tw the tag's w (the clipped fans' template) */
+static __inline__ __attribute__((always_inline)) u32 nd_0_build(int p4, u32 (*ob)[4], const NcUp *const *e, u32 *tw) {
+    const u32 *h = e ? e[0]->w : mem[top & (DATA_QW - 1)];
     u32 nv = h[0] & 0x7FFF, rq = 2, j, k, i2 = top + 1;
+    u32 cu = e ? e[2]->imm >> 14 & 1 : 0, tu = e ? e[3]->imm >> 14 & 1 : 0, ts = e && (e[3]->cmd & 0x7F) == 0x6D ? 4 : 2;
     f32 sc[4], m[4][4];
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
     float32x4_t scv;
 #endif
-    nd0_built = 0;
-    nd0_p4 = p4;
-    if (pc != 0xc && pc != (p4 ? 0x45u : 0x4eu)) return 0;
     if (!nv || 3 + nv * 2 + 4 > ND_QW || nv * 7u + 8 > DATA_QW) return 0;
+    if (e && (nv > e[1]->num || nv > e[2]->num || nv > e[3]->num)) return 0;
     for (k = 0; k < 4; k++) sc[k] = fin(vf[31][k]);
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
     scv = vld1q_f32(sc);
@@ -235,42 +382,80 @@ static int nd_0(u32 pc, int p4) {
         for (r = 0; r < 4; r++)
             m[k][r] = fin(vf[1][r]) * w0 + fin(vf[2][r]) * w1 + fin(vf[3][r]) * w2 + fin(vf[4][r]) * w3;
     }
-    nd_buf[rq][0] = h[0];
-    nd_buf[rq][1] = h[1];
-    nd_buf[rq][2] = nv;
-    nd_buf[rq][3] = 0;
+    ob[rq][0] = h[0];
+    ob[rq][1] = h[1];
+    ob[rq][2] = nv;
+    ob[rq][3] = 0;
     rq++;
     for (j = 0; j < nv; j++, i2 += 3) {
-        const u32 *p = mem[i2 & (DATA_QW - 1)], *c = mem[(i2 + 1) & (DATA_QW - 1)], *t = mem[(i2 + 2) & (DATA_QW - 1)];
-        u32 rgba;
+        const u32 *p, *c, *t;
+        u32 rgba, cv[4], tv[2];
+        if (e) { /* the unpack's elements: V4-8 and V2-16 / V4-16 sign-extended unless USN */
+            const u8 *cb = (const u8 *)e[2]->w + j * 4;
+            const u16 *th = (const u16 *)e[3]->w + j * ts;
+            p = e[1]->w + j * 4;
+            for (k = 0; k < 4; k++) cv[k] = cu ? cb[k] : (u32)(s32)(s8)cb[k];
+            tv[0] = tu ? th[0] : (u32)(s32)(s16)th[0];
+            tv[1] = tu ? th[1] : (u32)(s32)(s16)th[1];
+            c = cv;
+            t = tv;
+        } else {
+            p = mem[i2 & (DATA_QW - 1)];
+            c = mem[(i2 + 1) & (DATA_QW - 1)];
+            t = mem[(i2 + 2) & (DATA_QW - 1)];
+        }
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
-        nd0_vert(c, t, scv, sc, nd_buf[rq + 1], &rgba);
+        nd0_vert(c, t, scv, sc, ob[rq + 1], &rgba);
 #else
-        nd0_vert_c(c, t, sc, nd_buf[rq + 1], &rgba);
+        nd0_vert_c(c, t, sc, ob[rq + 1], &rgba);
 #endif
-        nd_buf[rq][0] = p[0];
-        nd_buf[rq][1] = p[1];
-        nd_buf[rq][2] = p[2];
-        nd_buf[rq][3] = p4 && p[3] & 0xFFFF ? (p[3] & ~0x20u) | 1 : p[3]; /* the strip flag word (natdraw.h) */
-        nd_buf[rq + 1][2] = 0x3F800000u;
-        nd_buf[rq + 1][3] = rgba;
+        ob[rq][0] = p[0];
+        ob[rq][1] = p[1];
+        ob[rq][2] = p[2];
+        ob[rq][3] = p4 && p[3] & 0xFFFF ? (p[3] & ~0x20u) | 1 : p[3]; /* the strip flag word (natdraw.h) */
+        ob[rq + 1][2] = 0x3F800000u;
+        ob[rq + 1][3] = rgba;
         rq += 2;
     }
-    nd_buf[1][0] = (u32)(s32)fin(i_reg) & 0xFF; /* F: the I register (MULI.w, FTOI4, the GS's F) */
+    ob[0][0] = KH1_NAT_MAGIC | 0;
+    ob[0][1] = 1;
+    ob[0][2] = 1;
+    ob[0][3] = rq - 2;
+    ob[1][0] = (u32)(s32)fin(i_reg) & 0xFF; /* F: the I register (MULI.w, FTOI4, the GS's F) */
+    ob[1][1] = ob[1][2] = ob[1][3] = 0;
+    for (k = 0; k < 4; k++) memcpy(ob[rq + k], m[k], 16);
+    *tw = h[3];
+    return rq + 4;
+}
+static int nd_0(u32 pc, int p4) {
+    const NcUp *e[4];
+    u32 (*ob)[4], n = 0, tw = 0;
+    nd0_built = 0;
+    nd0_p4 = p4;
+    if (pc != 0xc && pc != (p4 ? 0x45u : 0x4eu)) return 0;
+    ob = kh1_vu1_draw ? nd_out() : nd_buf; /* (KH1_HOST_NATCHECK builds in nd_buf, with nothing held) */
+    if (nc_n && nc_a(e) && (n = nd_0_build(p4, ob, e, &tw)) != 0) {
+        if (kh1_vu1_natchain == 3) {
+            u32 t2 = 0;
+            nc_flush();
+            nc_compare((const u32 (*)[4])ob, n, (const u32 (*)[4])nd_chk, nd_0_build(p4, nd_chk, 0, &t2));
+            if (t2 != tw && !kh1_vu1_nc_bad++) printf("kh1-vu1: natchain: P0's template differs\n");
+        } else nc_drop();
+    }
+    if (!n) {
+        if (nc_n) nc_flush();
+        n = nd_0_build(p4, ob, 0, &tw);
+        if (!n) return 0;
+    }
     nd0_built = 1;
     if (!kh1_vu1_draw) return 0;
-    nd_buf[0][0] = KH1_NAT_MAGIC | 0;
-    nd_buf[0][1] = 1;
-    nd_buf[0][2] = 1;
-    nd_buf[0][3] = rq - 2;
-    nd_buf[1][1] = nd_buf[1][2] = nd_buf[1][3] = 0;
-    for (k = 0; k < 4; k++) memcpy(nd_buf[rq + k], m[k], 16);
-    nd_hand(nd_buf[0], rq + 4);
-    if (!p4) mem[48][1] = h[3]; /* P4 leaves the template as it is */
+    nd_give(ob, n);
+    if (!p4) mem[48][1] = tw; /* P4 leaves the template as it is */
     kh1_vu1_drawn++;
     tpc = (p4 ? 0x45 : 0x4e) & (MICRO_N - 1);
     return 1;
 }
+#undef NQ
 
 /* 2026-10-31: KH1_HOST_NATCHECK=1 (host/null/main.c): P0 runs as the program, and each run's strip is compared with
  * what nd_0's payload would draw: the program's output (the kick's XYZF2, ADC and the 12.4 position) against

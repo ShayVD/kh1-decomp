@@ -89,6 +89,11 @@ extern void (*kh1_gsq_idle_hook)(void);
 int kh1_pool_start(u32 bytes);
 u32 *kh1_pool_get(u32 nqw, u32 *end);
 void kh1_pool_free(u32 end);
+/* 2026-11-01 (natchain): kh1_pool_room waits as kh1_pool_get would for maxqw and returns where they would go without
+ * taking them; kh1_pool_take(nqw) takes the first nqw of that room (nqw <= maxqw, no other get or room between) and
+ * returns the position after them, kh1_pool_get's *end */
+u32 *kh1_pool_room(u32 maxqw);
+u32 kh1_pool_take(u32 nqw);
 extern volatile u32 kh1_pool_us_wait, kh1_pool_waits;
 
 #endif

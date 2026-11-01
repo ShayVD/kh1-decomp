@@ -173,6 +173,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/vu1feed_test" "$ROOT/tests/host/vu1feed_test.c" -lm
   "$W/vu1feed_test" > "$W/vu1feed.log" || { cat "$W/vu1feed.log"; exit 1; }
   tail -n 1 "$W/vu1feed.log"
+  # 2026-11-01: natchain's chain reader (host/port/vu1.c nc_*, vu1_draw.h) against VU memory, natchain 0-3
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -DKH1_VU1_TR -I"$ROOT/tests/host/vu1chain" -I"$ROOT/include" \
+      -o "$W/vu1chain_test" "$ROOT/tests/host/vu1chain_test.c" -lm
+  "$W/vu1chain_test" > "$W/vu1chain.log" || { cat "$W/vu1chain.log"; exit 1; }
+  tail -n 1 "$W/vu1chain.log"
   # session 141: the VU1 programs' four-lane FMACs with the MAC flag / OPMSUB against their scalar form, on
   # ARM with NEON under qemu-arm when the cross gcc and qemu are there (elsewhere the scalar form runs)
   if command -v arm-linux-gnueabihf-gcc > /dev/null && command -v qemu-arm > /dev/null; then
@@ -185,6 +190,12 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
         -mfloat-abi=hard -static -DKH1_HOST -I"$ROOT/include" -o "$W/vu1feed_arm" "$ROOT/tests/host/vu1feed_test.c" -lm
     qemu-arm "$W/vu1feed_arm" > "$W/vu1feed_arm.log" || { cat "$W/vu1feed_arm.log"; exit 1; }
     tail -n 1 "$W/vu1feed_arm.log"
+    # 2026-11-01: and natchain's reader with P0's NEON colours
+    arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -fno-strict-aliasing -ffp-contract=off -mcpu=cortex-a9 -mfpu=neon \
+        -mfloat-abi=hard -static -DKH1_HOST -DKH1_VU1_TR -I"$ROOT/tests/host/vu1chain" -I"$ROOT/include" \
+        -o "$W/vu1chain_arm" "$ROOT/tests/host/vu1chain_test.c" -lm
+    qemu-arm "$W/vu1chain_arm" > "$W/vu1chain_arm.log" || { cat "$W/vu1chain_arm.log"; exit 1; }
+    tail -n 1 "$W/vu1chain_arm.log"
     # session 147: the large uploads' NEON compare (host/null/bytesame.h) against memcmp
     arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -static -DKH1_HOST \
         -I"$ROOT/include" -o "$W/bytesame_arm" "$ROOT/tests/host/bytesame_test.c"
