@@ -64,9 +64,9 @@
  *       natp13=0              with renderer=native, P13 (renderer B's skinned models) on its VU1 program (2026-10-31;
  *                             1, the default, draws it natively: one-bone vertices transformed by the GPU, the others
  *                             summed on the CPU)
- *       natskin=0             with renderer=native, P13's two-bone vertices summed on the CPU as before 2026-11-01 (1,
- *                             the default: both bones' positions and matrices handed to the GPU's vertex shader, which
- *                             sums them; only 3+ bone vertices summed on the CPU)
+ *       natskin=1             with renderer=native, P13's two-bone vertices handed to the GPU's vertex shader, which
+ *                             sums them (2026-11-01; 0, the default since the first Vita A/B: summed on the CPU, as
+ *                             before; docs/native-renderer.md "P13's two-bone vertices on the GPU")
  *       natspan=0             with renderer=native, the GS worker puts each native record to the recording queue as
  *                             its own op (as before 2026-11-01; 1, the default: a payload's records as one op)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and

@@ -311,7 +311,8 @@ M_ref^-1 x M_i per matrix in double, then k NEON products and a reciprocal a ver
 converted from VU floats (fin) as it was listed. Shay's 2026-11-01 Vita log had P13 at ~940 ms per ~8.8 s window
 (~255 ms per 2.4 s, ~1.1 us a vertex, 32 % of the vertices summed).
 
-Now (natskin=1, the default; `natskin=0` in config.txt / `KH1_HOST_NATSKIN=0` is the old path):
+With `natskin=1` in config.txt (`KH1_HOST_NATSKIN=1`; **off by default** after the Vita A/B below, natskin=0 being the
+old path):
 
 - **The payload** (natdraw.h `KH1_NAT_SKIN`): P13's records carry bit 16 in word 3 and 3 qwords a vertex:
   (x1, y1, z1, mi1 | mi2 << 16), (s, t, q, w1), (x2, y2, z2, w2): both bones' pre-weighted positions exactly as the
@@ -350,7 +351,18 @@ Expected on a Vita: the game thread loses most of P13's summing (80 % of its sum
 thread copies 52 bytes instead of 32 for each P13 vertex (it lists 3 a triangle), and the GPU's vertex shader does one
 more matrix product for P13. Which way the frame rate goes depends on whether the game thread or the GPU thread is the
 limit in the window: compare `natskin=0` and `natskin=1` runs' `vu1 programs:` P13 time, the `gpu parts:` vertex copy
-and the `threads:` line. Not checked on a Vita yet.
+and the `threads:` line.
+
+**On a Vita (2026-11-01, Shay's A/B, PR #207's VPK with native sound, dive_en.txt)**: the 7 skinned shaders compiled
+and Sora looked right. Outside the P13 stretch both runs are the same (~20 pictures/s). Where Sora is on P13 (Dive
+frames ~6,700-7,400) natskin=1 was **slower**: 19.1 pictures/s against 20.2 (game frames 6916-7306 in 10.2 s against
+6854-7354 in 12.4 s). Per P13 vertex the game thread's P13 time fell ~1.1 -> ~0.9 us (the sums gone), but its hand-off
+to the GS worker rose (P13's ~0.10 -> ~0.14 us a vertex: 3 payload qwords instead of 2), the GPU thread's vertex copy
+rose (~0.26 -> ~0.33 us a P13 vertex), and the game waited for the GS worker about twice as long (~730 against ~340
+ms a ~3.3 s window): the GS worker and the GPU thread, which copy every payload byte, are the limit there, and the
+bigger payload and vertex cost them more than the game thread saved. So natskin is 0 by default. Worth trying again
+once native payloads reach the GPU thread by reference (the GS worker no longer copying them) and the native draws are
+indexed (one vertex a strip vertex, not three a triangle), when the bigger vertex costs a third as much.
 
 ## The stages after
 

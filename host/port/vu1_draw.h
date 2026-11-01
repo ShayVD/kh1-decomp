@@ -345,11 +345,11 @@ u32 kh1_vu1_nd13_multi, kh1_vu1_nd13_verts, kh1_vu1_nd13_fail, kh1_vu1_nd13_fail
 static int nd13_built;
 static double nd13_inv[KH1_NAT_MATS][4][4]; /* M^-1 as rows, for the matrices a summed vertex is put in */
 static f32 nd13_f[KH1_NAT_MATS][4][4];     /* the payload's matrices as floats (fin()'d once), for the sums */
-/* 2026-11-01: GPU skinning (natdraw.h KH1_NAT_SKIN; config natskin=0 / KH1_HOST_NATSKIN=0 sums every vertex with more
- * than one bone here, as before): a two-bone vertex goes over as its two pre-weighted positions and matrices, which
+/* 2026-11-01: GPU skinning (natdraw.h KH1_NAT_SKIN; config natskin=1 / KH1_HOST_NATSKIN=1; 0, the default since the
+ * first Vita A/B, sums every vertex with more than one bone here, as before): a two-bone vertex goes over as its two pre-weighted positions and matrices, which
  * the vertex shader sums, so only vertices with 3 or more bones are summed here, and a matrix is fin()'d only when one
  * of those (or the reference) uses it */
-int kh1_vu1_nat_skin = 1;
+int kh1_vu1_nat_skin = 0; /* 2026-11-01: off by default after the first Vita A/B (docs/native-renderer.md) */
 u32 kh1_vu1_nd13_gpu2; /* the two-bone vertices handed over for the GPU to sum */
 static u32 nd13_have_f;
 static void nd13_f_of(u32 id) {
