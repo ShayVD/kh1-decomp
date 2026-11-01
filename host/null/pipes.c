@@ -222,6 +222,8 @@ static void tex_lookup(u32 lo, u32 hi) {
 /* session 126: the recorder and its two rings, made at the first use (only KH1_HOST_TRACE=5 runs use them);
  * session 127: with its caches, and gsmem.c's transfer hooks set */
 static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b);
+static void nat_idle(void);
+static void nat_done(u32 free);
 static KH1CmdRec *recorder(void) {
     if (!rec) {
         /* calloc: kh1_texcache_init frees what a used cache holds, so a block that is not zeroed
@@ -239,6 +241,8 @@ static KH1CmdRec *recorder(void) {
         kh1_gsmem_xfer_hook = on_xfer;
         kh1_gsmem_clut_hook = on_clut;
         kh1_gs_native_hook = nat_hook;
+        kh1_gsq_idle_hook = nat_idle;
+        kh1_gs_nat_done = nat_done;
     }
     return rec;
 }
@@ -556,9 +560,46 @@ static void r_nat_end(const u32 *a, const u32 *d, u32 nqw) {
 int kh1_pipes_nat_span = 1;
 static const u32 *span_p;
 static u32 span_nq;
+
+/* 2026-11-01 (docs/native-plan.md "Native payloads by reference", dmawalk.c's natref): a payload in the pool
+ * (gsqueue.h kh1_pool_*) stays where the game thread wrote it until the GPU thread frees it, so a span of its
+ * records goes to the recording queue as a reference: a qword (the records' address, their qwords, a pool position to
+ * free once they are read, 1 when there is one), which r_nat_ref reads in place.  The free rides on the payload's
+ * last span (or, when it has none, the next span put; the worker's idle hook puts it on its own before the worker
+ * sleeps, so a game thread waiting for room is never left waiting).  gsregs.h's kh1_gs_nat_pooled is set while a
+ * pooled payload runs, kh1_gs_nat_free the position after it */
+static int span_ref, nat_pend_on;
+static u32 nat_pend;
+static void r_nat_ref(const u32 *a, const u32 *d, u32 nqw) {
+    for (; nqw; nqw--, d += 4) {
+        if (d[1]) r_nat_rec(a, (const u32 *)(unsigned long)d[0], d[1]);
+        if (d[3]) kh1_pool_free(d[2]);
+    }
+}
+static void nat_ref_put(const u32 *p, u32 nq) {
+    u32 r[4];
+    r[0] = (u32)(unsigned long)p;
+    r[1] = nq;
+    r[2] = nat_pend;
+    r[3] = (u32)nat_pend_on;
+    nat_pend_on = 0;
+    kh1_recq_put(r_nat_ref, 0, 0, r, 1);
+}
+/* the GS worker idle (gsqueue.c kh1_gsq_idle_hook): a free still held back goes on its own */
+static void nat_idle(void) {
+    if (nat_pend_on) nat_ref_put(0, 0);
+}
+/* dmawalk.c, after a pooled payload's run (gsregs.h kh1_gs_nat_done): the pool up to free may be freed after the
+ * records put so far */
+static void nat_done(u32 free) {
+    nat_pend = free;
+    nat_pend_on = 1;
+}
+
 static void span_flush(void) {
     if (!span_nq) return;
-    kh1_recq_put(r_nat_rec, 0, 0, span_p, span_nq);
+    if (span_ref) nat_ref_put(span_p, span_nq);
+    else kh1_recq_put(r_nat_rec, 0, 0, span_p, span_nq);
     span_nq = 0;
 }
 
@@ -595,12 +636,13 @@ static void nat_rec(u32 prim, const u32 *r) {
     }
     /* joins the records before it while the queue holds them unpublished; a joined P13 run's matrix indices are
      * moved on the recorder's side (r_nat_mats, r_nat_rec) */
-    if (!kh1_pipes_nat_span) kh1_recq_put(r_nat_rec, 0, 0, r, nq);
+    if (!kh1_pipes_nat_span && !kh1_gs_nat_pooled) kh1_recq_put(r_nat_rec, 0, 0, r, nq);
     else if (span_nq && span_p + span_nq * 4 == r) span_nq += nq;
     else {
         span_flush();
         span_p = r;
         span_nq = nq;
+        span_ref = kh1_gs_nat_pooled;
     }
     nat_rq += nq;
     nat_nrec++;
@@ -630,7 +672,10 @@ static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
     } else if (what == 1) {
         nat_rec(prim, a);
     } else {
-        span_flush(); /* the payload's records are only valid during the worker's op */
+        /* the payload's records are only valid during the worker's op (a pooled one's until its free: put with its
+         * last span) */
+        if (kh1_gs_nat_pooled) nat_done(kh1_gs_nat_free);
+        span_flush();
         if ((nat_hdr[0] & 0xFF) != 0 && (nat_hdr[0] & 0xFF) != 13) nat_flush();
     }
 }
