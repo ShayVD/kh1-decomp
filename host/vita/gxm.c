@@ -276,6 +276,7 @@ static VertProg vert[KH1_VERT_VARIANTS];
 /* the native renderer (docs/native-renderer.md): 1 once its vertex variants compiled (host/vita/main.c turns
  * renderer=native off without them) */
 int kh1_vita_gxm_native_ok;
+int kh1_vita_gxm_skin_ok; /* 2026-11-01: and its skinned variants (KH1_VERT_SKIN) */
 
 static s32 reg_of(void *prog, const char *name) {
     const SceGxmProgramParameter *p = sceGxmProgramFindParameterByName((const SceGxmProgram *)prog, name);
@@ -1266,12 +1267,15 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         case KH1_GXM_DRAW: {
             static const SceGxmPrimitiveType prim[4] = { SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_PRIMITIVE_POINTS,
                                                          SCE_GXM_PRIMITIVE_LINES, SCE_GXM_PRIMITIVE_TRIANGLES };
-            u32 per = c->cls == KH1_PA_TRIANGLES ? 3 : c->cls == KH1_PA_LINES ? 2 : 1, v0 = c->v0, left = c->nv;
+            u32 per = c->cls == KH1_PA_TRIANGLES ? 3 : c->cls == KH1_PA_LINES ? 2 : 1, left = c->nv;
+            /* 2026-11-01: a skinned native draw's (vertex.h KH1GpuVertSk) vertices are bigger, from v0 x 32 bytes */
+            u32 vstride = vi >= KH1_VERT_SKIN && vi < KH1_VERT_VARIANTS ? KH1_VTX_SKIN_STRIDE : KH1_VTX_STRIDE;
+            u64 vat = (u64)c->v0 * 32;
             void *vb, *fb;
             if (!cur) { skip(W_NOSCENE, 0); break; }
             if (bad_pipe || !pk || !fp) { skip(W_PIPE, pk ? pipe_why : "no pipeline set"); break; }
             if (pk->shader.tex && pk->shader.setup != 2 && !have_tex) { skip(W_TEX, tex_why); break; }
-            if ((u64)(v0 + left) * 32 > r->vring.head) { skip(W_RANGE, 0); break; }
+            if (vat + (u64)left * vstride > r->vring.head) { skip(W_RANGE, 0); break; }
             if (!u || !xf || c->cls == KH1_PA_NONE) { skip(W_STATE, 0); break; }
             if ((c->nmat != 0) != (vi >= KH1_VERT_NAT) || (c->nmat && !vert[vi].u_m)) { skip(W_STATE, 0); break; }
             if (pk->shader.tex && fs->tex >= 0) sceGxmSetFragmentTexture(ctx, (u32)fs->tex, &t);
@@ -1291,9 +1295,9 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                         if (fs->u[q]) sceGxmSetUniformDataF(fb, fs->u[q], 0, 4, u + q * 4);
                     if (fs->u[4]) sceGxmSetUniformDataF(fb, fs->u[4], 0, 4, xf);
                 }
-                sceGxmSetVertexStream(ctx, 0, vbuf + v0 * 32);
+                sceGxmSetVertexStream(ctx, 0, vbuf + vat);
                 sceGxmDraw(ctx, prim[c->cls & 3], SCE_GXM_INDEX_FORMAT_U16, index_buf, n);
-                v0 += n;
+                vat += (u64)n * vstride;
                 left -= n;
             }
             if (c->nmat) sceGxmSetCullMode(ctx, SCE_GXM_CULL_NONE);
@@ -1561,10 +1565,17 @@ int kh1_vita_gxm_init(void) {
     vert_load(0); /* DATE's set-up variant: its draws are skipped without it */
     /* the native renderer's variants (natdraw.h): all or none */
     kh1_vita_gxm_native_ok = 1;
-    for (i = KH1_VERT_NAT; i < KH1_VERT_VARIANTS && kh1_vita_gxm_native_ok; i++)
+    for (i = KH1_VERT_NAT; i < KH1_VERT_SKIN && kh1_vita_gxm_native_ok; i++)
         if (vert_load(i)) {
             kh1_vita_log("kh1-gxm: native vertex shader %u (%s) unavailable: renderer=native is off\n", i, kh1_vertkey_str(i));
             kh1_vita_gxm_native_ok = 0;
+        }
+    /* 2026-11-01: the skinned ones (natdraw.h KH1_NAT_SKIN): all or none, natskin off without them */
+    kh1_vita_gxm_skin_ok = kh1_vita_gxm_native_ok;
+    for (i = KH1_VERT_SKIN; i < KH1_VERT_VARIANTS && kh1_vita_gxm_skin_ok; i++)
+        if (vert_load(i)) {
+            kh1_vita_log("kh1-gxm: skinned vertex shader %u (%s) unavailable: natskin is off\n", i, kh1_vertkey_str(i));
+            kh1_vita_gxm_skin_ok = 0;
         }
     if (present_load()) {
         kh1_vita_log("kh1-gxm: the present's shaders unavailable: the software picture stays\n");
@@ -1588,7 +1599,7 @@ int kh1_vita_gxm_init(void) {
     kh1_vita_log("kh1-gxm: ready: %u shaders compiled now, %u from the cache\n", compiled, cached);
     { /* 2026-10-31: which native shaders this build has (a log names its build by them): the colour of a native
        * textured draw in TEXCOORD3 since the floor fix (shadergen.c), and the variant's text hash */
-        u32 n = kh1_shader_vert_cg(KH1_VERT_VARIANTS - 1, text, sizeof text);
+        u32 n = kh1_shader_vert_cg(KH1_VERT_SKIN - 1, text, sizeof text);
         u64 h = fnv64(text, n);
         kh1_vita_log("kh1-gxm: build %s %s: native textured colour in %s (vertex text %08x)\n", __DATE__, __TIME__,
                      strstr(text, "ocol : TEXCOORD3") ? "TEXCOORD3 (the floor fix)" : "COLOR0 (before the floor fix)",

@@ -64,6 +64,9 @@
  *       natp13=0              with renderer=native, P13 (renderer B's skinned models) on its VU1 program (2026-10-31;
  *                             1, the default, draws it natively: one-bone vertices transformed by the GPU, the others
  *                             summed on the CPU)
+ *       natskin=1             with renderer=native, P13's two-bone vertices handed to the GPU's vertex shader, which
+ *                             sums them (2026-11-01; 0, the default since the first Vita A/B: summed on the CPU, as
+ *                             before; docs/native-renderer.md "P13's two-bone vertices on the GPU")
  *       natspan=0             with renderer=native, the GS worker puts each native record to the recording queue as
  *                             its own op (as before 2026-11-01; 1, the default: a payload's records as one op)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
@@ -171,7 +174,7 @@ static int use_recq = 1; /* session 146: config.txt's recq= */
 extern int kh1_pipes_rq_frame, kh1_pipes_gxm_count; /* 2026-10-31: config.txt's recframe= (host/null/pipes.c) */
 static int use_gsstrip = 1; /* session 151: config.txt's gsstrip= */
 static int use_native;      /* config.txt's renderer=native (docs/native-renderer.md) */
-extern int kh1_dma_native, kh1_vita_gxm_native_ok;
+extern int kh1_dma_native, kh1_vita_gxm_native_ok, kh1_vita_gxm_skin_ok;
 extern u32 kh1_pipes_nat_cull, kh1_pipes_nat_draws, kh1_pipes_nat_tris;
 extern int kh1_pipes_nat_span; /* pipes.c: config.txt natspan= (2026-11-01) */
 static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
@@ -561,11 +564,11 @@ static int watchdog(SceSize args, void *argp) {
                 polls0 = kh1_vita_gt_polls;
             }
             if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
-                static u32 n0, d0, t0, v0, m0, h0, h13, f0, fu0;
+                static u32 n0, d0, t0, v0, m0, h0, h13, f0, fu0, g0;
                 vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles; P13 %u vertices "
-                     "(%u summed on the CPU); handing them to the GS worker %u ms (P13's %u ms; the rest of each program's "
+                     "(%u summed on the CPU, %u two-bone ones by the GPU); handing them to the GS worker %u ms (P13's %u ms; the rest of each program's "
                      "time is its parse); %u P13 runs handed back to the program (%u ms)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
-                     kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0, (kh1_vu1_nd_hand_us - h0) / 1000,
+                     kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0, kh1_vu1_nd13_gpu2 - g0, (kh1_vu1_nd_hand_us - h0) / 1000,
                      (kh1_vu1_nd13_hand_us - h13) / 1000, kh1_vu1_nd13_fail - f0, (kh1_vu1_nd13_fail_us - fu0) / 1000);
                 f0 = kh1_vu1_nd13_fail;
                 fu0 = kh1_vu1_nd13_fail_us;
@@ -573,6 +576,7 @@ static int watchdog(SceSize args, void *argp) {
                 h13 = kh1_vu1_nd13_hand_us;
                 v0 = kh1_vu1_nd13_verts;
                 m0 = kh1_vu1_nd13_multi;
+                g0 = kh1_vu1_nd13_gpu2;
                 n0 = kh1_vu1_drawn;
                 d0 = kh1_pipes_nat_draws;
                 t0 = kh1_pipes_nat_tris;
@@ -722,6 +726,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
         else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
         else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
+        else if (strcmp(line, "natskin") == 0) kh1_vu1_nat_skin = atoi(v);
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
@@ -903,6 +908,10 @@ int main(int argc, char **argv) {
         }
         /* the native renderer: P18's runs transformed by the GPU (its vertex variants compiled in gxm.c) */
         kh1_dma_native = use_native && kh1_vita_gxm_native_ok;
+        if (!kh1_vita_gxm_skin_ok) kh1_vu1_nat_skin = 0; /* 2026-11-01: without the skinned shaders, the CPU's sums */
+        if (kh1_dma_native)
+            vlog("kh1-vita: natskin=%d (P13's two-bone vertices summed %s)\n", kh1_vu1_nat_skin,
+                 kh1_vu1_nat_skin ? "by the GPU's vertex shader" : "on the CPU");
         vlog("kh1-vita: renderer: %s\n", kh1_dma_native ? "native (P18 drawn by the GPU's transform)"
                                          : use_native ? "the GS path (renderer=native asked, its vertex shaders unavailable)"
                                          : "the GS path");

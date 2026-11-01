@@ -61,7 +61,9 @@ u32 kh1_vertkey_index(const KH1VertKey *k) { return k->setup ? 0 : 1 + k->tex * 
 const char *kh1_vertkey_str(u32 index) {
     static const char *names[] = { "pos", "pos col", "pos col fog", "pos col uv", "pos col uv fog", "pos col stq",
                                    "pos col stq fog", "native pos", "native pos col", "native pos col fog", "native pos col uv",
-                                   "native pos col uv fog", "native pos col stq", "native pos col stq fog" };
+                                   "native pos col uv fog", "native pos col stq", "native pos col stq fog",
+                                   "skin pos", "skin pos col", "skin pos col fog", "skin pos col uv", "skin pos col uv fog",
+                                   "skin pos col stq", "skin pos col stq fog" };
     return index < KH1_VERT_VARIANTS ? names[index] : "?";
 }
 
@@ -78,9 +80,10 @@ u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask) {
 }
 
 u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[KH1_VTX_ATTRS]) {
-    u32 nat = index >= KH1_VERT_NAT, tex, fog, n = 0;
+    u32 nat = index >= KH1_VERT_NAT, skin = index >= KH1_VERT_SKIN, tex, fog, n = 0;
     if (index >= KH1_VERT_VARIANTS) return 0;
-    if (nat) index -= KH1_VERT_NAT;
+    if (skin) index -= KH1_VERT_SKIN;
+    else if (nat) index -= KH1_VERT_NAT;
     tex = index >= 5 ? KH1_VTX_STQ : index >= 3 ? KH1_VTX_UV : KH1_VTX_NONE;
     fog = index && !(index & 1);
     /* the order is shadergen.c's kh1_shader_vert_cg: pos, col, tc, fog (and a native variant's matrix index) */
@@ -88,7 +91,15 @@ u32 kh1_vertex_attrs(u32 index, KH1VtxAttr out[KH1_VTX_ATTRS]) {
     if (index) out[n].name = "col", out[n].offset = 24, out[n].format = KH1_VFMT_U8N, out[n++].count = 4;
     if (tex) out[n].name = "tc", out[n].offset = 12, out[n].format = KH1_VFMT_F32, out[n++].count = tex == KH1_VTX_STQ ? 3 : 2;
     if (fog) out[n].name = "fog", out[n].offset = 28, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
-    if (nat) out[n].name = "mi", out[n].offset = 29, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
+    if (skin) { /* 2026-11-01: KH1GpuVertSk's offsets */
+        u32 i;
+        out[0].count = 4;
+        for (i = 1; i < n; i++) out[i].offset = out[i].name[0] == 'c' ? 28 : out[i].name[0] == 't' ? 16 : 32;
+        out[n].name = "mi", out[n].offset = 33, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
+        out[n].name = "mi2", out[n].offset = 34, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
+        out[n].name = "pos2", out[n].offset = 36, out[n].format = KH1_VFMT_F32, out[n++].count = 4;
+    } else if (nat)
+        out[n].name = "mi", out[n].offset = 29, out[n].format = KH1_VFMT_U8N, out[n++].count = 1;
     return n;
 }
 
@@ -106,7 +117,7 @@ u32 kh1_vertex_gxm_attrs(u32 index, KH1GxmRegOf reg_of, void *prog, KH1GxmVtxAtt
         out[i].componentCount = a[i].count;
         out[i].regIndex = (u16)reg;
     }
-    stream->stride = KH1_VTX_STRIDE;
+    stream->stride = index >= KH1_VERT_SKIN ? KH1_VTX_SKIN_STRIDE : KH1_VTX_STRIDE;
     stream->indexSource = KH1_GXM_INDEX_16BIT;
     return n;
 }
