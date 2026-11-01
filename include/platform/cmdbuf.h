@@ -209,7 +209,9 @@ extern int kh1_cmd_hoist;
 extern int kh1_cmd_fastrot;
 extern int kh1_cmd_natjoin;    /* 2026-11-01: 1 (the default) a native run joins the native draw before it (cmdbuf.c
                                 * nat_join; config.txt natjoin=) */
-extern u32 kh1_cmd_nat_joins;  /* runs joined so far */ /* 2026-11-01: hoist moves commands by blocks, not swaps (config.txt recfast=) */
+extern u32 kh1_cmd_nat_joins;  /* runs joined so far */
+extern u32 kh1_cmd_nat_nojoin[4]; /* runs not joined: no native draw just before; its cull mode or vertex kind; its state,
+                                   * texture or palette; no room */ /* 2026-11-01: hoist moves commands by blocks, not swaps (config.txt recfast=) */
 void kh1_cmd_init(KH1CmdRec *r, void *vmem, u32 vslot, void *umem, u32 uslot);
 /* a primitive drawn in d / p: its n GPU vertices (v 0: counted, not written), sig as batch.h's */
 void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, u32 sig);

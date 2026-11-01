@@ -400,25 +400,47 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
  * kh1_cmd_natjoin 0 (config.txt natjoin=0, host KH1_HOST_NATJOIN=0) gives each run its own command as before */
 int kh1_cmd_natjoin = 1;
 u32 kh1_cmd_nat_joins; /* runs joined so far */
+u32 kh1_cmd_nat_nojoin[4]; /* runs not joined: another command (or none) before; another cull mode or vertex kind; another
+                            * state, texture or palette; no room (32 matrices, the rings) */
 static int nat_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                     u32 nmat, u32 cull, u32 skin) {
     KH1Cmd *c;
     KH1BatchKey k;
     u32 stride = skin ? (u32)sizeof(KH1GpuVertSk) : (u32)sizeof(KH1GpuVert), vend, mend, i, off;
     u8 *at, *u;
-    if (r->cur < 0 || r->dropped || (u32)r->cur + 1 != r->ncmd || r->split || r->held >= 0) return 0;
-    c = &r->cmd[r->cur];
-    if (c->kind != KH1_CMD_DRAW || !c->nmat || c->lost || !c->hasv || c->skin != skin || c->cull != (cull & ~KH1_NAT_LIN) ||
-        c->nmat + nmat > KH1_NAT_MATS || c->pass + 1 != r->npass)
+    if (r->cur < 0 || r->dropped || (u32)r->cur + 1 != r->ncmd || r->split || r->held >= 0) {
+        kh1_cmd_nat_nojoin[0]++;
         return 0;
-    if (d->pipe[0].shader.tex && (c->tslot != r->tslot || c->pslot != r->pslot)) return 0;
+    }
+    c = &r->cmd[r->cur];
+    if (c->kind != KH1_CMD_DRAW || !c->nmat || c->lost || !c->hasv || c->pass + 1 != r->npass) {
+        kh1_cmd_nat_nojoin[0]++;
+        return 0;
+    }
+    if (c->skin != skin || c->cull != (cull & ~KH1_NAT_LIN)) {
+        kh1_cmd_nat_nojoin[1]++;
+        return 0;
+    }
+    if (c->nmat + nmat > KH1_NAT_MATS) {
+        kh1_cmd_nat_nojoin[3]++;
+        return 0;
+    }
+    if (d->pipe[0].shader.tex && (c->tslot != r->tslot || c->pslot != r->pslot)) {
+        kh1_cmd_nat_nojoin[2]++;
+        return 0;
+    }
     vend = c->v0 * (u32)sizeof(KH1GpuVert) + c->nv * stride;
     mend = c->moff + c->nmat * 64u;
     if (r->vring.head != vend || r->uring.head != mend || n * stride > r->vring.slot - vend ||
-        nmat * 64u > r->uring.slot - mend)
+        nmat * 64u > r->uring.slot - mend) {
+        kh1_cmd_nat_nojoin[3]++;
         return 0;
+    }
     kh1_batch_key(d, p, &k);
-    if (memcmp(&k, &c->k, sizeof k)) return 0;
+    if (memcmp(&k, &c->k, sizeof k)) {
+        kh1_cmd_nat_nojoin[2]++;
+        return 0;
+    }
     at = (u8 *)kh1_ring_alloc(&r->vring, n * stride, 1);
     u = (u8 *)kh1_ring_alloc(&r->uring, nmat * 64u, 1);
     memcpy(at, v, n * stride);

@@ -262,6 +262,46 @@ copy (~150 ms per 2.4 s: gxm.c memcpys the recorder's whole vertex slot into GPU
 GPU-mapped memory needs the empty frames' early return to wait for the GPU before the slot is reused) and the
 uploads into targets (pend_flush, outside the parts' timers).
 
+**Batching (2026-11-01, config.txt `natjoin=1`, the default; `natjoin=0` / host `KH1_HOST_NATJOIN=0` a draw a run)**.
+The Vita's fight log (build 26b3b0b) had the GPU thread at 65 ms a picture, 57 of it recording, with 492 draws a picture
+against the early Dive's 162: each native run was its own draw command (cmdbuf.c `native` broke the batch before and
+after it). Now cmdbuf.c `nat_join` appends a run to the native draw before it when that is the list's last command with
+the same batch key (pipelines, uniforms, sampler, TEX0, target, scissor), texture entry and palette slot, cull mode and
+vertex kind (plain / skinned), the two runs' matrices fit u_m (KH1_NAT_MATS, 32) and both rings' heads are still just
+after the command's vertices and matrices. The run's vertices and folded matrices go on the end, its vertices' matrix
+indices (pad[0], or a skinned vertex's mi / mi2) moved past the command's earlier matrices: the same triangles in the
+same order, in one sceGxmDraw, without new_cmd's uniform block, sampled() lookup or batch bookkeeping for the run. A
+transfer, CLUT load or texture upload between two runs is a command of its own, so it ends the join, and a texture bind
+without one changes r->tslot, which is checked.
+
+Checked (host, en.iso, dive_en.txt to frame 9000, the gxmcheck binary, `KH1_HOST_TRACE=5 KH1_HOST_GSQ=1 KH1_HOST_GPUQ=1
+KH1_HOST_RECQ=1 KH1_HOST_VU1=1 KH1_HOST_NATIVE=1 KH1_HOST_WIDE=1 KH1_HOST_GXM=250 KH1_HOST_GXM_HASH=1`): all 72 GPU
+target hashes (36 pictures, display and 3D target) identical with natjoin 0 and 1. GXM draws over the run 612,111 ->
+438,963 (-28 %), GXM calls 1,829,870 -> 1,483,574 (-19 %); in the Dive's 3D stretch (frames 4500-8999) the mock's draws a
+picture roughly halve (e.g. frame 5999 201 -> 98, 7999 187 -> 95). Of 387,759 native runs, 173,148 joined the draw
+before; of the rest 125,925 came after another command (a transfer, CLUT or texture command, or a non-native draw),
+88,686 found no room (mostly the 32-matrix limit), none had another state, cull mode or vertex kind. tests/host/cmdbuf_test.c
+"natjoin" (5 checks): two runs in one draw with the second's indices moved, a cull change, a transfer and the 32-matrix
+limit each ending a join, natjoin=0 a draw a run.
+
+**Not yet measured on a Vita**: the `native renderer:` line's new "N of the draws joined into the one before", and the
+`gpu thread` / recording lines with natjoin=1 against natjoin=0, ideally in a fight. Expected (estimate): the GPU thread's
+per-draw cost (two default uniform buffer reserves, the uniform copies, the stream and the draw, gxmrec.c's ops) cut by
+the ~30-50 % fewer draws, 12-18 ms a picture in fights if the 492 draws cost what the plan assumed.
+
+Next steps the counts suggest: u_m past 32 matrices (u_m[256]: the "no room" runs, if the Vita's shader compiler and
+the default uniform buffer take it), and the commands that come between native runs (the 126 K "after another command";
+a frame's command list, pipes.c's dump, names them).
+
+**Static vertex buffers: not done, and why.** The plan keyed a cached batch by the record's hash. On the GPU thread a
+run's conversion (natdraw.c with recfast: each strip vertex converted once, its triangles 32-byte copies) reads each
+record word once, which is what hashing it would cost, and a hit would still copy the cached triangles into the vertex
+ring (gxm.c then copies the whole slot into GPU memory). So a CPU-side cache keyed by a hash saves almost nothing. The
+cache pays only when it skips both the read and the copy: a key that does not read the records (their address in the
+game's memory, which the "Read P18/P0 records straight from the chain" thread is making available; the pool's copies
+have no stable address) and a draw that reads persistent GPU memory instead of the ring (gxm.c's stream from a cached
+block, which a joined draw cannot mix). That is the follow-up once records come straight from the chain.
+
 ### Stage 2: the rest of renderer B on the GPU (P12, P14, P15-P17, P19, P20)
 
 - **P12 / P14 (lit, rigid / skinned)**: the native vertex shader gains renderer B's lighting: 3 parallel lights +
