@@ -11,6 +11,7 @@
 
 void *memset(void *, int, __SIZE_TYPE__);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
+void *memmove(void *, const void *, __SIZE_TYPE__);
 int sprintf(char *, const char *, ...);
 __SIZE_TYPE__ strlen(const char *);
 
@@ -624,6 +625,25 @@ static void cmd_swap(KH1Cmd *a, KH1Cmd *b) {
 static void cmd_rev(KH1CmdRec *r, u32 a, u32 b) { /* [a, b) reversed */
     while (a + 1 < b) cmd_swap(&r->cmd[a++], &r->cmd[--b]);
 }
+/* 2026-11-01 (native-plan.md stage 1: on the Vita the frame op's passes took ~0.55 s of the GPU thread's 2.8 s, and on
+ * the host 75 % of their instructions were cmd_swap, hoist's three reversals of whole KH1Cmds): [s, mid) [mid, e) ->
+ * [mid, e) [s, mid) through a scratch copy, each command moved once or twice where the reversals swapped it twice
+ * (three copies a swap).  The same order of commands.  kh1_cmd_fastrot 0 (config.txt recfast=0) keeps the swaps */
+int kh1_cmd_fastrot = 1;
+static KH1Cmd rot_tmp[KH1_CMD_MAX];
+static void cmd_rot(KH1CmdRec *r, u32 s, u32 mid, u32 e) {
+    u32 a = mid - s, b = e - mid;
+    if (!a || !b) return;
+    if (a <= b) {
+        memcpy(rot_tmp, &r->cmd[s], a * sizeof *rot_tmp);
+        memmove(&r->cmd[s], &r->cmd[mid], b * sizeof *rot_tmp);
+        memcpy(&r->cmd[s + b], rot_tmp, a * sizeof *rot_tmp);
+    } else {
+        memcpy(rot_tmp, &r->cmd[mid], b * sizeof *rot_tmp);
+        memmove(&r->cmd[s + b], &r->cmd[s], a * sizeof *rot_tmp);
+        memcpy(&r->cmd[s], rot_tmp, b * sizeof *rot_tmp);
+    }
+}
 static int slot_clash(const KH1Cmd *x, const KH1Cmd *y) { /* x's upload against y's draw or upload */
     if (x->kind == KH1_CMD_TEXTURE && x->x.slot >= 0)
         return (y->kind == KH1_CMD_DRAW && y->tslot == x->x.slot) || (y->kind == KH1_CMD_TEXTURE && y->x.slot == x->x.slot);
@@ -685,16 +705,33 @@ static void hoist(KH1CmdRec *r) {
         mid = m->cmd0 + m->ncmd;
         e = r->pass[b - 1].cmd0 + r->pass[b - 1].ncmd;
         /* the commands: [s, mid) [mid, e) -> [mid, e) [s, mid) */
-        cmd_rev(r, s, mid);
-        cmd_rev(r, mid, e);
-        cmd_rev(r, s, e);
         n = e - mid;
-        /* G's uploads from T's first pass ahead of G, in their order: [s, s + k) */
-        for (i = s + n, k = 0; i < e; i++)
-            if (g_upload(&r->cmd[i], hoist_g, m->tgt)) {
-                for (j = i; j > s + k; j--) cmd_swap(&r->cmd[j], &r->cmd[j - 1]);
-                k++;
+        if (kh1_cmd_fastrot) {
+            cmd_rot(r, s, mid, e);
+            /* G's uploads from T's first pass ahead of G, in their order: [s, s + k), the others after them in
+             * theirs (what the swaps below do), each command moved once */
+            for (i = s + n, k = 0; i < e; i++)
+                if (g_upload(&r->cmd[i], hoist_g, m->tgt)) k++;
+            if (k) {
+                u32 up = 0, rest = 0;
+                for (i = s; i < e; i++) {
+                    int g = i >= s + n && g_upload(&r->cmd[i], hoist_g, m->tgt);
+                    if (g) rot_tmp[up++] = r->cmd[i];
+                    else rot_tmp[k + rest++] = r->cmd[i];
+                }
+                memcpy(&r->cmd[s], rot_tmp, (e - s) * sizeof *rot_tmp);
             }
+        } else {
+            cmd_rev(r, s, mid);
+            cmd_rev(r, mid, e);
+            cmd_rev(r, s, e);
+            /* G's uploads from T's first pass ahead of G, in their order: [s, s + k) */
+            for (i = s + n, k = 0; i < e; i++)
+                if (g_upload(&r->cmd[i], hoist_g, m->tgt)) {
+                    for (j = i; j > s + k; j--) cmd_swap(&r->cmd[j], &r->cmd[j - 1]);
+                    k++;
+                }
+        }
         keep = *m;
         for (i = a; i + 1 < b; i++) {
             r->pass[i] = r->pass[i + 1];

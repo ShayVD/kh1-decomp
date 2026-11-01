@@ -444,6 +444,10 @@ int main(int argc, char **argv) {
             kh1_pipes_nat_span = atoi(getenv("KH1_HOST_NATSPAN"));
         }
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
+        if (getenv("KH1_HOST_RECFAST")) { /* 2026-11-01: 0 the GPU thread's recording as before (natdraw.c, cmdbuf.c) */
+            extern int kh1_nat_once;
+            kh1_cmd_fastrot = kh1_nat_once = atoi(getenv("KH1_HOST_RECFAST"));
+        }
         if (getenv("KH1_HOST_CLOCK")) { /* 2026-10-31: kh1_vu1_clock on the host (the frame op's parts at the end) */
             kh1_vu1_clock = host_us;
             atexit(host_clock_report);

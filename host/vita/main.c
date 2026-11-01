@@ -66,6 +66,9 @@
  *                             summed on the CPU)
  *       natspan=0             with renderer=native, the GS worker puts each native record to the recording queue as
  *                             its own op (as before 2026-11-01; 1, the default: a payload's records as one op)
+ *       recfast=0             the GPU thread's recording as before 2026-11-01 (1, the default: each native strip
+ *                             vertex converted once, natdraw.c; the frame op's pass hoist moving commands in blocks,
+ *                             cmdbuf.c; the same draws either way)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
@@ -126,6 +129,7 @@ int kh1_spu2_voices_on(void);
 #include "vita.h"
 #include "dmawalk.h"
 #include "platform/cmdbuf.h"
+extern int kh1_nat_once; /* natdraw.c: config.txt recfast= (2026-11-01) */
 #include "platform/vu1.h"
 #include "platform/costack.h"
 #include "platform/view.h"
@@ -724,6 +728,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
+        else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */

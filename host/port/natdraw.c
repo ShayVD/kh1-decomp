@@ -29,12 +29,40 @@ static void put(KH1GpuVert *o, const u32 *v, u32 rgba, u32 f) {
     o->pad[1] = o->pad[2] = 0;
 }
 
+/* 2026-11-01 (native-plan.md stage 1, the GPU thread's recording): each strip vertex goes to the GPU's form once
+ * (put / put0 into sv) and its triangles are copies of those (32 bytes each), where it was converted again for each of
+ * the up to 3 triangles it is in.  The same vertices out, in the same order.  kh1_nat_once 0 (config.txt recfast=0,
+ * host KH1_HOST_RECFAST=0) converts per triangle as before */
+int kh1_nat_once = 1;
+#define SV_MAX 512
+static KH1GpuVert sv[SV_MAX];
+
 u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVert *out, u32 max, u32 *lost) {
     u32 r, j, n = 0;
     *lost = 0;
     for (r = 0; r < nrec; r++) {
         u32 nv = data[2], par = data[3];
         const u32 *v = data + 4;
+        if (kh1_nat_once && nv <= SV_MAX) {
+            u32 bad = 0; /* bit k of the last 3: vertex j - 2 + k's matrix index past the run's */
+            for (j = 0; j < nv; j++) put(&sv[j], v + j * 8, rgba, f);
+            for (j = 0; j < nv; j++) {
+                bad = (bad >> 1) | (v[j * 8 + 3] >= nmat) << 2;
+                if (j < 2 || bad) continue;
+                if (n + 3 > max) { (*lost)++; continue; }
+                if ((par + j) & 1) {
+                    out[n] = sv[j - 2];
+                    out[n + 1] = sv[j - 1];
+                } else {
+                    out[n] = sv[j - 1];
+                    out[n + 1] = sv[j - 2];
+                }
+                out[n + 2] = sv[j];
+                n += 3;
+            }
+            data += 4 + nv * 8;
+            continue;
+        }
         for (j = 2; j < nv; j++) {
             const u32 *a = v + (j - 2) * 8, *b = v + (j - 1) * 8, *c = v + j * 8;
             if (a[3] >= nmat || b[3] >= nmat || c[3] >= nmat) continue;
@@ -83,6 +111,27 @@ u32 kh1_nat_tris0(const u32 *data, u32 nrec, u32 f, int culled, KH1GpuVert *out,
     for (r = 0; r < nrec; r++) {
         u32 nv = data[2];
         const u32 *v = data + 4;
+        if (kh1_nat_once && nv <= SV_MAX) { /* each vertex converted once (kh1_nat_tris), only those a triangle uses */
+            u32 done = 0; /* sv holds vertices 0 .. done - 1 */
+            for (j = 2; j < nv; j++) {
+                u32 fl = v[j * 8 + 3] & 0xFFFF;
+                if (!fl || ((fl & 0x20) != 0) != (culled != 0)) continue;
+                if (n + 3 > max) { (*lost)++; continue; }
+                if (done < j - 2) done = j - 2;
+                for (; done <= j; done++) put0(&sv[done], v + done * 8, f);
+                if (culled && !(v[j * 8 + 3] >> 31)) {
+                    out[n] = sv[j - 1];
+                    out[n + 1] = sv[j - 2];
+                } else {
+                    out[n] = sv[j - 2];
+                    out[n + 1] = sv[j - 1];
+                }
+                out[n + 2] = sv[j];
+                n += 3;
+            }
+            data += 4 + nv * 8;
+            continue;
+        }
         for (j = 2; j < nv; j++) {
             const u32 *a = v + (j - 2) * 8, *b = v + (j - 1) * 8, *c = v + j * 8;
             u32 fl = c[3] & 0xFFFF;
