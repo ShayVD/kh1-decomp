@@ -240,7 +240,24 @@ the Dive has no 3D and the profile is empty):
 Checked: all 60 GPU picture hashes (KH1_HOST_GXM=250, KH1_HOST_GXM_HASH=1, to frame 7500, KH1_HOST_WIDE=1) identical
 with the change and without; make test passes. **Not yet measured on a Vita**: the `gs worker's frame op:` line's "the
 passes on the GPU thread" and the `recording:` line, recfast=1 against recfast=0. Expected: the passes ~0.3 s lower per
-2.4 s if the A9 spends what x86 does in the swaps. Next on this thread, by the Vita's `gpu parts:` line: the vertex
+2.4 s if the A9 spends what x86 does in the swaps.
+
+**The Vita's A/B (2026-11-01, Shay's Vita, the recfast VPK, renderer=native, dive_en.txt, watchdog windows inside
+frames 5000-8000, scaled to 2.4 s)**:
+
+| | recfast=0 | recfast=1 |
+|---|---|---|
+| pictures/s | 20.1 | **21.3** |
+| the frame op's passes on the GPU thread | 635 ms | **119 ms** |
+| recording on the GPU thread (the passes and the GPU frame in it) | 1,985 | 1,867 |
+| GS worker (run clock) | 1,670 | 2,097 |
+| game (run clock) | 1,495 | 1,874 |
+
+The passes lost ~0.5 s, more than x86's share predicted. The recording total fell less, because with frames coming
+faster the GPU frame's submit (554 -> 849 ms) and the worker and game threads each do more work a second: the GS
+worker (~2.1 s) is now the busiest thread again. The watchdog's windows were 5.9 s long with recfast=0 and 3.6 s with
+1 (it shares core 2 with the GPU thread). Both runs were played by hand, so ~6 % is about the noise floor; the passes'
+drop is far outside it. Next on this thread, by the Vita's `gpu parts:` line: the vertex
 copy (~150 ms per 2.4 s: gxm.c memcpys the recorder's whole vertex slot into GPU memory each frame; recording into
 GPU-mapped memory needs the empty frames' early return to wait for the GPU before the slot is reused) and the
 uploads into targets (pend_flush, outside the parts' timers).
