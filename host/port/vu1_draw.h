@@ -181,15 +181,54 @@ static int nd_10(u32 pc) {
 static int nd0_built, nd0_p4; /* the last nd_0 call filled nd_buf, and for P4 (KH1_HOST_NATCHECK's) */
 /* 2026-10-31: p4 1 for P4 (vu1_nat.h nat_4: entered at 00c or its idle 045), P0's batch with no back-face test:
  * every flag word that draws goes to the double-sided list (bit 0x20 cleared, natdraw.h) */
+/* one P0 vertex's colour (ITOF0, x vf31, FTOI0 toward 0 and saturating, the low bytes as the GS takes them) and ST
+ * (ITOF12: / 4096), into o[0..1] (s, t bits) and *rgba: the scalar form, and (2026-11-01) four lanes at once on
+ * NEON, the same bits (tests/host/vu1neon_test.c: nd0_vert against nd0_vert_c) */
+static __inline__ void nd0_vert_c(const u32 *c, const u32 *t, const f32 *sc, u32 *o, u32 *rgba) {
+    u32 k, r = 0;
+    for (k = 0; k < 4; k++) {
+        f32 v = (f32)(s32)c[k] * sc[k];
+        s32 iv = v >= 2147483520.0f ? 0x7FFFFFFF : v <= -2147483648.0f ? (s32)0x80000000u : (s32)v;
+        r |= ((u32)iv & 0xFF) << (k * 8);
+    }
+    *rgba = r;
+    o[0] = fo((f32)(s32)t[0] * (1.0f / 4096.0f));
+    o[1] = fo((f32)(s32)t[1] * (1.0f / 4096.0f));
+}
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+/* NEON's float to integer conversion rounds toward 0 and saturates as FTOI0, but at 2^31 - 128 (the largest float
+ * below 2^31), which the scalar form takes as saturated: such a vertex (and anything whose ST is not a normal float or 0)
+ * goes the scalar way */
+static __inline__ void nd0_vert(const u32 *c, const u32 *t, float32x4_t scv, const f32 *sc, u32 *o, u32 *rgba) {
+    float32x4_t v = vmulq_f32(vcvtq_f32_s32(vld1q_s32((const s32 *)c)), scv);
+    uint32x4_t big = vcgeq_f32(v, vdupq_n_f32(2147483520.0f));
+    uint16x4_t n16 = vmovn_u32(vreinterpretq_u32_s32(vcvtq_s32_f32(v)));
+    float32x2_t st = vmul_f32(vcvt_f32_s32(vld1_s32((const s32 *)t)), vdup_n_f32(1.0f / 4096.0f));
+    uint32x2_t b2 = vorr_u32(vget_low_u32(big), vget_high_u32(big));
+    if (vget_lane_u32(b2, 0) | vget_lane_u32(b2, 1)) {
+        nd0_vert_c(c, t, sc, o, rgba);
+        return;
+    }
+    *rgba = vget_lane_u32(vreinterpret_u32_u8(vmovn_u16(vcombine_u16(n16, n16))), 0);
+    vst1_u32(o, vreinterpret_u32_f32(st)); /* |t| < 2^31 over 4096: a normal float or 0, as fo leaves it */
+}
+#endif
+
 static int nd_0(u32 pc, int p4) {
     const u32 *h = mem[top & (DATA_QW - 1)];
     u32 nv = h[0] & 0x7FFF, rq = 2, j, k, i2 = top + 1;
     f32 sc[4], m[4][4];
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+    float32x4_t scv;
+#endif
     nd0_built = 0;
     nd0_p4 = p4;
     if (pc != 0xc && pc != (p4 ? 0x45u : 0x4eu)) return 0;
     if (!nv || 3 + nv * 2 + 4 > ND_QW || nv * 7u + 8 > DATA_QW) return 0;
     for (k = 0; k < 4; k++) sc[k] = fin(vf[31][k]);
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+    scv = vld1q_f32(sc);
+#endif
     for (k = 0; k < 4; k++) { /* column k of P x W: P (vf01-04) applied to W's column k (vf13-16) */
         f32 w0 = fin(vf[13 + k][0]), w1 = fin(vf[13 + k][1]), w2 = fin(vf[13 + k][2]), w3 = fin(vf[13 + k][3]);
         u32 r;
@@ -203,18 +242,16 @@ static int nd_0(u32 pc, int p4) {
     rq++;
     for (j = 0; j < nv; j++, i2 += 3) {
         const u32 *p = mem[i2 & (DATA_QW - 1)], *c = mem[(i2 + 1) & (DATA_QW - 1)], *t = mem[(i2 + 2) & (DATA_QW - 1)];
-        u32 rgba = 0;
-        for (k = 0; k < 4; k++) { /* ITOF0, x vf31, FTOI0 (toward 0, saturating), the low byte as the GS takes it */
-            f32 v = (f32)(s32)c[k] * sc[k];
-            s32 iv = v >= 2147483520.0f ? 0x7FFFFFFF : v <= -2147483648.0f ? (s32)0x80000000u : (s32)v;
-            rgba |= ((u32)iv & 0xFF) << (k * 8);
-        }
+        u32 rgba;
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+        nd0_vert(c, t, scv, sc, nd_buf[rq + 1], &rgba);
+#else
+        nd0_vert_c(c, t, sc, nd_buf[rq + 1], &rgba);
+#endif
         nd_buf[rq][0] = p[0];
         nd_buf[rq][1] = p[1];
         nd_buf[rq][2] = p[2];
         nd_buf[rq][3] = p4 && p[3] & 0xFFFF ? (p[3] & ~0x20u) | 1 : p[3]; /* the strip flag word (natdraw.h) */
-        nd_buf[rq + 1][0] = fo((f32)(s32)t[0] * (1.0f / 4096.0f));
-        nd_buf[rq + 1][1] = fo((f32)(s32)t[1] * (1.0f / 4096.0f));
         nd_buf[rq + 1][2] = 0x3F800000u;
         nd_buf[rq + 1][3] = rgba;
         rq += 2;

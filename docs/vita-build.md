@@ -1973,6 +1973,51 @@ recording wait (30-250 ms) and part of w_native (one of its two copies), so roug
 thread gains the passes less the GXM count (it had ~0.8 s free). If the GPU thread becomes the limit, `recframe=0`
 gives the old split.
 
+## The walk after the native programs (2026-11-01, native-plan.md stages 5 / 6, host-measured)
+
+Where the game thread's time goes now that P0, P4, P10, P11, P13 and P18 are native (callgrind, game thread only,
+`--separate-threads=yes`, renderer=native with GSQ / GPUQ / RECQ on, en.iso and dive_en.txt, 60 frames each; the host's
+own trace-5 prints and per-send GS syncs left out, as a Vita at trace 2 does neither):
+
+| Dive frames | game thread | VU1 programs | native parse | unpacks into VU memory | the rest of the walk |
+|---|---|---|---|---|---|
+| 5000-5060 (map, lit models) | ~1.0 G | P12 ~730 M, P2 ~50 M, P1 ~14 M | nd_0 62 M | 55 M | ~25 M (VIF codes, skim, ring puts) |
+| 7000-7060 (Sora on P13) | ~0.33 G | P2 ~7 M | nd_13 113 M (~11.5 k a run, ~270 a vertex) | ~40 M | ~15 M |
+
+So the tag / VIF code / ring work the plan's stages 5 and 6 would replace is under a tenth of the game thread on the
+host; what costs is the unpack into VU memory, the native programs' parse and P12. The Vita's own split line read
+~690 ms of walk outside the VU1 programs per 2.6 s (Shay's frame-op log), but that line also counted the waits for room
+in the GS worker's ring inside the walk (the worker was the limit then); PR #203's `walk split:` / ring-wait lines
+separate them.
+
+Changes (all exact: VU memory, micro memory and every output the same):
+
+- **Unpacks from the walk's own words** (host/port/vu1.c `ds`): an UNPACK whose data comes in one piece (renderer A's
+  and B's mesh packets always) is unpacked straight from the packet, not copied to `dbuf` first; a V4-32 with CL == WL
+  that does not wrap is one memcpy into VU memory. tests/host/vu1feed_test.c's random streams (data in random runs)
+  cover it, now also on ARM under qemu-arm (tests/selftest.sh).
+- **An MPG's words at once**: each object's chain sends its program again; the words are compared with micro memory
+  as one memcmp and copied only when they differ (micro_gen still counts each changed word).
+- Host, frames 7000-7060: unpack + the VIF data path 30 M -> 0 + one memcpy; the game thread 489 M -> 465 M (with the
+  artefacts above). Frames 5000-5060: 1,179 M -> 1,155 M.
+- **P0's parse on NEON** (vu1_draw.h `nd0_vert`): a vertex's colour (ITOF0, x vf31, FTOI0) and ST (/ 4096) in four
+  lanes; a colour lane at or over 2^31 - 128 (where NEON's saturation and FTOI0's differ) goes the scalar way.
+  vu1neon_test compares it with the scalar form on 300,000 weighted cases (0 differ; a broken threshold gives ~7,000).
+  Not measurable on the x86 host (scalar there).
+- **Two clock reads fewer per VU1 run** (vu1.c `start` / `start_run` share one start and one end), and the Vita's log
+  starts with `kh1-vita: clock: N ns a read (sceKernelGetProcessTimeWide)`: the clock is read ~4 times a VU1 run (~15,000
+  runs a window) and twice per GS worker op, so if it is a slow call its own cost is in every timed line.
+
+Checked on the host: the GS path's 140 worker digests (`KH1_HOST_GSQ_CHECK=50`) and its whole log identical to main's
+to frame 7000; renderer=native's GPU target hashes (gxmcheck, every 50 frames to 7000) identical to main's; make test.
+Not checked: anything on a Vita.
+
+**What would remove most of the rest** (stage 5 proper): P13's parse is per vertex every frame because the skinned
+vertices with more than one bone are summed on the CPU. With the bone indices and weights in the vertex and the
+palette in u_m (the GPU skinning that native-renderer.md "P13 too" chose not to do), a model's vertex records would be
+the same every frame and could be cached by packet address with stage 1's static buffers, leaving only the matrices
+per frame. That needs a new native vertex format (gxm.c, shadergen.c, the mock) and is best done with stage 1's cache.
+
 ## What next, in order
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
