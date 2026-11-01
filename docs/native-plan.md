@@ -363,6 +363,17 @@ tpc are the same every way, VU memory too except the poisoned words; it runs on 
 (tests/selftest.sh). Mutations (sign of a USN element, a length off by one, the mode test dropped, the flush's CL not
 restored, the flush before another unpack dropped) each fail it.
 
+**Checked on the host** (en.iso c8ee8c77..., dive_en.txt to frame 7000, the gxmcheck binary, `KH1_HOST_TRACE=5
+KH1_HOST_QUIET=1 KH1_HOST_GSQ=1 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1 KH1_HOST_NATIVE=1 KH1_HOST_CLOCK=1`): all 280 GPU target hashes identical for main
+(26b3b0b) and natchain 0, 1, 2 (poisoned) and 3. **The host turns the native renderer on only at trace 5**
+(main.c: `kh1_host_trace >= 5 && KH1_HOST_NATIVE`); at trace 2 the same env runs the GS path, where natchain holds
+nothing: those runs gave the same 140 GS digests and 280 hashes for all five as well. With natchain=1, 465,834 of the
+496,718 native runs (P0 286 K, P18 82 K, P11 65 K, P4 35 K, P10 29 K) read their records from the chain, 77 M qwords
+were never unpacked into VU memory, 197 K held unpacks were written late (the rest of the runs: a parse that gave them
+back, or another program); natchain=3 found 0 payloads that differ. Host times (x86, not the Vita's): the hand-offs
+343 -> 119 ms, P18's runs 116 -> 86 ms. make test passes.
+
 **Expected (estimate, not measured)**: per 5.6 s fight window, the feed's copies for these runs and the payload's
 second copy (~0.3-0.5 s together, if the copies are the feed's cost) and ~0.2-0.4 s of clock reads, so the game
 thread -0.5 to -0.9 s a fight window, a few ms a picture; less than the ~34 ms a picture the walk's lines add up to,
