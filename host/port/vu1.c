@@ -519,6 +519,7 @@ static u32 lower_stall(u32 lo, u32 t) {
 }
 
 static void kick(u32 a);
+static u32 kick_smp;
 
 /* DIV / SQRT / RSQRT's Q from fs's and ft's chosen fields */
 static u32 qop(u32 x, u32 s, u32 t) {
@@ -759,10 +760,10 @@ static void kick(u32 a) {
         u32 k;
         for (k = 0; k < n; k++) printf("kh1-vu1:   %08x %08x %08x %08x\n", q[k * 4], q[k * 4 + 1], q[k * 4 + 2], q[k * 4 + 3]);
     }
-    if (kh1_vu1_kick && kh1_vu1_clock) {
+    if (kh1_vu1_kick && kh1_vu1_clock && KH1_TIME_THIS(kick_smp)) { /* (natchain=1: 1 kick in 8 timed) */
         u32 t0 = kh1_vu1_clock();
         kh1_vu1_kick(q, n);
-        kh1_vu1_kick_us += kh1_vu1_clock() - t0;
+        kh1_vu1_kick_us += (kh1_vu1_clock() - t0) * KH1_TIME_EVERY;
     } else if (kh1_vu1_kick) kh1_vu1_kick(q, n);
 }
 
@@ -1296,16 +1297,18 @@ static int nat_check(int prog, u32 pc) {
 static void start_run(u32 pc);
 /* 2026-11-01: a run's start and end times, read once each and shared by start and start_run's per-program time (the
  * Vita's clock is a system call: four reads a run were ~15,000 runs' worth of calls a window) */
-static u32 run_t0, run_t1, run_t1_set;
+static u32 run_t0, run_t1, run_t1_set, run_timed, run_smp;
 static void start(u32 pc) {
-    if (!kh1_vu1_clock) {
+    if (!kh1_vu1_clock || !KH1_TIME_THIS(run_smp)) { /* (natchain=1: 1 run in 8 timed, each program's runs all counted) */
+        run_timed = 0;
         start_run(pc);
         return;
     }
+    run_timed = 1;
     run_t0 = kh1_vu1_clock();
     run_t1_set = 0;
     start_run(pc);
-    kh1_vu1_us += (run_t1_set ? run_t1 : kh1_vu1_clock()) - run_t0;
+    kh1_vu1_us += ((run_t1_set ? run_t1 : kh1_vu1_clock()) - run_t0) * KH1_TIME_EVERY;
 }
 
 /* KH1_HOST_VU1DUMP=DIR:N (host/null/main.c): every Nth run's start (micro memory, then a TrSnap, then the
@@ -1375,16 +1378,16 @@ static void start_run(u32 pc) {
         }
         if (!ran && kh1_vu1_native == 2) ran = nat_check(prog, pc);
         if (!ran) ran = tr_go(prog, pc);
-        if (kh1_vu1_clock) {
+        if (run_timed) {
             t1 = run_t1 = kh1_vu1_clock();
             run_t1_set = 1;
         }
         if (tr_progs[prog].num == 13 && kh1_vu1_draw && kh1_vu1_draw_p13 && !nd13_built) { /* handed back */
             kh1_vu1_nd13_fail++;
-            if (kh1_vu1_clock) kh1_vu1_nd13_fail_us += t1 - t0;
+            if (run_timed) kh1_vu1_nd13_fail_us += (t1 - t0) * KH1_TIME_EVERY;
         }
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
-            tr_us[prog] += t1 - t0;
+            if (run_timed) tr_us[prog] += (t1 - t0) * KH1_TIME_EVERY;
             tr_runs[prog]++;
             tr_pairs[prog] += st.insns - n0;
         }

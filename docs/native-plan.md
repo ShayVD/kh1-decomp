@@ -322,6 +322,61 @@ The biggest structural step: the game's draw list hands its renderer B nodes to 
   vertices, same order in the draw list); the worker-order digests (`KH1_HOST_GSQ_CHECK`) unchanged for the
   draws that stay on the GS path; gxmcheck pictures.
 
+### Stage 5, first cut: records straight from the chain (2026-11-01, config.txt `natchain=1`)
+
+The fights log (Shay's Vita, build 26b3b0b, renderer=native, dive_en.txt into the Dive's enemies; watchdog windows
+of ~5-9 s) put VIF1's walk at ~4.2 s of a 5.6 s window: the native programs' parse and hand-off ~1.2 s (P18 ~386 ms,
+P0 ~473, P11 ~315, P10 ~167; ~20 us a run), the feed into VU memory ~1.4 s (43 M words), the rest of the walk ~0.8 s.
+The clock on the Vita is a system call, `683 ns a read`, and that feed line alone read it twice per feed (a few
+hundred thousand feeds a window), the VU1 runs and hand-offs twice each more.
+
+What this cut does (host/port/vu1.c `nc_*`, vu1_draw.h; `natchain=0` / host `KH1_HOST_NATCHAIN=0` is the old path):
+
+- **Unpacks held, not written.** With the native renderer on, a TOPS-relative UNPACK whose data came in one piece (the
+  walk's own words; they stay put until the send ends) in a form the native parses read in place (mode 0, no mask,
+  CL >= WL; V4-32, V4-16, V4-8, V2-16) is recorded (its words, address, CL / WL) instead of written. Up to 8 are held.
+- **The parses read the held words.** Renderer B's packets (renderer-spec 2.3: `STCYCL 1,1; UNPACK V4-32 n -> 0 +TOPS;
+  MSCNT`) are one held V4-32 at top: nd_18 (P18, P11) and nd_10 read their records from it, bounds-checked against
+  its length. Renderer A's batches (renderer-spec 2.2.2: the tag `V4-32 1 -> @0`, then `STCYCL 3,1` and `V4-32 -> @1`,
+  `V4-8 -> @2`, `V2-16` or `V4-16 -> @3`) are exactly four held unpacks: nd_0 (P0, P4) reads the position, the
+  colour bytes and the ST halves where they are, sign-extended or not as the unpack would (USN). A handed-over run
+  drops what it read: those VU addresses keep what they had.
+- **Everything else first writes what is held, in order, as before** (`nc_flush`): any unpack not held, a run of any
+  other program (or the interpreter, or a check mode), a parse that cannot read them (a stream longer than the
+  unpack, two unpacks where one is expected, a role missing, a vertex w not 1...), and every VIF1 send's end
+  (dmawalk.c calls `kh1_vif1_end`). Held unpacks are never kept past their send.
+- **The payload written into the pool** (gsqueue.c `kh1_pool_room` / `kh1_pool_take`, dmawalk.c `path1_room_at` /
+  `path1_take`): with natref's pool the parse writes the payload where the GS worker reads it, then puts the same
+  one-qword reference op path1_draw put, so nd_buf and its copy into the pool are gone (P13 still builds in nd_buf).
+- **1 in 8 of the game thread's hot timers** (platform/vu1.h `KH1_TIME_THIS`): a VU1 run, an XGKICK, a feed and a
+  hand-off read the clock on 1 call in 8, chosen at random (a fixed 1-in-8 would always time the same call of a
+  repeating pattern: P0's five feeds a batch), and count it 8 times. Run counts stay exact; the times are estimates.
+
+**What is not exact, and how it is checked.** The only change to VU1's state is that a dropped unpack's addresses are
+not written: the TOPS buffer keeps an older run's input. Nothing reads its TOPS buffer before an unpack fills it, but
+that is a claim about the game's chains, so `KH1_HOST_NATCHAIN=2` writes a poison pattern there instead (any reader
+would change a picture or a digest), and `=3` parses every held run both ways and compares the payloads
+(`natchain=... payloads differed` in the host's last lines). tests/host/vu1chain_test.c feeds 6 random streams of B
+packets and A batches with every fallback case through the real VIF1 code path (stand-in programs,
+tests/host/vu1chain/vu1_tr.c) with natchain 0-3: the payloads, what each program run reads, the slot registers and
+tpc are the same every way, VU memory too except the poisoned words; it runs on x86 and under qemu-arm with NEON
+(tests/selftest.sh). Mutations (sign of a USN element, a length off by one, the mode test dropped, the flush's CL not
+restored, the flush before another unpack dropped) each fail it.
+
+**Expected (estimate, not measured)**: per 5.6 s fight window, the feed's copies for these runs and the payload's
+second copy (~0.3-0.5 s together, if the copies are the feed's cost) and ~0.2-0.4 s of clock reads, so the game
+thread -0.5 to -0.9 s a fight window, a few ms a picture; less than the ~34 ms a picture the walk's lines add up to,
+because the parse itself (the records read and the payload written, now cold pool memory) and the rest of the walk
+(VIF codes, the w_path1 op per run, the tags) stay. The Vita's `natchain=` line counts the runs read from the chain,
+the qwords never unpacked and the unpacks written late; compare `walk split:`, `vu1 programs:` and `native renderer:`
+with natchain=0. If the parse's per-run time does not fall, the cost is cache misses on the model data, which only
+stage 1's cache (records not re-read every frame) removes.
+
+**Not changed**: P13 (its parse reads VU memory: held unpacks are written before it runs), the GS path, any check or
+trace mode (nothing is held in them). The GS worker's per-op profile (gsqueue.c `prof`, two clock reads an op, ~270 K
+ops a fight window) still reads the clock every op: on the worker, ~0.35 s a window at 683 ns a read, a cheap
+follow-up for the worker's thread.
+
 ### Stage 6: renderer A's object chains as native calls, and the walk's fast path for the rest
 
 - The same for renderer A: per-object chains start with the program's REF (renderer-spec 2.1) and REF the map's

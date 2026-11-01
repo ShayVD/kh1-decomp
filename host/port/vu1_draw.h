@@ -15,20 +15,19 @@ int kh1_vu1_draw_p10 = 1;
 
 /* 2026-10-31: the time the game thread spends handing payloads over (dmawalk.c's queue put: the copy, and a full
  * ring's wait), all programs' and P13's, kh1_vu1_clock's microseconds; the rest of a native program's time in
- * the Vita's `vu1 programs:` line is its parse.  2026-11-01 (natchain=1): the Vita's clock is a system call (~0.7 us
- * a read, two a hand-off), so only 1 hand-off in 8 is timed and counted 8 times */
+ * the Vita's `vu1 programs:` line is its parse.  2026-11-01 (natchain=1): 1 hand-off in 8 timed (vu1.h KH1_TIME_THIS) */
 u32 kh1_vu1_nd_hand_us, kh1_vu1_nd13_hand_us;
-static u32 nd_hand_n;
-static void nd_time(u32 t0, u32 num, u32 every) {
-    u32 dt = (kh1_vu1_clock() - t0) * every;
+static u32 nd_hand_smp;
+static void nd_time(u32 t0, u32 num) {
+    u32 dt = (kh1_vu1_clock() - t0) * KH1_TIME_EVERY;
     kh1_vu1_nd_hand_us += dt;
     if (num == 13) kh1_vu1_nd13_hand_us += dt;
 }
 static void nd_hand(const u32 *q, u32 nqw) {
-    u32 every = kh1_vu1_natchain ? 8 : 1, t0 = 0, timed = kh1_vu1_clock && !(nd_hand_n++ & (every - 1));
+    u32 t0 = 0, timed = kh1_vu1_clock && KH1_TIME_THIS(nd_hand_smp);
     if (timed) t0 = kh1_vu1_clock();
     kh1_vu1_draw(q, nqw);
-    if (timed) nd_time(t0, q[0] & 0xFF, every);
+    if (timed) nd_time(t0, q[0] & 0xFF);
 }
 
 #define ND_QW 4096 /* a payload's qwords: VU1's data memory is 1024, a vertex 3 there and 2 here */
@@ -57,10 +56,10 @@ static void nd_give(u32 (*ob)[4], u32 nqw) {
         nd_hand(ob[0], nqw);
         return;
     }
-    timed = kh1_vu1_clock && !(nd_hand_n++ & 7);
+    timed = kh1_vu1_clock && KH1_TIME_THIS(nd_hand_smp);
     if (timed) t0 = kh1_vu1_clock();
     kh1_vu1_draw_take(nqw);
-    if (timed) nd_time(t0, ob[0][0] & 0xFF, 8);
+    if (timed) nd_time(t0, ob[0][0] & 0xFF);
 }
 
 /* natchain (vu1.c nc_*): the programs whose parse reads held unpacks, and the views they read them by */

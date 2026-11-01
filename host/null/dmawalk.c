@@ -485,19 +485,18 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
 /* native-plan.md stage 0: the time VIF1's data words take on their way into VU memory (UNPACK, MPG, STROW...),
  * apart from the programs they start; the Vita's watchdog prints it with the walk's split by channel */
 u32 kh1_dma_feed_us, kh1_dma_feed_words;
-/* 2026-11-01: with natchain=1 only 1 feed in 8 is timed (and counted 8 times): the Vita's clock is a system call, ~0.7
- * us a read, and a window has a few hundred thousand feeds */
+/* 2026-11-01: with natchain=1 only 1 feed in 8 is timed (platform/vu1.h KH1_TIME_THIS) */
 static void vif1_feed(const u32 *w, u32 n) {
-    static u32 k;
-    u32 t0, every = kh1_vu1_natchain ? 8 : 1;
+    static u32 smp;
+    u32 t0;
     kh1_dma_feed_words += n;
-    if (!kh1_vu1_clock || (k++ & (every - 1))) {
+    if (!kh1_vu1_clock || !KH1_TIME_THIS(smp)) {
         kh1_vif1_data_n(w, n);
         return;
     }
     t0 = kh1_vu1_clock();
     kh1_vif1_data_n(w, n);
-    kh1_dma_feed_us += (kh1_vu1_clock() - t0) * every;
+    kh1_dma_feed_us += (kh1_vu1_clock() - t0) * KH1_TIME_EVERY;
 }
 
 static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {

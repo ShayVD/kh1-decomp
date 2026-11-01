@@ -33,6 +33,12 @@ void kh1_vif1_end(void);
  * natchain=3's payloads that differed */
 extern int kh1_vu1_natchain;
 extern u32 kh1_vu1_nc_runs, kh1_vu1_nc_flushed, kh1_vu1_nc_qw, kh1_vu1_nc_bad;
+/* with natchain=1 the timers of the game thread's hot calls (a VU1 run, an XGKICK, a feed into VU memory, a hand-off)
+ * read the clock on 1 call in 8, picked at random so that no repeating pattern of calls is always or never timed, and
+ * count that call's time 8 times: the Vita's clock is a system call (~0.7 us a read) and a fight's window makes a few
+ * hundred thousand of them.  s: the site's own state */
+#define KH1_TIME_EVERY (kh1_vu1_natchain ? 8u : 1u)
+#define KH1_TIME_THIS(s) (!kh1_vu1_natchain || ((s) = (s) * 1664525u + 1013904223u) >> 29 == 0)
 extern u32 *(*kh1_vu1_draw_room)(u32 maxqw);
 extern void (*kh1_vu1_draw_take)(u32 nqw);
 
