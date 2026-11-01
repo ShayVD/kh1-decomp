@@ -24,6 +24,9 @@
  * the PS2 build. */
 #include "common.h"
 #include "iop.h"
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#include <arm_neon.h>
+#endif
 
 int printf(const char *, ...);
 void *memcpy(void *, const void *, unsigned int);
@@ -176,23 +179,34 @@ static const s32 adpcm_f1[5] = { 0, 0, -52, -55, -60 };
 static void decode_block(Voice *v, int c, int n) {
     const u8 *b = spu_ram + (v->nax & (SPU_RAM - 16) & ~15u);
     int shift = b[0] & 15, filt = (b[0] >> 4) & 7, i;
-    s32 f0, f1;
+    s32 f0, f1, h1 = v->hist1, h2 = v->hist2;
+    s16 *d = v->dec;
     if (shift > 12) shift = 9;
     if (filt > 4) filt = 4;
     f0 = adpcm_f0[filt];
     f1 = adpcm_f1[filt];
     v->flags = b[1];
     if ((v->flags & 4) && !v->lsa_manual) v->lsa = v->nax & ~15u;
-    for (i = 0; i < 28; i++) {
-        s32 nib = (b[2 + i / 2] >> ((i & 1) * 4)) & 15;
-        s32 s = ((s32)(s16)(nib << 12)) >> shift;
-        s += (v->hist1 * f0 + v->hist2 * f1 + 32) >> 6;
+    /* the history in locals (the stores into dec[] would make the compiler reload it from the voice) */
+    for (i = 0; i < 28; i += 2) {
+        u32 by = b[2 + i / 2];
+        s32 s = ((s32)(s16)(by << 12)) >> shift;
+        s += (h1 * f0 + h2 * f1 + 32) >> 6;
         if (s > 32767) s = 32767;
         if (s < -32768) s = -32768;
-        v->hist2 = v->hist1;
-        v->hist1 = s;
-        v->dec[i] = (s16)s;
+        h2 = h1;
+        h1 = s;
+        d[i] = (s16)s;
+        s = ((s32)(s16)((by >> 4) << 12)) >> shift;
+        s += (h1 * f0 + h2 * f1 + 32) >> 6;
+        if (s > 32767) s = 32767;
+        if (s < -32768) s = -32768;
+        h2 = h1;
+        h1 = s;
+        d[i + 1] = (s16)s;
     }
+    v->hist1 = h1;
+    v->hist2 = h2;
     (void)c;
     (void)n;
 }
@@ -316,6 +330,11 @@ int kh1_spu2_find_presets(const u8 *irx, u32 size) {
 
 /* one half-rate step of a core's reverb on its wet input; returns the output pair in r->out */
 static void reverb_step(Reverb *r, const u16 *p, s32 evl, s32 evr) {
+    /* the buffer and position in locals (RV through r reloads them after every store) */
+    s16 *__restrict__ rb = r->buf;
+    u32 rpos = r->pos;
+#undef RV
+#define RV(r, off) (rb[(rpos + (u32)(off)) & (RV_SIZE - 1)])
     s32 lin = (VR(30) * r->in[0]) >> 15, rin = (VR(31) * r->in[1]) >> 15;
     s32 viir = VR(2), vwall = VR(7), vapf1 = VR(8), vapf2 = VR(9), l, rr, t;
     /* same side, then cross reflections */
@@ -351,7 +370,9 @@ static void reverb_step(Reverb *r, const u16 *p, s32 evl, s32 evr) {
     r->prev[1] = r->out[1];
     r->out[0] = (l * evl) >> 15;
     r->out[1] = (rr * evr) >> 15;
-    r->pos = (r->pos + 1) & (RV_SIZE - 1);
+    r->pos = (rpos + 1) & (RV_SIZE - 1);
+#undef RV
+#define RV(r, off) ((r)->buf[((r)->pos + (u32)(off)) & (RV_SIZE - 1)])
 }
 
 /* a core's wet pair at 48 kHz: steps at every other sample on the two inputs' average, the output
@@ -406,7 +427,163 @@ static void noise_run(Core *k, s16 *out, int frames) {
     k->noise_timer = t;
 }
 
+/* The voice's mix over a stretch in three passes (2026-10-31, docs/sound-spec.md "The mix in passes"),
+ * the same numbers as voice_sample()'s sample-by-sample loop (kept below for KH1_SPU2_SLOWMIX):
+ *   1. the envelope: env_at[i], the ENVX sample i is scaled by; it changes only when the envelope's
+ *      counter overflows, so the samples between are filled in one go.  It stops where the release
+ *      reaches 0 (the voice's last sample is the one whose tick turned it off);
+ *   2. the wave: the interpolated samples (or the noise) up to there, the pitch counter, the ADPCM
+ *      blocks and their end flags, with the voice's state in locals; a block end that stops the voice
+ *      stops it here (env 0, off) as block_end() does;
+ *   3. the volumes and the sums: with no sweep the volumes are constants, and the four sums are
+ *      straight loops (NEON on the Vita). */
+static __inline__ __attribute__((always_inline)) u32 env_inc(const Env *e, s32 level) {
+    u32 inc = e->inc;
+    if (e->exp && !e->dec && level >= 0x6000) {
+        if (e->rate < 40) ;
+        else if (e->rate >= 44) inc >>= 2;
+        else inc >>= 1;
+    }
+    return inc;
+}
+
+/* pass 1: how many samples the voice plays (frames, or fewer if the envelope ends) */
+static int env_pass(Voice *__restrict__ v, int frames, s32 *__restrict__ env_at) {
+    int i = 0;
+    while (i < frames) {
+        int ph = v->phase, m;
+        u32 inc;
+        if (ph == PH_OFF) break;
+        env_at[i++] = v->env;
+        adsr_tick(v);
+        if (v->phase != ph || v->phase == PH_OFF) continue;
+        /* the same phase, its condition false at this level: the ticks until the next overflow change
+         * nothing but the counter */
+        inc = env_inc(&v->adsr, v->env);
+        if (!inc) m = frames - i;
+        else m = (int)((0x8000u - (u32)v->adsr.counter + inc - 1) / inc) - 1;
+        if (m > frames - i) m = frames - i;
+        if (m > 0) {
+            s32 e = v->env;
+            int j;
+            v->adsr.counter += (s32)(inc * (u32)m);
+            for (j = 0; j < m; j++) env_at[i + j] = e;
+            i += m;
+        }
+    }
+    return i;
+}
+
+/* pass 2: the wave; returns the samples played (fewer than cnt if a block end stopped the voice) */
+static int wave_pass(Voice *__restrict__ v, int c, int n, int cnt, const s16 *__restrict__ nz, s32 *__restrict__ raw) {
+    u32 counter = v->counter, step = v->pitch > 0x3FFF ? 0x3FFF : v->pitch;
+    s16 s0 = v->s[0], s1 = v->s[1], s2 = v->s[2], s3 = v->s[3];
+    int idx = v->idx, i, off = 0;
+    for (i = 0; i < cnt; i++) {
+        if (nz) raw[i] = nz[i];
+        else {
+            const s32 *w = interp_w[(counter & 0xFFF) >> 4];
+            s32 r = (s0 * w[0] + s1 * w[1] + s2 * w[2] + s3 * w[3]) >> 15;
+            raw[i] = r > 32767 ? 32767 : r < -32768 ? -32768 : r;
+        }
+        counter += step;
+        while (counter >= 0x1000) {
+            counter -= 0x1000;
+            s0 = s1;
+            s1 = s2;
+            s2 = s3;
+            if (idx >= 28) {
+                if (idx != 99) {
+                    block_end(v, c, n);
+                    if (v->phase == PH_OFF) off = 1;
+                }
+                decode_block(v, c, n);
+                idx = 0;
+            }
+            s3 = v->dec[idx++];
+            if (off) break;
+        }
+        if (off) { i++; break; }
+    }
+    v->counter = counter;
+    v->s[0] = s0;
+    v->s[1] = s1;
+    v->s[2] = s2;
+    v->s[3] = s3;
+    v->idx = idx;
+    return i;
+}
+
 static void voice_render(Voice *__restrict__ v, int c, int n, int frames, s32 (*__restrict__ dry)[MIX_MAX], s32 (*__restrict__ wet)[MIX_MAX]) {
+    static s32 env_at[MIX_MAX] __attribute__((aligned(16))), raw[MIX_MAX] __attribute__((aligned(16)));
+    const Core *k = &core[c];
+    u32 bit = 1u << n;
+    int ml = (k->vmixl & bit) != 0, mr = (k->vmixr & bit) != 0, mel = (k->vmixel & bit) != 0, mer = (k->vmixer & bit) != 0;
+    int sweep_l = v->voll & 0x8000, sweep_r = v->volr & 0x8000, i, cnt, ph = v->phase;
+    const s16 *nz = (k->non & bit) ? mix_noise[c] : 0;
+    cnt = env_pass(v, frames, env_at);
+    if (!cnt) return;
+    /* pass 2 reads the phase only for a block end's stop: give it the phase the voice had */
+    {
+        int ph_env = v->phase;
+        s32 e_env = v->env;
+        int got;
+        v->phase = (u8)ph;
+        got = wave_pass(v, c, n, cnt, nz, raw);
+        if (got < cnt || v->phase == PH_OFF) {
+            cnt = got;          /* stopped by a block end: env 0, off (block_end) */
+            v->env = 0;
+            v->phase = PH_OFF;
+        } else {
+            v->phase = (u8)ph_env;
+            v->env = e_env;
+        }
+    }
+    if (sweep_l || sweep_r) {
+        for (i = 0; i < cnt; i++) {
+            s32 s = (raw[i] * env_at[i]) >> 15, l, r;
+            if (sweep_l) vol_tick(v, 0, v->voll);
+            if (sweep_r) vol_tick(v, 1, v->volr);
+            l = (s * v->vol[0]) >> 15;
+            r = (s * v->vol[1]) >> 15;
+            if (ml) dry[0][i] += l;
+            if (mr) dry[1][i] += r;
+            if (mel) wet[0][i] += l;
+            if (mer) wet[1][i] += r;
+        }
+        return;
+    }
+    {
+        /* a sum the voice is not routed to goes to a sink (adding 0 to it would be the same) */
+        static s32 sink[MIX_MAX] __attribute__((aligned(16)));
+        s32 vl = v->vol[0], vr = v->vol[1];
+        s32 *d0 = ml ? dry[0] : sink, *d1 = mr ? dry[1] : sink, *w0 = mel ? wet[0] : sink, *w1 = mer ? wet[1] : sink;
+        i = 0;
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+        {
+            int32x4_t qvl = vdupq_n_s32(vl), qvr = vdupq_n_s32(vr);
+            for (; i + 4 <= cnt; i += 4) {
+                int32x4_t s = vshrq_n_s32(vmulq_s32(vld1q_s32(raw + i), vld1q_s32(env_at + i)), 15);
+                int32x4_t l = vshrq_n_s32(vmulq_s32(s, qvl), 15), r = vshrq_n_s32(vmulq_s32(s, qvr), 15);
+                vst1q_s32(d0 + i, vaddq_s32(vld1q_s32(d0 + i), l));
+                vst1q_s32(w0 + i, vaddq_s32(vld1q_s32(w0 + i), l));
+                vst1q_s32(d1 + i, vaddq_s32(vld1q_s32(d1 + i), r));
+                vst1q_s32(w1 + i, vaddq_s32(vld1q_s32(w1 + i), r));
+            }
+        }
+#endif
+        for (; i < cnt; i++) {
+            s32 s = (raw[i] * env_at[i]) >> 15, l = (s * vl) >> 15, r = (s * vr) >> 15;
+            d0[i] += l;
+            w0[i] += l;
+            d1[i] += r;
+            w1[i] += r;
+        }
+    }
+}
+
+#ifdef KH1_SPU2_SLOWMIX
+static void voice_render_slow(Voice *__restrict__ v, int c, int n, int frames, s32 (*__restrict__ dry)[MIX_MAX], s32 (*__restrict__ wet)[MIX_MAX]) {
     const Core *k = &core[c];
     u32 bit = 1u << n;
     s32 ml = -(s32)((k->vmixl & bit) != 0), mr = -(s32)((k->vmixr & bit) != 0);
@@ -425,6 +602,8 @@ static void voice_render(Voice *__restrict__ v, int c, int n, int frames, s32 (*
         wet[1][i] += r & mer;
     }
 }
+#define voice_render voice_render_slow
+#endif
 
 static void mix_part(s16 *out, int frames) {
     int f, c, n;

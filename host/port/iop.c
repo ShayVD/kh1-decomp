@@ -41,6 +41,7 @@ u32 kh1_iop_insns;
 #define OP_STUB 0xF8000000u
 #define OP_MAGIC 0xFC000000u
 #define OP_NATIVE 0xF4000000u /* (primary 0x3D) a driver function run as C: natives[] below */
+#define OP_REC 0xF0000000u    /* (primary 0x3C) a driver function translated to C at build time (KH1_IOP_REC) */
 
 #define IOP_THREADS 8
 #define IOP_SEMAS 16
@@ -95,6 +96,7 @@ static int iop_ok;
 static u32 iop_mod_end;
 static int iop_log_on = -1;
 static int iop_natives_on = 1; /* 0: interpret every driver function (KH1_HOST_IOP=nonative) */
+static int iop_rec_on = 1;     /* 0: leave the build's translation unused (KH1_HOST_IOP=norec) */
 
 /* the RPC server (one is enough for the sound driver) */
 static u32 rpc_sid = (u32)-1, rpc_func, rpc_buf;
@@ -117,7 +119,8 @@ static int iop_log(void) {
     if (iop_log_on < 0) {
         const char *s = getenv("KH1_HOST_IOP");
         iop_log_on = s && *s && *s != '0';
-        if (s && !strcmp(s, "nonative")) { iop_natives_on = 0; iop_log_on = 0; }
+        if (s && !strcmp(s, "nonative")) { iop_natives_on = 0; iop_rec_on = 0; iop_log_on = 0; }
+        if (s && !strcmp(s, "norec")) { iop_rec_on = 0; iop_log_on = 0; }
     }
     return iop_log_on;
 }
@@ -176,6 +179,7 @@ static u32 iop_alloc(u32 size) {
 /* ---- the CPU ---- */
 
 static int hle(IopCtx *c, const IopStub *s);
+static void rec_dispatch(IopCtx *c, u32 k);
 
 #define RS ((op >> 21) & 31)
 #define RT ((op >> 16) & 31)
@@ -334,7 +338,7 @@ static __attribute__((optimize("no-gcse", "no-crossjumping"))) int run(IopCtx *c
         &&op_lb, &&op_lh, &&op_lwl, &&op_lw, &&op_lbu, &&op_lhu, &&op_lwr, &&op_bad,
         &&op_sb, &&op_sh, &&op_swl, &&op_sw, &&op_bad, &&op_bad, &&op_swr, &&op_bad,
         &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad,
-        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_native, &&op_stub, &&op_magic,
+        &&op_bad, &&op_bad, &&op_bad, &&op_bad, &&op_rec, &&op_native, &&op_stub, &&op_magic,
     };
     static void *const special_tbl[64] = {
         &&op_sll, &&op_bad, &&op_srl, &&op_sra, &&op_sllv, &&op_bad, &&op_srlv, &&op_srav,
@@ -377,6 +381,12 @@ op_magic: /* the return address of a call from C: the call is over */
     goto out;
 op_native: /* the function's C, then its jr ra (natives[]: leaf functions, nothing in a delay slot) */
     natives[(op & 0xFFFF) % N_NATIVES].fn(c);
+    xpc = r[31];
+    npc = xpc + 4;
+    NEXT_B;
+op_rec: /* the function as C (it counts its own instructions, this one included), then its jr ra */
+    n--;
+    rec_dispatch(c, op & 0xFFFF);
     xpc = r[31];
     npc = xpc + 4;
     NEXT_B;
@@ -515,6 +525,103 @@ out:
     c->npc = npc;
     kh1_iop_insns += n;
     return k;
+}
+
+/* ---- the driver as C (KH1_IOP_REC: out/gen/iop_rec.c, made from the user's LIBSSL.IRX at build time by
+ * tools/host/iop_translate.py; docs/sound-spec.md "The driver as C") ----
+ * Each translated function keeps the registers it uses in locals and hands them back through the context
+ * at every call and at its return; it uses the interpreter's own memory helpers and counts the same
+ * instructions.  Calls to functions left to the interpreter (they can block their thread) and calls
+ * through a register go through rec_interp: the interpreter, nested, with $ra the magic return address
+ * for the call and given back after it.  Used only when the loaded module's text hashes to the one
+ * translated; KH1_HOST_IOP=norec (or nonative) leaves it unused. */
+static int rec_live;
+static const IopStub *rec_stub_ptr[129];
+static int rec_reports;
+
+static void rec_report(const char *what, u32 pc) {
+    if (rec_reports < 8) {
+        rec_reports++;
+        printf("kh1-iop: translated driver: %s at 0x%05x\n", what, pc - KH1_IOP_BASE);
+    }
+}
+
+static void rec_interp(IopCtx *c, u32 t) {
+    u32 ra = c->r[31], pc = c->pc, npc = c->npc;
+    int k;
+    c->pc = t;
+    c->npc = t + 4;
+    c->r[31] = IOP_MAGIC_RET;
+    k = run(c, 20000000);
+    if (k != RUN_RET) rec_report(k == RUN_BLOCK ? "a nested call blocked" : "a nested call faulted", t);
+    c->r[31] = ra;
+    c->pc = pc;
+    c->npc = npc;
+}
+
+static void rec_call_ind(IopCtx *c, u32 t) {
+    u32 w = RAM_OK(t) ? *(u32 *)RAM(t & ~3u) : 0;
+    if ((w & 0xFC000000u) == OP_REC) rec_dispatch(c, w & 0xFFFF);
+    else rec_interp(c, t);
+}
+#define rec_jump_out rec_call_ind
+
+#define REC_IMPORT(k)                                               \
+    do {                                                            \
+        if (hle(c, rec_stub_ptr[k]) != RUN_RET) rec_report("an import blocked", c->pc); \
+    } while (0)
+#define REC_BADRET(pc) rec_report("a call came back to another address", pc)
+#define REC_FAULT(pc) rec_report("syscall / break", pc)
+#define REC_DIV(a, b)                                                                     \
+    do {                                                                                  \
+        s32 nn_ = (s32)(a), d_ = (s32)(b);                                                \
+        if (d_ == 0) { lo = nn_ >= 0 ? 0xFFFFFFFFu : 1; hi = (u32)nn_; }                   \
+        else if (nn_ == (s32)0x80000000 && d_ == -1) { lo = 0x80000000u; hi = 0; }        \
+        else { s32 q_ = nn_ / d_; lo = (u32)q_; hi = (u32)(nn_ - q_ * d_); }              \
+    } while (0)
+#define REC_DIVU(a, b)                                                    \
+    do {                                                                  \
+        u32 nn_ = (a), d_ = (b);                                          \
+        if (d_ == 0) { lo = 0xFFFFFFFFu; hi = nn_; }                      \
+        else { u32 q_ = nn_ / d_; lo = q_; hi = nn_ - q_ * d_; }          \
+    } while (0)
+
+#ifdef KH1_IOP_REC
+#include "iop_rec.c"
+#else
+#define REC_N 0
+#define REC_NSTUBS 0
+#define REC_TEXT_OFF 0u
+#define REC_TEXT_SIZE 0u
+#define REC_HASH 0u
+static const u32 rec_stub_addr[1] = { 0 };
+static const struct { u32 addr; void (*fn)(IopCtx *c); } rec_table[1] = { { 0, 0 } };
+#endif
+
+static void rec_dispatch(IopCtx *c, u32 k) {
+    if (k < REC_N) rec_table[k].fn(c);
+}
+
+/* after the loader's relocation (the hash is of the relocated text, before find_imports marks the stubs) */
+static int rec_check(void) {
+    rec_live = 0;
+    iop_log(); /* reads KH1_HOST_IOP */
+    if (!REC_N || !iop_rec_on) return 0;
+    return fnv1a(RAM(KH1_IOP_BASE + REC_TEXT_OFF), REC_TEXT_SIZE) == REC_HASH;
+}
+
+/* after find_imports: each translated function's first word becomes OP_REC | its index */
+static int rec_patch(void) {
+    int i, j;
+    for (i = 0; i < REC_NSTUBS; i++) {
+        rec_stub_ptr[i] = 0;
+        for (j = 0; j < iop_nstubs; j++)
+            if (iop_stub[j].addr == rec_stub_addr[i]) rec_stub_ptr[i] = &iop_stub[j];
+        if (!rec_stub_ptr[i]) return 0;
+    }
+    for (i = 0; i < REC_N; i++) *(u32 *)RAM(rec_table[i].addr) = OP_REC | (u32)i;
+    rec_live = 1;
+    return REC_N;
 }
 
 /* one call from C into IOP code, on the interrupt stack (an interrupt handler, the module's start) */
@@ -1035,10 +1142,13 @@ int kh1_iop_load(const u8 *f, u32 size) {
         if (KH1_IOP_BASE + addr + sz > iop_mod_end) iop_mod_end = KH1_IOP_BASE + addr + sz;
     }
     if (!text || relocate(f, size, shoff, shnum, KH1_IOP_BASE) != 0) return -1;
-    find_imports(text, text_size);
     {
-        int k = patch_natives();
-        if (k) printf("kh1-iop: %d of the driver's functions run as C\n", k);
+        int rec = rec_check(), k;
+        find_imports(text, text_size);
+        if (rec && (k = rec_patch()) > 0)
+            printf("kh1-iop: the driver runs as C (%d functions translated at build time)\n", k);
+        else if ((k = patch_natives()) > 0)
+            printf("kh1-iop: %d of the driver's functions run as C\n", k);
     }
     iop_heap = (iop_mod_end + 0xFFF) & ~0xFFFu;
     if (iop_log()) printf("kh1-iop: module at 0x%x..0x%x, entry +0x%x, %d imports\n", KH1_IOP_BASE, iop_mod_end, entry,

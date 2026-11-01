@@ -15,6 +15,9 @@
 *.vpk
 *.velf
 eboot.bin
+# IOP modules from the disc (LIBSSL.IRX: the sound driver tools/host/iop_translate.py reads at build time).
+*.IRX
+*.irx
 # Disc images and dumped archives / extracted assets.
 *.iso
 *.ISO

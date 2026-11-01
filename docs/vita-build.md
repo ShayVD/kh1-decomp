@@ -1710,6 +1710,16 @@ Shay's Vita run with `sndprio=-4` (above the game) played clean, so -4 is the de
 setting. The threads are paced by the output (the mixer stops 64 ms ahead), so above the game they take only the
 time the sound needs. Its cost to the frame rate is not measured yet.
 
+### The sound's driver as C and a cheaper mix (2026-10-31)
+
+Build with `LIBSSL.IRX` (from your own disc's root) beside the ELF in the repo's root: the build translates the
+driver to C (out/gen/iop_rec.c, never committed; the VPK then holds code made from your disc's driver as well as
+your ELF's bytes, so the same rule applies: never share it). The log says `kh1-iop: the driver runs as C (93
+functions translated at build time)`; without the file it runs on the interpreter as before. The mixer works in
+passes with NEON for the volumes and sums. Output byte-identical on the host; about 2.5x fewer ARM instructions for
+the two sound threads together (sound-spec 6, "The driver as C and the mix in passes"). Watch the sound line's
+`ms ticking` and `ms mixing` (before: ~800 and ~630 per window in the Dive).
+
 ## The GPU's work in the Dive (2026-10-31)
 
 The Dive ran at ~15.7-16 pictures/s on a Vita, GPU-bound: ~31 ms of GPU a picture, every thread waiting on it

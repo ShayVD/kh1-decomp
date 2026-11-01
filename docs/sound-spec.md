@@ -321,6 +321,64 @@ Nothing here was compared against a console recording.
   25 minutes), plus the mix. **Not measured on a Vita yet** after these changes; the watchdog's sound
   line (vita-build.md "Sound") prints the mixer's milliseconds per 2 s.
 
+### The driver as C and the mix in passes (2026-10-31, native-plan stage 8 steps 1-2)
+
+The Vita's sound threads were about 800 ms ticking and 630 ms mixing per 2.4 s window in the Dive (Shay's logs of
+2026-10-31, `sndprio=-4`), on cores the game, the GS worker and the GPU thread also need. Both are now much cheaper,
+with the output unchanged byte for byte.
+
+**The driver as C** (tools/host/iop_translate.py, host/port/iop.c `KH1_IOP_REC`). A profile of the IOP instructions
+per function (sndplay over music110) put func_0a2a8 (the per-voice update) at 35% and six more functions at another
+55%: too many to write by hand, as func_00150 and the other three natives were. So the build translates the whole
+driver instead, as tools/vu/vu1_translate.py does the VU1 programs:
+
+- The build looks for `LIBSSL.IRX` in the repo's root (copy it from your own disc's root; `.gitignore` refuses
+  `*.IRX`). tools/host/census.py (host and Vita builds alike) runs the translator into out/gen/iop_rec.c, never
+  committed, and compiles iop.c with `-DKH1_IOP_REC`. Without the file the build is as before.
+- The translator loads and relocates the IRX at iop.c's base as the loader does, finds its import stubs, takes
+  every `jal` target (and the lui / addiu code pointers that start right after a `jr ra`: the timer handler, the
+  threads, the RPC function) as a function, follows its branches and its jump tables (the module's relocated
+  code pointers inside the function), and writes each as one C function over the interpreter's state: the
+  registers it uses in locals (handed back through the context at every call and at its return), the delay slots
+  in place, iop.c's own memory helpers (the same bounds checks and alignment), and the same instruction count
+  (each block adds its length, an import's stub one, as run() counts).
+- A call to another translated function is a C call; to an import, iop.c's hle(); to a function left to the
+  interpreter, or through a register, the interpreter nested (rec_interp: $ra is the magic return address for the
+  call and given back after it). Functions that can block their thread (WaitSema, DelayThread, the RPC loop,
+  directly or through a call) stay interpreted: 5 of 98 (the tick thread's loop func_015c4, the bank compaction
+  func_0df50 and func_072fc / 0b118 / 0b370); their callees are C.
+- At load, iop.c compares an FNV-1a of the relocated text with the translated one's; only on a match does each
+  translated function's first word become `OP_REC | index` (primary opcode 0x3C), which run() answers by calling the
+  C. Another driver runs on the interpreter (and the four natives) as before. `KH1_HOST_IOP=norec` (or `nonative`)
+  turns it off. The log says `kh1-iop: the driver runs as C (93 functions translated at build time)`.
+
+**The mix in passes** (host/port/spu2.c voice_render; the old loop is kept under `KH1_SPU2_SLOWMIX`). A voice's
+stretch between two ticks is mixed in three passes, the numbers the same as the sample-by-sample loop's:
+
+1. the envelope, env_at[i]: its level changes only when its counter overflows, and between overflows a phase's
+   condition (attack's top, decay's sustain level, release's 0) cannot newly hold, so the samples between are
+   filled at once; it stops where the release ends the voice;
+2. the wave up to there (the interpolation or the noise, the pitch counter, the ADPCM blocks and their flags), the
+   voice's state in locals; a block end that stops the voice stops it here (env 0, off) as block_end() does, and the
+   envelope's leftover state is then never read (key-on resets it);
+3. the volumes and the four sums: with no sweep the volumes are constants and the loop is NEON on the Vita (a sum
+   the voice is not routed to goes to a sink).
+
+decode_block keeps the ADPCM history in locals and the reverb step its buffer and position (the stores through the
+voice and the reverb made the compiler reload them).
+
+**Checked** (host, the English patch's image): `make` byte-identical; sndplay's WAV of all 39 music `.dat` files on
+the disc (20 s each) and of 12 system SEs from se000.dat byte-identical to the old code's, one-thread and
+`SNDPLAY_THREADS=1`; the host runner over tests/host/pads/dive_en.txt to frame 91,000 with `KH1_HOST_SND=wav:`
+byte-identical WAV (291 MB) and log, and to frame 20,000 the same IOP instruction count as the fully interpreted
+driver (`nonative`); the x86 build and an ARM (cortex-a9, NEON) build under qemu-arm give the same WAV.
+
+**Cost**, ARM instructions under qemu-arm for 3 s of music110 (19-26 voices; the TB log of `-d in_asm,exec,nochain`
+counted per function): the driver 400 M -> 70 M (5.7x), the mix 824 M -> 395 M (2.1x), 1,236 M -> 486 M in all. What
+is left of the mix: the wave pass (the interpolation, ~150 M), the reverb's two cores at half rate (~120 M: about 290
+instructions a step, straight-line), the ADPCM decode (~51 M). **Not measured on a Vita yet**: the watchdog's sound
+line gives the two threads' milliseconds per window.
+
 ### Checked (2026-10-29, on the English patch's image)
 
 - `tools/host/sndplay.c`: the title's and other tracks (`music097.bgm` + `wave0099.wd` and others) and
