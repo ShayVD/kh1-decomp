@@ -186,9 +186,22 @@ identical there too. tests/selftest.sh passes. **Worker profile** (callgrind as 
 
 On the Vita the bigger part should be memory, not instructions: the worker no longer reads every byte of each
 payload (written on the game's core) or writes it again into the recording queue (~25 MB a window, the
-estimate in vita-build.md). **Not yet measured on a Vita**: the `gs worker ops:` line's `w_native_ref` time (this
-build's out/vita/kh1.elf has it at 0x810dcedc, w_native at 0x810dced4; add the log's offset) with natref=1 against
-w_native with natref=0, and the `gs worker:` line's pool waits (should be ~0). **Next on the worker's native path**:
+estimate in vita-build.md). **Vita (Shay, 2026-11-01, PR #208's first VPK, before #207; dive_en.txt, watchdog windows over frames 5000-7700
+scaled to 2.4 s)**:
+
+| | natref=0 | natref=1 |
+|---|---|---|
+| pictures/s | 18.5 | 19.1 |
+| w_native / w_native_ref | 754 ms | 568 ms |
+| the GS worker thread's run time | 1,804 ms | 1,412 ms |
+| the GPU thread's run time / its recording | 1,967 / 2,001 ms | 1,692 / 2,153 ms |
+| the worker's frame op waiting for the GPU thread | 167 ms | 292 ms |
+| waiting for pool room | - | 0 ms |
+
+(The two logs' op addresses sit 0x1 and 0x39001 above out/vita/kh1.elf's: map each log by its own w_block /
+w_gpu_frame.) The worker is no longer the limit: it lost ~0.4 s a window and now waits more for the GPU thread,
+whose recording fills its core. So the frame rate moved only ~3 %; the next gain is on the GPU thread (stage 1, and
+the 'Cut GPU thread recording cost' thread). **Next on the worker's native path**:
 prim_state's texture lookup per op (~25 M here), then stage 4's uploads.
 
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
