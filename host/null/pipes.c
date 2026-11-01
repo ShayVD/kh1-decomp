@@ -1075,6 +1075,9 @@ static void report_cmds(void) {
                g->scenes, g->loads, g->stores, g->draws, g->programs, g->textures, g->regions, g->tex_uploads, g->pal_fills,
                g->pal_readbacks, g->target_uploads, g->blits, g->lost);
     }
+    if (kh1_pipes_nat_draws) /* 2026-11-01: the native runs, and those joined into the draw before them (cmdbuf.c nat_join) */
+        printf("kh1-host:   native: %u runs drawn, %u triangles; natjoin=%d: %u runs joined into the draw before\n",
+               kh1_pipes_nat_draws, kh1_pipes_nat_tris, kh1_cmd_natjoin, kh1_cmd_nat_joins);
     for (i = 0; i < nseq; i++) printf("kh1-host:   pass list %u: %u frames\n", i + 1, seq_frames[i]);
 }
 

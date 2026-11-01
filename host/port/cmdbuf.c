@@ -389,6 +389,62 @@ void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, c
 
 static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                    u32 nmat, u32 cull, u32 skin);
+
+/* 2026-11-01 (docs/native-plan.md stage 1, "Batching"): a native run joins the draw command before it when that is the
+ * last command of the list and a native draw with the same batch key (pipelines, uniforms, sampler, texture, target,
+ * scissor), texture entry and palette slot, cull mode and vertex kind, with room for both runs' matrices in u_m
+ * (KH1_NAT_MATS), and both rings' heads still right after its vertices and matrices.  Then the run's vertices and
+ * matrices are appended to the command's, its vertices' matrix indices moved past the command's earlier matrices: the
+ * same triangles in the same order, in one GPU draw instead of one a run.  Nothing else can have come between them (a
+ * transfer, a CLUT load or a texture upload is a command of its own; a texture bind without one changes r->tslot).
+ * kh1_cmd_natjoin 0 (config.txt natjoin=0, host KH1_HOST_NATJOIN=0) gives each run its own command as before */
+int kh1_cmd_natjoin = 1;
+u32 kh1_cmd_nat_joins; /* runs joined so far */
+static int nat_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
+                    u32 nmat, u32 cull, u32 skin) {
+    KH1Cmd *c;
+    KH1BatchKey k;
+    u32 stride = skin ? (u32)sizeof(KH1GpuVertSk) : (u32)sizeof(KH1GpuVert), vend, mend, i, off;
+    u8 *at, *u;
+    if (r->cur < 0 || r->dropped || (u32)r->cur + 1 != r->ncmd || r->split || r->held >= 0) return 0;
+    c = &r->cmd[r->cur];
+    if (c->kind != KH1_CMD_DRAW || !c->nmat || c->lost || !c->hasv || c->skin != skin || c->cull != (cull & ~KH1_NAT_LIN) ||
+        c->nmat + nmat > KH1_NAT_MATS || c->pass + 1 != r->npass)
+        return 0;
+    if (d->pipe[0].shader.tex && (c->tslot != r->tslot || c->pslot != r->pslot)) return 0;
+    vend = c->v0 * (u32)sizeof(KH1GpuVert) + c->nv * stride;
+    mend = c->moff + c->nmat * 64u;
+    if (r->vring.head != vend || r->uring.head != mend || n * stride > r->vring.slot - vend ||
+        nmat * 64u > r->uring.slot - mend)
+        return 0;
+    kh1_batch_key(d, p, &k);
+    if (memcmp(&k, &c->k, sizeof k)) return 0;
+    at = (u8 *)kh1_ring_alloc(&r->vring, n * stride, 1);
+    u = (u8 *)kh1_ring_alloc(&r->uring, nmat * 64u, 1);
+    memcpy(at, v, n * stride);
+    memcpy(u, mats, nmat * 64u);
+    off = c->nmat;
+    if (skin) {
+        KH1GpuVertSk *o = (KH1GpuVertSk *)(void *)at;
+        for (i = 0; i < n; i++) {
+            o[i].mi = (u8)(o[i].mi + off);
+            o[i].mi2 = (u8)(o[i].mi2 + off);
+        }
+    } else {
+        KH1GpuVert *o = (KH1GpuVert *)(void *)at;
+        for (i = 0; i < n; i++) o[i].pad[0] = (u8)(o[i].pad[0] + off);
+        if (c->wtex) { /* prim()'s wide-screen s, as the command's first run had it */
+            u32 lw = d->tex0_lo >> 26 & 15;
+            f32 kk = (f32)(1u << (lw > 10 ? 10 : lw)) / r->tsw[c->samples - 1];
+            for (i = 0; i < n; i++) o[i].s *= kk;
+        }
+    }
+    c->nv += n;
+    c->prims++;
+    c->nmat = (u8)(c->nmat + nmat);
+    kh1_cmd_nat_joins++;
+    return 1;
+}
 void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                     u32 nmat, u32 cull) {
     native(r, d, p, v, n, mats, nmat, cull, 0);
@@ -413,6 +469,7 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
         for (i = 0; i < 2; i++) nd.pipe[i].shader.lin = 1;
         d = &nd;
     }
+    if (kh1_cmd_natjoin && nat_join(r, d, p, v, n, mats, nmat, cull, skin)) return;
     kh1_batch_break(&r->b); /* nothing before joins it */
     r->in_d = d;
     r->in_p = p;
