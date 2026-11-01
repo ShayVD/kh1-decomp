@@ -383,6 +383,13 @@ the qwords never unpacked and the unpacks written late; compare `walk split:`, `
 with natchain=0. If the parse's per-run time does not fall, the cost is cache misses on the model data, which only
 stage 1's cache (records not re-read every frame) removes.
 
+**First Vita run (Shay, 2026-11-01, the natchain VPK, natchain=1 only, no natchain=0 run alongside; dive_en.txt to
+frame ~12,800)**: Shay found it ran well. The feed into VU memory fell to ~8 % of VIF1's time (e.g. 553 of 6,660 ms
+in a 9.8 s window around frame 11,000), where 26b3b0b's fights log had it at about a third (1,383 of 4,224 ms per
+5.6 s). The windows from frame 9,100 to 12,500 (enemies) ran at 21-28 pictures/s. 26b3b0b's fight windows ran at
+~13, but other changes merged in between and the route differs, so that comparison is not an A/B. The `natchain=` line
+counted 36-114 K runs read from the chain per window. Still to do: the same route with `natchain=0` for a clean A/B.
+
 **Not changed**: P13 (its parse reads VU memory: held unpacks are written before it runs), the GS path, any check or
 trace mode (nothing is held in them). The GS worker's per-op profile (gsqueue.c `prof`, two clock reads an op, ~270 K
 ops a fight window) still reads the clock every op: on the worker, ~0.35 s a window at 683 ns a read, a cheap
