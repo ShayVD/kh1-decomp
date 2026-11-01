@@ -48,6 +48,14 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
+## Latest (2026-11-01): the fights' upload waits (pendgpu=1)
+
+vita-build.md "Uploads into a target its last scene still uses, written by the GPU": the fights' particle uploads into
+the slot capture between its two passes made the GPU thread wait for the GPU (~1 s a window); the GPU now writes them at
+the start of the next scene (`pendgpu=0` the old path), and the watchdog runs above the game's threads (`wdprio=0` the
+old). Host-checked only. **First thing next time**: a fight on the Vita with pendgpu=1 and =0: the `gpu waits` line's
+"for uploads into targets" and the new `uploads into targets the GPU wrote` line, and the frame rate.
+
 ## Latest (2026-10-31, later): the frame op off the GS worker
 
 vita-build.md "The frame op on the GPU thread, and the native payload's copy": with recq=1 the GS worker's frame op

@@ -2028,6 +2028,45 @@ palette in u_m (the GPU skinning that native-renderer.md "P13 too" chose not to 
 the same every frame and could be cached by packet address with stage 1's static buffers, leaving only the matrices
 per frame. That needs a new native vertex format (gxm.c, shadergen.c, the mock) and is best done with stage 1's cache.
 
+## Uploads into a target its last scene still uses, written by the GPU (2026-11-01, pendgpu=1)
+
+Shay's renderer=native Vita log from main 26b3b0b (the Dive to its fights, frames ~17,500-21,600): 13 pictures a second in
+the fights against 22 before them, the GPU thread the limit at ~65 ms a picture. In one fight window (frames
+17,500-18,090) `gpu waits: ... 1064 for uploads into targets (107)` and `427 waits for one scene`: ~3.6 ms a picture of
+the GPU thread waiting in gxm.c's pend_flush, none before the fights.
+
+**Which target** (host replay, gxmcheck binary, en.iso, dive_en.txt to 19,000, renderer=native, the Vita's queues;
+`KH1_HOST_PENDLOG=1` prints each wait of a flush with the target waited for and what was pending): all 1,208 waits are
+the **slot capture** (rt 4, bp 0x3600) waiting for **its own** last scene. A fight frame's passes (the host
+log's pass list at frame 13,544): the slot capture drawn twice, one draw each (passes 3 and 6), with the fights' particle
+textures and CLUTs uploaded into its pages between them.
+The second pass loads the target, so the uploaded words must be in its pixels first, and the CPU may write them only
+once the first pass's scene is done on the GPU, which in the fights is well behind. Flushing only the targets a scene
+needs (tried first) changes nothing here: the pending target is the scene's own.
+
+**The change** (host/vita/gxm.c `put_fill` / `put_draw`): when a scene begins on a target with pending uploads whose last
+scene is not done, the pending words (pend_write's values: CT24's alpha 0x80, the rest on the 0x80 scale) go into a
+staging atlas of 8 x 8 blocks, 64 to a 512-texel row, and the scene's first draws copy them in: one quad a whole block
+inside the target, a one-pixel-high quad for each run of words in a partial or edge block, point-sampled, unblended,
+depth ALWAYS / no write, stencil off, with a pair of copy shaders written in shadergen's statement forms (so the host's
+stand-in runs them; on the Vita SceShaccCg compiles them at boot like the others). They draw after the scene's colour
+load and before its own draws: the pixels the CPU path wrote before the load. The atlas (1 MiB) and the vertices
+(1 MiB) are rings in LPDDR rewound at each frame's start (after its sceGxmFinish); no room, the copy shaders missing,
+or the target's last scene already done: the CPU path as before. Uploads into other targets the scene samples still
+go the CPU way (none waited in the replay).
+
+- config.txt `pendgpu=0` is the old path (the A/B toggle); host `KH1_HOST_PENDGPU=0`.
+- The Vita log's new line after `uploads into targets:`: `uploads into targets the GPU wrote (pendgpu=1): N (B blocks);
+  the CPU's waits by the target waited for: ...` (kind, count, ms). With pendgpu=1 the fights' `waits for one scene` and
+  `for uploads into targets` should drop to ~0.
+- **The watchdog's priority** (main.c, `wdprio=`, default -20): it shared the third core with the GPU thread at the same
+  priority, so it ran only when that thread blocked, and its 2 s windows stretched to 10-40 s in the fights (the log's
+  windows, not the frame rate). Now above the game's threads; it is busy ~25 ms a window, mostly the log's writes.
+  `wdprio=0` is the old priority.
+
+Expected (an estimate): the fights' ~3.6-5.8 ms a picture of GPU-thread waiting goes, ~13 -> ~15-16 pictures a second;
+the Dive before the fights unchanged (no such waits there). The GPU does a little more (a few thousand pixels a frame).
+
 ## What next, in order
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
