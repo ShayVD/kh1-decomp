@@ -81,6 +81,11 @@
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
  *                             2026-10-31); 1, the default: each new picture presented once, from the display target
+ *       pendgpu=0             uploads into a target its last scene still uses are written by the CPU after waiting
+ *                             for that scene (as before 2026-11-01); 1, the default: the GPU writes them at the start
+ *                             of the target's next scene, with no wait (gxm.c put_fill / put_draw)
+ *       wdprio=N              the watchdog's priority against the game's threads (2026-11-01): -20, the default, above
+ *                             them; 0 theirs, as before (it then waits for the GPU thread on the third core)
  *       gputime=1             log each 2 s how long the GPU spent on each kind of scene (gxm.c; a polling thread, so
  *                             the frame rate of such a run is a little lower: for the split, not the speed)
  *       rcam=N                1 (the default) a free camera on the right stick, left / right and up / down (host/vita/
@@ -122,6 +127,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+#include "platform/target.h"
 /* host/vita/audio.c: the sound */
 extern int kh1_vita_snd, kh1_vita_snd_core, kh1_vita_snd_prio;
 extern u32 kh1_vita_snd_us, kh1_vita_snd_tick_us, kh1_vita_snd_bufs, kh1_vita_snd_under, kh1_vita_snd_queued;
@@ -438,6 +444,11 @@ static void threads_line(void) {
     vlog("%s\n", line);
 }
 
+static int wd_prio = -20; /* config.txt's wdprio=: the watchdog's priority against the game's threads (0: theirs) */
+/* host/vita/gxm.c: the uploads into targets (pendgpu=, 2026-11-01) */
+extern int kh1_vita_pendgpu;
+extern volatile u32 kh1_vita_pend_waits[], kh1_vita_pend_wait_us[], kh1_vita_put_n, kh1_vita_put_blocks;
+
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
@@ -520,6 +531,27 @@ static int watchdog(SceSize args, void *argp) {
                 kh1_vita_scene_waits -= sw;
                 vlog("kh1-vita: uploads into targets: %u blocks in a target's pixels, %u outside; %u writes with no wait "
                      "for the GPU; %u waits for one scene (in the gpu waits above)\n", pin, pout, pnw, sw);
+            }
+            { /* 2026-11-01: the writes the GPU did (pendgpu=), and the CPU's waits by the kind of target whose last scene
+               * they waited for */
+                static const char *const kn[KH1_RT_COUNT] = { "display", "Z as colour", "movie", "3D target",
+                                                              "slot capture", "off-screen", "CLUT pass", "other" };
+                char line[512];
+                u32 k, any = 0;
+                u32 pn = kh1_vita_put_n, pb = kh1_vita_put_blocks;
+                int len;
+                kh1_vita_put_n -= pn;
+                kh1_vita_put_blocks -= pb;
+                len = snprintf(line, sizeof line, "kh1-vita: uploads into targets the GPU wrote (pendgpu=%d): %u (%u blocks); "
+                               "the CPU's waits by the target waited for:", kh1_vita_pendgpu, pn, pb);
+                for (k = 0; k < KH1_RT_COUNT; k++) {
+                    u32 n = kh1_vita_pend_waits[k], us = kh1_vita_pend_wait_us[k];
+                    kh1_vita_pend_waits[k] -= n;
+                    kh1_vita_pend_wait_us[k] -= us;
+                    if (n) len += snprintf(line + len, sizeof line - len, "%s %s %u (%u ms)", any++ ? "," : "", kn[k], n,
+                                           us / 1000);
+                }
+                vlog("%s%s\n", line, any ? "" : " none");
             }
             /* the rest of the 2 s (less the vblank wait) is the game and the GS model's chain walk */
             vlog("kh1-vita: cpu: %u ms recording, %u ms the frame's commands (the submit in it), %u ms present; "
@@ -753,6 +785,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
+        else if (strcmp(line, "pendgpu") == 0) kh1_vita_pendgpu = atoi(v);
+        else if (strcmp(line, "wdprio") == 0) wd_prio = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
             snprintf(pad, sizeof pad, "%s", v);
@@ -947,8 +981,10 @@ int main(int argc, char **argv) {
         kh1_vita_present_on();
     }
     {
-        /* session 141: on the third core, out of the game's and the GS worker's way */
-        SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
+        /* session 141: on the third core, out of the game's and the GS worker's way.  2026-11-01: above the GPU
+         * thread's priority (wdprio=, default -20): at the same priority it ran only when that thread blocked, and its
+         * 2 s windows stretched to 10-40 s in the fights; it is busy ~25 ms a window, most of it the log's writes */
+        SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100 + wd_prio, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
         if (t >= 0) sceKernelStartThread(t, 0, 0);
         kh1_vita_thread_note(t, "watchdog");
     }

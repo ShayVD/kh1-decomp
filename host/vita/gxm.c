@@ -470,6 +470,40 @@ static int present_load(void) {
     return 0;
 }
 
+/* ---- 2026-11-01: the pending uploads' copy (pend_gpu): a point-sampled texel copied as it is, alpha too.  Written
+ * in shadergen's statement forms so the host's stand-in (tests/host/gxm_mock.c) runs it like the generated ones ---- */
+static const char put_v[] =
+    "// kh1-decomp vertex shader: the pending uploads' copy (gxm.c pend_gpu)\n"
+    "void main(float4 pos : POSITION, float4 tc : TEXCOORD0, out float4 opos : POSITION, out float4 otc : TEXCOORD0)\n"
+    "{\n    opos = pos;\n    otc = tc;\n}\n";
+static const char put_f[] =
+    "// kh1-decomp fragment shader: the pending uploads' copy (gxm.c pend_gpu)\n"
+    "void main(float4 tc : TEXCOORD0, uniform sampler2D tex, out float4 ocolor : COLOR)\n"
+    "{\n    ocolor = tex2D(tex, tc.xy);\n}\n";
+static SceGxmVertexProgram *put_vp;
+static SceGxmFragmentProgram *put_fp;
+
+static int put_load(void) {
+    SceGxmProgram *v = program_of(put_v, sizeof put_v - 1, 0), *f = program_of(put_f, sizeof put_f - 1, 1);
+    SceGxmShaderPatcherId vid, fid;
+    SceGxmVertexAttribute a[2];
+    SceGxmVertexStream s;
+    if (!v || !f || reg_of(v, "pos") < 0 || reg_of(v, "tc") < 0) return -1;
+    if (sceGxmShaderPatcherRegisterProgram(patcher, v, &vid) < 0 || sceGxmShaderPatcherRegisterProgram(patcher, f, &fid) < 0)
+        return -1;
+    a[0].streamIndex = 0; a[0].offset = 0; a[0].format = SCE_GXM_ATTRIBUTE_FORMAT_F32; a[0].componentCount = 4;
+    a[0].regIndex = (u16)reg_of(v, "pos");
+    a[1].streamIndex = 0; a[1].offset = 16; a[1].format = SCE_GXM_ATTRIBUTE_FORMAT_F32; a[1].componentCount = 4;
+    a[1].regIndex = (u16)reg_of(v, "tc");
+    s.stride = 32;
+    s.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
+    if (sceGxmShaderPatcherCreateVertexProgram(patcher, vid, a, 2, &s, 1, &put_vp) < 0) return -1;
+    if (sceGxmShaderPatcherCreateFragmentProgram(patcher, fid, SCE_GXM_OUTPUT_REGISTER_FORMAT_UCHAR4, SCE_GXM_MULTISAMPLE_NONE,
+                                                 0, v, &put_fp) < 0)
+        return -1;
+    return 0;
+}
+
 /* session 150 (the watchdog's): blocks of uploads into targets kept for a target's pixels, and left as outside them;
  * flushes of them that needed no wait for the GPU */
 volatile u32 kh1_vita_pend_in, kh1_vita_pend_out, kh1_vita_pend_nowait;
@@ -889,6 +923,30 @@ static void stencil(u32 mode) {
  * (and read as CT32 from the upload's bp).  Now each word the upload wrote goes to the target pixel that
  * holds it (the target's CT32 layout from FBP / FBW), and only those: whole blocks from a table, the
  * rectangle's edge blocks pixel by pixel.  GS memory is still read as the frame left it, when written. */
+/* 2026-11-01: the waits of the flushes above, by the kind (target.h KH1_RT_*) of the target whose scene was waited
+ * for (the watchdog's `uploads into targets` line); KH1_HOST_PENDLOG=1 prints each one on the host */
+volatile u32 kh1_vita_pend_waits[KH1_RT_COUNT], kh1_vita_pend_wait_us[KH1_RT_COUNT];
+static u32 pend_scene_tgt = ~0u; /* the target of the scene whose begin is flushing (pend_wait_note's) */
+static void pend_wait_note(u32 why, int at) {
+    kh1_vita_pend_waits[tgt[why].rt < KH1_RT_COUNT ? tgt[why].rt : KH1_RT_OTHER]++;
+#ifdef KH1_HOST
+    {
+        static int on = -1;
+        if (on < 0) on = getenv("KH1_HOST_PENDLOG") != 0;
+        if (on) {
+            u32 i;
+            printf("kh1-gxm-pend: frame %u at %d: wait for scene %u (target %u, rt %u%s); scene's target %d; pending:",
+                   gxm_frame_no, at, tgt[why].used, why, tgt[why].rt, why == pend_scene_tgt ? ", its own" : "",
+                   (int)pend_scene_tgt);
+            for (i = 0; i < KH1_CMD_TARGETS; i++)
+                if (tgt[i].pend) printf(" %u (rt %u, used %u)", i, tgt[i].rt, tgt[i].used);
+            printf("; done to %u\n", finish_seen);
+        }
+    }
+#else
+    (void)at;
+#endif
+}
 static u64 pend_mask[0x4000];
 static u32 pend_own[0x4000];  /* the targets (bit i: tgt[i]) it is pending for */
 static u8 pend_24[0x4000];    /* CT24 wrote it */
@@ -910,11 +968,11 @@ static void pend_block(u32 t, u32 b, u64 m, int ct24) {
 }
 
 /* GS memory's words in the pending blocks into the targets' pixels, the alpha on the 0x80 scale */
-static void pend_write(Target *t, u32 b, u64 m, int ct24) {
-    static u8 a8[256];
-    static int made;
-    u32 words[64], rel, pg, x0, y0, c;
-    if (!made) {
+static u8 a8[256];
+static int a8_made;
+static void pend_tables(void) {
+    u32 c;
+    if (!a8_made) {
         u32 x, y;
         for (c = 0; c < 256; c++) a8[c] = (u8)kh1_blend_store_alpha(c);
         for (y = 0; y < 32; y++)
@@ -923,8 +981,14 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
                 inv_x[a] = (u8)x;
                 inv_y[a] = (u8)y;
             }
-        made = 1;
+        a8_made = 1;
     }
+}
+/* the value a target pixel holds for GS word v */
+static u32 pend_px(u32 v, int ct24) { return ct24 ? (v & 0xFFFFFF) | 0x80000000u : (v & 0xFFFFFF) | (u32)a8[v >> 24] << 24; }
+static void pend_write(Target *t, u32 b, u64 m, int ct24) {
+    u32 words[64], rel, pg, x0, y0, c;
+    pend_tables();
     if (!t->mem || !t->fbw) return;
     rel = (b - t->fbp * 32) & 0x3FFF;
     pg = rel >> 5;
@@ -935,25 +999,32 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
     for (c = 0; c < 64; c++) {
         u32 a = (rel & 31) * 64 + c, x = x0 + inv_x[a], y = y0 + inv_y[a], v = words[c];
         if (!(m >> c & 1) || x >= t->w || y >= t->h) continue;
-        ((u32 *)t->mem)[y * t->stride + x] = ct24 ? (v & 0xFFFFFF) | 0x80000000u : (v & 0xFFFFFF) | (u32)a8[v >> 24] << 24;
+        ((u32 *)t->mem)[y * t->stride + x] = pend_px(v, ct24);
     }
 }
 
-/* the pending uploads written; `only` one target's, or all.  Session 150: a wait for the GPU (one for them all)
- * only when a scene not yet finished drew or sampled one of those targets (the Dive's mid-frame flush is for
- * two targets no scene of the frame had used yet, ~5 ms a frame of waiting) */
-static void pend_flush(Target *only) {
-    u32 i, k = 0, sel = only ? 1u << (u32)(only - tgt) : ~0u;
-    u32 wait = 0;
+/* the pending uploads written for the targets in `sel` (bit i: tgt[i]), the others left pending.  Session 150: a
+ * wait for the GPU (one for them all) only when a scene not yet finished drew or sampled one of those targets (the
+ * Dive's mid-frame flush is for two targets no scene of the frame had used yet, ~5 ms a frame of waiting) */
+static void pend_flush_sel(u32 sel, int at) {
+    u32 i, k = 0, wait = 0, why = 0;
     int any = 0;
     for (i = 0; i < KH1_CMD_TARGETS; i++)
-        if (sel >> i & 1 && tgt[i].pend && tgt[i].used > wait) wait = tgt[i].used;
+        if (sel >> i & 1 && tgt[i].pend && tgt[i].used > wait) {
+            wait = tgt[i].used;
+            why = i;
+        }
     for (i = 0; i < pend_n; i++) {
         u32 b = pend_list[i], own = pend_own[b] & sel, j;
         if (own) {
             if (!any) {
-                if (!scene_done(wait)) wait_scene(wait, 1);
-                else kh1_vita_pend_nowait++;
+                if (!scene_done(wait)) {
+                    SceUInt64 t0 = sceKernelGetProcessTimeWide();
+                    pend_wait_note(why, at);
+                    wait_scene(wait, at);
+                    kh1_vita_pend_wait_us[tgt[why].rt < KH1_RT_COUNT ? tgt[why].rt : KH1_RT_OTHER] +=
+                        (u32)(sceKernelGetProcessTimeWide() - t0);
+                } else kh1_vita_pend_nowait++;
             }
             any = 1;
             for (j = 0; j < KH1_CMD_TARGETS; j++)
@@ -965,6 +1036,142 @@ static void pend_flush(Target *only) {
     pend_n = k;
     for (i = 0; i < KH1_CMD_TARGETS; i++)
         if (sel >> i & 1) tgt[i].pend = 0;
+}
+static void pend_flush(Target *only) { pend_flush_sel(only ? 1u << (u32)(only - tgt) : ~0u, 1); }
+
+/* 2026-11-01 (pendgpu=1, the default): a scene that draws a target with pending uploads, while the target's last
+ * scene is still on the GPU, has the GPU write them instead of waiting for that scene and writing them with the CPU.
+ * Fights in the Dive upload particle textures into the slot capture's pages between its two one-draw passes a frame:
+ * each second pass waited for the first (427 waits, ~1 s a window on 26b3b0b's Vita log; the host's replay of the
+ * fights: every wait the slot capture's own).  put_fill copies the target's pending words (pend_write's values) into
+ * a staging atlas of 8 x 8 blocks, 64 to a 512-texel row, and lays out a quad for each whole block inside the target
+ * and a one-row quad for each run of words in the others; put_draw draws them first thing in the new scene,
+ * point-sampled and unblended, after its colour load: the same pixels the CPU would have written before it.  The
+ * staging and the vertices are rings rewound at each frame's start (after its sceGxmFinish); when one is full, or
+ * the GPU is already done with the target, the CPU path as before. */
+int kh1_vita_pendgpu = 1;
+volatile u32 kh1_vita_put_n, kh1_vita_put_blocks; /* the watchdog's: flushes the GPU wrote, and their blocks */
+#define PUT_TEX_BYTES (1u << 20)
+#define PUT_VTX_BYTES (1u << 20)
+#define PUT_W 512
+static u8 *put_tex;
+static u8 *put_vtx;
+static u32 put_tex_at, put_vtx_at;
+static struct { u32 tex, rows, vtx, nv; } put; /* the prepared copy */
+
+static void put_quad(f32 *v, const Target *t, u32 x, u32 y, u32 w, u32 h, u32 ax, u32 ay, u32 th) {
+    f32 x0 = 2.0f * (f32)x / (f32)t->w - 1.0f, x1 = 2.0f * (f32)(x + w) / (f32)t->w - 1.0f;
+    f32 y0 = 2.0f * (f32)y / (f32)t->h - 1.0f, y1 = 2.0f * (f32)(y + h) / (f32)t->h - 1.0f;
+    f32 u0 = (f32)ax / PUT_W, u1 = (f32)(ax + w) / PUT_W, v0 = (f32)ay / (f32)th, v1 = (f32)(ay + h) / (f32)th;
+    f32 q[6][8] = { { x0, y0, 0.5f, 1, u0, v0, 0, 1 }, { x1, y0, 0.5f, 1, u1, v0, 0, 1 }, { x0, y1, 0.5f, 1, u0, v1, 0, 1 },
+                    { x1, y0, 0.5f, 1, u1, v0, 0, 1 }, { x1, y1, 0.5f, 1, u1, v1, 0, 1 }, { x0, y1, 0.5f, 1, u0, v1, 0, 1 } };
+    memcpy(v, q, sizeof q);
+}
+
+/* the target's pending words into the staging atlas and its quads; 0 when there is no room (nothing changed) */
+static int put_fill(Target *t) {
+    u32 ti = (u32)(t - tgt), bit = 1u << ti, i, k = 0, nb = 0, j = 0, rows, th, nv = 0, vcap, words[64];
+    u32 *tx;
+    f32 *vx;
+    if (!put_fp || !put_tex || !t->mem || !t->fbw) return 0;
+    for (i = 0; i < pend_n; i++)
+        if (pend_own[pend_list[i]] & bit) nb++;
+    rows = (nb + PUT_W / 8 - 1) / (PUT_W / 8);
+    th = rows * 8;
+    if (!nb || put_tex_at + th * PUT_W * 4 > PUT_TEX_BYTES) return 0;
+    tx = (u32 *)(put_tex + put_tex_at);
+    vx = (f32 *)(put_vtx + put_vtx_at);
+    vcap = (PUT_VTX_BYTES - put_vtx_at) / 32;
+    pend_tables();
+    for (i = 0; i < pend_n; i++) { /* the vertices first: a ring with no room leaves everything as it was */
+        u32 b = pend_list[i], rel, pg, x0, y0, bx, by, ax, ay, c, ly;
+        u64 m = pend_mask[b];
+        u8 row[8];
+        if (!(pend_own[b] & bit)) continue;
+        rel = (b - t->fbp * 32) & 0x3FFF;
+        pg = rel >> 5;
+        x0 = pg % t->fbw * 64;
+        y0 = pg / t->fbw * 32;
+        bx = x0 + (inv_x[(rel & 31) * 64] & ~7u);
+        by = y0 + (inv_y[(rel & 31) * 64] & ~7u);
+        ax = j % (PUT_W / 8) * 8;
+        ay = j / (PUT_W / 8) * 8;
+        j++;
+        if (m == ~0ull && bx + 8 <= t->w && by + 8 <= t->h) {
+            if (nv + 6 > vcap) return 0;
+            put_quad(vx + nv * 8, t, bx, by, 8, 8, ax, ay, th);
+            nv += 6;
+            continue;
+        }
+        for (ly = 0; ly < 8; ly++) { /* the block's words a row, then each run of them in the target */
+            u32 lx, run;
+            memset(row, 0, sizeof row);
+            for (c = 0; c < 64; c++) {
+                u32 a = (rel & 31) * 64 + c;
+                if (m >> c & 1 && (inv_y[a] & 7u) == ly && x0 + inv_x[a] < t->w && y0 + inv_y[a] < t->h) row[inv_x[a] & 7] = 1;
+            }
+            for (lx = 0; lx < 8; lx = run) {
+                for (; lx < 8 && !row[lx]; lx++) ;
+                for (run = lx; run < 8 && row[run]; run++) ;
+                if (run == lx) break;
+                if (nv + 6 > vcap) return 0;
+                put_quad(vx + nv * 8, t, bx + lx, by + ly, run - lx, 1, ax + lx, ay + ly, th);
+                nv += 6;
+            }
+        }
+    }
+    for (i = 0, j = 0; i < pend_n; i++) { /* then the words, and the blocks no longer pending for t */
+        u32 b = pend_list[i], rel, c, ax, ay;
+        if (pend_own[b] & bit) {
+            rel = (b - t->fbp * 32) & 0x3FFF;
+            ax = j % (PUT_W / 8) * 8;
+            ay = j / (PUT_W / 8) * 8;
+            j++;
+            gs_read_block(b, words);
+            for (c = 0; c < 64; c++) {
+                u32 a = (rel & 31) * 64 + c;
+                tx[(ay + (inv_y[a] & 7u)) * PUT_W + ax + (inv_x[a] & 7u)] = pend_px(words[c], pend_24[b]);
+            }
+            pend_own[b] &= ~bit;
+        }
+        if (pend_own[b]) pend_list[k++] = (u16)b;
+    }
+    pend_n = k;
+    t->pend = 0;
+    put.tex = put_tex_at;
+    put.rows = th;
+    put.vtx = put_vtx_at;
+    put.nv = nv;
+    put_tex_at += th * PUT_W * 4;
+    put_vtx_at += nv * 32;
+    kh1_vita_put_n++;
+    kh1_vita_put_blocks += nb;
+    return 1;
+}
+
+/* the prepared copy into the open scene, before its own draws (which set their programs, depth and stencil again) */
+static void put_draw(void) {
+    SceGxmTexture tx;
+    u32 at = 0;
+    if (!put.nv) return;
+    sceGxmTextureInitLinearStrided(&tx, put_tex + put.tex, SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_ABGR, PUT_W, put.rows, PUT_W * 4);
+    sceGxmTextureSetMinFilter(&tx, SCE_GXM_TEXTURE_FILTER_POINT);
+    sceGxmTextureSetMagFilter(&tx, SCE_GXM_TEXTURE_FILTER_POINT);
+    sceGxmTextureSetUAddrMode(&tx, SCE_GXM_TEXTURE_ADDR_CLAMP);
+    sceGxmTextureSetVAddrMode(&tx, SCE_GXM_TEXTURE_ADDR_CLAMP);
+    sceGxmSetVertexProgram(ctx, put_vp);
+    sceGxmSetFragmentProgram(ctx, put_fp);
+    sceGxmSetFrontDepthFunc(ctx, SCE_GXM_DEPTH_FUNC_ALWAYS);
+    sceGxmSetFrontDepthWriteEnable(ctx, SCE_GXM_DEPTH_WRITE_DISABLED);
+    stencil(0);
+    sceGxmSetFragmentTexture(ctx, 0, &tx);
+    while (at < put.nv) {
+        u32 n = put.nv - at > MAX_INDEX / 6 * 6 ? MAX_INDEX / 6 * 6 : put.nv - at;
+        sceGxmSetVertexStream(ctx, 0, put_vtx + put.vtx + at * 32);
+        sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, index_buf, n);
+        at += n;
+    }
+    put.nv = 0;
 }
 
 /* session 150: a block whose page lies outside the target's pixels (pend_write would write none of it) */
@@ -1030,6 +1237,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         return;
     }
     finish_at(0); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
+    put_tex_at = put_vtx_at = 0; /* 2026-11-01: and with put_fill's staging */
     pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
     if (r->vring.head > vbuf_bytes) {
         char d[64];
@@ -1094,12 +1302,17 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 break;
             }
             {   /* the pending uploads into this target, and into those its draws sample */
-                int need = cur->pend;
+                u32 need = cur->pend ? 1u << c->tgt : 0; /* the targets that need theirs written */
                 for (j = i + 1; j < rec.n && rec.call[j].op != KH1_GXM_END_SCENE; j++)
                     if (rec.call[j].op == KH1_GXM_SET_TEXTURE && rec.call[j].src && rec.call[j].src <= KH1_CMD_TARGETS &&
                         tgt[rec.call[j].src - 1].pend)
-                        need = 1;
+                        need |= 1u << (rec.call[j].src - 1);
+                pend_scene_tgt = c->tgt;
+                put.nv = 0;
+                if (need >> c->tgt & 1 && kh1_vita_pendgpu && !scene_done(cur->used) && put_fill(cur))
+                    need &= ~(1u << c->tgt); /* 2026-11-01: the GPU writes them, first in the scene (put_draw) */
                 if (need) pend_flush(0);
+                pend_scene_tgt = ~0u;
             }
             sceGxmDepthStencilSurfaceSetForceLoadMode(&z->surf, c->depth != KH1_DS_NONE && c->dload == KH1_LOAD_LOAD
                                                       ? SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_ENABLED : SCE_GXM_DEPTH_STENCIL_FORCE_LOAD_DISABLED);
@@ -1129,6 +1342,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             sceGxmSetTwoSidedEnable(ctx, SCE_GXM_TWO_SIDED_DISABLED);
             sceGxmSetFrontPointLineWidth(ctx, 1);
             sceGxmSetRegionClip(ctx, SCE_GXM_REGION_CLIP_OUTSIDE, 0, 0, cur->w - 1, cur->h - 1);
+            put_draw(); /* 2026-11-01: the pending uploads put_fill took, before the scene's own draws */
             xf = (const f32 *)(ub + c->uoff);
             pk = 0;
             fp = 0;
@@ -1548,6 +1762,9 @@ int kh1_vita_gxm_init(void) {
     ctx = vita2d_get_context();
     patcher = vita2d_get_shader_patcher();
     if (!ctx || !patcher) return -1;
+#ifdef KH1_HOST
+    if (getenv("KH1_HOST_PENDGPU")) kh1_vita_pendgpu = atoi(getenv("KH1_HOST_PENDGPU")); /* config.txt's pendgpu= */
+#endif
     sceIoMkdir(SHADER_DIR, 0777);
     /* session 136: SceShaccCgExt's extensions (the Vita's own Cg: __nativecolor, the frame reads) where they
      * load, else the plain compiler (Vita3K's; the frame reads get unfetch's stand-ins) */
@@ -1594,6 +1811,12 @@ int kh1_vita_gxm_init(void) {
     for (i = 0; i < KH1_PALCACHE_SLOTS; i++) pal[i] = heap_alloc(&tram, 1024);
     if (!vbuf || !index_buf || !pal_rb || !pal[KH1_PALCACHE_SLOTS - 1]) return -1;
     for (i = 0; i < 64000; i++) index_buf[i] = (u16)i;
+    if (put_load()) kh1_vita_log("kh1-gxm: the pending uploads' copy shaders unavailable: pendgpu is off\n");
+    else {
+        put_tex = (u8 *)heap_alloc(&tram, PUT_TEX_BYTES);
+        put_vtx = (u8 *)heap_alloc(&tram, PUT_VTX_BYTES);
+        if (!put_tex || !put_vtx) put_fp = 0;
+    }
     kh1_gxm_clear(&rec);
     ready = 1;
     kh1_vita_log("kh1-gxm: ready: %u shaders compiled now, %u from the cache\n", compiled, cached);
