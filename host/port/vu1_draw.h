@@ -345,11 +345,24 @@ u32 kh1_vu1_nd13_multi, kh1_vu1_nd13_verts, kh1_vu1_nd13_fail, kh1_vu1_nd13_fail
 static int nd13_built;
 static double nd13_inv[KH1_NAT_MATS][4][4]; /* M^-1 as rows, for the matrices a summed vertex is put in */
 static f32 nd13_f[KH1_NAT_MATS][4][4];     /* the payload's matrices as floats (fin()'d once), for the sums */
-static void nd13_add(u32 id, const u32 (*m)[4]) {
+/* 2026-11-01: GPU skinning (natdraw.h KH1_NAT_SKIN; config natskin=1 / KH1_HOST_NATSKIN=1; 0, the default since the
+ * first Vita A/B, sums every vertex with more than one bone here, as before): a two-bone vertex goes over as its two pre-weighted positions and matrices, which
+ * the vertex shader sums, so only vertices with 3 or more bones are summed here, and a matrix is fin()'d only when one
+ * of those (or the reference) uses it */
+int kh1_vu1_nat_skin = 0; /* 2026-11-01: off by default after the first Vita A/B (docs/native-renderer.md) */
+u32 kh1_vu1_nd13_gpu2; /* the two-bone vertices handed over for the GPU to sum */
+static u32 nd13_have_f;
+static void nd13_f_of(u32 id) {
     u32 r, c;
-    memcpy(nd_mat[id], m, 64);
+    if (nd13_have_f >> id & 1) return;
     for (c = 0; c < 4; c++)
-        for (r = 0; r < 4; r++) nd13_f[id][c][r] = fin(m[c][r]);
+        for (r = 0; r < 4; r++) nd13_f[id][c][r] = fin(nd_mat[id][c][r]);
+    nd13_have_f |= 1u << id;
+}
+static void nd13_add(u32 id, const u32 (*m)[4], int skin) {
+    memcpy(nd_mat[id], m, 64);
+    nd13_have_f &= ~(1u << id);
+    if (!skin) nd13_f_of(id); /* as before natskin: every matrix at once */
 }
 static u32 nd13_have_inv;
 /* 2026-10-31 (the Vita measured nd_13 at ~1.4 us a vertex): a summed vertex goes in one reference matrix's space for
@@ -361,6 +374,7 @@ static s32 nd13_ref;
 static const f32 (*nd13_getq(u32 id))[4] {
     if (!(nd13_have_q >> id & 1)) {
         u32 r, c, k;
+        nd13_f_of(id);
         for (c = 0; c < 4; c++)
             for (r = 0; r < 4; r++) {
                 double a = 0.0;
@@ -377,6 +391,7 @@ static int nd13_invert(u32 id) {
     double a[4][8];
     u32 r, c, k;
     if (nd13_have_inv >> id & 1) return 1;
+    nd13_f_of(id);
     for (r = 0; r < 4; r++) /* M's row r from its columns: c_r = sum_k M[k][r] x_k */
         for (c = 0; c < 4; c++) {
             a[r][c] = nd13_f[id][c][r];
@@ -405,6 +420,8 @@ static int nd13_invert(u32 id) {
 }
 static int nd_13(u32 pc) {
     u32 i2 = top, rq = 2, nrec = 0, nmat = 0, k, l9;
+    const int skin = kh1_vu1_nat_skin != 0;
+    const u32 vq = skin ? 3 : 2, cpu = skin ? 2 : 1; /* a vertex's payload qwords; bones above cpu are summed here */
     u16 i6 = vi[6], i8 = vi[8], i9 = vi[9];
     u32 sl[3][4][4];               /* the slots as the run's loads leave them (written back on success) */
     s32 cur[3] = { -1, -1, -1 };   /* each slot's matrix in this payload, -1 not listed yet */
@@ -418,6 +435,7 @@ static int nd_13(u32 pc) {
     for (k = 0; k < 3; k++) memcpy(sl[k], vf[base[k]], 64);
     nd13_have_inv = 0;
     nd13_have_q = 0;
+    nd13_have_f = 0;
     nd13_ref = -1;
     for (;;) {
         const u32 *h = mem[i2 & (DATA_QW - 1)];
@@ -448,18 +466,18 @@ static int nd_13(u32 pc) {
         nd_buf[rq][0] = mem[(i2 + 1) & (DATA_QW - 1)][0]; /* the GIF tag's low words */
         nd_buf[rq][1] = mem[(i2 + 1) & (DATA_QW - 1)][1];
         nd_buf[rq][2] = nv;
-        nd_buf[rq][3] = h[3] & 0xFFFF;
+        nd_buf[rq][3] = (h[3] & 0xFFFF) | (skin ? KH1_NAT_SKIN : 0);
         rq++;
         i2 += 2;
         for (j = 0; j < nv; j++) {
-            u32 nb = mem[i2 & (DATA_QW - 1)][3] & 0xFFFF, b, first = 0;
+            u32 nb = mem[i2 & (DATA_QW - 1)][3] & 0xFFFF, b, first = 0, second = 0, w1 = 0x3F800000u;
             const u32 *t;
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
             float32x4_t acc = vdupq_n_f32(0.0f);
 #endif
             f32 c[4] = { 0, 0, 0, 0 };
             if (!nb || nb > 8) return 0;
-            if (rq + 2 > ND_QW - KH1_NAT_MATS * 4) return 0;
+            if (rq + vq > ND_QW - KH1_NAT_MATS * 4) return 0;
             i2++;
             for (b = 0; b < nb; b++, i2++) {
                 const u32 *p = mem[i2 & (DATA_QW - 1)], *w = mem[i8 & (DATA_QW - 1)];
@@ -479,7 +497,7 @@ static int nd_13(u32 pc) {
                     }
                     if (cur[2] < 0) {
                         if (nmat == KH1_NAT_MATS) return 0;
-                        nd13_add(nmat, (const u32 (*)[4])sl[2]);
+                        nd13_add(nmat, (const u32 (*)[4])sl[2], skin);
                         pal[nmat] = at;
                         cur[2] = (s32)nmat++;
                     }
@@ -488,18 +506,28 @@ static int nd_13(u32 pc) {
                     r = ix == 0 ? 0 : ix == 1 ? 1 : 2;
                 if (cur[r] < 0) {
                     if (nmat == KH1_NAT_MATS) return 0;
-                    nd13_add(nmat, (const u32 (*)[4])sl[r]);
+                    nd13_add(nmat, (const u32 (*)[4])sl[r], skin);
                     pal[nmat] = ~0u;
                     cur[r] = (s32)nmat++;
                 }
                 if (!b) {
                     first = (u32)cur[r];
-                    if (nb > 1 && nd13_ref < 0) { /* the run's reference matrix: the first summed vertex's first */
+                    if (nb > cpu && nd13_ref < 0) { /* the run's reference matrix: the first summed vertex's first */
                         if (!nd13_invert(first)) return 0;
                         nd13_ref = (s32)first;
                     }
                 }
-                if (nb == 1 && p[3] == 0x3F800000u) { /* weight 1 (most): the position as it is */
+                if (skin && nb <= 2) { /* 2026-11-01: the bone's pre-weighted position as it is, for the GPU's sum */
+                    u32 *o = b ? nd_buf[rq + 2] : nd_buf[rq];
+                    o[0] = p[0];
+                    o[1] = p[1];
+                    o[2] = p[2];
+                    if (b) {
+                        o[3] = p[3];
+                        second = (u32)cur[r];
+                    } else
+                        w1 = p[3];
+                } else if (nb == 1 && p[3] == 0x3F800000u) { /* weight 1 (most): the position as it is */
                     nd_buf[rq][0] = p[0];
                     nd_buf[rq][1] = p[1];
                     nd_buf[rq][2] = p[2];
@@ -525,7 +553,7 @@ static int nd_13(u32 pc) {
 #endif
                 }
             }
-            if (nb > 1) { /* c is already in the reference's space (Q_i): v = c, the position v.xyz / v.w */
+            if (nb > cpu) { /* c is already in the reference's space (Q_i): v = c, the position v.xyz / v.w */
                 f32 iw;
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
                 vst1q_f32(c, acc);
@@ -538,14 +566,24 @@ static int nd_13(u32 pc) {
                 first = (u32)nd13_ref;
                 kh1_vu1_nd13_multi++;
             }
-            nd_buf[rq][3] = first;
             t = mem[i2 & (DATA_QW - 1)];
             i2++;
             nd_buf[rq + 1][0] = t[0];
             nd_buf[rq + 1][1] = t[1];
             nd_buf[rq + 1][2] = t[2];
-            nd_buf[rq + 1][3] = 0;
-            rq += 2;
+            if (skin) { /* natdraw.h KH1_NAT_SKIN: (p1, mi1 | mi2 << 16), (stq, w1), p2 */
+                if (nb == 2) kh1_vu1_nd13_gpu2++;
+                else { /* one bone, or the sum here in the reference's space: no second */
+                    second = first;
+                    nd_buf[rq + 2][0] = nd_buf[rq + 2][1] = nd_buf[rq + 2][2] = nd_buf[rq + 2][3] = 0;
+                }
+                nd_buf[rq][3] = first | second << 16;
+                nd_buf[rq + 1][3] = w1;
+            } else {
+                nd_buf[rq][3] = first;
+                nd_buf[rq + 1][3] = 0;
+            }
+            rq += vq;
         }
         kh1_vu1_nd13_verts += nv;
         nrec++;
@@ -584,16 +622,28 @@ static void nd_13_check(void) {
     u32 o = top + 0x1E0, r, j, q = 2, nrec = nd_buf[0][1], cull = nd_buf[1][3];
     if (!nd13_built) return;
     for (r = 0; r < nrec; r++) {
-        u32 nv = nd_buf[q][2], par = nd_buf[q][3];
+        u32 nv = nd_buf[q][2], par = nd_buf[q][3] & 0xFFFF, vq = nd_buf[q][3] & KH1_NAT_SKIN ? 3 : 2;
         q++;
         o++; /* the tag */
-        for (j = 0; j < nv; j++, q += 2, o += 3) {
+        for (j = 0; j < nv; j++, q += vq, o += 3) {
             const u32 *x = mem[(o + 2) & (DATA_QW - 1)], *v = nd_buf[q];
             f32 pos[3], ref[3], dx, dy, dz;
             pos[0] = fin(v[0]);
             pos[1] = fin(v[1]);
             pos[2] = fin(v[2]);
-            kh1_nat_ref_xyz(nd_mat[v[3]][0], pos, ref);
+            if (vq == 3) { /* 2026-11-01: the skinned vertex: the vertex shader's sum M1 x p1 + M2 x p2, divided */
+                const u32 *m1 = nd_mat[v[3] & 0xFFFF][0], *m2 = nd_mat[v[3] >> 16][0], *p2 = nd_buf[q + 2];
+                f32 c[4], w1 = fin(nd_buf[q + 1][3]);
+                u32 k2;
+                for (k2 = 0; k2 < 4; k2++)
+                    c[k2] = fin(m1[k2]) * pos[0] + fin(m1[4 + k2]) * pos[1] + fin(m1[8 + k2]) * pos[2] + fin(m1[12 + k2]) * w1 +
+                            fin(m2[k2]) * fin(p2[0]) + fin(m2[4 + k2]) * fin(p2[1]) + fin(m2[8 + k2]) * fin(p2[2]) +
+                            fin(m2[12 + k2]) * fin(p2[3]);
+                ref[0] = c[0] / c[3];
+                ref[1] = c[1] / c[3];
+                ref[2] = c[2] / c[3];
+            } else
+                kh1_nat_ref_xyz(nd_mat[v[3]][0], pos, ref);
             dx = ref[0] * 16.0f - (f32)(s32)x[0];
             dy = ref[1] * 16.0f - (f32)(s32)x[1];
             dz = ref[2] * 16.0f - (f32)(s32)x[2];
@@ -627,8 +677,8 @@ static void nd_13_check(void) {
         }
     }
     if (!(++n13_runs % 2000))
-        printf("kh1-vu1: natcheck P13: %u runs, %u vertices (%u summed here), %u drawn ones over 1/8 pixel off (worst %.2f "
+        printf("kh1-vu1: natcheck P13: %u runs, %u vertices (%u summed here, %u two-bone by the GPU), %u drawn ones over 1/8 pixel off (worst %.2f "
                "sixteenths), %u z off; triangles drawn by both %u, by neither %u, the program only %u, native only %u\n",
-               n13_runs, n13_verts, kh1_vu1_nd13_multi, n13_far, n13_worst, n13_zfar, n13_both, n13_none, n13_vu, n13_nat);
+               n13_runs, n13_verts, kh1_vu1_nd13_multi, kh1_vu1_nd13_gpu2, n13_far, n13_worst, n13_zfar, n13_both, n13_none, n13_vu, n13_nat);
     (void)n13_multi_far;
 }

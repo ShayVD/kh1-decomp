@@ -47,10 +47,23 @@ enum { KH1_NAT_CULL_NONE, KH1_NAT_CULL_CCW, KH1_NAT_CULL_CW };
  * the screen (drawstate.h lin) and z not clamped */
 #define KH1_NAT_LIN 0x80u
 
+/* 2026-11-01: GPU skinning (docs/native-renderer.md "P13's two-bone vertices on the GPU", config natskin): a record
+ * whose word 3 has KH1_NAT_SKIN (P13's, with natskin on) has 3 qwords a vertex: (x1, y1, z1, mi1 | mi2 << 16),
+ * (s, t, q, w1), (x2, y2, z2, w2), the two bones' pre-weighted positions as P13 reads them (w the weight) and their
+ * matrices' indices in the run; a one-bone vertex has mi2 = mi1 and the second position 0.  The vertex shader sums
+ * u_m[mi1] x p1 + u_m[mi2] x p2, which is P13's sum before its divide.  A record's length in qwords is
+ * KH1_NAT_REC_QW (records without the bit: 2 qwords a vertex, as before) */
+#define KH1_NAT_SKIN 0x10000u
+#define KH1_NAT_REC_QW(r) (1u + (r)[2] * ((r)[3] & KH1_NAT_SKIN ? 3u : 2u))
+
 /* the GPU vertices of a run's records (data: the records as above, nrec of them; mats: the run's matrix count, a
  * record's index past it is dropped as ADC), with the run's rgba / f: the number written (at most max), and the
  * triangles dropped in *lost when out was full */
 u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVert *out, u32 max, u32 *lost);
+
+/* 2026-11-01: kh1_nat_tris for KH1_NAT_SKIN records, into the skinned vertex (vertex.h KH1GpuVertSk); lin or'd into
+ * every vertex's mi (KH1_NAT_LIN) */
+u32 kh1_nat_tris_skin(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, u32 lin, KH1GpuVertSk *out, u32 max, u32 *lost);
 
 /* 2026-10-31: P0's payload (program 0, docs/native-renderer.md stage 3): one record a run (its batch), one matrix (the
  * screen matrix times the clip one, the VU's columns), qword 1's word 0 the F all vertices get (P0's I register);

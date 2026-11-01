@@ -163,7 +163,7 @@ static void draw(KH1GxmRec *g, const KH1CmdRec *r, Bound *b, u32 ci) {
         u32 pi = pipe_index(g, ps[i]), vi;
         KH1VertKey vk;
         kh1_vertkey_of(ps[i], &vk);
-        vi = kh1_vertkey_index(&vk) + (k->nmat ? KH1_VERT_NAT : 0);
+        vi = kh1_vertkey_index(&vk) + (k->nmat ? k->skin ? KH1_VERT_SKIN : KH1_VERT_NAT : 0); /* 2026-11-01: skin */
         if (pi != b->pipe || vi != b->vert) {
             c = emit(g, KH1_GXM_SET_PROGRAMS, ci);
             if (c) {

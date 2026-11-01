@@ -63,6 +63,7 @@ enum {
     KH1_SV_R0, KH1_SV_R1, KH1_SV_R2, KH1_SV_R3, KH1_SV_R4, KH1_SV_R5, KH1_SV_R6, KH1_SV_R7, /* registers */
     KH1_SV_OCOLOR, KH1_SV_OPOS, KH1_SV_OCOL, KH1_SV_OTC, KH1_SV_OFOG, /* outputs */
     KH1_SV_MI,                                           /* a native vertex shader's matrix index input (natdraw.h) */
+    KH1_SV_MI2, KH1_SV_POS2,                             /* 2026-11-01: a skinned one's second index and position */
     KH1_SV_COUNT
 };
 typedef struct {

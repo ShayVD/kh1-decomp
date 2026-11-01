@@ -35,6 +35,10 @@ u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVer
     for (r = 0; r < nrec; r++) {
         u32 nv = data[2], par = data[3];
         const u32 *v = data + 4;
+        if (par & KH1_NAT_SKIN) { /* 2026-11-01: kh1_nat_tris_skin's */
+            data += KH1_NAT_REC_QW(data) * 4;
+            continue;
+        }
         for (j = 2; j < nv; j++) {
             const u32 *a = v + (j - 2) * 8, *b = v + (j - 1) * 8, *c = v + j * 8;
             if (a[3] >= nmat || b[3] >= nmat || c[3] >= nmat) continue;
@@ -50,6 +54,56 @@ u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVer
             n += 3;
         }
         data += 4 + nv * 8;
+    }
+    return n;
+}
+
+/* 2026-11-01: a KH1_NAT_SKIN record's vertex (natdraw.h) */
+static void put_sk(KH1GpuVertSk *o, const u32 *v, u32 rgba, u32 f, u32 lin) {
+    o->x = nf(v[0]);
+    o->y = nf(v[1]);
+    o->z = nf(v[2]);
+    o->w = nf(v[7]);
+    o->s = nf(v[4]);
+    o->t = nf(v[5]);
+    o->q = nf(v[6]);
+    o->rgba[0] = (u8)rgba;
+    o->rgba[1] = (u8)(rgba >> 8);
+    o->rgba[2] = (u8)(rgba >> 16);
+    o->rgba[3] = (u8)(rgba >> 24);
+    o->f = (u8)f;
+    o->mi = (u8)(v[3] | lin);
+    o->mi2 = (u8)(v[3] >> 16);
+    o->pad = 0;
+    o->x2 = nf(v[8]);
+    o->y2 = nf(v[9]);
+    o->z2 = nf(v[10]);
+    o->w2 = nf(v[11]);
+}
+
+u32 kh1_nat_tris_skin(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, u32 lin, KH1GpuVertSk *out, u32 max, u32 *lost) {
+    u32 r, j, n = 0;
+    *lost = 0;
+    for (r = 0; r < nrec; r++) {
+        u32 nv = data[2], par = data[3] & 0xFFFF, vq = data[3] & KH1_NAT_SKIN ? 12 : 8;
+        const u32 *v = data + 4;
+        for (j = 2; j < nv; j++) {
+            const u32 *a = v + (j - 2) * vq, *b = v + (j - 1) * vq, *c = v + j * vq;
+            if (vq != 12 || (a[3] & 0xFFFF) >= nmat || (b[3] & 0xFFFF) >= nmat || (c[3] & 0xFFFF) >= nmat ||
+                a[3] >> 16 >= nmat || b[3] >> 16 >= nmat || c[3] >> 16 >= nmat)
+                continue;
+            if (n + 3 > max) { (*lost)++; continue; }
+            if ((par + j) & 1) {
+                put_sk(&out[n], a, rgba, f, lin);
+                put_sk(&out[n + 1], b, rgba, f, lin);
+            } else {
+                put_sk(&out[n], b, rgba, f, lin);
+                put_sk(&out[n + 1], a, rgba, f, lin);
+            }
+            put_sk(&out[n + 2], c, rgba, f, lin);
+            n += 3;
+        }
+        data += 4 + nv * vq;
     }
     return n;
 }

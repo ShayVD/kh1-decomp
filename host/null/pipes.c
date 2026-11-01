@@ -457,6 +457,7 @@ static u32 nat_rq, nat_nrec, nat_prim, nat_gen;
 static u32 nat_moff; /* 2026-10-31: the open op's matrix index of the current run's first matrix (a joined P13 run's) */
 static int nat_open;
 static KH1GpuVert nat_v[KH1_NAT_VERTS];
+static KH1GpuVertSk nat_vs[KH1_NAT_VERTS]; /* 2026-11-01: P13's skinned draws' (natdraw.h KH1_NAT_SKIN) */
 static f32 nat_m[KH1_NAT_MATS * 16];
 
 /* the recorder's side: argument the GS's X shift, data one or more payloads (ops put one after another join) */
@@ -475,6 +476,14 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
                 kh1_pipes_nat_draws++;
                 kh1_pipes_nat_tris += n / 3;
             }
+        } else if (!d[6] && (d[0] & 0xFF) == 13 && nrec && d[8 + 3] & KH1_NAT_SKIN) {
+            /* 2026-11-01: P13's skinned records (natdraw.h KH1_NAT_SKIN): the bigger vertex, its own shaders */
+            n = kh1_nat_tris_skin(d + 8, nrec, nmat, d[4], d[5], KH1_NAT_LIN, nat_vs, KH1_NAT_VERTS, &lost);
+            kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            kh1_cmd_native_skin(rec, &last_d, &last_p, nat_vs, n, nat_m, nmat,
+                                (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | KH1_NAT_LIN);
+            kh1_pipes_nat_draws++;
+            kh1_pipes_nat_tris += n / 3;
         } else if (!d[6]) { /* not every vertex ADC */
             u32 lin = (d[0] & 0xFF) == 11 || (d[0] & 0xFF) == 13 ? KH1_NAT_LIN : 0, i;
             n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
@@ -521,9 +530,10 @@ static void r_nat_rec(const u32 *a, const u32 *d, u32 nqw) {
         u32 nq = KH1_NAT_REC_QW(d);
         if (nq > nqw || nat_crq + nq > NAT_QW) break;
         memcpy(nat_op[nat_crq], d, nq * 16);
-        if (nat_cmoff) { /* a joined run's vertices: its matrices follow the op's earlier ones (nat_rec's rule) */
-            u32 j;
-            for (j = 0; j < d[2]; j++) nat_op[nat_crq + 1 + j * 2][3] += nat_cmoff;
+        if (nat_cmoff) { /* a joined run's vertices: its matrices follow the op's earlier ones (nat_rec's rule); a
+                          * skinned vertex's two indices (natdraw.h KH1_NAT_SKIN) both */
+            u32 j, vq = d[3] & KH1_NAT_SKIN ? 3 : 2, add = vq == 3 ? nat_cmoff | nat_cmoff << 16 : nat_cmoff;
+            for (j = 0; j < d[2]; j++) nat_op[nat_crq + 1 + j * vq][3] += add;
         }
         nat_crq += nq;
         nat_cnrec++;
