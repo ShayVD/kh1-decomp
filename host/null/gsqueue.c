@@ -537,6 +537,19 @@ u32 *kh1_pool_get(u32 nqw, u32 *end) {
     return p;
 }
 
+/* 2026-11-01 (natchain): room for up to maxqw, the position not moved until kh1_pool_take says how much was written */
+u32 *kh1_pool_room(u32 maxqw) {
+    u32 size = pool_mask + 1, at = pool_w & pool_mask;
+    if (!kh1_pool_on || !maxqw || maxqw > size / 4) return 0;
+    if (size - at < maxqw) pool_w += size - at; /* as kh1_pool_get */
+    pool_wait(pool_w + maxqw - size);
+    return pool[pool_w & pool_mask];
+}
+u32 kh1_pool_take(u32 nqw) {
+    pool_w += nqw;
+    return pool_w;
+}
+
 void kh1_pool_free(u32 end) {
     if ((s32)(end - LOAD(pool_freed)) > 0) STORE(pool_freed, end);
 }

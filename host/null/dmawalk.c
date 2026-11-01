@@ -381,6 +381,21 @@ static void path1_draw(const u32 *q, u32 nqw) {
     }
     kh1_gsq_put(w_native, 0, 0, q, nqw);
 }
+/* 2026-11-01 (docs/native-plan.md "Records straight from the chain", natchain=1): the payload written straight into the
+ * pool by the parse (host/port/vu1_draw.h nd_out), then the same reference op as path1_draw's */
+static u32 *path1_room(u32 maxqw) {
+    return kh1_dma_natref && kh1_gsq_on && kh1_pool_on ? kh1_pool_room(maxqw) : 0;
+}
+static u32 *path1_at;
+static u32 *path1_room_at(u32 maxqw) { return path1_at = path1_room(maxqw); }
+static void path1_take(u32 nqw) {
+    u32 r[4];
+    r[2] = kh1_pool_take(nqw);
+    r[0] = (u32)(unsigned long)path1_at;
+    r[1] = nqw;
+    r[3] = 0;
+    kh1_gsq_put(w_native_ref, 0, 0, r, 1);
+}
 
 /* the words an UNPACK reads: num vectors written, CL of each WL read when WL > CL */
 static u32 vif_unpack_words(VifStream *v, u32 cmd, u32 num) {
@@ -425,7 +440,11 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     v->codes++;
     if (kh1_dma_vu1 && !v->vif0) {
         if (!kh1_vu1_kick) kh1_vu1_kick = path1_kick;
-        if (kh1_dma_native && !kh1_vu1_draw) kh1_vu1_draw = path1_draw;
+        if (kh1_dma_native && !kh1_vu1_draw) {
+            kh1_vu1_draw = path1_draw;
+            kh1_vu1_draw_room = path1_room_at;
+            kh1_vu1_draw_take = path1_take;
+        }
         if (cmd == 0x14 || cmd == 0x15 || cmd == 0x17) kh1_gsq_put(w_path1, 0, 0, 0, 0);
         kh1_vif1_code(w);
     }
@@ -466,16 +485,19 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
 /* native-plan.md stage 0: the time VIF1's data words take on their way into VU memory (UNPACK, MPG, STROW...),
  * apart from the programs they start; the Vita's watchdog prints it with the walk's split by channel */
 u32 kh1_dma_feed_us, kh1_dma_feed_words;
+/* 2026-11-01: with natchain=1 only 1 feed in 8 is timed (and counted 8 times): the Vita's clock is a system call, ~0.7
+ * us a read, and a window has a few hundred thousand feeds */
 static void vif1_feed(const u32 *w, u32 n) {
-    u32 t0;
+    static u32 k;
+    u32 t0, every = kh1_vu1_natchain ? 8 : 1;
     kh1_dma_feed_words += n;
-    if (!kh1_vu1_clock) {
+    if (!kh1_vu1_clock || (k++ & (every - 1))) {
         kh1_vif1_data_n(w, n);
         return;
     }
     t0 = kh1_vu1_clock();
     kh1_vif1_data_n(w, n);
-    kh1_dma_feed_us += kh1_vu1_clock() - t0;
+    kh1_dma_feed_us += (kh1_vu1_clock() - t0) * every;
 }
 
 static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
@@ -768,6 +790,7 @@ static int dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
                 vif_block(&v, (u32 *)(unsigned long)data, qwc, data);
             }
         }
+        if (ch == 1 && kh1_dma_vu1) kh1_vif1_end(); /* natchain: what VU memory still holds back, before the words change */
         gs_send_done(ch == 2 ? &g : &v.gif);
         if (ch == 2) {
             if (g.left) bad |= KH1_DMA_GIF_SHORT;

@@ -77,6 +77,11 @@
  *                             payload is written once into a 4 MiB pool and both queues carry only a reference to it
  *       natbulk=0             with natref=1, the GS worker counts each native record in the GS model on its own (1, the
  *                             default: the records between PRIM changes in one count); natref=0 is always per record
+ *       natchain=0            with renderer=native, every UNPACK written into VU memory and the native parses of P18,
+ *                             P11, P10, P0 and P4 reading it there, their payloads built and then copied into the pool, and
+ *                             every feed / hand-off timed (as before 2026-11-01); 1, the default: those parses read the
+ *                             records from the DMA chain's own words (the unpack into VU memory skipped) and write the
+ *                             payload straight into the pool (docs/native-plan.md "Records straight from the chain")
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
@@ -580,6 +585,16 @@ static int watchdog(SceSize args, void *argp) {
                      "time is its parse); %u P13 runs handed back to the program (%u ms)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
                      kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0, kh1_vu1_nd13_gpu2 - g0, (kh1_vu1_nd_hand_us - h0) / 1000,
                      (kh1_vu1_nd13_hand_us - h13) / 1000, kh1_vu1_nd13_fail - f0, (kh1_vu1_nd13_fail_us - fu0) / 1000);
+                { /* 2026-11-01: natchain's reads (docs/native-plan.md "Records straight from the chain") */
+                    static u32 cr0, cq0, cf0;
+                    vlog("kh1-vita: natchain=%d: %u runs read from the chain (%u K qwords not unpacked into VU memory), "
+                         "%u held unpacks written late; feeds and hand-offs timed %s\n", kh1_vu1_natchain,
+                         kh1_vu1_nc_runs - cr0, (kh1_vu1_nc_qw - cq0) / 1000, kh1_vu1_nc_flushed - cf0,
+                         kh1_vu1_natchain ? "1 in 8" : "every one");
+                    cr0 = kh1_vu1_nc_runs;
+                    cq0 = kh1_vu1_nc_qw;
+                    cf0 = kh1_vu1_nc_flushed;
+                }
                 f0 = kh1_vu1_nd13_fail;
                 fu0 = kh1_vu1_nd13_fail_us;
                 h0 = kh1_vu1_nd_hand_us;
@@ -744,6 +759,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
         else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
         else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
+        else if (strcmp(line, "natchain") == 0) kh1_vu1_natchain = atoi(v) ? 1 : 0;
         else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
         else if (strcmp(line, "natskin") == 0) kh1_vu1_nat_skin = atoi(v);
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
@@ -934,9 +950,12 @@ int main(int argc, char **argv) {
         /* the native renderer: P18's runs transformed by the GPU (its vertex variants compiled in gxm.c) */
         kh1_dma_native = use_native && kh1_vita_gxm_native_ok;
         if (!kh1_vita_gxm_skin_ok) kh1_vu1_nat_skin = 0; /* 2026-11-01: without the skinned shaders, the CPU's sums */
-        if (kh1_dma_native)
+        if (kh1_dma_native) {
+            vlog("kh1-vita: natchain=%d (native parses %s)\n", kh1_vu1_natchain,
+                 kh1_vu1_natchain ? "read from the chain, payloads written into the pool" : "read VU memory, as before");
             vlog("kh1-vita: natskin=%d (P13's two-bone vertices summed %s)\n", kh1_vu1_nat_skin,
                  kh1_vu1_nat_skin ? "by the GPU's vertex shader" : "on the CPU");
+        }
         vlog("kh1-vita: renderer: %s\n", kh1_dma_native ? "native (P18 drawn by the GPU's transform)"
                                          : use_native ? "the GS path (renderer=native asked, its vertex shaders unavailable)"
                                          : "the GS path");
