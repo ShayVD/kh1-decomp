@@ -678,7 +678,7 @@ static void vertex(void) {
     for (i = 0; i < KH1_VERT_VARIANTS; i++) {
         KH1GpuVert g;
         f32 w = 512.0f, h = 384.0f;
-        u32 b = i % KH1_VERT_NAT, nat = i >= KH1_VERT_NAT;
+        u32 b = i % KH1_VERT_NAT, nat = i >= KH1_VERT_NAT, skin = i >= KH1_VERT_SKIN;
         u32 tex = b >= 5 ? 2 : b >= 3 ? 1 : 0, fog = b && !(b & 1);
         memset(&g, 0, sizeof g);
         g.x = 100.5f;
@@ -694,7 +694,8 @@ static void vertex(void) {
         g.f = 0x77;
         kh1_shader_vert_cg(i, text, sizeof text);
         memset(&run, 0, sizeof run);
-        set4(run.v[KH1_SV_POS], g.x, g.y, g.z, 0.0f);
+        set4(run.v[KH1_SV_POS], g.x, g.y, g.z, skin ? 1.0f : 0.0f); /* a skinned one's w: the first bone's weight */
+        run.v[KH1_SV_MI2][0] = 0.0f; /* 2026-11-01: a one-bone skinned vertex: pos2 0 (the junk matrix 0 adds nothing) */
         set4(run.v[KH1_SV_COL], g.rgba[0] / 255.0f, g.rgba[1] / 255.0f, g.rgba[2] / 255.0f, g.rgba[3] / 255.0f);
         set4(run.v[KH1_SV_TC], g.s, g.t, g.q, 0.0f);
         run.v[KH1_SV_FOG][0] = g.f / 255.0f;
@@ -732,13 +733,13 @@ static void vertex(void) {
     { /* 2026-10-31: mi's bit 7 (P0's vertices): z not clamped, and with a texture colour and fog times w, w in tc.w */
         u32 lb = 0;
         for (i = KH1_VERT_NAT; i < KH1_VERT_VARIANTS; i++) {
-            u32 b = i - KH1_VERT_NAT, tex = b >= 5 ? 2 : b >= 3 ? 1 : 0, fog = b && !(b & 1);
+            u32 b = (i - KH1_VERT_NAT) % KH1_VERT_NAT, tex = b >= 5 ? 2 : b >= 3 ? 1 : 0, fog = b && !(b & 1);
             const f32 *m = um + 16;
             f32 e[4], w, d;
             u32 k;
             kh1_shader_vert_cg(i, text, sizeof text);
             memset(&run, 0, sizeof run);
-            set4(run.v[KH1_SV_POS], 100.5f, 300.25f, -40.0f, 0.0f); /* z far below 0: clamped without the bit */
+            set4(run.v[KH1_SV_POS], 100.5f, 300.25f, -40.0f, i >= KH1_VERT_SKIN ? 1.0f : 0.0f); /* z far below 0: clamped without the bit */
             set4(run.v[KH1_SV_COL], 0.5f, 0.25f, 0.125f, 0.75f);
             set4(run.v[KH1_SV_TC], 0.125f, 0.625f, 1.0f, 0.0f);
             run.v[KH1_SV_FOG][0] = 0.5f;
@@ -770,8 +771,36 @@ static void vertex(void) {
                   strstr(text, "float4 col : TEXCOORD3") && !strstr(text, "COLOR0"));
         }
     }
-    CHECK("vertex: the 14 vertex shaders (7 native: F x position, z clamped) map to clip space and pass the attributes on "
-          "(native, mi's bit 7 clear: as before)", !bad);
+    CHECK("vertex: the 21 vertex shaders (7 native, 7 skinned: F x position, z clamped) map to clip space and pass the "
+          "attributes on (native, mi's bit 7 clear: as before)", !bad);
+    { /* 2026-11-01: a skinned variant with two bones: u_m[mi] x pos + u_m[mi2] x pos2, the weights in the w's */
+        static const f32 um2[48] = {9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                                    0.5f, 0.25f, 0.0f, -0.125f, 0.0f, -0.75f, 0.125f, 0.5f,
+                                    0.0f, 0.0f, 2.0f, 0.25f, 0.0f, 0.0f, 0.5f, 1.5f,
+                                    -0.25f, 0.5f, 0.125f, 2.0f, 0.75f, 0.0f, -0.5f, 1.0f,
+                                    0.25f, 0.125f, 1.0f, -3.0f, 0.0f, 0.0f, 0.25f, 0.5f};
+        const f32 p1[4] = { 30.0f, -12.5f, 7.25f, 0.375f }, p2[4] = { -4.0f, 40.0f, 2.0f, 0.625f };
+        u32 sb = 0, k;
+        for (i = KH1_VERT_SKIN; i < KH1_VERT_VARIANTS; i++) {
+            f32 e[4];
+            kh1_shader_vert_cg(i, text, sizeof text);
+            memset(&run, 0, sizeof run);
+            set4(run.v[KH1_SV_POS], p1[0], p1[1], p1[2], p1[3]);
+            set4(run.v[KH1_SV_POS2], p2[0], p2[1], p2[2], p2[3]);
+            run.v[KH1_SV_MI][0] = 129.0f / 255.0f; /* matrix 1, z not clamped */
+            run.v[KH1_SV_MI2][0] = 2.0f / 255.0f;
+            run.um = um2;
+            run.um_rows = 12;
+            exec(text);
+            for (k = 0; k < 4; k++)
+                e[k] = um2[16 + k * 4] * p1[0] + um2[16 + k * 4 + 1] * p1[1] + um2[16 + k * 4 + 2] * p1[2] + um2[16 + k * 4 + 3] * p1[3] +
+                       um2[32 + k * 4] * p2[0] + um2[32 + k * 4 + 1] * p2[1] + um2[32 + k * 4 + 2] * p2[2] + um2[32 + k * 4 + 3] * p2[3];
+            for (k = 0; k < 4; k++)
+                if (run.v[KH1_SV_OPOS][k] - e[k] < -1e-3f || run.v[KH1_SV_OPOS][k] - e[k] > 1e-3f) sb++;
+            if (run.bad) sb++;
+        }
+        CHECK("vertex: a skinned shader sums its two bones' matrices times their pre-weighted positions", !sb);
+    }
 }
 
 /* ---- the GXM vertex stream (vertex.h kh1_vertex_attrs) ---- */
@@ -781,7 +810,18 @@ static int same(const char *a, const char *b, u32 n) {
         if (a[i] != b[i]) return 0;
     return b[n] == 0;
 }
+static u32 field_off_sk(const char *name) { /* 2026-11-01: the same in KH1GpuVertSk */
+    if (!strcmp(name, "pos2")) return (u32)(__SIZE_TYPE__)&((KH1GpuVertSk *)0)->x2;
+    if (!strcmp(name, "mi2")) return (u32)(__SIZE_TYPE__)&((KH1GpuVertSk *)0)->mi2;
+    if (name[0] == 'p') return (u32)(__SIZE_TYPE__)&((KH1GpuVertSk *)0)->x;
+    if (name[0] == 'c') return (u32)(__SIZE_TYPE__)&((KH1GpuVertSk *)0)->rgba;
+    if (name[0] == 't') return (u32)(__SIZE_TYPE__)&((KH1GpuVertSk *)0)->s;
+    if (name[0] == 'm') return (u32)(__SIZE_TYPE__)&((KH1GpuVertSk *)0)->mi;
+    return (u32)(__SIZE_TYPE__)&((KH1GpuVertSk *)0)->f;
+}
+static int lay_skin; /* layout_diff reads KH1GpuVertSk's offsets and stride */
 static u32 field_off(const char *name) { /* where vertex.h's comment puts each input, by offsetof */
+    if (lay_skin) return field_off_sk(name);
     if (name[0] == 'p') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->x;
     if (name[0] == 'c') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->rgba;
     if (name[0] == 't') return (u32)(__SIZE_TYPE__)&((KH1GpuVert *)0)->s;
@@ -810,7 +850,7 @@ static u32 layout_diff(const char *cg, const KH1VtxAttr *a, u32 na) {
         if (n >= na) { bad++; break; }
         size = a[n].format == KH1_VFMT_F32 ? 4 : 1;
         if (!same(nm, a[n].name, len) || comps != a[n].count || a[n].offset != field_off(a[n].name) ||
-            a[n].offset + comps * size > KH1_VTX_STRIDE)
+            a[n].offset + comps * size > (lay_skin ? KH1_VTX_SKIN_STRIDE : KH1_VTX_STRIDE))
             bad++;
         /* the formats vertex.h gives: position and texcoords F32, colour and F U8N */
         if ((a[n].name[0] == 'p' || a[n].name[0] == 't') != (a[n].format == KH1_VFMT_F32)) bad++;
@@ -822,10 +862,13 @@ static void layout(void) {
     u32 i, bad = 0, caught = 0;
     KH1VtxAttr a[KH1_VTX_ATTRS];
     CHECK("layout: KH1GpuVert is the stream's 32-byte stride", sizeof(KH1GpuVert) == KH1_VTX_STRIDE);
+    CHECK("layout: KH1GpuVertSk is the skinned stream's 52-byte stride", sizeof(KH1GpuVertSk) == KH1_VTX_SKIN_STRIDE);
     for (i = 0; i < KH1_VERT_VARIANTS; i++) {
         u32 n = kh1_vertex_attrs(i, a);
         kh1_shader_vert_cg(i, text, sizeof text);
+        lay_skin = i >= KH1_VERT_SKIN;
         if (!n || layout_diff(text, a, n)) bad++, printf("shadergen_test: layout: variant %u (%s)\n", i, kh1_vertkey_str(i));
+        lay_skin = 0;
     }
     CHECK("layout: each vertex shader's inputs are vertex.h's attributes (names, components, offsets)", !bad);
     /* the comparison sees a wrong offset and a wrong component count */
@@ -837,7 +880,7 @@ static void layout(void) {
     a[2].count = 2;
     caught += layout_diff(text, a, 4) != 0;
     CHECK("layout: two deliberate table breaks caught", caught == 2);
-    CHECK("layout: no variant past 13", kh1_vertex_attrs(KH1_VERT_VARIANTS, a) == 0);
+    CHECK("layout: no variant past 20", kh1_vertex_attrs(KH1_VERT_VARIANTS, a) == 0);
 }
 
 /* ---- the GXM attribute arrays a port builds (vertex.h kh1_vertex_gxm_attrs) ---- */
@@ -880,21 +923,23 @@ static void gxmattr(void) {
     FakeProg f;
     CHECK("gxmattr: SceGxmVertexAttribute is 8 bytes, SceGxmVertexStream 4", sizeof(KH1GxmVtxAttr) == 8 && sizeof(KH1GxmVtxStream) == 4);
     for (i = 0; i < KH1_VERT_VARIANTS; i++) {
-        u32 n = kh1_vertex_attrs(i, a), used = 0;
+        u32 n = kh1_vertex_attrs(i, a), stride = i >= KH1_VERT_SKIN ? KH1_VTX_SKIN_STRIDE : KH1_VTX_STRIDE;
+        unsigned long long used = 0;
         kh1_shader_vert_cg(i, text, sizeof text);
         fake_prog(&f, text);
         memset(&st, 0, sizeof st);
         if (kh1_vertex_gxm_attrs(i, fake_reg_of, &f, g, &st) != n || n != f.n) { bad++; continue; }
-        if (st.stride != KH1_VTX_STRIDE || st.indexSource != KH1_GXM_INDEX_16BIT) bad++;
+        if (st.stride != stride || st.indexSource != KH1_GXM_INDEX_16BIT) bad++;
         for (j = 0; j < n; j++) {
-            u32 size = g[j].format == KH1_GXM_ATTR_F32 ? 4 : 1, k, bytes = 0;
+            u32 size = g[j].format == KH1_GXM_ATTR_F32 ? 4 : 1, k;
+            unsigned long long bytes = 0;
             if (g[j].streamIndex || g[j].offset != a[j].offset || g[j].componentCount != a[j].count ||
                 g[j].format != (a[j].format == KH1_VFMT_F32 ? KH1_GXM_ATTR_F32 : KH1_GXM_ATTR_U8N) ||
                 g[j].regIndex != fake_reg_of(&f, a[j].name))
                 bad++;
             /* the attributes' bytes inside the stride never overlap */
-            for (k = 0; k < g[j].componentCount * size; k++) bytes |= 1u << (g[j].offset + k);
-            if (g[j].offset + g[j].componentCount * size > KH1_VTX_STRIDE || (used & bytes)) bad++;
+            for (k = 0; k < g[j].componentCount * size; k++) bytes |= 1ull << (g[j].offset + k);
+            if (g[j].offset + g[j].componentCount * size > stride || (used & bytes)) bad++;
             used |= bytes;
         }
     }
@@ -904,7 +949,7 @@ static void gxmattr(void) {
     fake_prog(&f, text);
     f.n--; /* drop "fog" */
     CHECK("gxmattr: a program missing an input gives 0", kh1_vertex_gxm_attrs(6, fake_reg_of, &f, g, &st) == 0);
-    CHECK("gxmattr: no variant past 13", kh1_vertex_gxm_attrs(KH1_VERT_VARIANTS, fake_reg_of, &f, g, &st) == 0);
+    CHECK("gxmattr: no variant past 20", kh1_vertex_gxm_attrs(KH1_VERT_VARIANTS, fake_reg_of, &f, g, &st) == 0);
 }
 
 int main(void) {

@@ -9,7 +9,11 @@
  *             in GS space, y down) are exactly those P18 does not mark ADC (its cross product of the last two
  *             screen edges, the operands swapped by the parity (h[3] + j) & 1, negative), at both parities.
  *   tris      the strips' triangle count, a vertex whose matrix index is past the run's dropped, the vertex's
- *             fields and pad[0] the index, and *lost when out is full. */
+ *             fields and pad[0] the index, and *lost when out is full.
+ *   skin      2026-11-01: kh1_nat_tris_skin on a KH1_NAT_SKIN record (3 qwords a vertex) beside a plain one: the
+ *             skinned record's triangles only, in kh1_nat_tris's order and winding, both bones' positions, weights
+ *             and indices in the vertex, the lin bit on mi only, a second index past the run dropped; kh1_nat_tris
+ *             skips the skinned record and still reads the plain one after it (KH1_NAT_REC_QW). */
 #include "common.h"
 #include "platform/natdraw.h"
 #include "platform/vertex.h"
@@ -246,7 +250,53 @@ static void tris0(void) {
     CHECK("tris0: P0's flags and back-face test as the culled / double-sided lists and the winding rule", !bad && drawn && drawn < total);
 }
 
+static void skin(void) {
+    u32 d[2 * 4 + 4 * 12 + 3 * 8], *r = d, *v, i, n, lost, nplain, bad = 0;
+    KH1GpuVertSk out[16];
+    KH1GpuVert pl[8];
+    memset(d, 0, sizeof d);
+    r[2] = 4;
+    r[3] = 1 | KH1_NAT_SKIN; /* parity 1 */
+    for (i = 0; i < 4; i++) {
+        v = r + 4 + i * 12;
+        v[0] = bits_of(1.0f + i);
+        v[1] = bits_of(2.0f + i);
+        v[2] = bits_of(3.0f + i);
+        v[3] = (i & 1) | (i == 3 ? 5u : 2u) << 16; /* bones 0 / 1 and 2; vertex 3's second bone past the run */
+        v[4] = bits_of(0.5f);
+        v[5] = bits_of(0.25f);
+        v[6] = bits_of(1.0f);
+        v[7] = bits_of(0.25f * (f32)(i + 1)); /* w1 */
+        v[8] = bits_of(-1.0f - i);
+        v[9] = bits_of(-2.0f);
+        v[10] = bits_of(4.0f);
+        v[11] = bits_of(1.0f - 0.25f * (f32)(i + 1)); /* w2 */
+    }
+    CHECK("skin: KH1_NAT_REC_QW of a skinned record", KH1_NAT_REC_QW(r) == 13);
+    r += KH1_NAT_REC_QW(r) * 4;
+    r[2] = 3;
+    r[3] = 1;
+    CHECK("skin: KH1_NAT_REC_QW of a plain one", KH1_NAT_REC_QW(r) == 7);
+    n = kh1_nat_tris_skin(d, 2, 3, 0x80402010u, 0x55, KH1_NAT_LIN, out, 16, &lost);
+    /* triangles ending at 2 (odd: a, b, c as they are) and 3 (dropped: its second bone is 5, past 3 matrices) */
+    CHECK("skin: one triangle of the skinned record, none of the plain one", n == 3 && !lost);
+    for (i = 0; i < 3 && n == 3; i++) {
+        const KH1GpuVertSk *o = &out[i];
+        if (o->x != 1.0f + i || o->y != 2.0f + i || o->z != 3.0f + i || o->w != 0.25f * (f32)(i + 1) ||
+            o->x2 != -1.0f - i || o->y2 != -2.0f || o->z2 != 4.0f || o->w2 != 1.0f - 0.25f * (f32)(i + 1) || o->s != 0.5f ||
+            o->t != 0.25f || o->q != 1.0f || o->rgba[0] != 0x10 || o->rgba[3] != 0x80 || o->f != 0x55 ||
+            o->mi != ((i & 1) | KH1_NAT_LIN) || o->mi2 != 2 || o->pad)
+            bad++;
+    }
+    CHECK("skin: the vertices' fields", !bad);
+    n = kh1_nat_tris_skin(d, 2, 3, 0, 0, 0, out, 2, &lost);
+    CHECK("skin: lost when out is full", n == 0 && lost == 1);
+    nplain = kh1_nat_tris(d, 2, 3, 0, 0, pl, 8, &lost);
+    CHECK("skin: kh1_nat_tris skips the skinned record and reads the plain one", nplain == 3);
+}
+
 int main(void) {
+    skin();
     fold();
     cull();
     tris();

@@ -121,6 +121,7 @@ typedef struct {
     u8 nmat;           /* the native renderer (natdraw.h): the draw's matrices (0 an ordinary draw), at moff in the
                         * frame's uniform slot (4 rows of 4 floats each, the native vertex shader's u_m) */
     u8 cull;           /* and its cull mode (natdraw.h's KH1_NAT_CULL_*) */
+    u8 skin;           /* 2026-11-01: its vertices are KH1GpuVertSk (KH1_VTX_SKIN_STRIDE), from v0 x 32 bytes */
     u32 moff;
 } KH1Cmd;
 
@@ -179,6 +180,7 @@ typedef struct {
     const KH1RenderPass *in_p;
     const KH1GpuVert *in_v;
     u32 in_n;
+    u32 in_skin;       /* 2026-11-01: in_v is KH1GpuVertSk's (kh1_cmd_native_skin) */
     KH1CmdGrpPrim grp[KH1_BATCH_GROUP];
     /* colour targets across frames: (rt, fbp, fbw, psm); drawn: in an earlier frame */
     u32 ntgt;
@@ -212,6 +214,10 @@ void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, c
  * batched with it), culled by `cull` (KH1_NAT_CULL_*, with natdraw.h's KH1_NAT_LIN for P0's: the shader's lin) */
 void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                     u32 nmat, u32 cull);
+/* 2026-11-01: the same with the skinned vertex (vertex.h KH1GpuVertSk, natdraw.h KH1_NAT_SKIN): the command's skin set,
+ * so gxmrec.h picks the KH1_VERT_SKIN variants */
+void kh1_cmd_native_skin(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVertSk *v, u32 n,
+                         const f32 *mats, u32 nmat, u32 cull);
 /* a transfer or CLUT load, not recorded (batch.h's break only) */
 void kh1_cmd_break(KH1CmdRec *r);
 /* session 127: TRXDIR dir (0 an upload, 2 a copy) with BITBLTBUF, TRXPOS and TRXREG: an UPLOAD or COPY command

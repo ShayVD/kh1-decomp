@@ -18,6 +18,7 @@
 #include "gsmem.h"
 #include "platform/canvas.h"
 #include "platform/fullscreen.h"
+#include "platform/natdraw.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
 int memcmp(const void *, const void *, __SIZE_TYPE__);
@@ -498,7 +499,7 @@ u32 kh1_gs_native_run(const u32 *d) {
         if (rec[1] >> 14 & 1) kh1_gs_write(0x00, rec[1] >> 15 & 0x7FF, 0); /* the GIF tag's PRE */
         p = kh1_gs_native(rec[2]);
         if (kh1_gs_native_hook) kh1_gs_native_hook(1, p, rec, 0);
-        rec += 4 + rec[2] * 8;
+        rec += KH1_NAT_REC_QW(rec) * 4;
     }
     if (kh1_gs_native_hook) kh1_gs_native_hook(2, 0, 0, 0);
     return nrec;

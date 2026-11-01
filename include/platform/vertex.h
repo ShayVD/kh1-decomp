@@ -62,8 +62,12 @@ void kh1_vertex_of(const KH1VertCtx *c, const KH1PaVert *in, u32 n, KH1GpuVert *
 /* the native renderer's variants (natdraw.h): KH1_VERT_NAT + the index, the same inputs and outputs plus the matrix
  * index (pad[0] as UNORM8, "mi"), the position through the matrix u_m[mi] instead of u_xf */
 #define KH1_VERT_NAT 7
-#define KH1_VERT_VARIANTS 14
-#define KH1_VTX_ATTRS 5
+/* 2026-11-01: the native skinned variants (natdraw.h "GPU skinning", P13 with natskin): KH1_VERT_SKIN + the index, the
+ * native variant's inputs from KH1GpuVertSk plus a second matrix index (mi2) and pre-weighted position (pos2), pos a
+ * float4 (its w the first bone's weight): clip = u_m[mi] x pos + u_m[mi2] x pos2 */
+#define KH1_VERT_SKIN 14
+#define KH1_VERT_VARIANTS 21
+#define KH1_VTX_ATTRS 7
 /* the vertex shader a pipeline's draws use */
 void kh1_vertkey_of(const KH1PipeKey *p, KH1VertKey *out);
 /* the variant's number, 0 .. 6 (0 the set-up's), and its name ("pos", "pos col uv fog", ..., "native pos ...") */
@@ -85,6 +89,19 @@ u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask);
  * (tests/host/shadergen_test.c "layout") reads each generated vertex shader's inputs back and checks names,
  * component counts and offsets against KH1GpuVert. */
 #define KH1_VTX_STRIDE 32
+/* 2026-11-01: the native skinned variants' vertex (KH1_VERT_SKIN, natdraw.h "GPU skinning"), 52 bytes: x, y, z, w the
+ * first bone's pre-weighted position (w its weight, 1 for a one-bone vertex), s, t, q, rgba, f, the matrix indices mi
+ * (with natdraw.h's KH1_NAT_LIN bit) and mi2, a pad byte, and the second bone's pre-weighted position (all 0 for a
+ * one-bone vertex).  Its draws start at a 32-byte boundary in the vertex ring (v0 counts 32-byte units as for
+ * KH1GpuVert), with this stride */
+#define KH1_VTX_SKIN_STRIDE 52
+typedef struct {
+    f32 x, y, z, w;
+    f32 s, t, q;
+    u8 rgba[4];
+    u8 f, mi, mi2, pad;
+    f32 x2, y2, z2, w2;
+} KH1GpuVertSk;
 enum { KH1_VFMT_U8N, KH1_VFMT_F32 };
 typedef struct {
     const char *name; /* the vertex shader's input */

@@ -304,6 +304,54 @@ Not checked on a Vita: the GPU's cost of one draw a P13 run (each with up to 32 
 the GS path batched them; the Vita log's `native renderer:` line now also counts P13's vertices and the summed ones.
 If Sora looks wrong with renderer=native, `natp13=0` is the switch to try first.
 
+### P13's two-bone vertices on the GPU (2026-11-01, `natskin`)
+
+What was still CPU skinning after "P13 too": every P13 vertex with more than one bone was summed in nd_13 (Q_i =
+M_ref^-1 x M_i per matrix in double, then k NEON products and a reciprocal a vertex), and every matrix of a run was
+converted from VU floats (fin) as it was listed. Shay's 2026-11-01 Vita log had P13 at ~940 ms per ~8.8 s window
+(~255 ms per 2.4 s, ~1.1 us a vertex, 32 % of the vertices summed).
+
+Now (natskin=1, the default; `natskin=0` in config.txt / `KH1_HOST_NATSKIN=0` is the old path):
+
+- **The payload** (natdraw.h `KH1_NAT_SKIN`): P13's records carry bit 16 in word 3 and 3 qwords a vertex:
+  (x1, y1, z1, mi1 | mi2 << 16), (s, t, q, w1), (x2, y2, z2, w2): both bones' pre-weighted positions exactly as the
+  program reads them (w the weight) and their matrices' indices in the run. A one-bone vertex has its raw position
+  (w its weight: no divide on the CPU now) and a zero second position; a vertex with 3 or more bones is still summed
+  on the CPU into the run's reference matrix as before (w1 1, no second). `KH1_NAT_REC_QW(r)` is a record's length
+  (the other native programs' records stay 2 qwords a vertex); pipes.c's join adds the op's matrix offset to both
+  indices.
+- **The vertex** (vertex.h `KH1GpuVertSk`, 52 bytes: pos xyzw, stq, rgba, f, mi, mi2, pad, pos2 xyzw) and seven more
+  vertex shaders (`KH1_VERT_SKIN` + the variant, "skin pos ..."): clip = u_m[mi] x pos + u_m[mi2] x pos2 with the
+  folded matrices, then everything as the native variant (mi's lin bit, z, colour x w). Since the fold is linear,
+  F_1 p_1 + F_2 p_2 = N (M_1 p_1 + M_2 p_2): P13's own sum before its divide. pipes.c's r_native lists a skinned P13
+  op with `kh1_nat_tris_skin` and records it with `kh1_cmd_native_skin` (the command's `skin`; its vertices from a
+  32-byte boundary in the ring, v0 in 32-byte units as before, gxm.c's stream advancing 52 bytes a vertex).
+- **Matrices** are converted to floats only when a 3+-bone vertex (or the reference) needs them (nd13_f_of).
+- **On the Vita** the skinned shaders compile with the others; if they do not, the log says `skinned vertex shader
+  N unavailable: natskin is off` and the old path runs. The log prints `kh1-vita: natskin=1 (...)` at start, and the
+  `native renderer:` line counts `N two-bone ones by the GPU` beside those summed on the CPU.
+
+Checked on the host (en.iso, dive_en.txt):
+
+- `KH1_HOST_NATCHECK=1` to frame 8000 with natskin=1 (nd_13_check now sums the payload's two bones as the shader
+  does): 196,000 runs and 8,685,473 vertices as before; of the 2,760,075 with more
+  than one bone, 2,198,115 (80 %) now go to the GPU and 561,960 (3+ bones) are still summed here. Every drawn vertex
+  within 1.01 sixteenths of the program's (as before), Z within a step, and the triangle counts unchanged (both
+  2,541,733, neither 2,207,319, the program only 5,314, native only 6,743).
+- GPU pictures (gxmcheck, renderer=native, KH1_HOST_GXM=250 to 7499, natskin 0 against 1): 52 of the 60 display / 3D target hashes identical;
+  the 8 that differ are the 4 frames where Sora is on P13 in each stretch (3249-3999, 6749-7499), with the same
+  draw and triangle counts and 1-17 pixels different, none by more than 32 levels (the sums' roundings in another
+  order).
+- make test (shadergen_test: a two-bone skinned shader against the sum, the 52-byte layout and GXM attributes;
+  natdraw_test: kh1_nat_tris_skin and KH1_NAT_REC_QW).
+- Not measured on the host: the instruction cost either way (the Vita log decides).
+
+Expected on a Vita: the game thread loses most of P13's summing (80 % of its summed vertices are two-bone), the GPU
+thread copies 52 bytes instead of 32 for each P13 vertex (it lists 3 a triangle), and the GPU's vertex shader does one
+more matrix product for P13. Which way the frame rate goes depends on whether the game thread or the GPU thread is the
+limit in the window: compare `natskin=0` and `natskin=1` runs' `vu1 programs:` P13 time, the `gpu parts:` vertex copy
+and the `threads:` line. Not checked on a Vita yet.
+
 ## The stages after
 
 2. **P13 (skinned, flat, cull)**: done (above, "P13 too"). Not as planned here (the palette in `u_m` and the bone
