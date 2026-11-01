@@ -538,8 +538,23 @@ static void r_nat_end(const u32 *a, const u32 *d, u32 nqw) {
     r_native(a, nat_op[0], nat_crq + nmat * 4);
 }
 
+/* 2026-11-01 (native-plan.md stage 0: w_native 800 ms per 2.4 s on the Vita's GS worker, ~3x its instruction count's
+ * share): a payload's records are contiguous, so the ones nat_rec takes are put to the recording queue as one op at
+ * the payload's end (or before any other op of the native path), not one op each: one queue put (its atomic loads
+ * and stores, barriers on ARM) a span instead of a record.  r_nat_rec takes any number of records already, so the
+ * GPU thread's side is unchanged.  kh1_pipes_nat_span 0 (config.txt natspan=0) puts each record as before */
+int kh1_pipes_nat_span = 1;
+static const u32 *span_p;
+static u32 span_nq;
+static void span_flush(void) {
+    if (!span_nq) return;
+    kh1_recq_put(r_nat_rec, 0, 0, span_p, span_nq);
+    span_nq = 0;
+}
+
 static void nat_flush(void) {
     u32 a;
+    span_flush();
     if (!nat_open) return;
     nat_open = 0;
     if (!nat_nrec) return;
@@ -570,7 +585,13 @@ static void nat_rec(u32 prim, const u32 *r) {
     }
     /* joins the records before it while the queue holds them unpublished; a joined P13 run's matrix indices are
      * moved on the recorder's side (r_nat_mats, r_nat_rec) */
-    kh1_recq_put(r_nat_rec, 0, 0, r, nq);
+    if (!kh1_pipes_nat_span) kh1_recq_put(r_nat_rec, 0, 0, r, nq);
+    else if (span_nq && span_p + span_nq * 4 == r) span_nq += nq;
+    else {
+        span_flush();
+        span_p = r;
+        span_nq = nq;
+    }
     nat_rq += nq;
     nat_nrec++;
 }
@@ -589,6 +610,7 @@ static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
             memcpy(nat_ms + nat_hs[2] * 16, b, a[2] * 64);
             nat_moff = nat_hs[2];
             nat_hs[2] += a[2];
+            span_flush(); /* the earlier runs' records before the matrices that follow them */
             kh1_recq_put(r_nat_mats, &nat_moff, 1, b, a[2] * 4); /* the recorder's side of the join */
         } else {
             nat_flush();
@@ -597,8 +619,9 @@ static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b) {
         nat_mats = b;
     } else if (what == 1) {
         nat_rec(prim, a);
-    } else if ((nat_hdr[0] & 0xFF) != 0 && (nat_hdr[0] & 0xFF) != 13) {
-        nat_flush();
+    } else {
+        span_flush(); /* the payload's records are only valid during the worker's op */
+        if ((nat_hdr[0] & 0xFF) != 0 && (nat_hdr[0] & 0xFF) != 13) nat_flush();
     }
 }
 

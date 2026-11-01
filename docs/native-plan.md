@@ -119,6 +119,27 @@ What it changes in the order:
 5. Stages 2 / 3 can wait in the Dive: P12 is 19 ms a window here, P1 / P2 ~55 between them. VU1 time is now
    P0's parse 162 and P13's 153.
 
+### After stage 0: w_native on the worker (2026-11-01, host-measured)
+
+A host profile of the GS worker (callgrind `--separate-threads=yes` on the gxmcheck binary, renderer=native, trace 5,
+GSQ / GPUQ / RECQ, en.iso, dive_en.txt) puts w_native at 22 M of the worker's 527 M instructions over frames
+5000-5060 and 83 M of 586 M over 7000-7060 (Sora, P13): 4-14 %, where the Vita's log has it at ~44 % of the worker
+(800 of 1,829 ms). The uploads (kh1_gsmem_image ~280-380 M) lead on x86. So on the A9 w_native costs ~3x its
+instruction share: ~43 us a gsq op, ~3.6 us a record, ~520 x86 instructions a record. The likely reason is the
+recording queue: nat_rec put every record as its own kh1_recq_put, and each put does sequentially consistent
+atomic loads and stores (a `dmb` each on ARM, which waits for the core's pending stores), where x86's are plain
+loads.
+
+**First cut (pipes.c `span_flush`, config.txt `natspan=1`, the default)**: a payload's records are contiguous, so
+nat_rec now extends one span and puts it as one r_nat_rec op at the payload's end (or before any other op of the
+native path: r_nat_mats, the op's end). r_nat_rec already took several records at once, so the GPU thread's side
+is unchanged. `natspan=0` (host `KH1_HOST_NATSPAN=0`) puts each record as before. Host: the Dive to frame 7500 at
+trace 5 with renderer=native, all 60 GPU picture hashes (KH1_HOST_GXM=250, KH1_HOST_GXM_HASH=1) identical with
+natspan 0 and 1; over 7000-7060 w_native 83 M -> 71 M, the worker's kh1_recq_put 16 M -> 8 M. **Not yet measured on
+a Vita**: the `gs worker ops:` line's w_native time (the address of `w_native` in out/vita/kh1.elf + the log's
+offset) with natspan=1 against natspan=0. If it barely moves, the cost is elsewhere (the payload's cache misses
+crossing cores, or kh1_gs_native's per-record bookkeeping) and the next step is handing payloads by reference.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
