@@ -838,6 +838,12 @@ int main(int argc, char **argv) {
         else
             vlog("kh1-vita: disc image %s\n", iso);
     }
+    { /* 2026-11-01: what one read of the clock costs (the VU1 runs, the GS worker's ops and the walks each read it) */
+        u32 t0 = vita_us(), i, t1;
+        for (i = 0; i < 1000; i++) (void)vita_us();
+        t1 = vita_us();
+        vlog("kh1-vita: clock: %u ns a read (sceKernelGetProcessTimeWide)\n", t1 - t0);
+    }
     vlog("kh1-vita: vu1=%d (the 3D), vu1tr=%d (its programs as C), vu1nat=%d, pad %s\n", kh1_dma_vu1, kh1_vu1_tr, kh1_vu1_native, kh1_vita_pad_script ? kh1_vita_pad_script : "the Vita's controls");
     /* the chain walk feeds the GS memory model (KH1_HOST_TRACE >= 2 on the host); session 135: without
      * its line per send (~7 a frame through the unbuffered log) unless config.txt asks for trace=2 */

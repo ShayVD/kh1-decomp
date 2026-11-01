@@ -135,6 +135,35 @@ static u32 op_check(u32 n) {
 static u32 op_check(u32 n) { return 0; }
 #endif
 
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+/* 2026-11-01: native P0's per-vertex colour and ST (vu1_draw.h nd0_vert) against its scalar form, on colours and scales
+ * weighted to bytes, 1.0, the saturating edges and huge values, and ST of any s32 */
+static u32 nd0_check(u32 n) {
+    u32 i, bad = 0;
+    for (i = 0; i < n; i++) {
+        u32 c[4], t[2], o1[2], o2[2], r1, r2, k;
+        f32 sc[4];
+        for (k = 0; k < 4; k++) {
+            u32 m = rnd() % 6;
+            c[k] = m < 3 ? rnd() & 0xFF : m == 3 ? rnd() : m == 4 ? (u32)(s32)(s16)rnd() : 0x7FFFFF80u + rnd() % 0x100;
+            m = rnd() % 5;
+            sc[k] = m == 0 ? 1.0f : m == 1 ? fin(val()) : m == 2 ? (f32)(rnd() % 512) / 256.0f : m == 3 ? 128.0f : -fin(val());
+        }
+        t[0] = rnd() % 3 ? (u32)(s32)(s16)rnd() : rnd();
+        t[1] = rnd() % 3 ? (u32)(s32)(s16)rnd() : rnd();
+        nd0_vert_c(c, t, sc, o1, &r1);
+        nd0_vert(c, t, vld1q_f32(sc), sc, o2, &r2);
+        if ((r1 != r2 || o1[0] != o2[0] || o1[1] != o2[1]) && bad++ < 10)
+            printf("vu1neon_test: nd0_vert c %08x %08x %08x %08x sc %08x: %08x / %08x st %08x %08x / %08x %08x\n", c[0], c[1],
+                   c[2], c[3], fo(sc[0]), r1, r2, o1[0], o1[1], o2[0], o2[1]);
+    }
+    printf("vu1neon_test: nd0_vert, %u cases, %u differ\n", n, bad);
+    return bad;
+}
+#else
+static u32 nd0_check(u32 n) { return 0; }
+#endif
+
 int main(int argc, char **argv) {
     static const int ks[5] = { K_ADD, K_SUB, K_MUL, K_MADD, K_MSUB };
     u32 n = argc > 1 ? (u32)atoi(argv[1]) : 2000000, i, fast = 0, bad = 0;
@@ -166,6 +195,7 @@ int main(int argc, char **argv) {
         }
     }
     bad += op_check(n);
+    bad += nd0_check(n);
     printf("vu1neon_test: %u cases, %u on four lanes, %u differ: %s\n", n, fast, bad, bad ? "FAIL" : "PASS");
     return bad != 0;
 }

@@ -180,6 +180,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
         -mfloat-abi=hard -static -DKH1_HOST -I"$ROOT/include" -o "$W/vu1neon_test" "$ROOT/tests/host/vu1neon_test.c" -lm
     qemu-arm "$W/vu1neon_test" 300000 > "$W/vu1neon.log" || { cat "$W/vu1neon.log"; exit 1; }
     tail -n 1 "$W/vu1neon.log"
+    # 2026-11-01: the VIF1 data path's NEON unpacks (from the walk's own words, renderer B's and A's formats) too
+    arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -fno-strict-aliasing -ffp-contract=off -mcpu=cortex-a9 -mfpu=neon \
+        -mfloat-abi=hard -static -DKH1_HOST -I"$ROOT/include" -o "$W/vu1feed_arm" "$ROOT/tests/host/vu1feed_test.c" -lm
+    qemu-arm "$W/vu1feed_arm" > "$W/vu1feed_arm.log" || { cat "$W/vu1feed_arm.log"; exit 1; }
+    tail -n 1 "$W/vu1feed_arm.log"
     # session 147: the large uploads' NEON compare (host/null/bytesame.h) against memcmp
     arm-linux-gnueabihf-gcc -std=gnu89 -O2 -w -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -static -DKH1_HOST \
         -I"$ROOT/include" -o "$W/bytesame_arm" "$ROOT/tests/host/bytesame_test.c"

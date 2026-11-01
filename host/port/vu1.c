@@ -80,6 +80,9 @@ static u32 base, ofst, tops, top, itops, itop, dbf, tpc;
 /* the code whose data is coming */
 static u32 cur, cur_imm, cur_num, need, got, mpg_changed, micro_gen;
 static u32 dbuf[256 * 4 + 4]; /* an UNPACK's data words (at most 256 vectors of 4 words) */
+/* 2026-11-01 (docs/native-plan.md stage 5): the words unpack reads: dbuf, or the walk's own words when an UNPACK's
+ * data came in one piece (kh1_vif1_data_n), so they are not copied to dbuf first */
+static const u32 *ds = dbuf;
 
 void kh1_vu1_stats(KH1Vu1Stats *out) {
     *out = st;
@@ -1239,15 +1242,18 @@ static int nat_check(int prog, u32 pc) {
 }
 
 static void start_run(u32 pc);
+/* 2026-11-01: a run's start and end times, read once each and shared by start and start_run's per-program time (the
+ * Vita's clock is a system call: four reads a run were ~15,000 runs' worth of calls a window) */
+static u32 run_t0, run_t1, run_t1_set;
 static void start(u32 pc) {
-    u32 t0;
     if (!kh1_vu1_clock) {
         start_run(pc);
         return;
     }
-    t0 = kh1_vu1_clock();
+    run_t0 = kh1_vu1_clock();
+    run_t1_set = 0;
     start_run(pc);
-    kh1_vu1_us += kh1_vu1_clock() - t0;
+    kh1_vu1_us += (run_t1_set ? run_t1 : kh1_vu1_clock()) - run_t0;
 }
 
 /* KH1_HOST_VU1DUMP=DIR:N (host/null/main.c): every Nth run's start (micro memory, then a TrSnap, then the
@@ -1284,7 +1290,7 @@ static void start_run(u32 pc) {
         return;
     }
     if (prog >= 0) {
-        u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, n0 = st.insns;
+        u32 t0 = run_t0, n0 = st.insns, t1 = 0;
         int ran;
         tr_lost = 0;
         /* the native renderer (vu1_draw.h): the run's records handed to the GPU instead */
@@ -1315,12 +1321,16 @@ static void start_run(u32 pc) {
         }
         if (!ran && kh1_vu1_native == 2) ran = nat_check(prog, pc);
         if (!ran) ran = tr_go(prog, pc);
+        if (kh1_vu1_clock) {
+            t1 = run_t1 = kh1_vu1_clock();
+            run_t1_set = 1;
+        }
         if (tr_progs[prog].num == 13 && kh1_vu1_draw && kh1_vu1_draw_p13 && !nd13_built) { /* handed back */
             kh1_vu1_nd13_fail++;
-            if (kh1_vu1_clock) kh1_vu1_nd13_fail_us += kh1_vu1_clock() - t0;
+            if (kh1_vu1_clock) kh1_vu1_nd13_fail_us += t1 - t0;
         }
         if (kh1_vu1_clock && prog < KH1_VU1_PROGS) { /* session 147: each program's own time (the Vita's watchdog) */
-            tr_us[prog] += kh1_vu1_clock() - t0;
+            tr_us[prog] += t1 - t0;
             tr_runs[prog]++;
             tr_pairs[prog] += st.insns - n0;
         }
@@ -1331,6 +1341,7 @@ static void start_run(u32 pc) {
             if (tr_lost && !tr_bad++) printf("kh1-vu1: translated program P%d lost its way (a JR)\n", tr_progs[prog].num);
             return;
         }
+        run_t1_set = 0; /* the interpreter's time too */
     }
     run(pc);
 }
@@ -1352,7 +1363,7 @@ static u32 unpack_data_words(u32 cmd, u32 num) {
 static u32 elem(u32 e, u32 bits, int usn, u32 nwords) {
     u32 bit = e * bits, w = bit >> 5, v;
     if (w >= nwords) return 0;
-    v = dbuf[w] >> (bit & 31);
+    v = ds[w] >> (bit & 31);
     if (bits == 32) return v;
     v &= (1u << bits) - 1;
     if (!usn && v >> (bits - 1) & 1) v |= ~((1u << bits) - 1);
@@ -1362,12 +1373,12 @@ static u32 elem(u32 e, u32 bits, int usn, u32 nwords) {
 /* session 143: element e of the data words, 32, 16 or 8 bits (vl 0, 1, 2), sign-extended unless usn */
 static __inline__ u32 unpack_el(u32 vl, u32 usn, u32 e) {
     u32 h;
-    if (vl == 0) return dbuf[e];
+    if (vl == 0) return ds[e];
     if (vl == 1) {
-        h = dbuf[e >> 1] >> (e & 1) * 16 & 0xFFFF;
+        h = ds[e >> 1] >> (e & 1) * 16 & 0xFFFF;
         return !usn && h & 0x8000 ? h | 0xFFFF0000u : h;
     }
-    h = dbuf[e >> 2] >> (e & 3) * 8 & 0xFF;
+    h = ds[e >> 2] >> (e & 3) * 8 & 0xFF;
     return !usn && h & 0x80 ? h | 0xFFFFFF00u : h;
 }
 
@@ -1377,15 +1388,15 @@ static __inline__ u32 unpack_el(u32 vl, u32 usn, u32 e) {
  * thread's unpacks were ~10% of its instructions under qemu-arm in the Dive, an element at a time */
 static __inline__ __attribute__((always_inline)) void unpack_run(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
     u32 nel = vn + 1, i, cycle = 0, e = 0, x;
-    const u8 *b = (const u8 *)dbuf;
+    const u8 *b = (const u8 *)ds;
     uint32x4_t r = vld1q_u32(row), v;
     for (i = 0; i < num; i++, e += nel) {
         if (vl == 0) {
-            if (vn >= 2) v = vld1q_u32(dbuf + e);
+            if (vn >= 2) v = vld1q_u32(ds + e);
             else if (vn == 1) {
-                uint32x2_t t = vld1_u32(dbuf + e);
+                uint32x2_t t = vld1_u32(ds + e);
                 v = vcombine_u32(t, t);
-            } else v = vdupq_n_u32(dbuf[e]);
+            } else v = vdupq_n_u32(ds[e]);
         } else if (vl == 1) {
             const u16 *h = (const u16 *)b + e;
             uint16x4_t t;
@@ -1442,10 +1453,14 @@ static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
     if (vl == 3 || wl > cl) return 0;
     /* V4-32 / V3-32 with all their words here, MODE 0, CL == WL: the words themselves */
     if (vl == 0 && vn >= 2 && mode == 0 && cl == wl && num * nel + (vn == 2) <= got) {
+        if (vn == 3 && addr + num <= DATA_QW) { /* 2026-11-01: V4-32 not wrapping: one copy */
+            memcpy(mem[addr], ds, num * 16);
+            return 1;
+        }
 #if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
-        for (i = 0; i < num; i++) vst1q_u32(mem[(addr + i) & (DATA_QW - 1)], vld1q_u32(dbuf + i * nel)); /* no call a qword */
+        for (i = 0; i < num; i++) vst1q_u32(mem[(addr + i) & (DATA_QW - 1)], vld1q_u32(ds + i * nel)); /* no call a qword */
 #else
-        for (i = 0; i < num; i++) memcpy(mem[(addr + i) & (DATA_QW - 1)], dbuf + i * nel, 16);
+        for (i = 0; i < num; i++) memcpy(mem[(addr + i) & (DATA_QW - 1)], ds + i * nel, 16);
 #endif
         return 1;
     }
@@ -1470,12 +1485,12 @@ static int unpack_fast(u32 vn, u32 vl, u32 num, u32 usn, u32 addr) {
         u32 *d = mem[addr & (DATA_QW - 1)];
         for (k = 0; k < (vn == 2 ? 4u : nel); k++) { /* V3: w is the next element in the stream */
             e = i * nel + k;
-            if (vl == 0) v[k] = e < got ? dbuf[e] : 0;
+            if (vl == 0) v[k] = e < got ? ds[e] : 0;
             else if (vl == 1) {
-                u32 h = (e >> 1) < got ? dbuf[e >> 1] >> (e & 1) * 16 & 0xFFFF : 0;
+                u32 h = (e >> 1) < got ? ds[e >> 1] >> (e & 1) * 16 & 0xFFFF : 0;
                 v[k] = !usn && h & 0x8000 ? h | 0xFFFF0000u : h;
             } else {
-                u32 b = (e >> 2) < got ? dbuf[e >> 2] >> (e & 3) * 8 & 0xFF : 0;
+                u32 b = (e >> 2) < got ? ds[e >> 2] >> (e & 3) * 8 & 0xFF : 0;
                 v[k] = !usn && b & 0x80 ? b | 0xFFFFFF00u : b;
             }
         }
@@ -1579,6 +1594,32 @@ void kh1_vif1_code(u32 w) {
 void kh1_vif1_data_n(const u32 *w, u32 n) {
     if ((cur == 0x50 || cur == 0x51) && n <= need) { /* session 143: DIRECT's words are the walk's (PATH2) */
         need -= n;
+        return;
+    }
+    if (cur == 0x4A && n <= need) { /* 2026-11-01: an MPG's words at once: the same program again (most) only compared */
+        u32 *flat = &micro[0][0], at = (2 * cur_imm + got) & (2 * MICRO_N - 1);
+        if (at + n <= 2 * MICRO_N) {
+            if (memcmp(flat + at, w, n * 4)) { /* a new program: word by word, micro_gen counting each change */
+                u32 i;
+                for (i = 0; i < n; i++)
+                    if (flat[at + i] != w[i]) {
+                        flat[at + i] = w[i];
+                        micro_gen++;
+                    }
+                mpg_changed = 1;
+            }
+            got += n;
+            need -= n;
+            if (!need && mpg_changed) { st.mpg++; mpg_changed = 0; }
+            return;
+        }
+    }
+    if ((cur & 0x60) == 0x60 && n == need && !got) { /* 2026-11-01: all of it here: unpacked from the walk's words */
+        ds = w;
+        got = n;
+        need = 0;
+        unpack();
+        ds = dbuf;
         return;
     }
     if ((cur & 0x60) == 0x60 && n <= need) {
