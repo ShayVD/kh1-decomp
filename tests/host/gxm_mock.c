@@ -493,7 +493,8 @@ typedef struct {
 
 static int sv_of(const char *name) {
     return !strcmp(name, "pos") ? KH1_SV_POS : !strcmp(name, "col") ? KH1_SV_COL : !strcmp(name, "tc") ? KH1_SV_TC
-           : !strcmp(name, "fog") ? KH1_SV_FOG : !strcmp(name, "mi") ? KH1_SV_MI : -1;
+           : !strcmp(name, "fog") ? KH1_SV_FOG : !strcmp(name, "mi") ? KH1_SV_MI
+           : !strcmp(name, "mi2") ? KH1_SV_MI2 : !strcmp(name, "pos2") ? KH1_SV_POS2 : -1;
 }
 
 static const struct SceGxmProgramParameter *param(const MockProg *p, int kind, int index) {

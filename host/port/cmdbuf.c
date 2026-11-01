@@ -285,7 +285,7 @@ static void prim(KH1CmdRec *r, const KH1BatchKey *k, u32 src) {
     const KH1DrawState *d = r->in_d;
     const KH1RenderPass *rp = r->in_p;
     const KH1GpuVert *v = r->in_v;
-    u32 n = r->in_n;
+    u32 n = r->in_n, stride;
     KH1Cmd *c;
     KH1CmdPass *p;
     u8 *at;
@@ -312,12 +312,14 @@ static void prim(KH1CmdRec *r, const KH1BatchKey *k, u32 src) {
         p->zseen = 1;
     }
     if (c->samples && c->samples - 1 == p->tgt) p->feedback = 1;
-    at = (u8 *)kh1_ring_alloc(&r->vring, n * (u32)sizeof(KH1GpuVert), (u32)sizeof(KH1GpuVert));
+    /* 2026-11-01: a skinned native draw's vertices are bigger (KH1GpuVertSk), still from a 32-byte boundary */
+    stride = src == KH1_BEV_NEW && r->in_skin ? (u32)sizeof(KH1GpuVertSk) : (u32)sizeof(KH1GpuVert);
+    at = (u8 *)kh1_ring_alloc(&r->vring, n * stride, (u32)sizeof(KH1GpuVert));
     if (!at) {
         c->lost = 1;
     } else {
-        if (v) memcpy(at, v, n * sizeof *v);
-        if (v && c->wtex) { /* wide screen: s (over TW's 2^n texels) over the target's whole width, the same texels: a
+        if (v) memcpy(at, v, n * stride);
+        if (v && c->wtex && stride == (u32)sizeof(KH1GpuVert)) { /* wide screen: s (over TW's 2^n texels) over the target's whole width, the same texels: a
                              * full-screen pass's u, stretched to the view, runs past 512 (the frame copy's 0 .. 678) */
             u32 lw = d->tex0_lo >> 26 & 15, i;
             f32 kk = (f32)(1u << (lw > 10 ? 10 : lw)) / r->tsw[c->samples - 1];
@@ -385,8 +387,18 @@ void kh1_cmd_prim(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, c
     kh1_batch_prim_sig(&r->b, d, p, n, sig);
 }
 
+static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
+                   u32 nmat, u32 cull, u32 skin);
 void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                     u32 nmat, u32 cull) {
+    native(r, d, p, v, n, mats, nmat, cull, 0);
+}
+void kh1_cmd_native_skin(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVertSk *v, u32 n,
+                         const f32 *mats, u32 nmat, u32 cull) {
+    native(r, d, p, (const KH1GpuVert *)(const void *)v, n, mats, nmat, cull, 1);
+}
+static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
+                   u32 nmat, u32 cull, u32 skin) {
     KH1Cmd *c;
     u8 *u;
     u32 bytes = nmat * 64;
@@ -406,12 +418,16 @@ void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
     r->in_p = p;
     r->in_v = v;
     r->in_n = n;
+    r->in_skin = skin;
     if (!kh1_batch_prim_sig(&r->b, d, p, n, 0) || r->cur < 0 || r->dropped) { /* a state that draws nothing, or no room */
+        r->in_skin = 0;
         kh1_batch_break(&r->b);
         return;
     }
+    r->in_skin = 0;
     c = &r->cmd[r->cur];
     c->nmat = (u8)nmat;
+    c->skin = (u8)skin;
     c->cull = (u8)(cull & ~KH1_NAT_LIN);
     u = (u8 *)kh1_ring_alloc(&r->uring, bytes, KH1_RING_UNIFORM_SLOT);
     if (u) {

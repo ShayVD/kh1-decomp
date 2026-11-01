@@ -41,6 +41,10 @@ extern int kh1_vu1_draw_p10;
  * hands over and those of them with more than one bone (summed on the CPU) */
 extern int kh1_vu1_draw_p13;
 extern u32 kh1_vu1_nd13_verts, kh1_vu1_nd13_multi;
+/* 2026-11-01: P13's two-bone vertices summed by the GPU's vertex shader (natskin=1 / KH1_HOST_NATSKIN=1; 0, the default,
+ * sums them on the CPU as before; natdraw.h KH1_NAT_SKIN), and how many were handed over so */
+extern int kh1_vu1_nat_skin;
+extern u32 kh1_vu1_nd13_gpu2;
 /* microseconds (kh1_vu1_clock's) the game thread spent handing native payloads to the GS worker's queue (the copy and
  * a full ring's wait), all programs' and P13's (vu1_draw.h nd_hand) */
 extern u32 kh1_vu1_nd_hand_us, kh1_vu1_nd13_hand_us;
