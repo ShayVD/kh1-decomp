@@ -114,8 +114,15 @@ u32 kh1_gs_native(u32 nv);
 s32 kh1_gs_xshift_of(void);
 /* a native run's payload (natdraw.h; host/null/dmawalk.c's op): each record's GIF tag (PRE PRIM) applied and its strip
  * counted (kh1_gs_native), handed to the hook (host/null/pipes.c's recorder side): what 0 the payload starts (a its
- * header, b its matrices), 1 a record (prim the PRIM in force, a the record), 2 it ends.  Its record count */
+ * header, b its matrices), 1 a record (prim the PRIM in force, a the record), 2 it ends.  Its record count.  bulk
+ * (2026-11-01, natref's path): the records between PRIM changes counted with one call, the same counts and marks */
 extern void (*kh1_gs_native_hook)(u32 what, u32 prim, const u32 *a, const u32 *b);
-u32 kh1_gs_native_run(const u32 *d);
+u32 kh1_gs_native_run(const u32 *d, int bulk);
+/* 2026-11-01 (natref, host/null/dmawalk.c w_native_ref): set while a payload in the pool runs (its records stay where
+ * they are until the pool is freed to kh1_gs_nat_free), and the recorder's hook told after it (pipes.c: the free goes
+ * on the recording queue after the records' last reader) */
+extern int kh1_gs_nat_pooled;
+extern u32 kh1_gs_nat_free;
+extern void (*kh1_gs_nat_done)(u32 free);
 
 #endif

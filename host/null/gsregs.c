@@ -462,8 +462,11 @@ static u32 gs_strip(const u32 *q, u32 n, u32 p) {
  * vertex.  The draw record is found as gs_kick finds it, counted, and given the scissor as its extent; GS memory marks
  * the target's (and Z's) pages drawn (kh1_gsmem_draw_n, as gs_strip does for its triangles); the vertex queue is left
  * empty (the next packet's PRE PRIM starts a new strip).  The PRIM in force, for the recorder */
-u32 kh1_gs_native(u32 nv) {
-    u32 p = gs_prim(), nd = nv > 2 ? nv - 2 : 0;
+/* 2026-11-01: nrec strips of kicks vertices and nd triangles in all, drawn in one state (kh1_gs_native_run's bulk:
+ * the counts and extents add, and GS memory's marks repeat their registers with nothing between, so one call is
+ * the nrec calls') */
+static u32 gs_native_n(u32 kicks, u32 nd, u32 nrec) {
+    u32 p = gs_prim();
     KH1GsContext *c = &gs.ctx[p >> 9 & 1];
     KH1GsDraw *k;
     gs_find(p);
@@ -471,29 +474,63 @@ u32 kh1_gs_native(u32 nv) {
     if (k) {
         s32 x0 = (s32)(c->scissor.lo & 0x7FF) * 16, x1 = (s32)(c->scissor.lo >> 16 & 0x7FF) * 16 + 15;
         s32 y0 = (s32)(c->scissor.hi & 0x7FF) * 16, y1 = (s32)(c->scissor.hi >> 16 & 0x7FF) * 16 + 15;
-        k->kicks += nv;
+        k->kicks += kicks;
         k->draws += nd;
         if (x0 < k->x0) k->x0 = x0;
         if (x1 > k->x1) k->x1 = x1;
         if (y0 < k->y0) k->y0 = y0;
         if (y1 > k->y1) k->y1 = y1;
     } else {
-        gs.lost++;
+        gs.lost += nrec;
     }
     gs.nvert = 0;
     nsv = 0;
     if (nd) kh1_gsmem_draw_n(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo, nd);
     return p;
 }
+u32 kh1_gs_native(u32 nv) { return gs_native_n(nv, nv > 2 ? nv - 2 : 0, 1); }
 
 s32 kh1_gs_xshift_of(void) { return gs_xshift; }
 
 void (*kh1_gs_native_hook)(u32 what, u32 prim, const u32 *a, const u32 *b);
+int kh1_gs_nat_pooled;
+u32 kh1_gs_nat_free;
+void (*kh1_gs_nat_done)(u32 free);
 
-u32 kh1_gs_native_run(const u32 *d) {
+u32 kh1_gs_native_run(const u32 *d, int bulk) {
     u32 nrec = d[1], r;
     const u32 *rec = d + 8;
     if (kh1_gs_native_hook) kh1_gs_native_hook(0, 0, d, d + (2 + d[3]) * 4);
+    if (bulk) {
+        /* 2026-11-01 (natref): the records up to a PRE with another PRIM counted as one (gs_native_n): a PRE that
+         * writes the PRIM in force changes nothing a strip's count reads (set() keeps the draw state; the vertex
+         * queue is left empty either way).  The hook still sees each record, with the PRIM its run is drawn in */
+        u32 kicks = 0, nd = 0, n = 0, p = 0;
+        const u32 *first = rec;
+        for (r = 0; r < nrec; r++) {
+            if (rec[1] >> 14 & 1 && (!n || (rec[1] >> 15 & 0x7FF) != (gs.prim.lo & 0x7FF) || gs.prim.hi)) {
+                if (n) {
+                    p = gs_native_n(kicks, nd, n);
+                    if (kh1_gs_native_hook)
+                        for (; first != rec; first += KH1_NAT_REC_QW(first) * 4) kh1_gs_native_hook(1, p, first, 0);
+                    kicks = nd = n = 0;
+                }
+                kh1_gs_write(0x00, rec[1] >> 15 & 0x7FF, 0);
+            }
+            if (!n) first = rec;
+            kicks += rec[2];
+            nd += rec[2] > 2 ? rec[2] - 2 : 0;
+            n++;
+            rec += KH1_NAT_REC_QW(rec) * 4;
+        }
+        if (n) {
+            p = gs_native_n(kicks, nd, n);
+            if (kh1_gs_native_hook)
+                for (; first != rec; first += KH1_NAT_REC_QW(first) * 4) kh1_gs_native_hook(1, p, first, 0);
+        }
+        if (kh1_gs_native_hook) kh1_gs_native_hook(2, 0, 0, 0);
+        return nrec;
+    }
     for (r = 0; r < nrec; r++) {
         u32 p;
         if (rec[1] >> 14 & 1) kh1_gs_write(0x00, rec[1] >> 15 & 0x7FF, 0); /* the GIF tag's PRE */

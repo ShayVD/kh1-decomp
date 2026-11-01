@@ -75,4 +75,20 @@ void kh1_gsq_state(char *b, int n);
  * waits that had to wait */
 extern volatile u32 kh1_recq_us_busy, kh1_recq_us_wait, kh1_recq_waits;
 
+/* 2026-11-01 (docs/native-plan.md "Native payloads by reference", config.txt natref=): a ring of qwords the game thread
+ * writes data into that the GS worker hands on to the GPU thread by reference, so neither queue copies it.  One
+ * writer (the game thread: kh1_pool_get), one freer (whoever ran the data's last reader: kh1_pool_free, in order).
+ * kh1_pool_get returns room for nqw contiguous qwords (0 when nqw is more than a quarter of the pool) and sets *end
+ * to the position after it; kh1_pool_free(end) frees everything before end.  A get that finds no room publishes the
+ * GS queue and waits (counted in kh1_pool_us_wait / kh1_pool_waits).  While the pool is on (kh1_pool_on, set by
+ * kh1_pool_start) the GS worker publishes the recording queue before it sleeps, so a free put there is never held
+ * back while the game thread waits for it */
+extern int kh1_pool_on;
+/* run on the GS worker before it sleeps while the pool is on (pipes.c: a pool free held back) */
+extern void (*kh1_gsq_idle_hook)(void);
+int kh1_pool_start(u32 bytes);
+u32 *kh1_pool_get(u32 nqw, u32 *end);
+void kh1_pool_free(u32 end);
+extern volatile u32 kh1_pool_us_wait, kh1_pool_waits;
+
 #endif

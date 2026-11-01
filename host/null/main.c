@@ -481,6 +481,14 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_GSQ") && atoi(getenv("KH1_HOST_GSQ")) && /* a power of two > 1: the ring's bytes */
             kh1_gsq_start(atoi(getenv("KH1_HOST_GSQ")) > 1 ? (u32)atoi(getenv("KH1_HOST_GSQ")) : 4u << 20))
             printf("kh1-host: KH1_HOST_GSQ: no worker thread\n");
+        else if (kh1_gsq_on) { /* 2026-11-01: KH1_HOST_NATREF=0 copies native payloads (the Vita's natref=) */
+            extern int kh1_dma_natref;
+            extern int kh1_dma_natbulk;
+            if (getenv("KH1_HOST_NATREF")) kh1_dma_natref = atoi(getenv("KH1_HOST_NATREF"));
+            if (getenv("KH1_HOST_NATBULK")) kh1_dma_natbulk = atoi(getenv("KH1_HOST_NATBULK"));
+            if (kh1_dma_natref && kh1_pool_start(getenv("KH1_HOST_NATPOOL") ? (u32)atoi(getenv("KH1_HOST_NATPOOL")) : 4u << 20))
+                printf("kh1-host: KH1_HOST_NATREF: no pool\n");
+        }
     }
     {
         const char *counts = getenv("KH1_HOST_COUNTS"); /* session 96: countcheck's DATA rows' marks */
