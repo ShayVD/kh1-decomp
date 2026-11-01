@@ -448,6 +448,7 @@ int main(int argc, char **argv) {
             extern int kh1_pipes_nat_span;
             kh1_pipes_nat_span = atoi(getenv("KH1_HOST_NATSPAN"));
         }
+        if (getenv("KH1_HOST_NATJOIN")) kh1_cmd_natjoin = atoi(getenv("KH1_HOST_NATJOIN")); /* 2026-11-01: cmdbuf.c nat_join */
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
         if (getenv("KH1_HOST_RECFAST")) { /* 2026-11-01: 0 the GPU thread's recording as before (natdraw.c, cmdbuf.c) */
             extern int kh1_nat_once;

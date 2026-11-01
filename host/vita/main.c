@@ -72,6 +72,9 @@
  *       recfast=0             the GPU thread's recording as before 2026-11-01 (1, the default: each native strip
  *                             vertex converted once, natdraw.c; the frame op's pass hoist moving commands in blocks,
  *                             cmdbuf.c; the same draws either way)
+ *       natjoin=0             with renderer=native, each native run its own GPU draw (as before 2026-11-01; 1, the
+ *                             default: a run joins the native draw before it when nothing differs but its matrices,
+ *                             cmdbuf.c nat_join; the same triangles in the same order)
  *       natref=0              with renderer=native, a native payload is copied into the GS worker's queue and its
  *                             records again into the recording queue (as before 2026-11-01); 1, the default: the
  *                             payload is written once into a 4 MiB pool and both queues carry only a reference to it
@@ -579,12 +582,14 @@ static int watchdog(SceSize args, void *argp) {
                 polls0 = kh1_vita_gt_polls;
             }
             if (kh1_dma_native) { /* the native renderer (docs/native-renderer.md) */
-                static u32 n0, d0, t0, v0, m0, h0, h13, f0, fu0, g0;
+                static u32 n0, d0, t0, v0, m0, h0, h13, f0, fu0, g0, j0;
                 vlog("kh1-vita: native renderer: %u runs drawn by the GPU's transform, %u draws, %u triangles; P13 %u vertices "
                      "(%u summed on the CPU, %u two-bone ones by the GPU); handing them to the GS worker %u ms (P13's %u ms; the rest of each program's "
-                     "time is its parse); %u P13 runs handed back to the program (%u ms)\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
+                     "time is its parse); %u P13 runs handed back to the program (%u ms); natjoin=%d: %u of the draws joined into the one before\n", kh1_vu1_drawn - n0, kh1_pipes_nat_draws - d0, kh1_pipes_nat_tris - t0,
                      kh1_vu1_nd13_verts - v0, kh1_vu1_nd13_multi - m0, kh1_vu1_nd13_gpu2 - g0, (kh1_vu1_nd_hand_us - h0) / 1000,
-                     (kh1_vu1_nd13_hand_us - h13) / 1000, kh1_vu1_nd13_fail - f0, (kh1_vu1_nd13_fail_us - fu0) / 1000);
+                     (kh1_vu1_nd13_hand_us - h13) / 1000, kh1_vu1_nd13_fail - f0, (kh1_vu1_nd13_fail_us - fu0) / 1000,
+                     kh1_cmd_natjoin, kh1_cmd_nat_joins - j0);
+                j0 = kh1_cmd_nat_joins;
                 { /* 2026-11-01: natchain's reads (docs/native-plan.md "Records straight from the chain") */
                     static u32 cr0, cq0, cf0;
                     vlog("kh1-vita: natchain=%d: %u runs read from the chain (%u K qwords not unpacked into VU memory), "
@@ -766,6 +771,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
         else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
+        else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
         else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);

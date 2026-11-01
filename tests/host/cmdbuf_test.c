@@ -39,6 +39,7 @@
 #include "platform/palcache.h"
 #include "platform/texcache.h"
 #include "platform/gxmrec.h"
+#include "platform/natdraw.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -1020,6 +1021,71 @@ static void upload_join(void) {
     CHECK("upload join: the list replayed gives gsmem.c's pixels", !bad);
 }
 
+/* ---- 2026-11-01: native runs joined into one draw (cmdbuf.c nat_join) ---- */
+static void nstate(KH1DrawState *d, KH1RenderPass *p) {
+    static const KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
+    KH1DrawRegs g;
+    memset(&g, 0, sizeof g);
+    g.prim = 0x3; /* a flat TRIANGLE */
+    g.frame_lo = F_MAIN;
+    g.zbuf_lo = 0x31000070;
+    g.test_lo = Z_GEQUAL;
+    g.alpha_lo = 0x44;
+    kh1_drawstate_of(&g, d);
+    kh1_target_of(F_MAIN, 0, g.zbuf_lo, g.zbuf_hi, Z_GEQUAL, S_MAIN, 0x7000, 0x7000, &c43, 1.0f, p);
+}
+
+static void nrun(const KH1DrawState *d, const KH1RenderPass *p, u32 nv, u32 nmat, u32 seed, u32 cull) {
+    KH1GpuVert v[12];
+    f32 m[8 * 16];
+    u32 i;
+    memset(v, 0, sizeof v);
+    for (i = 0; i < nv; i++) {
+        v[i].x = (f32)(seed + i);
+        v[i].pad[0] = (u8)(i % nmat);
+    }
+    for (i = 0; i < nmat * 16; i++) m[i] = (f32)(seed * 100 + i);
+    kh1_cmd_native(&pr, d, p, v, nv, m, nmat, cull);
+}
+
+static void natjoin(void) {
+    KH1DrawState d;
+    KH1RenderPass p;
+    const KH1Cmd *c;
+    const KH1GpuVert *v;
+    const f32 *m;
+    u32 i, ok = 1, save = kh1_cmd_natjoin;
+    nstate(&d, &p);
+    kh1_cmd_natjoin = 1;
+    kh1_cmd_init(&pr, pvm, sizeof pvm[0], pum, sizeof pum[0]);
+    nrun(&d, &p, 6, 2, 1, KH1_NAT_CULL_CCW);
+    nrun(&d, &p, 3, 3, 2, KH1_NAT_CULL_CCW);
+    nrun(&d, &p, 3, 1, 3, KH1_NAT_CULL_NONE); /* another cull mode: a draw of its own */
+    CHECK("natjoin: two runs of one state in one draw, another cull mode in its own", pr.ncmd == 2 &&
+          pr.cmd[0].nv == 9 && pr.cmd[0].nmat == 5 && pr.cmd[0].prims == 2 && pr.cmd[1].nv == 3 && pr.cmd[1].nmat == 1);
+    c = &pr.cmd[0];
+    v = kh1_cmd_verts(&pr, c);
+    m = (const f32 *)(pr.uring.base + pr.uring.cur * pr.uring.slot + c->moff);
+    for (i = 0; i < 9; i++) ok &= v[i].x == (f32)(i < 6 ? 1 + i : 2 + i - 6) && v[i].pad[0] == (i < 6 ? i % 2 : 2 + (i - 6) % 3);
+    for (i = 0; i < 5 * 16; i++) ok &= m[i] == (f32)(i < 32 ? 100 + i : 200 + i - 32);
+    CHECK("natjoin: the vertices and matrices in order, the second run's indices past the first's matrices", ok);
+    kh1_cmd_upload(&pr, 0, 0, 0x3A00 | 4 << 16, 0, 0, 8, 8);
+    nrun(&d, &p, 3, 1, 4, KH1_NAT_CULL_NONE); /* after a transfer: its own */
+    CHECK("natjoin: not across a transfer", pr.ncmd == 4 && pr.cmd[3].nv == 3);
+    for (i = 0; i < 8; i++) nrun(&d, &p, 3, 4, 5 + i, KH1_NAT_CULL_NONE); /* 1 + 28 matrices, then 4 more: past 32 */
+    CHECK("natjoin: at most KH1_NAT_MATS matrices a draw", pr.ncmd == 5 && pr.cmd[3].nmat == 29 && pr.cmd[4].nmat == 4);
+    kh1_cmd_frame(&pr);
+    kh1_cmd_reset_frame(&pr);
+    kh1_cmd_natjoin = 0;
+    kh1_cmd_init(&pr, pvm, sizeof pvm[0], pum, sizeof pum[0]);
+    nrun(&d, &p, 6, 2, 1, KH1_NAT_CULL_CCW);
+    nrun(&d, &p, 3, 3, 2, KH1_NAT_CULL_CCW);
+    CHECK("natjoin=0: a draw a run", pr.ncmd == 2 && pr.cmd[1].nmat == 3 && kh1_cmd_verts(&pr, &pr.cmd[1])[0].pad[0] == 0);
+    kh1_cmd_frame(&pr);
+    kh1_cmd_reset_frame(&pr);
+    kh1_cmd_natjoin = (int)save;
+}
+
 int main(void) {
     kh1_gs_reset();
     kh1_gsmem_reset();
@@ -1034,6 +1100,7 @@ int main(void) {
     upload_join();
     gxm();
     date();
+    natjoin();
     printf("cmdbuf_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }
