@@ -20,6 +20,7 @@
 #include <psp2/kernel/cpu.h>
 #include <string.h>
 #include "common.h"
+void kh1_vita_thread_note(int uid, const char *name); /* main.c: the watchdog's `threads:` line */
 
 void kh1_vita_log(const char *fmt, ...);
 #define vlog kh1_vita_log
@@ -164,16 +165,19 @@ static void start_output(void) {
         vlog("kh1-vita: sound: no tick thread (0x%08x)\n", t);
         return;
     }
+    kh1_vita_thread_note(t, "sound ticks");
     t = sceKernelCreateThread("kh1_snd_mix", mix_thread, 0x10000100 + kh1_vita_snd_prio, 0x8000, 0, mix_mask, 0);
     if (t < 0 || sceKernelStartThread(t, 0, 0) < 0) {
         vlog("kh1-vita: sound: no mixer thread (0x%08x)\n", t);
         return;
     }
+    kh1_vita_thread_note(t, "sound mix");
     t = sceKernelCreateThread("kh1_snd_out", out_thread, 0x10000100 - 16, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_ALL, 0);
     if (t < 0 || sceKernelStartThread(t, 0, 0) < 0) {
         vlog("kh1-vita: sound: no output thread (0x%08x)\n", t);
         return;
     }
+    kh1_vita_thread_note(t, "sound out");
     if (kh1_vita_snd_core >= 0 && kh1_vita_snd_core <= 2)
         vlog("kh1-vita: sound: the disc's driver ticking and mixing on core %d, %d ms ahead, 48 kHz\n",
              kh1_vita_snd_core, LEAD * 1000 / 48000);

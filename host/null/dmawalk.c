@@ -430,6 +430,21 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     if (!v->bad++) { v->bad_word = w; v->bad_addr = addr; }
 }
 
+/* native-plan.md stage 0: the time VIF1's data words take on their way into VU memory (UNPACK, MPG, STROW...),
+ * apart from the programs they start; the Vita's watchdog prints it with the walk's split by channel */
+u32 kh1_dma_feed_us, kh1_dma_feed_words;
+static void vif1_feed(const u32 *w, u32 n) {
+    u32 t0;
+    kh1_dma_feed_words += n;
+    if (!kh1_vu1_clock) {
+        kh1_vif1_data_n(w, n);
+        return;
+    }
+    t0 = kh1_vu1_clock();
+    kh1_vif1_data_n(w, n);
+    kh1_dma_feed_us += kh1_vu1_clock() - t0;
+}
+
 static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
     u32 i;
     if (!n) return;
@@ -439,7 +454,7 @@ static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
         /* session 143: a DIRECT's data words in a run too, its whole qwords handed on together */
         if (v->need && !v->pad && v->in_direct) {
             u32 k = n * 4 - i < v->need ? n * 4 - i : v->need, j = 0, nq;
-            if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q + i, k);
+            if (kh1_dma_vu1 && !v->vif0) vif1_feed(q + i, k);
             for (; j < k && v->nq; j++) {
                 v->q[v->nq++] = q[i + j];
                 if (v->nq == 4) {
@@ -463,7 +478,7 @@ static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
         /* session 137v (the Dive's speed on a Vita): a code's data words other than DIRECT's in a run */
         if (v->need && !v->pad && !v->in_direct) {
             u32 k = n * 4 - i < v->need ? n * 4 - i : v->need;
-            if (kh1_dma_vu1 && !v->vif0) kh1_vif1_data_n(q + i, k);
+            if (kh1_dma_vu1 && !v->vif0) vif1_feed(q + i, k);
             v->need -= k;
             v->pos = (v->pos + k) & 3;
             i += k;
@@ -803,12 +818,20 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
 /* session 137v: the walks' time on a clock the platform gives (the Vita's watchdog: what a frame's
  * CPU time goes to); the VU1 programs and the recorder's work run inside it */
 u32 kh1_dma_walk_us;
+u32 kh1_dma_ch_us[3], kh1_dma_ch_sends[3]; /* native-plan.md stage 0: the same by channel (VIF0, VIF1, GIF) */
+/* and of the walks' time, the puts' waits for room in the GS worker's ring (also in kh1_gsq_us_wait) */
+u32 kh1_dma_walk_ring_us;
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
-    u32 t0;
+    u32 t0, d, w0;
     int r;
+    if (ch >= 0 && ch <= 2) kh1_dma_ch_sends[ch]++;
     if (!kh1_vu1_clock) return dma_walk(ch, chcr, tadr, where);
+    w0 = kh1_gsq_us_wait;
     t0 = kh1_vu1_clock();
     r = dma_walk(ch, chcr, tadr, where);
-    kh1_dma_walk_us += kh1_vu1_clock() - t0;
+    d = kh1_vu1_clock() - t0;
+    kh1_dma_walk_ring_us += kh1_gsq_us_wait - w0;
+    kh1_dma_walk_us += d;
+    if (ch >= 0 && ch <= 2) kh1_dma_ch_us[ch] += d;
     return r;
 }

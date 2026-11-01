@@ -60,6 +60,65 @@ table above, plus the stage's own host checks. Expected gains are per 2.4 s wind
 - **Gain**: none. **Why first**: picks the order of stages 1-3 from measurements, not these estimates.
 - **Tested by**: the log itself; nothing in code changes beyond log lines.
 
+**The log lines for it (2026-10-31, host/vita/main.c's watchdog, every 2 s)**, added to what the log already had:
+
+- `vu1 programs:` now lists every program over 1 ms, not the top four.
+- `walk split:` the DMA walks' time by channel (VIF0, VIF1, GIF) and their sends; of VIF1, the time its data words
+  take into VU memory (dmawalk.c `vif1_feed`: UNPACK, MPG, STROW..., the programs they start not counted); the ops
+  and KiB the game thread copied into the GS worker's ring (gsqueue.c `kh1_gsq_puts`, `kh1_gsq_put_bytes_n`).
+  VIF1's time less the feed and the `vu1:` line is the walk itself (tags, VIF codes, DIRECT's skim).
+- `threads:` each port thread's CPU time in the window from the kernel's run clock (the game, the GS worker, the
+  GPU thread, the three sound threads, the watchdog), the core it last ran on, its affinity mask, its priority and
+  how often it was preempted. Unlike the busy counters this does not count time another thread took from it, so the
+  GPU thread and the sound threads sharing a core shows as the GPU thread's busy time above its run time and its
+  preemptions.
+
+**The host's split (2026-10-31, the stage 5 / 6 thread; callgrind, game thread only, renderer=native, GSQ / GPUQ / RECQ
+on, en.iso, dive_en.txt, the host's trace prints and per-send GS syncs removed)**: frames 5000-5060, ~1.0 G
+instructions: P12's translated program ~730 M, P2 ~50 M, nd_0 62 M, unpack 55 M, the rest of the walk (vif_word, the
+skim, the ring's put, dma_walk) ~25 M. Frames 7000-7060, ~0.33 G: nd_13 113 M (11.5 K instructions a run, ~270 a
+vertex, in line with the Vita's ~1.3 us a vertex), unpack and vif1_data ~40 M, the rest of the walk ~15 M. So with the
+native programs on, the walk's own tag / VIF / ring work is under 10 % of the game thread; the costs are the unpack
+into VU memory, the nd_* parse and P12. On the Vita P12 runs as hand-written NEON (vita-build.md "P12 as
+hand-written C"), so the host's translated count overstates it there: the Vita's `vu1 programs:` line decides
+whether stage 2 (P12 on the GPU) moves up.
+
+**The run**: the stage 0 VPK, config.txt `pad=ux0:data/kh1/dive_en.txt`, `renderer=native`, `latewait=0`,
+`frames=8000`, the rest default (sndprio -4, recframe 1); then the same with `gputime=1`. Frames 5000-8000 of the
+first log fill the table at the top of this file.
+
+### Stage 0's result (2026-11-01, Shay's Vita, the stage 0 VPK, renderer=native, dive_en.txt)
+
+15 watchdog windows over Dive frames 5144-7683, scaled to 2.4 s (the windows were ~5.1 s, not 2: the watchdog, on
+core 2 at the game's priority, is starved). **17.7 pictures/s** (35.5 frames/s): no better than before the three
+steps, because every core is full.
+
+| Thread (run clock) | ms per 2.4 s | Where it goes |
+|---|---|---|
+| GPU thread | **1,946** | the recording 1,790 (the frame op's passes, now here, 614 of it) |
+| GS worker | **1,829** | **w_native 800**, uploads 1,305 in all (w_block 491, w_load 313, w_qwords 274, w_load_big 227), w_gpu_frame 200 (152 of it waiting for the GPU thread), w_kick 70 |
+| Game | **1,763** | DMA walks 1,168 (VIF1 1,206 with the ring waits: VU1 programs 368, the feed into VU memory 372, the rest ~470; GIF 112), the game's code ~700, waiting for the worker 295, large uploads 137 |
+| Sound (3 threads) | **1,736** | ticks (the IOP interpreter) 918, mix 750, output 68; ~3.5 M IOP instructions a second, 10-13 voices |
+
+The three cores have 7.2 s per 2.4 s; the threads took ~7.3 s (the run clocks are read at slightly different
+moments). Worker op addresses were mapped with this build's symbols (the log's addresses are 0x6a001 above
+out/vita/kh1.elf's).
+
+What it changes in the order:
+
+1. **Sound is a quarter of all CPU.** With sndprio=-4 its threads run above the game's on any core, so they take
+   ~1.7 s per 2.4 s from the other three: about one core. The plan's estimate (the Dive has 3 voices) was wrong:
+   with the room's SEs fixed (2026-10-30) the Dive plays 10-13. Stage 8 moves to the front (a thread is already
+   on it).
+2. **w_native is the worker's biggest op** (800 ms): per native record the GIF tag's PRE, the draw counted in gsmem,
+   and the recorder's copy of the payload (pipes.c `nat_hook`). Next after sound: hand native payloads to the GPU
+   thread directly, with the worker doing only the register and draw-count bookkeeping in bulk (part of stage 7,
+   pulled ahead; it touches stage 5's hand-off, so the same thread or one right after it).
+3. **Uploads** (1.3 s on the worker): stage 4.
+4. **The GPU thread** (full at 1.9 s, mostly the recording): stage 1.
+5. Stages 2 / 3 can wait in the Dive: P12 is 19 ms a window here, P1 / P2 ~55 between them. VU1 time is now
+   P0's parse 162 and P13's 153.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.

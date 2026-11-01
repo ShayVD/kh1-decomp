@@ -390,6 +390,38 @@ extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_
 extern volatile u32 kh1_vita_us_finish_at[4], kh1_vita_finishes_at[4]; /* host/vita/gxm.c, session 147d */
 extern volatile u32 kh1_vita_pend_in, kh1_vita_pend_out, kh1_vita_pend_nowait; /* host/vita/gxm.c, session 150 */
 extern volatile u32 kh1_vita_scene_waits; /* host/vita/gxm.c, session 151 */
+/* native-plan.md stage 0: the port's threads, each one's CPU time per window (the kernel's run clock, so time
+ * another thread took from it is not counted), the core it last ran on, and how often it was preempted */
+#define KH1_THREADS_MAX 12
+static struct { SceUID uid; const char *name; SceUInt64 run; u32 pre; } kh1_threads[KH1_THREADS_MAX];
+static int kh1_nthreads;
+void kh1_vita_thread_note(int uid, const char *name) {
+    if (uid < 0 || kh1_nthreads >= KH1_THREADS_MAX) return;
+    kh1_threads[kh1_nthreads].uid = uid;
+    kh1_threads[kh1_nthreads++].name = name;
+}
+static void threads_line(void) {
+    char line[640];
+    int i, len = snprintf(line, sizeof line, "kh1-vita: threads:");
+    for (i = 0; i < kh1_nthreads && len < (int)sizeof line - 80; i++) {
+        SceKernelThreadInfo ti;
+        SceUInt64 run;
+        u32 pre;
+        memset(&ti, 0, sizeof ti);
+        ti.size = sizeof ti;
+        if (sceKernelGetThreadInfo(kh1_threads[i].uid, &ti) < 0) continue;
+        run = (SceUInt64)ti.runClocks;
+        pre = ti.threadPreemptCount + ti.intrPreemptCount;
+        len += snprintf(line + len, sizeof line - len, "%s %s %u ms (core %d, mask %x, prio %x, %u preempted)",
+                        i ? "," : "", kh1_threads[i].name, (u32)((run - kh1_threads[i].run) / 1000),
+                        (int)ti.lastExecutedCpuId, (u32)ti.currentCpuAffinityMask, (u32)ti.currentPriority,
+                        pre - kh1_threads[i].pre);
+        kh1_threads[i].run = run;
+        kh1_threads[i].pre = pre;
+    }
+    vlog("%s\n", line);
+}
+
 static int watchdog(SceSize args, void *argp) {
     unsigned long last = (unsigned long)-1;
     u32 at0 = (u32)sceKernelGetProcessTimeWide(), walk0 = 0;
@@ -488,7 +520,7 @@ static int watchdog(SceSize args, void *argp) {
                 char line[512];
                 int len = snprintf(line, sizeof line, "kh1-vita: vu1 programs:");
                 for (i = 0; i < KH1_VU1_PROGS; i++) d[i] = kh1_vu1_prog_stats(i, &num, &us, &runs, &pairs) ? us - p_us[i] : 0;
-                for (k = 0; k < 4; k++) {
+                for (k = 0; k < KH1_VU1_PROGS; k++) { /* stage 0: every program over 1 ms */
                     best = -1;
                     for (i = 0; i < KH1_VU1_PROGS; i++)
                         if (d[i] && (best < 0 || d[i] > d[best])) best = i;
@@ -586,15 +618,41 @@ static int watchdog(SceSize args, void *argp) {
                 u32 now = (u32)sceKernelGetProcessTimeWide(), all = now - at0, walk = kh1_dma_walk_us - walk0;
                 /* session 141: and the waits for the GS side's worker (at the vblank, LoadImage / StoreImage) */
                 u32 gw = kh1_gsq_us_wait - gwait0;
-                u32 known = walk + (kh1_gsq_on ? 0 : (us_frame - frame0) + (us_draw - draw0)) + (kh1_vita_us_wait - wait0) + gw;
-                vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them), %u the "
-                     "frame's commands, %u present (with the GS worker: the worker's), %u the vblank wait, %u waiting for the GS worker, %u the rest "
-                     "(the game's code)\n", all / 1000, walk / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
+                /* stage 0: a put that waits for room in the ring waits inside a walk, counted in both: once here */
+                extern u32 kh1_dma_walk_ring_us;
+                static u32 ring0;
+                u32 rw = kh1_dma_walk_ring_us - ring0;
+                u32 known;
+                ring0 = kh1_dma_walk_ring_us;
+                if (rw > walk) rw = walk;
+                walk -= rw;
+                known = walk + (kh1_gsq_on ? 0 : (us_frame - frame0) + (us_draw - draw0)) + (kh1_vita_us_wait - wait0) + gw;
+                vlog("kh1-vita: split: %u ms in all, %u in the DMA walks (VU1 and recording in them; not counting %u ms "
+                     "waiting for room in the GS worker's ring, which is in the GS worker wait), %u the frame's commands, %u present (with the GS worker: the worker's), %u the vblank wait, %u waiting for the GS worker, %u the rest "
+                     "(the game's code)\n", all / 1000, walk / 1000, rw / 1000, (us_frame - frame0) / 1000, (us_draw - draw0) / 1000,
                      (kh1_vita_us_wait - wait0) / 1000, gw / 1000, all > known ? (all - known) / 1000 : 0);
+            }
+            { /* native-plan.md stage 0: the walks by channel, VIF1's data into VU memory, the ring's copies */
+                extern u32 kh1_dma_ch_us[3], kh1_dma_ch_sends[3], kh1_dma_feed_us, kh1_dma_feed_words, kh1_gsq_puts,
+                    kh1_gsq_put_bytes_n;
+                static u32 cu0[3], cs0[3], fu0, fw0, gp0, gb0;
+                vlog("kh1-vita: walk split (ring waits included): VIF0 %u ms (%u sends), VIF1 %u ms (%u sends; VU1 programs and their hand-off "
+                     "in the vu1 lines, %u ms feeding %u K words into VU memory), GIF %u ms (%u sends); %u ops, %u KiB "
+                     "into the GS worker's ring\n", (kh1_dma_ch_us[0] - cu0[0]) / 1000, kh1_dma_ch_sends[0] - cs0[0],
+                     (kh1_dma_ch_us[1] - cu0[1]) / 1000, kh1_dma_ch_sends[1] - cs0[1], (kh1_dma_feed_us - fu0) / 1000,
+                     (kh1_dma_feed_words - fw0) >> 10, (kh1_dma_ch_us[2] - cu0[2]) / 1000, kh1_dma_ch_sends[2] - cs0[2],
+                     kh1_gsq_puts - gp0, (kh1_gsq_put_bytes_n - gb0) >> 10);
+                memcpy(cu0, kh1_dma_ch_us, sizeof cu0);
+                memcpy(cs0, kh1_dma_ch_sends, sizeof cs0);
+                fu0 = kh1_dma_feed_us;
+                fw0 = kh1_dma_feed_words;
+                gp0 = kh1_gsq_puts;
+                gb0 = kh1_gsq_put_bytes_n;
             }
         }
         /* session 143: the log's own cost (each line an sceIoWrite on the thread that prints it) and the sends
          * with a problem, whose tag lists only the first few print (dmawalk.h) */
+        threads_line();
         vlog("kh1-vita: log: %u writes, %u ms in them; %u bad DMA sends (%u so far, the first %d printed)\n",
              log_writes - logn0, (us_log - log0) / 1000, kh1_dma_bad_sends - bad0, kh1_dma_bad_sends, KH1_DMA_BAD_SHOWN);
         log0 = us_log;
@@ -708,6 +766,7 @@ int main(int argc, char **argv) {
         __asm__ volatile("vmrs %0, fpscr" : "=r"(fpscr));
         __asm__ volatile("vmsr fpscr, %0" : : "r"(fpscr | (1u << 24)));
     }
+    kh1_vita_thread_note(sceKernelGetThreadId(), "game"); /* native-plan.md stage 0: the `threads:` line */
     { /* the main thread's stack below its own MAIN_OWN: the coroutines' stacks */
         SceKernelThreadInfo ti;
         volatile u8 here;
@@ -847,6 +906,7 @@ int main(int argc, char **argv) {
         /* session 141: on the third core, out of the game's and the GS worker's way */
         SceUID t = sceKernelCreateThread("kh1_watchdog", watchdog, 0x10000100, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
         if (t >= 0) sceKernelStartThread(t, 0, 0);
+        kh1_vita_thread_note(t, "watchdog");
     }
     if (gpu_on && kh1_vita_gputime) { /* 2026-10-31: the scenes' GPU time (gxm.c), a poll on any core above the game's */
         SceUID t = sceKernelCreateThread("kh1_gputime", kh1_vita_gputime_thread, 0x10000100 - 8, 0x2000, 0, 0, 0);

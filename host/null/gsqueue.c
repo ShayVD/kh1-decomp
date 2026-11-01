@@ -48,6 +48,7 @@ static volatile int worker_sleeps;
 /* ---- the thread and its two semaphores (0: work for the worker, 1: room or done for the producer) ---- */
 static void worker(void);
 #ifdef KH1_VITA
+void kh1_vita_thread_note(int uid, const char *name); /* host/vita/main.c: the watchdog's `threads:` line */
 #include <psp2/kernel/cpu.h>
 #include <psp2/kernel/threadmgr.h>
 static SceUID sem[2];
@@ -79,6 +80,7 @@ static int gq_thread_start(void) {
         if ((gq_sem[i] = sceKernelCreateSema(names[i], 0, 0, 0x7FFFFFFF, 0)) < 0) return -1;
     t = sceKernelCreateThread("kh1_gpu", gq_entry, 0x10000100, 0x200000, 0, SCE_KERNEL_CPU_MASK_USER_2, 0);
     if (t < 0) return -1;
+    kh1_vita_thread_note(t, "gpu");
     return sceKernelStartThread(t, 0, 0) < 0 ? -1 : 0;
 }
 static int thread_start(void) {
@@ -90,6 +92,7 @@ static int thread_start(void) {
      * commands run here too, and gxm.c compiles a new shader with SceShaccCg in them */
     t = sceKernelCreateThread("kh1_gs", worker_entry, 0x10000100, 0x200000, 0, SCE_KERNEL_CPU_MASK_USER_1, 0);
     if (t < 0) return -1;
+    kh1_vita_thread_note(t, "gs worker");
     return sceKernelStartThread(t, 0, 0) < 0 ? -1 : 0;
 }
 #else
@@ -309,14 +312,23 @@ void kh1_gsq_wait(u32 pos) {
     if (kh1_gsq_on) q_wait_tail(&gsq, pos);
 }
 
+u32 kh1_gsq_puts, kh1_gsq_put_bytes_n; /* native-plan.md stage 0: ops and bytes the game thread copied into the ring */
 void kh1_gsq_put(KH1GsqFn fn, const u32 *args, u32 nargs, const u32 *data, u32 nqw) {
     if (!kh1_gsq_on) fn(args, data, nqw);
-    else q_put(&gsq, fn, args, nargs, data, nqw * 16, 1);
+    else {
+        kh1_gsq_puts++;
+        kh1_gsq_put_bytes_n += nqw * 16;
+        q_put(&gsq, fn, args, nargs, data, nqw * 16, 1);
+    }
 }
 
 void kh1_gsq_put_bytes(KH1GsqFn fn, const u32 *args, u32 nargs, const void *data, u32 bytes) {
     if (!kh1_gsq_on) fn(args, (const u32 *)data, (bytes + 15) / 16);
-    else q_put(&gsq, fn, args, nargs, data, bytes, 0);
+    else {
+        kh1_gsq_puts++;
+        kh1_gsq_put_bytes_n += bytes;
+        q_put(&gsq, fn, args, nargs, data, bytes, 0);
+    }
 }
 
 int kh1_gsq_start(u32 bytes) {

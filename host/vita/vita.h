@@ -3,6 +3,8 @@
 #define KH1_VITA_H
 
 /* display.c */
+/* native-plan.md stage 0: a thread the watchdog's `threads:` line reports (main.c) */
+void kh1_vita_thread_note(int uid, const char *name);
 int kh1_vita_display_init(const void *frame_copy_send);
 void kh1_vita_present_on(void);
 void kh1_vita_status(unsigned long frames, unsigned reads);
