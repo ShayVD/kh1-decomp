@@ -173,7 +173,8 @@ macro's body).
 KH1_HOST_GSQ_CHECK=50 KH1_HOST_GXM=50 KH1_HOST_GXM_HASH=1 KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1 KH1_HOST_VU1=1
 KH1_HOST_VU1TR=1 KH1_HOST_NATIVE=1`, the gxmcheck binary): all 140 GS digests and 280 GPU target hashes identical
 with `KH1_HOST_NATREF=0`, `=1`, and `=1 KH1_HOST_NATBULK=0 KH1_HOST_NATPOOL=262144` (a 256 KiB pool, so it
-wraps often). tests/selftest.sh passes. **Worker profile** (callgrind as above, trace 5, frames 7000-7060, thread 3):
+wraps often). After #207 (natskin) the same with `KH1_HOST_NATSKIN=1`: natref 0 and 1
+identical there too. tests/selftest.sh passes. **Worker profile** (callgrind as above, trace 5, frames 7000-7060, thread 3):
 
 | | natref=0 | natref=1 |
 |---|---|---|
@@ -186,7 +187,7 @@ wraps often). tests/selftest.sh passes. **Worker profile** (callgrind as above, 
 On the Vita the bigger part should be memory, not instructions: the worker no longer reads every byte of each
 payload (written on the game's core) or writes it again into the recording queue (~25 MB a window, the
 estimate in vita-build.md). **Not yet measured on a Vita**: the `gs worker ops:` line's `w_native_ref` time (this
-build's out/vita/kh1.elf has it at 0x810dce24, w_native at 0x810dce1c; add the log's offset) with natref=1 against
+build's out/vita/kh1.elf has it at 0x810dcedc, w_native at 0x810dced4; add the log's offset) with natref=1 against
 w_native with natref=0, and the `gs worker:` line's pool waits (should be ~0). **Next on the worker's native path**:
 prim_state's texture lookup per op (~25 M here), then stage 4's uploads.
 
