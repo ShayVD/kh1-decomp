@@ -1,0 +1,49 @@
+# From a save in Agrabah to the world map and back (session 142; docs/native-overlays.md "Session 142"):
+#   KH1_HOST_OVL=stub KH1_HOST_MC=mc0 KH1_HOST_CD=go KH1_HOST_ISO=en.iso KH1_HOST_PAD=tests/host/pads/wm_en.txt \
+#   KH1_HOST_FRAMES=12000 KH1_HOST_QUIET=1 KH1_HOST_TRACE=1 out/host/kh1-host
+# mc0: a copy of the user's card with saves 04-06 (never commit them); save 04 is Agrabah: Storage (world
+# 8, room 7). en.iso: the English disc (c8ee8c77...). KH1_HOST_OVL=stub: func_001b9c60 calls the
+# xl_limit.x entry while the old overlay is still there on the way to the ship (answered 0).
+#   1300-2100   START, DOWN to LOAD, CIRCLE, slot 1 (the cursor on the newest save, 06)
+#   2340-2380   DOWN twice: save 04 (the card lists the saves in name order, host/port/mc_dir.c)
+#   2500-3100   CIRCLE: load it and confirm; the field from ~3,300
+#   4600-4800   UP to the command menu's 4th slot (Save), CIRCLE: the Save Menu
+#   5300-5500   DOWN twice: Gummi Ship; 5800 CIRCLE, 6300 CIRCLE: "Board the gummi ship?" yes
+#   ~6330       wm.x loads as native C; "Select World" with Agrabah, Normal Drive, Depart (~6600)
+#   7000-7800   CIRCLE three times: Depart; gumi/*.bin load, then Agrabah again (al08.ard), the HUD by ~8000
+1300 START
+1302 -
+1600 DOWN
+1602 -
+1800 CIRCLE
+1802 -
+2100 CIRCLE
+2102 -
+2340 DOWN
+2342 -
+2380 DOWN
+2382 -
+2500 CIRCLE
+2502 -
+2800 CIRCLE
+2802 -
+3100 CIRCLE
+3102 -
+4600 UP
+4610 -
+4800 CIRCLE
+4810 -
+5300 DOWN
+5310 -
+5500 DOWN
+5510 -
+5800 CIRCLE
+5810 -
+6300 CIRCLE
+6310 -
+7000 CIRCLE
+7010 -
+7400 CIRCLE
+7410 -
+7800 CIRCLE
+7810 -

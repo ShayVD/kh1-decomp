@@ -65,12 +65,12 @@ s32 func_00f44e78(s32 arg0, s32 arg1) {
     return func_00f43fd8(arg0);
 }
 
-void func_00f451f8(void) {
-    func_00f44078();
+void func_00f451f8(s32 arg0, s32 arg1, s32 arg2) {
+    func_00f44078(arg0, arg1, arg2);
 }
 
-void func_00f45210(void) {
-    func_00f44000();
+void func_00f45210(s32 arg0, s32 arg1) {
+    func_00f44000(arg0, arg1);
 }
 
 void func_00f45520(s32 arg0, s32 arg1) {
@@ -81,8 +81,8 @@ void func_00f45dc8(s32 arg0, s32 arg1) {
     func_001c0310(-1, &func_00f45c90, arg0, arg1);
 }
 
-void func_00f46c78(void) {
-    func_001c0688();
+void func_00f46c78(s32 arg0) {
+    func_001c0688(arg0);
     if ((func_00f41448() == 0) && (D_00F9B2EC == 0)) {
         func_00f309d0(0);
     }

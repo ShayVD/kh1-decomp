@@ -12,6 +12,7 @@
  * not proved by a boot (docs/modules.md "Session 54"). */
 #include "common.h"
 #include "platform/thread.h"
+#include "platform/ovl.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004E.h"
 #include "data/bss_004F.h"
@@ -70,6 +71,9 @@ s32 func_001205f0(char *name, u8 *buf) {
     PlatFlushCache(0);
 #endif
     PlatFlushCache(2);
+    /* a port's native overlays (no code on the PS2): gumisave.c's func_001b9c60 loads wm.x into the
+     * overlay area this way and runs it at once (session 142) */
+    PlatOvlLoaded(name, buf, D_002C5C48);
     return D_002C5C48;
 }
 

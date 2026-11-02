@@ -28,10 +28,20 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 BASE = 0x00F20000
 MEM_BASE = 0x6A0000
 # the overlay area's names: its functions, and data anywhere up to 0x00FE0000 (session 136:
-# xs_dh_break.x's buffers past its file, D_00F317F0 ... D_00FA2400)
-NAME_RX = re.compile(r"\b(func_00f2[0-9a-f]{4}|D_00F[2-9A-D][0-9A-F]{4})\b")
+# xs_dh_break.x's buffers past its file, D_00F317F0 ... D_00FA2400). Functions too: wm.x's code
+# runs to 0x00F87E60 (it was func_00f2xxxx only, which covered the first 64 KiB), and its buffers
+# to 0x0109xxxx (D_01067FE0 ... D_0108FAA0)
+NAME_RX = re.compile(r"\b(func_00f[2-9a-d][0-9a-f]{4}|D_00F[2-9A-F][0-9A-F]{4}|D_010[0-9A-F]{5})\b")
 # a function definition: the name, its parameters and `{` (a prototype has its `;` first)
-HEAD_RX = re.compile(r"\b(func_00f2[0-9a-f]{4})\s*\([^;{]*?\)\s*\{")
+HEAD_RX = re.compile(r"\b(func_00f[2-9a-d][0-9a-f]{4})\s*\([^;{]*?\)\s*\{")
+
+
+def read_c(path):
+    """a C file without its comments: a header comment naming another function with a `(`
+    (wm.x's "the twin of gb.x func_00f26458 (tools/ovl/twins.py)") read as that one's definition
+    and hid the real one"""
+    text = open(os.path.join(ROOT, path), errors="replace").read()
+    return re.sub(r"/\*.*?\*/|//[^\n]*", lambda m: "\n" * m.group(0).count("\n") or " ", text, flags=re.S)
 
 
 def pins():
@@ -40,6 +50,21 @@ def pins():
         if line.strip() and not line.startswith(("#", "name")):
             name, size, sha = line.rstrip("\n").split("\t")[:3]
             out[name] = (int(size), sha)
+    return out
+
+
+def extra_pins(name):
+    """ovl/NAME/pins.tsv (session 142): other files of the same name the native C also runs, as
+    `size<TAB>sha256<TAB>what` rows: only files whose code is byte-identical to the pinned one's
+    and whose data differs only in ways the C reads from the loaded file (the English patch's wm.x:
+    its world names and their offset tables)"""
+    path = os.path.join(ROOT, "ovl", name, "pins.tsv")
+    out = []
+    if os.path.exists(path):
+        for line in open(path):
+            if line.strip() and not line.startswith(("#", "size")):
+                size, sha = line.rstrip("\n").split("\t")[:2]
+                out.append((int(size), sha))
     return out
 
 
@@ -83,7 +108,7 @@ def bodies(srcs):
     """{func: (source, the names its body uses)}, a body running to the next definition"""
     out = {}
     for s in srcs:
-        text = open(os.path.join(ROOT, s), errors="replace").read()
+        text = read_c(s)
         heads = list(HEAD_RX.finditer(text))
         for i, m in enumerate(heads):
             end = heads[i + 1].start() if i + 1 < len(heads) else len(text)
@@ -136,7 +161,7 @@ def build(cc, cflags, out, nm):
         names = set(funcs)
         heads = set()
         for s in srcs:
-            text = open(os.path.join(ROOT, s), errors="replace").read()
+            text = read_c(s)
             names |= set(NAME_RX.findall(text))
             heads |= set(HEAD_RX.findall(text))
         missing = [f for f in funcs if f not in heads]
@@ -155,10 +180,13 @@ def build(cc, cflags, out, nm):
         mine, bad = [], []
         for s in srcs:
             obj = os.path.join(od, s.replace("/", "__") + ".o")
-            r = subprocess.run([cc] + cflags + ["-Iovl/" + name, "-include", "platform/ovlsdk.h", "-include", hdr, "-c", "-o", obj, s], cwd=ROOT,
+            # a near-miss draft is plain C with no includes (tools/ovl/hand.py puts ovl.h in front)
+            pre = ["-include", "ovl.h"] if s.startswith("nonmatchings/") else []
+            r = subprocess.run([cc] + cflags + ["-Iovl/" + name, "-include", "platform/ovlsdk.h"] + pre + ["-include", hdr, "-c", "-o", obj, s], cwd=ROOT,
                                capture_output=True, text=True, env=dict(os.environ, LC_ALL="C"))
             if r.returncode:
-                bad.append((s, (r.stderr.strip().splitlines() or ["?"])[-1]))
+                errs = [ln for ln in r.stderr.splitlines() if "error:" in ln] or r.stderr.strip().splitlines() or ["?"]
+                bad.append((s, errs[0]))
             else:
                 mine.append(obj)
         defined = nm(mine, True) if mine else set()
@@ -169,6 +197,8 @@ def build(cc, cflags, out, nm):
                 "; %d files do not compile, first %s: %s" % (len(bad), bad[0][0], bad[0][1]) if bad else ""))
             if missing:
                 print("  missing: " + " ".join(missing[:40]) + (" ..." if len(missing) > 40 else ""))
+            for b in bad[:None if os.environ.get("KH1_OVL_ERRORS") else 0]:
+                print("  %s: %s" % b)
             continue
         # the overlay's data names: their place in the memory map's overlay area
         data = sorted(n for n in names if n.startswith("D_"))
@@ -183,6 +213,7 @@ def build(cc, cflags, out, nm):
                 continue
             fix.append((a, t, name + "_" + fn[5:] if k == "func" else None))
         gen.append((name, p[name], name + "_" + funcs[0][5:], fix, data))
+        gen += [(name, pin, name + "_" + funcs[0][5:], fix, None) for pin in extra_pins(name)]
         objs += mine
         linked.append(name)
     src = os.path.join(out, "ovl", "modules.c")
@@ -191,6 +222,8 @@ def build(cc, cflags, out, nm):
         f.write("/* generated by tools/host/ovlnative.py: the native overlays (include/platform/ovl.h) */\n")
         f.write('#include "common.h"\n#include "platform/ovl.h"\n')
         for name, (size, sha), entry, fix, data in gen:
+            if data is None:  # another pin of the overlay before: its tables are written
+                continue
             for fn in sorted(set(x[2] for x in fix if x[2])):
                 f.write("void %s(void);\n" % fn)
             f.write("int %s();\n" % entry)
@@ -211,6 +244,7 @@ def build(cc, cflags, out, nm):
     # the data names as linker-script symbols (an assembler .set to another object's symbol
     # stays undefined): census.py appends build.script to its aliases.ld
     build.script = "".join("PROVIDE(%s_%s = kh1_memmap + 0x%X);\n" % (name, d, int(d[2:], 16) - MEM_BASE)
-                           for name, _p, _e, _f, data in gen for d in data)
-    print("ovl: native overlays linked: %s" % (" ".join(n + ".x" for n in linked) or "none"))
+                           for name, _p, _e, _f, data in gen for d in data or ())
+    print("ovl: native overlays linked: %s" % (" ".join(n + ".x" + ("" if not extra_pins(n) else " (+%d pin%s)" % (
+        len(extra_pins(n)), "s" if len(extra_pins(n)) > 1 else "")) for n in linked) or "none"))
     return objs, linked

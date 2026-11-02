@@ -55,7 +55,7 @@ void func_00f43ae0(void) {
     D_00F864C0 = &D_00F86500;
     func_001bb480();
     func_00f204d8();
-    h = func_001c00e8(-1, func_00f436d0, 0);
+    h = func_001c00e8(-1, func_00f436d0, KH1_Q(0));
     while (func_001bff70(h)) {
         func_001bfac8();
     }

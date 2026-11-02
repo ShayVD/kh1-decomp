@@ -4,7 +4,7 @@
 typedef struct { f32 x0; f32 x4; f32 x8; f32 xC; f32 x10; } Bob;
 extern Bob D_00FB5ED8[];
 
-void func_00f787b0(s32 i) {
+KH1_V0(f32) func_00f787b0(s32 i) {
     f32 d;
     /* do { } while (0) (a macro in the original, likely) fixes the v0/v1 choice (permuter) */
     do {
@@ -16,4 +16,5 @@ void func_00f787b0(s32 i) {
     } while (0);
     D_00FB5ED8[i].x4 += d;
     D_00FB5ED8[i].x8 += D_00FB5ED8[i].x4;
+    KH1_V0_RETURN(D_00FB5ED8[i].x8); /* f0 still holds the new x8 */
 }

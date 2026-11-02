@@ -82,27 +82,35 @@ void PlatOvlLoaded(const char *name, void *buf, s32 size) {
     }
     if (buf != (void *)D_00F20000) return;
     current = 0;
+    hex[0] = 0;
     for (i = 0; i < kh1_ovl_module_count; i++) {
         const KH1OvlModule *m = &kh1_ovl_modules[i];
+        int k, named = 0;
         if (!same_name(name, m->file)) continue;
-        if ((u32)size != m->size) {
-            printf("kh1-ovl: %s: %d bytes, not the pinned %u: its native C stays off\n", name, (int)size, m->size);
-            return;
-        }
-        kh1_sha256_hex(D_00F20000, m->size, hex);
-        if (strcmp(hex, m->sha256) != 0) {
-            printf("kh1-ovl: %s is not the pinned file (sha256 %.12s...): its native C stays off\n", name, hex);
-            return;
-        }
+        /* session 142: an overlay can have more than one pinned file (ovl/NAME/pins.tsv: the English
+         * patch's wm.x), one module row each */
+        if ((u32)size != m->size) continue;
+        if (!hex[0]) kh1_sha256_hex(D_00F20000, (u32)size, hex);
+        if (strcmp(hex, m->sha256) != 0) continue;
+        for (k = 0; k < i; k++)
+            if (same_name(name, kh1_ovl_modules[k].file)) named++;
         for (i = 0; i < m->nfix; i++) {
             const KH1OvlFix *f = &m->fix[i];
             u32 v = f->func ? (u32)(unsigned long)f->func : (u32)(unsigned long)(kh1_memmap + f->target - KH1_MEM_BASE);
             memcpy(kh1_memmap + f->at - KH1_MEM_BASE, &v, 4);
         }
         current = m;
-        printf("kh1-ovl: %s loaded: native C (%d pointers fixed up)\n", name, m->nfix);
+        printf("kh1-ovl: %s loaded: native C (%d pointers fixed up%s)\n", name, m->nfix,
+               named ? "; another pinned file of it" : "");
         return;
     }
+    for (i = 0; i < kh1_ovl_module_count; i++)
+        if (same_name(name, kh1_ovl_modules[i].file)) {
+            if (!hex[0]) kh1_sha256_hex(D_00F20000, (u32)size, hex);
+            printf("kh1-ovl: %s (%d bytes, sha256 %.12s...) is not a pinned file: its native C stays off\n", name,
+                   (int)size, hex);
+            return;
+        }
     i = (int)strlen(name);
     if (i > 2 && name[i - 2] == '.' && (name[i - 1] | 0x20) == 'x') /* session 136: music also loads here */
         printf("kh1-ovl: %s loaded (%d bytes): no native C\n", name, (int)size);

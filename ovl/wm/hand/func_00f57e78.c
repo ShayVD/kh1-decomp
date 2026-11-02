@@ -35,7 +35,7 @@ void func_00f57e78(s32 d) {
     s32 z = 0;
     s32 y;
     f32 fx, fy, fz, t;
-    task = func_001c00e8(-1, func_00f55310, 0);
+    task = func_001c00e8(-1, func_00f55310, KH1_Q(0));
     D_00F9B540->f60 = D_00F9B540->f5e;
     q = D_00F9B540->ang / 1024;
     k = q * 4 + 8;

@@ -9,7 +9,7 @@ typedef struct { u8 pad[1344]; s32 f1344; } G2e0b8;
 extern B2e0b8 D_00FBB5D0[];
 extern G2e0b8 *D_00F864C0;
 extern f32 D_002BBDEC;
-A2e0b8 *func_00f2cae8(void);
+A2e0b8 *func_00f2cae8(s32);
 O2e0b8 *func_00f3b4e0(s32);
 R2e0b8 *func_00f3f260(s32, s32);
 s32 func_00f680c0(s32);
@@ -33,7 +33,7 @@ void func_00f2e0b8(s32 arg) {
     f32 acc;
     s32 g;
 
-    s = func_00f2cae8();
+    s = func_00f2cae8(arg);
     v = D_002BBDEC * 2000.0f;
     acc = D_002BBDEC * 40.0f;
     idx = s->idx;

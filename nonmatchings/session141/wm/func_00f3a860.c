@@ -19,7 +19,7 @@ void sceVu0UnitMatrix(OvlMtx);
 void sceVu0TransMatrix(OvlMtx, OvlMtx, OvlVec);
 void sceVu0MulMatrix(OvlMtx, OvlMtx, OvlMtx);
 void sceVu0CopyMatrix(OvlMtx, OvlMtx);
-s32 func_00f3d978(f32, f32, OvlVec, s32);
+s32 func_00f3d978(OvlVec, s32, f32, f32);
 s32 func_00f3d758(OvlVec, f32);
 
 s32 func_00f3a860(s32 *a, s32 *b) {
@@ -95,7 +95,7 @@ s32 func_00f3a860(s32 *a, s32 *b) {
             n = 2;
             hit = 0;
             for (j = 0; j < 2; j++) {
-                if (func_00f3d978(f, f * 0.5f, m[j][3], 1)) {
+                if (func_00f3d978(m[j][3], 1, f, f * 0.5f)) {
                     sceVu0CopyMatrix(o->mA0, m[j]);
                     hit = 1;
                     break;

@@ -12,8 +12,8 @@ void func_00f59870(s32, s32, s32, s32, s32);
 
 void func_00f553b8(s32 arg0) {
     /* register pin: gcc otherwise rotates the loop registers (s1/s2/s3) */
-    register s32 k asm("s2");
-    register s32 n asm("s1");
+    register s32 k KH1_REG("s2");
+    register s32 n KH1_REG("s1");
     s32 i;
     s32 v;
 

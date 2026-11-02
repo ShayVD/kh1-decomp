@@ -4,11 +4,11 @@
 void func_001efaf0(void);
 void func_001efb18(s32, s32);
 s32 func_001efbb8(s32);
-s32 func_00f2b808(void);
+s32 func_00f2b808(s32, s32);
 extern s32 D_00FBB574;
 extern s32 D_00FBB578;
-s32 func_00f2b940(void) {
-    s32 r = func_00f2b808();
+s32 func_00f2b940(s32 arg0, s32 arg1) {
+    s32 r = func_00f2b808(arg0, arg1);
     if (r < 0) {
         return 0;
     }

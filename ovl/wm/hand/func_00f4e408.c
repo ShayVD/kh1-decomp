@@ -1,19 +1,19 @@
 /* wm.x func_00f4e408: matched by hand. */
 #include "ovl.h"
 
-s32 func_00f4afb8(void);
-s32 func_00f4cad0(void);
+s32 func_00f4afb8(s32);
+s32 func_00f4cad0(s32);
 extern s32 D_00FA5AE8;
 
-f32 func_00f4e408(void) {
+f32 func_00f4e408(s32 arg0) {
     switch (D_00FA5AE8) {
     case 0:
-        if (func_00f4afb8() > 0) {
+        if (func_00f4afb8(arg0) > 0) {
             break;
         }
         return 0.5f;
     case 1:
-        if (func_00f4cad0() == 0) {
+        if (func_00f4cad0(arg0) == 0) {
             return 0.5f;
         }
         break;

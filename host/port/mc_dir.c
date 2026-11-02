@@ -18,6 +18,7 @@
  * the PS2 build. */
 #include <dirent.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <sys/stat.h>
@@ -200,13 +201,16 @@ static void mc_entry(unsigned char *e, const char *name, const struct stat *st) 
     strncpy((char *)e + 0x20, name, 31);
 }
 
+static int mc_namecmp(const void *a, const void *b) { return strcmp(a, b); }
+
 int PlatMcGetDir(int port, int slot, const char *name, unsigned int mode, int maxent, void *table) {
     char card[512], dirp[600], fp[700], *pat;
     unsigned char *out = table;
+    static char names[64][32];
     struct dirent *de;
     struct stat st;
     DIR *d;
-    int n = 0;
+    int n = 0, nde, i;
     if (!mc_card(port)) return done(MC_NO_CARD);
     if (mode) return done(0); /* the game asks once (mode 0) for up to maxent */
     mc_norm(port, name, card, sizeof card);
@@ -220,13 +224,19 @@ int PlatMcGetDir(int port, int slot, const char *name, unsigned int mode, int ma
         if (n < maxent && mc_match(pat, ".")) mc_entry(out + 64 * n++, ".", &st);
         if (n < maxent && mc_match(pat, "..")) mc_entry(out + 64 * n++, "..", &st);
     }
-    while (n < maxent && (de = readdir(d)) != 0) {
+    /* in name order (session 142): readdir's order depends on how the host made the folder, and the
+     * load menu lists the saves in the order it gets them, so a copied card moved a pad script's slot */
+    nde = 0;
+    while (nde < 64 && (de = readdir(d)) != 0) {
         if (de->d_name[0] == '.' || strlen(de->d_name) > 31 || !mc_match(pat, de->d_name)) continue;
-        snprintf(fp, sizeof fp, "%s/%s", dirp, de->d_name);
-        if (stat(fp, &st) != 0) continue;
-        mc_entry(out + 64 * n++, de->d_name, &st);
+        strcpy(names[nde++], de->d_name);
     }
     closedir(d);
+    qsort(names, nde, sizeof names[0], mc_namecmp);
+    for (i = 0; i < nde && n < maxent; i++) {
+        snprintf(fp, sizeof fp, "%s/%s", dirp, names[i]);
+        if (stat(fp, &st) == 0) mc_entry(out + 64 * n++, names[i], &st);
+    }
     return done(n);
 }
 

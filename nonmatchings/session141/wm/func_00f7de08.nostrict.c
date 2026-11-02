@@ -128,7 +128,7 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     func_00f7a1a8(cols, xs, ys, 72);
     top = D_0108FA60;
     p = top + 1;
-    top->q = 0;
+    top->q = KH1_Q(0);
 
     p->d[0] = 0x1000000000000002;
     p->d[1] = 14;
@@ -163,7 +163,7 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     col[3] = a * 77 / 128;
     func_00f799e0(tex + 0x20000, tex + 0x20800, 481, 10, 32, 32, 4, col, 0, 72, 0, 0x5001D);
     top = D_0108FA60;
-    top->q = 0;
+    top->q = KH1_Q(0);
     p = top + 1;
     p->d[1] = 14;
     p->d[0] = 0x1000000000000002;
@@ -204,7 +204,7 @@ void func_00f7de08(Arg *arg, s32 a, s32 sel)
     if (arg->list[0] != 0 || arg->x4 != 0) {
         top = D_0108FA60;
         p = top + 1;
-        top->q = 0;
+        top->q = KH1_Q(0);
         p->d[0] = 0x1000000000000002;
         p->d[1] = 14;
         p++;

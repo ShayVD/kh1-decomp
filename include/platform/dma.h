@@ -14,7 +14,11 @@
  * chain by hand (PlatDmaPutVif1Qwc(0), PlatDmaPutVif1Tadr(tag & 0x0fffffff),
  * PlatDmaPutStat(2) to clear channel 1's interrupt status, a cache flush,
  * then PlatDmaPutVif1Chcr(0x145 or 0x105): STR, chain mode, DIR from memory,
- * 0x40 TTE), and src/model/mdlgs.nostrict.c clears channels 1 and 2's status
+ * 0x40 TTE); wm.x and gb.x do the same in their draw-list nodes (session
+ * 142: wm func_00f668d0 / f67170 / f671d8, gb func_00f3f7d8 / f40078 /
+ * f400e0), and start a GIF chain that way on channel 2 (PlatDmaPutGifQwc /
+ * Tadr, PlatDmaPutStat(4), PlatDmaPutGifChcr: wm func_00f67040 / f670c8, gb
+ * func_00f3ff48 / f3ffd0); and src/model/mdlgs.nostrict.c clears channels 1 and 2's status
  * (PlatDmaPutStat(6)), masks the VIF0 / VIF1 error interrupts
  * (PlatVifPutErr(0 / 1, 6)) and waits for VIF1 to idle with an empty FIFO
  * (PlatVif1GetStat() & PLAT_VIF1_STAT_BUSY).  On the PS2 these are the 32-bit
@@ -45,6 +49,9 @@
 #define PlatDmaPutVif1Chcr(v) (*(volatile u32 *)0x10009000 = (v))
 #define PlatDmaPutVif1Qwc(v) (*(volatile u32 *)0x10009020 = (v))
 #define PlatDmaPutVif1Tadr(v) (*(volatile u32 *)0x10009030 = (v))
+#define PlatDmaPutGifChcr(v) (*(volatile u32 *)0x1000a000 = (v))
+#define PlatDmaPutGifQwc(v) (*(volatile u32 *)0x1000a020 = (v))
+#define PlatDmaPutGifTadr(v) (*(volatile u32 *)0x1000a030 = (v))
 #define PlatVifPutErr(n, v) (*(volatile u32 *)(0x10003820 + (n) * 0x400) = (v))
 #define PlatVif1GetStat() (*(volatile u32 *)0x10003c00)
 #else
@@ -56,6 +63,9 @@ void PlatDmaPutStat(u32 v);
 void PlatDmaPutVif1Chcr(u32 v);
 void PlatDmaPutVif1Qwc(u32 v);
 void PlatDmaPutVif1Tadr(u32 v);
+void PlatDmaPutGifChcr(u32 v);
+void PlatDmaPutGifQwc(u32 v);
+void PlatDmaPutGifTadr(u32 v);
 void PlatVifPutErr(int n, u32 v);
 u32 PlatVif1GetStat(void);
 #endif

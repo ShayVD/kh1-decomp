@@ -6,7 +6,7 @@
 typedef struct { f32 pos[3]; s32 rot[3]; f32 size[3]; s32 pad; s32 box; f32 rad; } E;
 typedef struct { s32 pad; s32 n; E e[1]; } H;
 typedef struct { f32 *p; f32 r; H *h; f32 (*m)[4]; s32 hit; } A;
-s32 func_00f3caf0(f32 *, f32 *, f32, f32);
+s32 func_00f3caf0(f32 *, f32, f32 *, f32);
 s32 func_00f3cb90(f32 *, f32 *, f32 *, OvlMtx, f32);
 
 void func_00f3d300(A *arg0) {
@@ -29,7 +29,7 @@ void func_00f3d300(A *arg0) {
         PlatVu0CopyMatrix(m, arg0->m);
         PlatVu0ApplyMatrix(m[3], m, pos);
         if (h->n > 0 || e->box == 0) {
-            if (func_00f3caf0(arg0->p, m[3], arg0->r, e->rad) == 0) continue;
+            if (func_00f3caf0(arg0->p, arg0->r, m[3], e->rad) == 0) continue;
             if (e->box == 0) goto hit;
         }
         size[0] = fabsf(e->size[0]);

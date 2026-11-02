@@ -5,7 +5,14 @@ f32 func_00f2c7f8(void);
 f32 *func_00f2c848(void);
 s32 func_00f33a90(void);
 f32 *func_00f35058(s32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3cb90(f32 *, s32, f32, s32, s32);
+#else
+s32 func_00f3cb90(f32 *, s32, s32, s32, f32);
+static __inline__ s32 ee_00f3cb90(f32 * x0, s32 x1, f32 x2, s32 x3, s32 x4) { return func_00f3cb90(x0, x1, x3, x4, x2); }
+#undef func_00f3cb90
+#define func_00f3cb90 ee_00f3cb90
+#endif
 extern OvlMtx D_00F8C240;
 
 s32 func_00f3d850(s32 arg0, s32 arg1, s32 arg2, f32 *out) {

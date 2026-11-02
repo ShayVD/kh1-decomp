@@ -68,7 +68,7 @@ void func_00f7c510(s32 idx) {
     }
     Y += 48;
     top = D_0108FA60;
-    top->q = 0;
+    top->q = KH1_Q(0);
     n = D_00FB6408.n[idx];
     p = top + 1;
     if (n > 0) {

@@ -31,7 +31,7 @@ extern Pad D_002C5AD0;
 extern u8 D_0108F298[];
 u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 s32 func_001bc510(void); CONTEXT_ONLY s32 func_001bc510() { return 0; }
-Snd *func_001f31a8(Cfg *);
+Snd *func_001f31a8(Cfg *, s32);
 void func_001f3dc0(s32);
 Item *func_00f6b6a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00f47110(void);
@@ -45,9 +45,9 @@ void func_00f6b5d0(s32, s32, s32);
 void func_00f6ade8(s32);
 void func_00f6ae60(Item *);
 s32 func_001be278(void); CONTEXT_ONLY s32 func_001be278() { return 0; }
-s32 func_001be010(void);
+s32 func_001be010(s32);
 void func_001be320(s32);
-void func_001be430(void);
+void func_001be430(s32);
 void func_0020be10(s32);
 void func_0020bda8(s32);
 void func_00f6ed80(s32);
@@ -120,7 +120,7 @@ void func_00f75d80(void) {
     D_0108F550 = 0;
     D_00FB5AD0.xE = D_00FB4D2C;
     D_0108F564 = 0;
-    snd = func_001f31a8(&D_00FB5AD0);
+    snd = func_001f31a8(&D_00FB5AD0, 1);
     func_001f3dc0(D_0108F18C);
     func_00f6b6a0(18, 0, 2, 1, 0, 15, 1, 4, D_00FB4C24, D_00FB4C28, 0, D_00FB4C2C, 0, 0, 0, 0, 0, 256, wait);
 main:
@@ -317,7 +317,7 @@ state:
         func_00f6ae60(s0);
         D_0108F550 = 0;
         if (D_0108F554 < 0) goto end;
-        s2 = func_001be010();
+        s2 = func_001be010(D_0108F554);
         D_0108F54C = 1;
         if (func_001be278() == s2) goto end;
         if (rec[s2 * 96 + 2] == 0) goto end;
@@ -484,7 +484,7 @@ selA:
                     func_0024e468(D_00FB4A70);
                     func_00f6ae60(s0);
                     D_0108F550 = 0;
-                    if (D_0108F554 >= 0) func_001be430();
+                    if (D_0108F554 >= 0) func_001be430(D_0108F554);
                     goto end;
                 }
             }

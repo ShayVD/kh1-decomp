@@ -48,6 +48,16 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
+## Latest (2026-11-02): wm.x, the world map, as native C (session 142)
+
+native-overlays.md "Session 142": from the user's save 04 (Agrabah) to the Gummi ship, "Select World", Depart and back
+into Agrabah's field, 12,000 frames on the host with no crash (`KH1_HOST_OVL=stub ... KH1_HOST_PAD=tests/host/pads/wm_en.txt`,
+a copy of the user's card as mc0). Fixed on the way: VU0 divide by zero (NaN positions after a save load), the
+synchronous load path never handing an overlay to the native hook, 116 register passthroughs and 30 float-order
+prototypes in wm (`tools/host/argcheck.py --ovl wm`), the overlays' DMA register writes, and the card's directory order.
+Host-checked only (no 3D on the null platform). **First thing next time**: the PCSX2 check of the 31 drafts the route
+runs (`tools/host/draftcov.py`), then a flight to another world (gb.x).
+
 ## Latest (2026-11-01): the fights' upload waits (pendgpu=1)
 
 vita-build.md "Uploads into a target its last scene still uses, written by the GPU": the fights' particle uploads into
