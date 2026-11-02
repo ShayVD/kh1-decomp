@@ -3,7 +3,7 @@ typedef struct { u8 pad[4]; u8 b4; } P36bc0;
 typedef struct { s32 f0; P36bc0 *p; s32 f8; s32 f12; s32 f16; s32 f20; u8 pad[72]; f32 m[4][4]; f32 m160[4][4]; } O36bc0;
 extern s32 D_00F87048;
 extern f32 D_002BBDEC;
-O36bc0 *func_00f363c0(void);
+O36bc0 *func_00f363c0(s32);
 void func_00f363e0(f32 (*)[4], s32, P36bc0 *);
 s32 func_00f68770(s32, s32, void *, s32, s32);
 void func_00f36308(s32);
@@ -23,7 +23,7 @@ void func_00f36bc0(s32 arg) {
     s32 kind;
     f32 sp;
 
-    o = func_00f363c0();
+    o = func_00f363c0(arg);
     func_00f363e0(o->m, o->f0, o->p);
     h = func_00f68770(o->f8, 1000, o->m, 0, D_00F87048);
     if (h < 0) return;

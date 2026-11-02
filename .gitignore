@@ -60,3 +60,6 @@ src/**/.*
 
 # EE overlays from KINGDOM.IMG (tools/ovl/build.py; never commit them)
 *.x
+
+# tools/vita/hw_run.sh: the Vita's address
+tools/vita/hw.env

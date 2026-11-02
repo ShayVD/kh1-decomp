@@ -274,7 +274,12 @@ static void canon(const u32 *q, u32 nqw) {
         if (d[3] & KH1_NAT_VB) {
             const KH1GpuVert *v = (const KH1GpuVert *)(unsigned long)d[4];
             const u16 *x = (const u16 *)(unsigned long)d[5];
-            for (i = 0; i < d[6] && n < 16384; i++) canon_v[n++] = v[x[i]];
+            u32 home = KH1_NAT_VB_HOME(d[6]); /* 2026-11-02: the entry's matrix indices start at its home */
+            for (i = 0; i < KH1_NAT_VB_COUNT(d[6]) && n < 16384; i++) {
+                canon_v[n] = v[x[i]];
+                canon_v[n].pad[0] = (u8)(((canon_v[n].pad[0] & 0x7F) - home) & 0x7F);
+                n++;
+            }
         }
     }
     if (nrec && !(q[8 + 3] & KH1_NAT_VB)) n = kh1_nat_tris(q + 8, nrec, nmat, q[4], q[5], canon_v, 16384, &lost);

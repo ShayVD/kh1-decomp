@@ -1,4 +1,5 @@
 /* Round 46 wwm2: score 36 -> 34, hill3o statement order. Earlier header below. */
+#include "platform/thread.h"
 /* Round 46 wwm2: score 38 -> 36, f = (Ent *)(j * sizeof(Ent) + (u32)base) puts the scaled index first in the addu. Earlier header below. */
 /* Round 36 (wgb): no change. Same note as gb func_00f4a650: the o3->f24 / o3->h8 stores sit above the o4 stores, valid only if o3 and o4 are distinct objects. */
 /* Round 35 (wgb): wm.x func_00f71748 near miss: 35 -> 21 words, score 62 -> 38 (1040 = 1040). port.py of gb func_00f4a650's round 35 draft (statement order from the dependency-safe hill climb); left: FP temporary numbering in the panel blocks. Earlier header below. */
@@ -54,7 +55,7 @@ void func_00f71748(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
     D_0108F3B0 = 0;
     D_0108F308 = 0;
     if (n >= 256) {
-        __asm__ volatile("break");
+        PlatBreak();
     }
     for (i = 0; i < n; i++) {
         e = &base[i];

@@ -18,7 +18,14 @@ s32 func_00f4ad68(s32);
 s32 func_00f4aca8(s32);
 void func_001bfac8(void);
 void func_00f59820(s32, s32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f4ec30(s32 id, void *pp, s32 x, s32 y, f32 ry0, f32 ry1, s32 a4, f32 f, s32 size);
+#else
+s32 func_00f4ec30(s32 id, void *pp, s32 x, s32 y, s32 a4, s32 size, f32 ry0, f32 ry1, f32 f);
+static __inline__ s32 ee_00f4ec30(s32 x0, void * x1, s32 x2, s32 x3, f32 x4, f32 x5, s32 x6, f32 x7, s32 x8) { return func_00f4ec30(x0, x1, x2, x3, x6, x8, x4, x5, x7); }
+#undef func_00f4ec30
+#define func_00f4ec30 ee_00f4ec30
+#endif
 void func_00f56f30(void) {
     s32 ids[3][4];
     s32 h0;
@@ -38,9 +45,9 @@ void func_00f56f30(void) {
     f32 q;
     s32 ten;
     s32 ninety;
-    h0 = func_001c00e8(-1, func_00f56ce0, 0);
-    h1 = func_001c00e8(-1, func_00f55bc0, 0);
-    h2 = func_001c00e8(-1, func_00f55310, 0);
+    h0 = func_001c00e8(-1, func_00f56ce0, KH1_Q(0));
+    h1 = func_001c00e8(-1, func_00f55bc0, KH1_Q(0));
+    h2 = func_001c00e8(-1, func_00f55310, KH1_Q(0));
     ids[0][0] = func_00f4ae48(D_00F9B540->id);
     ids[1][0] = D_00F9B540->id;
     n = func_00f4ad68(D_00F9B540->id);

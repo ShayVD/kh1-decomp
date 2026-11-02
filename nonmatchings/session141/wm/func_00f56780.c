@@ -14,8 +14,8 @@ s32 func_00f4ae48(s32);
 s32 func_00f4ad68(s32);
 void func_001bfac8(void);
 f32 func_001befc8(s32, void *);
-s32 func_00f4f188(s32 id, void *pp, s32 x, s32 y, f32 ry0, f32 ry1, f32 f, s32 a4, s32 size);
-s32 func_00f4f6d8(s32 id, void *pp, f32 ry, f32 f1, f32 s, s32 x, s32 y, s32 a4, f32 f3, f32 *scl, s32 flag);
+s32 func_00f4f188(s32 id, void *pp, s32 x, s32 y, s32 a4, s32 size, f32 ry0, f32 ry1, f32 f);
+s32 func_00f4f6d8(s32 id, void *pp, s32 x, s32 y, s32 a4, f32 *scl, s32 flag, f32 ry, f32 f1, f32 s, f32 f3);
 void func_00f56780(s32 arg) {
     s32 ids[3][4];
     f32 sc[3];
@@ -38,11 +38,11 @@ void func_00f56780(s32 arg) {
         fi = i;
         r = fi * 0.017453292f;
         t = 180.0f - fi;
-        id = func_00f4f188(11200, D_00F9B548, 41, 347, 0.0f, 0.0f, D_00FA5CEC, ids[1][1], 58);
+        id = func_00f4f188(11200, D_00F9B548, 41, 347, ids[1][1], 58, 0.0f, 0.0f, D_00FA5CEC);
         r = -r;
-        id = func_00f4f188(id, D_00F9B548, 41, 347, r, 0.0f, D_00FA5CEC, ids[0][1], 58);
-        id = func_00f4f188(id, D_00F9B548, 41, 76, 0.0f, 0.0f, D_00FA5CEC, ids[1][0], 58);
-        func_00f4f188(id, D_00F9B548, 41, 76, r, 0.0f, D_00FA5CEC, ids[0][0], 58);
+        id = func_00f4f188(id, D_00F9B548, 41, 347, ids[0][1], 58, r, 0.0f, D_00FA5CEC);
+        id = func_00f4f188(id, D_00F9B548, 41, 76, ids[1][0], 58, 0.0f, 0.0f, D_00FA5CEC);
+        func_00f4f188(id, D_00F9B548, 41, 76, ids[0][0], 58, r, 0.0f, D_00FA5CEC);
         k = i / 15 * 4;
         sc[1] = func_001befc8(k, D_00FA5C40);
         sc[0] = sc[2] = func_001befc8(k, D_00FA5C90);
@@ -50,9 +50,9 @@ void func_00f56780(s32 arg) {
         sc[1] = (sc[1] - 1.0f) * 0.5f + 1.0f;
         r = fi * 0.5f;
         r /= 180.0f;
-        id = func_00f4f6d8(10720, D_00F9B548, 0.0f, fi / 180.0f, r + 0.5f, 68 - (180 - i) / 2, 192, ids[1][2], D_00FA5CEC, sc, 0);
+        id = func_00f4f6d8(10720, D_00F9B548, 68 - (180 - i) / 2, 192, ids[1][2], sc, 0, 0.0f, fi / 180.0f, r + 0.5f, D_00FA5CEC);
         fi = t;
-        func_00f4f6d8(id, D_00F9B548, 0.0f, fi / 180.0f, 1.0f - r, i / 2 + 68, 192, ids[0][2], D_00FA5CEC, sc, 1);
+        func_00f4f6d8(id, D_00F9B548, i / 2 + 68, 192, ids[0][2], sc, 1, 0.0f, fi / 180.0f, 1.0f - r, D_00FA5CEC);
     }
     for (i = 0; i < 90; i += 15) {
         t = 0.0f;
@@ -60,10 +60,10 @@ void func_00f56780(s32 arg) {
         j = 90 - i;
         r = (f32)j * 0.017453292f;
         fi = i;
-        id = func_00f4f188(11200, D_00F9B548, 41, 347, t, t, D_00FA5CEC, ids[0][1], 58);
-        id = func_00f4f188(id, D_00F9B548, 41, 347, t, r, D_00FA5CEC, ids[1][1], 58);
-        id = func_00f4f188(id, D_00F9B548, 41, 76, t, t, D_00FA5CEC, ids[0][0], 58);
-        func_00f4f188(id, D_00F9B548, 41, 76, t, r, D_00FA5CEC, ids[1][0], 58);
+        id = func_00f4f188(11200, D_00F9B548, 41, 347, ids[0][1], 58, t, t, D_00FA5CEC);
+        id = func_00f4f188(id, D_00F9B548, 41, 347, ids[1][1], 58, t, r, D_00FA5CEC);
+        id = func_00f4f188(id, D_00F9B548, 41, 76, ids[0][0], 58, t, t, D_00FA5CEC);
+        func_00f4f188(id, D_00F9B548, 41, 76, ids[1][0], 58, t, r, D_00FA5CEC);
         k = i / 15 * 4 + 24;
         m = i + 90;
         sc[1] = func_001befc8(k, D_00FA5C40);
@@ -73,9 +73,9 @@ void func_00f56780(s32 arg) {
         n90 = 90.0f;
         r = fi * 0.5f;
         r /= 180.0f;
-        id = func_00f4f6d8(10720, D_00F9B548, t, (n90 - fi) / 180.0f, 0.75f - r, m / 2 + 68, 192, ids[0][2], D_00FA5CEC, sc, 1);
+        id = func_00f4f6d8(10720, D_00F9B548, m / 2 + 68, 192, ids[0][2], sc, 1, t, (n90 - fi) / 180.0f, 0.75f - r, D_00FA5CEC);
         fi = fi + n90;
-        func_00f4f6d8(id, D_00F9B548, t, fi / 180.0f, r + 0.75f, 68 - j / 2, 192, ids[1][2], D_00FA5CEC, sc, 0);
+        func_00f4f6d8(id, D_00F9B548, 68 - j / 2, 192, ids[1][2], sc, 0, t, fi / 180.0f, r + 0.75f, D_00FA5CEC);
     }
     func_00f47388(11);
 }

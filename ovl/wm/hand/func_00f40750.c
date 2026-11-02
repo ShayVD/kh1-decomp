@@ -4,7 +4,14 @@
 #include "ovl.h"
 
 typedef struct { s32 id; s32 a; s32 b; f32 val; u8 pad[0x590 - 16]; } S;
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f62c98(f32 *, s32, f32, s32);
+#else
+void func_00f62c98(f32 *, s32, s32, f32);
+static __inline__ void ee_00f62c98(f32 * x0, s32 x1, f32 x2, s32 x3) { func_00f62c98(x0, x1, x3, x2); }
+#undef func_00f62c98
+#define func_00f62c98 ee_00f62c98
+#endif
 void func_001becb8(OvlMtx, f32 *, s32);
 extern S D_00F86A40[];
 

@@ -36,8 +36,8 @@ void func_00f43430(void) {
     s32 *p;
 
     func_00114820();
-    func_001c00e8(10, func_00f432f0, 0);
-    func_001c00e8(15, func_00f42f20, 0);
+    func_001c00e8(10, func_00f432f0, KH1_Q(0));
+    func_001c00e8(15, func_00f42f20, KH1_Q(0));
     func_00f309d0(0);
     func_00f344e0(0);
     D_00F9B1C8 = 0;

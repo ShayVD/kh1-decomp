@@ -7,7 +7,7 @@ extern s32 D_00F878E4;
 extern s32 D_00F878E8;
 extern s32 D_00FBAA68;
 extern s32 D_00FBB550;
-s32 func_00f26e48(void);
+s32 func_00f26e48(s32);
 void func_00f258c8(s32);
 void func_00f29500(s32, s32, s32);
 void func_00f28448(s32, s32, s32, s32);
@@ -22,7 +22,7 @@ s32 func_00f27a00(s32 a0) {
     s32 i;
     f32 f;
 
-    n = func_00f26e48();
+    n = func_00f26e48(a0);
     while (p = func_001ba488(0), D_00F878E8 == 0) {
         if (p->trig & 1) return 4;
         if (p->a & 0x2000002000000000) return 3;

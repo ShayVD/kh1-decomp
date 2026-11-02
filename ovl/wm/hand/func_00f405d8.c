@@ -4,8 +4,22 @@
 typedef struct { s32 id; s32 a; s32 b; f32 val; s32 pad2; s32 dir; } Sub;
 typedef struct { OvlMtx m0; OvlMtx m1; OvlMtx m2; OvlMtx m3[16]; OvlMtx m4[2]; Sub s; u8 pad2[0x590 - 0x558]; } W;
 void func_001becb8(OvlMtx, OvlVec, s32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f62c98(OvlVec, f32, s32, s32);
+#else
+void func_00f62c98(OvlVec, s32, s32, f32);
+static __inline__ void ee_00f62c98(OvlVec x0, f32 x1, s32 x2, s32 x3) { func_00f62c98(x0, x2, x3, x1); }
+#undef func_00f62c98
+#define func_00f62c98 ee_00f62c98
+#endif
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f62ea0(OvlVec, f32, s32);
+#else
+void func_00f62ea0(f32, OvlVec, s32);
+static __inline__ void ee_00f62ea0(OvlVec x0, f32 x1, s32 x2) { func_00f62ea0(x1, x0, x2); }
+#undef func_00f62ea0
+#define func_00f62ea0 ee_00f62ea0
+#endif
 extern W D_00F86500[];
 
 void func_00f405d8(s32 arg0, OvlMtx arg1, OvlMtx arg2) {

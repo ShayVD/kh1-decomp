@@ -74,7 +74,7 @@ s32 func_00f218e8(void) {
         func_00f681b0();
         func_001bb4b0();
         func_001c0010();
-        func_001c00e8(2, func_00f23628, 0);
+        func_001c00e8(2, func_00f23628, KH1_Q(0));
         func_001bfc90(3);
         break;
     case 2:
@@ -82,7 +82,7 @@ s32 func_00f218e8(void) {
         func_00f681b0();
         func_001bb4b0();
         func_001c0010();
-        func_001c00e8(2, func_00f43ae0, 0);
+        func_001c00e8(2, func_00f43ae0, KH1_Q(0));
         func_001bfc90(3);
         break;
     }

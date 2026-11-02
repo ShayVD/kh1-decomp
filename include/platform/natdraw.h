@@ -55,6 +55,11 @@ enum { KH1_NAT_CULL_NONE, KH1_NAT_CULL_CCW, KH1_NAT_CULL_CW };
 /* 2026-11-02: a cached record (natvb below): 2 qwords, the record's own first qword (word 3's KH1_NAT_VB set), then the
  * entry's vertices, the record's first index, its index count and the hand-over's sequence number */
 #define KH1_NAT_VB 0x20000u
+/* 2026-11-02 (natvbjoin): a cached record's index count word (its second qword's word 2) also carries the entry's home:
+ * its vertices' matrix indices are the run's own plus home, so the run's matrices go at u_m[home ..], and runs of
+ * entries with homes after each other share one draw (cmdbuf.c vb_join) */
+#define KH1_NAT_VB_COUNT(w) ((w) & 0xFFFFFFu)
+#define KH1_NAT_VB_HOME(w) ((w) >> 24)
 #define KH1_NAT_REC_QW(r) ((r)[3] & KH1_NAT_VB ? 2u : 1u + (r)[2] * ((r)[3] & KH1_NAT_SKIN ? 3u : 2u))
 
 /* the GPU vertices of a run's records (data: the records as above, nrec of them; mats: the run's matrix count, a
@@ -108,6 +113,9 @@ extern u32 kh1_natvb_hits, kh1_natvb_miss, kh1_natvb_made, kh1_natvb_stale, kh1_
 void kh1_natvb_publish(u32 seq);
 /* the game thread: the entry of a run (src: the held unpack's words, lim qwords) or 0 (a miss, its key remembered) */
 KH1NatVb *kh1_natvb_find(const u32 *src, u32 lim, u32 prog, u32 rgba, u32 f, u32 flags);
+/* 2026-11-02: 1 (the default) each new entry gets a home after the last one's matrices (wrapping at KH1_NAT_MATS), so
+ * the GPU thread can join cached runs into one draw; 0 every home 0 (host KH1_HOST_NATVBHOME, config natvbhome) */
+extern int kh1_natvb_home;
 /* 1 when the stream's words other than the matrices hash as when the entry was made (else the entry is dropped) */
 int kh1_natvb_same(KH1NatVb *e, const u32 *src);
 /* a hit's payload into ob: header, the stub records, the matrices (from the stream, or mats_reg[slot] for those the run

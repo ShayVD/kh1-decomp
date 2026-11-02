@@ -1,5 +1,6 @@
 /* wm.x func_00f6a480: the twin of gb.x func_00f43388 (tools/ovl/twins.py). */
 #include "ovl.h"
+#include "platform/thread.h"
 
 typedef struct {
     s8 used;      /* 0 */
@@ -49,6 +50,6 @@ E68 *func_00f6a480(void) {
             return e;
         }
     }
-    __asm__ volatile("break");
+    PlatBreak();
     return 0;
 }

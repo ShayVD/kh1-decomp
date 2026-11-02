@@ -1,6 +1,6 @@
 /* Round 41 wwm2: score 17 -> 11 (5 words + the trailing nop). Reading x10 into v at the bottom test (test: v = D_002C5AD0.x10; } while (!(x8 & 0x2000))) and testing ((v >> 24) | v) & 0x10 at the top (v | v >> 24 gives 13). Left: srl v0,v1 (original srl v1,v0: v and the shift temp swapped), and the load sits in a plain beqz slot (filled from before the branch), where the original has beqzl with the load stolen from the loop top. Writing func_0011d768(2) before m->x34 = sel (the original's order) gives the same score. Every while/for form duplicates the exit test or hoists the D_002C5AD0 address (45-50). */
-/* func_00f7ecd8: score 17, 79 words differ. loop entry beqz should be beqzl (loop notes); goto/do-while loses likely, plain while duplicates test; permuter output used */
 #include "platform/thread.h"
+/* func_00f7ecd8: score 17, 79 words differ. loop entry beqz should be beqzl (loop notes); goto/do-while loses likely, plain while duplicates test; permuter output used */
 typedef struct {
     u32 x0;
     u32 x4;
@@ -36,7 +36,7 @@ s32 func_00f7ecd8(Menu *m)
   Menu *new_var;
   if (m->x2C < func_00f78900(D_00FBA7D8, (*m).x28))
   {
-    asm volatile("break");
+    PlatBreak();
   }
   for (i = 0; i < 8; i++)
   {

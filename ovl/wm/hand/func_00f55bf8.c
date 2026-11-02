@@ -13,7 +13,14 @@ void func_001bfac8(void);
 s32 func_00f4ad68(s32);
 s32 func_00f4ae48(s32);
 void func_00f4eaa0(s32, s32 *, s32, s32, s32, s32, void *, f32, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f4ec30(s32, s32 *, s32, s32, s32, f32, f32, s32, f32);
+#else
+s32 func_00f4ec30(s32, s32 *, s32, s32, s32, s32, f32, f32, f32);
+static __inline__ s32 ee_00f4ec30(s32 x0, s32 * x1, s32 x2, s32 x3, s32 x4, f32 x5, f32 x6, s32 x7, f32 x8) { return func_00f4ec30(x0, x1, x2, x3, x4, x7, x5, x6, x8); }
+#undef func_00f4ec30
+#define func_00f4ec30 ee_00f4ec30
+#endif
 void func_00f559d0(void);
 void func_00f55ad8(void);
 

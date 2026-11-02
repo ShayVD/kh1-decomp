@@ -245,6 +245,9 @@ rewrite matched code.
     `python3 -I tools/host/argcheck.py` lists what is left (a heuristic over
     the text: some hits are benign, e.g. an unused last parameter; it keeps a
     BENIGN table of hits read by hand and left, with the reason).
+    `--ovl NAME` (session 142) checks a native overlay's C instead (ovl/NAME
+    and the drafts its drafts.tsv lists, against its own definitions and
+    src/'s): wm.x had 125 hits.
     Session 63: a call through m2c's `#define f ((T (*)()) f)` cast in the
     callee's own file misses arguments too (argcheck checks those now); type
     the cast when a float is passed (an unprototyped call passes a double).

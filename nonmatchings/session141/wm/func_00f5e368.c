@@ -20,7 +20,7 @@ s32 func_00f4a958(s32);
 s32 func_00f4aa00(s32);
 void *func_00f65480(s32, u8 *, u8 *, Desc *, s32, s32, Mode *, f32);
 
-void func_00f5e368(s32 arg, u8 *base, s32 id, s32 id2, s32 idx, f32 f) {
+void *func_00f5e368(s32 arg, u8 *base, s32 id, s32 id2, s32 idx, f32 f) {
     Mode m;
     Desc d;
     u8 *tex;
@@ -68,5 +68,5 @@ void func_00f5e368(s32 arg, u8 *base, s32 id, s32 id2, s32 idx, f32 f) {
     m.a = 5;
     m.b = 1;
     m.c = 1;
-    func_00f65480(arg, o, tex, &d, r, r2, &m, f);
+    return func_00f65480(arg, o, tex, &d, r, r2, &m, f);
 }

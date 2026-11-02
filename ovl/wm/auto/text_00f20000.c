@@ -124,7 +124,7 @@ void func_00f29500(s32, s32, s32);
 void func_00f2c910(s32, s32);
 void func_00f2cf78(s32);
 void func_00f3f3a8(s32, s32, s32);
-void func_00f65480(s32, s32, s32, s32, s32, s32, s32, f32);
+void *func_00f65480(s32, s32, s32, s32, s32, s32, s32, f32);
 void func_00f65a68(s32);
 
 void func_00f20000(void) {
@@ -337,12 +337,12 @@ void func_00f29658(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_00f65480(arg0, arg1, arg1 + 0xD0, 0, arg2, arg3, (s32) sp, 0.0f);
 }
 
-void func_00f29698(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+void *func_00f29698(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 sp[4];
     M2C_FIELD(sp, s32 *, 0x0) = 1;
     M2C_FIELD(sp, s32 *, 0x4) = 1;
     M2C_FIELD(sp, s32 *, 0x8) = 1;
-    func_00f65480(arg0, arg1, arg1 + 0xD0, 0, arg2, arg3, (s32) sp, 0.0f);
+    return func_00f65480(arg0, arg1, arg1 + 0xD0, 0, arg2, arg3, (s32) sp, 0.0f);
 }
 
 s32 func_00f2ab00(s32 arg0) {
@@ -470,7 +470,7 @@ f32 func_00f2c8c8(void) {
 }
 
 void func_00f2c8d8(s32 arg0) {
-    sceVu0UnitMatrix();
+    sceVu0UnitMatrix(arg0);
     sceVu0MulMatrix(arg0, &D_00F87280, arg0);
 }
 

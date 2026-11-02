@@ -3,11 +3,12 @@
 
 extern u32 *D_0108F034;
 
-void func_00f66b38(u32 *end) {
+KH1_V0(u32) func_00f66b38(u32 *end) {
     u32 n = ((u32)end - (u32)D_0108F034) / 16 - 1;
 
     D_0108F034[3] = n | 0x50000000;
     D_0108F034[1] = 0;
     D_0108F034[2] = 0;
     D_0108F034[0] = 0;
+    KH1_V0_RETURN(n + 1); /* v0 still holds the qword count */
 }

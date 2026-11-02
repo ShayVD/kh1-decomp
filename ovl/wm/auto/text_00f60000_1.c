@@ -16,8 +16,8 @@ s32 func_00f68140();
 void func_00176310(s32);
 void func_00f688a0(s32);
 
-s32 func_00f632a8(void) {
-    return func_00f63270() * D_00FA66DC;
+s32 func_00f632a8(s32 arg0) {
+    return func_00f63270(arg0) * D_00FA66DC;
 }
 
 void func_00f68070(void) {
@@ -32,7 +32,7 @@ void func_00f689f0(s32 arg0, s32 arg1) {
 }
 
 void func_00f68a40(s32 arg0) {
-    if (func_00f68140() == 0) {
+    if (func_00f68140(arg0) == 0) {
         if (arg0 >= 0) {
             func_00f688a0(arg0);
             return;

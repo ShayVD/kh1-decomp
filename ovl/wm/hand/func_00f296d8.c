@@ -11,10 +11,10 @@ typedef struct {
 } Obj296d8;
 typedef struct { s32 a, b, c; } Blk296d8;
 Scr296d8 *func_00f650e8(s32);
-void func_00f65480(s32, Obj296d8 *, void *, Blk296d8 *, s32, s32, Blk296d8 *, f32);
+void *func_00f65480(s32, Obj296d8 *, void *, Blk296d8 *, s32, s32, Blk296d8 *, f32);
 extern f32 D_002BBDFC;
 
-void func_00f296d8(s32 arg0, Obj296d8 *obj, s32 arg2, s32 arg3) {
+void *func_00f296d8(s32 arg0, Obj296d8 *obj, s32 arg2, s32 arg3) {
     Blk296d8 b0;
     Blk296d8 b1;
     Scr296d8 *s;
@@ -55,5 +55,5 @@ void func_00f296d8(s32 arg0, Obj296d8 *obj, s32 arg2, s32 arg3) {
     b0.a = 0;
     b0.b = 0;
     b0.c = 0;
-    func_00f65480(arg0, obj, e0, &b1, arg2, arg3, &b0, 0.0f);
+    return func_00f65480(arg0, obj, e0, &b1, arg2, arg3, &b0, 0.0f);
 }

@@ -15,10 +15,10 @@ void sceVu0CopyMatrix(M2C_UNK *, s32);
 void sceVu0CopyVector(f32 *, M2C_UNK *);
 void sceVu0Normalize(f32 *, f32 *);
 
-void func_00f2dad0(void) {
+void func_00f2dad0(s32 arg0) {
     s32 sp[24];    s32 temp_s3;
 
-    temp_s3 = func_00f2cae8() + 0x20;
+    temp_s3 = func_00f2cae8(arg0) + 0x20;
     sceVu0CopyMatrix(&M2C_FIELD(sp, M2C_UNK *, 0x20), temp_s3);
     sceVu0CopyVector(sp, &M2C_FIELD(sp, M2C_UNK *, 0x50));
     M2C_FIELD(sp, f32 *, 0x8) += 1e+02f;
@@ -40,10 +40,10 @@ void func_00f2dad0(void) {
     func_00f68770(0x43, 0x7D0, temp_s3, 0, D_00F87048);
 }
 
-void func_00f2e390(void) {
+void func_00f2e390(s32 arg0) {
     s32 sp[24];    s32 temp_s3;
 
-    temp_s3 = func_00f2cae8() + 0x20;
+    temp_s3 = func_00f2cae8(arg0) + 0x20;
     sceVu0CopyMatrix(&M2C_FIELD(sp, M2C_UNK *, 0x20), temp_s3);
     sceVu0CopyVector(sp, &M2C_FIELD(sp, M2C_UNK *, 0x50));
     M2C_FIELD(sp, f32 *, 0x8) += 1e+02f;

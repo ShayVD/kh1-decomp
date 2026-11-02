@@ -56,6 +56,16 @@ repeated CLUT loads are no longer sent to the recorder (`clutskip=0` the old pat
 frame 21,000 identical). **First thing next time**: a fight log (frames 18,000-23,000) with those two lines, to pick the
 next cut.
 
+## Latest (2026-11-02): wm.x, the world map, as native C (session 142)
+
+native-overlays.md "Session 142": from the user's save 04 (Agrabah) to the Gummi ship, "Select World", Depart and back
+into Agrabah's field, 12,000 frames on the host with no crash (`KH1_HOST_OVL=stub ... KH1_HOST_PAD=tests/host/pads/wm_en.txt`,
+a copy of the user's card as mc0). Fixed on the way: VU0 divide by zero (NaN positions after a save load), the
+synchronous load path never handing an overlay to the native hook, 116 register passthroughs and 30 float-order
+prototypes in wm (`tools/host/argcheck.py --ovl wm`), the overlays' DMA register writes, and the card's directory order.
+Host-checked only (no 3D on the null platform). **First thing next time**: the PCSX2 check of the 31 drafts the route
+runs (`tools/host/draftcov.py`), then a flight to another world (gb.x).
+
 ## Latest (2026-11-01): the fights' upload waits (pendgpu=1)
 
 vita-build.md "Uploads into a target its last scene still uses, written by the GPU": the fights' particle uploads into

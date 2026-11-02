@@ -531,7 +531,7 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
             u32 i, cull = d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE;
             const KH1GpuVert *xv = 0;
             const u16 *xi = 0;
-            u32 ni = 0, seq = 0;
+            u32 ni = 0, seq = 0, home = 0;
             if ((d[0] & 0xFF) == 11) cull |= KH1_NAT_LIN;
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
             for (i = 0; i <= nrec; i++, q += 8) {
@@ -539,7 +539,7 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
                 const u16 *x = i < nrec ? (const u16 *)(unsigned long)q[5] : 0;
                 if (i < nrec && !(q[3] & KH1_NAT_VB)) break; /* (an op is all stubs or none) */
                 if (ni && (i == nrec || v != xv || x != xi + ni)) {
-                    kh1_cmd_native_vb(rec, &last_d, &last_p, xv, xi, ni, nat_m, nmat, cull, seq);
+                    kh1_cmd_native_vb(rec, &last_d, &last_p, xv, xi, ni, nat_m, nmat, home, cull, seq);
                     kh1_pipes_nat_draws++;
                     kh1_pipes_nat_tris += ni / 3;
                     ni = 0;
@@ -548,8 +548,9 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
                 if (!ni) {
                     xv = v;
                     xi = x;
+                    home = KH1_NAT_VB_HOME(q[6]); /* (one entry's records share it) */
                 }
-                ni += q[6];
+                ni += KH1_NAT_VB_COUNT(q[6]);
                 if ((s32)(q[7] - seq) > 0) seq = q[7];
             }
         } else if (!d[6]) { /* not every vertex ADC */

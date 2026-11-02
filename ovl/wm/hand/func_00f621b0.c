@@ -20,7 +20,7 @@ void func_00f621b0(s32 i, s32 *c) {
     }
     {
         /* pinned: plain C picks $2 for this address, the original uses $3 */
-        register s32 *p asm("$3") = D_0108EE80[i];
+        register s32 *p KH1_REG("$3") = D_0108EE80[i];
         p[3] = 0;
     }
 }

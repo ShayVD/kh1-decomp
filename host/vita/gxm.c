@@ -1497,6 +1497,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             if (bad_pipe || !pk || !fp) { skip(W_PIPE, pk ? pipe_why : "no pipeline set"); break; }
             if (pk->shader.tex && pk->shader.setup != 2 && !have_tex) { skip(W_TEX, tex_why); break; }
             if (!(k && k->xv) && vat + (u64)left * vstride > r->vring.head) { skip(W_RANGE, 0); break; }
+            if (k && k->xi32 && vat + (u64)left * 4 > r->vring.head) { skip(W_RANGE, 0); break; }
             if (!u || !xf || c->cls == KH1_PA_NONE) { skip(W_STATE, 0); break; }
             if ((c->nmat != 0) != (vi >= KH1_VERT_NAT) || (c->nmat && !vert[vi].u_m)) { skip(W_STATE, 0); break; }
             if (pk->shader.tex && fs->tex >= 0) sceGxmSetFragmentTexture(ctx, (u32)fs->tex, &t);
@@ -1507,7 +1508,8 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             if (k && k->xv) { /* 2026-11-02 (natvb): a cached run, indexed, from natvb's GPU memory */
                 sceGxmReserveVertexDefaultUniformBuffer(ctx, &vb);
                 if (vert[vi].u_xf) sceGxmSetUniformDataF(vb, vert[vi].u_xf, 0, 4, xf);
-                sceGxmSetUniformDataF(vb, vert[vi].u_m, 0, c->nmat * 16u, (const f32 *)(ub + c->moff));
+                /* 2026-11-02 (natvbjoin): u_m[mlo ..], the entry's home on (cmdbuf.h KH1Cmd.mlo) */
+                sceGxmSetUniformDataF(vb, vert[vi].u_m, k->mlo * 16u, (c->nmat - k->mlo) * 16u, (const f32 *)(ub + c->moff));
                 sceGxmReserveFragmentDefaultUniformBuffer(ctx, &fb);
                 {
                     u32 q;
@@ -1516,7 +1518,10 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                     if (fs->u[4]) sceGxmSetUniformDataF(fb, fs->u[4], 0, 4, xf);
                 }
                 sceGxmSetVertexStream(ctx, 0, k->xv);
-                sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, k->xi, left);
+                if (k->xi32) /* 2026-11-02 (natvbjoin): joined cached runs, 32-bit indices into natvb's memory, in the ring */
+                    sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U32, vbuf + vat, left);
+                else
+                    sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, k->xi, left);
                 left = 0;
                 kh1_vita_natvb_draws++;
             }
@@ -1524,7 +1529,10 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 u32 n = left > MAX_INDEX ? MAX_INDEX / per * per : left;
                 sceGxmReserveVertexDefaultUniformBuffer(ctx, &vb);
                 if (vert[vi].u_xf) sceGxmSetUniformDataF(vb, vert[vi].u_xf, 0, 4, xf);
-                if (c->nmat) sceGxmSetUniformDataF(vb, vert[vi].u_m, 0, c->nmat * 16u, (const f32 *)(ub + c->moff));
+                if (c->nmat) {
+                    u32 lo = k ? k->mlo : 0; /* (a cached run copied into the ring for the wide view keeps its home) */
+                    sceGxmSetUniformDataF(vb, vert[vi].u_m, lo * 16u, (c->nmat - lo) * 16u, (const f32 *)(ub + c->moff));
+                }
                 sceGxmReserveFragmentDefaultUniformBuffer(ctx, &fb);
                 {
                     u32 q;

@@ -12,7 +12,7 @@ extern s8 D_00FCC670[];
 extern f32 D_00F8C240[4][4];
 void sceVu0UnitMatrix(f32 (*)[4]);
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
-O34998 *func_00f3d978(f32, f32, f32 *, s32);
+O34998 *func_00f3d978(f32 *, s32, f32, f32);
 s32 func_00f3dbf8(s32, u8 *, s32);
 void func_00f68770(s32, s32, void *, s32, s32);
 
@@ -39,7 +39,7 @@ void func_00f34998(void) {
         for (j = 0; j < 2; j++) {
             v[2] = d[j];
             sceVu0ApplyMatrix(m[3], D_00FBEBC0[idx].m, v);
-            o = func_00f3d978(800.0f, 200.0f, m[3], 0);
+            o = func_00f3d978(m[3], 0, 800.0f, 200.0f);
             if (o == NULL) continue;
             D_00FBEBC0[idx].h18 |= 1;
             if ((u32)(o->w0 - 2) < 2 && (u32)(func_00f3dbf8(o->w4, o->b32, D_00FBEBC0[idx].h6) - 1) < 2 && !(o->w20 & 1)) {
@@ -55,7 +55,7 @@ void func_00f34998(void) {
         fl = D_00FBE7B8[i];
         if (fl & 0x4000) {
             idx = fl & 0xFFF;
-            o = func_00f3d978(900.0f, 200.0f, D_00FBEBC0[idx].m[3], 0);
+            o = func_00f3d978(D_00FBEBC0[idx].m[3], 0, 900.0f, 200.0f);
             if (o == NULL) continue;
             D_00FBEBC0[idx].h18 |= 1;
             if ((u32)(o->w0 - 2) >= 2) continue;
@@ -65,7 +65,7 @@ void func_00f34998(void) {
             o->w20 |= 1;
         } else if (fl & 0x8000) {
             idx = fl & 0xFFF;
-            o = func_00f3d978(1200.0f, 200.0f, D_00FBEBC0[idx].m[3], 0);
+            o = func_00f3d978(D_00FBEBC0[idx].m[3], 0, 1200.0f, 200.0f);
             if (o == NULL) continue;
             if ((u32)(o->w0 - 2) >= 2) continue;
             if (func_00f3dbf8(o->w4, o->b32, D_00FBEBC0[idx].h6) != 2) continue;
@@ -77,7 +77,7 @@ void func_00f34998(void) {
             for (j = 0; j < 2; j++) {
                 v[2] = d[j];
                 sceVu0ApplyMatrix(m[3], D_00FBEBC0[idx].m, v);
-                o = func_00f3d978(900.0f, 200.0f, m[3], 0);
+                o = func_00f3d978(m[3], 0, 900.0f, 200.0f);
                 if (o == NULL) continue;
                 D_00FBEBC0[idx].h18 |= 1;
                 if ((u32)(o->w0 - 2) < 2 && (u32)(func_00f3dbf8(o->w4, o->b32, D_00FBEBC0[idx].h6) - 1) < 2 && !(o->w20 & 1)) {
@@ -128,7 +128,7 @@ void func_00f34998(void) {
             v[sel] += d[j];
             v[3] = 1.0f;
             sceVu0ApplyMatrix(m[3], D_00F8C240, v);
-            o = func_00f3d978(300.0f, 0.0f, m[3], 0);
+            o = func_00f3d978(m[3], 0, 300.0f, 0.0f);
             if (o == NULL) continue;
             if ((u32)(o->w0 - 2) >= 2) continue;
             if ((u32)(func_00f3dbf8(o->w4, o->b32, 141) - 1) >= 2) continue;

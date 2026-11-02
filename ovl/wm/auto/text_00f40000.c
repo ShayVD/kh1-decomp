@@ -112,7 +112,7 @@ void func_00f3f2f8(f32);
 void func_00f44ee0(s32, s32, s32);
 void func_00f47f40();
 void func_00f4cb10();
-void func_00f4d550(s32, s32, s32);
+void *func_00f4d550(s32, s32, s32);
 void func_00f4fd68();
 void func_00f505a8(M2C_UNK);
 void func_00f55398();
@@ -262,13 +262,13 @@ s32 func_00f454f8(void) {
     return D_00F850A0 == 0;
 }
 
-void func_00f45508(void) {
-    func_00f35108();
+void func_00f45508(s32 arg0, s32 arg1) {
+    func_00f35108(arg0, arg1);
 }
 
 void func_00f45978(s32 arg0) {
     if (arg0 != 2) {
-        func_00f309d0();
+        func_00f309d0(arg0);
         func_00f307b0();
         return;
     }
@@ -295,20 +295,20 @@ void func_00f45c90(s32 arg0, s32 arg1) {
     func_00f2c8b8(temp_f23);
 }
 
-void func_00f45df0(void) {
-    func_00f2fe40();
+void func_00f45df0(s32 arg0) {
+    func_00f2fe40(arg0);
 }
 
-void func_00f45e08(void) {
-    func_001ba708();
+void func_00f45e08(s32 arg0) {
+    func_001ba708(arg0);
 }
 
-void func_00f45e20(void) {
-    func_001ba768();
+void func_00f45e20(s32 arg0) {
+    func_001ba768(arg0);
 }
 
-void func_00f45e38(void) {
-    func_001ba778();
+void func_00f45e38(s32 arg0, s32 arg1, s32 arg2) {
+    func_001ba778(arg0, arg1, arg2);
 }
 
 void func_00f45e50(s32 arg0) {
@@ -450,8 +450,8 @@ s32 func_00f4a9e0(s32 arg0) {
     return func_00f64c18(arg0, D_01080B00);
 }
 
-u8 func_00f4aca8(void) {
-    return M2C_FIELD(func_001bb658(), u8 *, 4);
+u8 func_00f4aca8(s32 arg0) {
+    return M2C_FIELD(func_001bb658(arg0), u8 *, 4);
 }
 
 void func_00f4af50(s32 arg0) {
@@ -461,7 +461,7 @@ void func_00f4af50(s32 arg0) {
 
     temp_s1 = arg0 + 0x10E0;
     temp_s0 = M2C_FIELD((D_00F9B540 + temp_s1), u8 *, 0xC);
-    if ((s32) temp_s0 < func_001ba3f0()) {
+    if ((s32) temp_s0 < func_001ba3f0(arg0)) {
         temp_v1 = D_00F9B540 + 0xC + temp_s1;
         *temp_v1 += 1;
     }
@@ -505,11 +505,11 @@ s32 func_00f4cfb8(s32 arg0) {
 
 void func_00f4d038(s32 arg0) {
     D_0108BC9C = arg0;
-    func_00f78680();
+    func_00f78680(arg0);
 }
 
-void func_00f4d058(void) {
-    func_001ba708();
+void func_00f4d058(s32 arg0) {
+    func_001ba708(arg0);
 }
 
 void func_00f4d2e0(void) {
@@ -522,8 +522,8 @@ void func_00f4d500(s32 arg0) {
     func_00f49c40(1);
 }
 
-void func_00f4d5f8(s32 arg0) {
-    func_00f4d550(arg0, (s32) &D_00FA54D0, 0x70);
+void *func_00f4d5f8(s32 arg0) {
+    return func_00f4d550(arg0, (s32) &D_00FA54D0, 0x70);
 }
 
 void func_00f4e3e8(s32 arg0) {

@@ -5,6 +5,7 @@
  * which lanes it writes, which it copies and which it zeroes.  The VU's own
  * float rules (no denormals, NaN or infinity) are not modelled.  Not part of
  * the PS2 build (it lives outside src/). */
+#include <float.h>
 #include "common.h"
 #include "platform/vu.h"
 #include "sce/libvu0.h"
@@ -69,12 +70,21 @@ void sceVu0InversMatrix(float (*m0)[4], float (*m1)[4]) {
     __builtin_memcpy(m0, r, sizeof(r));
 }
 
+/* The VU's `vdiv Q, vf0w, q`: 1 / 0 is +-max (the sign of q's zero), not infinity, so a zero vector
+ * divided by zero stays zero (0 x max = 0) where the host's 0 x inf was NaN (session 142: a loaded
+ * save's first motion frame divides the party's zero matrix rows by their zero lengths, func_001655e0,
+ * and the NaN reached their positions; cf. PlatVu0Normalize3) */
+static float vu_rcp(float q) {
+    if (q == 0.0f) return __builtin_signbit(q) ? -FLT_MAX : FLT_MAX;
+    return 1.0f / q;
+}
+
 void sceVu0DivVector(float *v0, float *v1, float q) {
-    PlatVu0Scale4(v0, v1, 1.0f / q);
+    PlatVu0Scale4(v0, v1, vu_rcp(q));
 }
 
 void sceVu0DivVectorXYZ(float *v0, float *v1, float q) {
-    PlatVu0Scale3W(v0, v1, 1.0f / q);
+    PlatVu0Scale3W(v0, v1, vu_rcp(q));
 }
 
 /* v1 t + v2 (1 - t) */

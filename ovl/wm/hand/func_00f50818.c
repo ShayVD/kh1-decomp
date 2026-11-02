@@ -12,7 +12,7 @@ void func_00f59870(s32, s32, s32, s32, s32);
 
 void func_00f50818(void) {
     /* register pin: gcc otherwise swaps the loop counter and the hoisted divisor (s1/s2) */
-    register s32 i asm("s2");
+    register s32 i KH1_REG("s2");
     s32 v;
 
     func_00f47388(11);

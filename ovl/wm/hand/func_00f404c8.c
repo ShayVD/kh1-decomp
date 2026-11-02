@@ -6,7 +6,14 @@ typedef struct { OvlMtx a; OvlMtx b; OvlMtx c; u8 pad[0x540 - 0xC0]; Sub s; u8 p
 f32 func_00f2bed0(s32);
 void func_00f405d8(s32, OvlMtx, OvlMtx);
 f32 func_00f62b60(s32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 f32 func_00f630c0(f32, f32, s32);
+#else
+f32 func_00f630c0(s32, f32, f32);
+static __inline__ f32 ee_00f630c0(f32 x0, f32 x1, s32 x2) { return func_00f630c0(x2, x0, x1); }
+#undef func_00f630c0
+#define func_00f630c0 ee_00f630c0
+#endif
 extern s32 D_00F850A4;
 extern W D_00F86500[];
 
