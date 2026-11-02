@@ -113,6 +113,8 @@
  *       pendgpu=0             uploads into a target its last scene still uses are written by the CPU after waiting
  *                             for that scene (as before 2026-11-01); 1, the default: the GPU writes them at the start
  *                             of the target's next scene, with no wait (gxm.c put_fill / put_draw)
+ *       pendfast=0            uploads into targets written by the CPU a word at a time (as before 2026-11-02); 1, the
+ *                             default: a whole block inside the target as 8 rows of 8 pixels (gxm.c pend_write)
  *       wdprio=N              the watchdog's priority against the game's threads (2026-11-01): -20, the default, above
  *                             them; 0 theirs, as before (it then waits for the GPU thread on the third core)
  *       gputime=1             log each 2 s how long the GPU spent on each kind of scene (gxm.c; a polling thread, so
@@ -445,6 +447,7 @@ extern volatile u32 kh1_vita_sends, kh1_vita_last_send, kh1_vita_shown;
 extern volatile u32 kh1_vita_us_gpu, kh1_vita_us_finish, kh1_vita_finishes, kh1_vita_us_part[5];
 extern volatile u32 kh1_vita_us_finish_at[4], kh1_vita_finishes_at[4]; /* host/vita/gxm.c, session 147d */
 extern volatile u32 kh1_vita_pend_in, kh1_vita_pend_out, kh1_vita_pend_nowait; /* host/vita/gxm.c, session 150 */
+extern volatile u32 kh1_vita_pend_us, kh1_vita_pend_us_start, kh1_vita_pend_rt[8], kh1_vita_pend_full; /* host/vita/gxm.c, 2026-11-02 */
 extern volatile u32 kh1_vita_scene_waits; /* host/vita/gxm.c, session 151 */
 /* native-plan.md stage 0: the port's threads, each one's CPU time per window (the kernel's run clock, so time
  * another thread took from it is not counted), the core it last ran on, and how often it was preempted */
@@ -481,6 +484,7 @@ static void threads_line(void) {
 static int wd_prio = -20; /* config.txt's wdprio=: the watchdog's priority against the game's threads (0: theirs) */
 /* host/vita/gxm.c: the uploads into targets (pendgpu=, 2026-11-01) */
 extern int kh1_vita_pendgpu;
+extern int kh1_vita_pendfast; /* host/vita/gxm.c, 2026-11-02 */
 extern volatile u32 kh1_vita_pend_waits[], kh1_vita_pend_wait_us[], kh1_vita_put_n, kh1_vita_put_blocks;
 
 static int watchdog(SceSize args, void *argp) {
@@ -565,6 +569,20 @@ static int watchdog(SceSize args, void *argp) {
                 kh1_vita_scene_waits -= sw;
                 vlog("kh1-vita: uploads into targets: %u blocks in a target's pixels, %u outside; %u writes with no wait "
                      "for the GPU; %u waits for one scene (in the gpu waits above)\n", pin, pout, pnw, sw);
+                { /* 2026-11-02: the CPU's writes of them (gxm.c pend_write) */
+                    u32 us = kh1_vita_pend_us, us0 = kh1_vita_pend_us_start, full = kh1_vita_pend_full, k, r[8];
+                    kh1_vita_pend_us -= us;
+                    kh1_vita_pend_us_start -= us0;
+                    kh1_vita_pend_full -= full;
+                    for (k = 0; k < 8; k++) {
+                        r[k] = kh1_vita_pend_rt[k];
+                        kh1_vita_pend_rt[k] -= r[k];
+                    }
+                    vlog("kh1-vita: uploads into targets written by the CPU (pendfast=%d): %u ms (%u of it the frame's start flush, waits "
+                         "left out); blocks by target: display %u, Z as colour %u, movie %u, 3D %u, slot capture %u, "
+                         "off-screen %u, CLUT pass %u, other %u; %u whole\n", kh1_vita_pendfast, us / 1000, us0 / 1000, r[0], r[1], r[2],
+                         r[3], r[4], r[5], r[6], r[7], full);
+                }
             }
             { /* 2026-11-01: the writes the GPU did (pendgpu=), and the CPU's waits by the kind of target whose last scene
                * they waited for */
@@ -930,6 +948,7 @@ static void config(char *iso, int n) {
             if (c && *c == ',') kh1_vita_shot_step = strtoul(c + 1, &c, 0);
             if (c && *c == ',') kh1_vita_shot_count = strtoul(c + 1, &c, 0);
         }
+        else if (strcmp(line, "pendfast") == 0) kh1_vita_pendfast = atoi(v);
         else if (strcmp(line, "wdprio") == 0) wd_prio = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
