@@ -281,6 +281,84 @@ against w_native_ref with `natdirect=0` (in the natdirect VPK's out/vita/kh1.elf
 0x810dd0c4, w_block 0x810ddac4; map the log by its w_block, the offset differs per run), the GPU thread's run clock (it does the joins now), and the fight windows'
 pictures/s. Expected (estimate): most of w_native_ref's ~0.55 s off the worker, ~0.1 s more on the GPU thread.
 
+### The GS worker's packets by sender, and repeated CLUT loads (2026-11-02, config.txt `clutskip=1`, host-measured)
+
+The natdirect VPK's fights (frames 18,000-23,000) left w_block at ~1,000 ms of the worker's ~2.1 s window with its
+IMAGE pieces at only ~180 ms. This change measures the rest by sender and cuts the largest non-image cost the host shows.
+
+**What is counted (dmawalk.c `KH1DmaSender`, `kh1_dma_senders_take`).** PlatDmaSend (plat_null.c) and
+kh1_dma_gif_direct store their return address in `kh1_dma_sender` before the walk; gs_block hands it to the worker in
+w_block's second argument, and the worker adds each block's time (kh1_vu1_clock, two reads a w_block, ~5,800 a window)
+and its qwords by kind to that sender's slot: GIF tags, PACKED register qwords (vertices and the rest but A+D), A+D
+writes, REGLIST registers, IMAGE qwords. The Vita prints the eight slowest each window as
+`gs senders (w_block by the send's caller): ADDR N ms (blocks, K qw: tags, K packed, K A+D, K reglist, K image), ...`;
+the addresses map with out/vita/kh1.elf's symbols at the same offset as the `gs worker ops:` line's (in the VPK built on main 45eecda,
+w_block is 0x810ddc60, w_native_dir 0x810dd264; func_0015ff78 0x81065734, func_00237018 0x8102c780, func_00106b18
+0x8102a1dc). The host prints the same with `KH1_HOST_SENDERS=FROM:TO KH1_HOST_CLOCK=1` (`addr2line -f -e` the binary).
+
+**Host, frames 18,000-21,000 (en.iso, dive_en.txt, the gxmcheck binary, x86 times):**
+
+| Sender (the send's caller) | worker ms | blocks | what the blocks carry |
+|---|---|---|---|
+| func_0015ff78 (mdlgs.c: the models' texture streams) | 780 | 137,170 | 35.5 M qwords, 34.9 M of them IMAGE, 466 K A+D (the transfer registers) |
+| func_00237018 (gspkt.c: the HUD's and effects' packet sender, 72 callers) | 341 | 19,811 | 604 K PACKED, 462 K A+D (TEX0 / TEX2 with CLUT loads, sprites), 77,840 tags |
+| func_00106b18 (dmapool.c's pool send) | 84 | 8,612 | 294 K PACKED, 284 K REGLIST, 34 K A+D |
+| func_00242c08 (gauge.c) | 38 | 5,685 | 946 K IMAGE |
+| func_001274c8 (shadow.c) | 24 | 9,088 | 125 K A+D |
+
+func_00237018 is a wrapper, so its line is the 72 HUD / effect callers together; the host's call graph splits them.
+
+**Where the non-image part goes (host callgrind, `--separate-threads=yes`, instrumentation on at frame 18,000 for 300
+frames; the GS worker 2,657 M instructions):** w_block 925 M, of it the images 720 M (kh1_gsmem_image and the
+same-bytes compare) and gif_qword 216 M. Of gif_qword: **TEX0 / TEX2 writes 131 M** (kh1_gsmem_tex0: the CLUT load,
+then pipes.c on_clut: the conversion, the palette cache, a recording op, a native op's end, a texture lookup after),
+vertex kicks 87 M (gs_kick and the recorder's prim op). w_native_dir 212 M: nat_direct 152 M, **130 M of it prim_state**,
+almost all its texture lookups (kh1_texcache_get 163 M in all, 108 M of it decoding the 3,617 textures that changed);
+kh1_gs_native_sum 55 M. 935,045 CLUT loads to frame 21,000, about half with the TEX0 and TEXA of the load before.
+
+**clutskip (pipes.c on_clut).** A load is left out when it has the last load's TEX0 and TEXA, its entries are the
+same conversion (gsmem.c's id, which changes when the CLUT's words do), the palette cache answers the slot the
+recorder still has bound with nothing to fill, the CLUT's corners are not in pages a draw marked (the GPU's pixels,
+which the model does not hold), and no palette op, upload or frame op came since. Such a load binds nothing new, so
+its clut command (a batch break and a transfer command on the GPU thread), the native op's end before it and the
+texture lookup it would set off are not sent. 0 (host `KH1_HOST_CLUTSKIP=0`) sends every load as before.
+Also nat_direct calls prim_state only when it has work (a state change, or a texture lookup pending).
+
+**Checked (host, en.iso, dive_en.txt to frame 21,000, the gxmcheck binary, `KH1_HOST_TRACE=5 KH1_HOST_GSQ=1
+KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1 KH1_HOST_VU1=1 KH1_HOST_VU1TR=1 KH1_HOST_NATIVE=1 KH1_HOST_WIDE=1 KH1_HOST_NATCHAIN=1
+KH1_HOST_CD=go KH1_HOST_GXM=250 KH1_HOST_GXM_HASH=1`)**: all 168 GPU target hashes (84 pictures, display and 3D target)
+identical with main (ae76225); 167,282 of the 935,045 CLUT loads left out; GXM draws 2,032,690 -> 1,893,921 (-7 %), GPU
+vertices -8 % (the native joins a CLUT command no longer ends); make test passes.
+
+**The Vita's new lines, to read from the next fight log**: `gs senders` (which code the ~800 ms of non-image w_block
+belongs to on the A9; the host's x86 split is not the Vita's: images are 78 % of w_block here and ~18 % there), and
+`gs worker's CLUT loads (clutskip=1): N, N of them repeats left out, N ms; texture lookups: N, N decoded, N ms` (the
+worker's CLUT loads and prim_state's texture lookups, the host's main costs of the non-image packets and of
+w_native_dir). If the lookups' decodes are most of w_native_dir's ~19 us a run on the Vita, the next cut is the
+texture from its upload's source bytes (stage 4) rather than a second unswizzle out of GS memory.
+
+**Vita A/B (2026-11-02, Shay's Vita, unattended over vitacompanion with tools/vita/hw_run.sh, the merged VPK on main
+45eecda, `renderer=native frames=23000 pad=dive_en.txt`, clutskip=1 then 0)**: both runs reached frame 23,000 and
+stopped cleanly (each left one psp2core dump at the exit: a data abort in the kh1_gpu thread inside SceGxm during
+teardown, the same kind the natvbjoin run left at its frames= exit; not this change's). Frames 18,000-23,000: 25.5 / 25.4
+pictures/s. The last window (frame ~22,900):
+
+| | clutskip=1 | clutskip=0 |
+|---|---|---|
+| gs worker busy; the game's wait for it | 2,110 ms; 107 ms (20 waits) | 2,070 ms; 163 ms (27 waits) |
+| gs blocks: blocks, qwords; images' pieces, KiB, ms | 4,628, 682 K; 1,197, 10,156, 142 | 4,593, 670 K; 1,175, 9,995, 147 |
+| top sender (the texture streams) | 198 ms, 3,032 blocks, 672 K qw (657 K image) | 202 ms, 2,936 blocks, 651 K qw (638 K image) |
+| CLUT loads: all, left out, ms | 4,659, 1,189, 59 | 4,575, 0, 57 |
+| texture lookups: all, decoded, ms | **2,770, 0, 243** | **3,819, 0, 229** |
+
+So on the hardware clutskip leaves ~25 % of the loads out but saves no measurable time (the loads cost ~13 us each);
+it stays on (fewer draws on the host, no cost seen). In these unattended runs the worker's blocks are light (the game
+waits ~0.1-0.16 s for the worker, not the hand-played fight's ~0.77 s), so the ~800 ms of non-image w_block that log
+showed was not reproduced. The clear finding is **the texture lookups: ~240 ms a window, none of them decoding**, i.e.
+~60-90 us a lookup spent on the stamp and target scans (tex_scan over the texture's pages) and the cache's search, set
+off by every upload and CLUT load (tex_look). That is the next cut: no lookup after an upload or load whose pages miss
+the bound texture's and CLUT's, and a cheaper hit path.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.

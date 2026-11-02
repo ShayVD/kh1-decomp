@@ -41,6 +41,14 @@ void kh1_dma_fullscreen(const KH1FullScreen *tab, int n, s32 x0, s32 w);
 
 /* a GIF packet of qwc qwords sent in normal mode (no chain), read and printed like a walk's */
 void kh1_dma_gif_direct(const u32 *q, u32 qwc);
+/* 2026-11-02: the GS worker's blocks (the GIF channel's sends) by sender: who the code address that started the send
+ * (PlatDmaSend's caller, set in kh1_dma_sender before the walk), its blocks, qwords and microseconds on the worker, and
+ * the qwords by kind: GIF tags, PACKED register qwords (vertices and the rest but A+D), A+D writes, REGLIST registers,
+ * IMAGE qwords; the counts since the last take (the last slot also takes any sender beyond), each zeroed */
+#define KH1_DMA_SENDERS 24
+typedef struct { u32 who, blocks, qw, us, tags, pk, ad, rl, img; } KH1DmaSender;
+extern u32 kh1_dma_sender;
+int kh1_dma_senders_take(KH1DmaSender *out, int max);
 
 extern int kh1_host_trace;
 extern const char *kh1_host_texdump;
