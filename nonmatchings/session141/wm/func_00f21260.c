@@ -9,7 +9,7 @@ void *memset(void *, s32, u32);
 void sceVu0UnitMatrix(f32 (*)[4]);
 void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-void func_001655e0(f32 (*)[4], s32, s32, f32);
+void func_001655e0(f32 (*)[4], s32, f32, s32);
 void func_001621e0(s32, f32 (*)[4], St21260 *, s32);
 extern u64 **D_00F85160;
 extern f32 D_00FBA990[4][4];
@@ -104,7 +104,7 @@ void func_00f21260(s32 id, f32 (*m)[4], f32 (*m2)[4], s32 a3, s32 *tbl, s32 idx,
     sceVu0MulMatrix(D_00FBA990, m2, m3);
     sceVu0MulMatrix(m, m, m3);
     sceVu0CopyMatrix(m4, D_00F85180);
-    func_001655e0(m, a3, tbl[idx], f);
+    func_001655e0(m, a3, f, tbl[idx]);
     st.id = id;
     st.b12 = -128;
     st.b13 = -128;

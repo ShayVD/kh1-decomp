@@ -52,7 +52,7 @@ s32 func_00f67c60(void *x, s32 unused, s32 y) {
         }
         n /= 2;
         if (n < 8 && (btn & 0x2000)) {
-            func_00f67928(buf, sel, v);
+            func_00f67928(buf, sel, v, 0, 0); /* lim and base: set by its switch, sel is 0-5 */
         }
         if (n > 0 && (pad->btn & 0x4000)) {
             func_00f67ac8(buf);

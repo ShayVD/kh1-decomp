@@ -3,7 +3,7 @@
 
 typedef struct { u8 b0; u8 pad1[13]; u16 h0e; u16 pad10; s16 h12; u8 pad14[12]; f32 m[2][4]; f32 x, y, z; } O2f020;
 extern f32 D_002BBDEC;
-O2f020 *func_00f2cae8(void);
+O2f020 *func_00f2cae8(s32);
 s32 func_00f680c0(s32);
 void func_00f68ab0(s32);
 void func_001c0310(s32, void (*)(s32), ...);
@@ -18,7 +18,7 @@ void func_00f2f020(s32 arg0) {
     s32 done = 0;
     f32 s;
     f32 v[4];
-    o = func_00f2cae8();
+    o = func_00f2cae8(arg0);
     s = D_002BBDEC * 1000.0f;
     for (i = 0; func_00f680c0(o->h0e); i++) {
         if (o->b0 == 0) {

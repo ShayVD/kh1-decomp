@@ -668,6 +668,9 @@ xs_tink) and xl_limit.x (limits) have none, so a call into one stops the port (v
 The mechanism is done (ovl.h, ovl.c, relocs.tsv, drafts.tsv, ovlnative.py); each overlay needs its tables
 and C for every function its entry and data reach.
 
+- **Status (session 142)**: wm.x runs as native C on the host from a save to "Select World", Depart and
+  back into the field (native-overlays.md "Session 142", tests/host/pads/wm_en.txt). 31 of its 123
+  drafts run on that route (tools/host/draftcov.py); none is checked against PCSX2 yet.
 - **Order**: wm.x first (no world past Traverse Town without it), then gb.x (the Gummi flights between
   worlds, and gumisave.c's func_001b9c60 calling the editor through a stored pointer), then xs_simba /
   xs_genie / xs_dumbo / xs_bambi / xs_mushu / xs_tink as each summon is reached, xl_limit.x with the first

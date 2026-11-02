@@ -258,8 +258,8 @@ void func_00f5ad68(s32 arg0) {
     }
 }
 
-void func_00f5ae98(void) {
-    func_00f68808();
+void func_00f5ae98(s32 arg0, s32 arg1) {
+    func_00f68808(arg0, arg1);
 }
 
 void func_00f5aeb0(s32 arg0) {

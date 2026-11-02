@@ -4,14 +4,14 @@
 typedef struct { s32 id; s32 a; s32 b; f32 val; s32 pad2; s32 dir; } Sub;
 typedef struct { OvlMtx m0; OvlMtx m1; OvlMtx m2; OvlMtx m3[16]; OvlMtx m4[2]; Sub s; u8 pad2[0x590 - 0x558]; } W;
 typedef struct { f32 f0; u8 kind; u8 pad[3]; f32 tx; f32 ty; f32 tz; f32 rx; f32 ry; f32 rz; u16 snd; } K;
-void func_00f62ea0(OvlVec, f32, s32);
+void func_00f62ea0(f32, OvlVec, s32);
 extern W *D_00F864C0;
 
 void func_00f37028(OvlMtx arg0, K *k) {
     OvlVec v;
     OvlMtx r;
     OvlMtx m;
-    func_00f62ea0(v, k->f0, D_00F864C0->s.id);
+    func_00f62ea0(k->f0, v, D_00F864C0->s.id);
     PlatVu0UnitMatrix(m);
     PlatVu0TransMatrix(m, m, v);
     PlatVu0MulMatrix(m, D_00F864C0->m0, m);

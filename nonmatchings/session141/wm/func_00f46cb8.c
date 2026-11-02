@@ -42,7 +42,7 @@ void func_00f202b0(s32, s32);
 void func_00f2abe8(s32, s32);
 void func_00f309d0(s32);
 void func_00f3a4c8(void);
-s32 func_00f43e30(void);
+s32 func_00f43e30(s32);
 void func_00f43eb8(void);
 void func_00f43ef8(void);
 void func_00f44ea0(void);
@@ -61,7 +61,7 @@ void func_00f46cb8(s32 id, s32 how)
     D_010807F8 = 0;
     D_010809B0 = 0;
     once = 0;
-    h = func_00f43e30();
+    h = func_00f43e30(id);
     if (h == 0) {
         return;
     }

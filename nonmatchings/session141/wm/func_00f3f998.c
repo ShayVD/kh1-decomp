@@ -4,7 +4,7 @@ typedef struct { u8 pad[4]; s32 n; N3f998 e[1]; } M3f998;
 typedef struct { u8 pad[0xA0]; s32 xa0; u8 pada4[12]; f32 lo[3]; f32 hi[3]; } E3f998;
 s32 func_00f64c10(s32);
 E3f998 *func_00f64c38(s32, s32);
-M3f998 *func_00f650f0(s32);
+M3f998 *func_00f650f0(s32, void *);
 
 static inline f32 vlen_3f998(f32 *v) {
     return PlatSqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -33,7 +33,7 @@ void func_00f3f998(s32 arg0) {
         e->hi[1] = h[1];
         e->hi[2] = h[2];
         if (e->xa0 > 0) {
-            m = func_00f650f0(0);
+            m = func_00f650f0(0, e);
             p = m->e;
             for (j = 0; j < m->n; j++, p++) {
                 if (p->flag) {

@@ -11,7 +11,7 @@ typedef struct { u16 bone; u16 nkeys; u8 pad4[4]; AnmKey *keys; } AnmTrack;
 typedef struct { u8 pad0[8]; u32 count; AnmTrack *tracks; } Anm;
 typedef struct { f32 rot[4]; f32 pos[4]; f32 sc[4]; } Pose;
 extern u32 D_00FB1144;
-f32 func_00f64d48(f32, void *);
+f32 func_00f64d48(void *, f32);
 void *func_00f66640(void *, s32, MdlWork *, s32, void *, s32);
 MdlWork *func_00f65480(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, Anm *an, s32 *arg5, f32 time) {
     Pose ps;
@@ -55,7 +55,7 @@ MdlWork *func_00f65480(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, Anm
                 pp->sc[1] = b[bone].sc[1];
                 pp->sc[2] = b[bone].sc[2];
                 for (j = 0, ky = tr->keys; j < tr->nkeys; j++, ky++) {
-                    ((f32 *)pp)[ky->chan] = func_00f64d48(time, ky->curve);
+                    ((f32 *)pp)[ky->chan] = func_00f64d48(ky->curve, time);
                 }
                 for (k = 0; k < 3; k++) {
                     while (ps.rot[k] > 180.0f) ps.rot[k] -= 360.0f;

@@ -3,7 +3,7 @@ extern s32 D_00F85098;
 extern f32 D_00F8509C;
 extern f32 D_00F86480[4][4];
 extern f32 D_00F9A540[4][4];
-void func_00f3b360(void);
+void func_00f3b360(s32);
 void sceVu0UnitMatrix(f32 (*)[4]);
 void sceVu0TransMatrix(f32 (*)[4], f32 (*)[4], f32 *);
 
@@ -32,7 +32,7 @@ void func_00f44158(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
         }
         break;
     case 1:
-        func_00f3b360();
+        func_00f3b360(arg0);
         if (arg0 == 1) {
             setv_44158(v, arg1, arg2, arg3, D_00F9A540);
             D_00F9A540[1][1] = -1.0f;

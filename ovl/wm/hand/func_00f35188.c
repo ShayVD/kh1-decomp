@@ -3,7 +3,7 @@
 
 void func_0011d140(s32, s32);
 s32 func_001623e0(s32);
-void func_001655e0(f32 (*)[4], s32, s32, f32);
+void func_001655e0(f32 (*)[4], s32, f32, s32);
 s32 func_00167698(s32);
 void func_001bfac8(void);
 void func_00f2c310(s32);
@@ -37,7 +37,7 @@ void func_00f35188(void) {
                 break;
             }
         }
-        func_001655e0(m1, D_00FCD638, D_00FCD634[D_00F8C22C], D_00F8C228);
+        func_001655e0(m1, D_00FCD638, D_00F8C228, D_00FCD634[D_00F8C22C]);
         func_00f2c310(func_001623e0(D_00FCD638));
         if (D_00F8C230 >= 0) {
             r = func_00167698(D_00FCD634[D_00F8C22C]);

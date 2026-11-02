@@ -35,6 +35,19 @@ CALL_RX = re.compile(r"\b(func_[0-9a-f]{8})\s*\(")
 
 # Hits read by hand and left as they are (file, callee): the reason.
 BENIGN = {
+    # wm.x (session 142, --ovl wm)
+    ("nonmatchings/session141/wm/func_00f6cfa0.c", "func_0011d768"):
+        "comma expressions in the draft's loop condition: their value is the 1 / 0 after the call",
+    ("nonmatchings/session141/wm/func_00f43430.c", "func_00f41c28"):
+        "func_00f41c28 ends in a task loop and never returns",
+    ("ovl/wm/auto/text_00f40000.c", "func_00f44078"):
+        "a tail-call wrapper's `return`; nothing reads the wrapper's value",
+    ("ovl/wm/auto/text_00f40000_1.c", "func_00f43fd8"):
+        "a tail-call wrapper's `return`; nothing reads the wrapper's value",
+    ("ovl/wm/auto/text_00f60000.c", "func_001f3c20"):
+        "a tail-call wrapper's `return`; nothing reads the wrapper's value",
+    ("ovl/wm/hand/func_00f37770.nosib.c", "func_001bf098"):
+        "a statement in a switch case (the text heuristic reads it as a value)",
     ("src/game/dkmovie.c", "func_0024b138"):
         "func_00111238 names the disc / IPU calls and is never called (no jal, j or pointer to it)",
     ("src/game/dkmovie.c", "sceIpuSync"):
@@ -71,6 +84,20 @@ BENIGN = {
     ("src/text/winpart.c", "func_00206370", "func_002066b0"):
         "returned by func_002066b0, whose 39 main-ELF calls are all statements (recheck against the overlays, 5.2)",
 }
+
+
+def ovl_files(name):
+    """an overlay's C (ovl/NAME/) and its drafts (ovl/NAME/drafts.tsv), for --ovl (session 142)"""
+    out = []
+    for d, _, fs in os.walk(os.path.join(ROOT, "ovl", name)):
+        out += [os.path.relpath(os.path.join(d, f), ROOT) for f in fs if f.endswith(".c")]
+    t = os.path.join(ROOT, "ovl", name, "drafts.tsv")
+    if os.path.exists(t):
+        for l in open(t):
+            f = l.rstrip("\n").split("\t")
+            if len(f) >= 2 and f[0].startswith("func_"):
+                out.append(f[1])
+    return sorted(out)
 
 
 def files(sdk=False):
@@ -235,6 +262,7 @@ def enclosing_ret(s, pos):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--tsv")
+    ap.add_argument("--ovl", help="check an overlay's C (ovl/NAME and its drafts) against its own and the main ELF's definitions")
     a = ap.parse_args()
     alias = {}
     for l in open(os.path.join(ROOT, "functions.tsv")):
@@ -242,6 +270,9 @@ def main():
         if len(f) >= 2 and not l.startswith("#") and f[1].split():
             alias[f[0]] = "func_" + f[1].split()[0].lower()[-8:]
     srcs = {f: strip_comments(open(os.path.join(ROOT, f), errors="replace").read()) for f in files()}
+    if a.ovl:  # the overlay's definitions win over the main ELF's (none share an address); only its calls are checked
+        mine = {f: strip_comments(open(os.path.join(ROOT, f), errors="replace").read()) for f in ovl_files(a.ovl)}
+        srcs = dict(list(mine.items()) + list(srcs.items()))
     sdk = {f: strip_comments(open(os.path.join(ROOT, f), errors="replace").read()) for f in files(sdk=True)}
     defs = {}  # func_ name -> (params, variadic, rettype, file)
     for f, s in list(srcs.items()) + list(sdk.items()):
@@ -259,6 +290,8 @@ def main():
                 continue
             n, var = nparams(p)
             defs.setdefault(name, (n, var, ret, f))
+    if a.ovl:
+        srcs = mine
     # calls by functions.tsv names too (session 137: pppsys.c called pppStepPrograms with none of
     # its two arguments through a `(void)` prototype)
     call_rx = re.compile(r"(?<![\w.>])(func_[0-9a-f]{8}|" + "|".join(sorted(map(re.escape, alias), key=len, reverse=True))

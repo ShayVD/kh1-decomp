@@ -388,3 +388,65 @@ runs on the fake disc.
   set `D_002E26A0[0]` to 0 and the steering read through it: a crash in the pad script's code, not the
   game's).
 - The Japanese dive.txt (plan item 3) was not run: the old isoparts were not staged.
+
+## Session 142: wm.x (the world map) as native C
+
+Track A of native-plan.md "Beyond speed", the first overlay of the nine: wm.x is 1,105 functions (982
+matched, 123 near-miss drafts in ovl/wm/drafts.tsv, three of them new in nonmatchings/wm-native). It now
+runs as native C on the host: **from a save in Agrabah to the Gummi ship, the "Select World" screen,
+Depart, and back into Agrabah's field with the HUD**, 12,000 frames with no crash
+(tests/host/pads/wm_en.txt). wm.elf and gb.elf are byte-identical after every change below; kh1.elf too.
+
+- **The route**: the port has only been played as far as Destiny Islands, so the world map is reached
+  from the user's save 04 (Agrabah: Storage, world 8 room 7): load it, the command menu's Save, the Save
+  Menu's Gummi Ship, "Board the gummi ship?" yes. wm.x loads at ~6,330 ("kh1-ovl: wm.x loaded: native C
+  (1077 pointers fixed up; another pinned file of it)") and its worldmap/*.bin files follow.
+  `KH1_HOST_OVL=stub` is still needed: on the way, gumisave.c's func_001b9c60 calls the entry of the
+  overlay it is about to replace (xl_limit.x's, no native C) and gets 0.
+- **The English disc's wm.x** (ovl/wm/pins.tsv, last commit): the same code, 262 data bytes differ
+  (world names at 0xF87BE0-0xF87DF8, offsets at 0xFB4ECC-0xFB4F2D); ovl.c takes more than one pinned
+  file per overlay.
+- **The synchronous load path** (src/io/discfile.nostrict.c func_001205f0, which wm.x's own loads go
+  through) now calls `PlatOvlLoaded` like the queued path; wm.x was never handed to the native hook
+  before.
+- **VU0 divide by zero** (host/port/libvu0.c): `vdiv` of 1 by 0 gives +-MAX on the VU, so the 0 * MAX
+  that follows is 0; the host gave NaN. motion.nostrict.c func_001655e0 divides the zero rows of a
+  matrix by their zero lengths after a save load, and the party's positions became NaN.
+  sceVu0DivVector / DivVectorXYZ now take the VU's reciprocal (`vu_rcp`).
+- **Register passthrough in wm** (portability rules 10 and 11): `tools/host/argcheck.py --ovl NAME`
+  (new) checks an overlay's C (hand, auto and the drafts drafts.tsv lists) against its own and src/'s
+  definitions. It found 52 calls with too few arguments and 73 value uses of void functions; 116 are
+  fixed (the caller's own a0 / a1 passed on, wrappers that tail-call with every argument, the last
+  call's value returned, `KH1_V0` where the PS2 object needs void). The other 9 are left: comma
+  expressions in a draft's loop condition, tail wrappers whose value nobody reads, and func_00f41c28,
+  which never returns. The crash that started it: func_00f2b870 called func_00f64b88() without its
+  handle. func_00f68770 (33 callers use its handle) also dropped the matrix its first call takes in a2.
+- **Float argument order** (rule 11): 30 prototypes put an f32 where the definition has an int (wm.x's
+  curve functions, func_00f4ec30 / f4f188 / f4f6d8, func_001655e0 ...). 16 declarations were reordered
+  with their calls; where that changes the PS2 code (14 declarations in 12 files), the file keeps the EE's prototype under `#ifdef KH1_PS2` and the
+  host gets the definition's order through an inline `ee_xxxxxxxx` wrapper and a `#define` (a
+  function-like macro cannot be used: ovlnative.py's names.h already defines func_X as wm_X).
+  abicheck.py reads src/ only; the scan was a one-off (both checks should learn `--ovl`).
+- **DMA by register** (include/platform/dma.h): wm.x and gb.x start their draw-list nodes' chains by
+  writing D_STAT, VIF1's and GIF's QWC / TADR / CHCR directly. `PlatDmaPutGifChcr / Qwc / Tadr` are new
+  (the host walks the chain like PlatDmaSend on channel 2) and the six functions use them with
+  `PLAT_DMA_ADDR`. dkmovie.x's IPU registers (0x10002000) are left: it is not on this route.
+- **One library call** passed no argument: auto func_00f2c8d8's sceVu0UnitMatrix() (a0 was the
+  matrix).
+- **Memory card order** (host/port/mc_dir.c): GetDir listed a directory in readdir's order, which
+  depends on how the host made the folder; a fresh copy of the card moved save 04 and the pad script
+  loaded another save. The entries are now sorted by name.
+- **No 3D**: the null platform draws no 3D, so the map's galaxy and ship are missing from the shots; the
+  menus and text are drawn.
+- **Drafts on the route** (tools/host/draftcov.py, new: a gdb breakpoint on every draft): **31 of the
+  123 drafts run** on wm_en.txt's route (function, words its draft differs by): f23550 (2), f32770 (2),
+  f43430 (2), f3a030 (3), f7cb60 (3), f436d0 (4), f7ecd8 (5), f42ce0 (12), f79868 (12), f651d0 (13),
+  f66b38 (14), f29dc0 (20), f79700 (24), f7a350 (31), f3a860 (32), f78bc0 (50), f2b598 (54), f3f998 (56),
+  f7bde0 (59), f66bd0 (61), f78978 (100), f7c880 (107), f344f0 (112), f23628 (130), f2ac98 (165),
+  f46cb8 (210), f33e48 (416), f7d0a8 (499), f7ad38 (760), f31430 (810), f7de08 (933). **None is checked
+  against PCSX2 yet**: that check (native-plan.md track A) needs the same save loaded in PCSX2 and the
+  same pad script, comparing positions, wm.x's data and the menus' text at the same frames. Until then a draft on this list is a suspect for anything
+  the world map does wrong.
+
+What is next for wm.x: a world that is not the current one (a Gummi flight, most likely gb.x, which has
+no native C yet), Warp Drive, the ship editor, and the PCSX2 check of the 31 drafts above.

@@ -12,7 +12,14 @@ f32 func_00f2c7f8(void);
 E3d4d8 *func_00f3b460(s32);
 s32 func_00f3b480(void);
 s32 func_00f3caf0(s32, f32, f32 *, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3cb90(s32, f32, f32 *, f32 *, f32 (*)[4]);
+#else
+s32 func_00f3cb90(s32, f32 *, f32 *, f32 (*)[4], f32);
+static __inline__ s32 ee_00f3cb90(s32 x0, f32 x1, f32 * x2, f32 * x3, f32 (*x4)[4]) { return func_00f3cb90(x0, x2, x3, x4, x1); }
+#undef func_00f3cb90
+#define func_00f3cb90 ee_00f3cb90
+#endif
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 void sceVu0CopyVector(f32 *, f32 *);
 s32 func_00f33a90(void);

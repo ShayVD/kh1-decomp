@@ -23,10 +23,10 @@ typedef struct {
 
 extern u8 D_00379F28[];
 extern u8 D_0037A028[];
-void func_00f651d0(s32, u8 *, u8 *, Desc *, s32, Mode *, s32);
+void *func_00f651d0(s32, u8 *, u8 *, Desc *, s32, Mode *, s32);
 
 
-void func_00f676b8(s32 flag, s32 arg, u8 *base, s32 idx, s32 a4, s32 a5, UV *src) {
+void *func_00f676b8(s32 flag, s32 arg, u8 *base, s32 idx, s32 a4, s32 a5, UV *src) {
     Mode m;
     Desc d;
     u8 *tex;
@@ -75,5 +75,5 @@ void func_00f676b8(s32 flag, s32 arg, u8 *base, s32 idx, s32 a4, s32 a5, UV *src
         m.b = 1;
         m.c = 1;
     }
-    func_00f651d0(arg, o, tex, &d, a4, &m, a5);
+    return func_00f651d0(arg, o, tex, &d, a4, &m, a5);
 }

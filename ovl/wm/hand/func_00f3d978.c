@@ -21,7 +21,14 @@ CONTEXT_ONLY s32 func_00f3b480() { return 0; }
 s32 func_00f218d8(void);
 s32 func_00f3af58(f32 *, f32);
 s32 func_00f3caf0(f32 *, f32, f32 *, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3cb90(f32 *, f32, f32 *, f32 *, f32 (*)[4]);
+#else
+s32 func_00f3cb90(f32 *, f32 *, f32 *, f32 (*)[4], f32);
+static __inline__ s32 ee_00f3cb90(f32 * x0, f32 x1, f32 * x2, f32 * x3, f32 (*x4)[4]) { return func_00f3cb90(x0, x2, x3, x4, x1); }
+#undef func_00f3cb90
+#define func_00f3cb90 ee_00f3cb90
+#endif
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 void *func_00f650f0(s32, S3d978 *);
 void func_0024e640(s32, s32, void (*)(A3d978 *), A3d978 *);

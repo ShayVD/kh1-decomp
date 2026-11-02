@@ -120,6 +120,16 @@ void PlatDmaPutVif1Chcr(u32 v) {
 }
 void PlatDmaPutVif1Qwc(u32 v) {}
 void PlatDmaPutVif1Tadr(u32 v) { null_vif1_tadr = v; }
+/* the same on channel 2 (GIF), for the overlays' draw-list nodes (session 142) */
+static u32 null_gif_tadr;
+void PlatDmaPutGifChcr(u32 v) {
+    if (!(v & 0x100)) return;
+    null_gs_send("PlatDmaPutGifChcr", 1);
+    if (kh1_host_trace >= 2 && (v >> 2 & 3) == 1) null_dma_walk(2, v, null_gif_tadr);
+    null_dmac_done(2);
+}
+void PlatDmaPutGifQwc(u32 v) {}
+void PlatDmaPutGifTadr(u32 v) { null_gif_tadr = v; }
 
 /* KH1_HOST_TRACE=2: host/null/dmawalk.c walks each chain a send starts.  The host owns the
  * executable's data and bss, the scratchpad and the stack. */

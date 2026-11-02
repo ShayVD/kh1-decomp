@@ -50,12 +50,12 @@ typedef struct {
 } GbArgs;
 extern u8 D_00379F28[][4];
 extern u8 D_0037A028[][4];
-void func_00f651d0(s32, GbWork *, void *, GbArgs *, s32, GbMode *, s32);
+void *func_00f651d0(s32, GbWork *, void *, GbArgs *, s32, GbMode *, s32);
 
 extern GbUVTbl *D_0108DB8C[];
 s32 func_00f4a958(s32);
 
-void func_00f5e540(s32 x, GbWork *w, s32 id, s32 c, s32 a4) {
+void *func_00f5e540(s32 x, GbWork *w, s32 id, s32 c, s32 a4) {
     GbMode m;
     GbUVTbl *t;
     u8 *tex;
@@ -99,5 +99,5 @@ void func_00f5e540(s32 x, GbWork *w, s32 id, s32 c, s32 a4) {
     m.mode = 5;
     m.b = 1;
     m.c = 1;
-    func_00f651d0(x, (GbWork *)o, tex, &a, r, &m, a4);
+    return func_00f651d0(x, (GbWork *)o, tex, &a, r, &m, a4);
 }

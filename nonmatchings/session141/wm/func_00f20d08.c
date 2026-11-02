@@ -34,7 +34,7 @@ void sceVu0UnitMatrix(OvlMtx);
 void sceVu0RotMatrixX(OvlMtx, OvlMtx, f32);
 void sceVu0MulMatrix(OvlMtx, OvlMtx, OvlMtx);
 void sceVu0CopyMatrix(OvlMtx, OvlMtx);
-void func_001655e0(OvlMtx, s32, s32, f32);
+void func_001655e0(OvlMtx, s32, f32, s32);
 void func_001621e0(s32, OvlMtx, St20 *, s32);
 void func_0011d140(s32, s32);
 s32 func_00167698(s32);
@@ -62,7 +62,7 @@ void func_00f20d08(s32 id, OvlMtx m, OvlMtx w, f32 a) {
     sceVu0MulMatrix(v, D_00F85180, D_00F85200);
     sceVu0CopyMatrix(D_00FBA9D0, D_00F872C0);
     D_00FBA9D0[3][3] = a;
-    func_001655e0(m, D_00F850EC, D_00F850E8[D_00F85120], D_00F8511C);
+    func_001655e0(m, D_00F850EC, D_00F8511C, D_00F850E8[D_00F85120]);
     st.xC = -128;
     st.xD = -128;
     st.x8 = id;

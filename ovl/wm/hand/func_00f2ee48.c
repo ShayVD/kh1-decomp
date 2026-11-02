@@ -3,7 +3,7 @@
 
 typedef struct { u8 on; u8 pad[0xD]; u16 snd; u16 pad2; s16 flag; u8 pad3[0xC]; OvlMtx m; } O;
 void func_001bfac8(void);
-O *func_00f2cae8(void);
+O *func_00f2cae8(s32);
 void func_00f2cf78(s32);
 void func_00f2ee20(s32);
 s32 func_00f680c0(s32);
@@ -13,7 +13,7 @@ extern f32 D_002BBDEC;
 void func_00f2ee48(s32 arg0) {
     OvlVec v;
     s32 state = 0;
-    O *o = func_00f2cae8();
+    O *o = func_00f2cae8(arg0);
     f32 *m = o->m[0];
     f32 acc = 0.0f;
     f32 step = D_002BBDEC * 4000.0f;

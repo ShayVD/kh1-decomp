@@ -12,7 +12,7 @@ extern K6 D_00FB6F60;
 extern u64 D_00F87070[];
 extern Spr D_00F9B330[];
 f32 func_001befc8(s32, void *);
-u64 *func_00f32b00(f32, f32, u64 *, s32, u64, s32, s32, s32, s32, s32, s32);
+u64 *func_00f32b00(u64 *, s32, u64, s32, s32, s32, s32, s32, f32, f32, s32);
 u64 *func_00f32df0(u64 *p, s32 x, s32 y, s32 k)
 {
     K6 a;
@@ -40,17 +40,17 @@ u64 *func_00f32df0(u64 *p, s32 x, s32 y, s32 k)
         pv = &D_00F9B330[5].v;
         pw = &D_00F9B330[5].w;
         ph = &D_00F9B330[5].h;
-        p = func_00f32b00(0.0f, 1.0f, p, ((s32)(func_001befc8(k, &a) * 128.0f) << 24) | 0x808080, *pt, x, y, *pw - 1, *ph - 1, *pu + 1, *pv + 1);
-        p = func_00f32b00(0.0f, 1.0f, p, ((s32)(func_001befc8(k, &b) * 128.0f) << 24) | 0x808080, *pt, x, y, *pw - 1, *ph - 1, *pu + 1, *pv + 1);
+        p = func_00f32b00(p, ((s32)(func_001befc8(k, &a) * 128.0f) << 24) | 0x808080, *pt, x, y, *pw - 1, *ph - 1, *pu + 1, 0.0f, 1.0f, *pv + 1);
+        p = func_00f32b00(p, ((s32)(func_001befc8(k, &b) * 128.0f) << 24) | 0x808080, *pt, x, y, *pw - 1, *ph - 1, *pu + 1, 0.0f, 1.0f, *pv + 1);
     }
     if (k < 12) {
         col = ((s32)(func_001befc8(k, &e) * 128.0f) << 24) | 0x808080;
         t = func_001befc8(k, &c);
-        p = func_00f32b00(func_001befc8(k, &d), t, p, col, D_00F87070[7], x, y, D_00F9B330[7].w, D_00F9B330[7].h, D_00F9B330[7].u, D_00F9B330[7].v);
+        p = func_00f32b00(p, col, D_00F87070[7], x, y, D_00F9B330[7].w, D_00F9B330[7].h, D_00F9B330[7].u, func_001befc8(k, &d), t, D_00F9B330[7].v);
     }
     if ((u32)(k - 5) < 7) {
         col = ((s32)(func_001befc8(k, &g) * 128.0f) << 24) | 0x808080;
-        p = func_00f32b00(0.0f, func_001befc8(k, &f), p, col, D_00F87070[8], x, y, D_00F9B330[8].w, D_00F9B330[8].h, D_00F9B330[8].u, D_00F9B330[8].v);
+        p = func_00f32b00(p, col, D_00F87070[8], x, y, D_00F9B330[8].w, D_00F9B330[8].h, D_00F9B330[8].u, 0.0f, func_001befc8(k, &f), D_00F9B330[8].v);
     }
     return p;
 }

@@ -36,7 +36,7 @@ u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 void func_0011d768(s32);
 void func_0024e468(s32);
 void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
-void func_00f6b5d0(s32, s32);
+void func_00f6b5d0(s32, s32, s32);
 void func_00f6ade8(s32);
 
 #define B(x) (*(u8 *)&(x))
@@ -263,7 +263,7 @@ void func_00f6b7c8(void) {
             }
             func_001bfac8();
         }
-        func_00f6b5d0(2, 0);
+        func_00f6b5d0(2, 0, 0); /* a2 is whatever the path left (an original bug); 0 off the EE */
         if (D_0108F284 == 0) {
             func_0024e468(wait);
         } else {
