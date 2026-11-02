@@ -408,6 +408,24 @@ moved, so it reads the pages' raw words, `kh1_gsmem_tex_raw`'s 8 KiB a page copi
 hashes the texels), not in the scans; the op is 8 ms and the palette check 18 ms. That is the next cut: keep the
 raw words' check from copying (compare in place, or a per-page content id gsmem.c keeps as it stores), or key the
 entries by the upload's source as stage 4 plans.
+**A scripted fight on the hardware (2026-11-02, Shay's Vita, the merged VPK on main 3157883b, tools/vita/hw_run.sh with
+tests/host/pads/fight_en.txt `renderer=native frames=24000`)**: fight_en.txt is dive_en.txt with the Shadows (12,700-17,990)
+played like a person fights: the left stick round the four ways every 15 frames, CIRCLE 3 frames in every 5, CROSS once
+a cycle. The log's addresses are this ELF's symbols + 0x68000. Per ~2.2 s window in the fight (frame ~15,000):
+
+| | fight (13,000-18,000) | after (18,000-24,000) |
+|---|---|---|
+| pictures/s | 21.6 | 25.5 |
+| threads: gpu / game / gs worker | 1,750-1,840 / 1,630-1,730 / 1,380-1,480 ms | 1,940-2,035 / 1,750-1,830 / 1,610-1,690 ms |
+| the game's wait for the worker | 0-100 ms | 80-220 ms |
+| worker ops | w_qwords 328-381, w_load 283-415, w_load_big 231-388, w_native_dir 253-308, w_block 194-276, w_kick ~70 | w_qwords 455-497, w_load 350-371, w_block 304-344, w_native_dir ~280 |
+| top senders | func_0015ff78 (texture streams) 139-177 ms, ~600 K image qw; func_00237018 (HUD / effects) 18-24 ms | 200-230 ms; 22-29 ms |
+| texture lookups | ~2,500, none decoded, ~215-230 ms | ~2,800, none decoded, ~250-260 ms |
+
+So the HUD's and effects' packets (func_00237018) are ~25 ms a window on the A9, not the ~800 ms of non-image w_block the
+hand-played log suggested; the stage 6 fast 2D path has little to take from the worker. The worker's ~1.2 s of texture
+work (uploads, PATH2 image qwords, the stream's image blocks, the lookups) is stage 4's, but in this fight the worker is
+no longer the limit: the GPU thread is the busiest thread and the game waits little for the worker.
 
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
