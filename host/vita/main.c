@@ -80,6 +80,9 @@
  *                             payload is written once into a 4 MiB pool and both queues carry only a reference to it
  *       natbulk=0             with natref=1, the GS worker counts each native record in the GS model on its own (1, the
  *                             default: the records between PRIM changes in one count); natref=0 is always per record
+ *       natdirect=0           with natref=1, the GS worker reads every pooled payload and hands its records on itself (1,
+ *                             the default since 2026-11-02: a payload drawn in one PRIM is counted from the game thread's
+ *                             summary and passed to the GPU thread whole, which joins and opens its ops; dmawalk.c)
  *       natchain=0            with renderer=native, every UNPACK written into VU memory and the native parses of P18,
  *                             P11, P10, P0 and P4 reading it there, their payloads built and then copied into the pool, and
  *                             every feed / hand-off timed (as before 2026-11-01); 1, the default: those parses read the
@@ -201,6 +204,9 @@ extern int kh1_dma_native, kh1_vita_gxm_native_ok, kh1_vita_gxm_skin_ok;
 extern u32 kh1_pipes_nat_cull, kh1_pipes_nat_draws, kh1_pipes_nat_tris;
 extern int kh1_pipes_nat_span; /* pipes.c: config.txt natspan= (2026-11-01) */
 extern int kh1_dma_natref, kh1_dma_natbulk; /* dmawalk.c: config.txt natref=, natbulk= (2026-11-01) */
+extern int kh1_dma_natdirect;               /* dmawalk.c: config.txt natdirect= (2026-11-02) */
+extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends;
+extern u32 kh1_dma_img_n, kh1_dma_img_qw, kh1_dma_img_same, kh1_dma_img_us, kh1_dma_blk_n, kh1_dma_blk_qw; /* dmawalk.c */
 static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
 static int strip_always;  /* config.txt's strip= */
 /* session 136: where a GPU frame's CPU time goes (the watchdog's): recording the kicks, the frame's
@@ -654,6 +660,28 @@ static int watchdog(SceSize args, void *argp) {
                      (kh1_pool_us_wait - pw0) / 1000, kh1_pool_waits - pn0);
                 pw0 = kh1_pool_us_wait;
                 pn0 = kh1_pool_waits;
+                if (kh1_pool_on && kh1_dma_natref && kh1_dma_natdirect) { /* 2026-11-02 */
+                    static u32 dn0, mn0, de0;
+                    vlog("kh1-vita: natdirect=1: %u payloads straight to the GPU thread, %u read by the GS worker (a PRIM "
+                         "change among their records); %u native ops ended by the worker\n",
+                         kh1_dma_nat_direct_n - dn0, kh1_dma_nat_mixed_n - mn0, kh1_pipes_nat_dir_ends - de0);
+                    dn0 = kh1_dma_nat_direct_n;
+                    mn0 = kh1_dma_nat_mixed_n;
+                    de0 = kh1_pipes_nat_dir_ends;
+                }
+                { /* 2026-11-02: what the GS worker's blocks (w_block) carry: the IMAGE pieces' share of their time */
+                    static u32 bn0, bq0, in0, iq0, is0, iu0;
+                    vlog("kh1-vita: gs blocks: %u blocks, %u K qwords; images in them and the kicks: %u pieces, %u KiB, %u "
+                         "skipped as the same bytes, %u ms\n", kh1_dma_blk_n - bn0, (kh1_dma_blk_qw - bq0) / 1000,
+                         kh1_dma_img_n - in0, (kh1_dma_img_qw - iq0) / 64, kh1_dma_img_same - is0,
+                         (kh1_dma_img_us - iu0) / 1000);
+                    bn0 = kh1_dma_blk_n;
+                    bq0 = kh1_dma_blk_qw;
+                    in0 = kh1_dma_img_n;
+                    iq0 = kh1_dma_img_qw;
+                    is0 = kh1_dma_img_same;
+                    iu0 = kh1_dma_img_us;
+                }
             }
             if (kh1_gpuq_on) /* session 142: the frame's GPU work on the third core (the commands and present above) */
                 vlog("kh1-vita: gpu thread: %u ms busy; the GS worker waited %u ms for it (%u waits); %u GS memory pages "
@@ -802,6 +830,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
         else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
         else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
+        else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
         else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);

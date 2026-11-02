@@ -29,6 +29,7 @@
 #include "gsmem.h"
 #include "gsqueue.h"
 #include "platform/vu1.h"
+#include "platform/natdraw.h"
 
 int printf(const char *, ...);
 int sprintf(char *, const char *, ...);
@@ -103,6 +104,11 @@ int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max) {
     return gs_nval;
 }
 
+/* 2026-11-02 (the 9a95cf9 fight log: w_block ~850 ms per 2.1 s on the GS worker): the IMAGE pieces gif_block took (the
+ * GS worker's blocks and kicks, or the walk's own without the worker), their qwords, those skipped as the same bytes
+ * again, and the microseconds they took (kh1_vu1_clock: the Vita's watchdog); and the blocks and qwords w_block took */
+u32 kh1_dma_img_n, kh1_dma_img_qw, kh1_dma_img_same, kh1_dma_img_us, kh1_dma_blk_n, kh1_dma_blk_qw;
+
 /* one qword of the GIF stream: a GIFtag, or the next qword of the current packet */
 static void gif_qword(GifStream *g, const u32 *q) {
     u32 nloop, h;
@@ -156,10 +162,16 @@ static void gif_block(GifStream *g, const u32 *q, u32 n) {
          * skipped whole when it is the same rectangle's same bytes again (host/null/gsmem.c) */
         if (g->left && g->flg >= 2) {
             u32 k = n - i < g->left ? n - i : g->left, whole = g->left == g->nloop && k == g->left;
+            u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
             if (!whole || !kh1_gsmem_image_same(q, k * 16)) {
                 kh1_gsmem_image(q, k * 4);
                 if (whole) kh1_gsmem_image_kept(q, k * 16);
+            } else {
+                kh1_dma_img_same++;
             }
+            if (kh1_vu1_clock) kh1_dma_img_us += kh1_vu1_clock() - t0;
+            kh1_dma_img_n++;
+            kh1_dma_img_qw += k;
             g->left -= k;
             i += k - 1;
             q += (k - 1) * 4;
@@ -224,7 +236,11 @@ static void skim_block(GifStream *g, const u32 *q, u32 n) {
 /* the worker's streams: 0 a walk's GIF channel or PATH2 (DIRECT) data, or a direct packet; 1 an XGKICK's */
 static GifStream ws[2];
 static u32 path1_packets, block_seq;
-static void w_block(const u32 *a, const u32 *d, u32 n) { gif_block(&ws[0], d, n); } /* a[0]: never joined */
+static void w_block(const u32 *a, const u32 *d, u32 n) { /* a[0]: never joined */
+    kh1_dma_blk_n++;
+    kh1_dma_blk_qw += n;
+    gif_block(&ws[0], d, n);
+}
 static void w_qwords(const u32 *a, const u32 *d, u32 n) { /* PATH2 qwords: joined, one stream either way */
     GifStream *g = &ws[0];
     u32 i, k;
@@ -369,14 +385,82 @@ static void w_native_ref(const u32 *a, const u32 *d, u32 n) {
         else kh1_pool_free(d[2]); /* no recorder: nothing reads it later */
     }
 }
-static void path1_draw(const u32 *q, u32 nqw) {
-    u32 r[4], *p;
-    if (kh1_dma_natref && kh1_gsq_on && kh1_pool_on && (p = kh1_pool_get(nqw, &r[2])) != 0) {
-        memcpy(p, q, nqw * 16);
-        r[0] = (u32)(unsigned long)p;
-        r[1] = nqw;
-        r[3] = 0;
+/* 2026-11-02 (docs/native-plan.md "Native payloads straight to the GPU thread"; config.txt natdirect=, host
+ * KH1_HOST_NATDIRECT): with natref on, the game thread sums up a payload as it hands it over (its records are still in
+ * its cache: it just wrote them), and when every record is drawn in one PRIM the GS worker does only the GS model's
+ * bookkeeping from that summary (gsregs.c kh1_gs_native_sum) and passes the whole payload to the GPU thread as one
+ * reference (pipes.c nat_direct), which joins, opens and ends the native ops there.  The worker reads none of the
+ * payload.  A payload with a PRIM change among its records goes the natref way (w_native_ref's body).  0 is natref's
+ * path for every payload */
+int kh1_dma_natdirect = 1;
+u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n; /* the watchdog's: payloads that went directly, and the natref way */
+/* the summary (s: the vertices, the triangles, the PRIM | the first record's PRE << 16 | 1 << 17 when it is one PRIM,
+ * the records | the program << 24) of one payload of nqw qwords; 0 when the worker must read it (no records, a PRIM
+ * change, a record past the payload's end) */
+static int nat_sum(const u32 *d, u32 nqw, u32 *s) {
+    u32 nrec, r, kicks = 0, nd = 0, pp = 0, pre = 0, used = 0, nq;
+    const u32 *rec = d + 8;
+    if (nqw < 2) return 0;
+    nrec = d[1];
+    if (!nrec || nrec > 0xFFFFFF || 2 + d[3] + d[2] * 4 != nqw) return 0;
+    for (r = 0; r < nrec; r++) {
+        if (used + 1 > d[3]) return 0;
+        nq = KH1_NAT_REC_QW(rec);
+        if ((used += nq) > d[3]) return 0;
+        if (rec[1] >> 14 & 1) {
+            u32 p = rec[1] >> 15 & 0x7FF;
+            if (!r) pre = 1, pp = p;
+            else if (!pre || p != pp) return 0;
+        }
+        kicks += rec[2];
+        nd += rec[2] > 2 ? rec[2] - 2 : 0;
+        rec += nq * 4;
+    }
+    s[0] = kicks;
+    s[1] = nd;
+    s[2] = pp | pre << 16 | 1u << 17;
+    s[3] = nrec | (d[0] & 0xFF) << 24;
+    return 1;
+}
+/* two qwords a payload: the reference (w_native_ref's) and the summary (nat_sum's, or zeros) */
+static void w_native_dir(const u32 *a, const u32 *d, u32 n) {
+    (void)a;
+    for (; n >= 2; n -= 2, d += 8) {
+        const u32 *p = (const u32 *)(unsigned long)d[0], *s = d + 4;
+        if (s[2] >> 17 & 1) {
+            u32 prim = kh1_gs_native_sum(s[2] >> 16 & 1, s[2] & 0x7FF, s[0], s[1], s[3] & 0xFFFFFF);
+            path1_packets += s[3] & 0xFFFFFF;
+            kh1_dma_nat_direct_n++;
+            if (!kh1_gs_nat_direct || !kh1_gs_nat_direct(prim, s[3] >> 24, p, d[1], d[2])) kh1_pool_free(d[2]);
+            continue;
+        }
+        kh1_dma_nat_mixed_n++;
+        kh1_gs_nat_pooled = 1;
+        kh1_gs_nat_free = d[2];
+        native_run(p, d[1], kh1_dma_natbulk);
+        kh1_gs_nat_pooled = 0;
+        if (kh1_gs_nat_done) kh1_gs_nat_done(d[2]);
+        else kh1_pool_free(d[2]);
+    }
+}
+static void nat_put(const u32 *p, u32 nqw, u32 end) {
+    u32 r[8];
+    r[0] = (u32)(unsigned long)p;
+    r[1] = nqw;
+    r[2] = end;
+    r[3] = 0;
+    if (kh1_dma_natdirect) {
+        if (!nat_sum(p, nqw, r + 4)) r[4] = r[5] = r[6] = r[7] = 0;
+        kh1_gsq_put(w_native_dir, 0, 0, r, 2);
+    } else {
         kh1_gsq_put(w_native_ref, 0, 0, r, 1);
+    }
+}
+static void path1_draw(const u32 *q, u32 nqw) {
+    u32 end, *p;
+    if (kh1_dma_natref && kh1_gsq_on && kh1_pool_on && (p = kh1_pool_get(nqw, &end)) != 0) {
+        memcpy(p, q, nqw * 16);
+        nat_put(p, nqw, end);
         return;
     }
     kh1_gsq_put(w_native, 0, 0, q, nqw);
@@ -389,12 +473,8 @@ static u32 *path1_room(u32 maxqw) {
 static u32 *path1_at;
 static u32 *path1_room_at(u32 maxqw) { return path1_at = path1_room(maxqw); }
 static void path1_take(u32 nqw) {
-    u32 r[4];
-    r[2] = kh1_pool_take(nqw);
-    r[0] = (u32)(unsigned long)path1_at;
-    r[1] = nqw;
-    r[3] = 0;
-    kh1_gsq_put(w_native_ref, 0, 0, r, 1);
+    u32 end = kh1_pool_take(nqw);
+    nat_put(path1_at, nqw, end);
 }
 
 /* the words an UNPACK reads: num vectors written, CL of each WL read when WL > CL */

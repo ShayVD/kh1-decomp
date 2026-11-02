@@ -120,6 +120,12 @@ static void host_clock_report(void) {
                "%u payloads differed\n", kh1_vu1_natchain, kh1_vu1_nc_runs, kh1_vu1_nc_qw / 1000, kh1_vu1_nc_flushed,
                kh1_vu1_nc_bad);
     }
+    { /* 2026-11-02: natdirect's payloads (dmawalk.c) */
+        extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends;
+        if (kh1_dma_nat_direct_n || kh1_dma_nat_mixed_n)
+            printf("kh1-host: natdirect: %u payloads straight to the GPU thread, %u read by the GS worker; %u ops ended by "
+                   "the worker\n", kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends);
+    }
 }
 #include "gsregs.h"
 #include "gsmem.h"
@@ -491,6 +497,10 @@ int main(int argc, char **argv) {
             extern int kh1_dma_natbulk;
             if (getenv("KH1_HOST_NATREF")) kh1_dma_natref = atoi(getenv("KH1_HOST_NATREF"));
             if (getenv("KH1_HOST_NATBULK")) kh1_dma_natbulk = atoi(getenv("KH1_HOST_NATBULK"));
+            { /* 2026-11-02: KH1_HOST_NATDIRECT=0 has the GS worker read every pooled payload (the Vita's natdirect=) */
+                extern int kh1_dma_natdirect;
+                if (getenv("KH1_HOST_NATDIRECT")) kh1_dma_natdirect = atoi(getenv("KH1_HOST_NATDIRECT"));
+            }
             if (kh1_dma_natref && kh1_pool_start(getenv("KH1_HOST_NATPOOL") ? (u32)atoi(getenv("KH1_HOST_NATPOOL")) : 4u << 20))
                 printf("kh1-host: KH1_HOST_NATREF: no pool\n");
         }

@@ -204,6 +204,83 @@ whose recording fills its core. So the frame rate moved only ~3 %; the next gain
 the 'Cut GPU thread recording cost' thread). **Next on the worker's native path**:
 prim_state's texture lookup per op (~25 M here), then stage 4's uploads.
 
+### Native payloads straight to the GPU thread (2026-11-02, config.txt `natdirect=1`, host-measured)
+
+The Vita's fight log of 9a95cf9 (frame 10,444, a 2.12 s window, renderer=native) had the GS worker saturated: 2,094 ms
+busy, the game waiting 512 ms for it. Its two biggest ops, mapped with this build's symbols (dmawalk.o compiled with
+vitasdk's flags: the log's `81134f79` is `w_native_ref` at dmawalk.o + 0x2d8, so the log's base for that file is
+0x81134ca0): **`w_block` 853 ms** (6,357 calls: the GIF channel's and DIRECT's blocks, gif_block on stream 0) and
+**`w_native_ref` 565 ms** (15,546 calls, ~36 us a native run). The rest: w_load 188, w_qwords (0x6f0) 152, the frame op
+123, w_load_big 95, w_path1 (0x254) 38, w_send (0x30) 12, w_xshift / w_xstretch (0x1c / 0x24) 6 each, w_kick (0xb84) 8.
+
+On x86 (callgrind, the same fight, frames 10,400-10,460 on the host's gxmcheck binary) w_native_ref is only ~6 % of the
+worker's instructions, so on the A9 its cost is mostly memory, not instructions: the worker read each payload's header,
+matrices (the join checks) and every record's first qword, all written on the game thread's core, then copied the header
+and matrices into the recording queue for each op it opened, and put three ops a run.
+
+**What natdirect does** (dmawalk.c `nat_sum` / `w_native_dir`, gsregs.c `kh1_gs_native_sum`, pipes.c `nat_direct` /
+`r_nat_dir` / `r_nat_dend`):
+
+- **The game thread sums up each payload as it hands it over** (path1_take, path1_draw): the vertices, the triangles, the
+  PRIM the first record's PRE writes, the records and the program, read from the records it has just written (still in
+  its cache). The summary rides in the GS queue's op beside the reference (two qwords a payload).
+- **The worker reads none of the payload** when its records are all drawn in one PRIM (the first record's PRE, or none,
+  and every later PRE the same PRIM): one PRIM write and one gs_native_n from the summary, which are exactly the bulk
+  path's writes and counts for such a payload. It keeps only what decides a join without the payload's bytes: the PRIM
+  and GS state generation the GPU thread's open op was drawn in. When either changed (or the worker's own op is open) it
+  ends the op first (nat_flush, as nat_rec would have); the state op goes as before (prim_state, a no-op on a join); then
+  one recording op with the payload's reference.
+- **The GPU thread does nat_hook's and nat_rec's work for it** (r_nat_dir): P0's join (same header and matrix), P13's
+  (same header, its matrices added), an op opened at the first record that fits, ended where a record would not fit and
+  at the payload's end unless it is P0's or P13's; then it frees the pool up to the payload's end. It read every record
+  already (r_nat_rec), and now reads the header and matrices from the pool instead of from the recording queue's copy.
+- **nat_flush ends an op the GPU thread may hold** (r_nat_dend) before any other recording op, as it ends the worker's own.
+- A payload with a PRIM change among its records goes natref's way (w_native_ref's body). In the Dive and its fights
+  there are none: 1,325,562 payloads to frame 12,000, all direct.
+
+One case is not op-for-op the same: a P13 run whose header joins the open op but whose PRIM or GS state changed. natref
+added its matrices to the old op and then ended it (an op with matrices no vertex uses); natdirect ends it first. The
+pictures cannot differ (the unused matrices draw nothing), and the host's hashes did not.
+
+**Checked (host, en.iso, dive_en.txt, gxmcheck binary, `KH1_HOST_TRACE=5 KH1_HOST_GSQ=1 KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1
+KH1_HOST_VU1=1 KH1_HOST_VU1TR=1 KH1_HOST_NATIVE=1 KH1_HOST_WIDE=1 KH1_HOST_NATCHAIN=1 KH1_HOST_CD=go`, to frame 12,000,
+through the fights the Vita log measured)**: all 96 GPU target hashes (KH1_HOST_GXM=250, KH1_HOST_GXM_HASH=1) identical
+with main (9a95cf9) and with natdirect, also with `KH1_HOST_NATPOOL=262144` (a 256 KiB pool that wraps often); the 240 GS
+digests at trace 2 (`KH1_HOST_GSQ_CHECK=50`) identical; the same native run, triangle and join counts.
+`natdirect=0` (host `KH1_HOST_NATDIRECT=0`) is natref's path, unchanged.
+
+**w_block, the 853 ms op.** In the host's fight the blocks carry the 3D target slot's texture streams: 11 T8 uploads of
+128 x 128 (16 KiB, BITBLTBUF 0x3600, bw 4) and their 11 CLUTs (16 x 16 CT32 at 0x3700) a picture, one texture after
+another through the same slot, so the same-bytes skip (kh1_gsmem_image_same) never matches. On x86 the decode
+(kh1_gsmem_image) and the compares are half the worker, but on the Vita band_t8 stores a block with NEON, so ~180 KiB a
+picture should cost a few ms, not 850. The VPK's new `gs blocks:` line measures it: the IMAGE pieces' time, KiB and skips
+inside the worker's blocks and kicks, against w_block's total. If the images are small there, the rest of w_block is
+the GS path's register and vertex packets (gif_qword, gs_kick), and the next step is counting those, not the uploads.
+
+**Vita (Shay, 2026-11-02, the natdirect VPK, defaults, dive_en.txt to frame 29,218; ops mapped at +0x7b001 over
+out/vita/kh1.elf)**: no errors; 4,295,310 payloads direct, none read by the worker. This build also has the C sound
+driver back (sound ticks ~220-280 ms a window, was ~780), so the frame rates below are both changes together; no
+natdirect=0 run was made.
+
+| Stretch (frames) | 9a95cf9 | natdirect VPK |
+|---|---|---|
+| Fight, 10,092-11,544 (frame 10,444 / 10,460 for the ops) | 17-18 heaviest, 22-29 typical | 27-30 |
+| w_native_ref / w_native_dir at that frame | 565 ms, 15,546 runs (36 us a run) | 307 ms, 15,986 runs (19 us a run) |
+| Fights 18,000-23,000 (26b3b0b's 13 pictures/s ones) | (not reached) | a steady 22-23 |
+
+In the 18,000-23,000 fights the worker is the limit again: ~2.1 s busy, the game waiting ~770 ms a window, **w_block
+~1,000 ms of it, but the `gs blocks:` line puts the IMAGE pieces at only ~180 ms (~11.5 MiB, ~1,400 pieces, ~300
+skipped)**. So ~800 ms of w_block is the GS path's register and vertex packets (gif_qword, gs_kick, the A+D writes),
+not uploads: the next worker target. w_native_dir's remaining ~19 us a run (prim_state, the recording queue's put,
+nat_flush, the op's two clock reads) is the second. In the 10,000-11,500 fight the GPU thread is the limit instead
+(1.84 s run clock; the worker's frame op waits ~535 ms for it). Frames 17,300-17,700 run at ~13 with the worker idle
+(the game thread at ~1.9-2.0 s): a game-thread stretch, not this path's.
+
+**Measured before that run**: the `gs worker ops:` line's w_native_dir (dmawalk.o's address of it, from this build)
+against w_native_ref with `natdirect=0` (in the natdirect VPK's out/vita/kh1.elf: w_native_dir 0x810dd144, w_native_ref
+0x810dd0c4, w_block 0x810ddac4; map the log by its w_block, the offset differs per run), the GPU thread's run clock (it does the joins now), and the fight windows'
+pictures/s. Expected (estimate): most of w_native_ref's ~0.55 s off the worker, ~0.1 s more on the GPU thread.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
