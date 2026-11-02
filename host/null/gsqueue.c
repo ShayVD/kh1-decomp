@@ -173,16 +173,28 @@ int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n) {
     return k;
 }
 
-/* the consumer: runs the ops from *t up to h, moving tail after each (prof: each op timed, op_add) */
+/* 2026-11-01: prof times 1 op in GSQ_SAMPLE (and counts the time GSQ_SAMPLE times): the two clock reads an op cost
+ * ~0.68 us each on a Vita, ~80 ms of the worker's 2.1 s window at ~60 K ops (fps-next 9a95cf9 log).  The op is
+ * picked by a cheap LCG's top bits, not every 8th, so a repeating op pattern cannot alias with the sample.  The
+ * counts (n) stay exact; the times are estimates, good to a few percent for an op run a few hundred times a
+ * window. */
+#define GSQ_SAMPLE 8
+static u32 gsq_lcg = 1;
+
+/* the consumer: runs the ops from *t up to h, moving tail after each (prof: ops sampled and timed, op_add) */
 static void q_run(KH1Q *q, u32 *t, u32 h, int prof) {
     while (*t != h) {
         const u32 *op = q->ring + (*t & q->mask);
         if (!op[0]) { /* the rest of the ring is unused: the next op is at its start */
             *t += q->mask + 1 - (*t & q->mask);
         } else {
-            u32 nqw = op[1], na = op[2], pa = (na + 3) & ~3u, t0 = prof ? clock_us() : 0;
+            u32 nqw = op[1], na = op[2], pa = (na + 3) & ~3u, t0 = 0, timed = 0;
+            if (prof) {
+                gsq_lcg = gsq_lcg * 1664525u + 1013904223u;
+                if ((timed = (gsq_lcg >> 29) == 0)) t0 = clock_us(); /* top 3 bits: 1 in 8 */
+            }
             ((KH1GsqFn)(unsigned long)op[0])(op + 4, op + 4 + pa, nqw);
-            if (prof) op_add(op[0], clock_us() - t0);
+            if (prof) op_add(op[0], timed ? (clock_us() - t0) * GSQ_SAMPLE : 0);
             *t += 4 + pa + nqw * 4;
         }
         STORE(q->tail, *t);
