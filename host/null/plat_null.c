@@ -97,6 +97,7 @@ PlatDmaChan * PlatDmaGetChan(int id) { return (PlatDmaChan *)&null_chan[id & 15]
 void kh1_counts_sample(void); /* host/null/counts.c (KH1_HOST_COUNTS, session 96) */
 void PlatDmaSend(PlatDmaChan *ch, void *tag) {
     int n = (struct PlatDmaChan *)ch - null_chan;
+    kh1_dma_sender = (u32)(unsigned long)__builtin_return_address(0); /* the GS worker's blocks by sender (dmawalk.h) */
     kh1_counts_sample();
     null_gs_send(n == 1 ? "PlatDmaSend ch 1" : n == 2 ? "PlatDmaSend ch 2" : 0, 1);
     if (kh1_host_trace >= 2) null_dma_walk(n, ch->words[0], (u32)(unsigned long)tag);

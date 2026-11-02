@@ -70,6 +70,11 @@ static void mark_pal(s32 slot, int fill) {
 static KH1PalCache *pal;
 static KH1TexCache *tex;
 static int tex_ok, tex_look = 1; /* tex_look: a transfer since the last lookup */
+static int oc_ok; /* the last clut op's TEX0, TEXA, id and slot (on_clut's oc_*) are what the recorder holds */
+/* 2026-11-02: the GS worker's CLUT loads and texture lookups on kh1_vu1_clock (the Vita's watchdog prints them): calls,
+ * microseconds, and the lookups that decoded the texture */
+extern u32 (*kh1_vu1_clock)(void);
+u32 kh1_pipes_clut_us, kh1_pipes_tex_n, kh1_pipes_tex_us, kh1_pipes_tex_dec;
 static u32 pal_buf[256];
 
 /* Session 146 (docs/vita-build.md "The recording on the third core"): the recorder's own work (the draw state's
@@ -119,6 +124,7 @@ static void on_xfer(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32 r
     nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_upload, a, 7, 0, 0);
     tex_look = 1;
+    oc_ok = 0;
 }
 
 /* Session 147d (the title's New Game pages: ~200 glyph CLUT loads a frame over more palettes than the palette
@@ -149,10 +155,37 @@ static int pal_get(const u32 *col, u32 n, int *fill) {
     return slot;
 }
 
+/* 2026-11-02 (docs/native-plan.md "Repeated CLUT loads"; config.txt clutskip=, host KH1_HOST_CLUTSKIP): the fights'
+ * HUD and effects load the same CLUT before each of their sprites (~half the loads repeat the one before).  A load
+ * with the last load's TEX0 and TEXA whose entries are the same conversion (gsmem.c's id: the CLUT's words unchanged)
+ * into the palette slot the recorder still has bound, its source not in pages a draw marked (the GPU's, which the
+ * model does not hold), with no palette, upload or frame op since, binds nothing new: the clut op, the native op's
+ * end before it and the texture lookup after it are left out.  0 sends every load as before */
+int kh1_pipes_clutskip = 1;
+u32 kh1_pipes_clut_n, kh1_pipes_clut_skipped; /* the loads, and those left out (the watchdog's) */
+static u32 oc_lo, oc_hi, oc_ta, oc_tb, oc_id;
 static void on_clut(u32 lo, u32 hi) {
     const KH1GsState *s = kh1_gs_state();
-    u32 n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_buf), a[4];
+    u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
+    u32 n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_buf), a[4], id = kh1_gsmem_clut_id();
     int fill = 0, slot = n ? pal_get(pal_buf, n, &fill) : -1;
+    kh1_pipes_clut_n++;
+    if (kh1_pipes_clutskip && oc_ok && id && id == oc_id && lo == oc_lo && hi == oc_hi && s->texa.lo == oc_ta &&
+        s->texa.hi == oc_tb && slot >= 0 && slot == a_pslot && !fill) {
+        u32 cpsm = hi >> 19 & 15, cbp = hi >> 5 & 0x3FFF, b8 = (lo >> 20 & 7) == 3; /* PSMT8 / T8H: 16 x 16, else 8 x 2 */
+        if (cpsm == 1) cpsm = 0; /* CT24 read as CT32 (gsmem.c cpsm_of) */
+        if (!kh1_gsmem_drawn(cpsm, cbp, 1, 0, 0) && !kh1_gsmem_drawn(cpsm, cbp, 1, b8 ? 15 : 7, b8 ? 15 : 1)) {
+            kh1_pipes_clut_skipped++;
+            if (kh1_vu1_clock) kh1_pipes_clut_us += kh1_vu1_clock() - t0;
+            return;
+        }
+    }
+    oc_ok = slot >= 0;
+    oc_lo = lo;
+    oc_hi = hi;
+    oc_ta = s->texa.lo;
+    oc_tb = s->texa.hi;
+    oc_id = id;
     a[0] = lo;
     a[1] = hi;
     a[2] = (u32)slot;
@@ -162,6 +195,7 @@ static void on_clut(u32 lo, u32 hi) {
     kh1_recq_put(r_clut, a, 4, 0, 0);
     a_pslot = (s16)slot;
     tex_look = 1;
+    if (kh1_vu1_clock) kh1_pipes_clut_us += kh1_vu1_clock() - t0;
 }
 
 /* the CLUT buffer's entries a draw of TEX0 (lo, hi) reads: 0 for a texture that is not indexed */
@@ -196,7 +230,7 @@ static void tex_lookup(u32 lo, u32 hi) {
     a[2] = (u32)slot;
     a[3] = (u32)decoded;
     a[4] = decoded && slot >= 0 ? tex->slot[slot].n : 0;
-    if (decoded) mark_tex(slot);
+    if (decoded) mark_tex(slot), kh1_pipes_tex_dec++;
     nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_texture, a, 5, 0, 0);
     /* session 136: an indexed draw reads the CLUT buffer at its own CSA, loaded or not (the GS's rule, and
@@ -215,6 +249,7 @@ static void tex_lookup(u32 lo, u32 hi) {
             nat_flush(); /* a joined native op first (2026-10-31) */
             kh1_recq_put(r_palette, a, 4, 0, 0);
             a_pslot = (s16)slot;
+            oc_ok = 0;
         }
     }
 }
@@ -414,8 +449,11 @@ static void prim_state(u32 prim) {
     }
 same:
     if (tex_look && prim >> 4 & 1) { /* session 127: the binding may have moved: the texture cache's answer */
+        u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
         tex_lookup(c->tex0.lo, c->tex0.hi);
         tex_look = 0;
+        kh1_pipes_tex_n++;
+        if (kh1_vu1_clock) kh1_pipes_tex_us += kh1_vu1_clock() - t0;
     }
 }
 
@@ -703,7 +741,9 @@ static int nat_direct(u32 prim, u32 prog, const u32 *p, u32 nqw, u32 free) {
     recorder();
     if (nat_open || !dir_open || prim != dir_prim || kh1_gs_gen != dir_gen) nat_flush();
     nat_pend_on = 0; /* a free held back is before this one, which the GPU thread does after it */
-    prim_state(prim);
+    /* 2026-11-02: prim_state only when it has something to do (its own first test, and a texture lookup pending): most
+     * payloads come in the state of the one before */
+    if (!have_last || kh1_gs_gen != last_gen || prim != last_prim || (tex_look && prim >> 4 & 1)) prim_state(prim);
     a = (u32)kh1_gs_xshift_of();
     r[0] = (u32)(unsigned long)p;
     r[1] = nqw;
@@ -1085,6 +1125,7 @@ static int rq_frame(void) {
 }
 
 void kh1_pipes_frame(void) {
+    oc_ok = 0; /* the next frame's first CLUT load is sent (on_clut) */
     pf_mark(-1);
     nat_flush();
     pf_mark(0);

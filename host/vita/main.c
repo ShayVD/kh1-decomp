@@ -83,6 +83,8 @@
  *       natdirect=0           with natref=1, the GS worker reads every pooled payload and hands its records on itself (1,
  *                             the default since 2026-11-02: a payload drawn in one PRIM is counted from the game thread's
  *                             summary and passed to the GPU thread whole, which joins and opens its ops; dmawalk.c)
+ *       clutskip=0            every CLUT load goes to the recorder (1, the default since 2026-11-02: a load that repeats
+ *                             the one before into the same bound palette is left out; pipes.c on_clut)
  *       natchain=0            with renderer=native, every UNPACK written into VU memory and the native parses of P18,
  *                             P11, P10, P0 and P4 reading it there, their payloads built and then copied into the pool, and
  *                             every feed / hand-off timed (as before 2026-11-01); 1, the default: those parses read the
@@ -707,6 +709,41 @@ static int watchdog(SceSize args, void *argp) {
                     is0 = kh1_dma_img_same;
                     iu0 = kh1_dma_img_us;
                 }
+                { /* 2026-11-02: w_block by sender (dmawalk.h): the code address that started each send (out/vita/kh1.elf names
+                   * it, at the same offset as the gs worker ops' addresses), its time on the worker and its qwords by kind */
+                    KH1DmaSender t[KH1_DMA_SENDERS];
+                    char b[1024];
+                    int n = kh1_dma_senders_take(t, KH1_DMA_SENDERS), i, j, k = 0;
+                    for (i = 1; i < n; i++) /* by time, the largest first */
+                        for (j = i; j > 0 && t[j].us > t[j - 1].us; j--) {
+                            KH1DmaSender x = t[j];
+                            t[j] = t[j - 1];
+                            t[j - 1] = x;
+                        }
+                    b[0] = 0;
+                    for (i = 0; i < n && i < 8 && k < (int)sizeof b - 160; i++)
+                        k += snprintf(b + k, sizeof b - k, "%s%08x %u ms (%u blocks, %u K qw: %u tags, %u K packed, %u K A+D, "
+                                      "%u K reglist, %u K image)", i ? ", " : "", t[i].who, t[i].us / 1000, t[i].blocks,
+                                      t[i].qw / 1000, t[i].tags, t[i].pk / 1000, t[i].ad / 1000, t[i].rl / 1000,
+                                      t[i].img / 1000);
+                    vlog("kh1-vita: gs senders (w_block by the send's caller): %s\n", b);
+                }
+                { /* 2026-11-02: the worker's CLUT loads (pipes.c on_clut, clutskip=) and texture lookups (prim_state's) */
+                    extern u32 kh1_pipes_clut_n, kh1_pipes_clut_skipped, kh1_pipes_clut_us, kh1_pipes_tex_n, kh1_pipes_tex_us,
+                        kh1_pipes_tex_dec;
+                    extern int kh1_pipes_clutskip;
+                    static u32 cn0, cs0, cu0, tn0, tu0, td0;
+                    vlog("kh1-vita: gs worker's CLUT loads (clutskip=%d): %u, %u of them repeats left out, %u ms; texture "
+                         "lookups: %u, %u decoded, %u ms\n", kh1_pipes_clutskip, kh1_pipes_clut_n - cn0,
+                         kh1_pipes_clut_skipped - cs0, (kh1_pipes_clut_us - cu0) / 1000, kh1_pipes_tex_n - tn0,
+                         kh1_pipes_tex_dec - td0, (kh1_pipes_tex_us - tu0) / 1000);
+                    cn0 = kh1_pipes_clut_n;
+                    cs0 = kh1_pipes_clut_skipped;
+                    cu0 = kh1_pipes_clut_us;
+                    tn0 = kh1_pipes_tex_n;
+                    tu0 = kh1_pipes_tex_us;
+                    td0 = kh1_pipes_tex_dec;
+                }
             }
             if (kh1_gpuq_on) /* session 142: the frame's GPU work on the third core (the commands and present above) */
                 vlog("kh1-vita: gpu thread: %u ms busy; the GS worker waited %u ms for it (%u waits); %u GS memory pages "
@@ -856,6 +893,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
         else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
         else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);
+        else if (strcmp(line, "clutskip") == 0) { extern int kh1_pipes_clutskip; kh1_pipes_clutskip = atoi(v); }
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
         else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);

@@ -133,10 +133,18 @@ static void host_clock_report(void) {
             printf("kh1-host: natdirect: %u payloads straight to the GPU thread, %u read by the GS worker; %u ops ended by "
                    "the worker\n", kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends);
     }
+    { /* 2026-11-02: repeated CLUT loads left out (pipes.c on_clut) */
+        extern u32 kh1_pipes_clut_n, kh1_pipes_clut_skipped;
+        extern int kh1_pipes_clutskip;
+        if (kh1_pipes_clut_n)
+            printf("kh1-host: clutskip=%d: %u CLUT loads, %u of them repeats left out\n", kh1_pipes_clutskip,
+                   kh1_pipes_clut_n, kh1_pipes_clut_skipped);
+    }
 }
 #include "gsregs.h"
 #include "gsmem.h"
 #include "gsqueue.h"
+#include "dmawalk.h"
 extern u32 kh1_vu1_snap_kicks;
 extern unsigned long kh1_vu1_dump_frame;
 
@@ -281,6 +289,25 @@ void kh1_snd_frame(void); /* host/port/snd.c: the sound driver's four ticks a fr
 void kh1_snd_host_end(void);
 int kh1_snd_host_init(void);
 extern int kh1_snd_wanted;
+/* 2026-11-02: KH1_HOST_SENDERS=FROM:TO prints the GS worker's blocks by sender over frames FROM to TO (dmawalk.h
+ * kh1_dma_senders_take; KH1_HOST_CLOCK=1 for the times); addr2line -f -e the binary names each address */
+static unsigned long snd_from, snd_to;
+static int snd_cmp(const void *a, const void *b) {
+    const KH1DmaSender *x = a, *y = b;
+    return x->us != y->us ? (x->us < y->us ? 1 : -1) : x->qw < y->qw ? 1 : x->qw > y->qw ? -1 : 0;
+}
+static void snd_report(void) {
+    KH1DmaSender t[KH1_DMA_SENDERS];
+    int n, i;
+    kh1_gsq_sync();
+    n = kh1_dma_senders_take(t, KH1_DMA_SENDERS);
+    if (frames == snd_from) return;
+    qsort(t, n, sizeof t[0], snd_cmp);
+    printf("kh1-host: gs senders, frames %lu-%lu: %d\n", snd_from, snd_to, n);
+    for (i = 0; i < n; i++)
+        printf("kh1-host: sender %08x: %u us, %u blocks, %u qwords: %u tags, %u packed, %u A+D, %u reglist, %u image\n",
+               t[i].who, t[i].us, t[i].blocks, t[i].qw, t[i].tags, t[i].pk, t[i].ad, t[i].rl, t[i].img);
+}
 void kh1_host_vblank(void) {
     static int in_vblank;
     if (in_vblank) return;
@@ -289,6 +316,7 @@ void kh1_host_vblank(void) {
     kh1_counts_sample();
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
     if (kh1_dma_vu1 && frames % 300 == 0) vu1_line();
+    if (snd_to && (frames == snd_from || frames == snd_to)) snd_report();
     if (kh1_host_trace >= 5) {
         kh1_gsq_sync(); /* session 141: the GS side's worker done with the frame's sends (gsqueue.h) */
         kh1_pipes_frame(); /* session 124: the frame's batches */
@@ -474,6 +502,11 @@ int main(int argc, char **argv) {
             extern int kh1_nat_once;
             kh1_cmd_fastrot = kh1_nat_once = atoi(getenv("KH1_HOST_RECFAST"));
         }
+        if (getenv("KH1_HOST_SENDERS")) { /* 2026-11-02: FROM:TO, the GS worker's blocks by sender (snd_report) */
+            char *e;
+            snd_from = strtoul(getenv("KH1_HOST_SENDERS"), &e, 0);
+            snd_to = *e == ':' ? strtoul(e + 1, 0, 0) : snd_from + 300;
+        }
         if (getenv("KH1_HOST_CLOCK")) { /* 2026-10-31: kh1_vu1_clock on the host (the frame op's parts at the end) */
             kh1_vu1_clock = host_us;
             atexit(host_clock_report);
@@ -514,6 +547,10 @@ int main(int argc, char **argv) {
             { /* 2026-11-02: KH1_HOST_NATDIRECT=0 has the GS worker read every pooled payload (the Vita's natdirect=) */
                 extern int kh1_dma_natdirect;
                 if (getenv("KH1_HOST_NATDIRECT")) kh1_dma_natdirect = atoi(getenv("KH1_HOST_NATDIRECT"));
+            }
+            { /* 2026-11-02: KH1_HOST_CLUTSKIP=0 sends every CLUT load to the recorder (pipes.c on_clut; the Vita's clutskip=) */
+                extern int kh1_pipes_clutskip;
+                if (getenv("KH1_HOST_CLUTSKIP")) kh1_pipes_clutskip = atoi(getenv("KH1_HOST_CLUTSKIP"));
             }
             if (kh1_dma_natref && kh1_pool_start(getenv("KH1_HOST_NATPOOL") ? (u32)atoi(getenv("KH1_HOST_NATPOOL")) : 4u << 20))
                 printf("kh1-host: KH1_HOST_NATREF: no pool\n");

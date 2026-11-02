@@ -48,6 +48,14 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
+## Latest (2026-11-02): the GS worker's packets by sender, repeated CLUT loads (clutskip=1)
+
+native-plan.md "The GS worker's packets by sender, and repeated CLUT loads": the Vita log's new `gs senders` line
+(w_block's time and qwords by the code that started each send) and `gs worker's CLUT loads ... texture lookups` line;
+repeated CLUT loads are no longer sent to the recorder (`clutskip=0` the old path). Host-checked (168 GPU hashes to
+frame 21,000 identical). **First thing next time**: a fight log (frames 18,000-23,000) with those two lines, to pick the
+next cut.
+
 ## Latest (2026-11-01): the fights' upload waits (pendgpu=1)
 
 vita-build.md "Uploads into a target its last scene still uses, written by the GPU": the fights' particle uploads into
