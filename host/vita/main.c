@@ -95,6 +95,11 @@
  *                             hashed (on the Vita, 1's hash costs as much as the parse it saves; a rewrite that misses
  *                             those qwords would go unseen, none seen in the logs)
  *       natvbmb=N             natvb's GPU memory in MiB (default 16; the oldest entries make room)
+ *       natvbjoin=0           with natvb on, each cached run its own GPU draw (as before 2026-11-02); 1, the default:
+ *                             a cached run joins the cached draw before it when its entry's matrices come after that
+ *                             draw's (cmdbuf.c vb_join; 32-bit indices into natvb's memory, the same triangles)
+ *       natvbhome=0           every natvb entry's matrices at u_m[0], so cached runs never join (1, the default: each
+ *                             new entry's after the last one's, natdraw.c)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
@@ -648,12 +653,19 @@ static int watchdog(SceSize args, void *argp) {
                     cf0 = kh1_vu1_nc_flushed;
                 }
                 { /* 2026-11-02: natvb's cache (natdraw.h) */
-                    static u32 a0, b0, c0, d0b, e0, f0b, g0b, x0;
+                    static u32 a0, b0, c0, d0b, e0, f0b, g0b, x0, vj0, vn0[4];
                     vlog("kh1-vita: natvb=%d: %u cached runs, %u misses, %u entries made, %u whose words changed, %u dropped "
                          "for room, %u found no room, %u too big; %u draws from GPU memory; %u KiB of %u in use\n", kh1_natvb,
                          kh1_natvb_hits - a0, kh1_natvb_miss - b0, kh1_natvb_made - c0, kh1_natvb_stale - d0b,
                          kh1_natvb_evict - e0, kh1_natvb_noroom - f0b, kh1_natvb_big - g0b, kh1_vita_natvb_draws - x0,
                          kh1_natvb_used() >> 10, kh1_natvb_bytes >> 10);
+                    /* 2026-11-02: cached runs joined (cmdbuf.c vb_join) and why the rest were not */
+                    vlog("kh1-vita: natvbjoin=%d natvbhome=%d: %u cached runs joined into the draw before; not joined: %u "
+                         "after another command, %u another state, %u a home before the draw's matrices' end, %u no room\n",
+                         kh1_cmd_natvbjoin, kh1_natvb_home, kh1_cmd_natvb_joins - vj0, kh1_cmd_natvb_nojoin[0] - vn0[0],
+                         kh1_cmd_natvb_nojoin[1] - vn0[1], kh1_cmd_natvb_nojoin[2] - vn0[2], kh1_cmd_natvb_nojoin[3] - vn0[3]);
+                    vj0 = kh1_cmd_natvb_joins;
+                    memcpy(vn0, kh1_cmd_natvb_nojoin, sizeof vn0);
                     a0 = kh1_natvb_hits;
                     b0 = kh1_natvb_miss;
                     c0 = kh1_natvb_made;
@@ -860,6 +872,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
         else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);
         else if (strcmp(line, "natvbmb") == 0) kh1_vita_natvb_mb = (u32)atoi(v);
+        else if (strcmp(line, "natvbjoin") == 0) kh1_cmd_natvbjoin = atoi(v);
+        else if (strcmp(line, "natvbhome") == 0) kh1_natvb_home = atoi(v);
         else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);

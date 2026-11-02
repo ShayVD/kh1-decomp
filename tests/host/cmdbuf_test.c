@@ -1086,6 +1086,67 @@ static void natjoin(void) {
     kh1_cmd_natjoin = (int)save;
 }
 
+/* ---- 2026-11-02: cached runs joined into one draw (cmdbuf.c vb_join) ---- */
+static KH1GpuVert vb_arena[64];
+
+static void vbrun(const KH1DrawState *d, const KH1RenderPass *p, u32 at, const u16 *xi, u32 n, u32 nmat, u32 home, u32 seed) {
+    f32 m[4 * 16];
+    u32 i;
+    for (i = 0; i < nmat * 16; i++) m[i] = (f32)(seed * 100 + i);
+    kh1_cmd_native_vb(&pr, d, p, &vb_arena[at], xi, n, m, nmat, home, KH1_NAT_CULL_CCW, seed);
+}
+
+static void natvbjoin(void) {
+    static const u16 xa[6] = { 0, 1, 2, 2, 1, 3 }, xb[3] = { 0, 2, 1 };
+    static const u32 want[12] = { 10, 11, 12, 12, 11, 13, 20, 22, 21, 30, 32, 31 };
+    KH1DrawState d;
+    KH1RenderPass p;
+    const KH1Cmd *c;
+    const u32 *ix;
+    const f32 *m;
+    u32 i, ok = 1, save = kh1_cmd_natvbjoin;
+    u8 *mem_save = kh1_natvb_mem;
+    nstate(&d, &p);
+    kh1_natvb_mem = (u8 *)vb_arena;
+    kh1_cmd_natvbjoin = 1;
+    kh1_cmd_init(&pr, pvm, sizeof pvm[0], pum, sizeof pum[0]);
+    vbrun(&d, &p, 10, xa, 6, 2, 0, 1);
+    CHECK("natvbjoin: one cached run reads its entry's 16-bit indices", pr.ncmd == 1 && pr.cmd[0].xi == xa &&
+          pr.cmd[0].xv == &vb_arena[10] && !pr.cmd[0].xi32 && pr.cmd[0].nmat == 2 && pr.cmd[0].mlo == 0);
+    vbrun(&d, &p, 20, xb, 3, 1, 2, 2);  /* home 2: right after the draw's matrices */
+    vbrun(&d, &p, 30, xb, 3, 2, 5, 3);  /* home 5: slots 3 and 4 left unread */
+    vbrun(&d, &p, 40, xb, 3, 1, 0, 4);  /* home 0: before the draw's end, a draw of its own */
+    c = &pr.cmd[0];
+    CHECK("natvbjoin: runs whose homes follow in one draw, an earlier home in its own", pr.ncmd == 2 && c->xi32 &&
+          !c->xi && c->xv == vb_arena && c->nv == 12 && c->nmat == 7 && c->mlo == 0 && c->prims == 3 &&
+          pr.cmd[1].nmat == 1 && pr.cmd[1].xv == &vb_arena[40]);
+    ix = (const u32 *)(const void *)kh1_cmd_verts(&pr, c);
+    m = (const f32 *)(pr.uring.base + pr.uring.cur * pr.uring.slot + c->moff);
+    for (i = 0; i < 12; i++) ok &= ix[i] == want[i];
+    for (i = 0; i < 7 * 16; i++)
+        ok &= m[i] == (i < 32 ? (f32)(100 + i) : i < 48 ? (f32)(200 + i - 32) : i < 80 ? 0.0f : (f32)(300 + i - 80));
+    CHECK("natvbjoin: 32-bit indices into natvb's memory, each run's matrices at its home", ok);
+    kh1_cmd_upload(&pr, 0, 0, 0x3A00 | 4 << 16, 0, 0, 8, 8);
+    vbrun(&d, &p, 50, xb, 3, 2, 30, 5);
+    c = &pr.cmd[3];
+    m = (const f32 *)(pr.uring.base + pr.uring.cur * pr.uring.slot + c->moff);
+    CHECK("natvbjoin: a run alone after a transfer, its matrices from its home", pr.ncmd == 4 && c->mlo == 30 &&
+          c->nmat == 32 && c->xi == xb && m[0] == 500.0f && m[31] == 531.0f);
+    vbrun(&d, &p, 60, xb, 3, 1, 31, 6); /* past 32 matrices: its own */
+    CHECK("natvbjoin: at most KH1_NAT_MATS matrices a draw", pr.ncmd == 5 && pr.cmd[4].mlo == 31);
+    kh1_cmd_frame(&pr);
+    kh1_cmd_reset_frame(&pr);
+    kh1_cmd_natvbjoin = 0;
+    kh1_cmd_init(&pr, pvm, sizeof pvm[0], pum, sizeof pum[0]);
+    vbrun(&d, &p, 10, xa, 6, 2, 0, 1);
+    vbrun(&d, &p, 20, xb, 3, 1, 2, 2);
+    CHECK("natvbjoin=0: a draw a cached run", pr.ncmd == 2 && !pr.cmd[0].xi32 && pr.cmd[1].mlo == 2 && pr.cmd[1].nmat == 3);
+    kh1_cmd_frame(&pr);
+    kh1_cmd_reset_frame(&pr);
+    kh1_cmd_natvbjoin = (int)save;
+    kh1_natvb_mem = mem_save;
+}
+
 int main(void) {
     kh1_gs_reset();
     kh1_gsmem_reset();
@@ -1101,6 +1162,7 @@ int main(void) {
     gxm();
     date();
     natjoin();
+    natvbjoin();
     printf("cmdbuf_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }
