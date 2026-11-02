@@ -56,7 +56,7 @@ void func_00f47428(void) {
     func_001bfac8();
     func_001bfac8();
     D_002BBE0C = 0;
-    func_001c00e8(2, func_00f48f98, 0);
+    func_001c00e8(2, func_00f48f98, KH1_Q(0));
     func_00f47388(10);
     if (D_00F9B514 < 2)
         func_0011ef10(0x2BFE8, func_00f471c0);

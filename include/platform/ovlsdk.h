@@ -26,6 +26,10 @@
 #define sceCdDiskReady PlatCdDiskReady
 #define sceDmaGetChan PlatDmaGetChan
 #define sceDmaSend PlatDmaSend
+/* wm.x: its packet sends wait on channels 1 / 2; a port's transfer is done when it starts
+ * (host/null/plat_null.c) */
+#define sceDmaSync PlatOvlDmaSync
+#define iFlushCache PlatIFlushCache
 #define sceGsSetDefLoadImage PlatGsSetDefLoadImage
 #define sceGsExecLoadImage PlatGsExecLoadImage
 /* newlib's strncpy (the EE's MMI version in src/sdk/libkernl_asm.s) */

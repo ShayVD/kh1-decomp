@@ -134,7 +134,7 @@ void func_00f5a4f0(s32 arg) {
         }
     }
     if (arg == 2) {
-        D_0108D180 = func_001c00e8(-1, func_00f5a498, 0);
+        D_0108D180 = func_001c00e8(-1, func_00f5a498, KH1_Q(0));
     } else {
         func_00f47388(12);
         func_00f504f8(1);

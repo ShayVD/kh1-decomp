@@ -38,9 +38,9 @@ void func_00f57738(void) {
     f32 q;
     s32 ten;
     s32 ninety;
-    h0 = func_001c00e8(-1, func_00f574e8, 0);
-    h1 = func_001c00e8(-1, func_00f55bc0, 0);
-    h2 = func_001c00e8(-1, func_00f55310, 0);
+    h0 = func_001c00e8(-1, func_00f574e8, KH1_Q(0));
+    h1 = func_001c00e8(-1, func_00f55bc0, KH1_Q(0));
+    h2 = func_001c00e8(-1, func_00f55310, KH1_Q(0));
     ids[0][1] = func_00f4ad68(D_00F9B540->id);
     ids[1][1] = D_00F9B540->id;
     n = func_00f4ae48(D_00F9B540->id);

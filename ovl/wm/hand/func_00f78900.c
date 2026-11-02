@@ -11,7 +11,7 @@ s32 func_00f78900(s32 a0, s32 a1) {
     func_00120748(a0, a1, func_00f78828, 0);
     {
         /* register pin: the first poll of D_0108F6B0 is read into v1 in the target */
-        register s32 t asm("v1") = D_0108F6B0;
+        register s32 t KH1_REG("v1") = D_0108F6B0;
         if (t == -1) {
             do {
                 func_001bfac8();

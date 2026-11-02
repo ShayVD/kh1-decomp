@@ -33,7 +33,7 @@ void func_00f7f438(s32 id, s32 *str, s32 bits, s32 n, s32 v) {
     col[3] = 64;
     base = func_00f21e90();
     q = func_00f7ef20(base, 12, 160, 484, 72, col, 68, 0x5001D);
-    q[0].q = 0;
+    q[0].q = KH1_Q(0);
     q[1].d[1] = 14;
     q[1].d[0] = 0x1000000000000002;
     q[3].d[0] = 68;

@@ -1,0 +1,4 @@
+# Other wm.x files the native C runs (tools/host/ovlnative.py): same code bytes as the pinned one (ovl/overlays.tsv),
+# data that differs only where the C reads it from the loaded file. Never commit the files.
+size	sha256	what
+632810	eecac3e23bc9f670b7eff96340ceb1e83ab1b3a213560e7288dee54e57a93203	the English patch (crazycatz00 ISOMaker, July 2025): 262 bytes of data differ, all past the code (0x00F87BE0-0x00F87DF8 world names, 0x00FB4ECC-0x00FB4F2D their offsets)

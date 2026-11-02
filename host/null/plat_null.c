@@ -102,6 +102,13 @@ void PlatDmaSend(PlatDmaChan *ch, void *tag) {
     if (kh1_host_trace >= 2) null_dma_walk(n, ch->words[0], (u32)(unsigned long)tag);
     null_dmac_done(n);
 }
+/* include/platform/ovlsdk.h: the overlays' sceDmaSync(chan, mode, timeout); nothing is ever in flight */
+int PlatOvlDmaSync(void *ch, int mode, int timeout) {
+    (void)ch;
+    (void)mode;
+    (void)timeout;
+    return 0;
+}
 void PlatDmaPutStat(u32 v);
 /* CHCR's STR (0x100) starts channel 1 (VIF1); MOD 1 (bits 2-3) walks the chain at TADR */
 static u32 null_vif1_tadr;

@@ -81,5 +81,5 @@ void func_00f21c48(void) {
     func_00f68170();
     func_0011ef10(0x1D4C1, func_00f218e8);
     func_00f66e98();
-    func_001c00e8(-1, func_00f21bc8, 0);
+    func_001c00e8(-1, func_00f21bc8, KH1_Q(0));
 }

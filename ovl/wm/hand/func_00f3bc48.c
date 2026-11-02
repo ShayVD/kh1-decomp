@@ -12,7 +12,11 @@ typedef struct { u8 pad[0x20]; u16 h20; } R3bc48;
 typedef struct { u16 h0; u16 h2; u16 h4; } Q3bc48;
 typedef struct { u8 pad[0x540]; s32 x540; } G3bc48;
 extern E3bc48 D_01067FE0[256];
+#ifdef KH1_PS2
 extern E3bc48 D_01067FE0b[256] __asm__("D_01067FE0");
+#else /* the port: one name (the asm alias would also skip ovlnative.py's renaming) */
+#define D_01067FE0b D_01067FE0
+#endif
 typedef struct { s32 flags; u32 mask; s32 id; void *conds; s32 cnt; } H3bc48;
 extern G3bc48 *D_00F864C0;
 extern s32 D_00F8704C;

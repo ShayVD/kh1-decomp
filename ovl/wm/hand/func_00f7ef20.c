@@ -33,7 +33,7 @@ Qw *func_00f7ef20(Qw *p, s32 x, s32 y, s32 w, s32 h, u8 *col, u64 a, u64 b) {
     s32 y1 = y0 + h;
     u32 r, g, bl, al;
 
-    p[0].q = 0;
+    p[0].q = KH1_Q(0);
     put(&p[1], 0x1000000000000004, 14);
     put(&p[2], a, 66);
     put(&p[3], b, 71);

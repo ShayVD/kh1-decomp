@@ -21,7 +21,7 @@ void func_00f21bc8(void) {
     func_00f44578();
     func_001bb7c8(D_00FB6618, D_00F8706C);
     func_00f2b870(D_00F8706C);
-    func_001c00e8(2, func_00f23628, 0);
+    func_001c00e8(2, func_00f23628, KH1_Q(0));
     func_001bfc90(3);
     D_00F850CC = 1;
 }
