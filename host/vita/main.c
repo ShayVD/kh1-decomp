@@ -916,6 +916,13 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
         else if (strcmp(line, "pendgpu") == 0) kh1_vita_pendgpu = atoi(v);
+        else if (strcmp(line, "shot") == 0) { /* 2026-11-02: FIRST[,STEP[,COUNT]] pictures to PPMs (gxm.c shot) */
+            extern u32 kh1_vita_shot_first, kh1_vita_shot_step, kh1_vita_shot_count;
+            char *c = 0;
+            kh1_vita_shot_first = strtoul(v, &c, 0);
+            if (c && *c == ',') kh1_vita_shot_step = strtoul(c + 1, &c, 0);
+            if (c && *c == ',') kh1_vita_shot_count = strtoul(c + 1, &c, 0);
+        }
         else if (strcmp(line, "wdprio") == 0) wd_prio = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];
