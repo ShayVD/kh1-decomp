@@ -257,7 +257,26 @@ picture should cost a few ms, not 850. The VPK's new `gs blocks:` line measures 
 inside the worker's blocks and kicks, against w_block's total. If the images are small there, the rest of w_block is
 the GS path's register and vertex packets (gif_qword, gs_kick), and the next step is counting those, not the uploads.
 
-**Not yet measured on a Vita**: the `gs worker ops:` line's w_native_dir (dmawalk.o's address of it, from this build)
+**Vita (Shay, 2026-11-02, the natdirect VPK, defaults, dive_en.txt to frame 29,218; ops mapped at +0x7b001 over
+out/vita/kh1.elf)**: no errors; 4,295,310 payloads direct, none read by the worker. This build also has the C sound
+driver back (sound ticks ~220-280 ms a window, was ~780), so the frame rates below are both changes together; no
+natdirect=0 run was made.
+
+| Stretch (frames) | 9a95cf9 | natdirect VPK |
+|---|---|---|
+| Fight, 10,092-11,544 (frame 10,444 / 10,460 for the ops) | 17-18 heaviest, 22-29 typical | 27-30 |
+| w_native_ref / w_native_dir at that frame | 565 ms, 15,546 runs (36 us a run) | 307 ms, 15,986 runs (19 us a run) |
+| Fights 18,000-23,000 (26b3b0b's 13 pictures/s ones) | (not reached) | a steady 22-23 |
+
+In the 18,000-23,000 fights the worker is the limit again: ~2.1 s busy, the game waiting ~770 ms a window, **w_block
+~1,000 ms of it, but the `gs blocks:` line puts the IMAGE pieces at only ~180 ms (~11.5 MiB, ~1,400 pieces, ~300
+skipped)**. So ~800 ms of w_block is the GS path's register and vertex packets (gif_qword, gs_kick, the A+D writes),
+not uploads: the next worker target. w_native_dir's remaining ~19 us a run (prim_state, the recording queue's put,
+nat_flush, the op's two clock reads) is the second. In the 10,000-11,500 fight the GPU thread is the limit instead
+(1.84 s run clock; the worker's frame op waits ~535 ms for it). Frames 17,300-17,700 run at ~13 with the worker idle
+(the game thread at ~1.9-2.0 s): a game-thread stretch, not this path's.
+
+**Measured before that run**: the `gs worker ops:` line's w_native_dir (dmawalk.o's address of it, from this build)
 against w_native_ref with `natdirect=0` (in the natdirect VPK's out/vita/kh1.elf: w_native_dir 0x810dd144, w_native_ref
 0x810dd0c4, w_block 0x810ddac4; map the log by its w_block, the offset differs per run), the GPU thread's run clock (it does the joins now), and the fight windows'
 pictures/s. Expected (estimate): most of w_native_ref's ~0.55 s off the worker, ~0.1 s more on the GPU thread.
