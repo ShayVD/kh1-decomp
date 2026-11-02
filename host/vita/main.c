@@ -88,6 +88,13 @@
  *                             every feed / hand-off timed (as before 2026-11-01); 1, the default: those parses read the
  *                             records from the DMA chain's own words (the unpack into VU memory skipped) and write the
  *                             payload straight into the pool (docs/native-plan.md "Records straight from the chain")
+ *       natvb=0               with renderer=native and natchain=1, renderer B's runs (P18, P11, P10) parsed and
+ *                             converted every frame (as before 2026-11-02); 1: cached by their records' address, a run
+ *                             whose words hash the same hands over only its matrices and is drawn from GPU memory with
+ *                             indices (natdraw.h natvb), every word hashed; 2, the default: the same, one qword in 8
+ *                             hashed (on the Vita, 1's hash costs as much as the parse it saves; a rewrite that misses
+ *                             those qwords would go unseen, none seen in the logs)
+ *       natvbmb=N             natvb's GPU memory in MiB (default 16; the oldest entries make room)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
@@ -156,6 +163,7 @@ int kh1_spu2_voices_on(void);
 #include "platform/cmdbuf.h"
 extern int kh1_nat_once; /* natdraw.c: config.txt recfast= (2026-11-01) */
 #include "platform/vu1.h"
+#include "platform/natdraw.h"
 #include "platform/costack.h"
 #include "platform/view.h"
 void kh1_null_hud_wide(s32 margin16); /* host/null/plat_null.c: the HUD anchors, full-screen stretch, scissor rule */
@@ -201,6 +209,7 @@ extern int kh1_pipes_rq_frame, kh1_pipes_gxm_count; /* 2026-10-31: config.txt's 
 static int use_gsstrip = 1; /* session 151: config.txt's gsstrip= */
 static int use_native;      /* config.txt's renderer=native (docs/native-renderer.md) */
 extern int kh1_dma_native, kh1_vita_gxm_native_ok, kh1_vita_gxm_skin_ok;
+extern u32 kh1_vita_natvb_mb, kh1_vita_natvb_draws; /* gxm.c (natdraw.h natvb) */
 extern u32 kh1_pipes_nat_cull, kh1_pipes_nat_draws, kh1_pipes_nat_tris;
 extern int kh1_pipes_nat_span; /* pipes.c: config.txt natspan= (2026-11-01) */
 extern int kh1_dma_natref, kh1_dma_natbulk; /* dmawalk.c: config.txt natref=, natbulk= (2026-11-01) */
@@ -638,6 +647,22 @@ static int watchdog(SceSize args, void *argp) {
                     cq0 = kh1_vu1_nc_qw;
                     cf0 = kh1_vu1_nc_flushed;
                 }
+                { /* 2026-11-02: natvb's cache (natdraw.h) */
+                    static u32 a0, b0, c0, d0b, e0, f0b, g0b, x0;
+                    vlog("kh1-vita: natvb=%d: %u cached runs, %u misses, %u entries made, %u whose words changed, %u dropped "
+                         "for room, %u found no room, %u too big; %u draws from GPU memory; %u KiB of %u in use\n", kh1_natvb,
+                         kh1_natvb_hits - a0, kh1_natvb_miss - b0, kh1_natvb_made - c0, kh1_natvb_stale - d0b,
+                         kh1_natvb_evict - e0, kh1_natvb_noroom - f0b, kh1_natvb_big - g0b, kh1_vita_natvb_draws - x0,
+                         kh1_natvb_used() >> 10, kh1_natvb_bytes >> 10);
+                    a0 = kh1_natvb_hits;
+                    b0 = kh1_natvb_miss;
+                    c0 = kh1_natvb_made;
+                    d0b = kh1_natvb_stale;
+                    e0 = kh1_natvb_evict;
+                    f0b = kh1_natvb_noroom;
+                    g0b = kh1_natvb_big;
+                    x0 = kh1_vita_natvb_draws;
+                }
                 f0 = kh1_vu1_nd13_fail;
                 fu0 = kh1_vu1_nd13_fail_us;
                 h0 = kh1_vu1_nd_hand_us;
@@ -833,6 +858,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
+        else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);
+        else if (strcmp(line, "natvbmb") == 0) kh1_vita_natvb_mb = (u32)atoi(v);
         else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
@@ -1022,6 +1049,9 @@ int main(int argc, char **argv) {
         if (kh1_dma_native) {
             vlog("kh1-vita: natchain=%d (native parses %s)\n", kh1_vu1_natchain,
                  kh1_vu1_natchain ? "read from the chain, payloads written into the pool" : "read VU memory, as before");
+            vlog("kh1-vita: natvb=%d (renderer B's runs %s), %u KiB of GPU memory\n", kh1_natvb,
+                 kh1_natvb == 2 ? "cached by address, 1 qword in 8 hashed" : kh1_natvb ? "cached by address, every word hashed"
+                 : "parsed every frame", kh1_natvb_bytes >> 10);
             vlog("kh1-vita: natskin=%d (P13's two-bone vertices summed %s)\n", kh1_vu1_nat_skin,
                  kh1_vu1_nat_skin ? "by the GPU's vertex shader" : "on the CPU");
         }

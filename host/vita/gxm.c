@@ -277,6 +277,8 @@ static VertProg vert[KH1_VERT_VARIANTS];
  * renderer=native off without them) */
 int kh1_vita_gxm_native_ok;
 int kh1_vita_gxm_skin_ok; /* 2026-11-01: and its skinned variants (KH1_VERT_SKIN) */
+/* 2026-11-02 (natdraw.h natvb): the MiB of GPU memory natvb's entries get (config.txt natvbmb=), and its draws so far */
+u32 kh1_vita_natvb_mb = 16, kh1_vita_natvb_draws;
 
 static s32 reg_of(void *prog, const char *name) {
     const SceGxmProgramParameter *p = sceGxmProgramFindParameterByName((const SceGxmProgram *)prog, name);
@@ -1237,6 +1239,11 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         return;
     }
     finish_at(0); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
+    { /* 2026-11-02 (natdraw.h natvb): and with the cached runs' entries the frames before this one drew */
+        static u32 vb_prev;
+        if (vb_prev) kh1_natvb_publish(vb_prev);
+        if (r->xseq) vb_prev = r->xseq;
+    }
     put_tex_at = put_vtx_at = 0; /* 2026-11-01: and with put_fill's staging */
     pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
     if (r->vring.head > vbuf_bytes) {
@@ -1489,7 +1496,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             if (!cur) { skip(W_NOSCENE, 0); break; }
             if (bad_pipe || !pk || !fp) { skip(W_PIPE, pk ? pipe_why : "no pipeline set"); break; }
             if (pk->shader.tex && pk->shader.setup != 2 && !have_tex) { skip(W_TEX, tex_why); break; }
-            if (vat + (u64)left * vstride > r->vring.head) { skip(W_RANGE, 0); break; }
+            if (!(k && k->xv) && vat + (u64)left * vstride > r->vring.head) { skip(W_RANGE, 0); break; }
             if (!u || !xf || c->cls == KH1_PA_NONE) { skip(W_STATE, 0); break; }
             if ((c->nmat != 0) != (vi >= KH1_VERT_NAT) || (c->nmat && !vert[vi].u_m)) { skip(W_STATE, 0); break; }
             if (pk->shader.tex && fs->tex >= 0) sceGxmSetFragmentTexture(ctx, (u32)fs->tex, &t);
@@ -1497,6 +1504,22 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
             if (c->nmat) /* natdraw.h: the GS's screen is the window's (y down), so CCW in it is CCW here */
                 sceGxmSetCullMode(ctx, c->cull == KH1_NAT_CULL_CCW ? SCE_GXM_CULL_CCW : c->cull == KH1_NAT_CULL_CW ? SCE_GXM_CULL_CW
                                        : SCE_GXM_CULL_NONE);
+            if (k && k->xv) { /* 2026-11-02 (natvb): a cached run, indexed, from natvb's GPU memory */
+                sceGxmReserveVertexDefaultUniformBuffer(ctx, &vb);
+                if (vert[vi].u_xf) sceGxmSetUniformDataF(vb, vert[vi].u_xf, 0, 4, xf);
+                sceGxmSetUniformDataF(vb, vert[vi].u_m, 0, c->nmat * 16u, (const f32 *)(ub + c->moff));
+                sceGxmReserveFragmentDefaultUniformBuffer(ctx, &fb);
+                {
+                    u32 q;
+                    for (q = 0; q < 4; q++)
+                        if (fs->u[q]) sceGxmSetUniformDataF(fb, fs->u[q], 0, 4, u + q * 4);
+                    if (fs->u[4]) sceGxmSetUniformDataF(fb, fs->u[4], 0, 4, xf);
+                }
+                sceGxmSetVertexStream(ctx, 0, k->xv);
+                sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, k->xi, left);
+                left = 0;
+                kh1_vita_natvb_draws++;
+            }
             while (left) {
                 u32 n = left > MAX_INDEX ? MAX_INDEX / per * per : left;
                 sceGxmReserveVertexDefaultUniformBuffer(ctx, &vb);
@@ -1803,6 +1826,17 @@ int kh1_vita_gxm_init(void) {
         kh1_vita_log("kh1-gxm: no GPU memory: the software picture stays\n");
         return -1;
     }
+    if (kh1_natvb && kh1_vita_natvb_mb) { /* 2026-11-02 (natvb): the entries' vertices and indices, read by the GPU */
+        u8 *m = (u8 *)gpu_block(SCE_KERNEL_MEMBLOCK_TYPE_USER_RW_UNCACHE, kh1_vita_natvb_mb << 20, 4096);
+        if (m) {
+            kh1_natvb_bytes = kh1_vita_natvb_mb << 20;
+            kh1_natvb_mem = m;
+        } else {
+            kh1_vita_log("kh1-gxm: no GPU memory for natvb's %u MiB: natvb is off\n", kh1_vita_natvb_mb);
+            kh1_natvb = 0;
+        }
+    }
+    kh1_natvb_fenced = 1; /* kh1_vita_gxm_frame publishes what the GPU has read */
     vbuf_bytes = KH1_RING_VERTEX_BYTES;
     vbuf = (u8 *)heap_alloc(&tram, vbuf_bytes);
     index_buf = (u16 *)heap_alloc(&tram, 64000 * 2);

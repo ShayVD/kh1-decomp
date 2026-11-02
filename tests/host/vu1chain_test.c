@@ -9,9 +9,11 @@
  * data. */
 #include "common.h"
 #include "../../host/port/vu1.c"
+#include "../../host/port/natdraw.c" /* 2026-11-02: natvb (the cache below) */
+void *malloc(__SIZE_TYPE__);
+float kh1_depth_f32(u32 z, u32 psm) { return (float)z * (float)psm; } /* (kh1_nat_fold only, not called here) */
 
 unsigned long kh1_host_frame(void) { return 0; }
-void kh1_nat_ref_xyz(const u32 *m, const f32 *pos, f32 out[3]) { out[0] = out[1] = out[2] = 0; } /* (KH1_HOST_NATCHECK only) */
 
 static u32 rs = 12345;
 static u32 rnd(void) {
@@ -248,7 +250,44 @@ static int fk_run(u32 pc) { /* a program: what it reads, its input (as long as t
     tpc = pc;
     return 1;
 }
+/* 2026-11-02 (natvb): a B payload as what it draws, the same whether its records came as vertices or as natvb's stubs:
+ * the header, the records' first qwords (KH1_NAT_VB and P11's lin aside), the matrices and the triangles' vertices */
+static int canon_on;
+static KH1GpuVert canon_v[16384];
+static void canon(const u32 *q, u32 nqw) {
+    u32 prog = q[0] & 0xFF, nrec = q[1], nmat = q[2], r, i, n = 0, lost;
+    const u32 *d = q + 8;
+    if (prog != 18 && prog != 11 && prog != 10) {
+        ev(q, nqw * 16);
+        return;
+    }
+    ev(q, 12);
+    ev(q + 4, 16);
+    ev(q + (2 + q[3]) * 4, nmat * 64);
+    for (r = 0; r < nrec; r++, d += KH1_NAT_REC_QW(d) * 4) {
+        u32 h[4];
+        h[0] = d[0];
+        h[1] = d[1];
+        h[2] = d[2];
+        h[3] = d[3] & 0xFFFF;
+        ev(h, 16);
+        if (d[3] & KH1_NAT_VB) {
+            const KH1GpuVert *v = (const KH1GpuVert *)(unsigned long)d[4];
+            const u16 *x = (const u16 *)(unsigned long)d[5];
+            for (i = 0; i < d[6] && n < 16384; i++) canon_v[n++] = v[x[i]];
+        }
+    }
+    if (nrec && !(q[8 + 3] & KH1_NAT_VB)) n = kh1_nat_tris(q + 8, nrec, nmat, q[4], q[5], canon_v, 16384, &lost);
+    for (i = 0; i < n; i++) canon_v[i].pad[0] &= 0x7F;
+    ev(canon_v, n * sizeof canon_v[0]);
+}
 static void draw(const u32 *q, u32 nqw) {
+    if (canon_on) {
+        canon(q, nqw);
+        ev(vf, sizeof vf);
+        ev_copy++;
+        return;
+    }
     ev(q, nqw * 16);
     ev(vf, sizeof vf);
     ev_copy++;
@@ -259,7 +298,8 @@ static u32 *room(u32 maxqw) { return use_room && maxqw <= 4096 ? pool_buf[rnd() 
 static u32 *room_at;
 static u32 *room_rec(u32 maxqw) { return room_at = room(maxqw); }
 static void take(u32 nqw) {
-    ev(room_at, nqw * 16);
+    if (canon_on) canon(room_at, nqw);
+    else ev(room_at, nqw * 16);
     ev(vf, sizeof vf);
     ev_pool++;
 }
@@ -295,6 +335,7 @@ static u32 run_mode(int mode, int rooms) {
         }
     }
     memcpy(mem_out, mem, sizeof mem);
+    kh1_natvb_publish(kh1_natvb_seq); /* every hand-over read (the GPU side's frame) */
     return ev_hash;
 }
 
@@ -305,6 +346,9 @@ int main(void) {
     kh1_vu1_draw = draw;
     kh1_vu1_draw_room = room_rec;
     kh1_vu1_draw_take = take;
+    kh1_natvb = 0; /* the natchain passes below compare payloads byte for byte */
+    kh1_natvb_bytes = 16u << 20;
+    kh1_natvb_mem = (u8 *)malloc(kh1_natvb_bytes);
     for (pass = 0; pass < 6; pass++) {
         u32 n0, r0, runs1 = 0, flushed1 = 0, pool1 = 0, a, f;
         rs = 777 + pass * 31;
@@ -353,10 +397,75 @@ int main(void) {
             printf("vu1chain_test: %u events, %u program runs; natchain=1: %u runs from the chain, %u unpacks written late\n",
                    n0, r0, runs1, flushed1);
     }
+    /* 2026-11-02 (natdraw.h natvb): the same streams three times (an entry is made at a run's second sighting, used from
+     * its third) with natchain=1 and the cache (natvb 1, 2 and 3; 2 only before the words change), against natchain=1 without it: what is drawn (canon), the registers at each
+     * hand-over, the program runs and VU memory the same; check mode (3) finds no hit that differs from its parse; then
+     * data words changed (a model rewritten in place, or another at the same address) and the same again: the changed
+     * entries are dropped, nothing drawn differs */
+    {
+        u32 hits = 0, stale = 0, made = 0;
+        canon_on = 1;
+        for (pass = 0; pass < 6; pass++) {
+            u32 mode, round;
+            rs = 4321 + pass * 17;
+            make_stream();
+            vfseed = rnd();
+            for (round = 0; round < 2; round++) {
+                u32 hn, nn, rn, k;
+                static u32 mref[DATA_QW][4];
+                if (round) /* words of the bigger data runs changed */
+                    for (k = 0; k < 400; k++) {
+                        u32 o = rnd() % nops;
+                        if (ops[o].op == OP_DATA && ops[o].b >= 8) words[ops[o].a + rnd() % ops[o].b] ^= 1u << (rnd() % 32);
+                    }
+                kh1_natvb = 0;
+                hn = run_mode(1, 1);
+                nn = ev_n;
+                rn = ev_runs;
+                memcpy(mref, mem_out, sizeof mref);
+                for (mode = 1; mode <= 3; mode++) {
+                    u32 t, h3 = 0, b0 = kh1_natvb_bad, k0 = kh1_natvb_hits;
+                    if (mode == 2 && round) continue; /* 2 (the default) hashes 1 qword in 8: a flip elsewhere goes unseen */
+                    kh1_natvb = (int)mode;
+                    kh1_natvb_bytes = pass >= 4 ? 48u << 10 : 16u << 20; /* the last two streams in a small arena: room made */
+                    if (!round) kh1_natvb_reset();
+                    for (t = 0; t < 3; t++) {
+                        h3 = run_mode(1, (int)(t & 1));
+                        if (h3 != hn || ev_n != nn || ev_runs != rn || memcmp(mem_out, mref, sizeof mref)) {
+                            printf("vu1chain_test: pass %u natvb=%u round %u run %u: events %08x (%u, %u runs) against %08x "
+                                   "(%u, %u)%s\n", pass, mode, round, t, h3, ev_n, ev_runs, hn, nn, rn,
+                                   memcmp(mem_out, mref, sizeof mref) ? ", VU memory differs" : "");
+                            fails++;
+                        }
+                    }
+                    if (kh1_natvb_bad != b0) {
+                        printf("vu1chain_test: pass %u natvb=3 round %u: %u hits differ from their parse\n", pass, round,
+                               kh1_natvb_bad - b0);
+                        fails++;
+                    }
+                    if (kh1_natvb_hits == k0) {
+                        printf("vu1chain_test: pass %u natvb=%u round %u: no hits\n", pass, mode, round);
+                        fails++;
+                    }
+                }
+            }
+        }
+        hits = kh1_natvb_hits;
+        stale = kh1_natvb_stale;
+        made = kh1_natvb_made;
+        canon_on = 0;
+        if (!stale || !kh1_natvb_evict || !kh1_natvb_noroom) {
+            printf("vu1chain_test: natvb: the cases did not happen (%u changed, %u dropped, %u without room)\n", stale,
+                   kh1_natvb_evict, kh1_natvb_noroom);
+            fails++;
+        }
+        printf("vu1chain_test: natvb: %u hits, %u entries made, %u whose words changed, %u dropped for room, %u without room\n",
+               hits, made, stale, kh1_natvb_evict, kh1_natvb_noroom);
+    }
     if (fails) {
         printf("vu1chain_test: FAILED (%u)\n", fails);
         return 1;
     }
-    printf("vu1chain_test: ok (6 streams, natchain 0-3 the same; %u words poisoned, none read)\n", poisoned);
+    printf("vu1chain_test: ok (6 streams, natchain 0-3 the same; %u words poisoned, none read; natvb 1, 2 and 3 draw the same)\n", poisoned);
     return 0;
 }

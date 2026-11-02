@@ -312,6 +312,35 @@ static void prim(KH1CmdRec *r, const KH1BatchKey *k, u32 src) {
         p->zseen = 1;
     }
     if (c->samples && c->samples - 1 == p->tgt) p->feedback = 1;
+    /* 2026-11-02: a cached native draw (kh1_cmd_native_vb, a command of its own) reads natvb's memory, unless the wide
+     * view's s must be scaled (wtex): then its triangles are copied into the ring as an uncached run's */
+    if (src == KH1_BEV_NEW && r->in_xi && !c->prims) {
+        if (!c->wtex) {
+            c->xv = v;
+            c->xi = r->in_xi;
+            c->hasv = 1;
+            c->nv = n;
+            c->prims = 1;
+            return;
+        }
+        at = (u8 *)kh1_ring_alloc(&r->vring, n * (u32)sizeof(KH1GpuVert), (u32)sizeof(KH1GpuVert));
+        if (!at) {
+            c->lost = 1;
+        } else {
+            u32 lw = d->tex0_lo >> 26 & 15, i;
+            f32 kk = (f32)(1u << (lw > 10 ? 10 : lw)) / r->tsw[c->samples - 1];
+            KH1GpuVert *o = (KH1GpuVert *)(void *)at;
+            for (i = 0; i < n; i++) {
+                o[i] = v[r->in_xi[i]];
+                o[i].s *= kk;
+            }
+            c->hasv = 1;
+            c->v0 = (u32)(at - (r->vring.base + r->vring.cur * r->vring.slot)) / (u32)sizeof(KH1GpuVert);
+        }
+        c->nv = n;
+        c->prims = 1;
+        return;
+    }
     /* 2026-11-01: a skinned native draw's vertices are bigger (KH1GpuVertSk), still from a 32-byte boundary */
     stride = src == KH1_BEV_NEW && r->in_skin ? (u32)sizeof(KH1GpuVertSk) : (u32)sizeof(KH1GpuVert);
     at = (u8 *)kh1_ring_alloc(&r->vring, n * stride, (u32)sizeof(KH1GpuVert));
@@ -413,7 +442,7 @@ static int nat_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
         return 0;
     }
     c = &r->cmd[r->cur];
-    if (c->kind != KH1_CMD_DRAW || !c->nmat || c->lost || !c->hasv || c->pass + 1 != r->npass) {
+    if (c->kind != KH1_CMD_DRAW || !c->nmat || c->lost || !c->hasv || c->xv || c->pass + 1 != r->npass) {
         kh1_cmd_nat_nojoin[0]++;
         return 0;
     }
@@ -475,6 +504,14 @@ void kh1_cmd_native_skin(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPas
                          const f32 *mats, u32 nmat, u32 cull) {
     native(r, d, p, (const KH1GpuVert *)(const void *)v, n, mats, nmat, cull, 1);
 }
+void kh1_cmd_native_vb(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *xv, const u16 *xi,
+                       u32 n, const f32 *mats, u32 nmat, u32 cull, u32 seq) {
+    if (!n || !xi) return;
+    if ((s32)(seq - r->xseq) > 0) r->xseq = seq;
+    r->in_xi = xi;
+    native(r, d, p, xv, n, mats, nmat, cull, 0);
+    r->in_xi = 0;
+}
 static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                    u32 nmat, u32 cull, u32 skin) {
     KH1Cmd *c;
@@ -491,7 +528,7 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
         for (i = 0; i < 2; i++) nd.pipe[i].shader.lin = 1;
         d = &nd;
     }
-    if (kh1_cmd_natjoin && nat_join(r, d, p, v, n, mats, nmat, cull, skin)) return;
+    if (kh1_cmd_natjoin && !r->in_xi && nat_join(r, d, p, v, n, mats, nmat, cull, skin)) return;
     kh1_batch_break(&r->b); /* nothing before joins it */
     r->in_d = d;
     r->in_p = p;
@@ -948,6 +985,7 @@ void kh1_cmd_reset_frame(KH1CmdRec *r) {
     r->split = 0;
     r->pwrote = 0;
     r->open_pending = 0;
+    r->xseq = 0;
     memset(&r->frame, 0, sizeof r->frame);
     kh1_ring_frame(&r->vring);
     kh1_ring_frame(&r->uring);
