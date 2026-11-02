@@ -2082,6 +2082,29 @@ go the CPU way (none waited in the replay).
 Expected (an estimate): the fights' ~3.6-5.8 ms a picture of GPU-thread waiting goes, ~13 -> ~15-16 pictures a second;
 the Dive before the fights unchanged (no such waits there). The GPU does a little more (a few thousand pixels a frame).
 
+## The hang at the end of the Dive: a queue position over 2^31 words old (2026-11-02)
+
+Seen in two Vita logs (Oct 30, frame 17042, before natvb; Nov 2, frame 24708, natvb=2), at the same point (88 disc
+reads, last send 0x814016e0, just after dh_003's event): one last window with a long vblank wait, then every
+window "no vblank since the last", the game thread at 0 ms, the GS worker and the GPU thread asleep with their queues
+empty, sound still running. The watchdog's stall line had the answer: `gsq head a6d13ce0 tail a6d13ce0 wpos
+a6d13ce0, waited for until 16e1d48` (Oct 30: tail bad0aac4, want 267d234). The game thread was asleep in
+q_wait_tail for a position over 2^31 words behind the tail.
+
+The waiter was gsimage.c `load_big`: before it overwrites the least recently used of its 8 kept copies it waits for
+the last op that read that copy (`big[k].pos`). A copy last used early in the game keeps that early position; when
+the copy is reused much later (here the end of the Dive, ~9 minutes and ~2.5 G words through the ring at ~12 M words
+per 2 s), `(s32)(tail - want)` is negative and the wait never ends. Any wait on a saved position could do the same.
+
+The fix (host/null/gsqueue.c `q_reached`): a wait's position is measured back from the producer's wpos, `wpos - tail
+<= wpos - want` (unsigned). Every want is a position already put (<= wpos) and the tail is never more than a ring
+behind wpos, so the test is right for any want up to 2^32 words old; an older one reads as recent and costs at most a
+wait for the ops put so far, which always ends. tests/host/gsqueue_test.c waits on positions 0x90000000 and
+0xFFFFFF00 words old with ops still queued (the old test hangs there; a 10 s alarm fails it). The pool's waits
+(`pool_wait`) only ever ask for a position less than a pool behind, so they keep the signed form. The Nov 1 log
+(40a5212a, frame 2982) that also stops with "no vblank since the last" has no stall line with a stale position and
+is a different stop.
+
 ## What next, in order
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
