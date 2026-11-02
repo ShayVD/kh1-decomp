@@ -8,6 +8,8 @@
  * room depend on the worker publishing the recording queue before it sleeps).  Not part of the PS2 build. */
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <unistd.h>
 #include "common.h"
 #include "../../host/null/gsqueue.h"
 
@@ -45,6 +47,14 @@ static void job(const u32 *a, const u32 *d, u32 nqw) {
 }
 
 static u32 buf[1 << 16];
+
+/* 2026-11-02: a wait that never returns ends the test (the stale-position waits below) */
+static void hung(int sig) {
+    (void)sig;
+    printf("gsqueue_test: FAILED: a wait for a position over 2^31 words old never returned\n");
+    fflush(stdout);
+    _exit(1);
+}
 
 static void put_ops(int q, u32 n, u32 *words) {
     u32 k, i, nq, seq = 0, reps, args[2];
@@ -134,6 +144,26 @@ int main(void) {
             fails++;
         }
         printf("gsqueue_test: the pool: %u payloads (%u qwords), %u waits for room\n", pool_next, pool_qw, kh1_pool_waits);
+    }
+    { /* 2026-11-02: a wait for a position put long ago (load_big's kept copy, last read over 2^31 words before: the
+       * Vita's hang at the end of the Dive) returns at once, ops still queued or not; one put just now still waits */
+        u32 k, args[2];
+        signal(SIGALRM, hung);
+        alarm(10);
+        for (k = 0; k < 3; k++) {
+            kh1_gsq_wait(kh1_gsq_pos() - 0x90000000u);
+            kh1_gsq_wait(kh1_gsq_pos() - 0xFFFFFF00u);
+            kh1_recq_wait(kh1_recq_pos() - 0x90000000u);
+            args[0] = 20000 + k;
+            args[1] = 0;
+            kh1_gsq_put(op, args, 2, 0, 0); /* queued, unpublished: the stale wait must not need it */
+        }
+        kh1_gsq_wait(kh1_gsq_pos());
+        alarm(0);
+        if (seen[0].next != 20003 || seen[0].bad) {
+            printf("gsqueue_test: the waits after the stale ones: %u ops run of 20003, %u bad\n", seen[0].next, seen[0].bad);
+            fails++;
+        }
     }
     printf("gsqueue_test: %s (%u + %u words through the two queues, %u jobs between)\n", fails ? "FAILED" : "ok", w0, w1,
            jobs_run);

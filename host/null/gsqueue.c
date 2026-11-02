@@ -212,21 +212,32 @@ static void q_publish(KH1Q *q) {
     }
 }
 
+/* 2026-11-02: whether the consumer's tail has reached want, a position the producer has already put (want <= wpos).
+ * Measured back from wpos, not as (s32)(tail - want): the tail is never more than a ring behind wpos, so the test
+ * holds for any want up to 2^32 words old.  The signed difference turned negative once want was over 2^31 words
+ * behind, and the wait never ended: gsimage.c's load_big waits for the last op that read a kept copy, and a copy
+ * last used early in the game (position 0x16e1d48) was reused at the end of the Dive with the tail at 0xa6d13ce0,
+ * the game thread asleep in this wait for good (the Vita's "no vblank since the last" hang, Oct 30 and Nov 2 logs).
+ * A want more than 2^32 words old reads as recent and only costs a wait for the ops put so far, which always ends */
+static int q_reached(const KH1Q *q, u32 want) {
+    return q->wpos - LOAD(q->tail) <= q->wpos - want;
+}
+
 /* waits until the consumer's tail reaches at least want (words past it free, or everything done); the ops
- * put so far are published first, so the consumer can get there */
+ * put so far are published first, so the consumer can get there.  The producer's call only (wpos is its own) */
 static void q_wait_tail(KH1Q *q, u32 want) {
     u32 spin, t0;
-    if ((s32)(LOAD(q->tail) - want) >= 0) return;
+    if (q_reached(q, want)) return;
     q_publish(q);
     t0 = clock_us();
     (*q->waits)++;
     q->want = want;
     q->waiting = 1;
     for (;;) {
-        for (spin = 0; spin < SPINS && (s32)(LOAD(q->tail) - want) < 0; spin++) ;
-        if ((s32)(LOAD(q->tail) - want) >= 0) break;
+        for (spin = 0; spin < SPINS && !q_reached(q, want); spin++) ;
+        if (q_reached(q, want)) break;
         STORE(q->psleeps, 1);
-        if ((s32)(LOAD(q->tail) - want) < 0) q->pwait();
+        if (!q_reached(q, want)) q->pwait();
         STORE(q->psleeps, 0);
     }
     q->waiting = 0;
