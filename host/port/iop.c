@@ -1149,6 +1149,9 @@ int kh1_iop_load(const u8 *f, u32 size) {
             printf("kh1-iop: the driver runs as C (%d functions translated at build time)\n", k);
         else if ((k = patch_natives()) > 0)
             printf("kh1-iop: %d of the driver's functions run as C\n", k);
+        if (!rec_live && iop_rec_on) /* 2026-11-01: said plainly, three Vita builds ran this way unnoticed */
+            printf("kh1-iop: WARNING: the driver is NOT translated (%s): it runs on the interpreter, ~2.5x the sound's "
+                   "CPU\n", !REC_N ? "built without LIBSSL.IRX" : "the disc's driver does not match the build's");
     }
     iop_heap = (iop_mod_end + 0xFFF) & ~0xFFFu;
     if (iop_log()) printf("kh1-iop: module at 0x%x..0x%x, entry +0x%x, %d imports\n", KH1_IOP_BASE, iop_mod_end, entry,

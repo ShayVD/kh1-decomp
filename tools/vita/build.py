@@ -254,6 +254,19 @@ def package(b, out, elf):
     return vpk
 
 
+def translations_missing():
+    """What census.platform_flags would fall back to the interpreter for (an empty list: both translations on):
+    the sound driver (LIBSSL.IRX -> out/gen/iop_rec.c) and the VU1 programs (SLPS_251.98 -> out/gen/vu1_tr.c)."""
+    out = []
+    if not census.iop_flags():
+        out.append("LIBSSL.IRX (from your own disc's root) is missing from the repo root or does not translate: "
+                   "the sound driver would run on the interpreter")
+    if not census_platform_flags("port", "vu1.c"):
+        out.append("SLPS_251.98 is missing from the repo root or does not translate: the VU1 programs would run on "
+                   "the interpreter")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--linux-arm", action="store_true", help="build out/armlinux/kh1-arm for qemu-arm instead")
@@ -262,6 +275,9 @@ def main():
                          "stand-in (tools/vita/gxmcheck.sh's, compiled for ARM)")
     ap.add_argument("--opt", choices=sorted(OPTS), default=os.environ.get("KH1_VITA_OPT", DEFAULT_OPT),
                     help="the optimisation (default %s; KH1_VITA_OPT sets it too)" % DEFAULT_OPT)
+    ap.add_argument("--allow-interpreter", action="store_true",
+                    help="build even without LIBSSL.IRX / SLPS_251.98 in the repo root: the sound driver (or the VU1 "
+                         "programs) then run on the interpreter, much slower (KH1_VITA_ALLOW_INTERP=1 sets it too)")
     a = ap.parse_args()
     global PLATFORM_OPT
     opt_c, PLATFORM_OPT, opt_link = OPTS[a.opt]
@@ -272,6 +288,19 @@ def main():
     out = os.path.join(ROOT, t["out"])
     if not os.path.exists(os.path.join(ROOT, "out", "gen", "symbols.ld")):
         sys.exit("vita: run the PS2 `make` first (out/gen/symbols.ld, out/data/pieces/)")
+
+    # 2026-11-01: three VPKs in a row (natchain, pendgpu, main 9a95cf9) were built without LIBSSL.IRX in the repo
+    # root, so their sound driver ran on the MIPS interpreter (~0.8 s of a core more per 2 s window) and nobody
+    # noticed until a Vita log was read.  The translations are now required unless asked for otherwise.
+    missing = translations_missing() if name == "vita" else []
+    if missing:
+        for m in missing:
+            print("vita: " + m)
+        if not (a.allow_interpreter or os.environ.get("KH1_VITA_ALLOW_INTERP") == "1"):
+            sys.exit("vita: refusing to build a slow VPK; copy the file(s) above into the repo root, or pass "
+                     "--allow-interpreter (docs/vita-build.md \"The sound's driver as C\")")
+        print("vita: " + "!" * 60 + "\nvita: building WITHOUT the translation(s) above (--allow-interpreter)\n"
+              "vita: " + "!" * 60)
 
     census.OUT = out
     census.CFLAGS = CFLAGS + opt_c + t["defines"] + (CFLAGS_GCC14 if gcc_major(cc) >= 14 else [])

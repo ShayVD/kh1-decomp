@@ -1720,6 +1720,21 @@ passes with NEON for the volumes and sums. Output byte-identical on the host; ab
 the two sound threads together (sound-spec 6, "The driver as C and the mix in passes"). Watch the sound line's
 `ms ticking` and `ms mixing` (before: ~800 and ~630 per window in the Dive).
 
+**The build now refuses to package without it (2026-11-01).** The natchain, pendgpu and main 9a95cf9 VPKs were
+built without LIBSSL.IRX in the repo root, and their sound ran on the interpreter (~780 ms of ticks a 2.1 s window,
+the log's `kh1-iop: 4 of the driver's functions run as C`); nobody noticed until a Vita log was read. tools/vita/build.py
+now stops before compiling when LIBSSL.IRX (or SLPS_251.98, for the VU1 translation) is missing or fails to
+translate; `--allow-interpreter` (or `KH1_VITA_ALLOW_INTERP=1`) builds anyway with a banner. At run time the log also
+says `kh1-iop: WARNING: the driver is NOT translated (...)` when the driver runs on the interpreter.
+**Where the file is:** Shay's Mac, `~/Downloads/kh1-test/irx/LIBSSL.IRX` (85,501 bytes, SHA-256 5d69c946…, with the
+disc's other IRX modules beside it). A cloud session stages it with the folder tools (a connect card, folder access on
+`~/Downloads/kh1-test`, `device_stage_files`) and copies it into the repo root; `.gitignore` keeps it out of git.
+
+**The GS worker's op times are sampled (2026-11-01).** gsqueue.c's `q_run` timed every op with two clock reads
+(~0.68 us each on a Vita, ~80 ms of a fight window at ~60 K ops). It now times 1 op in 8 (picked by an LCG, so a
+repeating op pattern cannot alias) and counts that op's time 8 times: the `gs worker ops:` line's call counts stay
+exact, its ms are estimates (good for ops run hundreds of times a window, noisy for one run a handful of times).
+
 ## The GPU's work in the Dive (2026-10-31)
 
 The Dive ran at ~15.7-16 pictures/s on a Vita, GPU-bound: ~31 ms of GPU a picture, every thread waiting on it
