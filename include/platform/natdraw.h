@@ -52,7 +52,10 @@ enum { KH1_NAT_CULL_NONE, KH1_NAT_CULL_CCW, KH1_NAT_CULL_CW };
  * u_m[mi1] x p1 + u_m[mi2] x p2, which is P13's sum before its divide.  A record's length in qwords is
  * KH1_NAT_REC_QW (records without the bit: 2 qwords a vertex, as before) */
 #define KH1_NAT_SKIN 0x10000u
-#define KH1_NAT_REC_QW(r) (1u + (r)[2] * ((r)[3] & KH1_NAT_SKIN ? 3u : 2u))
+/* 2026-11-02: a cached record (natvb below): 2 qwords, the record's own first qword (word 3's KH1_NAT_VB set), then the
+ * entry's vertices, the record's first index, its index count and the hand-over's sequence number */
+#define KH1_NAT_VB 0x20000u
+#define KH1_NAT_REC_QW(r) ((r)[3] & KH1_NAT_VB ? 2u : 1u + (r)[2] * ((r)[3] & KH1_NAT_SKIN ? 3u : 2u))
 
 /* the GPU vertices of a run's records (data: the records as above, nrec of them; mats: the run's matrix count, a
  * record's index past it is dropped as ADC), with the run's rgba / f: the number written (at most max), and the
@@ -79,6 +82,50 @@ extern int kh1_nat_once;
  * vertex shader's u_m), for a pass and the draw's ZBUF (its PSM picks depth.h's scale) and the GS's X shift in
  * sixteenths (gsregs.c kh1_gs_xshift) */
 void kh1_nat_fold(const KH1RenderPass *p, u32 zbuf_lo, s32 xshift16, const u32 *mats, u32 nmat, f32 *out);
+
+/* 2026-11-02 (docs/native-plan.md "Vertex buffers cached by the records' address"; config.txt natvb=, host
+ * KH1_HOST_NATVB): renderer B's runs (P18, P11, P10) whose records natchain reads from the chain are cached by the
+ * records' EE address and length (the program, the run's colour, F and flags too).  An entry keeps the run's GPU
+ * vertices once each (a strip vertex once, not once a triangle) and its triangles as 16-bit indices in kh1_natvb_mem
+ * (GPU memory on the Vita), and the stream's shape: where its matrices are (the game rewrites those in place every
+ * frame) and which slot registers the run reads.  A run that finds its entry, with the stream's other words hashing as
+ * they did, hands over a payload of the run's matrices and one 2-qword KH1_NAT_VB record a strip (no vertices): no
+ * parse, a few qwords into the pool, and the GPU thread draws the entry's indices from GPU memory (cmdbuf.h
+ * kh1_cmd_native_vb).  kh1_natvb: 0 off, 1 every word but the matrices hashed on each hit, 2 one qword in 8 hashed, 3
+ * (host) as 1 and each hit also parsed and its triangles compared */
+typedef struct KH1NatVb KH1NatVb;
+extern int kh1_natvb;
+extern u8 *kh1_natvb_mem;           /* the entries' vertices and indices: GPU-visible memory (the platform's) */
+extern u32 kh1_natvb_bytes;
+extern volatile u32 kh1_natvb_done; /* every KH1_NAT_VB record with a sequence number up to this one read for good */
+extern int kh1_natvb_fenced;        /* the GPU renderer publishes done itself (host/vita/gxm.c, after the GPU's finish) */
+extern u32 kh1_natvb_seq;           /* the game thread's last sequence number */
+/* the log's counts: hits, runs with no entry, entries made, entries whose words changed, entries dropped for room,
+ * entries that found no room, check mode's differences, runs not cacheable (too big) */
+extern u32 kh1_natvb_hits, kh1_natvb_miss, kh1_natvb_made, kh1_natvb_stale, kh1_natvb_evict, kh1_natvb_noroom,
+    kh1_natvb_bad, kh1_natvb_big;
+/* the GPU side: commands of a frame with KH1_NAT_VB records up to seq read by the GPU for good */
+void kh1_natvb_publish(u32 seq);
+/* the game thread: the entry of a run (src: the held unpack's words, lim qwords) or 0 (a miss, its key remembered) */
+KH1NatVb *kh1_natvb_find(const u32 *src, u32 lim, u32 prog, u32 rgba, u32 f, u32 flags);
+/* 1 when the stream's words other than the matrices hash as when the entry was made (else the entry is dropped) */
+int kh1_natvb_same(KH1NatVb *e, const u32 *src);
+/* a hit's payload into ob: header, the stub records, the matrices (from the stream, or mats_reg[slot] for those the run
+ * read from the slot registers); its matrix count in *nmat, the slots' last loads (payload indices, -1 none) in last;
+ * returns the payload's qwords */
+u32 kh1_natvb_payload(KH1NatVb *e, const u32 *src, const u32 *const *mats_reg, u32 (*ob)[4], u32 (*mats)[4][4], u32 *nmat,
+                      s32 *last);
+/* after a miss whose run read its records from src: an entry made from its payload (pay, natdraw.h's format: P18's
+ * records), msrc[i] the stream qword of payload matrix i's first row (-1 - slot: from the slot's registers), mbody the
+ * qwords a matrix record skips after its first (7 P18 / P11, 4 P10), last the slots' last loads, lin or'd into mi */
+void kh1_natvb_learn(const u32 *src, u32 lim, u32 prog, u32 flags, const u32 *pay, const s16 *msrc, u32 mbody,
+                     const s32 *last, u32 lin);
+/* check mode: 1 when the entry's triangles, expanded, are kh1_nat_tris's of the payload pay (lin or'd in) */
+int kh1_natvb_check(const KH1NatVb *e, const u32 *pay, u32 lin);
+/* the GPU memory the entries hold now, bytes */
+u32 kh1_natvb_used(void);
+/* forget every entry (the arena's memory gone or the switch changed): only when no record is in flight */
+void kh1_natvb_reset(void);
 
 /* the reference: P18's screen position of one vertex (GS units, before 12.4: x, y, and z, from M's column-order
  * matrix and the position), for the tests: what the VU computes, in plain float */

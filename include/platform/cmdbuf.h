@@ -123,6 +123,10 @@ typedef struct {
     u8 cull;           /* and its cull mode (natdraw.h's KH1_NAT_CULL_*) */
     u8 skin;           /* 2026-11-01: its vertices are KH1GpuVertSk (KH1_VTX_SKIN_STRIDE), from v0 x 32 bytes */
     u32 moff;
+    /* 2026-11-02 (natdraw.h natvb): a cached native draw's vertices and nv 16-bit indices in natvb's GPU memory (xv 0:
+     * the ring's, from v0) */
+    const KH1GpuVert *xv;
+    const u16 *xi;
 } KH1Cmd;
 
 typedef struct {
@@ -181,6 +185,8 @@ typedef struct {
     const KH1GpuVert *in_v;
     u32 in_n;
     u32 in_skin;       /* 2026-11-01: in_v is KH1GpuVertSk's (kh1_cmd_native_skin) */
+    const u16 *in_xi;  /* 2026-11-02: in_v is natvb's, these in_n indices into it (kh1_cmd_native_vb) */
+    u32 xseq;          /* 2026-11-02: the highest natvb sequence number of the frame's draws (natdraw.h kh1_natvb_publish) */
     KH1CmdGrpPrim grp[KH1_BATCH_GROUP];
     /* colour targets across frames: (rt, fbp, fbw, psm); drawn: in an earlier frame */
     u32 ntgt;
@@ -224,6 +230,10 @@ void kh1_cmd_native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
  * so gxmrec.h picks the KH1_VERT_SKIN variants */
 void kh1_cmd_native_skin(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVertSk *v, u32 n,
                          const f32 *mats, u32 nmat, u32 cull);
+/* 2026-11-02 (natdraw.h natvb): a cached run's draw: n indices xi into the vertices xv (both in natvb's GPU memory,
+ * read by the GPU, not copied into the ring), seq its hand-over's number (r->xseq).  Never joined */
+void kh1_cmd_native_vb(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *xv, const u16 *xi,
+                       u32 n, const f32 *mats, u32 nmat, u32 cull, u32 seq);
 /* a transfer or CLUT load, not recorded (batch.h's break only) */
 void kh1_cmd_break(KH1CmdRec *r);
 /* session 127: TRXDIR dir (0 an upload, 2 a copy) with BITBLTBUF, TRXPOS and TRXREG: an UPLOAD or COPY command

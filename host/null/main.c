@@ -92,6 +92,7 @@
 #include "platform/ovl.h"
 #include "platform/vu1.h"
 #include "platform/cmdbuf.h"
+#include "platform/natdraw.h"
 #include <time.h>
 extern u32 (*kh1_vu1_clock)(void);
 extern volatile u32 kh1_pipes_frame_us[7];
@@ -119,6 +120,12 @@ static void host_clock_report(void) {
         printf("kh1-host: natchain=%d: %u runs read from the chain (%u K qwords never unpacked), %u unpacks written late, "
                "%u payloads differed\n", kh1_vu1_natchain, kh1_vu1_nc_runs, kh1_vu1_nc_qw / 1000, kh1_vu1_nc_flushed,
                kh1_vu1_nc_bad);
+    }
+    { /* 2026-11-02: natvb's cache (natdraw.h) */
+        printf("kh1-host: natvb=%d: %u hits, %u misses, %u entries made, %u whose words changed, %u dropped for room, "
+               "%u found no room, %u runs too big, %u hits differed from their parse\n", kh1_natvb, kh1_natvb_hits,
+               kh1_natvb_miss, kh1_natvb_made, kh1_natvb_stale, kh1_natvb_evict, kh1_natvb_noroom, kh1_natvb_big,
+               kh1_natvb_bad);
     }
     { /* 2026-11-02: natdirect's payloads (dmawalk.c) */
         extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends;
@@ -445,6 +452,13 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATP13")) kh1_vu1_draw_p13 = atoi(getenv("KH1_HOST_NATP13")); /* 2026-10-31: 0 P13 on the VU */
         if (getenv("KH1_HOST_NATSKIN")) kh1_vu1_nat_skin = atoi(getenv("KH1_HOST_NATSKIN")); /* 2026-11-01: 0 the CPU's sums */
         if (getenv("KH1_HOST_NATCHAIN")) kh1_vu1_natchain = atoi(getenv("KH1_HOST_NATCHAIN")); /* 2026-11-01: 0 the old path */
+        if (getenv("KH1_HOST_NATVB")) kh1_natvb = atoi(getenv("KH1_HOST_NATVB")); /* 2026-11-02: natdraw.h natvb */
+        if (kh1_natvb && !kh1_natvb_mem) { /* the host's stand-in for GPU memory (gxm.c gives its own) */
+            u32 mb = getenv("KH1_HOST_NATVBMB") ? (u32)atoi(getenv("KH1_HOST_NATVBMB")) : 16;
+            kh1_natvb_bytes = mb << 20;
+            kh1_natvb_mem = (u8 *)malloc(kh1_natvb_bytes);
+            if (!kh1_natvb_mem) kh1_natvb = 0;
+        }
         if (getenv("KH1_HOST_NATP10")) kh1_vu1_draw_p10 = atoi(getenv("KH1_HOST_NATP10")); /* 2026-10-31: 0 P10 on the VU */
         if (getenv("KH1_HOST_RECFRAME")) { /* 2026-10-31: pipes.c's frame op on the GPU thread (the Vita's recframe=) */
             extern int kh1_pipes_rq_frame;

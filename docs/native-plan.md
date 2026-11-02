@@ -360,6 +360,61 @@ game's memory, which the "Read P18/P0 records straight from the chain" thread is
 have no stable address) and a draw that reads persistent GPU memory instead of the ring (gxm.c's stream from a cached
 block, which a joined draw cannot mix). That is the follow-up once records come straight from the chain.
 
+### Static vertex buffers by the records' address (2026-11-02, config.txt `natvb=1`)
+
+Built on natchain (records read from the chain's own words, so a run's records have an EE address) and natdirect (a
+payload reaches the GPU thread whole). Code: natdraw.h / natdraw.c `kh1_natvb_*` (the cache), vu1_draw.h `nb_hit` and
+the natvb branches of `nd_18` / `nd_10` (the game thread), pipes.c `r_native`'s KH1_NAT_VB branch and cmdbuf.c
+`kh1_cmd_native_vb` (the GPU thread), gxm.c (the indexed draw, the GPU memory and the fence).
+
+**What is cached.** Renderer B's runs of P18, P11 and P10 whose records natchain reads from one held unpack. Key: the
+unpack's words' address and length in qwords, the program, and the run's colour (vf01), F (vi12) and the two flags
+(every vertex ADC, the cull bit) since those are baked into the GPU vertices. An entry holds, in GPU memory, each strip
+vertex once (natdraw.c's `put`: the same 32-byte KH1GpuVert the uncached path makes, P11's lin bit in mi) and the
+triangles kh1_nat_tris would list, as 16-bit indices into them; and on the CPU, the stub records a hit sends and the
+matrix plan: each payload matrix either the stream's qword (renderer-spec 2.3: `func_0015fd20` rewrites the op 0
+records' matrices in place every frame) or the slot register the run read, plus the slots' last loads.
+
+**A hit** (the entry is there and the stream's words outside the matrix records' bodies hash as they did when it was
+made) hands over: the header, one 2-qword `KH1_NAT_VB` record a strip (its first qword as before, so natdirect's
+summary, the GS worker's counts and the PRIM are unchanged; then the entry's vertices, the strip's first index, its index
+count, a sequence number) and the matrices read from the stream and the registers. The game thread does not parse or
+write vertices; the pool gets ~2 qwords a strip instead of 1 + 2 a vertex; the GPU thread folds the matrices and records
+one draw command whose vertices and indices are the entry's (`KH1Cmd.xv` / `xi`), with nothing copied into the vertex
+ring; gxm.c draws it with `sceGxmDraw(..., U16, xi, n)` from the entry's vertices. The slot registers are left as the
+parse would leave them. A miss parses as before; an entry is made the second time the same key and words are seen (a
+colour that changes every frame makes none).
+
+**Words changed in place.** `natvb=1` hashes every qword of the stream but the matrix bodies on every hit (4 lanes,
+about one multiply a word: a fraction of the parse); `natvb=2` hashes one qword in 8 (cheaper; a rewrite that misses
+those qwords goes unseen); a hash that differs drops the entry. Host `KH1_HOST_NATVB=3` also parses every hit and
+compares its matrices, header, slot loads and expanded triangles with the entry's (`hits differed from their parse` in
+the host's last lines).
+
+**Memory and reuse.** 16 MiB (config `natvbmb=`) of GPU-mapped uncached memory on the Vita (malloc on the host) and 2 MiB
+of CPU memory, both rings in allocation order. The oldest entry goes first, and only once no frame still to be drawn
+names it: each hit's sequence number goes into its frame's command list (`KH1CmdRec.xseq`), and gxm.c, after
+`sceGxmFinish` at the next frame's start, publishes the previous frame's highest number (`kh1_natvb_done`). An entry
+still in flight is taken out of the lookup instead (its number stops growing) and that allocation is skipped. Without a
+GPU renderer (the plain host) the frame op publishes at the frame's end.
+
+**Draws.** A cached run is one draw of its own: it does not join the native draw before it (natjoin), because its
+vertices carry their matrix indices from the run's own numbering. So a frame of cached runs makes more draws than
+natjoin's; whether the cheaper runs outweigh that is the Vita A/B's question (the log's `natvb=` line counts the draws
+from GPU memory).
+
+**Not cached**: P0 / P4 (renderer A's map batches: one record a run, joined on the GPU thread into one draw per object
+and pass; per-batch cached draws would multiply the draws, so it waits for stage 6's object-level hook), P13 (its parse
+reads VU memory), any run natchain does not read from the chain, and runs over 1,024 strip vertices.
+
+**Checked**: tests/host/vu1chain_test.c (in tests/selftest.sh, x86 and qemu-arm with NEON): its six random streams run
+three times with natvb 1 and 3 against natchain=1 without the cache, comparing what is drawn (each B payload as its
+header, record headers, matrices and expanded triangles), the registers at each hand-over, the program runs and VU
+memory; then 400 data words flipped and the same again (entries whose words changed are dropped); the last two streams
+in a 48 KiB arena so room is made and refused. Mutations each fail it: the hash check skipped, a strip's parity swapped
+in an entry, a slot's last load dropped. The test publishes after every run, so it does not exercise the in-flight rule
+(an entry freed while a frame still to be drawn names it); that rests on gxm.c's fence as described above.
+
 ### Stage 2: the rest of renderer B on the GPU (P12, P14, P15-P17, P19, P20)
 
 - **P12 / P14 (lit, rigid / skinned)**: the native vertex shader gains renderer B's lighting: 3 parallel lights +

@@ -486,6 +486,34 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
                                 (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | KH1_NAT_LIN);
             kh1_pipes_nat_draws++;
             kh1_pipes_nat_tris += n / 3;
+        } else if (!d[6] && nrec && d[8 + 3] & KH1_NAT_VB) {
+            /* 2026-11-02 (natdraw.h natvb): a cached run's stubs: each run of them in one entry with contiguous indices one
+             * draw from natvb's GPU memory, in the records' order */
+            const u32 *q = d + 8;
+            u32 i, cull = d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE;
+            const KH1GpuVert *xv = 0;
+            const u16 *xi = 0;
+            u32 ni = 0, seq = 0;
+            if ((d[0] & 0xFF) == 11) cull |= KH1_NAT_LIN;
+            kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            for (i = 0; i <= nrec; i++, q += 8) {
+                const KH1GpuVert *v = i < nrec ? (const KH1GpuVert *)(unsigned long)q[4] : 0;
+                const u16 *x = i < nrec ? (const u16 *)(unsigned long)q[5] : 0;
+                if (i < nrec && !(q[3] & KH1_NAT_VB)) break; /* (an op is all stubs or none) */
+                if (ni && (i == nrec || v != xv || x != xi + ni)) {
+                    kh1_cmd_native_vb(rec, &last_d, &last_p, xv, xi, ni, nat_m, nmat, cull, seq);
+                    kh1_pipes_nat_draws++;
+                    kh1_pipes_nat_tris += ni / 3;
+                    ni = 0;
+                }
+                if (i == nrec) break;
+                if (!ni) {
+                    xv = v;
+                    xi = x;
+                }
+                ni += q[6];
+                if ((s32)(q[7] - seq) > 0) seq = q[7];
+            }
         } else if (!d[6]) { /* not every vertex ADC */
             u32 lin = (d[0] & 0xFF) == 11 || (d[0] & 0xFF) == 13 ? KH1_NAT_LIN : 0, i;
             n = kh1_nat_tris(d + 8, nrec, nmat, d[4], d[5], nat_v, KH1_NAT_VERTS, &lost);
@@ -532,7 +560,7 @@ static void r_nat_rec(const u32 *a, const u32 *d, u32 nqw) {
         u32 nq = KH1_NAT_REC_QW(d);
         if (nq > nqw || nat_crq + nq > NAT_QW) break;
         memcpy(nat_op[nat_crq], d, nq * 16);
-        if (nat_cmoff) { /* a joined run's vertices: its matrices follow the op's earlier ones (nat_rec's rule); a
+        if (nat_cmoff && !(d[3] & KH1_NAT_VB)) { /* a joined run's vertices: its matrices follow the op's earlier ones (nat_rec's rule); a
                           * skinned vertex's two indices (natdraw.h KH1_NAT_SKIN) both */
             u32 j, vq = d[3] & KH1_NAT_SKIN ? 3 : 2, add = vq == 3 ? nat_cmoff | nat_cmoff << 16 : nat_cmoff;
             for (j = 0; j < d[2]; j++) nat_op[nat_crq + 1 + j * vq][3] += add;
@@ -838,7 +866,14 @@ static void frame_begin(void) {
     }
 }
 
+/* 2026-11-02 (natdraw.h natvb): with no GPU renderer of its own fencing them (kh1_natvb_fenced), the frame's commands
+ * have been read once the frame ends: its cached runs' entries are free to go */
+static void vb_frame_done(void) {
+    if (!kh1_natvb_fenced && rec->xseq) kh1_natvb_publish(rec->xseq);
+}
+
 static void frame_end(void) {
+    vb_frame_done();
     kh1_cmd_reset_frame(rec);
     kh1_palcache_frame(pal);
     if (tex_ok) kh1_texcache_frame(tex);
@@ -983,6 +1018,7 @@ static void r_frame(const u32 *a, const u32 *d, u32 n) {
     if (kh1_vu1_clock) kh1_pipes_frame_us[6] += kh1_vu1_clock() - t0;
     kh1_pipes_job_arg = a[0];
     kh1_pipes_frame_hook(rec);
+    vb_frame_done();
     kh1_cmd_reset_frame(rec);
 }
 

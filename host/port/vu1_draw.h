@@ -121,6 +121,7 @@ static void nc_compare(const u32 (*a)[4], u32 na, const u32 (*b)[4], u32 nb) {
  * clipping replaces (pipes.c draws it with z not clamped).  2026-11-01: nd_18_build reads the stream from VU memory
  * (s 0) or from the held unpack's words (s, lim qwords: anything past them fails, and the caller reads VU memory) */
 #define NQ(o) (s ? s[o] : mem[(top + (o)) & (DATA_QW - 1)])
+static s16 nb_msrc[KH1_NAT_MATS]; /* 2026-11-02 (natvb): each payload matrix's stream qword, or -1 - its register slot */
 static __inline__ __attribute__((always_inline)) u32 nd_18_build(u32 num, u32 (*ob)[4], const u32 (*s)[4], u32 lim,
                                                                  u32 *nrec_o, s32 *last) {
     u32 o = 0, rq = 2, nrec = 0, nmat = 0, k;
@@ -136,6 +137,7 @@ static __inline__ __attribute__((always_inline)) u32 nd_18_build(u32 num, u32 (*
             u32 sl = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
             if (nmat == KH1_NAT_MATS || (s && o + 5 > lim)) return 0;
             for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], NQ(o + 1 + k), 16);
+            nb_msrc[nmat] = (s16)(o + 1);
             cur[sl] = last[sl] = (s32)nmat++;
             o += 8;
             continue;
@@ -159,6 +161,7 @@ static __inline__ __attribute__((always_inline)) u32 nd_18_build(u32 num, u32 (*
             if (cur[sl] < 0) { /* the slot's matrix as the registers hold it now */
                 if (nmat == KH1_NAT_MATS) return 0;
                 for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], vf[base[sl] + k], 16);
+                nb_msrc[nmat] = (s16)(-1 - (s32)sl);
                 cur[sl] = (s32)nmat++;
             }
             ob[rq][0] = p[0];
@@ -185,14 +188,76 @@ static __inline__ __attribute__((always_inline)) u32 nd_18_build(u32 num, u32 (*
     *nrec_o = nrec;
     return rq + nmat * 4;
 }
+/* 2026-11-02 (natdraw.h natvb, docs/native-plan.md "Vertex buffers cached by the records' address"): a run of P18, P11
+ * or P10 whose records are the held unpack s (lim qwords) and whose entry is there with the same words hands over
+ * the entry's payload (its matrices from the stream and the slot registers, a stub a strip): 1, with *n its qwords and
+ * last the slots' loads.  Check mode (natvb=3) also parses the run and compares */
+static u32 nb_bad_shown;
+static __inline__ __attribute__((always_inline)) u32 nd_10_build(u32 (*ob)[4], const u32 (*s)[4], u32 lim, u32 *nrec_o,
+                                                                 s32 *last);
+static __inline__ int nb_hit(u32 num, u32 (*ob)[4], const u32 (*s)[4], u32 lim, u32 rgba, u32 f, u32 flags, s32 *last,
+                             u32 *n, KH1NatVb **e_o) {
+    static const int base[3] = { 5, 12, 19 };
+    const u32 *reg[3];
+    u32 nmat;
+    KH1NatVb *e;
+    *e_o = 0;
+    if (!kh1_natvb || kh1_vu1_natchain != 1) return 0;
+    e = kh1_natvb_find((const u32 *)s, lim, num, rgba, f, flags);
+    *e_o = e;
+    if (!e || !kh1_natvb_same(e, (const u32 *)s)) return 0;
+    reg[0] = vf[base[0]];
+    reg[1] = vf[base[1]];
+    reg[2] = vf[base[2]];
+    *n = kh1_natvb_payload(e, (const u32 *)s, reg, ob, nd_mat, &nmat, last);
+    if (kh1_natvb == 3) { /* the same run parsed: its matrices, slots and triangles */
+        u32 r2, n2, rq = ob[0][3];
+        s32 l2[3] = { -1, -1, -1 };
+        static u32 keep[KH1_NAT_MATS][4][4];
+        memcpy(keep, nd_mat, nmat * 64);
+        n2 = num == 10 ? nd_10_build(nd_chk, s, lim, &r2, l2) : nd_18_build(num, nd_chk, s, lim, &r2, l2);
+        if (!n2 || nd_chk[0][2] != nmat || memcmp(nd_chk[2 + nd_chk[0][3]], ob[2 + rq], nmat * 64) ||
+            l2[0] != last[0] || l2[1] != last[1] || l2[2] != last[2] || memcmp(nd_chk[1], ob[1], 16) ||
+            !kh1_natvb_check(e, nd_chk[0], num == 11 ? KH1_NAT_LIN : 0)) {
+            if (!nb_bad_shown++) printf("kh1-vu1: natvb: a cached run differs from its parse (P%u, %u qwords at %08x)\n", num, lim,
+                                        (u32)(unsigned long)s);
+            kh1_natvb_bad++;
+        }
+        memcpy(nd_mat, keep, nmat * 64);
+    }
+    return 1;
+}
 static int nd_18(u32 pc, u32 num) {
     u32 (*ob)[4], n = 0, nrec = 0, k, lim;
     s32 last[3] = { -1, -1, -1 }; /* the last matrix each slot loaded */
     static const int base[3] = { 5, 12, 19 };
     const u32 (*s)[4];
+    KH1NatVb *e = 0;
     if (pc != 7 || !kh1_vu1_draw) return 0;
     ob = nd_out();
-    if (nc_n && (s = nc_b(&lim)) != 0 && (n = nd_18_build(num, ob, s, lim, &nrec, last)) != 0) {
+    if (nc_n && (s = nc_b(&lim)) != 0 && kh1_natvb) {
+        u32 rgba = (vf[1][0] & 0xFF) | (vf[1][1] & 0xFF) << 8 | (vf[1][2] & 0xFF) << 16 | (vf[1][3] & 0xFF) << 24;
+        u32 fl = (vi[12] >> 15 & 1) | (vi[13] >> 15 & 1) << 1;
+        if (nb_hit(num, ob, s, lim, rgba, vi[12] >> 4 & 0xFF, fl, last, &n, &e)) {
+            nc_drop();
+            nd_give(ob, n);
+            for (k = 0; k < 3; k++)
+                if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
+            kh1_vu1_drawn++;
+            tpc = 7 & (MICRO_N - 1);
+            return 1;
+        }
+        if ((n = nd_18_build(num, ob, s, lim, &nrec, last)) != 0 && kh1_vu1_natchain == 1 && nrec)
+            kh1_natvb_learn((const u32 *)s, lim, num, fl, ob[0], nb_msrc, 7, last, num == 11 ? KH1_NAT_LIN : 0);
+        if (n) {
+            if (kh1_vu1_natchain == 3) {
+                u32 r2;
+                s32 l2[3] = { -1, -1, -1 };
+                nc_flush();
+                nc_compare((const u32 (*)[4])ob, n, (const u32 (*)[4])nd_chk, nd_18_build(num, nd_chk, 0, 0, &r2, l2));
+            } else nc_drop();
+        }
+    } else if (nc_n && (s = nc_b(&lim)) != 0 && (n = nd_18_build(num, ob, s, lim, &nrec, last)) != 0) {
         if (kh1_vu1_natchain == 3) { /* the same from VU memory */
             u32 r2;
             s32 l2[3] = { -1, -1, -1 };
@@ -239,6 +304,7 @@ static __inline__ __attribute__((always_inline)) u32 nd_10_build(u32 (*ob)[4], c
             u32 sl = (h[2] & 0xFFFF) == 0 ? 0 : (h[2] & 0xFFFF) == 1 ? 1 : 2;
             if (nmat == KH1_NAT_MATS || (s && o + 5 > lim)) return 0;
             for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], NQ(o + 1 + k), 16);
+            nb_msrc[nmat] = (s16)(o + 1);
             cur[sl] = last[sl] = (s32)nmat++;
             o += 5;
             continue;
@@ -260,6 +326,7 @@ static __inline__ __attribute__((always_inline)) u32 nd_10_build(u32 (*ob)[4], c
             if (cur[sl] < 0) {
                 if (nmat == KH1_NAT_MATS) return 0;
                 for (k = 0; k < 4; k++) memcpy(nd_mat[nmat][k], vf[base[sl] + k], 16);
+                nb_msrc[nmat] = (s16)(-1 - (s32)sl);
                 cur[sl] = (s32)nmat++;
             }
             ob[rq][0] = p[0];
@@ -289,9 +356,30 @@ static int nd_10(u32 pc) {
     s32 last[3] = { -1, -1, -1 };
     static const int base[3] = { 5, 12, 19 };
     const u32 (*s)[4];
+    KH1NatVb *e = 0;
     if (pc != 6 || !kh1_vu1_draw) return 0;
     ob = nd_out();
-    if (nc_n && (s = nc_b(&lim)) != 0 && (n = nd_10_build(ob, s, lim, &nrec, last)) != 0) {
+    if (nc_n && (s = nc_b(&lim)) != 0 && kh1_natvb) { /* 2026-11-02: natvb, as nd_18 */
+        if (nb_hit(10, ob, s, lim, nd10_rgba, 0, 0, last, &n, &e)) {
+            nc_drop();
+            nd_give(ob, n);
+            for (k = 0; k < 3; k++)
+                if (last[k] >= 0) memcpy(vf[base[k]], nd_mat[last[k]], 64);
+            kh1_vu1_drawn++;
+            tpc = 6 & (MICRO_N - 1);
+            return 1;
+        }
+        if ((n = nd_10_build(ob, s, lim, &nrec, last)) != 0 && kh1_vu1_natchain == 1 && nrec)
+            kh1_natvb_learn((const u32 *)s, lim, 10, 0, ob[0], nb_msrc, 4, last, 0);
+        if (n) {
+            if (kh1_vu1_natchain == 3) {
+                u32 r2;
+                s32 l2[3] = { -1, -1, -1 };
+                nc_flush();
+                nc_compare((const u32 (*)[4])ob, n, (const u32 (*)[4])nd_chk, nd_10_build(nd_chk, 0, 0, &r2, l2));
+            } else nc_drop();
+        }
+    } else if (nc_n && (s = nc_b(&lim)) != 0 && (n = nd_10_build(ob, s, lim, &nrec, last)) != 0) {
         if (kh1_vu1_natchain == 3) {
             u32 r2;
             s32 l2[3] = { -1, -1, -1 };
