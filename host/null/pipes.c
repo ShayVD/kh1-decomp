@@ -224,6 +224,7 @@ static void tex_lookup(u32 lo, u32 hi) {
 static void nat_hook(u32 what, u32 prim, const u32 *a, const u32 *b);
 static void nat_idle(void);
 static void nat_done(u32 free);
+static int nat_direct(u32 prim, u32 prog, const u32 *p, u32 nqw, u32 free);
 static KH1CmdRec *recorder(void) {
     if (!rec) {
         /* calloc: kh1_texcache_init frees what a used cache holds, so a block that is not zeroed
@@ -243,6 +244,7 @@ static KH1CmdRec *recorder(void) {
         kh1_gs_native_hook = nat_hook;
         kh1_gsq_idle_hook = nat_idle;
         kh1_gs_nat_done = nat_done;
+        kh1_gs_nat_direct = nat_direct;
     }
     return rec;
 }
@@ -603,9 +605,98 @@ static void span_flush(void) {
     span_nq = 0;
 }
 
+/* 2026-11-02 (docs/native-plan.md "Native payloads straight to the GPU thread", dmawalk.c's natdirect): a payload drawn
+ * in one PRIM goes to the GPU thread whole, as one reference op, and the GPU thread does what nat_hook and nat_rec do
+ * here for it: the joins with the open op (P0's same header and matrix, P13's same header with its matrices added),
+ * an op opened at the first record that fits, ended where one would not fit, and at the payload's end unless it is
+ * P0's or P13's (they can stay open).  The worker keeps only what decides a join without the payload's bytes: the PRIM
+ * and the GS state's generation the open op was drawn in (dir_prim, dir_gen); when either changed it ends the op
+ * first, so the GPU thread joins only when nat_rec would have.  The state op before an open goes as before
+ * (prim_state).  nat_flush ends an op the GPU thread may hold (r_nat_dend) before any other recording op, as it ends
+ * the worker's own.  The GPU thread frees the pool up to the payload's end once it has read it */
+static int dir_open, nat_copen;
+static u32 dir_prim, dir_gen;
+u32 kh1_pipes_nat_dir_ends; /* the GPU thread's ops ended by the worker (r_nat_dend), for the log */
+static void r_nat_dend(const u32 *a, const u32 *d, u32 nqw) {
+    if (!nat_copen) return;
+    nat_copen = 0;
+    r_nat_end(a, d, nqw);
+}
+static void r_nat_dir(const u32 *a, const u32 *d, u32 nqw) {
+    for (; nqw; nqw--, d += 4) {
+        const u32 *h = (const u32 *)(unsigned long)d[0], *rec = h + 8, *mats;
+        u32 prog = h[0] & 0xFF, nrec = h[1], nmat = h[2], r;
+        mats = h + (2 + h[3]) * 4;
+        /* nat_hook's what 0: the joins */
+        if (nat_copen && prog == 0 && (nat_op[0][0] & 0xFF) == 0 && nmat == nat_op[0][2] && !memcmp(h + 4, nat_op[0] + 4, 16) &&
+            !memcmp(mats, nat_cms, nmat * 64)) {
+        } else if (nat_copen && prog == 13 && h[0] == nat_op[0][0] && !memcmp(h + 4, nat_op[0] + 4, 16) &&
+                   nat_op[0][2] + nmat <= KH1_NAT_MATS) {
+            memcpy(nat_cms + nat_op[0][2] * 16, mats, nmat * 64);
+            nat_cmoff = nat_op[0][2];
+            nat_op[0][2] += nmat;
+        } else if (nat_copen) {
+            nat_copen = 0;
+            r_nat_end(a, 0, 0);
+        }
+        /* nat_rec, a record at a time */
+        for (r = 0; r < nrec; r++) {
+            u32 nq = KH1_NAT_REC_QW(rec);
+            if (nat_copen && nat_crq + nq + nat_op[0][2] * 4 > NAT_QW) {
+                nat_copen = 0;
+                r_nat_end(a, 0, 0);
+            }
+            if (!nat_copen) {
+                if (2 + nq + nmat * 4 > NAT_QW || nmat > KH1_NAT_MATS) { /* cannot fit */
+                    rec += nq * 4;
+                    continue;
+                }
+                memcpy(nat_op[0], h, 32);
+                memcpy(nat_cms, mats, nmat * 64);
+                nat_crq = 2;
+                nat_cnrec = 0;
+                nat_cmoff = 0;
+                nat_copen = 1;
+            }
+            r_nat_rec(a, rec, nq);
+            rec += nq * 4;
+        }
+        /* nat_hook's what 2: only P0's and P13's ops stay open */
+        if (nat_copen && prog != 0 && prog != 13) {
+            nat_copen = 0;
+            r_nat_end(a, 0, 0);
+        }
+        kh1_pool_free(d[2]);
+    }
+}
+/* the worker's side (gsregs.h kh1_gs_nat_direct, dmawalk.c w_native_dir) */
+static int nat_direct(u32 prim, u32 prog, const u32 *p, u32 nqw, u32 free) {
+    u32 a, r[4];
+    recorder();
+    if (nat_open || !dir_open || prim != dir_prim || kh1_gs_gen != dir_gen) nat_flush();
+    nat_pend_on = 0; /* a free held back is before this one, which the GPU thread does after it */
+    prim_state(prim);
+    a = (u32)kh1_gs_xshift_of();
+    r[0] = (u32)(unsigned long)p;
+    r[1] = nqw;
+    r[2] = free;
+    r[3] = 0;
+    kh1_recq_put(r_nat_dir, &a, 1, r, 1);
+    dir_open = prog == 0 || prog == 13;
+    dir_prim = prim;
+    dir_gen = kh1_gs_gen;
+    return 1;
+}
+
 static void nat_flush(void) {
     u32 a;
     span_flush();
+    if (dir_open) {
+        dir_open = 0;
+        a = (u32)kh1_gs_xshift_of();
+        kh1_recq_put(r_nat_dend, &a, 1, 0, 0);
+        kh1_pipes_nat_dir_ends++;
+    }
     if (!nat_open) return;
     nat_open = 0;
     if (!nat_nrec) return;

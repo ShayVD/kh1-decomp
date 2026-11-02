@@ -496,6 +496,7 @@ void (*kh1_gs_native_hook)(u32 what, u32 prim, const u32 *a, const u32 *b);
 int kh1_gs_nat_pooled;
 u32 kh1_gs_nat_free;
 void (*kh1_gs_nat_done)(u32 free);
+int (*kh1_gs_nat_direct)(u32 prim, u32 prog, const u32 *p, u32 nqw, u32 free);
 
 u32 kh1_gs_native_run(const u32 *d, int bulk) {
     u32 nrec = d[1], r;
@@ -540,6 +541,16 @@ u32 kh1_gs_native_run(const u32 *d, int bulk) {
     }
     if (kh1_gs_native_hook) kh1_gs_native_hook(2, 0, 0, 0);
     return nrec;
+}
+
+/* 2026-11-02 (docs/native-plan.md "Native payloads straight to the GPU thread", config.txt natdirect=): a pooled
+ * payload whose records are all drawn in one PRIM, counted from the summary the game thread made when it wrote them
+ * (dmawalk.c nat_sum: the vertices, the triangles, the PRIM the first record's PRE writes), so the GS worker reads
+ * none of the payload.  The same writes and counts as kh1_gs_native_run's bulk for such a payload: one PRIM write
+ * when the first record has a PRE, then one gs_native_n.  The PRIM the records are drawn in */
+u32 kh1_gs_native_sum(int pre, u32 prim, u32 kicks, u32 nd, u32 nrec) {
+    if (pre) kh1_gs_write(0x00, prim, 0);
+    return gs_native_n(kicks, nd, nrec);
 }
 
 void kh1_gs_packed_stq_xyzf(const u32 *q, u32 n) {

@@ -118,6 +118,12 @@ s32 kh1_gs_xshift_of(void);
  * (2026-11-01, natref's path): the records between PRIM changes counted with one call, the same counts and marks */
 extern void (*kh1_gs_native_hook)(u32 what, u32 prim, const u32 *a, const u32 *b);
 u32 kh1_gs_native_run(const u32 *d, int bulk);
+/* 2026-11-02 (natdirect): a payload drawn in one PRIM from its summary: the PRIM written when pre, then the counts
+ * of nrec records with kicks vertices and nd triangles in all; returns the PRIM in force */
+u32 kh1_gs_native_sum(int pre, u32 prim, u32 kicks, u32 nd, u32 nrec);
+/* and the recorder's side of it (pipes.c): the payload of program prog at p (nqw qwords, the pool freed to free once it is read),
+ * drawn in prim; 0 when there is no recorder (the caller frees the pool) */
+extern int (*kh1_gs_nat_direct)(u32 prim, u32 prog, const u32 *p, u32 nqw, u32 free);
 /* 2026-11-01 (natref, host/null/dmawalk.c w_native_ref): set while a payload in the pool runs (its records stay where
  * they are until the pool is freed to kh1_gs_nat_free), and the recorder's hook told after it (pipes.c: the free goes
  * on the recording queue after the records' last reader) */
