@@ -579,6 +579,73 @@ Last, because it only matters once the game thread's own code (~0.66 s per 2.4 s
 - **Tested by**: per-function differential tests on inputs captured from a Dive run; the census and pad
   scripts reaching the same frames with the same positions (dive_en.txt to 91,000).
 
+## Beyond speed: the rest of the game native (added 2026-11-02)
+
+Stages 0-9 make the Dive fast. They do not make the whole game run: some of it still has no native code, and
+the port stops when it gets there. These tracks are about reaching the end of the game on the Vita, not
+about frame rate. They are separate from the speed stages and can run alongside them, one thread each.
+Same rules apply: kh1.elf, src/ and every overlay build stay byte-identical; the port's code lives in
+host/port, host/vita and ovl/NAME/'s tables.
+
+### Track A: the other nine overlays as native modules
+
+Only dktitle.x, dkmovie.x's front end and xs_dh_break.x run as native C (native-overlays.md). wm.x (the
+world map), gb.x (the Gummi ship), the six summons (xs_bambi, xs_dumbo, xs_genie, xs_mushu, xs_simba,
+xs_tink) and xl_limit.x (limits) have none, so a call into one stops the port (vita-build.md, "Saves").
+The mechanism is done (ovl.h, ovl.c, relocs.tsv, drafts.tsv, ovlnative.py); each overlay needs its tables
+and C for every function its entry and data reach.
+
+- **Order**: wm.x first (no world past Traverse Town without it), then gb.x (the Gummi flights between
+  worlds, and gumisave.c's func_001b9c60 calling the editor through a stored pointer), then xs_simba /
+  xs_genie / xs_dumbo / xs_bambi / xs_mushu / xs_tink as each summon is reached, xl_limit.x with the first
+  limit.
+- **Per overlay**: `tools/ovl/relocs.py NAME` for relocs.tsv; drafts.tsv rows for every unmatched function
+  (session 141 left a near-miss draft for each one: overlay-plan.md "Stopping point"); the SDK calls it makes
+  defined in sdk_host.c (the host link lists the missing ones); its tasks' pointers checked as
+  native-overlays.md "What a port still has to do" says.
+- **Near-miss drafts are not proven correct.** A matched function is the original's code; a draft that is
+  a few words off is usually the same behaviour, but not always (valaudit.py found two drafts passing the
+  wrong argument). Before an overlay goes native, the drafts it uses get a check: run the overlay's room
+  on the host with each draft against a PCSX2 run of the same pad script (positions, script state, GS
+  digests where the host has them), and keep a list of drafts that have been checked this way. Matching
+  more of them (overlay-plan.md) shrinks the list.
+- **Hard parts in the overlays**: gb.x's VU0 / sq functions and any MMI asm need C or NEON equivalents for
+  the ARM build, as dkmovie.x's mpeg_mmi.s did; wm.x is 1,105 functions, so a whole-overlay native run is
+  bigger than the three done so far put together.
+- **gb.x / wm.x's five Gummi VU1 programs** (renderer-spec 2.5) first run as translated VU1 programs, like
+  P1-P8 today (vu1tr=1); moving them to the GPU follows stage 3's pattern once the Gummi ship plays.
+- **Tested by**: a pad script for each overlay (world map open and a world chosen, one Gummi flight, each
+  summon and a limit), reaching the same frames on the host and the Vita as in PCSX2.
+
+### Track B: movies
+
+dkmovie.x's player is behind `PlatMovie*` but has no decoder: every movie ends at once (opening, world
+intros, ending). The PSS files are MPEG-2 video for the IPU, with PCM sound the SPU2 model does not take
+yet (vita-build.md, "Sound").
+
+- **The choice** (vita-port-plan 3, still open): transcode the user's PSS files to H.264 MP4 once, at
+  install time on their computer (needs ffmpeg there; plays with sceAvPlayer on the Vita's hardware
+  decoder), or link a software MPEG-2 decoder (libmpeg2 is GPL: check against the repo's licence first;
+  costs CPU on the A9). Transcoding is the likely pick: no decode cost on the Vita and no licence question.
+- The movies' sound: either part of the transcode (one audio track in the MP4) or the core PCM input
+  (BlockTrans) added to the SPU2 model.
+- **Tested by**: the opening and one world intro playing with sound, and the game's own timing (it waits for
+  the player's end) unchanged.
+
+### Track C: the gaps the Vita runs still show
+
+From vita-build.md: loading a save, the HUD's party portraits and panels are garbled textures and the Load
+Menu's windows and text do not draw (the GPU path's 2D). These are renderer bugs, not missing code, but a
+playable port needs them fixed; they go to whichever thread has the 2D path at the time.
+
+### What is already native and needs no track
+
+- The main ELF's game code: 6,982 of 6,988 functions matched; the other 6 run from drafts (shift/drafts.tsv),
+  with the same caveat as track A's drafts but on paths every run takes.
+- The sound driver (translated at build time, stage 8) and the SPU2 mix in C and NEON.
+- VU1 programs with no native form yet are covered by stages 2 and 3, except P9 and P21, which jump outside
+  themselves and stay on the interpreter (vita-build.md "VU1"): they need a look once a log shows them hot.
+
 ## Where that should end
 
 If the estimates hold: the game thread near 0.8-1.0 s per 2.4 s window (the game's own code and a little 2D
@@ -613,6 +680,6 @@ cache; 7 needs 4-6.
 - **Things that read VU memory or GS memory back**: native-renderer.md lists what `nd_*` leaves unwritten; a
   native call skips VU memory entirely, so any later reader of it must be found first (the check modes above are
   for this). The same for GS memory in stage 4.
-- **The overlays' programs** (gb.x / wm.x's five Gummi programs) are not in any stage: they are needed only once
-  the Gummi ship runs natively, and should follow stage 3's pattern then.
+- **The overlays' programs** (gb.x / wm.x's five Gummi programs) are not in the speed stages: they come with track
+  A ("Beyond speed" above) once the Gummi ship runs natively, and follow stage 3's pattern then.
 - **Sound exactness**: steps 1-2 of stage 8 keep the output identical or within an LSB; NGS would not.
