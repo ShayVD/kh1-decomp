@@ -487,10 +487,27 @@ one draw, an earlier home in its own; the 32-bit indices and each run's matrices
 lone run after a transfer uploading from its home; the 32-matrix limit; natvbjoin=0) and vu1chain_test (natvb 1-3
 with homes: what is drawn, the check mode's comparison with the home taken off) pass.
 
-**Not yet measured on a Vita**: the `gpu thread` / submit lines and pictures a second in the fights (frames
-10k-11.5k, where the GPU thread was the limit at ~1.84 s a window), natvbjoin=1 against =0, and the new
-`natvbjoin=` line. Expected: draws a frame back near natjoin's 54; the GPU thread's per-draw cost cut by ~a third of
-the draws.
+**Vita A/B (2026-11-02, Shay's Vita, run unattended over vitacompanion with tools/vita/hw_run.sh, the PR's VPK,
+`renderer=native frames=11600 pad=dive_en.txt`, natvbjoin=1 then =0; averages over the watchdog windows):**
+
+| | natvbjoin=1 | natvbjoin=0 |
+|---|---|---|
+| Dive 5k-8k: draws a picture | **112** | 167 |
+| Dive 5k-8k: pictures/s; GPU submit, recording, gpu thread (ms a ~2.16 s window) | 24.7; 1,113, 2,052, 1,895 | 24.8; 1,163, 2,035, 1,873 |
+| fights 10k-11.6k: draws a picture | **68** | 110 |
+| fights 10k-11.6k: pictures/s; GPU submit, recording, gpu thread (ms a ~2.14 s window) | 23.8; 857, 1,526, 1,472 | 24.1; 883, 1,478, 1,474 |
+| GXM draws over the run | 586,432 | 767,604 |
+
+The joins work on the hardware (the `natvbjoin=` line: 3,000-5,000 cached runs joined a window in the 3D stretches;
+the rest after another command or with an earlier home) and both runs reached frame 11,600 with clean logs (skipped
+draws 1,567 / 1,524 and 1,331 bad DMA sends in both: not this change's). But the frame rate did not move: draws a
+picture fell by a third, the submit by ~3-4 % and recording not at all (within the ~6 % noise of runs). So the
+per-draw GXM cost is small next to the rest of the recording; the GPU thread's time is in the commands' own
+conversion and the uploads, not the draw count. In these runs no thread was full (gpu thread ~1.47 s of 2.14 in the
+fights), unlike the hand-played fight logs (~1.84 s), so the fights here were lighter or differently paced; the
+pictures/s are ~24 in both. Kept as the default: fewer draws, no cost seen. An earlier natvbjoin=0 attempt stopped at
+frame 3,093 mid disc read with a crash dump (psp2core-1793629546, not analysed); the same build with natvbjoin=1
+and a later =0 attempt both ran to the end, so it is not taken as this change's.
 
 ### Stage 2: the rest of renderer B on the GPU (P12, P14, P15-P17, P19, P20)
 
