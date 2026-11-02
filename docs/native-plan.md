@@ -337,6 +337,28 @@ worker's CLUT loads and prim_state's texture lookups, the host's main costs of t
 w_native_dir). If the lookups' decodes are most of w_native_dir's ~19 us a run on the Vita, the next cut is the
 texture from its upload's source bytes (stage 4) rather than a second unswizzle out of GS memory.
 
+**Vita A/B (2026-11-02, Shay's Vita, unattended over vitacompanion with tools/vita/hw_run.sh, the merged VPK on main
+45eecda, `renderer=native frames=23000 pad=dive_en.txt`, clutskip=1 then 0)**: both runs reached frame 23,000 and
+stopped cleanly (each left one psp2core dump at the exit: a data abort in the kh1_gpu thread inside SceGxm during
+teardown, the same kind the natvbjoin run left at its frames= exit; not this change's). Frames 18,000-23,000: 25.5 / 25.4
+pictures/s. The last window (frame ~22,900):
+
+| | clutskip=1 | clutskip=0 |
+|---|---|---|
+| gs worker busy; the game's wait for it | 2,110 ms; 107 ms (20 waits) | 2,070 ms; 163 ms (27 waits) |
+| gs blocks: blocks, qwords; images' pieces, KiB, ms | 4,628, 682 K; 1,197, 10,156, 142 | 4,593, 670 K; 1,175, 9,995, 147 |
+| top sender (the texture streams) | 198 ms, 3,032 blocks, 672 K qw (657 K image) | 202 ms, 2,936 blocks, 651 K qw (638 K image) |
+| CLUT loads: all, left out, ms | 4,659, 1,189, 59 | 4,575, 0, 57 |
+| texture lookups: all, decoded, ms | **2,770, 0, 243** | **3,819, 0, 229** |
+
+So on the hardware clutskip leaves ~25 % of the loads out but saves no measurable time (the loads cost ~13 us each);
+it stays on (fewer draws on the host, no cost seen). In these unattended runs the worker's blocks are light (the game
+waits ~0.1-0.16 s for the worker, not the hand-played fight's ~0.77 s), so the ~800 ms of non-image w_block that log
+showed was not reproduced. The clear finding is **the texture lookups: ~240 ms a window, none of them decoding**, i.e.
+~60-90 us a lookup spent on the stamp and target scans (tex_scan over the texture's pages) and the cache's search, set
+off by every upload and CLUT load (tex_look). That is the next cut: no lookup after an upload or load whose pages miss
+the bound texture's and CLUT's, and a cheaper hit path.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
