@@ -292,9 +292,9 @@ w_block's second argument, and the worker adds each block's time (kh1_vu1_clock,
 and its qwords by kind to that sender's slot: GIF tags, PACKED register qwords (vertices and the rest but A+D), A+D
 writes, REGLIST registers, IMAGE qwords. The Vita prints the eight slowest each window as
 `gs senders (w_block by the send's caller): ADDR N ms (blocks, K qw: tags, K packed, K A+D, K reglist, K image), ...`;
-the addresses map with out/vita/kh1.elf's symbols at the same offset as the `gs worker ops:` line's (in this VPK
-w_block is 0x810ddbf8, w_native_dir 0x810dd1fc; func_0015ff78 0x810656cc, func_00237018 0x8102c728, func_00106b18
-0x8102a184). The host prints the same with `KH1_HOST_SENDERS=FROM:TO KH1_HOST_CLOCK=1` (`addr2line -f -e` the binary).
+the addresses map with out/vita/kh1.elf's symbols at the same offset as the `gs worker ops:` line's (in the VPK built on main 45eecda,
+w_block is 0x810ddc60, w_native_dir 0x810dd264; func_0015ff78 0x81065734, func_00237018 0x8102c780, func_00106b18
+0x8102a1dc). The host prints the same with `KH1_HOST_SENDERS=FROM:TO KH1_HOST_CLOCK=1` (`addr2line -f -e` the binary).
 
 **Host, frames 18,000-21,000 (en.iso, dive_en.txt, the gxmcheck binary, x86 times):**
 
