@@ -379,7 +379,7 @@ game's memory, which the "Read P18/P0 records straight from the chain" thread is
 have no stable address) and a draw that reads persistent GPU memory instead of the ring (gxm.c's stream from a cached
 block, which a joined draw cannot mix). That is the follow-up once records come straight from the chain.
 
-### Static vertex buffers by the records' address (2026-11-02, config.txt `natvb=1`)
+### Static vertex buffers by the records' address (2026-11-02, config.txt `natvb=2`, the default)
 
 Built on natchain (records read from the chain's own words, so a run's records have an EE address) and natdirect (a
 payload reaches the GPU thread whole). Code: natdraw.h / natdraw.c `kh1_natvb_*` (the cache), vu1_draw.h `nb_hit` and
@@ -405,8 +405,9 @@ parse would leave them. A miss parses as before; an entry is made the second tim
 colour that changes every frame makes none).
 
 **Words changed in place.** `natvb=1` hashes every qword of the stream but the matrix bodies on every hit (4 lanes,
-about one multiply a word: a fraction of the parse); `natvb=2` hashes one qword in 8 (cheaper; a rewrite that misses
-those qwords goes unseen); a hash that differs drops the entry. Host `KH1_HOST_NATVB=3` also parses every hit and
+about one multiply a word; on the Vita that costs as much as the parse, see below); `natvb=2`, the default, hashes one
+qword in 8 (a rewrite that misses those qwords would go unseen; the Vita logs saw no rewrite at all); a hash that
+differs drops the entry. Host `KH1_HOST_NATVB=3` also parses every hit and
 compares its matrices, header, slot loads and expanded triangles with the entry's (`hits differed from their parse` in
 the host's last lines).
 
@@ -422,12 +423,29 @@ vertices carry their matrix indices from the run's own numbering. So a frame of 
 natjoin's; whether the cheaper runs outweigh that is the Vita A/B's question (the log's `natvb=` line counts the draws
 from GPU memory).
 
+**Vita A/B (2026-11-02, three logs of the Dive against the natdirect log of the same morning).** Game-thread time a run
+(the `vu1 programs` lines over the whole log): P18 / P11 / P10 43 / 43 / 60 us without the cache, 44 / 45 / 59 with
+`natvb=1` (hashing every word reads the whole stream, as the parse does; a guess: both bound by the reads), 20 / 21 /
+38 with `natvb=2`. About 1.6 M hits a log, 5-9 % misses, 0 entries whose words changed. Draws a frame 54 -> ~85 (the
+cached runs do not join), GPU submit time unchanged (~1.0 s a 2.1 s window). Pictures/s in the same stretches about
+equal, +1 at most: the GS worker and the GPU thread are each busy ~1.5-1.7 s a window too, so the game thread's saving
+does not show by itself. `natskin=1` on top: P13 55 against 59 us a run, no visible change; it stays off. A freeze at
+the Dive's end in one log (game thread stopped after a vblank wait, every queue empty, 88 disc reads, last send
+0x814016e0) has the same signature as the 2026-10-30 log's, before natvb: an older hang.
+
+**Host run (2026-11-02, the dive pad, 7000 frames, gxm mock hashing 1 frame in 50):** natvb 0, 1 and 2 draw the same
+pictures bit for bit (145 K hits, 12 K misses, 535 entries, none changed); only the draw counts differ. Check mode
+(`KH1_HOST_NATVB=3`) first reported 918 hits differing and drew a few triangles differently: kh1_natvb_check called
+kh1_nat_tris, whose kh1_nat_once scratch (`sv`) the GPU thread uses at the same time, so the check raced the GPU
+thread's own expansion. kh1_natvb_check now expands each triangle itself on the game thread; rerun: 0 hits differed in
+145 K, pictures the same as natvb 0-2 (draw counts as natvb 1).
+
 **Not cached**: P0 / P4 (renderer A's map batches: one record a run, joined on the GPU thread into one draw per object
 and pass; per-batch cached draws would multiply the draws, so it waits for stage 6's object-level hook), P13 (its parse
 reads VU memory), any run natchain does not read from the chain, and runs over 1,024 strip vertices.
 
 **Checked**: tests/host/vu1chain_test.c (in tests/selftest.sh, x86 and qemu-arm with NEON): its six random streams run
-three times with natvb 1 and 3 against natchain=1 without the cache, comparing what is drawn (each B payload as its
+three times with natvb 1, 2 and 3 against natchain=1 without the cache (2 only before the words change), comparing what is drawn (each B payload as its
 header, record headers, matrices and expanded triangles), the registers at each hand-over, the program runs and VU
 memory; then 400 data words flipped and the same again (entries whose words changed are dropped); the last two streams
 in a 48 KiB arena so room is made and refused. Mutations each fail it: the hash check skipped, a strip's parity swapped

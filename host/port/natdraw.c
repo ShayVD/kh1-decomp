@@ -250,8 +250,9 @@ void kh1_nat_ref_xyz(const u32 *m, const f32 *pos, f32 out[3]) {
  * kh1_natvb_publish runs on the game thread.  The entries' GPU data (vertices, then indices) and their CPU data (the
  * stub records a hit sends, the matrix plan) are each a ring in allocation order: the oldest entry goes first, and only
  * once the GPU has read the last record that names it (its seq <= kh1_natvb_done); an entry still in flight is dropped
- * from the lookup instead (no more hits, so its seq stops growing) and the allocation fails for now. */
-int kh1_natvb = 1;
+ * from the lookup instead (no more hits, so its seq stops growing) and the allocation fails for now.  The default is 2
+ * (2026-11-02 Vita A/B: hashing every word cost as much as the parse it saves; one qword in 8 halves P18 / P11). */
+int kh1_natvb = 2;
 u8 *kh1_natvb_mem;
 u32 kh1_natvb_bytes;
 volatile u32 kh1_natvb_done;
@@ -580,16 +581,33 @@ void kh1_natvb_learn(const u32 *src, u32 lim, u32 prog, u32 flags, const u32 *pa
     kh1_natvb_made++;
 }
 
+/* Runs on the game thread, so not through kh1_nat_tris: its kh1_nat_once scratch (sv) belongs to the GPU thread, and sharing it
+ * both failed good runs here and spoilt that thread's triangles (2026-11-02, found by the 7000-frame dive run).  This is
+ * kh1_nat_tris's per-triangle path, each triangle compared as it is made. */
 int kh1_natvb_check(const KH1NatVb *e, const u32 *pay, u32 lin) {
-    static KH1GpuVert a[VB_MAX_I];
-    u32 lost, n, i;
-    if (pay[1] != e->nrec || pay[2] != e->nmat) return 0;
-    n = kh1_nat_tris(pay + 8, pay[1], pay[2], pay[4], pay[5], a, VB_MAX_I, &lost);
-    if (n != e->ni || lost) return 0;
-    for (i = 0; i < n; i++) {
-        KH1GpuVert t = a[i];
-        t.pad[0] = (u8)(t.pad[0] | lin);
-        if (memcmp(&t, &e->v[e->ix[i]], sizeof t)) return 0;
+    const u32 *data = pay + 8;
+    u32 nmat = pay[2], rgba = pay[4], f = pay[5], r, j, n = 0, k;
+    if (pay[1] != e->nrec || nmat != e->nmat) return 0;
+    for (r = 0; r < pay[1]; r++) {
+        u32 nv = data[2], par = data[3];
+        const u32 *v = data + 4;
+        if (par & (KH1_NAT_SKIN | KH1_NAT_VB)) return 0;
+        for (j = 2; j < nv; j++) {
+            const u32 *a = v + (j - 2) * 8, *b = v + (j - 1) * 8, *c = v + j * 8, *o[3];
+            if (a[3] >= nmat || b[3] >= nmat || c[3] >= nmat) continue;
+            if (n + 3 > e->ni) return 0;
+            o[0] = (par + j) & 1 ? a : b;
+            o[1] = (par + j) & 1 ? b : a;
+            o[2] = c;
+            for (k = 0; k < 3; k++) {
+                KH1GpuVert t;
+                put(&t, o[k], rgba, f);
+                t.pad[0] = (u8)(t.pad[0] | lin);
+                if (memcmp(&t, &e->v[e->ix[n + k]], sizeof t)) return 0;
+            }
+            n += 3;
+        }
+        data += 4 + nv * 8;
     }
-    return 1;
+    return n == e->ni;
 }

@@ -89,10 +89,11 @@
  *                             records from the DMA chain's own words (the unpack into VU memory skipped) and write the
  *                             payload straight into the pool (docs/native-plan.md "Records straight from the chain")
  *       natvb=0               with renderer=native and natchain=1, renderer B's runs (P18, P11, P10) parsed and
- *                             converted every frame (as before 2026-11-02); 1, the default: cached by their records'
- *                             address, a run whose words hash the same hands over only its matrices and is drawn from
- *                             GPU memory with indices (natdraw.h natvb); 2: the same, one qword in 8 hashed instead of
- *                             all of them (cheaper, a rewrite that misses those qwords goes unseen)
+ *                             converted every frame (as before 2026-11-02); 1: cached by their records' address, a run
+ *                             whose words hash the same hands over only its matrices and is drawn from GPU memory with
+ *                             indices (natdraw.h natvb), every word hashed; 2, the default: the same, one qword in 8
+ *                             hashed (on the Vita, 1's hash costs as much as the parse it saves; a rewrite that misses
+ *                             those qwords would go unseen, none seen in the logs)
  *       natvbmb=N             natvb's GPU memory in MiB (default 16; the oldest entries make room)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)

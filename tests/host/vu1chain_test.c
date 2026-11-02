@@ -398,7 +398,7 @@ int main(void) {
                    n0, r0, runs1, flushed1);
     }
     /* 2026-11-02 (natdraw.h natvb): the same streams three times (an entry is made at a run's second sighting, used from
-     * its third) with natchain=1 and the cache, against natchain=1 without it: what is drawn (canon), the registers at each
+     * its third) with natchain=1 and the cache (natvb 1, 2 and 3; 2 only before the words change), against natchain=1 without it: what is drawn (canon), the registers at each
      * hand-over, the program runs and VU memory the same; check mode (3) finds no hit that differs from its parse; then
      * data words changed (a model rewritten in place, or another at the same address) and the same again: the changed
      * entries are dropped, nothing drawn differs */
@@ -423,8 +423,9 @@ int main(void) {
                 nn = ev_n;
                 rn = ev_runs;
                 memcpy(mref, mem_out, sizeof mref);
-                for (mode = 1; mode <= 3; mode += 2) {
+                for (mode = 1; mode <= 3; mode++) {
                     u32 t, h3 = 0, b0 = kh1_natvb_bad, k0 = kh1_natvb_hits;
+                    if (mode == 2 && round) continue; /* 2 (the default) hashes 1 qword in 8: a flip elsewhere goes unseen */
                     kh1_natvb = (int)mode;
                     kh1_natvb_bytes = pass >= 4 ? 48u << 10 : 16u << 20; /* the last two streams in a small arena: room made */
                     if (!round) kh1_natvb_reset();
@@ -465,6 +466,6 @@ int main(void) {
         printf("vu1chain_test: FAILED (%u)\n", fails);
         return 1;
     }
-    printf("vu1chain_test: ok (6 streams, natchain 0-3 the same; %u words poisoned, none read; natvb 1 and 3 draw the same)\n", poisoned);
+    printf("vu1chain_test: ok (6 streams, natchain 0-3 the same; %u words poisoned, none read; natvb 1, 2 and 3 draw the same)\n", poisoned);
     return 0;
 }
