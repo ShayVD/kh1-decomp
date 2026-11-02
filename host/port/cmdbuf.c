@@ -459,7 +459,7 @@ static int nat_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p,
         return 0;
     }
     vend = c->v0 * (u32)sizeof(KH1GpuVert) + c->nv * stride;
-    mend = c->moff + c->nmat * 64u;
+    mend = c->moff + (c->nmat - c->mlo) * 64u; /* (moff holds u_m[mlo ..]) */
     if (r->vring.head != vend || r->uring.head != mend || n * stride > r->vring.slot - vend ||
         nmat * 64u > r->uring.slot - mend) {
         kh1_cmd_nat_nojoin[3]++;
@@ -504,13 +504,85 @@ void kh1_cmd_native_skin(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPas
                          const f32 *mats, u32 nmat, u32 cull) {
     native(r, d, p, (const KH1GpuVert *)(const void *)v, n, mats, nmat, cull, 1);
 }
+/* 2026-11-02 (docs/native-plan.md "Cached runs joined"): a cached run joins the cached draw before it on the same
+ * conditions as nat_join (the list's last command, the same batch key, texture entry, palette slot and cull mode, both
+ * rings' heads still right after its matrices and indices) and one more: the run's home (natdraw.h KH1_NAT_VB_HOME, where
+ * its vertices' matrix indices start) at or after the draw's last matrix, so its matrices go after the draw's ones (the
+ * slots between left unread).  Its vertices stay in natvb's memory; the draw's indices become 32-bit ones into all of
+ * natvb's memory in the ring (the first run's converted when the second joins), so one GPU draw reads every run's
+ * vertices where they are.  kh1_cmd_natvbjoin 0 (config natvbjoin=0, host KH1_HOST_NATVBJOIN=0): a draw a cached run */
+int kh1_cmd_natvbjoin = 1;
+u32 kh1_cmd_natvb_joins;
+u32 kh1_cmd_natvb_nojoin[4];
+#define VB_JOIN_MAX_I (1u << 20) /* indices a joined draw holds at most */
+static int vb_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *xv, const u16 *xi, u32 n,
+                   const f32 *mats, u32 nmat, u32 home, u32 cull) {
+    KH1Cmd *c;
+    KH1BatchKey k;
+    const KH1GpuVert *all = (const KH1GpuVert *)(const void *)kh1_natvb_mem;
+    u32 mend, gap, i, b;
+    u8 *u;
+    u32 *o;
+    if (r->cur < 0 || r->dropped || (u32)r->cur + 1 != r->ncmd || r->split || r->held >= 0) {
+        kh1_cmd_natvb_nojoin[0]++;
+        return 0;
+    }
+    c = &r->cmd[r->cur];
+    if (c->kind != KH1_CMD_DRAW || !c->nmat || c->lost || !c->xv || c->wtex || c->pass + 1 != r->npass || !all) {
+        kh1_cmd_natvb_nojoin[0]++;
+        return 0;
+    }
+    if (c->cull != (cull & ~KH1_NAT_LIN) || (d->pipe[0].shader.tex && (c->tslot != r->tslot || c->pslot != r->pslot))) {
+        kh1_cmd_natvb_nojoin[1]++;
+        return 0;
+    }
+    if (home < c->nmat || home + nmat > KH1_NAT_MATS) {
+        kh1_cmd_natvb_nojoin[2]++;
+        return 0;
+    }
+    mend = c->moff + (c->nmat - c->mlo) * 64u;
+    gap = (home - c->nmat) * 64u;
+    if (r->uring.head != mend || gap + nmat * 64u > r->uring.slot - mend || c->nv + n > VB_JOIN_MAX_I ||
+        (c->xi32 ? r->vring.head != c->v0 * 32u + c->nv * 4u || n * 4u > r->vring.slot - r->vring.head
+                 : (c->nv + n) * 4u + 32u > r->vring.slot - r->vring.head)) {
+        kh1_cmd_natvb_nojoin[3]++;
+        return 0;
+    }
+    kh1_batch_key(d, p, &k);
+    if (memcmp(&k, &c->k, sizeof k)) {
+        kh1_cmd_natvb_nojoin[1]++;
+        return 0;
+    }
+    if (!c->xi32) { /* the draw's own indices, now 32-bit ones into natvb's memory, at a vertex boundary of the ring */
+        o = (u32 *)kh1_ring_alloc(&r->vring, c->nv * 4u, (u32)sizeof(KH1GpuVert));
+        b = (u32)(c->xv - all);
+        for (i = 0; i < c->nv; i++) o[i] = b + c->xi[i];
+        c->v0 = (u32)((u8 *)o - (r->vring.base + r->vring.cur * r->vring.slot)) / (u32)sizeof(KH1GpuVert);
+        c->xv = all;
+        c->xi = 0;
+        c->xi32 = 1;
+    }
+    o = (u32 *)kh1_ring_alloc(&r->vring, n * 4u, 1);
+    b = (u32)(xv - all);
+    for (i = 0; i < n; i++) o[i] = b + xi[i];
+    u = (u8 *)kh1_ring_alloc(&r->uring, gap + nmat * 64u, 1);
+    if (gap) memset(u, 0, gap);
+    memcpy(u + gap, mats, nmat * 64u);
+    c->nv += n;
+    c->prims++;
+    c->nmat = (u8)(home + nmat);
+    kh1_cmd_natvb_joins++;
+    return 1;
+}
 void kh1_cmd_native_vb(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *xv, const u16 *xi,
-                       u32 n, const f32 *mats, u32 nmat, u32 cull, u32 seq) {
-    if (!n || !xi) return;
+                       u32 n, const f32 *mats, u32 nmat, u32 home, u32 cull, u32 seq) {
+    if (!n || !xi || home + nmat > KH1_NAT_MATS) return;
     if ((s32)(seq - r->xseq) > 0) r->xseq = seq;
     r->in_xi = xi;
+    r->in_home = home;
     native(r, d, p, xv, n, mats, nmat, cull, 0);
     r->in_xi = 0;
+    r->in_home = 0;
 }
 static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                    u32 nmat, u32 cull, u32 skin) {
@@ -528,7 +600,9 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
         for (i = 0; i < 2; i++) nd.pipe[i].shader.lin = 1;
         d = &nd;
     }
-    if (kh1_cmd_natjoin && !r->in_xi && nat_join(r, d, p, v, n, mats, nmat, cull, skin)) return;
+    if (r->in_xi ? kh1_cmd_natvbjoin && vb_join(r, d, p, v, r->in_xi, n, mats, nmat, r->in_home, cull)
+                 : kh1_cmd_natjoin && nat_join(r, d, p, v, n, mats, nmat, cull, skin))
+        return;
     kh1_batch_break(&r->b); /* nothing before joins it */
     r->in_d = d;
     r->in_p = p;
@@ -542,7 +616,8 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
     }
     r->in_skin = 0;
     c = &r->cmd[r->cur];
-    c->nmat = (u8)nmat;
+    c->mlo = (u8)r->in_home; /* (0 but for a cached run) */
+    c->nmat = (u8)(r->in_home + nmat);
     c->skin = (u8)skin;
     c->cull = (u8)(cull & ~KH1_NAT_LIN);
     u = (u8 *)kh1_ring_alloc(&r->uring, bytes, KH1_RING_UNIFORM_SLOT);

@@ -126,6 +126,10 @@ static void host_clock_report(void) {
                "%u found no room, %u runs too big, %u hits differed from their parse\n", kh1_natvb, kh1_natvb_hits,
                kh1_natvb_miss, kh1_natvb_made, kh1_natvb_stale, kh1_natvb_evict, kh1_natvb_noroom, kh1_natvb_big,
                kh1_natvb_bad);
+        printf("kh1-host: natvbjoin=%d natvbhome=%d: %u cached runs joined into the draw before; not joined: %u after "
+               "another command, %u another state, %u a home before the draw's matrices' end, %u no room\n",
+               kh1_cmd_natvbjoin, kh1_natvb_home, kh1_cmd_natvb_joins, kh1_cmd_natvb_nojoin[0], kh1_cmd_natvb_nojoin[1],
+               kh1_cmd_natvb_nojoin[2], kh1_cmd_natvb_nojoin[3]);
     }
     { /* 2026-11-02: natdirect's payloads (dmawalk.c) */
         extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends;
@@ -469,6 +473,8 @@ int main(int argc, char **argv) {
             kh1_pipes_nat_span = atoi(getenv("KH1_HOST_NATSPAN"));
         }
         if (getenv("KH1_HOST_NATJOIN")) kh1_cmd_natjoin = atoi(getenv("KH1_HOST_NATJOIN")); /* 2026-11-01: cmdbuf.c nat_join */
+        if (getenv("KH1_HOST_NATVBJOIN")) kh1_cmd_natvbjoin = atoi(getenv("KH1_HOST_NATVBJOIN")); /* 2026-11-02: vb_join */
+        if (getenv("KH1_HOST_NATVBHOME")) kh1_natvb_home = atoi(getenv("KH1_HOST_NATVBHOME")); /* 2026-11-02: natdraw.c */
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
         if (getenv("KH1_HOST_RECFAST")) { /* 2026-11-01: 0 the GPU thread's recording as before (natdraw.c, cmdbuf.c) */
             extern int kh1_nat_once;

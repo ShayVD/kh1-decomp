@@ -280,6 +280,7 @@ struct KH1NatVb {
     u32 lim, prog, rgba, f, flags;
     u32 hf[2], hs[2];            /* the hashes: every word but the matrices', and one qword in 8 */
     u32 nrec, nmat, mbody;
+    u32 home;                    /* the vertices' matrix indices are the run's plus this (natdraw.h KH1_NAT_VB_HOME) */
     s32 last[3];
     u32 gpu_off, gpu_len, cpu_off, cpu_len;
     u32 seq;                     /* the last hand-over that named it */
@@ -311,8 +312,12 @@ static u32 vb_key(const u32 *src, u32 lim, u32 prog, u32 rgba, u32 f, u32 flags)
     return h ^ (h >> 13);
 }
 
+int kh1_natvb_home = 1;
+static u32 vb_home_next; /* the next entry's home: right after the last entry's matrices */
+
 void kh1_natvb_reset(void) {
     u32 i;
+    vb_home_next = 0;
     for (i = 0; i < VB_BUCKETS; i++) vb_bucket[i] = -1;
     for (i = 0; i < VB_ENTRIES; i++) vbe[i].live = vbe[i].inmap = 0;
     for (i = 0; i < VB_CAND; i++) vb_cand[i] = 0;
@@ -527,6 +532,10 @@ void kh1_natvb_learn(const u32 *src, u32 lim, u32 prog, u32 flags, const u32 *pa
     e->nrec = nrec;
     e->nmat = nmat;
     e->mbody = mbody;
+    /* entries are made in the order their runs are drawn (each the second time it is seen), so consecutive runs get
+     * consecutive homes and their draws can join on the GPU thread */
+    e->home = kh1_natvb_home && vb_home_next + nmat <= KH1_NAT_MATS ? vb_home_next : 0;
+    vb_home_next = e->home + nmat;
     for (j = 0; j < 3; j++) e->last[j] = last[j];
     e->v = v = (KH1GpuVert *)(void *)(kh1_natvb_mem + e->gpu_off);
     e->ix = ix = (u16 *)(void *)(kh1_natvb_mem + e->gpu_off + nv * 32);
@@ -545,7 +554,7 @@ void kh1_natvb_learn(const u32 *src, u32 lim, u32 prog, u32 flags, const u32 *pa
         KH1GpuVert t;
         for (j = 0; j < n; j++) {
             put(&t, w + j * 8, rgba, f);
-            t.pad[0] = (u8)(t.pad[0] | lin);
+            t.pad[0] = (u8)((w[j * 8 + 3] < nmat ? t.pad[0] + e->home : t.pad[0]) | lin); /* (an ADC index is never drawn) */
             memcpy(&v[nv + j], &t, sizeof t); /* one store pass into GPU memory */
         }
         for (j = 0; j < n; j++) {
@@ -567,7 +576,7 @@ void kh1_natvb_learn(const u32 *src, u32 lim, u32 prog, u32 flags, const u32 *pa
         e->stub[r * 2][3] = (par & 0xFFFF) | KH1_NAT_VB;
         e->stub[r * 2 + 1][0] = (u32)(unsigned long)v;
         e->stub[r * 2 + 1][1] = (u32)(unsigned long)(ix + i0);
-        e->stub[r * 2 + 1][2] = ni - i0;
+        e->stub[r * 2 + 1][2] = (ni - i0) | e->home << 24;
         e->stub[r * 2 + 1][3] = 0;
         nv += n;
         d += 4 + n * 8;
@@ -602,7 +611,7 @@ int kh1_natvb_check(const KH1NatVb *e, const u32 *pay, u32 lin) {
             for (k = 0; k < 3; k++) {
                 KH1GpuVert t;
                 put(&t, o[k], rgba, f);
-                t.pad[0] = (u8)(t.pad[0] | lin);
+                t.pad[0] = (u8)((t.pad[0] + e->home) | lin);
                 if (memcmp(&t, &e->v[e->ix[n + k]], sizeof t)) return 0;
             }
             n += 3;

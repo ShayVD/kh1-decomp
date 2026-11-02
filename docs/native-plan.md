@@ -419,7 +419,8 @@ still in flight is taken out of the lookup instead (its number stops growing) an
 GPU renderer (the plain host) the frame op publishes at the frame's end.
 
 **Draws.** A cached run is one draw of its own: it does not join the native draw before it (natjoin), because its
-vertices carry their matrix indices from the run's own numbering. So a frame of cached runs makes more draws than
+vertices carry their matrix indices from the run's own numbering (2026-11-02: cached runs now join each other, see
+"Cached runs joined" below). So a frame of cached runs makes more draws than
 natjoin's; whether the cheaper runs outweigh that is the Vita A/B's question (the log's `natvb=` line counts the draws
 from GPU memory).
 
@@ -451,6 +452,62 @@ memory; then 400 data words flipped and the same again (entries whose words chan
 in a 48 KiB arena so room is made and refused. Mutations each fail it: the hash check skipped, a strip's parity swapped
 in an entry, a slot's last load dropped. The test publishes after every run, so it does not exercise the in-flight rule
 (an entry freed while a frame still to be drawn names it); that rests on gxm.c's fence as described above.
+
+### Cached runs joined (2026-11-02, config.txt `natvbjoin=1` / `natvbhome=1`, the defaults)
+
+The natvb Vita A/B had draws a frame go from 54 to ~85, because a cached run was always a draw of its own: its vertices
+in natvb's memory carry matrix indices from the run's own numbering (0 .. nmat - 1), so two runs could not share one
+u_m. Now each entry is given a **home** when it is made (natdraw.c `kh1_natvb_learn`): the slot right after the
+previous entry's matrices, back to 0 when the run's matrices would pass KH1_NAT_MATS (32). Its vertices are stored
+with their matrix index plus the home (P11's lin bit kept), and the home rides in each stub's index-count word
+(natdraw.h `KH1_NAT_VB_HOME` / `KH1_NAT_VB_COUNT`). Entries are made in the order their runs are drawn (each at its
+second sighting), so a model's runs get consecutive homes.
+
+On the GPU thread (cmdbuf.c `vb_join`) a cached run joins the cached draw before it on natjoin's conditions (the
+list's last command, same batch key, texture entry, palette slot and cull mode, both rings' heads right after the
+draw's matrices and indices) and one more: its home is at or after the draw's last matrix. Its matrices go into the
+uniform ring at their home (the slots between are zeroed and never read; `KH1Cmd.mlo` is the draw's first slot, so a
+lone run whose home is 20 uploads only u_m[20 ..]). The vertices stay where they are; the draw's indices become 32-bit
+ones into natvb's whole memory, written into the frame's vertex slot (the first run's 16-bit ones converted when the
+second joins), and gxm.c draws them with `SCE_GXM_INDEX_FORMAT_U32` from the memory's base. A run whose home is
+before the draw's end (the homes wrapped, or the same entry twice) starts a new draw. Cost on the GPU thread: 4 bytes
+written per index of a joined draw, against a draw's uniform reserves, uniform copies and gxmrec ops saved.
+
+`natvbjoin=0` (host `KH1_HOST_NATVBJOIN=0`) draws each cached run on its own as before (with its home);
+`natvbhome=0` (host `KH1_HOST_NATVBHOME=0`) gives every entry home 0, so nothing joins. The Vita log's new
+`natvbjoin=` line counts the joins and why the rest did not join.
+
+**Checked (host, en.iso, dive_en.txt to frame 11,500, gxmcheck binary, `KH1_HOST_TRACE=5 KH1_HOST_GSQ=1
+KH1_HOST_GPUQ=1 KH1_HOST_RECQ=1 KH1_HOST_VU1=1 KH1_HOST_NATIVE=1 KH1_HOST_WIDE=1 KH1_HOST_GXM=250
+KH1_HOST_GXM_HASH=1`)**: all 92 GPU target hashes (46 pictures, display and 3D target) identical with natvbjoin 1 and
+0. GXM draws over the run 764,869 -> 577,024 (-25 %), GXM calls 2,316,129 -> 1,940,439 (-16 %); in the fights (the
+pictures at frames 10,000-11,499) the mock's draws a picture average 101 -> 57 (e.g. frame 10,249: 142 -> 80).
+tests/host/cmdbuf_test.c "natvbjoin" (6 checks: a lone run reads its entry's indices; runs with following homes in
+one draw, an earlier home in its own; the 32-bit indices and each run's matrices at its home with the gap zeroed; a
+lone run after a transfer uploading from its home; the 32-matrix limit; natvbjoin=0) and vu1chain_test (natvb 1-3
+with homes: what is drawn, the check mode's comparison with the home taken off) pass.
+
+**Vita A/B (2026-11-02, Shay's Vita, run unattended over vitacompanion with tools/vita/hw_run.sh, the PR's VPK,
+`renderer=native frames=11600 pad=dive_en.txt`, natvbjoin=1 then =0; averages over the watchdog windows):**
+
+| | natvbjoin=1 | natvbjoin=0 |
+|---|---|---|
+| Dive 5k-8k: draws a picture | **112** | 167 |
+| Dive 5k-8k: pictures/s; GPU submit, recording, gpu thread (ms a ~2.16 s window) | 24.7; 1,113, 2,052, 1,895 | 24.8; 1,163, 2,035, 1,873 |
+| fights 10k-11.6k: draws a picture | **68** | 110 |
+| fights 10k-11.6k: pictures/s; GPU submit, recording, gpu thread (ms a ~2.14 s window) | 23.8; 857, 1,526, 1,472 | 24.1; 883, 1,478, 1,474 |
+| GXM draws over the run | 586,432 | 767,604 |
+
+The joins work on the hardware (the `natvbjoin=` line: 3,000-5,000 cached runs joined a window in the 3D stretches;
+the rest after another command or with an earlier home) and both runs reached frame 11,600 with clean logs (skipped
+draws 1,567 / 1,524 and 1,331 bad DMA sends in both: not this change's). But the frame rate did not move: draws a
+picture fell by a third, the submit by ~3-4 % and recording not at all (within the ~6 % noise of runs). So the
+per-draw GXM cost is small next to the rest of the recording; the GPU thread's time is in the commands' own
+conversion and the uploads, not the draw count. In these runs no thread was full (gpu thread ~1.47 s of 2.14 in the
+fights), unlike the hand-played fight logs (~1.84 s), so the fights here were lighter or differently paced; the
+pictures/s are ~24 in both. Kept as the default: fewer draws, no cost seen. An earlier natvbjoin=0 attempt stopped at
+frame 3,093 mid disc read with a crash dump (psp2core-1793629546, not analysed); the same build with natvbjoin=1
+and a later =0 attempt both ran to the end, so it is not taken as this change's.
 
 ### Stage 2: the rest of renderer B on the GPU (P12, P14, P15-P17, P19, P20)
 

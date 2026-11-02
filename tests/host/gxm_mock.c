@@ -298,6 +298,7 @@ typedef struct {
     SceGxmDepthStencilSurface ds;          /* as it is at the begin (its load / store modes) */
     SceGxmPrimitiveType t;                 /* draw */
     const void *ix;
+    int ix32; /* 2026-11-02: SCE_GXM_INDEX_FORMAT_U32 */
     unsigned n;
     u8 st[sizeof g];                       /* the context at the draw */
     SceGxmNotification fn;                 /* end: written once the scene has run (session 151) */
@@ -315,7 +316,7 @@ static Queued *enqueue(int op) {
 }
 static void do_begin(const SceGxmColorSurface *cs, const SceGxmDepthStencilSurface *ds);
 static void do_end(void);
-static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n);
+static void do_draw(SceGxmPrimitiveType t, const void *ix, int ix32, unsigned int n);
 static void flush(void) {
     u32 i;
     for (i = 0; i < nqueue; i++) {
@@ -338,7 +339,7 @@ static void flush(void) {
             g.col = col; g.cstride = cs; g.cw = cw; g.ch = ch; g.z = z; g.zstride = zs; g.zsave = zsave; g.ds = dsf;
             g.draws = draws; g.tris = tris; g.pixels = pixels; g.lost = lost; g.n_in = a; g.n_disc = b; g.n_zfail = c;
             g.raster = raster;
-            do_draw(q->t, q->ix, q->n);
+            do_draw(q->t, q->ix, q->ix32, q->n);
         }
     }
     nqueue = 0;
@@ -712,9 +713,10 @@ static void triangle(const Vary *a, const Vary *b, const Vary *c) {
 
 int sceGxmDraw(SceGxmContext *c, SceGxmPrimitiveType t, SceGxmIndexFormat f, const void *ix, unsigned int n) {
     Queued *q = enqueue(1);
-    (void)c; (void)f;
+    (void)c;
     q->t = t;
     q->ix = ix;
+    q->ix32 = f == SCE_GXM_INDEX_FORMAT_U32;
     q->n = n;
     memcpy(q->st, &g, sizeof g);
     return 0;
@@ -770,8 +772,9 @@ static void persp(const Vary *v) {
     for (i = 1; i + 1 < n; i++) triangle(&in[0], &in[i], &in[i + 1]);
 }
 
-static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
+static void do_draw(SceGxmPrimitiveType t, const void *ix, int ix32, unsigned int n) {
     const u16 *idx = (const u16 *)ix;
+    const u32 *idx32 = (const u32 *)ix;
     unsigned i;
     g.draws++;
     if (!g.raster || !g.col || !g.vp || !g.fp) return;
@@ -781,9 +784,9 @@ static void do_draw(SceGxmPrimitiveType t, const void *ix, unsigned int n) {
     g.c_verts += n;
     for (i = 0; i + 2 < n; i += 3) {
         Vary v[3];
-        vertex(idx[i], &v[0]);
-        vertex(idx[i + 1], &v[1]);
-        vertex(idx[i + 2], &v[2]);
+        vertex(ix32 ? idx32[i] : idx[i], &v[0]);
+        vertex(ix32 ? idx32[i + 1] : idx[i + 1], &v[1]);
+        vertex(ix32 ? idx32[i + 2] : idx[i + 2], &v[2]);
         if (getenv("KH1_HOST_GXM_VERTS") && g.raster && i < 6)
             printf("kh1-gxm-mock:   tri (%.2f, %.2f, %.4f) (%.2f, %.2f) (%.2f, %.2f) col %.3f %.3f %.3f %.3f clip %u %u..%u %u\n", v[0].x, v[0].y,
                    v[0].z, v[1].x, v[1].y, v[2].x, v[2].y, v[0].col[0], v[0].col[1], v[0].col[2], v[0].col[3], g.cx0, g.cy0, g.cx1, g.cy1);

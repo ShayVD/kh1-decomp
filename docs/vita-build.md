@@ -2122,3 +2122,25 @@ is a different stop.
    screen and its menu run instead of the stub.
 4. Renderer A / B on the CPU (vita-port-plan section 2 step 3). Sound: started 2026-10-29 ("Sound"
    above); next, its cost on a real Vita and the movies' PCM (BlockTrans).
+
+## Hardware runs over vitacompanion (2026-11-02)
+
+`tools/vita/hw_run.sh OUT_DIR [TIMEOUT_S] [config line]...` runs the build on a real Vita from a Mac / PC on the same
+Wi-Fi and fetches `ux0:data/kh1/kh1.log`; `tools/vita/hw_ftp.py` is its FTP / command-port client. Both are cut-down
+copies of the spyro-vita project's runner (its decision D77): vitacompanion (devnoname120/vitacompanion) on the Vita,
+FTP on 1337, commands on 1338 (1.05's `kill` or 1.06+'s `quit`, `launch KHDC00001`). The Vita's address goes in
+`VITA_IP` or tools/vita/hw.env (gitignored). The app must be installed once with VitaShell; each run uploads only the
+VPK's eboot.bin (`VPK=`). The owner's config.txt and kh1.log are renamed to `*.hw-backup` for the run and put back at
+the end (`--restore` for a run that was killed). `PAD=FILE` uploads a host pad script and adds `pad=`. Example:
+
+    VITA_IP=192.168.1.4 VPK=out/vita/kh1-decomp.vpk PAD=tests/host/pads/dive_en.txt \
+      tools/vita/hw_run.sh out/hw/j1 1800 frames=11600 renderer=native natvbjoin=1
+
+Lessons from the first runs (vitacompanion 1.05):
+- **No FTP while the game runs.** Polling the log every 10 s wedged vitacompanion's FTP at frame ~900 (the game kept
+  running to 8,460, unseen); only a full restart of the Vita (Power > Restart) brought it back. The script now waits
+  `HW_QUIET_S` (default 360 s; the Dive's 11,600 frames take ~5 min) before its first look. FTP also wedged once with
+  the game closed after many connections in a few minutes: keep connections few.
+- At `frames=` the app exits itself; on the screen that looks like a crash. The next launch can land behind
+  LiveArea's "close the application?" prompt (the game then sits at frame ~540): the script sends kill first, and if it
+  still happens, close the app on the Vita and run again.
