@@ -1358,6 +1358,42 @@ static int scan_pages(u32 psm, u32 bp, u32 bw, u32 w, u32 h, u32 bits, u32 *s, u
     return 1;
 }
 
+/* 2026-11-02 (docs/native-plan.md "Texture lookups by page lists"): the pages a texture layout's blocks lie in, in
+ * the order of the block walk below (each page where its first block is), kept by TEX0's layout bits.  The newest
+ * stamp is the largest of theirs and the target the first drawn page's in that order, which is the walk's answer
+ * (the first block in a drawn page lies in the first drawn page of the list), from a few words instead of a
+ * kh1_gsmem_addr a block.  The pages hang on the layout only, so a list never goes stale */
+#define TP_KEYS 64
+#define TP_MAX 64
+static struct { u32 lo, hi, n; u16 pg[TP_MAX]; } tp[TP_KEYS];
+static u32 tp_ok[TP_KEYS / 32];
+
+/* the list for TEX0 (lo, hi), made the first time: 0 for a texture over TP_MAX pages (the walk then) */
+static const u16 *tex_pages(u32 lo, u32 hi, u32 psm, u32 bwid, u32 bhgt, u32 *n) {
+    u32 k, seen[512 / 32], x, y, p, m = 0;
+    hi &= 3;
+    k = (lo ^ lo >> 14 ^ lo >> 20 ^ lo >> 26 ^ hi << 6) % TP_KEYS;
+    if (tp_ok[k >> 5] >> (k & 31) & 1 && tp[k].lo == lo && tp[k].hi == hi) {
+        *n = tp[k].n;
+        return tp[k].n <= TP_MAX ? tp[k].pg : 0;
+    }
+    memset(seen, 0, sizeof seen);
+    for (y = 0; y < 1u << ((lo >> 30 | hi << 2) & 15); y += bhgt)
+        for (x = 0; x < 1u << (lo >> 26 & 15); x += bwid) {
+            p = page_of(psm, kh1_gsmem_addr(psm, lo & 0x3FFF, lo >> 14 & 63, x, y));
+            if (seen[p >> 5] >> (p & 31) & 1) continue;
+            seen[p >> 5] |= 1u << (p & 31);
+            if (m < TP_MAX) tp[k].pg[m] = (u16)p;
+            m++;
+        }
+    tp[k].lo = lo;
+    tp[k].hi = hi;
+    tp[k].n = m;
+    tp_ok[k >> 5] |= 1u << (k & 31);
+    *n = m;
+    return m <= TP_MAX ? tp[k].pg : 0;
+}
+
 /* the pages a texture's w x h texels lie in: the newest write's sequence number, and with *t the
  * first page whose drawn bits it reads (1 + its target, 0 for none) */
 static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
@@ -1380,6 +1416,19 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
     if (fast_on && scan_pages(psm, tbp, tbw, 1u << tw, 1u << th, bits, &s, t)) {
         m_lo = lo; m_hi = hi; m_marks = marks; m_s = s; m_t = *t; m_ok = 1;
         return s;
+    }
+    if (fast_on) {
+        u32 n, i;
+        const u16 *pg = tex_pages(lo, hi, psm, bwid, bhgt, &n);
+        for (i = 0; pg && i < n; i++) {
+            page = pg[i];
+            if (page_seq[page] > s) s = page_seq[page];
+            if (!*t && page_drawn[page] & bits) *t = page_tgt[page];
+        }
+        if (pg) {
+            m_lo = lo; m_hi = hi; m_marks = marks; m_s = s; m_t = *t; m_ok = 1;
+            return s;
+        }
     }
     /* one address a block: a block never spans two pages */
     for (y = 0; y < 1u << th; y += bhgt)
