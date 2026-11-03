@@ -28,9 +28,11 @@ extern f32 D_0108F8A0[];
 extern f32 D_0108F918[];
 extern kh1_u128 *D_0108FA60;
 f32 cosf(f32);
-CONTEXT_ONLY f32 cosf(f32 x) { return 0; }
 f32 sinf(f32);
+#ifdef KH1_PS2 /* the matching experiments' copies; off the EE they replaced libm's for the whole game (2026-11-02) */
+CONTEXT_ONLY f32 cosf(f32 x) { return 0; }
 CONTEXT_ONLY f32 sinf(f32 x) { return 0; }
+#endif
 f32 func_00f787b0(s32);
 void func_00f792c8(s32 *, s32 *, s32 *, s32 *, s32, s32, s32 *, s32 *, s32, s32, u8 *, u64, s32, u64, s32);
 kh1_u128 *func_00f79700(kh1_u128 *, u8 *, s32, s32, s32, s32, s32, s32, s32, s32);
