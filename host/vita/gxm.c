@@ -81,6 +81,8 @@ static u32 gs_tex_stamp(u32 lo, u32 hi) {
     return kh1_pipes_snap ? kh1_gsmem_snap_tex_ver(lo, hi) : kh1_gsmem_tex_stamp(lo, hi);
 }
 void kh1_vita_log(const char *fmt, ...);     /* main.c */
+extern int kh1_cmd_natvbcheck; /* cmdbuf.c, 2026-11-03 */
+extern u32 kh1_cmd_natvb_gxmbad;
 
 #define SHADER_DIR "ux0:data/kh1/shaders"
 #define MAX_INDEX 63999u                     /* SCE_GXM_INDEX_SOURCE_INDEX_16BIT: below 64000 */
@@ -269,6 +271,10 @@ typedef struct {
     SceGxmProgram *prog;
     SceGxmShaderPatcherId id;
     SceGxmVertexProgram *vp;
+    /* 2026-11-03: a native variant's program with 32-bit index fetching, for natvbjoin's joined cached draws, whose
+     * indices run over all of natvb's memory: vp fetches 16 bits (SCE_GXM_INDEX_SOURCE_INDEX_16BIT, "below 64000"), so
+     * an index past 65535 read another entry's vertex and matrix slot (Sora's triangles across the screen) */
+    SceGxmVertexProgram *vp32;
     const SceGxmProgramParameter *u_xf;
     const SceGxmProgramParameter *u_m; /* a native variant's matrices (natdraw.h) */
 } VertProg;
@@ -296,6 +302,12 @@ static int vert_load(u32 i) {
     if (!n || sceGxmShaderPatcherCreateVertexProgram(patcher, v->id, (const SceGxmVertexAttribute *)a, n,
                                                      (const SceGxmVertexStream *)&s, 1, &v->vp) < 0)
         return -1;
+    if (i >= KH1_VERT_NAT && i < KH1_VERT_SKIN) {
+        s.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_32BIT;
+        if (sceGxmShaderPatcherCreateVertexProgram(patcher, v->id, (const SceGxmVertexAttribute *)a, n,
+                                                   (const SceGxmVertexStream *)&s, 1, &v->vp32) < 0)
+            v->vp32 = 0; /* no joined draws then (draw_join) */
+    }
     v->u_xf = sceGxmProgramFindParameterByName(v->prog, "u_xf");
     v->u_m = sceGxmProgramFindParameterByName(v->prog, "u_m");
     return i >= KH1_VERT_NAT && !v->u_m ? -1 : 0;
@@ -1614,6 +1626,11 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 sceGxmSetCullMode(ctx, c->cull == KH1_NAT_CULL_CCW ? SCE_GXM_CULL_CCW : c->cull == KH1_NAT_CULL_CW ? SCE_GXM_CULL_CW
                                        : SCE_GXM_CULL_NONE);
             if (k && k->xv) { /* 2026-11-02 (natvb): a cached run, indexed, from natvb's GPU memory */
+                if (k->xi32) { /* 2026-11-03: joined runs' 32-bit indices need 32-bit fetching; bound before the uniform
+                                * reserve, which is the bound program's */
+                    if (!vert[vi].vp32) { skip(W_STATE, "no 32-bit index program"); break; }
+                    sceGxmSetVertexProgram(ctx, vert[vi].vp32);
+                }
                 sceGxmReserveVertexDefaultUniformBuffer(ctx, &vb);
                 if (vert[vi].u_xf) sceGxmSetUniformDataF(vb, vert[vi].u_xf, 0, 4, xf);
                 /* 2026-11-02 (natvbjoin): u_m[mlo ..], the entry's home on (cmdbuf.h KH1Cmd.mlo) */
@@ -1626,9 +1643,38 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                     if (fs->u[4]) sceGxmSetUniformDataF(fb, fs->u[4], 0, 4, xf);
                 }
                 sceGxmSetVertexStream(ctx, 0, k->xv);
-                if (k->xi32) /* 2026-11-02 (natvbjoin): joined cached runs, 32-bit indices into natvb's memory, in the ring */
+                if (k->xi32 && kh1_cmd_natvbcheck) { /* 2026-11-03: each index's vertex against the matrices the draw sets */
+                    const u32 *ix = (const u32 *)(const void *)(vbuf + vat);
+                    const f32 *mm = (const f32 *)(const void *)(ub + c->moff);
+                    u32 q, bad = 0, why = 0, at = 0, mi = 0;
+                    for (q = 0; q < left; q++) {
+                        u32 w = 0, e;
+                        if (ix[q] >= kh1_natvb_bytes / 32u) { w = 1; mi = 0; }
+                        else {
+                            mi = ((const KH1GpuVert *)k->xv)[ix[q]].pad[0] & 0x7F;
+                            if (mi < k->mlo || mi >= c->nmat) w = 2;
+                            else {
+                                const f32 *m = mm + (mi - k->mlo) * 16;
+                                for (e = 0; e < 16 && m[e] == 0.0f; e++) ;
+                                if (e == 16) w = 3;
+                            }
+                        }
+                        if (w && !bad++) { why = w; at = q; }
+                    }
+                    if (bad) {
+                        static u32 said;
+                        kh1_cmd_natvb_gxmbad += bad;
+                        if (said++ < 12)
+                            kh1_vita_log("kh1-natvbcheck: joined draw, %u of %u indices bad (first at %u: %s, index %u, "
+                                         "matrix %u; mlo %u, nmat %u)\n", bad, left, at,
+                                         why == 1 ? "past natvb's memory" : why == 2 ? "matrix outside the draw's" : "zeroed matrix",
+                                         ix[at], mi, k->mlo, c->nmat);
+                    }
+                }
+                if (k->xi32) { /* 2026-11-02 (natvbjoin): joined cached runs, 32-bit indices into natvb's memory, in the ring */
                     sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U32, vbuf + vat, left);
-                else
+                    sceGxmSetVertexProgram(ctx, vert[vi].vp);
+                } else
                     sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, k->xi, left);
                 left = 0;
                 kh1_vita_natvb_draws++;

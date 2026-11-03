@@ -574,9 +574,36 @@ static int vb_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
     kh1_cmd_natvb_joins++;
     return 1;
 }
+/* 2026-11-03 (Sora's stray triangles with natvbjoin=1 on the Vita): config natvbcheck=1 / host KH1_HOST_NATVBCHECK=1 checks
+ * each cached run's vertices: a matrix index outside home .. home + nmat - 1 reads another run's matrix, or a zeroed gap
+ * slot of a joined draw (w 0: a triangle across the screen).  Counted, and the first few printed */
+int kh1_cmd_natvbcheck;
+u32 kh1_cmd_natvb_bad, kh1_cmd_natvb_checked, kh1_cmd_natvb_gxmbad; /* the last: gxm.c's check of joined draws */
+int printf(const char *, ...);
+static void vb_check(const KH1GpuVert *xv, const u16 *xi, u32 n, u32 nmat, u32 home, const KH1CmdRec *r) {
+    u32 i, bad = 0, lo = 255, hi = 0;
+    for (i = 0; i < n; i++) {
+        u32 mi = xv[xi[i]].pad[0] & 0x7F;
+        if (mi < lo) lo = mi;
+        if (mi > hi) hi = mi;
+        if (mi < home || mi >= home + nmat) bad++;
+    }
+    kh1_cmd_natvb_checked += n;
+    if (!bad) return;
+    kh1_cmd_natvb_bad += bad;
+    {
+        static u32 said;
+        const KH1Cmd *c = r->cur >= 0 ? &r->cmd[r->cur] : 0;
+        if (said++ < 12)
+            printf("kh1-natvbcheck: %u of %u indices outside home %u + %u matrices (indices %u .. %u); the list's last "
+                   "command: cached %d, mlo %u, nmat %u\n", bad, n, home, nmat, lo, hi, c && c->xv, c ? c->mlo : 0,
+                   c ? c->nmat : 0);
+    }
+}
 void kh1_cmd_native_vb(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *xv, const u16 *xi,
                        u32 n, const f32 *mats, u32 nmat, u32 home, u32 cull, u32 seq) {
     if (!n || !xi || home + nmat > KH1_NAT_MATS) return;
+    if (kh1_cmd_natvbcheck) vb_check(xv, xi, n, nmat, home, r);
     if ((s32)(seq - r->xseq) > 0) r->xseq = seq;
     r->in_xi = xi;
     r->in_home = home;

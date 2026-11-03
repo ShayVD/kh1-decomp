@@ -689,6 +689,13 @@ static int watchdog(SceSize args, void *argp) {
                          kh1_cmd_natvbjoin, kh1_natvb_home, kh1_cmd_natvb_joins - vj0, kh1_cmd_natvb_nojoin[0] - vn0[0],
                          kh1_cmd_natvb_nojoin[1] - vn0[1], kh1_cmd_natvb_nojoin[2] - vn0[2], kh1_cmd_natvb_nojoin[3] - vn0[3]);
                     vj0 = kh1_cmd_natvb_joins;
+                    {
+                        extern int kh1_cmd_natvbcheck;
+                        extern u32 kh1_cmd_natvb_bad, kh1_cmd_natvb_checked, kh1_cmd_natvb_gxmbad;
+                        if (kh1_cmd_natvbcheck)
+                            vlog("kh1-vita: natvbcheck=1: %u indices checked so far, %u outside their run's matrices; %u bad "
+                                 "in joined draws as drawn\n", kh1_cmd_natvb_checked, kh1_cmd_natvb_bad, kh1_cmd_natvb_gxmbad);
+                    }
                     memcpy(vn0, kh1_cmd_natvb_nojoin, sizeof vn0);
                     a0 = kh1_natvb_hits;
                     b0 = kh1_natvb_miss;
@@ -936,6 +943,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);
         else if (strcmp(line, "natvbmb") == 0) kh1_vita_natvb_mb = (u32)atoi(v);
         else if (strcmp(line, "natvbjoin") == 0) kh1_cmd_natvbjoin = atoi(v);
+        else if (strcmp(line, "natvbcheck") == 0) { extern int kh1_cmd_natvbcheck; kh1_cmd_natvbcheck = atoi(v); }
         else if (strcmp(line, "natvbhome") == 0) kh1_natvb_home = atoi(v);
         else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
