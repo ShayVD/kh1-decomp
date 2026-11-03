@@ -193,6 +193,11 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
             stamps = stamps * 3 + (pass ? (st1 != st0) + 1 : 0);
             stamps = stamps * 7 + kh1_gsmem_tex_target(lo, 1);
             st0 = st1;
+            { /* 2026-11-03: a 32 x 32 texture's content signature: the block uploads' hashes (band_*, NEON under
+               * qemu-arm) against the ones kh1_gsmem_tex_sig makes itself with them off */
+                u32 sg[2], lo2 = bp | bw << 14 | psm << 20 | 5u << 26 | 1u << 30;
+                if (kh1_gsmem_tex_sig(lo2, 1, sg)) stamps = stamps * 31 + (sg[0] ^ sg[1] * 3);
+            }
         }
     }
     *hash = snap_hash();
@@ -323,6 +328,15 @@ int main(int argc, char **argv) {
         kh1_gsmem_write_pixel(KH1_PSMCT32, 0x2000, 8, 0, 0, 1);
         kh1_gsmem_snap_take();
         CHECK("a write elsewhere keeps it", kh1_gsmem_snap_tex_ver(lo, hi) == v1);
+        /* 2026-11-03: a store of the bits a pixel already holds keeps the content version (kh1_gsmem_tex_ver); other
+         * bits move it */
+        {
+            u32 px = kh1_gsmem_read_pixel(KH1_PSMCT24, 0x0E00, 8, 7, 3), t0 = kh1_gsmem_tex_ver(lo, hi);
+            kh1_gsmem_write_pixel(KH1_PSMCT24, 0x0E00, 8, 7, 3, px);
+            CHECK("the same bits keep the version", kh1_gsmem_tex_ver(lo, hi) == t0);
+            kh1_gsmem_write_pixel(KH1_PSMCT24, 0x0E00, 8, 7, 3, px ^ 1);
+            CHECK("other bits move the version", kh1_gsmem_tex_ver(lo, hi) != t0);
+        }
         CHECK("200 copy rectangles", n == 200);
     }
     /* session 146: uploads of the bytes a rectangle already holds, over pages draws marked, skipped

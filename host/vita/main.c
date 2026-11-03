@@ -821,15 +821,15 @@ static int watchdog(SceSize args, void *argp) {
                     { /* 2026-11-03: the cache's lookups by how they hit (texcache.c, texver=) */
                         extern int kh1_pipes_texver;
                         const KH1TexCache *tc = kh1_pipes_texcache_if();
-                        static u32 q[6];
+                        static u32 q[8];
                         if (tc) {
-                            u32 hh = tc->hash_hits - tc->ver_hits - tc->raw_hits;
-                            vlog("kh1-vita: texture cache (texver=%d): %u lookups, %u stamp hits, %u version hits, %u raw "
-                                 "hits, %u hashed hits, %u decodes\n", kh1_pipes_texver, tc->draws - q[0],
-                                 tc->stamp_hits - q[1], tc->ver_hits - q[2], tc->raw_hits - q[3], hh - q[4],
-                                 tc->decodes - q[5]);
+                            u32 hh = tc->hash_hits - tc->ver_hits - tc->sig_hits - tc->raw_hits, lz = kh1_gsmem_sig_lazy();
+                            vlog("kh1-vita: texture cache (texver=%d): %u lookups, %u stamp hits, %u version hits, %u "
+                                 "signature hits, %u raw hits, %u hashed hits, %u decodes; %u blocks hashed at a lookup\n",
+                                 kh1_pipes_texver, tc->draws - q[0], tc->stamp_hits - q[1], tc->ver_hits - q[2],
+                                 tc->sig_hits - q[6], tc->raw_hits - q[3], hh - q[4], tc->decodes - q[5], lz - q[7]);
                             q[0] = tc->draws; q[1] = tc->stamp_hits; q[2] = tc->ver_hits; q[3] = tc->raw_hits;
-                            q[4] = hh; q[5] = tc->decodes;
+                            q[4] = hh; q[5] = tc->decodes; q[6] = tc->sig_hits; q[7] = lz;
                         }
                     }
                     cn0 = kh1_pipes_clut_n;
