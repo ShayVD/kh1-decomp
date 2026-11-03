@@ -1216,6 +1216,46 @@ static void pend_add(Target *t, u32 key, const KH1CmdXfer *x, u32 dx, u32 dy, u3
         }
 }
 
+/* 2026-11-02 config.txt's shot=FIRST[,STEP[,COUNT]]: the display and 3D targets as PPMs (ux0:data/kh1/shot-N-K.ppm,
+ * N the picture, K the KH1_RT_* kind), read once the GPU is done with them, to see a Vita's picture over FTP */
+u32 kh1_vita_shot_first, kh1_vita_shot_step = 250, kh1_vita_shot_count = 1;
+extern const char kh1_vita_dir[];
+static void shot(void) {
+    static const u8 kinds[2] = { KH1_RT_DISPLAY, KH1_RT_MAIN };
+    static u32 taken;
+    u32 k, y, x;
+    /* the first picture at or after each due one (the Dive's every other picture draws nothing and skips this) */
+    if (!kh1_vita_shot_first || taken >= kh1_vita_shot_count ||
+        frames < kh1_vita_shot_first + taken * kh1_vita_shot_step)
+        return;
+    while (taken < kh1_vita_shot_count && frames >= kh1_vita_shot_first + taken * kh1_vita_shot_step) taken++;
+    for (k = 0; k < 2; k++) {
+        s32 i;
+        for (i = KH1_CMD_TARGETS - 1; i >= 0; i--) {
+            const Target *g = &tgt[i];
+            char path[128], head[32];
+            u8 *row;
+            SceUID fd;
+            if (!g->mem || !g->drawn || g->rt != kinds[k]) continue;
+            snprintf(path, sizeof path, "%s/shot-%05u-%u.ppm", kh1_vita_dir, (unsigned)frames, (unsigned)kinds[k]);
+            fd = sceIoOpen(path, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_TRUNC, 0666);
+            if (fd < 0) break;
+            sceIoWrite(fd, head, (SceSize)snprintf(head, sizeof head, "P6\n%u %u\n255\n", (unsigned)g->w, (unsigned)g->h));
+            row = (u8 *)malloc(g->w * 3);
+            for (y = 0; row && y < g->h; y++) {
+                const u8 *s = g->mem + y * g->stride * 4;
+                for (x = 0; x < g->w; x++) row[x * 3] = s[x * 4], row[x * 3 + 1] = s[x * 4 + 1], row[x * 3 + 2] = s[x * 4 + 2];
+                sceIoWrite(fd, row, g->w * 3);
+            }
+            free(row);
+            sceIoClose(fd);
+            kh1_vita_log("kh1-gxm: shot of picture %u: %s (target %d, %u x %u)\n", (unsigned)frames, path, (int)i,
+                         (unsigned)g->w, (unsigned)g->h);
+            break;
+        }
+    }
+}
+
 void kh1_vita_gxm_frame(const KH1CmdRec *r) {
     const u8 *ub = r->uring.base + r->uring.cur * r->uring.slot;
     const u8 *vsrc = r->vring.base + r->vring.cur * r->vring.slot;
@@ -1239,6 +1279,7 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         return;
     }
     finish_at(0); /* the last frame's scenes are done with the rings, the caches' GPU copies and the targets */
+    shot();
     { /* 2026-11-02 (natdraw.h natvb): and with the cached runs' entries the frames before this one drew */
         static u32 vb_prev;
         if (vb_prev) kh1_natvb_publish(vb_prev);
