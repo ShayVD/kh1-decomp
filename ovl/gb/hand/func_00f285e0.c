@@ -10,7 +10,7 @@ typedef struct {
 extern GbMap *D_00F56DC0;
 void func_001bbbd0(OvlMtx, void *);
 u64 *func_00f26fb8(u64 *, s32, s32);
-void func_00f27388(s32, u64 **, s32, f32 *, void *, s32, f32, f32);
+s32 func_00f27388(s32, u64 **, s32, f32 *, void *, s32, f32, f32);
 u64 *func_00f3f9d0(u64 *);
 u64 *func_00f3f9e8(u64 *);
 void func_00f3fe80(s32, u64 *);
@@ -18,7 +18,7 @@ void sceVu0MulMatrix(OvlMtx, OvlMtx, OvlMtx);
 void sceVu0RotMatrix(OvlMtx, OvlMtx, OvlVec);
 void sceVu0UnitMatrix(OvlMtx);
 
-void func_00f285e0(s32 id, u64 **pp, s32 x, s32 y, s32 a4, f32 *scl, s32 flag, f32 ry, f32 f1, f32 s, f32 f3) {
+s32 func_00f285e0(s32 id, u64 **pp, s32 x, s32 y, s32 a4, f32 *scl, s32 flag, f32 ry, f32 f1, f32 s, f32 f3) {
     OvlMtx m;
     OvlMtx base;
     OvlMtx m2;
@@ -53,5 +53,5 @@ void func_00f285e0(s32 id, u64 **pp, s32 x, s32 y, s32 a4, f32 *scl, s32 flag, f
     *pp = func_00f3f9d0(*pp);
     *pp = func_00f26fb8(*pp, 2048 - x, 2048 - y);
     func_00f3fe80(id, func_00f3f9e8(*pp));
-    func_00f27388(id + 1, pp, a4, sv, m, 2, f1, f3);
+    return func_00f27388(id + 1, pp, a4, sv, m, 2, f1, f3);
 }

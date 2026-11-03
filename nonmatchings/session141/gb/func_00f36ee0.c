@@ -16,9 +16,9 @@ typedef struct {
 
 s32 func_00f23860(s32);
 s32 func_00f23908(s32);
-void func_00f3e388(s32, u8 *, u8 *, S12 *, s32, s32, T12 *, f32);
+void *func_00f3e388(s32, u8 *, u8 *, S12 *, s32, s32, T12 *, f32);
 
-void func_00f36ee0(s32 arg0, u8 *base, s32 a, s32 b, u8 *c1, u8 *c2) {
+void *func_00f36ee0(s32 arg0, u8 *base, s32 a, s32 b, u8 *c1, u8 *c2) {
     T12 t;
     S12 s;
     s32 h1;
@@ -62,5 +62,5 @@ void func_00f36ee0(s32 arg0, u8 *base, s32 a, s32 b, u8 *c1, u8 *c2) {
     t.a = 5;
     t.b = 1;
     t.c = 1;
-    func_00f3e388(arg0, o, tex, &s, h1, h2, &t, 0.0f);
+    return func_00f3e388(arg0, o, tex, &s, h1, h2, &t, 0.0f);
 }

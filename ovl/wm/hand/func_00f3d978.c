@@ -20,7 +20,14 @@ s32 func_00f3b480(void);
 CONTEXT_ONLY s32 func_00f3b480() { return 0; }
 s32 func_00f218d8(void);
 s32 func_00f3af58(f32 *, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3caf0(f32 *, f32, f32 *, f32);
+#else
+s32 func_00f3caf0(f32 *, f32 *, f32, f32);
+static __inline__ s32 ee_00f3caf0(f32 * x0, f32 x1, f32 * x2, f32 x3) { return func_00f3caf0(x0, x2, x1, x3); }
+#undef func_00f3caf0
+#define func_00f3caf0 ee_00f3caf0
+#endif
 #ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3cb90(f32 *, f32, f32 *, f32 *, f32 (*)[4]);
 #else

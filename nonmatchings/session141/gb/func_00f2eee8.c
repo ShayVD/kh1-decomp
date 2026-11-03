@@ -14,8 +14,24 @@ s32 func_00f23d50(s32);
 s32 func_00f23c70(s32);
 void func_001bfac8(void);
 f32 func_001befc8(s32, void *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f28090(s32 id, void *pp, s32 x, s32 y, f32 ry0, f32 ry1, f32 f, s32 a4, s32 size);
+#else
+s32 func_00f28090(s32, void *, s32, s32, s32, s32, f32, f32, f32);
+static __inline__ s32 ee_00f28090(s32 x0, void * x1, s32 x2, s32 x3, f32 x4, f32 x5, f32 x6, s32 x7, s32 x8) { return func_00f28090(x0, x1, x2, x3, x7, x8, x4, x5, x6); }
+#undef func_00f28090
+#define func_00f28090 ee_00f28090
+#endif
+#ifdef KH1_PS2
 s32 func_00f285e0(s32 id, void *pp, f32 ry, f32 f1, f32 s, s32 x, s32 y, s32 a4, f32 f3, f32 *scl, s32 flag);
+#else /* the definition's order (portability rule 11: the EE passes the floats in $f12-$f15 apart) */
+s32 func_00f285e0(s32 id, void *pp, s32 x, s32 y, s32 a4, f32 *scl, s32 flag, f32 ry, f32 f1, f32 s, f32 f3);
+static __inline__ s32 ee_00f285e0(s32 id, void *pp, f32 ry, f32 f1, f32 s, s32 x, s32 y, s32 a4, f32 f3, f32 *scl, s32 flag) {
+    return func_00f285e0(id, pp, x, y, a4, scl, flag, ry, f1, s, f3);
+}
+#undef func_00f285e0
+#define func_00f285e0 ee_00f285e0
+#endif
 void func_00f2eee8(s32 arg) {
     s32 ids[3][4];
     f32 sc[3];

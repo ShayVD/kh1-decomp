@@ -62,7 +62,7 @@ s32 func_00f3b4f8(void)
     D_00F6183C = D_00F56DC0->x80;
     D_00F61838 = D_00F6183C * 45.0f;
     func_0011d768(21);
-    h = func_001c00e8(-1, func_00f3b078, 0);
+    h = func_001c00e8(-1, func_00f3b078, KH1_Q(0));
     for (i = 0; i < 128; i += 8) {
         D_00F61840 = i;
         func_001bfac8();

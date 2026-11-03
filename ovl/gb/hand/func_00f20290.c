@@ -10,13 +10,13 @@ void func_00f20290(s32 n) {
     s32 r;
     switch (n) {
     case 10:
-        r = func_001c00e8(n, func_00f22620, 0);
+        r = func_001c00e8(n, func_00f22620, KH1_Q(0));
         break;
     case 11:
-        r = func_001c00e8(n, func_00f2eb00, 0);
+        r = func_001c00e8(n, func_00f2eb00, KH1_Q(0));
         break;
     case 12:
-        r = func_001c00e8(n, func_00f2a420, 0);
+        r = func_001c00e8(n, func_00f2a420, KH1_Q(0));
         break;
     default:
         return;

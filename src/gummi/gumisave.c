@@ -169,7 +169,13 @@ void func_001b9c60(char *a) {
     D_00621210 = func_001205f0(a, fn);
     PlatFlushCache(0);
     PlatFlushCache(2);
+#ifdef KH1_PS2
     fn();
+#else
+    /* a port: the entry called by name (a native overlay's, include/platform/ovl.h): fn is only the
+     * overlay area's address, which tools/vita/build.py's rewrite of D_00F20000 calls cannot see */
+    ((void (*)(void))D_00F20000)();
+#endif
 }
 
 void func_001b9cb0(void) {

@@ -10,8 +10,22 @@ extern s32 D_002BC148, D_00F850DC, D_002BBE0C, D_00F850F8;
 extern f32 D_00FBA900[4][4], D_00FBA880[4][4], D_00F85200[4][4], D_00F85180[4][4];
 void func_00112e98(void);
 void func_00f2c848(void);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f2c2d8(void);
+#else
+f32 func_00f2c2d8();
+static __inline__ void ee_00f2c2d8() { func_00f2c2d8(); }
+#undef func_00f2c2d8
+#define func_00f2c2d8 ee_00f2c2d8
+#endif
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f2c2f0(void);
+#else
+f32 func_00f2c2f0();
+static __inline__ void ee_00f2c2f0() { func_00f2c2f0(); }
+#undef func_00f2c2f0
+#define func_00f2c2f0 ee_00f2c2f0
+#endif
 void func_001bade8(void);
 void func_00f640e8(void);
 void func_00f21e78(void);

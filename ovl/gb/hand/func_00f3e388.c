@@ -11,7 +11,14 @@ typedef struct { u16 bone; u16 nkeys; u8 pad4[4]; AnmKey *keys; } AnmTrack;
 typedef struct { u8 pad0[8]; u32 count; AnmTrack *tracks; } Anm;
 typedef struct { f32 rot[4]; f32 pos[4]; f32 sc[4]; } Pose;
 extern u32 D_00F6C9C4;
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 f32 func_00f3dc50(f32, void *);
+#else
+f32 func_00f3dc50(void *, f32);
+static __inline__ f32 ee_00f3dc50(f32 x0, void * x1) { return func_00f3dc50(x1, x0); }
+#undef func_00f3dc50
+#define func_00f3dc50 ee_00f3dc50
+#endif
 void *func_00f3f548(void *, s32, MdlWork *, s32, void *, s32);
 MdlWork *func_00f3e388(void **out, s32 a1, MdlWork *w, s32 *arg3, MdlHdr *h, Anm *an, s32 *arg5, f32 time) {
     Pose ps;

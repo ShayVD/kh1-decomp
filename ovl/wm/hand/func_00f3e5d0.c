@@ -8,7 +8,14 @@ extern f32 D_00F8C240[4][4];
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 f32 *func_00f2c848(void);
 f32 func_00f2c7f8(void);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3caf0(f32 *, f32, f32 *, f32);
+#else
+s32 func_00f3caf0(f32 *, f32 *, f32, f32);
+static __inline__ s32 ee_00f3caf0(f32 * x0, f32 x1, f32 * x2, f32 x3) { return func_00f3caf0(x0, x2, x1, x3); }
+#undef func_00f3caf0
+#define func_00f3caf0 ee_00f3caf0
+#endif
 f32 *func_00f35058(s32);
 s32 func_00f33a90(void);
 

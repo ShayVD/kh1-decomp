@@ -30,10 +30,18 @@ typedef struct {
 } World;
 typedef struct { u8 pad[4]; u32 x4; u32 x8; } Pad;
 extern World *D_00F56DC0;
+#ifdef KH1_PS2
 extern World *D_00F56DC0b __asm__("D_00F56DC0");
+#else /* the port: one name (the asm alias would also skip ovlnative.py's renaming) */
+#define D_00F56DC0b D_00F56DC0
+#endif
 extern void *D_00F56DC4;
 extern s32 D_00F61560;
+#ifdef KH1_PS2
 extern s32 D_00F61560b __asm__("D_00F61560");
+#else
+#define D_00F61560b D_00F61560
+#endif
 extern s32 D_00F56D8C;
 extern s32 D_00F615C8;
 extern u8 D_00F615D0[];

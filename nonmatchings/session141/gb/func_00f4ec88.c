@@ -31,7 +31,7 @@ extern Pad D_002C5AD0;
 extern u8 D_00F82AD8[];
 u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 s32 func_001bc510(void); CONTEXT_ONLY s32 func_001bc510() { return 0; }
-Snd *func_001f31a8(Cfg *);
+Snd *func_001f31a8(Cfg *, s32);
 void func_001f3dc0(s32);
 Item *func_00f445a8(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00f20018(void);
@@ -45,9 +45,9 @@ void func_00f444d8(s32, s32, s32);
 void func_00f43cf0(s32);
 void func_00f43d68(Item *);
 s32 func_001be278(void); CONTEXT_ONLY s32 func_001be278() { return 0; }
-s32 func_001be010(void);
+s32 func_001be010(s32);
 void func_001be320(s32);
-void func_001be430(void);
+void func_001be430(s32);
 void func_0020be10(s32);
 void func_0020bda8(s32);
 void func_00f47c88(s32);
@@ -121,7 +121,7 @@ void func_00f4ec88(void) {
     D_00F82D90 = 0;
     D_00F71350.xE = D_00F705AC;
     D_00F82DA4 = 0;
-    snd = func_001f31a8(&D_00F71350);
+    snd = func_001f31a8(&D_00F71350, 1);
     func_001f3dc0(D_00F829CC);
     func_00f445a8(18, 0, 2, 1, 0, 15, 1, 4, D_00F704A4, D_00F704A8, 0, D_00F704AC, 0, 0, 0, 0, 0, 256, wait);
 main:
@@ -358,7 +358,7 @@ state:
                         func_0024e468(D_00F702F0);
                         func_00f43d68(s0);
                         D_00F82D90 = 0;
-                        if (D_00F82D94 >= 0) func_001be430();
+                        if (D_00F82D94 >= 0) func_001be430(D_00F82D94);
                         goto end;
                     }
                 }
@@ -402,7 +402,7 @@ state:
         func_00f43d68(s0);
         D_00F82D90 = 0;
         if (D_00F82D94 < 0) goto end;
-        s2 = func_001be010();
+        s2 = func_001be010(D_00F82D94);
         D_00F82D8C = 1;
         if (func_001be278() == s2) goto end;
         if (rec[s2 * 96 + 2] == 0) goto end;

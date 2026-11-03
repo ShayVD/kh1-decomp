@@ -3,7 +3,14 @@
 
 /* wm.x func_00f3cdd0: matched by hand. The CONTEXT_ONLY func_00f3caf0 makes the calls nothrow (plain bnez, li v0,1 in the slot); it is declared (f32 *, f32, f32 *, f32) and called (p, r, v, 0.0f) like func_00f3e5d0 does, which gives the a0/f12/a1/f13 setup order; m[3][0..2] cleared in order. */
 #include "ovl.h"
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 CONTEXT_ONLY s32 func_00f3caf0(f32 *a0, f32 a1, f32 *a2, f32 a3) { return 0; }
+#else /* a CONTEXT_ONLY copy is a weak definition off the EE: its order would be the calls' */
+s32 func_00f3caf0(f32 *, f32 *, f32, f32);
+static __inline__ s32 ee_00f3caf0(f32 *x0, f32 x1, f32 *x2, f32 x3) { return func_00f3caf0(x0, x2, x1, x3); }
+#undef func_00f3caf0
+#define func_00f3caf0 ee_00f3caf0
+#endif
 void sceVu0ApplyMatrix(f32 *, f32 (*)[4], f32 *);
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 void sceVu0TransposeMatrix(f32 (*)[4], f32 (*)[4]);

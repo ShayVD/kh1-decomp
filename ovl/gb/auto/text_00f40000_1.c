@@ -7,7 +7,7 @@ M2C_UNK func_001ed4b8(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_00f41100(void *, M2C_UNK *, s32);
 M2C_UNK func_00f417d0(s32, void *, M2C_UNK *);
 extern s32 D_00F70268;
-s32 func_00f41048();
+s32 func_00f41048(s32);
 void func_00176310(s32);
 void func_00f417a8(s32);
 
@@ -23,7 +23,7 @@ void func_00f418f8(s32 arg0, s32 arg1) {
 }
 
 void func_00f41948(s32 arg0) {
-    if (func_00f41048() == 0) {
+    if (func_00f41048(arg0) == 0) {
         if (arg0 >= 0) {
             func_00f417a8(arg0);
             return;

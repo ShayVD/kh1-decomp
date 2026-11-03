@@ -24,8 +24,12 @@ s32 func_00f35c08(s32 *);
 void func_00f42818(void);
 void func_00f35e10(void);
 s32 func_00f40c98(void);
+#ifdef KH1_PS2
 void func_00f41320(void);
 CONTEXT_ONLY void func_00f41320() {}
+#else /* the definition returns f32: an x86 caller of a void one leaves it on the x87 stack */
+f32 func_00f41320(void);
+#endif
 s32 func_00f41c28(void);
 void func_001bfac8(void);
 

@@ -1,6 +1,7 @@
 /* Round 46 wwm2: score 36 -> 34, hill3o statement order. Earlier header below. */
 /* Round 46 wwm2: score 38 -> 36, port.py of the wm twin func_00f71748 draft. Earlier header below. */
 /* Round 36 (wgb): no change (21 words, score 38). Note: the round 35 order moves the o3->f24 / o3->h8 stores above the o4->f24 / o4->h8 stores (o3 and o4 are parameters), which is only safe if the caller passes distinct objects; hill3.py rejects it even with --noalias. A strict score-ranked run from the pre-round-35 draft gets 19 words, score 32, but a worse aligned diff (26 vs 20), so the committed order stays. */
+#include "platform/thread.h"
 typedef struct { u8 pad[5]; s8 b5; u8 pad2[2]; s16 h8; u8 pad3[10]; f32 f20; f32 f24; } Obj;
 typedef struct { u8 b0; u8 b1; u8 b2; u8 b3; u8 b4[4]; u8 b8; u8 b9; u8 pad[86]; } Ent;
 extern s32 D_00F82C58, D_00F82C5C, D_00F82C60;
@@ -52,7 +53,7 @@ void func_00f4a650(Obj *o1, Obj *o2, Obj *o3, Obj *o4, Obj *o5, Obj *o6)
     D_00F82BF0 = 0;
     D_00F82B48 = 0;
     if (n >= 256) {
-        __asm__ volatile("break");
+        PlatBreak();
     }
     for (i = 0; i < n; i++) {
         e = &base[i];

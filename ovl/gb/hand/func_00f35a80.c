@@ -63,7 +63,14 @@ s32 func_00f20060(void);
 void func_00f20170(s32, s32);
 CONTEXT_ONLY s32 func_00f358b8(s32 a0) { return 0; }
 void func_001bebd0(OvlMtx, GbCam *, void *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f28e10(s32, f32, s32);
+#else
+void func_00f28e10(s32, s32, f32);
+static __inline__ void ee_00f28e10(s32 x0, f32 x1, s32 x2) { func_00f28e10(x0, x2, x1); }
+#undef func_00f28e10
+#define func_00f28e10 ee_00f28e10
+#endif
 void func_00f25a68(void);
 
 void func_00f35a80(void) {

@@ -19,7 +19,14 @@ extern GbMap *D_00F56DC0;
 extern s32 D_00F809C4;
 void func_001bfac8(void);
 void func_00f28c70(void);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f28e10(s32, f32, s32);
+#else
+void func_00f28e10(s32, s32, f32);
+static __inline__ void ee_00f28e10(s32 x0, f32 x1, s32 x2) { func_00f28e10(x0, x2, x1); }
+#undef func_00f28e10
+#define func_00f28e10 ee_00f28e10
+#endif
 void func_00f33b88(s32);
 void func_00f33bc0(s32);
 void func_00f33c70(s32);

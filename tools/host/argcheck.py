@@ -48,6 +48,15 @@ BENIGN = {
         "a tail-call wrapper's `return`; nothing reads the wrapper's value",
     ("ovl/wm/hand/func_00f37770.nosib.c", "func_001bf098"):
         "a statement in a switch case (the text heuristic reads it as a value)",
+    # gb.x (session 145, --ovl gb)
+    ("nonmatchings/session141/gb/func_00f45ea8.c", "func_0011d768"):
+        "comma expressions in the draft's loop condition: their value is the 1 / 0 after the call",
+    ("ovl/gb/auto/text_00f40000.c", "func_001f3c20"):
+        "a tail-call wrapper's `return`; nothing reads the wrapper's value",
+    ("ovl/gb/hand/func_00f40438.c", "func_00f3e388"):
+        "the missing f32 is the caller's $f12; func_00f40438 (and its twin func_00f405c0) is never called (no jal, no pointer)",
+    ("nonmatchings/session141/gb/func_00f40b68.c", "func_00f40830"):
+        "the missing lim / base are only read for a type above 5; func_00f40b68 passes 0-5, whose cases set both",
     ("src/game/dkmovie.c", "func_0024b138"):
         "func_00111238 names the disc / IPU calls and is never called (no jal, j or pointer to it)",
     ("src/game/dkmovie.c", "sceIpuSync"):

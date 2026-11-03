@@ -48,6 +48,10 @@ OUT = os.path.join(ROOT, "out", "host")
 CFLAGS = [
     "-m32", "-malign-double", "-std=gnu89", "-O1", "-g", "-w",
     "-fno-strict-aliasing", "-fno-pic", "-fno-stack-protector", "-DKH1_HOST", "-Iinclude", "-Isrc",
+    # session 145: a struct of up to 8 bytes returned in registers, like an int (and like ARM's
+    # AAPCS for up to 4): the game declares one function both ways (util.c's `Col func_001eddc0`,
+    # called as returning u32 by choice.nofill.c), and i386's default hidden pointer broke those calls
+    "-freg-struct-return",
     "-Wno-error=implicit-function-declaration", "-Wno-error=int-conversion",
     "-Wno-error=incompatible-pointer-types", "-Wno-error=implicit-int",
 ]
@@ -403,7 +407,7 @@ def link_census(results, cc):
         with open(src, "a" if link_census.script else "w") as f:
             f.write(ovlnative.build.script)
         link_census.script = src
-        undefined -= set(re.findall(r"PROVIDE\((\w+) =", ovlnative.build.script))
+        undefined -= set(re.findall(r"^(?:PROVIDE\()?(\w+) =", ovlnative.build.script, re.M))
     if link_census.script:
         # session 137v: without SANE_EXPR ld makes `X = sym + off` (outside SECTIONS) an absolute
         # symbol, and a relocatable link (the Vita's) then loses every relocation to it: the Vita
