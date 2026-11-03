@@ -1035,6 +1035,21 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
                 for (c = 0; c < 8; c++) row[c] = pend_px(words[wi[c]], ct24);
                 memcpy((u32 *)t->mem + (by + y) * t->stride + bx, row, sizeof row);
             }
+#ifdef KH1_HOST
+            { /* KH1_HOST_PENDCHECK=1: each word's pixel as the word-by-word path places it, compared */
+                static int chk = -1;
+                static u32 nblk, nbad;
+                if (chk < 0) chk = getenv("KH1_HOST_PENDCHECK") != 0;
+                if (chk) {
+                    for (c = 0; c < 64; c++) {
+                        u32 aa = (rel & 31) * 64 + c, xx = x0 + inv_x[aa], yy = y0 + inv_y[aa];
+                        if (((u32 *)t->mem)[yy * t->stride + xx] != pend_px(words[c], ct24)) nbad++;
+                    }
+                    if (++nblk % 50000 == 0 || (nbad && nbad < 65))
+                        printf("kh1-gxm-pendcheck: %u whole blocks written, %u pixels differ\n", nblk, nbad);
+                }
+            }
+#endif
             return;
         }
     }
