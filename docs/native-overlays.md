@@ -556,6 +556,12 @@ pad script's timing.** Found with config.txt's new `padlog=` (vita-build.md):
 D_003D9FE0[488]) calls roomload.c func_00112e08, which asks for state 6 (func_00109558(6)); gamestate.c
 case 6 then runs gumisave.c func_001ba7e0 ("Run Gumi Edit"). The Save Menu's Gummi Ship is library call
 func_00112d80 -> state 4 (wm.x). A VM word is opcode in byte 3, argument in bytes 0-2, so the call is
-the word 0x180001E8; the room scripts are in compressed .ard files, so a raw scan of the disc finds
-nothing useful. Which room's script makes call 488 is
-the open question for reaching gb.x.
+the word 0x180001E8 (little-endian e8 01 00 18). Decompressing every KINGDOM.IDX file (extract_kingdom.py's
+decoder) and searching for it: **the only room script with call 488 is tw01.ard (Traverse Town)**, at
+offset 0x28ee3d of the decompressed file (script code sits at offsets 1 mod 4 there, as in the other
+rooms). The words around it read as a choice dispatch: `push 2; jump-if 3 ...; push 3; jump-if 4 -> lib 488`,
+so it is most likely a conversation menu's third answer that opens the Gummi editor (who says it in
+tw01 is not read yet: vmdis.py on the host at that room would show the VM and its entity). The user's
+saves (Agrabah, End of the World) are not in Traverse Town: the route to gb.x is a save there, or a
+walk from a world's save point via the world map's Traverse Town. Lib 487 (func_001d8b28) is in most
+End of the World rooms, cp21, di01 / di03, dh05, pc05, tw03 and iz46 / iz48.
