@@ -23,7 +23,9 @@
  *
  * Session 142: a second port cache with kh1_gsmem_tex_raw (a stamp miss on pages holding the words an
  * entry of the layout came from is a hit without reading the texels) beside it must give the same
- * answers and counts on every case. */
+ * answers and counts on every case.  2026-11-03: a third with kh1_gsmem_tex_ver too (a stamp miss on pages no store
+ * reached since an entry of the layout was seen is a hit without reading their words), each version hit checked
+ * against the pages' words: the same answers again, none checked wrong. */
 #include "common.h"
 #include "../../host/null/gsmem.h"
 #include "platform/texcache.h"
@@ -40,6 +42,7 @@ enum { KEY_STAMP, KEY_BYTES, KEY_BOTH, KEYS };
 static const char *key_name[KEYS] = { "stamp", "bytes", "both" };
 static KH1TexCache port;
 static KH1TexCache port_raw; /* session 142: the port's cache with kh1_gsmem_tex_raw: the same answers */
+static KH1TexCache port_ver; /* 2026-11-03: with kh1_gsmem_tex_ver as well */
 
 typedef struct {
     u32 used, lo, hi, stamp, hash, age;
@@ -107,7 +110,7 @@ static void port_read(u32 lo, u32 hi, u32 *out, void *ctx) {
 
 /* every key's draw, each checked against the fresh read; the port's too (0 for a render target's
  * texture: nothing to check, counted in port_target) */
-static int stale, port_stale, port_target, raw_stale;
+static int stale, port_stale, port_target, raw_stale, ver_stale;
 static void draw(u32 lo, u32 hi) {
     int k, decoded;
     u32 n = tex_w(lo) * tex_h(lo, hi), i;
@@ -126,14 +129,23 @@ static void draw(u32 lo, u32 hi) {
                          &decoded);
     for (i = 0; t && i < n; i++)
         if (t[i] != fresh[i]) { raw_stale++; break; }
+    t = kh1_texcache_get(&port_ver, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), port_read, 0,
+                         &decoded);
+    for (i = 0; t && i < n; i++)
+        if (t[i] != fresh[i]) { ver_stale++; break; }
 }
 
 static void reset(void) {
     memset(cache, 0, sizeof cache);
-    stale = port_stale = port_target = raw_stale = 0;
+    stale = port_stale = port_target = raw_stale = ver_stale = 0;
     kh1_texcache_init(&port);
     kh1_texcache_init(&port_raw);
     port_raw.raw = kh1_gsmem_tex_raw;
+    kh1_texcache_init(&port_ver);
+    port_ver.raw = kh1_gsmem_tex_raw;
+    port_ver.ver = kh1_gsmem_tex_ver;
+    port_ver.same = kh1_gsmem_tex_raw_same;
+    port_ver.ver_check = 1;
     kh1_gsmem_reset();
 }
 
@@ -143,7 +155,10 @@ static int port_as_both(void) {
            port.hashed == cache[KEY_BOTH].hashed && port.draws == cache[KEY_BOTH].draws &&
            port.stamp_hits + port.hash_hits + port.decodes == port.draws && raw_stale == 0 &&
            port_raw.stamp_hits == port.stamp_hits && port_raw.hash_hits == port.hash_hits &&
-           port_raw.decodes == port.decodes && port_raw.draws == port.draws;
+           port_raw.decodes == port.decodes && port_raw.draws == port.draws && ver_stale == 0 &&
+           port_ver.ver_bad == 0 && port_ver.stamp_hits == port.stamp_hits &&
+           port_ver.hash_hits == port.hash_hits && port_ver.decodes == port.decodes && port_ver.draws == port.draws &&
+           port_ver.ver_hits + port_ver.raw_hits == port_raw.raw_hits;
 }
 
 /* an upload of w x h pixels in psm at block bp (BW bw), texel (x, y) = f(x, y, seed) */
@@ -180,6 +195,8 @@ static void report(const char *name) {
     printf("texcache_test: %s, port cache: %u draws, %u stamp hits, %u hash hits, %u decodes, %u targets, "
            "%u texels hashed, %u decoded\n", name, port.draws, port.stamp_hits, port.hash_hits, port.decodes,
            port.targets, port.hashed, port.decoded);
+    printf("texcache_test: %s, version cache: %u version hits, %u raw hits\n", name, port_ver.ver_hits,
+           port_ver.raw_hits);
 }
 
 #define TEX0(bp, bw, psm, tw, th) ((u32)(bp) | (u32)(bw) << 14 | (u32)(psm) << 20 | (u32)(tw) << 26 | (u32)(th) << 30)

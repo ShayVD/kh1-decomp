@@ -115,6 +115,10 @@ extern void (*kh1_gsmem_clut_hook)(u32 tex0_lo, u32 tex0_hi);
 u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);
 /* session 142: the raw words of the pages the texture's texels lie in (texcache.h's KH1TexRaw) */
 u32 kh1_gsmem_tex_raw(u32 tex0_lo, u32 tex0_hi, u32 *out, u32 max);
+/* 2026-11-03: the pages' newest content version (texcache.h's KH1TexVer: moves only when a store reaches them) */
+u32 kh1_gsmem_tex_ver(u32 tex0_lo, u32 tex0_hi);
+/* 2026-11-03: 1 when the pages hold those words (texcache.h's KH1TexRawSame), compared in place */
+int kh1_gsmem_tex_raw_same(u32 tex0_lo, u32 tex0_hi, const u32 *raw, u32 n);
 /* session 142: GS memory as it is now copied (the pages stored to since the last copy: their count, -1 when
  * the copy's 4 MiB cannot be had), then read from the copy as kh1_gsmem_read_block / _read_rect /
  * _tex_stamp read the live memory, by another thread too (the GPU frame's, gsqueue.h's kh1_gpuq) */
