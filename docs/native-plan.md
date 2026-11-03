@@ -542,8 +542,24 @@ compare. A hash that differs between the NEON and scalar forms would only cost h
 tests/host/texcache_test.c runs a fourth cache with signatures, and the slot 0x3600's picture coming back after
 another is a signature hit.
 
-Not measured yet: the Vita hardware A/B (`texver=1` against `=2`, fight_en.txt). Vita3K's times aren't hardware
-times. The ~66% cut in µs per lookup there would be ~250 ms a fight window on the worker if it carries over.
+**Vita A/B (2026-11-03, Shay's Vita, one build, tools/vita/hw_run.sh `renderer=native frames=14000
+pad=fight_en.txt texver=1|2`, means over frames 9,000-14,000 with ~/vita-tools/kh1-winavg.py)**: both reached frame
+14,000 and stopped cleanly.
+
+| | texver=1 | texver=2 |
+|---|---|---|
+| cache stamp misses (last window): version; signature; raw hits | 72; -; 892 | 401; 1,337; 98 |
+| texture lookups a window: ms; µs each (last 40 windows) | 214; 78 | 117; 40 |
+| gs worker thread; busy; GPU thread (ms a window) | 1,483; 1,765; 1,650 | 1,446; 1,742; 1,677 |
+| pictures/s | 25.4 | 25.2 |
+
+So the lookups lose ~100 ms a window (45%), well short of the ~0.3 s hoped for. The worker's totals move by only
+25-40 ms (one run each, so that's within noise). Pictures/s don't move because the GPU thread is the limit. What's
+left in the lookups is ~2,500 blocks hashed at a lookup a window: stores outside the NEON block uploads (the T8 row
+runs, T4, the sprites). Hashing those as they're stored, as `band_*` does, is the next cut. Host check (en.iso,
+dive_en.txt to 21,000, gxmcheck, `KH1_HOST_TEXVERCHECK=1`): all 168 GPU target hashes are the same as main's.
+`0 checked wrong`. 135,523 of main's 156,527 raw hits are signature hits. Only the mock's draw counts differ
+(a texture hit on another entry with the same bytes splits or joins a batch differently).
 
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
