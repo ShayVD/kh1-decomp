@@ -31,6 +31,7 @@ typedef struct {
     u32 *tex;    /* n stored texels, row by row */
     u32 *raw;    /* session 142: the raw words of the pages the texels lie in, when last seen (KH1TexRaw) */
     u32 nraw;
+    u32 ver;     /* 2026-11-03: the pages' content version the bytes were last seen at (KH1TexVer), 0: none */
 } KH1TexSlot;
 
 /* session 142: the raw words of every page TEX0 (lo, hi)'s texels lie in, at most max, into out: their
@@ -39,6 +40,14 @@ typedef struct {
  * few textures through one slot every frame, each a stamp miss) */
 typedef u32 (*KH1TexRaw)(u32 tex0_lo, u32 tex0_hi, u32 *out, u32 max);
 #define KH1_TEXCACHE_RAW (64u * 2048) /* words: 64 pages */
+/* 2026-11-03 (docs/native-plan.md "Texture stamp misses by content versions"): the newest content version of the
+ * pages TEX0 (lo, hi)'s texels lie in, one that moves only when a store reaches them (a page's stamp also moves
+ * when a draw marks it); 0 when not known.  On a stamp miss an entry of the same layout seen at the same version
+ * holds the pages' bytes as they are: a hit with no word copied or compared */
+typedef u32 (*KH1TexVer)(u32 tex0_lo, u32 tex0_hi);
+/* 2026-11-03: 1 when the pages TEX0 (lo, hi)'s texels lie in hold the n words a KH1TexRaw gave, compared in place
+ * (no copy on a raw hit) */
+typedef int (*KH1TexRawSame)(u32 tex0_lo, u32 tex0_hi, const u32 *raw, u32 n);
 
 typedef struct {
     KH1TexSlot slot[KH1_TEXCACHE_SLOTS];
@@ -55,6 +64,11 @@ typedef struct {
     KH1TexRaw raw;  /* session 142: set by the caller after kh1_texcache_init, or 0 */
     u32 *rawbuf;    /* KH1_TEXCACHE_RAW words */
     u32 raw_hits;   /* of hash_hits: the pages' words held, no texel read */
+    KH1TexVer ver;  /* 2026-11-03: set by the caller after kh1_texcache_init, or 0 */
+    KH1TexRawSame same; /* 2026-11-03: the same, or 0 (raw's words copied and compared) */
+    u32 ver_hits;   /* of hash_hits: the pages' version held, nothing read */
+    int ver_check;  /* nonzero: each version hit's pages also compared with the entry's words (ver_bad) */
+    u32 ver_bad;
 } KH1TexCache;
 
 /* reads the texture TEX0 (lo, hi) names: its 1 << TW by 1 << TH stored texels, row by row, into out */

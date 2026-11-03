@@ -168,6 +168,7 @@ extern u32 kh1_snd_ticks, kh1_snd_rpcs, kh1_snd_fifo_full, kh1_iop_insns;
 int kh1_spu2_voices_on(void);
 #include "platform/ovl.h"
 #include "present.h"
+const KH1TexCache *kh1_pipes_texcache_if(void);
 #include "gsmem.h"
 #include "gsregs.h"
 #include "gsqueue.h"
@@ -780,6 +781,20 @@ static int watchdog(SceSize args, void *argp) {
                          kh1_pipes_texskip, kh1_pipes_tex_n - tn0, kh1_pipes_tex_same - ts0, kh1_pipes_tex_dec - td0,
                          (kh1_pipes_tex_us - tu0) / 1000);
                     ts0 = kh1_pipes_tex_same;
+                    { /* 2026-11-03: the cache's lookups by how they hit (texcache.c, texver=) */
+                        extern int kh1_pipes_texver;
+                        const KH1TexCache *tc = kh1_pipes_texcache_if();
+                        static u32 q[6];
+                        if (tc) {
+                            u32 hh = tc->hash_hits - tc->ver_hits - tc->raw_hits;
+                            vlog("kh1-vita: texture cache (texver=%d): %u lookups, %u stamp hits, %u version hits, %u raw "
+                                 "hits, %u hashed hits, %u decodes\n", kh1_pipes_texver, tc->draws - q[0],
+                                 tc->stamp_hits - q[1], tc->ver_hits - q[2], tc->raw_hits - q[3], hh - q[4],
+                                 tc->decodes - q[5]);
+                            q[0] = tc->draws; q[1] = tc->stamp_hits; q[2] = tc->ver_hits; q[3] = tc->raw_hits;
+                            q[4] = hh; q[5] = tc->decodes;
+                        }
+                    }
                     cn0 = kh1_pipes_clut_n;
                     cs0 = kh1_pipes_clut_skipped;
                     cu0 = kh1_pipes_clut_us;
@@ -938,6 +953,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);
         else if (strcmp(line, "clutskip") == 0) { extern int kh1_pipes_clutskip; kh1_pipes_clutskip = atoi(v); }
         else if (strcmp(line, "texskip") == 0) { extern int kh1_pipes_texskip; kh1_pipes_texskip = atoi(v); }
+        else if (strcmp(line, "texver") == 0) { extern int kh1_pipes_texver; kh1_pipes_texver = atoi(v); }
         else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
         else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
         else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);

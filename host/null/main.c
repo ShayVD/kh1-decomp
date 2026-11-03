@@ -93,6 +93,8 @@
 #include "platform/vu1.h"
 #include "platform/cmdbuf.h"
 #include "platform/natdraw.h"
+#include "platform/texcache.h"
+const KH1TexCache *kh1_pipes_texcache_if(void);
 #include <time.h>
 extern u32 (*kh1_vu1_clock)(void);
 extern volatile u32 kh1_pipes_frame_us[7];
@@ -150,6 +152,15 @@ static void host_clock_report(void) {
         if (kh1_pipes_tex_n)
             printf("kh1-host: texskip=%d: %u texture lookups, %u of them the last one's texture, %u decoded\n",
                    kh1_pipes_texskip, kh1_pipes_tex_n, kh1_pipes_tex_same, kh1_pipes_tex_dec);
+    }
+    { /* 2026-11-03: the recorder's texture cache by how each lookup hit (texcache.c, texver) */
+        extern int kh1_pipes_texver;
+        const KH1TexCache *c = kh1_pipes_texcache_if();
+        if (c && c->draws)
+            printf("kh1-host: texver=%d: %u cache lookups, %u stamp hits, %u version hits (%u checked wrong), %u raw "
+                   "hits, %u hashed hits, %u decodes, %u targets\n", kh1_pipes_texver, c->draws, c->stamp_hits,
+                   c->ver_hits, c->ver_bad, c->raw_hits, c->hash_hits - c->ver_hits - c->raw_hits, c->decodes,
+                   c->targets);
     }
 }
 #include "gsregs.h"
@@ -564,6 +575,10 @@ int main(int argc, char **argv) {
             { /* 2026-11-02: KH1_HOST_CLUTSKIP=0 sends every CLUT load to the recorder (pipes.c on_clut; the Vita's clutskip=) */
                 extern int kh1_pipes_clutskip;
                 if (getenv("KH1_HOST_CLUTSKIP")) kh1_pipes_clutskip = atoi(getenv("KH1_HOST_CLUTSKIP"));
+            }
+            { /* 2026-11-03: KH1_HOST_TEXVER=0 checks a stamp miss's pages by their words (texcache.c; the Vita's texver=) */
+                extern int kh1_pipes_texver;
+                if (getenv("KH1_HOST_TEXVER")) kh1_pipes_texver = atoi(getenv("KH1_HOST_TEXVER"));
             }
             { /* 2026-11-02: KH1_HOST_TEXSKIP=0 looks every texture up again (pipes.c tex_lookup; the Vita's texskip=) */
                 extern int kh1_pipes_texskip;
