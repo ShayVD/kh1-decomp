@@ -117,6 +117,10 @@ u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);
 u32 kh1_gsmem_tex_raw(u32 tex0_lo, u32 tex0_hi, u32 *out, u32 max);
 /* 2026-11-03: the pages' newest content version (texcache.h's KH1TexVer: moves only when a store reaches them) */
 u32 kh1_gsmem_tex_ver(u32 tex0_lo, u32 tex0_hi);
+/* 2026-11-03: TEX0's content signature from its blocks' hashes into sig[0..1] (texcache.h's KH1TexSig): 1, or 0 when
+ * not known; kh1_gsmem_sig_lazy, the blocks it has hashed itself so far */
+int kh1_gsmem_tex_sig(u32 tex0_lo, u32 tex0_hi, u32 *sig);
+u32 kh1_gsmem_sig_lazy(void);
 /* 2026-11-03: 1 when the pages hold those words (texcache.h's KH1TexRawSame), compared in place */
 int kh1_gsmem_tex_raw_same(u32 tex0_lo, u32 tex0_hi, const u32 *raw, u32 n);
 /* session 142: GS memory as it is now copied (the pages stored to since the last copy: their count, -1 when
