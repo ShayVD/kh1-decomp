@@ -12,7 +12,7 @@ M2C_UNK func_001ed278(M2C_UNK, s32, s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_00f34fd0();
 M2C_UNK func_00f350d0();
 M2C_UNK func_00f35288();
-M2C_UNK func_00f41710();
+M2C_UNK func_00f41710(s32, s32);
 M2C_UNK func_00f419b8(s32);
 M2C_UNK sceVu0MulMatrix(s32, void *, s32);
 M2C_UNK sceVu0UnitMatrix(void *);
@@ -121,8 +121,8 @@ void func_00f33d18(s32 arg0, s32 arg1) {
     sceVu0MulMatrix(arg0, sp, arg0);
 }
 
-void func_00f33da0(void) {
-    func_00f41710();
+void func_00f33da0(s32 arg0, s32 arg1) {
+    func_00f41710(arg0, arg1);
 }
 
 void func_00f33db8(s32 arg0) {

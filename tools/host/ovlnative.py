@@ -242,8 +242,11 @@ def build(cc, cflags, out, nm):
     else:
         objs.append(obj)
     # the data names as linker-script symbols (an assembler .set to another object's symbol
-    # stays undefined): census.py appends build.script to its aliases.ld
-    build.script = "".join("PROVIDE(%s_%s = kh1_memmap + 0x%X);\n" % (name, d, int(d[2:], 16) - MEM_BASE)
+    # stays undefined): census.py appends build.script to its aliases.ld. An assignment, not
+    # PROVIDE (session 145): a CONTEXT_ONLY copy of an overlay variable (wm.x's
+    # `CONTEXT_ONLY W58 D_00F87E98[1]`) is a weak definition off the EE, which a PROVIDE yields
+    # to, so the C read a one-element array instead of the loaded file; a script assignment wins
+    build.script = "".join("%s_%s = kh1_memmap + 0x%X;\n" % (name, d, int(d[2:], 16) - MEM_BASE)
                            for name, _p, _e, _f, data in gen for d in data or ())
     print("ovl: native overlays linked: %s" % (" ".join(n + ".x" + ("" if not extra_pins(n) else " (+%d pin%s)" % (
         len(extra_pins(n)), "s" if len(extra_pins(n)) > 1 else "")) for n in linked) or "none"))

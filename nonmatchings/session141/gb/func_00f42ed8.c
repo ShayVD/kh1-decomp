@@ -2,6 +2,7 @@
 /* Round 41 wwm2: score 144 -> 127, port.py of the wm twin func_00f69fd0 draft (r41/twins.py pairs wm and gb drafts with the same target mnemonics). Earlier header below. */
 /* 142 words / score 144 (720 vs 736). Logic complete (init of ~30 globals, D_00F707CC vtable calls, PlatBreak bounds check). Store order is the hill-climb result (15 min, from score 182). Also left: &D_00F702D8/&D_00F702DC are materialised in s0/s1 before the func_001be278 call, and 1/128 constants sit in s8/s3; 16 bytes short */
 /* 113 words, score 183 (732 vs 736; was 148/184). Round 33 wwm2: hill2 moved `D_00F82A9C = D_00F707D0.xC` and `D_00F70738 = 0` within the init block; ctx2 gives nothing. Earlier header: score 184. Init function: around 30 global stores, sceGsSyncPath, func_001be278, then a one-time block that loads a module via func_0024b778/func_0024b7a0 and registers four callbacks through o->fn. The original preloads 1 (s8) and 128 (s3) into saved registers before sceGsSyncPath, so the 128 and 1 constants are probably shared variables. The store schedule is still far off. */
+#include "platform/thread.h"
 typedef struct { void *x0; void *x4; void (*fn)(void (*)(void), s32, s32); } Obj;
 typedef struct { s32 x0, x4, x8, xC, x10, x14, x18; } Hdr;
 extern s32 D_00F829F4;
@@ -114,7 +115,7 @@ void func_00f42ed8(s32 a)
         D_00F707CC = func_0024b7a0(5, top, 0, sz);
         D_00F829C0 = top + sz;
         if (D_00F707D0.x18 < top + sz + 0x8800 - D_00F707D0.x14) {
-            __asm__ volatile("break");
+            PlatBreak();
         }
         func_00f42ea0();
         D_00F707CC->fn(func_00f43d70, 1, 0);

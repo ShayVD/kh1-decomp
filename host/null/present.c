@@ -120,6 +120,7 @@ static void present_after(u32 tadr) {
 }
 
 void kh1_present_wide(s32 side16) { shot_side16 = side16; }
+void kh1_present_dir(const char *dir) { shot_dir = dir; }
 
 int kh1_present_init(s32 w, s32 h, int target, const char *dir, const void *send) {
     if (w <= 0 || h <= 0 || w > 4096 || h > 4096) return -1;

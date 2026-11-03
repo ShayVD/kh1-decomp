@@ -10,7 +10,14 @@ typedef union {
 
 Qw *func_00f21e90(void);
 void func_00f21ea0(Qw *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 Qw *func_00f7ef20(Qw *, s32, s32, s32, s32, u8 *, s32, s32);
+#else
+Qw * func_00f7ef20(Qw *, s32, s32, s32, s32, u8 *, u64, u64);
+static __inline__ Qw * ee_00f7ef20(Qw * x0, s32 x1, s32 x2, s32 x3, s32 x4, u8 * x5, s32 x6, s32 x7) { return func_00f7ef20(x0, x1, x2, x3, x4, x5, x6, x7); }
+#undef func_00f7ef20
+#define func_00f7ef20 ee_00f7ef20
+#endif
 Qw *func_00f7f338(Qw *, s32, s32, s32, s32);
 Qw *func_00f7f128(Qw *, s32, s32, s32);
 Qw *func_00f7f218(Qw *, s32, s32, s32);

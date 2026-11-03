@@ -25,7 +25,14 @@ void func_00f3e3a0(void);
 void func_00f3f2c0(void);
 f32 *func_00f2c848(void);
 f32 *func_00f2c878(void);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f2c8a8(void);
+#else
+f32 func_00f2c8a8();
+static __inline__ void ee_00f2c8a8() { func_00f2c8a8(); }
+#undef func_00f2c8a8
+#define func_00f2c8a8 ee_00f2c8a8
+#endif
 void func_00f32318(f32 *, f32 *, f32);
 void func_00f404c8(s32, s32);
 void func_001bfac8(void);

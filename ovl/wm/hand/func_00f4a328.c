@@ -38,7 +38,17 @@ void func_00f5df38(s32, s32, void *);
 void func_00f5df90(s32, s32, void *);
 void func_00f5de50(void *, s32);
 Info *func_001bb658(s32);
+#ifdef KH1_PS2
 GbPos func_001bbdf0(Ent *);
+#else /* a port: the definition returns s32 (src/gummi/ship.c); an i386 struct return is a hidden pointer */
+s32 func_001bbdf0(Ent *);
+static __inline__ GbPos ee_001bbdf0(Ent *p) {
+    union { s32 i; GbPos s; } u;
+    u.i = func_001bbdf0(p);
+    return u.s;
+}
+#define func_001bbdf0 ee_001bbdf0
+#endif
 void func_00f5dcf8(void *, s32);
 void func_00f5dd78(void *, void *, void *, void *, Ent *);
 s32 func_00f4cc38(s32, void *);

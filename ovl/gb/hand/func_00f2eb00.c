@@ -7,7 +7,14 @@ void func_001bfac8(void);
 s32 func_00f23c70(s32);
 s32 func_00f23d50(s32);
 void func_00f279a8(s32, void *, s32, s32, s32, s32, OvlMtx, f32, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f27b38(s32, void *, s32, s32, s32, f32, f32, s32, f32);
+#else
+s32 func_00f27b38(s32, void *, s32, s32, s32, s32, f32, f32, f32);
+static __inline__ s32 ee_00f27b38(s32 x0, void * x1, s32 x2, s32 x3, s32 x4, f32 x5, f32 x6, s32 x7, f32 x8) { return func_00f27b38(x0, x1, x2, x3, x4, x7, x5, x6, x8); }
+#undef func_00f27b38
+#define func_00f27b38 ee_00f27b38
+#endif
 void func_00f2e8d8(void);
 void func_00f2e9e0(void);
 extern World *D_00F56DC0;

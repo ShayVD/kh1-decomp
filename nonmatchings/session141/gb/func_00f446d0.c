@@ -35,7 +35,7 @@ u8 *func_001bc4e0(void); CONTEXT_ONLY u8 * func_001bc4e0() { return 0; }
 void func_0011d768(s32);
 void func_0024e468(s32); CONTEXT_ONLY void func_0024e468(s32 a0) {}
 void func_001bfac8(void); CONTEXT_ONLY void func_001bfac8() {}
-void func_00f444d8(s32, s32);
+void func_00f444d8(s32, s32, s32);
 void func_00f43cf0(s32);
 
 #define B(x) (*(u8 *)&(x))
@@ -260,7 +260,7 @@ void func_00f446d0(void) {
             }
             func_001bfac8();
         }
-        func_00f444d8(2, 0);
+        func_00f444d8(2, 0, wait);
         if (D_00F82AC4 == 0) {
             func_0024e468(wait);
         } else {

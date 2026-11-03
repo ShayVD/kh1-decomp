@@ -33,9 +33,9 @@ extern f32 D_00F61378;
 extern Col D_00F71760;
 extern Tbl D_00F61880;
 extern TexSize D_00F61B90[];
-void func_00f37618(s32, OvlVec *, OvlVec *, u64, Col *, s32);
+u64 *func_00f37618(s32, OvlVec *, OvlVec *, u64, Col *, s32);
 
-void func_00f2b800(s32 arg0, s32 arg1) {
+u64 *func_00f2b800(s32 arg0, s32 arg1) {
     OvlVec pos[4];
     OvlVec uv[4];
     Col col;
@@ -78,5 +78,5 @@ void func_00f2b800(s32 arg0, s32 arg1) {
     uv[2][1] = v1;
     uv[3][0] = u1;
     uv[3][1] = v1;
-    func_00f37618(arg1, pos, uv, D_00F56DC0->tex, &col, arg0);
+    return func_00f37618(arg1, pos, uv, D_00F56DC0->tex, &col, arg0);
 }

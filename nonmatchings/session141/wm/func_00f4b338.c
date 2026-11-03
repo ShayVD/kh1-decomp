@@ -25,7 +25,17 @@ typedef struct {
 } GbWorld;
 extern GbWorld *D_00F9B540;
 T14 *func_00f4b258(u16, s32);
+#ifdef KH1_PS2
 GbPos func_001bbdf0(T14 *);
+#else /* a port: the definition returns s32 (src/gummi/ship.c); an i386 struct return is a hidden pointer */
+s32 func_001bbdf0(T14 *);
+static __inline__ GbPos ee_001bbdf0(T14 *p) {
+    union { s32 i; GbPos s; } u;
+    u.i = func_001bbdf0(p);
+    return u.s;
+}
+#define func_001bbdf0 ee_001bbdf0
+#endif
 s32 func_00f4b060(GbPos, GbPos, s32);
 s32 func_00f4afb8(s32);
 

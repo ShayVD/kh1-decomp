@@ -51,7 +51,7 @@ u64 *func_00f66b78(void *);
 void func_00f66b90(void *);
 s32 func_00f4a328(s32, Ctx *, void *, s32, s32, void *);
 void *func_00f528f8(OvlMtx, void *);
-void *func_00f5e8a8(s32, s32, s32, s32, s32, s32, u64, s32, OvlMtx, void *);
+void *func_00f5e8a8(u64, s32, s32, s32, s32, s32, u64, s32, OvlMtx, void *);
 void *func_00f54050(void *, OvlMtx);
 s32 func_00f530f8(s32, Ctx *);
 void func_00f504a8(void);

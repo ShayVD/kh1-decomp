@@ -5,7 +5,14 @@ typedef struct { s32 bone; f32 x; f32 y; f32 z; f32 r; } H;
 OvlMtx *func_001623e0(s32);
 s32 func_00f20020(void);
 s32 func_00f20030(void);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3caf0(void *, f32, f32 *, f32);
+#else
+s32 func_00f3caf0(void *, f32 *, f32, f32);
+static __inline__ s32 ee_00f3caf0(void * x0, f32 x1, f32 * x2, f32 x3) { return func_00f3caf0(x0, x2, x1, x3); }
+#undef func_00f3caf0
+#define func_00f3caf0 ee_00f3caf0
+#endif
 extern H D_00F8C370[];
 extern H D_00F8C460[];
 

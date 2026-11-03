@@ -54,7 +54,14 @@ extern s32 D_00FB6544;
 s32 func_00f78838(void *, s32, s32, s32 *);
 void func_00f78690(s32 *);
 void func_0024bc08(s32, void *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f787b0(s32);
+#else
+f32 func_00f787b0(s32);
+static __inline__ void ee_00f787b0(s32 x0) { func_00f787b0(x0); }
+#undef func_00f787b0
+#define func_00f787b0 ee_00f787b0
+#endif
 s32 func_001b9e88(void);
 CONTEXT_ONLY void func_00f7bde0(void) {}
 void func_00f7b9e0(s32);

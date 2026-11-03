@@ -102,7 +102,11 @@ extern s32 D_00FBB338;
 extern s32 D_00FBB568;
 extern s32 D_00FBDA70;
 extern volatile s8 D_00F85100[];
+#ifdef KH1_PS2
 f32 func_00f2f240(s32, s32);
+#else /* the definition is void: an x86 caller of an f32 one pops an empty x87 stack */
+void func_00f2f240(s32, s32);
+#endif
 f32 func_00f62b88(s32);
 s32 func_001ed278(s32, s32, s32, s32, s32);
 s32 func_001efbb8(s32);

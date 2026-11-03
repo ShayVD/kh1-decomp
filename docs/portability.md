@@ -305,6 +305,16 @@ rewrite matched code.
     trees, so it also sees headers, struct typedefs, `()` declarations, block-scope externs and every
     m2c cast at a call, and an f32 an unprototyped call promotes to double. Run both after a new
     declaration (indcheck prints only the rows to act on: SHORT, ABI, PROMO, CLANG).
+    *Session 145:* `abicheck.py --ovl NAME` checks an overlay's C and its drafts the same way, and
+    CONTEXT_ONLY copies count as declarations (off the EE they are weak definitions, so a file's
+    calls take the copy's parameters: wm.x's func_00f3cdd0 called func_00f3caf0 in the EE's order
+    through one). The overlays' wrappers are inline functions plus an object-like macro
+    (`static __inline__ T ee_X(...) { return X(...); }` then `#define X ee_X`): ovlnative.py's
+    names.h already makes `func_X` a macro. **Small structs returned by value** (a 2-byte
+    `GbPos`, a 4-byte `Col`) are the same class problem: one file declares the function as
+    returning the struct, another as returning an int, and i386 returns a struct through a hidden
+    pointer. The host builds with `-freg-struct-return` (tools/host/census.py), which returns a
+    struct of up to 8 bytes in registers like an int; ARM's AAPCS already does for up to 4.
 
 12. **One object, one definition** (session 69). On the PS2 every data name sits at its original
     address, so a matched file may define the fields of one object as variables of their own (the

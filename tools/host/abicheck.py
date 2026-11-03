@@ -12,7 +12,11 @@ and ARM every argument has its place in one sequence (or on the stack), and a
 declared as an integer return (or the other way) works on the EE when the
 caller drops the value, but on x86 it leaves the x87 stack unbalanced.
 
-    python3 -I tools/host/abicheck.py [--tsv out/host/abicheck.tsv]
+    python3 -I tools/host/abicheck.py [--tsv out/host/abicheck.tsv] [--ovl NAME]
+
+--ovl NAME (session 145) checks an overlay's C (ovl/NAME and its drafts.tsv) against its own and
+src/'s definitions: wm.x's func_00f3d4d8 passed func_00f3caf0 (vec, vec, f32, f32) as
+(s32, f32, vec, f32), and the host crashed on the first world picked on the map.
 
 compares every prototype (`T f(...);`) and m2c cast (`#define f ((T (*)(...)) f)`)
 of a func_ name in src/ with the definition, parameter by parameter, by class:
@@ -39,6 +43,9 @@ CAST_RX = re.compile(r"^#define\s+(func_[0-9a-f]{8}|[A-Za-z_]\w*)\s+\(\(\s*([\w 
 INT32 = re.compile(r"(unsigned |signed )?(int|char|short|long|short int|long int)|[su](8|16|32)|M2C_UNK(8|16|32)?|size_t|unsigned|signed|BOOL|bool|vs32|vu32")
 
 
+ARRAYS = ("OvlVec", "OvlMtx", "sceVu0FVECTOR", "sceVu0FMATRIX", "sceVu0IVECTOR", "VECTOR", "MATRIX")
+
+
 def cls(t):
     """The ABI class of a parameter or return type: i32, i64, f32, f64, q128, void, or None (unknown)."""
     t = re.sub(r"\b(const|volatile|register|struct|union|enum|extern|static|inline|__inline__|CONTEXT_ONLY)\b", " ", t)
@@ -62,6 +69,8 @@ def cls(t):
     if s == "void":
         return "void"
     if INT32.fullmatch(s):
+        return "i32"
+    if s in ARRAYS:  # array typedefs: a parameter of one is a pointer (session 145)
         return "i32"
     return None
 
@@ -103,9 +112,15 @@ def ps2_only(s):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--tsv")
+    ap.add_argument("--ovl", help="check an overlay's C (ovl/NAME and its drafts) against its own and src/'s definitions")
     a = ap.parse_args()
     srcs = {f: argcheck.strip_comments(open(os.path.join(ROOT, f), errors="replace").read())
             for f in argcheck.files()}
+    mine = None
+    if a.ovl:  # the overlay's definitions first; only its declarations are checked
+        mine = {f: argcheck.strip_comments(open(os.path.join(ROOT, f), errors="replace").read())
+                for f in argcheck.ovl_files(a.ovl)}
+        srcs = dict(list(mine.items()) + list(srcs.items()))
     defs = {}  # name -> (ret, params, file); a name defined twice (file-local copies) is skipped
     twice = set()
     for f, s in srcs.items():
@@ -120,9 +135,13 @@ def main():
                 twice.add(name)
             defs[name] = (ret, params(p), f)
     rows = []
-    for f, s in sorted(srcs.items()):
+    for f, s in sorted((mine if mine is not None else srcs).items()):
         decls = [(m.start(), m.group(1), m.group(2), m.group(3)) for m in PROTO_RX.finditer(s)]
         decls += [(m.start(), m.group(2), m.group(1), m.group(3)) for m in CAST_RX.finditer(s)]
+        # a CONTEXT_ONLY copy is a weak definition off the EE: the file's calls use its parameters
+        # (session 145: wm.x's func_00f3cdd0 called func_00f3caf0 through one in the EE's order)
+        decls += [(m.start(), m.group(1).replace("CONTEXT_ONLY", " "), m.group(2), m.group(3))
+                  for m in argcheck.DEF_RX.finditer(s) if "CONTEXT_ONLY" in m.group(1)]
         skip = ps2_only(s)
         for pos, ret, name, p in decls:
             if any(a <= pos < b for a, b in skip):

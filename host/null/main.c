@@ -62,6 +62,18 @@
  *                       texels hashed / decoded a frame (host/port/texcache.c)
  *   KH1_HOST_QUIET=1    (session 135) the chain walk without its "dma ch" line per send, as the Vita
  *                       build runs it (host/null/dmawalk.h kh1_dma_quiet)
+ *   KH1_HOST_FORK=N:PAD[,PAD...]  (session 145) at frame N the run forks one child per pad script, which
+ *                       goes on with that script (its lines before N are ignored) and writes its output to
+ *                       PAD.log and its shots (KH1_HOST_SHOT, if set) to PAD.d/; the children run one after
+ *                       another (they share the disc image's file offset) and the parent ends when they have.  Tries inputs from a far frame (a menu after a save
+ *                       load) without replaying the way there.  The null platform's state only: no threads
+ *                       (KH1_HOST_GSQ, KH1_HOST_GPUQ, KH1_HOST_SND=iop are not forked)
+ *   KH1_HOST_SHOT_FROM=N  (session 145) KH1_HOST_SHOT set up at frame N instead of the start: the chain walk
+ *                       and the GS memory model (most of a shot run's time) stay off until then, so what
+ *                       was uploaded before N (fonts, textures) is missing from the shots
+ *   KH1_HOST_DUMP=F[,F...]:ADDR:LEN  (session 145) at each frame F, LEN bytes of the memory map from PS2 address
+ *                       ADDR (the overlay area and up) into DUMP.F (DUMP = the KH1_HOST_FORK child's pad
+ *                       file, or "dump"): diff two runs' dumps to find the variable an input changes
  *   KH1_HOST_MC=DIR     (session 140) a memory card in port 1 (the game's port 0): DIR holds the
  *                       save directories BISLPS-25198-NN/ (host/port/mc_dir.c; tools/host/ps2mc.py
  *                       copies them from an emulator's card).  The game reads and writes them, so
@@ -330,11 +342,118 @@ static void snd_report(void) {
         printf("kh1-host: sender %08x: %u us, %u blocks, %u qwords: %u tags, %u packed, %u A+D, %u reglist, %u image\n",
                t[i].who, t[i].us, t[i].blocks, t[i].qw, t[i].tags, t[i].pk, t[i].ad, t[i].rl, t[i].img);
 }
+/* KH1_HOST_SHOT's set-up: at the start, or (KH1_HOST_SHOT_FROM=N, session 145) at frame N, with the chain
+ * walk and the GS memory model off until then: much faster, but the model holds only what is sent from N
+ * on (a texture uploaded before is missing from the shots) */
+static int shot_setup(void) {
+    const char *shot = getenv("KH1_HOST_SHOT");
+    if (shot && *shot) {
+        const char *c = strchr(shot, ':'), *dir = ".";
+        int w = atoi(shot), h = c ? atoi(c + 1) : 0, target = 0;
+        c = c ? strchr(c + 1, ':') : 0;
+        if (c && strncmp(c + 1, "target", 6) == 0 && (c[7] == 0 || c[7] == ':')) {
+            target = 1;
+            c = c[7] ? c + 7 : 0;
+        }
+        if (c && c[1] == ':') c++; /* W:H::DIR, the source left out */
+        if (c && c[1]) dir = c + 1;
+        if (kh1_present_init(w, h, target, dir, D_002A6890)) {
+            fprintf(stderr, "kh1-host: KH1_HOST_SHOT=%s: want W:H[:target][:DIR]\n", shot);
+            return 2;
+        }
+        if (kh1_host_trace < 2) kh1_host_trace = 2;
+        if (kh1_view_side16) kh1_present_wide(kh1_view_side16); /* session 97 */
+        printf("kh1-host: shot %dx%d of the %s after each frame copy, to %s\n", w, h,
+               target ? "3D target" : "display", dir);
+    }
+    return 0;
+}
+static unsigned long shot_from;
+#include <sys/stat.h>
+#include <sys/wait.h>
+int kh1_null_pad_reload(const char *path);
+void kh1_present_dir(const char *dir);
+static unsigned long fork_frame;
+static char *fork_pads;
+static const char *dump_prefix = "dump";
+/* KH1_HOST_DUMP=F[,F...]:ADDR:LEN */
+extern unsigned char kh1_memmap[];
+static void dump_frame(void) {
+    static const char *spec;
+    static int init;
+    const char *s;
+    unsigned long f, addr, len;
+    char *e;
+    if (!init) {
+        init = 1;
+        spec = getenv("KH1_HOST_DUMP");
+    }
+    if (!spec) return;
+    for (s = spec;;) {
+        f = strtoul(s, &e, 0);
+        if (f == frames) break;
+        if (*e != ',') return;
+        s = e + 1;
+    }
+    s = strchr(spec, ':');
+    if (!s) return;
+    addr = strtoul(s + 1, &e, 0);
+    len = *e == ':' ? strtoul(e + 1, 0, 0) : 0;
+    if (addr < 0x6A0000u || addr + len > 0x2000000u) return; /* the memory map (KH1_MEM_BASE, KH1_MEM_END below) */
+    {
+        char path[512];
+        FILE *o;
+        snprintf(path, sizeof path, "%s.%lu", dump_prefix, frames);
+        o = fopen(path, "wb");
+        if (o) {
+            fwrite(kh1_memmap + addr - 0x6A0000u, 1, len, o);
+            fclose(o);
+        }
+    }
+}
+/* KH1_HOST_FORK: returns in each child; the parent waits for them and exits */
+static void fork_runs(void) {
+    static char dir[512], log[512];
+    char *p = fork_pads, *e;
+    int running = 0, st;
+    fflush(stdout);
+    fflush(stderr);
+    for (; p && *p; p = e ? e + 1 : 0) {
+        pid_t pid;
+        e = strchr(p, ',');
+        if (e) *e = 0;
+        /* one at a time: the children share the disc image's open file and its offset */
+        if (running == 1 && wait(&st) > 0) running--;
+        pid = fork();
+        if (pid == 0) {
+            snprintf(log, sizeof log, "%s.log", p);
+            snprintf(dir, sizeof dir, "%s.d", p);
+            mkdir(dir, 0755);
+            if (!freopen(log, "w", stdout) || !freopen(log, "a", stderr)) _exit(3);
+            setvbuf(stdout, 0, _IOLBF, 0);
+            setvbuf(stderr, 0, _IONBF, 0);
+            kh1_present_dir(dir);
+            dump_prefix = p;
+            if (kh1_null_pad_reload(p) < 0) _exit(2);
+            printf("kh1-host: KH1_HOST_FORK: frame %lu, pad %s\n", frames, p);
+            return;
+        }
+        if (pid > 0) running++;
+        else perror("kh1-host: fork");
+    }
+    while (wait(&st) > 0) {}
+    fprintf(stderr, "kh1-host: KH1_HOST_FORK: every run done\n");
+    _exit(0);
+}
+
 void kh1_host_vblank(void) {
     static int in_vblank;
     if (in_vblank) return;
     in_vblank = 1;
     frames++;
+    if (fork_frame && frames == fork_frame) fork_runs();
+    if (shot_from && frames == shot_from && shot_setup()) exit(2);
+    dump_frame();
     kh1_counts_sample();
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
     if (kh1_dma_vu1 && frames % 300 == 0) vu1_line();
@@ -397,8 +516,11 @@ static int ovl_entry(int cmd, int arg) {
 }
 static int ovl_return(siginfo_t *si, void *uc) {
     greg_t *r = ((ucontext_t *)uc)->uc_mcontext.gregs;
-    unsigned long a = (unsigned long)si->si_addr - (unsigned long)kh1_memmap + KH1_MEM_BASE;
-    if (!(ovl_stub || PlatOvlCurrent()) || (void *)r[REG_EIP] != si->si_addr || a < KH1_OVL_BASE || a >= KH1_OVL_END)
+    /* the faulting pc, not si_addr: under Rosetta (an x86 container on an Apple silicon Mac) a
+     * jump into non-executable memory reports another si_addr, while the pc is the entry */
+    unsigned long a = (unsigned long)r[REG_EIP] - (unsigned long)kh1_memmap + KH1_MEM_BASE;
+    (void)si;
+    if (!(ovl_stub || PlatOvlCurrent()) || a < KH1_OVL_BASE || a >= KH1_OVL_END)
         return 0;
     /* every call in src/ is to the entry; a fault further in means the bytes ran (valgrind
      * does not keep data from running, so the stub cannot work under it) */
@@ -425,6 +547,11 @@ static void on_crash(int sig, siginfo_t *si, void *uc) {
     if ((sig == SIGSEGV || sig == SIGILL) && ovl_return(si, uc))
         return;
     fprintf(stderr, "kh1-host: signal %d (%s)\n", sig, strsignal(sig));
+#if defined(REG_EIP) && defined(REG_ESP)
+    /* session 145: the faulting pc and stack, before the backtrace (which faults itself on a broken stack) */
+    fprintf(stderr, "kh1-host: pc %p, sp %p, address %p\n", (void *)((ucontext_t *)uc)->uc_mcontext.gregs[REG_EIP],
+            (void *)((ucontext_t *)uc)->uc_mcontext.gregs[REG_ESP], si->si_addr);
+#endif
     /* executing the memory map: a call into loaded code, an overlay entry such as D_00F20000
      * (docs/vita-port-plan.md 5.2: the overlays need a native build) */
     if ((sig == SIGSEGV || sig == SIGILL) && a < KH1_MEM_END - KH1_MEM_BASE) {
@@ -449,14 +576,28 @@ int main(int argc, char **argv) {
     const char *cd = getenv("KH1_HOST_CD");
     const char *iso = getenv("KH1_HOST_ISO");
     const char *nf = getenv("KH1_HOST_FRAMES");
+    if (getenv("KH1_HOST_SHOT_FROM")) shot_from = strtoul(getenv("KH1_HOST_SHOT_FROM"), 0, 0);
+    if (getenv("KH1_HOST_FORK")) { /* N:PAD[,PAD...] */
+        char *c;
+        fork_frame = strtoul(getenv("KH1_HOST_FORK"), &c, 0);
+        fork_pads = *c == ':' ? strdup(c + 1) : 0;
+        if (!fork_pads) fork_frame = 0;
+    }
     setvbuf(stdout, 0, _IONBF, 0);
     {
         static const int sigs[] = { SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT };
         struct sigaction sa;
         unsigned i;
+        static char alt[65536];
+        stack_t ss;
+        /* session 145: the handler on a stack of its own, so a stack overflow is reported too */
+        ss.ss_sp = alt;
+        ss.ss_size = sizeof alt;
+        ss.ss_flags = 0;
+        sigaltstack(&ss, 0);
         memset(&sa, 0, sizeof sa);
         sa.sa_sigaction = on_crash;
-        sa.sa_flags = SA_SIGINFO;
+        sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
         for (i = 0; i < sizeof sigs / sizeof sigs[0]; i++)
             sigaction(sigs[i], &sa, 0);
     }
@@ -613,26 +754,7 @@ int main(int argc, char **argv) {
     }
     {
         /* KH1_HOST_SHOT=W:H[:target][:DIR] (session 94): the present after each frame copy */
-        const char *shot = getenv("KH1_HOST_SHOT");
-        if (shot && *shot) {
-            const char *c = strchr(shot, ':'), *dir = ".";
-            int w = atoi(shot), h = c ? atoi(c + 1) : 0, target = 0;
-            c = c ? strchr(c + 1, ':') : 0;
-            if (c && strncmp(c + 1, "target", 6) == 0 && (c[7] == 0 || c[7] == ':')) {
-                target = 1;
-                c = c[7] ? c + 7 : 0;
-            }
-            if (c && c[1] == ':') c++; /* W:H::DIR, the source left out */
-            if (c && c[1]) dir = c + 1;
-            if (kh1_present_init(w, h, target, dir, D_002A6890)) {
-                fprintf(stderr, "kh1-host: KH1_HOST_SHOT=%s: want W:H[:target][:DIR]\n", shot);
-                return 2;
-            }
-            if (kh1_host_trace < 2) kh1_host_trace = 2;
-            if (kh1_view_side16) kh1_present_wide(kh1_view_side16); /* session 97 */
-            printf("kh1-host: shot %dx%d of the %s after each frame copy, to %s\n", w, h,
-                   target ? "3D target" : "display", dir);
-        }
+        if (!getenv("KH1_HOST_SHOT_FROM") && shot_setup()) return 2;
     }
     {
         const char *ovl = getenv("KH1_HOST_OVL");

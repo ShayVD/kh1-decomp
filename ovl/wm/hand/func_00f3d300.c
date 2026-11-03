@@ -6,7 +6,14 @@
 typedef struct { f32 pos[3]; s32 rot[3]; f32 size[3]; s32 pad; s32 box; f32 rad; } E;
 typedef struct { s32 pad; s32 n; E e[1]; } H;
 typedef struct { f32 *p; f32 r; H *h; f32 (*m)[4]; s32 hit; } A;
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 s32 func_00f3caf0(f32 *, f32, f32 *, f32);
+#else
+s32 func_00f3caf0(f32 *, f32 *, f32, f32);
+static __inline__ s32 ee_00f3caf0(f32 * x0, f32 x1, f32 * x2, f32 x3) { return func_00f3caf0(x0, x2, x1, x3); }
+#undef func_00f3caf0
+#define func_00f3caf0 ee_00f3caf0
+#endif
 s32 func_00f3cb90(f32 *, f32 *, f32 *, OvlMtx, f32);
 
 void func_00f3d300(A *arg0) {

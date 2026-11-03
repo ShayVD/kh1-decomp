@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-M2C_UNK func_001ba708();
+M2C_UNK func_001ba708(s32);
 M2C_UNK func_001c0310(M2C_UNK, M2C_UNK *, s32, s32, s32);
 M2C_UNK func_00f20248(M2C_UNK);
 M2C_UNK func_00f29450(M2C_UNK);
@@ -30,8 +30,8 @@ void func_00f21c38(void) {
     func_00f20248(0xC);
 }
 
-void func_00f25f60(void) {
-    func_001ba708();
+void func_00f25f60(s32 arg0) {
+    func_001ba708(arg0);
 }
 
 void func_00f26010(s32 arg0, s32 arg1, s32 arg2) {

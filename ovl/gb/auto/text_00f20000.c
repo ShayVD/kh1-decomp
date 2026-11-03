@@ -24,7 +24,7 @@ M2C_UNK func_00f32778(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_00f3db18(s32);
 M2C_UNK func_00f3fe80(M2C_UNK, s32);
 M2C_UNK func_00f50f08(s32);
-M2C_UNK func_00f51588();
+M2C_UNK func_00f51588(s32);
 M2C_UNK memcpy(s32, M2C_UNK *, M2C_UNK);
 M2C_UNK sceVu0RotMatrix(s32, s32, M2C_UNK *);
 M2C_UNK sceVu0UnitMatrix(s32);
@@ -71,7 +71,7 @@ extern s32 D_00F7F4DC;
 extern s32 D_00F806BC;
 extern s32 D_00F806C0;
 s32 func_001b9b78(M2C_UNK);
-s32 func_001ba3f0();
+s32 func_001ba3f0(s32);
 s32 func_001bb500(M2C_UNK, M2C_UNK);
 s32 func_00232cc0(M2C_UNK);
 s32 func_00f26fb8(s32, M2C_UNK, M2C_UNK);
@@ -82,13 +82,13 @@ s32 func_00f3db58(s32, s32, s32);
 s32 func_00f3f9d0(s32);
 s32 func_00f3f9e8(s32);
 s32 func_00f40fc8(s32);
-void *func_001bb658();
+void *func_001bb658(s32);
 void func_001bb870(s32);
 void func_001bfac8(void);
 void func_00f20100(void);
 void func_00f20e48();
 void func_00f25a18();
-void func_00f26458(s32, s32, s32);
+s32 func_00f26458(s32, s32, s32);
 void func_00f28c70();
 void func_00f294b0(M2C_UNK);
 void func_00f2e2a0();
@@ -251,8 +251,8 @@ s32 func_00f23908(s32 arg0) {
     return func_00f3db40(arg0, D_00F74348);
 }
 
-u8 func_00f23bb0(void) {
-    return M2C_FIELD(func_001bb658(), u8 *, 4);
+u8 func_00f23bb0(s32 arg0) {
+    return M2C_FIELD(func_001bb658(arg0), u8 *, 4);
 }
 
 void func_00f23e58(s32 arg0) {
@@ -262,7 +262,7 @@ void func_00f23e58(s32 arg0) {
 
     temp_s1 = arg0 + 0x10E0;
     temp_s0 = M2C_FIELD((D_00F56DC0 + temp_s1), u8 *, 0xC);
-    if ((s32) temp_s0 < func_001ba3f0()) {
+    if ((s32) temp_s0 < func_001ba3f0(arg0)) {
         temp_v1 = D_00F56DC0 + 0xC + temp_s1;
         *temp_v1 += 1;
     }
@@ -306,7 +306,7 @@ s32 func_00f25ec0(s32 arg0) {
 
 void func_00f25f40(s32 arg0) {
     D_00F7F4DC = arg0;
-    func_00f51588();
+    func_00f51588(arg0);
 }
 
 void func_00f25fe8(s32 arg0) {
@@ -323,8 +323,8 @@ void func_00f26408(s32 arg0) {
     func_00f22b48(1);
 }
 
-void func_00f26500(s32 arg0) {
-    func_00f26458(arg0, (s32) &D_00F60D50, 0x70);
+s32 func_00f26500(s32 arg0) {
+    return (s32)func_00f26458(arg0, (s32) &D_00F60D50, 0x70);
 }
 
 void func_00f272f0(s32 arg0) {

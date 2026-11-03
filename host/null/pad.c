@@ -220,6 +220,13 @@ int kh1_null_pad_load(const char *path) {
     return n;
 }
 
+/* KH1_HOST_FORK (host/null/main.c): a forked run goes on with another script from this frame */
+int kh1_null_pad_reload(const char *path) {
+    null_pad_n = 0;
+    null_pad_none = 0;
+    return kh1_null_pad_load(path);
+}
+
 /* the line that holds at this frame (0: before the first, or no script: connected, nothing) */
 static const NullPadLine *now(void) {
     static const NullPadLine idle = { 0, 0, 0, { 128, 128, 128, 128 }, 0, 0, 0, 0 };

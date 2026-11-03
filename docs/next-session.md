@@ -48,6 +48,17 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
+## Latest (2026-11-03): gb.x native, the Gummi flight and garage on the host (session 145)
+
+native-overlays.md "Session 145": gb.x links as native C; the Gummi flight (tests/host/pads/gummi_en.txt) and
+the garage (garage_en.txt) run on the host with no crash, but both are wm.x's code: gb.x (game mode 6) was
+not reached. Fixed on the way: rule 10 / 11 calls in gb and wm (`argcheck.py` / `abicheck.py --ovl`, the
+latter new and reading CONTEXT_ONLY copies), struct returns (`-freg-struct-return`), CONTEXT_ONLY data
+hiding the loaded overlay (ovlnative.py's data names are script assignments now), gumisave.c's stored-pointer
+overlay call. New host switches: KH1_HOST_FORK, KH1_HOST_DUMP, KH1_HOST_SHOT_FROM. **First thing next time**:
+find what starts game mode 6 (gb.x), then check gummi_en.txt against PCSX2 and in Vita3K (after the
+black-screen thread's fix for natively linked overlays).
+
 ## Latest (2026-11-02): the GS worker's packets by sender, repeated CLUT loads (clutskip=1)
 
 native-plan.md "The GS worker's packets by sender, and repeated CLUT loads": the Vita log's new `gs senders` line

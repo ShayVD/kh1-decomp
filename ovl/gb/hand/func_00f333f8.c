@@ -134,7 +134,7 @@ void func_00f333f8(s32 arg) {
         }
     }
     if (arg == 2) {
-        D_00F809C0 = func_001c00e8(-1, func_00f333a0, 0);
+        D_00F809C0 = func_001c00e8(-1, func_00f333a0, KH1_Q(0));
     } else {
         func_00f20290(12);
         func_00f29400(1);
