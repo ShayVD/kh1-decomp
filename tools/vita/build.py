@@ -356,6 +356,16 @@ def main():
         if lost:
             print("vita: %s missing from the link (dropped by LTO?)" % " ".join(lost))
             return 1
+    # 2026-11-02: a CONTEXT_ONLY copy (common.h: weak off the EE, "the real definition wins at link") wins when the
+    # real one is in a library: an archive member is not pulled for a symbol already defined.  wm.x's draft
+    # func_00f7ad38's sinf / cosf returning 0 replaced libm's for the whole game, and the 3D went black on the Vita.
+    # Weak code left in the link is such a copy (the toolchain's own __aeabi_*div0 aside)
+    nms = subprocess.run([census.NM, elf], capture_output=True, text=True).stdout.splitlines()
+    weak = sorted(set(f[2] for f in (l.split() for l in nms) if len(f) == 3 and f[1] == "W" and not f[2].startswith("__aeabi_")))
+    if weak:
+        print("%s: weak code in the link, a CONTEXT_ONLY copy in place of the real definition: %s" % (name, " ".join(weak[:20])))
+        print("  (guard the copy with #ifdef KH1_PS2 in its source)")
+        return 1
     print("%s: %s linked (%d objects, --opt %s)" % (name, os.path.relpath(elf, ROOT), len(objs), a.opt))
     if name == "linux-arm" and a.gxm:
         # 2026-10-31: tools/vita/gxmcheck.sh's run on ARM (NEON, the Vita's float and struct layout), so the
