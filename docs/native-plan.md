@@ -806,6 +806,10 @@ and C for every function its entry and data reach.
 - **Status (session 142)**: wm.x runs as native C on the host from a save to "Select World", Depart and
   back into the field (native-overlays.md "Session 142", tests/host/pads/wm_en.txt). 31 of its 123
   drafts run on that route (tools/host/draftcov.py); none is checked against PCSX2 yet.
+- **Status (session 145)**: gb.x links as native C on the host; its drafts and the gb / wm C got rule
+  10 / 11 and struct-return fixes. The Gummi flight and the garage turned out to be wm.x's code
+  (tests/host/pads/gummi_en.txt, garage_en.txt run with no crash); gb.x itself (game mode 6, "Run Gumi
+  Edit") was never reached, and no PCSX2 or Vita3K check was made (native-overlays.md "Session 145").
 - **Order**: wm.x first (no world past Traverse Town without it), then gb.x (the Gummi flights between
   worlds, and gumisave.c's func_001b9c60 calling the editor through a stored pointer), then xs_simba /
   xs_genie / xs_dumbo / xs_bambi / xs_mushu / xs_tink as each summon is reached, xl_limit.x with the first

@@ -450,3 +450,79 @@ Depart, and back into Agrabah's field with the HUD**, 12,000 frames with no cras
 
 What is next for wm.x: a world that is not the current one (a Gummi flight, most likely gb.x, which has
 no native C yet), Warp Drive, the ship editor, and the PCSX2 check of the 31 drafts above.
+
+## Session 145: gb.x native, and the Gummi flight and garage on the host
+
+Track A's second overlay. gb.x (529 functions: 470 matched, 59 near-miss drafts in ovl/gb/drafts.tsv)
+now links as native C on the host (`ovl: native overlays linked: ... gb.x wm.x`; relocs.tsv 795 pointers,
+15 of them functions). The English disc's gb.x is the pinned file (no pins.tsv). Run on the Mac in an
+x86 Docker container under qemu-user (no ee-gcc or `-m32` gcc on macOS); the notes below on the
+emulator matter for anyone else doing that.
+
+- **The Gummi flight and the garage are wm.x's code, not gb.x's.** With gb.x linked, two new pad scripts
+  run on the English disc with no crash: **tests/host/pads/gummi_en.txt** (save 04 to the ship, the left
+  stick up for 3 frames picks "Warp Hole" on Select World, Depart: the gumi_manual events, the flight's
+  radar HUD from ~7,400 to ~10,100, a white flash at ~11,000, Select World again at ~11,400; 12,500
+  frames) and **tests/host/pads/garage_en.txt** (SQUARE on Select World: the GUMMI BLOCK MENU and the
+  ship editor's screen; 10,000 frames). gb.x loaded in neither. It is game mode 6 (gamestate.c case 6:
+  gumisave.c func_001ba7e0 "Run Gumi Edit", which wm.x stores at D_003772FC and gb.x's own code stores
+  func_001ba870 back); **the route that starts it is not found yet**. Inputs tried: the Save Menu's other
+  rows, START / SELECT / TRIANGLE / SQUARE on Select World, CIRCLE / CROSS / START through the garage.
+  The flight route reached so far ends back on the map, so "arrival in another world" is not shown yet:
+  the destination the 3-frame stick picks is the warp hole, and longer stick presses pick 21 / 23 / 25,
+  whose Depart did not start a flight in 14,000 frames (not read further).
+- **Select World's controls** (read from memory dumps, KH1_HOST_DUMP below): the left stick moves the
+  destination (the word at 0x00FB6108: Agrabah 8; 22 after 3 frames up, 21 held 100 frames up, 23 down,
+  25 up-right), the D-pad UP / DOWN only moves between Normal Drive and Warp Drive, LEFT / RIGHT / L1 / R1
+  do nothing there, SQUARE opens the garage.
+- **gumisave.c func_001b9c60** loads an overlay and calls it through `fn`, the overlay area's address
+  taken before the load. On x86 that faults into the entry trap; on ARM and the Vita nothing redirects
+  it (tools/vita/build.py rewrites calls *of* `D_00F20000`, not of a pointer holding it). Ports now
+  call `((void (*)(void))D_00F20000)()` by name (`#ifdef KH1_PS2` keeps the EE's `fn()`).
+- **Register passthrough in gb** (`argcheck.py --ovl gb`: 21 short calls, 38 void-value uses): every
+  hit fixed from the original's asm (the caller's a0 / a1 passed on, seven tail wrappers return their
+  call's value, the draft func_00f446d0 passes its `wait`, func_00f4ec88 its D_00F82D94 and a1 = 1) except
+  four BENIGN rows in argcheck.py (func_00f40438 / func_00f405c0 are never called; func_00f40830's types
+  0-5 set the arguments it was not given; two comma / tail-return uses).
+- **EE-only argument order (rule 11) in gb and wm**: `abicheck.py --ovl NAME` (new) found 8 in gb and 14 in
+  wm that session 142's one-off scan missed, among them wm.x's func_00f3d4d8 passing func_00f3caf0
+  (vec, vec, f32, f32) as (s32, f32, vec, f32), which crashed the host on the first world picked. It now
+  also reads CONTEXT_ONLY copies (weak definitions off the EE, so a file's calls use their order: wm
+  func_00f3cdd0). Fixed with the rule-11 `#ifdef KH1_PS2` branch and an inline `ee_X` wrapper; two
+  drafts' u64 first argument (func_00f377b0, func_00f5e8a8) declared u64; four callers that declared an
+  f32 return for a void function (or void for an f32 one) given the definition's class off the EE.
+- **Struct returns**: `GbPos func_001bbdf0(...)` (gb and wm, 2 bytes) and util.c's `Col func_001eddc0`
+  (choice.nofill.c calls it as returning an int; START on Select World crashed in it) are i386 hidden-
+  pointer returns; the host now builds with `-freg-struct-return` (portability.md rule 11), and the
+  four GbPos declarations also go through an int-returning wrapper.
+- **CONTEXT_ONLY data hid the loaded overlay**: ovlnative.py's data names were `PROVIDE(...)` linker
+  symbols, and a weak definition wins over a PROVIDE, so wm.x's `CONTEXT_ONLY W58 D_00F87E98[1]` (11
+  such copies in wm / gb) made the native C read a one-element array instead of the file. They are
+  plain script assignments now (`wm_D_00F87E98 = kh1_memmap + ...;`), which win over weak and strong
+  definitions alike.
+- **Open crash**: TRIANGLE then CIRCLE on Select World (the world's picture, worldmap/wi/wp_al.tzb)
+  writes through a null packet pointer in wm's draft func_00f22358 (209 words off) via func_00f667b8.
+  Not on either route.
+- **Not done**: the PCSX2 comparison of these routes (positions, script state, the same frames) and a
+  Vita3K run with gb.x linked. The black-screen thread found that linking wm.x natively blacks out the
+  Dive on the Vita (2026-11-03); gb.x is linked the same way, so check that thread's fix first.
+
+**Host runner additions** (host/null/main.c):
+
+- `KH1_HOST_FORK=N:PAD[,PAD...]`: at frame N the run forks one child per pad script (output in PAD.log,
+  shots in PAD.d/), one after another (they share the disc image's file offset: two at once read each
+  other's sectors). Twelve Select World inputs from frame 6,650 took ~75 s.
+- `KH1_HOST_DUMP=F[,F...]:ADDR:LEN`: the memory map's bytes at those frames, to diff two inputs' effect.
+- `KH1_HOST_SHOT_FROM=N`: shots from frame N without the chain walk before it. Much faster, but a texture
+  uploaded before N (the fonts are uploaded at boot) is missing, so menus come out black: not useful for
+  text. With the chain walk from the start a shot run is ~50x slower than a plain one under emulation.
+- The crash handler runs on its own stack (a broken stack killed it silently) and prints the faulting pc
+  and sp first; the overlay entry trap checks the faulting pc rather than si_addr, which qemu-user
+  reports differently.
+
+**Building under emulation** (x86 Docker on an Apple-silicon Mac): ee-gcc and gcc crash now and then
+(a segfault or a truncated object that `ld` rejects with ".symtab local symbol at index"): retry, and
+delete the truncated object. Worse, qemu-user's ee-as / ld writes `lw` for some `%hi` `lui`s: 20
+kh1.elf functions, gb func_00f429b0 / func_00f46ee0 and wm func_00f2d308 / f39968 / f69aa8 / f6dfd8
+differ from the original only that way, all in files this session did not touch (or touched only under
+`#ifndef KH1_PS2`). Byte-identity has to be checked on real x86 Linux. gdb does not work (no ptrace).
