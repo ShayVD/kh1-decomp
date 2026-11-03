@@ -81,6 +81,8 @@ static u32 gs_tex_stamp(u32 lo, u32 hi) {
     return kh1_pipes_snap ? kh1_gsmem_snap_tex_ver(lo, hi) : kh1_gsmem_tex_stamp(lo, hi);
 }
 void kh1_vita_log(const char *fmt, ...);     /* main.c */
+extern int kh1_cmd_natvbcheck; /* cmdbuf.c, 2026-11-03 */
+extern u32 kh1_cmd_natvb_gxmbad;
 
 #define SHADER_DIR "ux0:data/kh1/shaders"
 #define MAX_INDEX 63999u                     /* SCE_GXM_INDEX_SOURCE_INDEX_16BIT: below 64000 */
@@ -269,6 +271,10 @@ typedef struct {
     SceGxmProgram *prog;
     SceGxmShaderPatcherId id;
     SceGxmVertexProgram *vp;
+    /* 2026-11-03: a native variant's program with 32-bit index fetching, for natvbjoin's joined cached draws, whose
+     * indices run over all of natvb's memory: vp fetches 16 bits (SCE_GXM_INDEX_SOURCE_INDEX_16BIT, "below 64000"), so
+     * an index past 65535 read another entry's vertex and matrix slot (Sora's triangles across the screen) */
+    SceGxmVertexProgram *vp32;
     const SceGxmProgramParameter *u_xf;
     const SceGxmProgramParameter *u_m; /* a native variant's matrices (natdraw.h) */
 } VertProg;
@@ -296,6 +302,12 @@ static int vert_load(u32 i) {
     if (!n || sceGxmShaderPatcherCreateVertexProgram(patcher, v->id, (const SceGxmVertexAttribute *)a, n,
                                                      (const SceGxmVertexStream *)&s, 1, &v->vp) < 0)
         return -1;
+    if (i >= KH1_VERT_NAT && i < KH1_VERT_SKIN) {
+        s.indexSource = SCE_GXM_INDEX_SOURCE_INDEX_32BIT;
+        if (sceGxmShaderPatcherCreateVertexProgram(patcher, v->id, (const SceGxmVertexAttribute *)a, n,
+                                                   (const SceGxmVertexStream *)&s, 1, &v->vp32) < 0)
+            v->vp32 = 0; /* no joined draws then (draw_join) */
+    }
     v->u_xf = sceGxmProgramFindParameterByName(v->prog, "u_xf");
     v->u_m = sceGxmProgramFindParameterByName(v->prog, "u_m");
     return i >= KH1_VERT_NAT && !v->u_m ? -1 : 0;
@@ -509,6 +521,10 @@ static int put_load(void) {
 /* session 150 (the watchdog's): blocks of uploads into targets kept for a target's pixels, and left as outside them;
  * flushes of them that needed no wait for the GPU */
 volatile u32 kh1_vita_pend_in, kh1_vita_pend_out, kh1_vita_pend_nowait;
+/* 2026-11-02 (the fight's ~400 ms of the GPU frame outside its parts): the CPU's writes of them, microseconds in
+ * pend_write (waits left out) and of it the frame start's flush, the blocks written by the kind of target (target.h
+ * KH1_RT_*) and how many of them had all 64 words */
+volatile u32 kh1_vita_pend_us, kh1_vita_pend_us_start, kh1_vita_pend_rt[8], kh1_vita_pend_full;
 
 /* ---- render targets and depth buffers ---- */
 typedef struct {
@@ -972,6 +988,7 @@ static void pend_block(u32 t, u32 b, u64 m, int ct24) {
 /* GS memory's words in the pending blocks into the targets' pixels, the alpha on the 0x80 scale */
 static u8 a8[256];
 static int a8_made;
+static void pend_blk_table(void); /* pend_write's whole-block table, made with the others */
 static void pend_tables(void) {
     u32 c;
     if (!a8_made) {
@@ -983,11 +1000,35 @@ static void pend_tables(void) {
                 inv_x[a] = (u8)x;
                 inv_y[a] = (u8)y;
             }
+        pend_blk_table();
         a8_made = 1;
     }
 }
 /* the value a target pixel holds for GS word v */
 static u32 pend_px(u32 v, int ct24) { return ct24 ? (v & 0xFFFFFF) | 0x80000000u : (v & 0xFFFFFF) | (u32)a8[v >> 24] << 24; }
+/* 2026-11-02 (pendfast=1, the default; 0 the word-by-word writes below for every block): a block with all 64 words
+ * written and wholly inside the target goes in as 8 rows of 8 pixels, each row put together first and stored as one
+ * 32-byte run (the fight's frame-start flush: ~620 such blocks a frame into the slot capture and the off-screen buffer,
+ * ~0.5 s a 2.2 s window on the Vita's GPU thread as 64 scattered word stores each).  The same pixels and values */
+int kh1_vita_pendfast = 1;
+static u8 blk_word[64]; /* a CT32 block's pixel (y * 8 + x) -> its word; 0xFF until made (pend_tables) */
+static int blk_ok;      /* every block of a page holds its words the same way (else no fast path) */
+static void pend_blk_table(void) {
+    u32 k, c;
+    memset(blk_word, 0xFF, sizeof blk_word);
+    blk_ok = 1;
+    for (k = 0; k < 32 && blk_ok; k++) {
+        u32 bx = inv_x[k * 64], by = inv_y[k * 64];
+        for (c = 0; c < 64; c++) {
+            u32 a = k * 64 + c, lx = inv_x[a] - bx, ly = inv_y[a] - by;
+            if (lx >= 8 || ly >= 8 || (k ? blk_word[ly * 8 + lx] != c : blk_word[ly * 8 + lx] != 0xFF)) {
+                blk_ok = 0;
+                break;
+            }
+            if (!k) blk_word[ly * 8 + lx] = (u8)c;
+        }
+    }
+}
 static void pend_write(Target *t, u32 b, u64 m, int ct24) {
     u32 words[64], rel, pg, x0, y0, c;
     pend_tables();
@@ -998,6 +1039,32 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
     y0 = pg / t->fbw * 32;
     if (x0 >= t->w || y0 >= t->h) return;
     gs_read_block(b, words);
+    if (m == ~0ull && kh1_vita_pendfast && blk_ok) {
+        u32 a = (rel & 31) * 64, bx = x0 + inv_x[a], by = y0 + inv_y[a], y, row[8];
+        if (bx + 8 <= t->w && by + 8 <= t->h) {
+            const u8 *wi = blk_word;
+            for (y = 0; y < 8; y++, wi += 8) {
+                for (c = 0; c < 8; c++) row[c] = pend_px(words[wi[c]], ct24);
+                memcpy((u32 *)t->mem + (by + y) * t->stride + bx, row, sizeof row);
+            }
+#ifdef KH1_HOST
+            { /* KH1_HOST_PENDCHECK=1: each word's pixel as the word-by-word path places it, compared */
+                static int chk = -1;
+                static u32 nblk, nbad;
+                if (chk < 0) chk = getenv("KH1_HOST_PENDCHECK") != 0;
+                if (chk) {
+                    for (c = 0; c < 64; c++) {
+                        u32 aa = (rel & 31) * 64 + c, xx = x0 + inv_x[aa], yy = y0 + inv_y[aa];
+                        if (((u32 *)t->mem)[yy * t->stride + xx] != pend_px(words[c], ct24)) nbad++;
+                    }
+                    if (++nblk % 50000 == 0 || (nbad && nbad < 65))
+                        printf("kh1-gxm-pendcheck: %u whole blocks written, %u pixels differ\n", nblk, nbad);
+                }
+            }
+#endif
+            return;
+        }
+    }
     for (c = 0; c < 64; c++) {
         u32 a = (rel & 31) * 64 + c, x = x0 + inv_x[a], y = y0 + inv_y[a], v = words[c];
         if (!(m >> c & 1) || x >= t->w || y >= t->h) continue;
@@ -1029,8 +1096,16 @@ static void pend_flush_sel(u32 sel, int at) {
                 } else kh1_vita_pend_nowait++;
             }
             any = 1;
-            for (j = 0; j < KH1_CMD_TARGETS; j++)
-                if (own >> j & 1) pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
+            {
+                SceUInt64 t1 = sceKernelGetProcessTimeWide();
+                for (j = 0; j < KH1_CMD_TARGETS; j++)
+                    if (own >> j & 1) {
+                        pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
+                        kh1_vita_pend_rt[tgt[j].rt < 8 ? tgt[j].rt : 7]++;
+                        if (pend_mask[b] == ~0ull) kh1_vita_pend_full++;
+                    }
+                kh1_vita_pend_us += (u32)(sceKernelGetProcessTimeWide() - t1);
+            }
             pend_own[b] &= ~own;
         }
         if (pend_own[b]) pend_list[k++] = (u16)b;
@@ -1286,7 +1361,11 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
         if (r->xseq) vb_prev = r->xseq;
     }
     put_tex_at = put_vtx_at = 0; /* 2026-11-01: and with put_fill's staging */
-    pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
+    {
+        SceUInt64 t1 = sceKernelGetProcessTimeWide();
+        pend_flush(0); /* the last frame's uploads its scenes did not need (GS memory as this frame left it) */
+        kh1_vita_pend_us_start += (u32)(sceKernelGetProcessTimeWide() - t1);
+    }
     if (r->vring.head > vbuf_bytes) {
         char d[64];
         snprintf(d, sizeof d, "%u bytes, room for %u", (u32)r->vring.head, (u32)vbuf_bytes);
@@ -1547,6 +1626,11 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                 sceGxmSetCullMode(ctx, c->cull == KH1_NAT_CULL_CCW ? SCE_GXM_CULL_CCW : c->cull == KH1_NAT_CULL_CW ? SCE_GXM_CULL_CW
                                        : SCE_GXM_CULL_NONE);
             if (k && k->xv) { /* 2026-11-02 (natvb): a cached run, indexed, from natvb's GPU memory */
+                if (k->xi32) { /* 2026-11-03: joined runs' 32-bit indices need 32-bit fetching; bound before the uniform
+                                * reserve, which is the bound program's */
+                    if (!vert[vi].vp32) { skip(W_STATE, "no 32-bit index program"); break; }
+                    sceGxmSetVertexProgram(ctx, vert[vi].vp32);
+                }
                 sceGxmReserveVertexDefaultUniformBuffer(ctx, &vb);
                 if (vert[vi].u_xf) sceGxmSetUniformDataF(vb, vert[vi].u_xf, 0, 4, xf);
                 /* 2026-11-02 (natvbjoin): u_m[mlo ..], the entry's home on (cmdbuf.h KH1Cmd.mlo) */
@@ -1559,9 +1643,38 @@ void kh1_vita_gxm_frame(const KH1CmdRec *r) {
                     if (fs->u[4]) sceGxmSetUniformDataF(fb, fs->u[4], 0, 4, xf);
                 }
                 sceGxmSetVertexStream(ctx, 0, k->xv);
-                if (k->xi32) /* 2026-11-02 (natvbjoin): joined cached runs, 32-bit indices into natvb's memory, in the ring */
+                if (k->xi32 && kh1_cmd_natvbcheck) { /* 2026-11-03: each index's vertex against the matrices the draw sets */
+                    const u32 *ix = (const u32 *)(const void *)(vbuf + vat);
+                    const f32 *mm = (const f32 *)(const void *)(ub + c->moff);
+                    u32 q, bad = 0, why = 0, at = 0, mi = 0;
+                    for (q = 0; q < left; q++) {
+                        u32 w = 0, e;
+                        if (ix[q] >= kh1_natvb_bytes / 32u) { w = 1; mi = 0; }
+                        else {
+                            mi = ((const KH1GpuVert *)k->xv)[ix[q]].pad[0] & 0x7F;
+                            if (mi < k->mlo || mi >= c->nmat) w = 2;
+                            else {
+                                const f32 *m = mm + (mi - k->mlo) * 16;
+                                for (e = 0; e < 16 && m[e] == 0.0f; e++) ;
+                                if (e == 16) w = 3;
+                            }
+                        }
+                        if (w && !bad++) { why = w; at = q; }
+                    }
+                    if (bad) {
+                        static u32 said;
+                        kh1_cmd_natvb_gxmbad += bad;
+                        if (said++ < 12)
+                            kh1_vita_log("kh1-natvbcheck: joined draw, %u of %u indices bad (first at %u: %s, index %u, "
+                                         "matrix %u; mlo %u, nmat %u)\n", bad, left, at,
+                                         why == 1 ? "past natvb's memory" : why == 2 ? "matrix outside the draw's" : "zeroed matrix",
+                                         ix[at], mi, k->mlo, c->nmat);
+                    }
+                }
+                if (k->xi32) { /* 2026-11-02 (natvbjoin): joined cached runs, 32-bit indices into natvb's memory, in the ring */
                     sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U32, vbuf + vat, left);
-                else
+                    sceGxmSetVertexProgram(ctx, vert[vi].vp);
+                } else
                     sceGxmDraw(ctx, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, k->xi, left);
                 left = 0;
                 kh1_vita_natvb_draws++;
@@ -1836,6 +1949,7 @@ int kh1_vita_gxm_init(void) {
     if (!ctx || !patcher) return -1;
 #ifdef KH1_HOST
     if (getenv("KH1_HOST_PENDGPU")) kh1_vita_pendgpu = atoi(getenv("KH1_HOST_PENDGPU")); /* config.txt's pendgpu= */
+    if (getenv("KH1_HOST_PENDFAST")) kh1_vita_pendfast = atoi(getenv("KH1_HOST_PENDFAST")); /* config.txt's pendfast= */
 #endif
     sceIoMkdir(SHADER_DIR, 0777);
     /* session 136: SceShaccCgExt's extensions (the Vita's own Cg: __nativecolor, the frame reads) where they

@@ -41,7 +41,11 @@ static u8 vm[VM_BYTES];
 static u8 dirty_pg[512];
 /* session 146: seq at the last store into each page (bytes changed or not; a draw's mark alone is not one) */
 static u32 wr_pg[512];
-#define STORED(pg) (dirty_pg[(pg) & 511] = 1, wr_pg[(pg) & 511] = seq)
+/* 2026-11-03 (docs/native-plan.md "Texture stamp misses by content versions"): each page's version, ver_now at its
+ * last store (a draw's mark is not one, unlike page_seq's); every kh1_gsmem_tex_ver read moves ver_now on, so a
+ * store after a read always leaves a newer version than the read saw */
+static u32 page_ver[512], ver_now = 1;
+#define STORED(pg) (dirty_pg[(pg) & 511] = 1, wr_pg[(pg) & 511] = seq, page_ver[(pg) & 511] = ver_now)
 static u16 clut[512];
 /* session 147c: the kept entries (clut_kept) the last load wrote into the CLUT buffer and how (CPSM, 8-bit, CSA): a
  * load that finds the same entries kept and loads them the same way would store what the buffer already holds */
@@ -107,6 +111,8 @@ void kh1_gsmem_reset(void) {
     memset(wr_pg, 0, sizeof wr_pg);
     memset(clut, 0, sizeof clut);
     memset(page_seq, 0, sizeof page_seq);
+    for (i = 0; i < 512; i++) page_ver[i] = ver_now; /* every page's bytes are new */
+    ver_now++;
     memset(&st, 0, sizeof st);
     memset(&trx, 0, sizeof trx);
     memset(tgt, 0, sizeof tgt);
@@ -1358,6 +1364,42 @@ static int scan_pages(u32 psm, u32 bp, u32 bw, u32 w, u32 h, u32 bits, u32 *s, u
     return 1;
 }
 
+/* 2026-11-02 (docs/native-plan.md "Texture lookups by page lists"): the pages a texture layout's blocks lie in, in
+ * the order of the block walk below (each page where its first block is), kept by TEX0's layout bits.  The newest
+ * stamp is the largest of theirs and the target the first drawn page's in that order, which is the walk's answer
+ * (the first block in a drawn page lies in the first drawn page of the list), from a few words instead of a
+ * kh1_gsmem_addr a block.  The pages hang on the layout only, so a list never goes stale */
+#define TP_KEYS 64
+#define TP_MAX 64
+static struct { u32 lo, hi, n; u16 pg[TP_MAX]; } tp[TP_KEYS];
+static u32 tp_ok[TP_KEYS / 32];
+
+/* the list for TEX0 (lo, hi), made the first time: 0 for a texture over TP_MAX pages (the walk then) */
+static const u16 *tex_pages(u32 lo, u32 hi, u32 psm, u32 bwid, u32 bhgt, u32 *n) {
+    u32 k, seen[512 / 32], x, y, p, m = 0;
+    hi &= 3;
+    k = (lo ^ lo >> 14 ^ lo >> 20 ^ lo >> 26 ^ hi << 6) % TP_KEYS;
+    if (tp_ok[k >> 5] >> (k & 31) & 1 && tp[k].lo == lo && tp[k].hi == hi) {
+        *n = tp[k].n;
+        return tp[k].n <= TP_MAX ? tp[k].pg : 0;
+    }
+    memset(seen, 0, sizeof seen);
+    for (y = 0; y < 1u << ((lo >> 30 | hi << 2) & 15); y += bhgt)
+        for (x = 0; x < 1u << (lo >> 26 & 15); x += bwid) {
+            p = page_of(psm, kh1_gsmem_addr(psm, lo & 0x3FFF, lo >> 14 & 63, x, y));
+            if (seen[p >> 5] >> (p & 31) & 1) continue;
+            seen[p >> 5] |= 1u << (p & 31);
+            if (m < TP_MAX) tp[k].pg[m] = (u16)p;
+            m++;
+        }
+    tp[k].lo = lo;
+    tp[k].hi = hi;
+    tp[k].n = m;
+    tp_ok[k >> 5] |= 1u << (k & 31);
+    *n = m;
+    return m <= TP_MAX ? tp[k].pg : 0;
+}
+
 /* the pages a texture's w x h texels lie in: the newest write's sequence number, and with *t the
  * first page whose drawn bits it reads (1 + its target, 0 for none) */
 static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
@@ -1381,6 +1423,19 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
         m_lo = lo; m_hi = hi; m_marks = marks; m_s = s; m_t = *t; m_ok = 1;
         return s;
     }
+    if (fast_on) {
+        u32 n, i;
+        const u16 *pg = tex_pages(lo, hi, psm, bwid, bhgt, &n);
+        for (i = 0; pg && i < n; i++) {
+            page = pg[i];
+            if (page_seq[page] > s) s = page_seq[page];
+            if (!*t && page_drawn[page] & bits) *t = page_tgt[page];
+        }
+        if (pg) {
+            m_lo = lo; m_hi = hi; m_marks = marks; m_s = s; m_t = *t; m_ok = 1;
+            return s;
+        }
+    }
     /* one address a block: a block never spans two pages */
     for (y = 0; y < 1u << th; y += bhgt)
         for (x = 0; x < 1u << tw; x += bwid) {
@@ -1398,24 +1453,59 @@ u32 kh1_gsmem_tex_stamp(u32 lo, u32 hi) {
     return tex_scan(lo, hi, &t);
 }
 
-/* session 142: the raw words of every page TEX0 (lo, hi)'s texels lie in, in page order, at most max words
- * (include/platform/texcache.h's KH1TexRaw): the texels are read from these words only, so the same words
- * give the same texels.  0 for a format the model does not keep or more pages than max holds */
-u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
+/* 2026-11-03: the newest content version of the pages TEX0 (lo, hi)'s texels lie in (texcache.h's KH1TexVer): while
+ * it holds, no store has reached those pages since, so their words are the same.  0 for a format the model does not
+ * keep */
+u32 kh1_gsmem_tex_ver(u32 lo, u32 hi) {
     u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
-    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, p, n = 0;
-    u32 seen[512 / 32];
+    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, n, i, v = 0;
+    const u16 *pg;
     if (!known(psm) || tw > 10 || th > 10) return 0;
     bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
     bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
-    memset(seen, 0, sizeof seen);
+    if ((pg = tex_pages(lo, hi, psm, bwid, bhgt, &n)) != 0)
+        for (i = 0; i < n; i++) {
+            if (page_ver[pg[i]] > v) v = page_ver[pg[i]];
+        }
+    else
+        for (y = 0; y < 1u << th; y += bhgt)
+            for (x = 0; x < 1u << tw; x += bwid) {
+                u32 p = page_of(psm, kh1_gsmem_addr(psm, tbp, tbw, x, y));
+                if (page_ver[p] > v) v = page_ver[p];
+            }
+    ver_now++;
+    return v;
+}
+
+/* session 142: the raw words of every page TEX0 (lo, hi)'s texels lie in, in page order, at most max words
+ * (include/platform/texcache.h's KH1TexRaw): the texels are read from these words only, so the same words
+ * give the same texels.  0 for a format the model does not keep or more pages than max holds */
+/* the pages TEX0 (lo, hi)'s texels lie in, as bits of seen: their count, 0 for a format the model does not keep */
+static u32 tex_seen(u32 lo, u32 hi, u32 *seen) {
+    u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
+    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, p, n = 0, i;
+    const u16 *pg;
+    memset(seen, 0, 512 / 8);
+    if (!known(psm) || tw > 10 || th > 10) return 0;
+    bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
+    bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
+    if ((pg = tex_pages(lo, hi, psm, bwid, bhgt, &n)) != 0) { /* 2026-11-03: the list, as the walk below finds them */
+        for (i = 0; i < n; i++) seen[pg[i] >> 5] |= 1u << (pg[i] & 31);
+        return n;
+    }
     for (y = 0; y < 1u << th; y += bhgt)
         for (x = 0; x < 1u << tw; x += bwid) {
             p = page_of(psm, kh1_gsmem_addr(psm, tbp, tbw, x, y));
             if (seen[p >> 5] >> (p & 31) & 1) continue;
             seen[p >> 5] |= 1u << (p & 31);
-            if (++n * 2048 > max) return 0;
+            n++;
         }
+    return n;
+}
+
+u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
+    u32 seen[512 / 32], p, n = tex_seen(lo, hi, seen);
+    if (!n || n * 2048 > max) return 0;
     n = 0;
     for (p = 0; p < 512; p++)
         if (seen[p >> 5] >> (p & 31) & 1) {
@@ -1423,6 +1513,19 @@ u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
             n += 2048;
         }
     return n;
+}
+
+/* 2026-11-03: 1 when the pages hold the n words kh1_gsmem_tex_raw gave (texcache.h's KH1TexRawSame), compared where
+ * they lie, a page at a time */
+int kh1_gsmem_tex_raw_same(u32 lo, u32 hi, const u32 *raw, u32 n) {
+    u32 seen[512 / 32], p, k = tex_seen(lo, hi, seen);
+    if (!k || k * 2048 != n) return 0;
+    for (p = 0, k = 0; p < 512; p++)
+        if (seen[p >> 5] >> (p & 31) & 1) {
+            if (!kh1_bytes_same(vm + p * 8192, raw + k, 8192)) return 0;
+            k += 2048;
+        }
+    return 1;
 }
 
 /* ---- session 142: GS memory as a frame left it, for the frame's GPU work on its own thread ----

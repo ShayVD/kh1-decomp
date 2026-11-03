@@ -359,6 +359,150 @@ showed was not reproduced. The clear finding is **the texture lookups: ~240 ms a
 off by every upload and CLUT load (tex_look). That is the next cut: no lookup after an upload or load whose pages miss
 the bound texture's and CLUT's, and a cheaper hit path.
 
+### Texture lookups by page lists (2026-11-02, config.txt `texskip=1`, host `KH1_HOST_TEXSKIP`)
+
+The clutskip A/B above showed ~240 ms a window of texture lookups on the Vita with none decoding (~60-90 us each),
+set off by every upload and every CLUT load (pipes.c `tex_look`), most of them finding the texture they found last
+time. Two cuts, both on the GS worker (host/null/pipes.c, host/null/gsmem.c):
+
+- **The stamp and target from a page list (gsmem.c `tex_pages`).** `tex_scan` answered a texture smaller than a page,
+  or one whose pages name two targets, by a `kh1_gsmem_addr` a block (a 256 x 256 T8 is 256 calls), and its memo
+  goes stale on every upload (`marks` moves). Now each TEX0 layout's pages are listed once, in the block walk's order
+  (each page where its first block falls), up to 64 pages, 64 layouts kept by a hash of TEX0's layout bits; the stamp
+  is the newest of their `page_seq` and the target the first listed page with drawn bits, which is the walk's answer
+  (the first block in a drawn page lies in the first drawn page of the list). A list hangs on the layout only, so it
+  never goes stale. Over 64 pages the walk runs as before.
+- **No lookup that would find the last one's answer (pipes.c `tex_lookup`).** When the TEX0, stamp and target are
+  the last lookup's of this frame, `kh1_texcache_get` would hit the same entry (nothing else touches the cache in
+  between) and the texture op would bind the slot the recorder already has (cmdbuf.c `kh1_cmd_texture`: no decode, no
+  batch break), so neither runs, and no native op is ended for it. The palette half (the draw's CLUT entries against
+  the bound slot) runs only after a CLUT load or a state change (`pal_look`): the CLUT buffer and the bound slot
+  change nowhere else. A frame op starts both afresh (the first lookup marks its entries the frame's).
+  `texskip=0` (host `KH1_HOST_TEXSKIP=0`) looks every time as before; the page lists stay on either way.
+
+The Vita's lookups line now reads `texture lookups (texskip=1): N, N the last one's texture, N decoded, N ms`, and
+the host prints `texskip=1: N texture lookups, N of them the last one's texture, N decoded` at the end.
+
+**Expectation on the Vita.** The GS packet thread's hardware fight run (main 3157883b) has the GPU thread (~1.8 s a
+window) and the game thread (~1.65 s) busier than the GS worker (~1.4 s), with the game waiting only 0-100 ms for the
+worker, and the lookups at ~220 ms a window. So this frees worker time (the lookups line should drop most of its ms)
+without necessarily raising pictures/s by itself.
+
+**Checked (host, en.iso, dive_en.txt to frame 21,000, the gxmcheck binary, the clutskip section's environment, on the
+Mac in a colima VM with qemu-i386 8.2)**: all 168 GPU target hashes identical with main (3157883b).
+
+**Vita A/B (2026-11-03, Shay's Vita, tools/vita/hw_run.sh, `renderer=native frames=23000 pad=dive_en.txt`, both with
+the black-Dive sinf/cosf fix of main 50d21c96; the branch's build also timed each step of a lookup)**: both reached
+frame 23,000 and stopped cleanly. Means over the last 42 windows:
+
+| | main | texskip=1 |
+|---|---|---|
+| texture lookups a window; ms; us each | 4,344; 603; 139 | 4,092 (~37 % the last one's texture); 544; 133 |
+| gs worker busy; the game's wait for it | 2,002 ms; 700 ms | 1,968 ms; 849 ms |
+| pictures/s, frames 18,000-23,000 | 19.4 | 18.9 (one run each: noise) |
+
+With the fix the Dive draws its real scene and the lookups cost ~600 ms a window (the earlier ~240 ms was the collapsed
+picture's). The page lists took the stamp and target to **5 ms** a window and the repeats save ~60 ms, but
+**`kh1_texcache_get` is ~508 ms of the 544**: the time is in the cache on a stamp miss (the texture's pages' stamps
+moved, so it reads the pages' raw words, `kh1_gsmem_tex_raw`'s 8 KiB a page copied and compared, and on a miss there
+hashes the texels), not in the scans; the op is 8 ms and the palette check 18 ms. That is the next cut: keep the
+raw words' check from copying (compare in place, or a per-page content id gsmem.c keeps as it stores), or key the
+entries by the upload's source as stage 4 plans.
+**A scripted fight on the hardware (2026-11-02, Shay's Vita, the merged VPK on main 3157883b, tools/vita/hw_run.sh with
+tests/host/pads/fight_en.txt `renderer=native frames=24000`)**: fight_en.txt is dive_en.txt with the Shadows (12,700-17,990)
+played like a person fights: the left stick round the four ways every 15 frames, CIRCLE 3 frames in every 5, CROSS once
+a cycle. The log's addresses are this ELF's symbols + 0x68000. Per ~2.2 s window in the fight (frame ~15,000):
+
+| | fight (13,000-18,000) | after (18,000-24,000) |
+|---|---|---|
+| pictures/s | 21.6 | 25.5 |
+| threads: gpu / game / gs worker | 1,750-1,840 / 1,630-1,730 / 1,380-1,480 ms | 1,940-2,035 / 1,750-1,830 / 1,610-1,690 ms |
+| the game's wait for the worker | 0-100 ms | 80-220 ms |
+| worker ops | w_qwords 328-381, w_load 283-415, w_load_big 231-388, w_native_dir 253-308, w_block 194-276, w_kick ~70 | w_qwords 455-497, w_load 350-371, w_block 304-344, w_native_dir ~280 |
+| top senders | func_0015ff78 (texture streams) 139-177 ms, ~600 K image qw; func_00237018 (HUD / effects) 18-24 ms | 200-230 ms; 22-29 ms |
+| texture lookups | ~2,500, none decoded, ~215-230 ms | ~2,800, none decoded, ~250-260 ms |
+
+So the HUD's and effects' packets (func_00237018) are ~25 ms a window on the A9, not the ~800 ms of non-image w_block the
+hand-played log suggested; the stage 6 fast 2D path has little to take from the worker. The worker's ~1.2 s of texture
+work (uploads, PATH2 image qwords, the stream's image blocks, the lookups) is stage 4's, but in this fight the worker is
+no longer the limit: the GPU thread is the busiest thread and the game waits little for the worker.
+
+### Uploads into targets a whole block at a time (2026-11-03, config.txt `pendfast=1`, host `KH1_HOST_PENDFAST`)
+
+The fight's GPU frame spent ~400 ms a ~2.2 s window outside its timed parts. The new `uploads into targets written by the
+CPU` line (gxm.c pend_write, waits left out) found it: ~420-520 ms a window, ~90 % of it the frame start's flush, about
+620 blocks a frame into the slot capture and the off-screen buffer, every one with all 64 words written. Each went in
+as 64 single-word stores at scattered pixels. `pendfast=1` writes such a block (whole, inside the target) as 8 rows of
+8 pixels, each row put together and stored as one 32-byte run; `pendfast=0` keeps the word-by-word writes.
+
+**Checked (host, the gxmcheck binary, dive_en.txt to frame 5,250, one binary with KH1_HOST_PENDFAST 0 and 1)**: all 42
+GPU target hashes identical; `KH1_HOST_PENDCHECK=1` compared 1.2 M whole blocks with the word-by-word placement, 0
+pixels differ. **Vita A/B (Shay's Vita, fight_en.txt to frame 18,000, the fight's 53 windows, main + the sinf / cosf
+fix)**: the writes 422 -> 298 ms a window, pictures/s 20.5 -> 20.8 (within the noise), the GPU thread 1,622 -> 1,598 ms.
+A third of the cost, not most of it: the stores into CDRAM were not the whole price (the GS-word reads and pixel
+conversions remain). It stays on.
+
+### Joined cached draws need 32-bit index fetching (2026-11-03, fixes natvbjoin on the Vita)
+
+With the sinf / cosf fix the 3D came back and Sora drew triangles across the screen in fights on the Vita
+(`natvbjoin=0` and `natvb=0` clean, renderer=gs clean). Every vertex program was made with
+`SCE_GXM_INDEX_SOURCE_INDEX_16BIT` ("values must be lower than 64000"), and natvbjoin's joined draws use 32-bit indices
+into all of natvb's memory: past 65,535 the GPU kept the low 16 bits and read another entry's vertex, with that entry's
+matrix slot (a zeroed gap slot of the join: w 0, a triangle across the screen). The host's GPU stand-in read all 32
+bits, so the gxmcheck hashes of natvbjoin's PR never showed it. Now each native variant also gets a program with
+32-bit fetching (gxm.c `vp32`), bound for a joined draw **before** its default uniform reserve (the reserve is the
+bound program's; binding after it left the joined parts with no matrices: Sora missing pieces, the pedestals' weapons
+gone). The stand-in drops the high bits of a 16-bit-fetching program's indices as the Vita does, so a host run catches
+this kind of bug. `natvbcheck=1` (host `KH1_HOST_NATVBCHECK=1`) checks each cached run's matrix indices against its home
+and each joined draw as it is submitted (index range, matrix range, zeroed matrix).
+
+Checked on the Vita (fight_en.txt to frame 18,000, natvbcheck=1, screenshots at pictures 7,900-8,500): 546 K joins, 81 M
+indices checked, 0 bad; Sora and the weapons right in every picture, and by eye through the fight.
+
+### Texture stamp misses by content versions (2026-11-03, config.txt `texver=1`, host `KH1_HOST_TEXVER`)
+
+The section above left `kh1_texcache_get` at ~508 ms a window on the Vita, all of it on a stamp miss: no decodes, and
+every miss a raw hit (`kh1_gsmem_tex_raw` copying the texture's pages, 8 KiB each, then compared with the entry's).
+**Why the stamps move on unchanged textures**: a page's `page_seq` also moves when `draw_into` marks it as a render
+target's (the Dive draws into pages its textures share), and an upload of the same bytes afterwards clears the drawn
+bits without changing a byte, so the texture's stamp is newer but its words are the same. Two cuts
+(host/null/gsmem.c, host/port/texcache.c):
+
+- **A content version a page (gsmem.c `page_ver`, `kh1_gsmem_tex_ver`).** `STORED` (every store into a page, which
+  every path that changes a byte goes through: the pixel stores, the bulk upload loops, the sprites' `st32`) sets the
+  page's version to `ver_now`; a draw's mark does not. `kh1_gsmem_tex_ver` gives the newest version of the texture's
+  pages (by `tex_pages`' list) and moves `ver_now` on, so any store after a read leaves a version newer than the read
+  saw. A reset gives every page a new version. Each cache entry keeps the version it was last seen at; on a stamp miss
+  an entry of the layout at the same version is a hit with no word read (`ver_hits`).
+- **The raw words compared in place (`kh1_gsmem_tex_raw_same`).** When the version moved (a store reached a page,
+  maybe with the same bytes, or another texture in a shared page changed), each entry of the layout's kept words are
+  compared with the pages where they lie, a page at a time with `kh1_bytes_same`; the pages are copied only for an
+  entry that keeps them (a hash hit or a decode).
+
+`texver=0` (host `KH1_HOST_TEXVER=0`) is the old path. The Vita prints `texture cache (texver=N): lookups, stamp hits,
+version hits, raw hits, hashed hits, decodes` a window; the host prints the same at the end (with `KH1_HOST_CLOCK=1`,
+beside the texskip line), and with
+`KH1_HOST_TEXVERCHECK=1` compares every version hit's pages with the entry's words (`checked wrong`).
+tests/host/texcache_test.c runs a third cache with both on beside the others: the same answers on every case.
+
+**Checked (host, en.iso, dive_en.txt to frame 21,000, the gxmcheck binary, the clutskip section's environment, in
+the kh1fast colima VM)**: all 178 `kh1-gxm` lines (the GPU target hashes) identical with `KH1_HOST_TEXVER=0` and `=1`.
+
+**Vita A/B (2026-11-03, Shay's Vita, one build, tools/vita/hw_run.sh `renderer=native frames=23000
+pad=dive_en.txt texver=0|1`)**: both reached frame 23,000 and stopped cleanly. Means over the last 42 windows:
+
+| | texver=0 | texver=1 |
+|---|---|---|
+| texture lookups a window; ms | 4,803; 608 | 5,115; 355 |
+| cache stamp misses: version hits; raw hits | 0; 1,281 | 376; 975 |
+| gs worker busy; game; GPU thread | 1,714; 1,462; 1,770 ms | 1,532; 1,462; 1,843 ms |
+| pictures/s, frames 18,000-23,000 | 22.1 | 23.2 (one run each) |
+
+So ~250 ms a window off the worker. About a quarter of the misses are now version hits; the rest still move their
+version (a store reached one of the pages), and those are cheaper by the copy. The GPU thread is the limit again.
+Next for the lookups: find which stores move the versions of the raw-hit textures (likely same-byte stores through
+`wr32`, which calls `st32` whatever the bytes, or a neighbour texture in a shared page), or block-granular versions.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.

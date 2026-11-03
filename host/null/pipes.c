@@ -47,6 +47,7 @@ static u32 gxm_max_calls, gxm_max_scenes;
 #define batcher (rec->b)
 void *malloc(__SIZE_TYPE__);
 void *calloc(__SIZE_TYPE__, __SIZE_TYPE__);
+char *getenv(const char *);
 void free(void *);
 void *memcpy(void *, const void *, __SIZE_TYPE__);
 char *getenv(const char *);
@@ -70,6 +71,13 @@ static void mark_pal(s32 slot, int fill) {
 static KH1PalCache *pal;
 static KH1TexCache *tex;
 static int tex_ok, tex_look = 1; /* tex_look: a transfer since the last lookup */
+/* 2026-11-02 (docs/native-plan.md "Texture lookups by page lists"): the last lookup's TEX0, stamp and target and
+ * its answer (lt_ok: one since the frame op), and pal_look: a CLUT load since the palette's last check */
+static int lt_ok, pal_look = 1;
+static u32 lt_lo, lt_hi, lt_stamp, lt_tgt;
+int kh1_pipes_texskip = 1; /* config.txt texskip=, host KH1_HOST_TEXSKIP: 0 looks every time as before */
+int kh1_pipes_texver = 1; /* 2026-11-03: config.txt texver=, host KH1_HOST_TEXVER: 0 checks a stamp miss's words as before */
+u32 kh1_pipes_tex_same; /* the lookups that found the last one's texture (the watchdog's) */
 static int oc_ok; /* the last clut op's TEX0, TEXA, id and slot (on_clut's oc_*) are what the recorder holds */
 /* 2026-11-02: the GS worker's CLUT loads and texture lookups on kh1_vu1_clock (the Vita's watchdog prints them): calls,
  * microseconds, and the lookups that decoded the texture */
@@ -194,7 +202,7 @@ static void on_clut(u32 lo, u32 hi) {
     nat_flush(); /* a joined native op first (2026-10-31) */
     kh1_recq_put(r_clut, a, 4, 0, 0);
     a_pslot = (s16)slot;
-    tex_look = 1;
+    tex_look = pal_look = 1;
     if (kh1_vu1_clock) kh1_pipes_clut_us += kh1_vu1_clock() - t0;
 }
 
@@ -215,24 +223,45 @@ static void tex_read(u32 lo, u32 hi, u32 *out, void *ctx) {
         for (x = 0; x < w; x++) out[y * w + x] = kh1_gsmem_read_pixel(lo >> 20 & 63, lo & 0x3FFF, lo >> 14 & 63, x, y);
 }
 
-/* the draw's texture: its entry in the recorder's texture cache (-1: a render target's, or not kept) */
+/* the draw's texture: its entry in the recorder's texture cache (-1: a render target's, or not kept).
+ * 2026-11-02 (docs/native-plan.md "Texture lookups by page lists"): with the TEX0, stamp and target of the last
+ * lookup this frame, the cache would hit that entry again and the texture op would bind the slot the recorder has
+ * (cmdbuf.c kh1_cmd_texture: no decode, no break): neither is done, nor the palette's check without a CLUT load or
+ * a state change since (the CLUT buffer and the bound slot are as it left them) */
 static void tex_lookup(u32 lo, u32 hi) {
     const u32 *t = 0;
     int decoded = 0;
     s32 slot = -1, i;
-    u32 a[5];
-    if (tex_ok) t = kh1_texcache_get(tex, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), tex_read, 0,
-                                     &decoded);
-    for (i = 0; t && i < KH1_TEXCACHE_SLOTS; i++)
-        if (tex->slot[i].tex == t) slot = i;
-    a[0] = lo;
-    a[1] = hi;
-    a[2] = (u32)slot;
-    a[3] = (u32)decoded;
-    a[4] = decoded && slot >= 0 ? tex->slot[slot].n : 0;
-    if (decoded) mark_tex(slot), kh1_pipes_tex_dec++;
-    nat_flush(); /* a joined native op first (2026-10-31) */
-    kh1_recq_put(r_texture, a, 5, 0, 0);
+    u32 a[5], stamp, target;
+    stamp = kh1_gsmem_tex_stamp(lo, hi);
+    target = kh1_gsmem_tex_target(lo, hi);
+    if (lt_ok && lo == lt_lo && hi == lt_hi && stamp == lt_stamp && target == lt_tgt) {
+        kh1_pipes_tex_same++;
+        if (!pal_look) return;
+        a[0] = lo;
+        a[1] = hi;
+    } else {
+        if (tex_ok) t = kh1_texcache_get(tex, lo, hi, stamp, target, tex_read, 0, &decoded);
+        for (i = 0; t && i < KH1_TEXCACHE_SLOTS; i++)
+            if (tex->slot[i].tex == t) {
+                slot = i;
+                break;
+            }
+        a[0] = lo;
+        a[1] = hi;
+        a[2] = (u32)slot;
+        a[3] = (u32)decoded;
+        a[4] = decoded && slot >= 0 ? tex->slot[slot].n : 0;
+        if (decoded) mark_tex(slot), kh1_pipes_tex_dec++;
+        nat_flush(); /* a joined native op first (2026-10-31) */
+        kh1_recq_put(r_texture, a, 5, 0, 0);
+        lt_ok = kh1_pipes_texskip;
+        lt_lo = lo;
+        lt_hi = hi;
+        lt_stamp = stamp;
+        lt_tgt = target;
+    }
+    pal_look = 0;
     /* session 136: an indexed draw reads the CLUT buffer at its own CSA, loaded or not (the GS's rule, and
      * present.c's pal_for): when its entries are not the bound slot's, bind theirs */
     if (pal_of(lo, hi)) {
@@ -274,6 +303,9 @@ static KH1CmdRec *recorder(void) {
         tex = (KH1TexCache *)calloc(1, sizeof *tex);
         tex_ok = kh1_texcache_init(tex) == 0;
         tex->raw = kh1_gsmem_tex_raw; /* session 142: a stamp miss on the same pages' words reads no texel */
+        tex->ver = kh1_pipes_texver ? kh1_gsmem_tex_ver : 0; /* 2026-11-03: nor one on the same pages' version */
+        tex->same = kh1_pipes_texver ? kh1_gsmem_tex_raw_same : 0; /* and the words compared where they lie */
+        tex->ver_check = getenv("KH1_HOST_TEXVERCHECK") != 0; /* the host's check of each version hit */
         kh1_gsmem_xfer_hook = on_xfer;
         kh1_gsmem_clut_hook = on_clut;
         kh1_gs_native_hook = nat_hook;
@@ -289,6 +321,8 @@ void kh1_pipes_start(void) { recorder(); }
 
 const KH1PalCache *kh1_pipes_palcache(void) { recorder(); return pal; }
 const KH1TexCache *kh1_pipes_texcache(void) { recorder(); return tex_ok ? tex : 0; }
+/* 2026-11-03: the same, 0 when no recorder was made (the end-of-run counts) */
+const KH1TexCache *kh1_pipes_texcache_if(void) { return rec && tex_ok ? tex : 0; }
 
 int memcmp(const void *, const void *, __SIZE_TYPE__);
 
@@ -445,7 +479,7 @@ static void prim_state(u32 prim) {
         last_scissor[0] = c->scissor.lo;
         last_scissor[1] = c->scissor.hi;
         have_last = 1;
-        tex_look = 1;
+        tex_look = pal_look = 1;
     }
 same:
     if (tex_look && prim >> 4 & 1) { /* session 127: the binding may have moved: the texture cache's answer */
@@ -918,7 +952,8 @@ static void frame_end(void) {
     kh1_cmd_reset_frame(rec);
     kh1_palcache_frame(pal);
     if (tex_ok) kh1_texcache_frame(tex);
-    tex_look = 1;
+    tex_look = pal_look = 1;
+    lt_ok = 0; /* the frame's first lookup marks its entry the frame's (kh1_texcache_get) */
 }
 
 /* Session 142 (docs/vita-build.md "The GPU frame on the third core"): the frame handed to the hook on another
@@ -1120,7 +1155,8 @@ static int rq_frame(void) {
     /* frame_end's worker side: the caches are the worker's */
     kh1_palcache_frame(pal);
     if (tex_ok) kh1_texcache_frame(tex);
-    tex_look = 1;
+    tex_look = pal_look = 1;
+    lt_ok = 0; /* the frame's first lookup marks its entry the frame's (kh1_texcache_get) */
     pf_mark(5);
     return 0;
 }
