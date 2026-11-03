@@ -427,6 +427,38 @@ hand-played log suggested; the stage 6 fast 2D path has little to take from the 
 work (uploads, PATH2 image qwords, the stream's image blocks, the lookups) is stage 4's, but in this fight the worker is
 no longer the limit: the GPU thread is the busiest thread and the game waits little for the worker.
 
+### Uploads into targets a whole block at a time (2026-11-03, config.txt `pendfast=1`, host `KH1_HOST_PENDFAST`)
+
+The fight's GPU frame spent ~400 ms a ~2.2 s window outside its timed parts. The new `uploads into targets written by the
+CPU` line (gxm.c pend_write, waits left out) found it: ~420-520 ms a window, ~90 % of it the frame start's flush, about
+620 blocks a frame into the slot capture and the off-screen buffer, every one with all 64 words written. Each went in
+as 64 single-word stores at scattered pixels. `pendfast=1` writes such a block (whole, inside the target) as 8 rows of
+8 pixels, each row put together and stored as one 32-byte run; `pendfast=0` keeps the word-by-word writes.
+
+**Checked (host, the gxmcheck binary, dive_en.txt to frame 5,250, one binary with KH1_HOST_PENDFAST 0 and 1)**: all 42
+GPU target hashes identical; `KH1_HOST_PENDCHECK=1` compared 1.2 M whole blocks with the word-by-word placement, 0
+pixels differ. **Vita A/B (Shay's Vita, fight_en.txt to frame 18,000, the fight's 53 windows, main + the sinf / cosf
+fix)**: the writes 422 -> 298 ms a window, pictures/s 20.5 -> 20.8 (within the noise), the GPU thread 1,622 -> 1,598 ms.
+A third of the cost, not most of it: the stores into CDRAM were not the whole price (the GS-word reads and pixel
+conversions remain). It stays on.
+
+### Joined cached draws need 32-bit index fetching (2026-11-03, fixes natvbjoin on the Vita)
+
+With the sinf / cosf fix the 3D came back and Sora drew triangles across the screen in fights on the Vita
+(`natvbjoin=0` and `natvb=0` clean, renderer=gs clean). Every vertex program was made with
+`SCE_GXM_INDEX_SOURCE_INDEX_16BIT` ("values must be lower than 64000"), and natvbjoin's joined draws use 32-bit indices
+into all of natvb's memory: past 65,535 the GPU kept the low 16 bits and read another entry's vertex, with that entry's
+matrix slot (a zeroed gap slot of the join: w 0, a triangle across the screen). The host's GPU stand-in read all 32
+bits, so the gxmcheck hashes of natvbjoin's PR never showed it. Now each native variant also gets a program with
+32-bit fetching (gxm.c `vp32`), bound for a joined draw **before** its default uniform reserve (the reserve is the
+bound program's; binding after it left the joined parts with no matrices: Sora missing pieces, the pedestals' weapons
+gone). The stand-in drops the high bits of a 16-bit-fetching program's indices as the Vita does, so a host run catches
+this kind of bug. `natvbcheck=1` (host `KH1_HOST_NATVBCHECK=1`) checks each cached run's matrix indices against its home
+and each joined draw as it is submitted (index range, matrix range, zeroed matrix).
+
+Checked on the Vita (fight_en.txt to frame 18,000, natvbcheck=1, screenshots at pictures 7,900-8,500): 546 K joins, 81 M
+indices checked, 0 bad; Sora and the weapons right in every picture, and by eye through the fight.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
