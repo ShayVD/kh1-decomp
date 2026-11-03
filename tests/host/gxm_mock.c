@@ -147,8 +147,14 @@ const SceGxmProgramParameter *sceGxmProgramFindParameterByName(const SceGxmProgr
 }
 unsigned int sceGxmProgramParameterGetResourceIndex(const SceGxmProgramParameter *p) { return (unsigned)p->index; }
 
-typedef struct { MockProg *p; int nattr; SceGxmVertexAttribute a[8]; u32 stride; int colclamp; } MockVP;
+typedef struct {
+    MockProg *p; int nattr; SceGxmVertexAttribute a[8]; u32 stride; int colclamp;
+    int ix16; /* 2026-11-03: SCE_GXM_INDEX_SOURCE_INDEX_16BIT: the Vita fetches an index's low 16 bits only */
+} MockVP;
 typedef struct { MockProg *p; int blend; SceGxmBlendInfo bi; int fetch; } MockFP;
+
+/* 2026-11-03: host/vita/main.c's data folder, which gxm.c's shot= writes into (main.c is not in this link) */
+const char kh1_vita_dir[] = "out/gxmcheck";
 
 int sceGxmShaderPatcherRegisterProgram(SceGxmShaderPatcher *sp, const SceGxmProgram *h, SceGxmShaderPatcherId *id) {
     (void)sp;
@@ -164,6 +170,7 @@ int sceGxmShaderPatcherCreateVertexProgram(SceGxmShaderPatcher *sp, SceGxmShader
     v->nattr = (int)n;
     memcpy(v->a, a, n * sizeof *a);
     v->stride = s->stride;
+    v->ix16 = s->indexSource == SCE_GXM_INDEX_SOURCE_INDEX_16BIT;
     *out = (SceGxmVertexProgram *)v;
     return 0;
 }
@@ -776,17 +783,19 @@ static void do_draw(SceGxmPrimitiveType t, const void *ix, int ix32, unsigned in
     const u16 *idx = (const u16 *)ix;
     const u32 *idx32 = (const u32 *)ix;
     unsigned i;
+    u32 msk;
     g.draws++;
     if (!g.raster || !g.col || !g.vp || !g.fp) return;
     if (!g.vp->p->kh1 || !g.fp->p->kh1) return; /* the present's own pair: not interpreted */
     if (t != SCE_GXM_PRIMITIVE_TRIANGLES) { g.lost++; return; }
+    msk = g.vp->ix16 ? 0xFFFFu : ~0u;
     g.c_draws++;
     g.c_verts += n;
     for (i = 0; i + 2 < n; i += 3) {
         Vary v[3];
-        vertex(ix32 ? idx32[i] : idx[i], &v[0]);
-        vertex(ix32 ? idx32[i + 1] : idx[i + 1], &v[1]);
-        vertex(ix32 ? idx32[i + 2] : idx[i + 2], &v[2]);
+        vertex(ix32 ? idx32[i] & msk : idx[i], &v[0]);
+        vertex(ix32 ? idx32[i + 1] & msk : idx[i + 1], &v[1]);
+        vertex(ix32 ? idx32[i + 2] & msk : idx[i + 2], &v[2]);
         if (getenv("KH1_HOST_GXM_VERTS") && g.raster && i < 6)
             printf("kh1-gxm-mock:   tri (%.2f, %.2f, %.4f) (%.2f, %.2f) (%.2f, %.2f) col %.3f %.3f %.3f %.3f clip %u %u..%u %u\n", v[0].x, v[0].y,
                    v[0].z, v[1].x, v[1].y, v[2].x, v[2].y, v[0].col[0], v[0].col[1], v[0].col[2], v[0].col[3], g.cx0, g.cy0, g.cx1, g.cy1);
