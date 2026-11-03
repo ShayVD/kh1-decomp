@@ -549,8 +549,15 @@ pad script's timing.** Found with config.txt's new `padlog=` (vita-build.md):
   ran out (Vita3K slows to ~10 frames/s on the map).
 - **On hardware** the user's hand-played run crashed right after that same first entry call (frame 2,122,
   log ends at `wm.x entry (2, 83) returned 1`). Vita3K does not reproduce it, so it is one of the
-  hardware-only kinds (vita-build.md "On a real Vita": stacks, relocation); no absolute symbol is left
-  in the image (`readelf -s` checked). A psp2core dump of that crash is the next step.
+  hardware-only kinds. **Found and fixed from its psp2core dump**: a data abort in hud/ui.c func_0024a490
+  (the command menu's sprite animation) reading through 0xaaeadb48. func_0024aac8 turns a sprite file's
+  key indices into pointers and skips entries already done with `(s32)ptr <= 0xfffff`; a Vita pointer
+  (0x81xxxxxx) is negative as s32, so the HUD's second set-up on the way to the world map relocated every
+  frame pointer again. The test is unsigned off the EE now (the EE's code unchanged). Vita3K did not fault
+  on the garbage read. The user's hardware run after the fix: wm.x's first entry passes, the world map's
+  files load and the map runs (~3 fps: the watchdog shows the game thread ~2 s of each 2 s, VIF1's walk
+  2,060 ms of it, so the map's 3D is on the emulated VU1 path; 7 bad DMA sends a window, 2,400 by frame
+  2,624). Its speed is a separate task.
 
 **gb.x (game mode 6) is started only by a field script**: library call 488 (vm_lib.c func_001d8b48,
 D_003D9FE0[488]) calls roomload.c func_00112e08, which asks for state 6 (func_00109558(6)); gamestate.c
