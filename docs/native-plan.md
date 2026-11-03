@@ -459,6 +459,50 @@ and each joined draw as it is submitted (index range, matrix range, zeroed matri
 Checked on the Vita (fight_en.txt to frame 18,000, natvbcheck=1, screenshots at pictures 7,900-8,500): 546 K joins, 81 M
 indices checked, 0 bad; Sora and the weapons right in every picture, and by eye through the fight.
 
+### Texture stamp misses by content versions (2026-11-03, config.txt `texver=1`, host `KH1_HOST_TEXVER`)
+
+The section above left `kh1_texcache_get` at ~508 ms a window on the Vita, all of it on a stamp miss: no decodes, and
+every miss a raw hit (`kh1_gsmem_tex_raw` copying the texture's pages, 8 KiB each, then compared with the entry's).
+**Why the stamps move on unchanged textures**: a page's `page_seq` also moves when `draw_into` marks it as a render
+target's (the Dive draws into pages its textures share), and an upload of the same bytes afterwards clears the drawn
+bits without changing a byte, so the texture's stamp is newer but its words are the same. Two cuts
+(host/null/gsmem.c, host/port/texcache.c):
+
+- **A content version a page (gsmem.c `page_ver`, `kh1_gsmem_tex_ver`).** `STORED` (every store into a page, which
+  every path that changes a byte goes through: the pixel stores, the bulk upload loops, the sprites' `st32`) sets the
+  page's version to `ver_now`; a draw's mark does not. `kh1_gsmem_tex_ver` gives the newest version of the texture's
+  pages (by `tex_pages`' list) and moves `ver_now` on, so any store after a read leaves a version newer than the read
+  saw. A reset gives every page a new version. Each cache entry keeps the version it was last seen at; on a stamp miss
+  an entry of the layout at the same version is a hit with no word read (`ver_hits`).
+- **The raw words compared in place (`kh1_gsmem_tex_raw_same`).** When the version moved (a store reached a page,
+  maybe with the same bytes, or another texture in a shared page changed), each entry of the layout's kept words are
+  compared with the pages where they lie, a page at a time with `kh1_bytes_same`; the pages are copied only for an
+  entry that keeps them (a hash hit or a decode).
+
+`texver=0` (host `KH1_HOST_TEXVER=0`) is the old path. The Vita prints `texture cache (texver=N): lookups, stamp hits,
+version hits, raw hits, hashed hits, decodes` a window; the host prints the same at the end (with `KH1_HOST_CLOCK=1`,
+beside the texskip line), and with
+`KH1_HOST_TEXVERCHECK=1` compares every version hit's pages with the entry's words (`checked wrong`).
+tests/host/texcache_test.c runs a third cache with both on beside the others: the same answers on every case.
+
+**Checked (host, en.iso, dive_en.txt to frame 21,000, the gxmcheck binary, the clutskip section's environment, in
+the kh1fast colima VM)**: all 178 `kh1-gxm` lines (the GPU target hashes) identical with `KH1_HOST_TEXVER=0` and `=1`.
+
+**Vita A/B (2026-11-03, Shay's Vita, one build, tools/vita/hw_run.sh `renderer=native frames=23000
+pad=dive_en.txt texver=0|1`)**: both reached frame 23,000 and stopped cleanly. Means over the last 42 windows:
+
+| | texver=0 | texver=1 |
+|---|---|---|
+| texture lookups a window; ms | 4,803; 608 | 5,115; 355 |
+| cache stamp misses: version hits; raw hits | 0; 1,281 | 376; 975 |
+| gs worker busy; game; GPU thread | 1,714; 1,462; 1,770 ms | 1,532; 1,462; 1,843 ms |
+| pictures/s, frames 18,000-23,000 | 22.1 | 23.2 (one run each) |
+
+So ~250 ms a window off the worker. About a quarter of the misses are now version hits; the rest still move their
+version (a store reached one of the pages), and those are cheaper by the copy. The GPU thread is the limit again.
+Next for the lookups: find which stores move the versions of the raw-hit textures (likely same-byte stores through
+`wr32`, which calls `st32` whatever the bytes, or a neighbour texture in a shared page), or block-granular versions.
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
