@@ -115,9 +115,11 @@ int PlatPadGetButtonProfile(int socket, void *profile) {
     p[0] = p[1] = p[2] = p[3] = 0xFF;
     return 4;
 }
+volatile u32 kh1_vita_pad_reads; /* main.c's padlog= */
 int PlatPadRead(int socket, u8 *data) {
     u8 stick[4];
     unsigned int b;
+    kh1_vita_pad_reads++;
     if (kh1_vita_pad_script) {
         free_x = free_y = 0;
         return kh1_script_PadRead(socket, data);
