@@ -388,8 +388,26 @@ window) and the game thread (~1.65 s) busier than the GS worker (~1.4 s), with t
 worker, and the lookups at ~220 ms a window. So this frees worker time (the lookups line should drop most of its ms)
 without necessarily raising pictures/s by itself.
 
-**Checked (host, en.iso, dive_en.txt, the gxmcheck binary, the clutskip section's environment, on the Mac in a colima
-VM with qemu-i386 8.2)**: in progress; the GPU target hashes of this branch and main are compared every 250 frames.
+**Checked (host, en.iso, dive_en.txt to frame 21,000, the gxmcheck binary, the clutskip section's environment, on the
+Mac in a colima VM with qemu-i386 8.2)**: all 168 GPU target hashes identical with main (3157883b).
+
+**Vita A/B (2026-11-03, Shay's Vita, tools/vita/hw_run.sh, `renderer=native frames=23000 pad=dive_en.txt`, both with
+the black-Dive sinf/cosf fix of main 50d21c96; the branch's build also timed each step of a lookup)**: both reached
+frame 23,000 and stopped cleanly. Means over the last 42 windows:
+
+| | main | texskip=1 |
+|---|---|---|
+| texture lookups a window; ms; us each | 4,344; 603; 139 | 4,092 (~37 % the last one's texture); 544; 133 |
+| gs worker busy; the game's wait for it | 2,002 ms; 700 ms | 1,968 ms; 849 ms |
+| pictures/s, frames 18,000-23,000 | 19.4 | 18.9 (one run each: noise) |
+
+With the fix the Dive draws its real scene and the lookups cost ~600 ms a window (the earlier ~240 ms was the collapsed
+picture's). The page lists took the stamp and target to **5 ms** a window and the repeats save ~60 ms, but
+**`kh1_texcache_get` is ~508 ms of the 544**: the time is in the cache on a stamp miss (the texture's pages' stamps
+moved, so it reads the pages' raw words, `kh1_gsmem_tex_raw`'s 8 KiB a page copied and compared, and on a miss there
+hashes the texels), not in the scans; the op is 8 ms and the palette check 18 ms. That is the next cut: keep the
+raw words' check from copying (compare in place, or a per-page content id gsmem.c keeps as it stores), or key the
+entries by the upload's source as stage 4 plans.
 
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
