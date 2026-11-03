@@ -67,6 +67,7 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
      `reartouch=0` turns the rear pad's L2 / R2 / L3 / R3 off, `volume=N` sets the sound's level (0-100). All four
      are the mod menu's ("The mod menu" below), which also writes the keys above it changes.
    - `pad=ux0:data/kh1/dive.txt` replays a host pad script (the format of `tests/host/pads/*.txt`, frame numbers counted the same way) in place of the Vita buttons, so an unattended run gets past the title into Dive to the Heart. A file that fails to load leaves the real pad in charge.
+   - `padlog=LO-HI` (2026-11-03) logs every 16th frame from LO to HI: the game's pad reads and decoded buttons, the player's position and facing, each command object's range test (cmdmenu.nostrict.c func_0012cd10) and the command menu's top list (the 4th slot's id: 0x36 Save, 0 "?"). For a pad script that goes wrong on the Vita but not on the host (docs/native-overlays.md "The Vita's save-point route").
 4. `ux0:data/kh1/kh1.log` gets what the host runner prints, a line every 60 frames and, from a
    watchdog thread, a line every 2 s of wall time (frame, disc reads, DMA sends, frames shown). It is
    written through sceIoWrite (a funopen FILE): newlib's own fopen'd / freopen'd log stayed empty in

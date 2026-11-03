@@ -19,6 +19,9 @@
  *                             ux0:data/kh1/shaders/); 0 keeps the GS model's software picture
  *       pad=PATH              session 137v: a host pad script (tests/host/pads/, host/null/pad.c) played instead of
  *                             the Vita's controls, e.g. ux0:data/kh1/dive.txt
+ *       padlog=LO-HI          2026-11-03: every 16th frame from LO to HI, the game's pad (reads, held, pressed), the
+ *                             player's position and facing, the command menu's top list (the 4th slot's id: 0x36
+ *                             Save, 0 "?") and each command object's range test (cmdmenu func_0012cd10)
  *       vu1=N                 1 (the default) runs VIF1 and the VU1 microprograms (host/port/vu1.c), so the 3D
  *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
  *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
@@ -361,6 +364,39 @@ static void menu_pause(void) {
     kh1_vita_menu_run(kh1_vita_draw);
 }
 
+/* config.txt's padlog=LO-HI (2026-11-03): why the command menu's 4th slot shows what it does.  Every 16th frame from
+ * LO to HI: how many pad reads the game made since the last line and its decoded pad (padread.nostrict.c's
+ * D_002C5BB0: held, pressed, repeat); the player's position, facing and the object it stands on; each command
+ * object (its info's type at 0x5f nonzero: a save point is kind 1, range 50) with cmdmenu func_0012cd10's range test
+ * against the player (-1 out of range); and the top list's ids (the 4th: 0x36 Save, 0 "?") with its masks. */
+static unsigned long padlog_lo, padlog_hi;
+extern volatile u32 kh1_vita_pad_reads; /* pad.c */
+extern u32 D_002C5BB0[];
+extern u8 *D_002E26A0[];
+extern u8 D_002E2FD8[];
+void *func_001230a0(void *); /* actor.c: the next object */
+s32 func_0012cd10(void *, void *);
+static void padlog(void) {
+    u8 *pl = D_002E26A0[0], *it = 0;
+    vlog("kh1-vita: padlog %lu: %u reads, held %08x pressed %08x repeat %08x; top ids %02x %02x %02x %02x masks %08x\n",
+         frames, kh1_vita_pad_reads, D_002C5BB0[1], D_002C5BB0[2], D_002C5BB0[4], D_002E2FD8[0x14], D_002E2FD8[0x15],
+         D_002E2FD8[0x16], D_002E2FD8[0x17], *(u32 *)(D_002E2FD8 + 4));
+    kh1_vita_pad_reads = 0;
+    if (!pl) return;
+    {
+        const f32 *p = (const f32 *)(pl + 0x10), *d = (const f32 *)(pl + 0x30);
+        vlog("kh1-vita: padlog %lu: player at %.1f %.1f %.1f facing %.3f %.3f %.3f, on %08x\n", frames, p[0], p[1], p[2],
+             d[0], d[1], d[2], *(u32 *)(pl + 0x98));
+    }
+    while ((it = func_001230a0(it)) != 0) {
+        const u8 *in = *(u8 **)(it + 0x130);
+        const f32 *q = (const f32 *)(it + 0x10);
+        if (!in || !in[0x5f] || it == pl) continue;
+        vlog("kh1-vita: padlog %lu:   object %08x type %d kind %d range %.1f at %.1f %.1f %.1f: test %d\n", frames,
+             (u32)(size_t)it, in[0x5f], in[0x5e], *(const f32 *)(in + 0x44), q[0], q[1], q[2], func_0012cd10(it, pl));
+    }
+}
+
 /* one frame: the game's vblank handler, paced by the Vita's own vblank */
 void kh1_host_vblank(void) {
     static int in_vblank;
@@ -369,6 +405,7 @@ void kh1_host_vblank(void) {
     in_vblank = 1;
     frames++;
     if (frames % 60 == 0) vlog("kh1-vita: frame %lu, %u disc reads\n", frames, kh1_host_cd_reads);
+    if (padlog_lo && frames >= padlog_lo && frames <= padlog_hi && (frames & 15) == 0) padlog();
     kh1_counts_sample();
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
@@ -934,6 +971,10 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "title") == 0) title_state = atoi(v);
         else if (strcmp(line, "trace") == 0) kh1_host_trace = atoi(v);
         else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
+        else if (strcmp(line, "padlog") == 0) {
+            padlog_lo = strtoul(v, &e, 0);
+            padlog_hi = *e == '-' ? strtoul(e + 1, 0, 0) : padlog_lo;
+        }
         else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
         else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
         else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);

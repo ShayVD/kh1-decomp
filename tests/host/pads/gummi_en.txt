@@ -2,7 +2,7 @@
 #   KH1_HOST_MC=mc0 KH1_HOST_CD=go KH1_HOST_ISO=en.iso KH1_HOST_PAD=tests/host/pads/gummi_en.txt \
 #   KH1_HOST_FRAMES=12500 KH1_HOST_QUIET=1 KH1_HOST_TRACE=1 out/host/kh1-host
 # mc0 and en.iso as in wm_en.txt (the user's card with saves 04-06, the English disc; never commit them).
-# Up to 6300 this is wm_en.txt: save 04, the Save Menu's Gummi Ship, "Board the gummi ship?" yes.
+# Up to 6300 this is wm_en.txt (the walk back to the save point at 3400 included): save 04, the Save Menu's Gummi Ship, "Board the gummi ship?" yes.
 #   6700-6703   the left stick up for 3 frames: Select World moves from Agrabah to "Warp Hole"
 #               (the destination word at 0x00FB6108 goes 8 -> 22; held longer it goes on to 21)
 #   7000-8200   CIRCLE four times: Normal Drive, Depart; worldmap/ev/gumi_manual_*.ev
@@ -26,6 +26,8 @@
 2802 -
 3100 CIRCLE
 3102 -
+3400 - goto -456 282 12
+4400 -
 4600 UP
 4610 -
 4800 CIRCLE
