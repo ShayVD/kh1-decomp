@@ -106,6 +106,10 @@
  *                             do not touch it, the Dive's shadow, are drawn ahead of it and its two parts joined)
  *       present=0             copy each picture into a surface of its own and present it every frame (as before
  *                             2026-10-31); 1, the default: each new picture presented once, from the display target
+ *       shot=FIRST[,STEP[,COUNT]]  2026-11-02: the display and 3D targets as PPMs, ux0:data/kh1/shot-N-K.ppm (N the
+ *                             picture, K the KH1_RT_* kind), at picture FIRST and every STEP after it, COUNT of them
+ *                             (default 250, 1), to see a Vita's picture over FTP (docs/vita-build.md); in Vita3K the CPU
+ *                             reads no GPU pixels, so they come out black there
  *       pendgpu=0             uploads into a target its last scene still uses are written by the CPU after waiting
  *                             for that scene (as before 2026-11-01); 1, the default: the GPU writes them at the start
  *                             of the target's next scene, with no wait (gxm.c put_fill / put_draw)
@@ -916,6 +920,13 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
         else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
         else if (strcmp(line, "pendgpu") == 0) kh1_vita_pendgpu = atoi(v);
+        else if (strcmp(line, "shot") == 0) { /* 2026-11-02: FIRST[,STEP[,COUNT]] pictures to PPMs (gxm.c shot) */
+            extern u32 kh1_vita_shot_first, kh1_vita_shot_step, kh1_vita_shot_count;
+            char *c = 0;
+            kh1_vita_shot_first = strtoul(v, &c, 0);
+            if (c && *c == ',') kh1_vita_shot_step = strtoul(c + 1, &c, 0);
+            if (c && *c == ',') kh1_vita_shot_count = strtoul(c + 1, &c, 0);
+        }
         else if (strcmp(line, "wdprio") == 0) wd_prio = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];

@@ -2105,6 +2105,27 @@ wait for the ops put so far, which always ends. tests/host/gsqueue_test.c waits 
 (40a5212a, frame 2982) that also stops with "no vblank since the last" has no stall line with a stale position and
 is a different stop.
 
+## The black Dive of #219: a matching draft's sinf / cosf in the link (2026-11-02)
+
+Shay's merged VPK (3157883b) showed only text from New Game on: the title and menus were right, the Dive's 3D black on
+both renderers (renderer=gs too). natvb, natchain, natdirect and clutskip off changed nothing. Bisected on the Vita
+(shot= pictures fetched over FTP) and in Vita3K (window captures): main at ae762256 is right, 3f7cd337 (wm.x's native
+overlay build, PR #219) black, and 3f7cd337 with the old tools/host/ovlnative.py (wm.x left out) right again.
+
+The cause: nonmatchings/session141/wm/func_00f7ad38.nofill.c, one of wm.x's drafts linked natively, had
+`CONTEXT_ONLY f32 sinf(f32 x) { return 0; }` and the same cosf (a matching round's ctx2.py experiment). Off the EE
+CONTEXT_ONLY is a weak definition (include/common.h), "the real definition wins at link", but libm's sinf / cosf are
+archive members, and the linker pulls no member for a symbol already defined: the game's every sinf / cosf returned 0
+(kh1.elf's `W sinf`, 12 bytes), every rotation matrix lost its terms and the 3D left the screen. Text and 2D do not
+rotate, so they stayed. Fixes: the two copies are under `#ifdef KH1_PS2`; tools/vita/build.py now fails a link that
+keeps weak code (a CONTEXT_ONLY copy in place of a library's definition; the toolchain's `__aeabi_*div0` aside).
+
+`shot=FIRST[,STEP[,COUNT]]` (gxm.c `shot`, new for this): at picture FIRST and every STEP after it the display and 3D
+targets as PPMs in ux0:data/kh1/ (`shot-N-0.ppm` the display, `shot-N-3.ppm` the 3D target), read after the GPU is
+done with them; fetch them with tools/vita/hw_ftp.py. In the Dive every other picture draws nothing, so a shot is the
+first picture at or after the one due. Vita3K does not write GPU pixels back where the CPU reads them (all black
+there): capture its window instead.
+
 ## What next, in order
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
