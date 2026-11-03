@@ -144,6 +144,13 @@ static void host_clock_report(void) {
             printf("kh1-host: clutskip=%d: %u CLUT loads, %u of them repeats left out\n", kh1_pipes_clutskip,
                    kh1_pipes_clut_n, kh1_pipes_clut_skipped);
     }
+    { /* 2026-11-02: texture lookups that found the last one's texture (pipes.c tex_lookup, texskip) */
+        extern u32 kh1_pipes_tex_n, kh1_pipes_tex_same, kh1_pipes_tex_dec;
+        extern int kh1_pipes_texskip;
+        if (kh1_pipes_tex_n)
+            printf("kh1-host: texskip=%d: %u texture lookups, %u of them the last one's texture, %u decoded\n",
+                   kh1_pipes_texskip, kh1_pipes_tex_n, kh1_pipes_tex_same, kh1_pipes_tex_dec);
+    }
 }
 #include "gsregs.h"
 #include "gsmem.h"
@@ -557,6 +564,10 @@ int main(int argc, char **argv) {
             { /* 2026-11-02: KH1_HOST_CLUTSKIP=0 sends every CLUT load to the recorder (pipes.c on_clut; the Vita's clutskip=) */
                 extern int kh1_pipes_clutskip;
                 if (getenv("KH1_HOST_CLUTSKIP")) kh1_pipes_clutskip = atoi(getenv("KH1_HOST_CLUTSKIP"));
+            }
+            { /* 2026-11-02: KH1_HOST_TEXSKIP=0 looks every texture up again (pipes.c tex_lookup; the Vita's texskip=) */
+                extern int kh1_pipes_texskip;
+                if (getenv("KH1_HOST_TEXSKIP")) kh1_pipes_texskip = atoi(getenv("KH1_HOST_TEXSKIP"));
             }
             if (kh1_dma_natref && kh1_pool_start(getenv("KH1_HOST_NATPOOL") ? (u32)atoi(getenv("KH1_HOST_NATPOOL")) : 4u << 20))
                 printf("kh1-host: KH1_HOST_NATREF: no pool\n");
