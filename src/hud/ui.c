@@ -287,18 +287,29 @@ void func_0024aac8(UiFile *buffer) {
     fa = (UiKey *)((u8 *)buffer + buffer->fa_off);
     fb = (UiKey4 *)((u8 *)buffer + buffer->fb_off);
     fc = (UiKey *)((u8 *)buffer + buffer->fc_off);
+    /* An entry still holding a key index (not yet a pointer) is <= 0xfffff.  The EE compares it signed, which
+     * works for its addresses (below 0x02000000); off the EE a pointer is 0x81xxxxxx on the Vita, negative as
+     * s32, so a second call (the HUD set up again on the way to the world map) relocated every frame pointer
+     * again and the command menu's animation read through garbage (a data abort on hardware, 2026-11-03).
+     * Off the EE the test is unsigned. */
+#ifdef KH1_PS2
+#define UI_UNRELOCATED(p) ((s32)(p) <= 0xfffff)
+#else
+#define UI_UNRELOCATED(p) ((u32)(unsigned long)(p) <= 0xfffff)
+#endif
     for (i = 0; i < n; i++, u++) {
         u32 fl = u->s.flags;
         if (fl & 2) {
-            if ((s32)u->s.a.fr <= 0xfffff) u->s.a.fr = &fa[(s32)u->s.a.fr];
+            if (UI_UNRELOCATED(u->s.a.fr)) u->s.a.fr = &fa[(s32)u->s.a.fr];
         }
         if (fl & 0x40) {
-            if ((s32)u->s.b.fr <= 0xfffff) u->s.b.fr = &fb[(s32)u->s.b.fr];
+            if (UI_UNRELOCATED(u->s.b.fr)) u->s.b.fr = &fb[(s32)u->s.b.fr];
         }
         if (fl & 4) {
-            if ((s32)u->s.c.fr <= 0xfffff) u->s.c.fr = &fc[(s32)u->s.c.fr];
+            if (UI_UNRELOCATED(u->s.c.fr)) u->s.c.fr = &fc[(s32)u->s.c.fr];
         }
     }
+#undef UI_UNRELOCATED
 }
 
 void func_0024abd8(s32 arg0, void *arg1) {
