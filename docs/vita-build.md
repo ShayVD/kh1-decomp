@@ -2377,16 +2377,23 @@ natively on an arm64 Mac with clang). It fails with a byte of a copied block fli
 Host A/B (wm_en.txt to frame 6,700, KH1_HOST_TEXDUMP): the 1,012 textures drawn are byte-identical both ways; 111,913
 uploads came from kept blocks, 168 entries kept, one pool reset.
 
-**Hardware** (hand-played, save -> Gummi Ship -> Select World):
+**Hardware** (hand-played, save -> Gummi Ship -> Select World, two runs):
 
-| Select World | band_t4 (PR #235) | texblk=1 |
-| --- | --- | --- |
-| Pictures/s | ~19.8 | **~24.5** (23.7-25.5 over 30 windows) |
-| Image pieces a window | 52 MB in 1,485 ms | 67.6 MB in ~1,415 ms |
-| Uploads from kept blocks a window | - | ~6,000 (~207,000 blocks), ~210 misses, no pool resets |
-| The game's wait for the GS worker | ~810 ms | ~880 ms (the game makes more pictures) |
+| Select World | band_t4 (PR #235) | texblk=1 (run 1) | texblk=1 + prefetch (run 2) |
+| --- | --- | --- | --- |
+| Pictures/s | ~19.8 | ~24.5 (23.7-25.5, 30 windows) | **~29** (27.4-30.4, 9 windows) |
+| Image pieces a window | 52 MB in 1,485 ms | 67.6 MB in ~1,415 ms | ~74 MB in ~1,200 ms |
+| Uploads from kept blocks a window | - | ~6,000 (~207,000 blocks) | ~7,200 (~247,000 blocks, ~47,000 already holding the bytes) |
+| Misses / pool resets a window | - | ~210 / 0 | ~250 / 0 |
 
-The GS worker is still the limit (~2.07 s busy, w_block ~1.95 s): the image pieces cost about as much per window as
-before though most are now 256-byte block copies, about 220 us an upload of ~9 KB. The second build's time split and
-prefetching (the source is written by the game thread on another core) are there to say whether that is the hash
-reading the ring, the copies, or the ~1,100 pieces still stored.
+Run 2 is the second build: `__builtin_prefetch` 512 bytes ahead in kb_hash and two blocks ahead in kb_try's copies,
+and the time split. Its split for a Select World window (frame ~2,978): **from kept blocks 62 MB in 827 ms, other
+same-bytes skips 11 MB in 313 ms, stored 4 MB in 70 ms**; GS worker 2.13 s busy, the game waiting 760 ms for it.
+
+What is left there, and the lead for a next step: both cached paths run at only ~40-75 MB/s of source, though
+neither stores a pixel. The other same-bytes skips (mostly whole-block rectangles whose hash now replaces the byte
+compare) do nothing but hash the source and walk the pages, so the cost is reading the source bytes (the game's
+texture data, sent by reference) on the worker's core. Worth checking next: whether those reads miss all the way to
+memory (a larger or earlier prefetch, or hashing on the game thread at send time, where the bytes were just read or
+written, and passing the hash with the op as gsimage.c's large uploads pass a generation), and the worker's
+preemptions by the sound threads on core 1 (~300 a window), which the per-piece clock counts as image time.
