@@ -218,6 +218,8 @@ typedef struct {
  * it, and its two parts joined (cmdbuf.c hoist); config.txt hoist=0 / KH1_HOST_HOIST=0 keeps the game's order */
 extern int kh1_cmd_hoist;
 extern int kh1_cmd_fastrot;
+extern int kh1_cmd_natvbbulk; /* 2026-11-03: 1 (the default) vb_join reads natvb's indices in bulk (cmdbuf.c) */
+extern void (*kh1_cmd_mark)(int part); /* 2026-11-03: native()'s parts timed by the caller (cmdbuf.c), 0 none */
 extern int kh1_cmd_natjoin;    /* 2026-11-01: 1 (the default) a native run joins the native draw before it (cmdbuf.c
                                 * nat_join; config.txt natjoin=) */
 extern u32 kh1_cmd_nat_joins;  /* runs joined so far */

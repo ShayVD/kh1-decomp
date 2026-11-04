@@ -105,6 +105,8 @@
  *       natvbjoin=0           with natvb on, each cached run its own GPU draw (as before 2026-11-02); 1, the default:
  *                             a cached run joins the cached draw before it when its entry's matrices come after that
  *                             draw's (cmdbuf.c vb_join; 32-bit indices into natvb's memory, the same triangles)
+ *       natvbbulk=0           with natvbjoin on, a join reads the cached run's indices one by one from natvb's uncached
+ *                             memory (as before 2026-11-03); 1, the default: copied out in blocks first (cmdbuf.c)
  *       natvbhome=0           every natvb entry's matrices at u_m[0], so cached runs never join (1, the default: each
  *                             new entry's after the last one's, natdraw.c)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
@@ -851,6 +853,27 @@ static int watchdog(SceSize args, void *argp) {
             if (kh1_recq_on) /* session 146: the recording on the GPU frame's thread (the `cpu:` line's is then 0) */
                 vlog("kh1-vita: recording: %u ms on the gpu thread; the GS worker waited %u ms for it (%u waits)\n",
                      (kh1_recq_us_busy - rbusy0) / 1000, (kh1_recq_us_wait - rwait0) / 1000, kh1_recq_waits - rwaits0);
+            if (kh1_recq_on) { /* 2026-11-03: that recording by op function (1 op in 8 timed, as the gs worker ops) */
+                u32 fn[KH1_GSQ_OPS], us[KH1_GSQ_OPS], nn[KH1_GSQ_OPS];
+                char ob[400];
+                int i, k = kh1_recq_ops_take(fn, us, nn), o = 0;
+                for (i = 0; i < k && o < (int)sizeof ob - 40; i++)
+                    if (us[i] >= 1000) o += snprintf(ob + o, sizeof ob - o, " %08x %u ms (%u),", fn[i], us[i] / 1000, nn[i]);
+                vlog("kh1-vita: recording ops:%s\n", o ? ob : " none over 1 ms");
+                { /* the native ops by part (pipes.c kh1_pipes_nat_us) */
+                    extern volatile u32 kh1_pipes_nat_us[7];
+                    static u32 nu0[7];
+                    u32 d[7], j;
+                    for (j = 0; j < 7; j++) {
+                        d[j] = kh1_pipes_nat_us[j] - nu0[j];
+                        nu0[j] += d[j];
+                    }
+                    vlog("kh1-vita: recording's native draws: %u ms the matrices' fold, %u the triangles' listing, %u the "
+                         "records' assembly; the draws' recording: %u the joins, %u the batcher and new commands, %u the "
+                         "matrices, %u the rest\n", d[0] / 1000, d[1] / 1000, d[3] / 1000, d[4] / 1000, d[5] / 1000,
+                         d[6] / 1000, d[2] / 1000);
+                }
+            }
             if (kh1_gsq_on) { /* session 147b: the worker's busy time by op function (addresses: out/vita/kh1.elf) */
                 u32 fn[KH1_GSQ_OPS], us[KH1_GSQ_OPS], nn[KH1_GSQ_OPS];
                 char ob[400];
@@ -1005,6 +1028,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);
         else if (strcmp(line, "natvbmb") == 0) kh1_vita_natvb_mb = (u32)atoi(v);
         else if (strcmp(line, "natvbjoin") == 0) kh1_cmd_natvbjoin = atoi(v);
+        else if (strcmp(line, "natvbbulk") == 0) kh1_cmd_natvbbulk = atoi(v);
         else if (strcmp(line, "natvbcheck") == 0) { extern int kh1_cmd_natvbcheck; kh1_cmd_natvbcheck = atoi(v); }
         else if (strcmp(line, "natvbhome") == 0) kh1_natvb_home = atoi(v);
         else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);

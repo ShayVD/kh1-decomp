@@ -662,6 +662,7 @@ int main(int argc, char **argv) {
         }
         if (getenv("KH1_HOST_NATJOIN")) kh1_cmd_natjoin = atoi(getenv("KH1_HOST_NATJOIN")); /* 2026-11-01: cmdbuf.c nat_join */
         if (getenv("KH1_HOST_NATVBJOIN")) kh1_cmd_natvbjoin = atoi(getenv("KH1_HOST_NATVBJOIN")); /* 2026-11-02: vb_join */
+        if (getenv("KH1_HOST_NATVBBULK")) kh1_cmd_natvbbulk = atoi(getenv("KH1_HOST_NATVBBULK")); /* 2026-11-03 */
         if (getenv("KH1_HOST_NATVBHOME")) kh1_natvb_home = atoi(getenv("KH1_HOST_NATVBHOME")); /* 2026-11-02: natdraw.c */
         if (getenv("KH1_HOST_HOIST")) kh1_cmd_hoist = atoi(getenv("KH1_HOST_HOIST")); /* 2026-10-31: cmdbuf.c hoist */
         if (getenv("KH1_HOST_RECFAST")) { /* 2026-11-01: 0 the GPU thread's recording as before (natdraw.c, cmdbuf.c) */

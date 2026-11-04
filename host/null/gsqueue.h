@@ -40,6 +40,10 @@ extern volatile u32 kh1_gsq_us_busy, kh1_gsq_us_wait, kh1_gsq_waits;
  * the count returned, each slot's time and count zeroed */
 #define KH1_GSQ_OPS 12
 int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n);
+int kh1_recq_ops_take(u32 *fn, u32 *us, u32 *n); /* 2026-11-03: the same for the GPU thread's recording ops */
+/* 2026-11-03: set while the GPU thread runs a recording op that is timed (1 in 8): its parts' own clocks (pipes.c
+ * kh1_pipes_nat_us) time only those, x8, so the untimed ones pay no clock reads */
+extern u32 kh1_recq_timed;
 
 /* Session 142 (docs/vita-build.md "The GPU frame on the third core"): one more thread, for the frame's GPU
  * work.  kh1_gpuq_put runs fn(args, 0, 0) on it after the jobs before (session 145: up to two posted and not

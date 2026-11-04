@@ -153,25 +153,31 @@ static void q_wake_producer(KH1Q *q) {
 
 /* session 147b: the GS worker's time by op function, for the Vita's watchdog (kh1_gsq_ops_take); the watchdog's
  * take races the worker's adds, so a window's numbers can be a few ops off */
-static struct { u32 fn, us, n; } ops[KH1_GSQ_OPS];
-static void op_add(u32 fn, u32 us) {
+typedef struct { u32 fn, us, n; } KH1QOp;
+static KH1QOp ops[KH1_GSQ_OPS], rops[KH1_GSQ_OPS]; /* 2026-11-03: rops, the recording queue's (the GPU thread's) */
+static void op_add(KH1QOp *t, u32 fn, u32 us) {
     u32 i;
-    for (i = 0; i < KH1_GSQ_OPS && ops[i].fn && ops[i].fn != fn; i++) ;
+    for (i = 0; i < KH1_GSQ_OPS && t[i].fn && t[i].fn != fn; i++) ;
     if (i == KH1_GSQ_OPS) i = KH1_GSQ_OPS - 1; /* full: the last slot takes the rest */
-    if (!ops[i].fn) ops[i].fn = fn;
-    ops[i].us += us;
-    ops[i].n++;
+    if (!t[i].fn) t[i].fn = fn;
+    t[i].us += us;
+    t[i].n++;
 }
-int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n) {
+static int ops_take(KH1QOp *t, u32 *fn, u32 *us, u32 *n) {
     int i, k = 0;
-    for (i = 0; i < KH1_GSQ_OPS && ops[i].fn; i++, k++) {
-        fn[i] = ops[i].fn;
-        us[i] = ops[i].us;
-        n[i] = ops[i].n;
-        ops[i].us = ops[i].n = 0;
+    for (i = 0; i < KH1_GSQ_OPS && t[i].fn; i++, k++) {
+        fn[i] = t[i].fn;
+        us[i] = t[i].us;
+        n[i] = t[i].n;
+        t[i].us = t[i].n = 0;
     }
     return k;
 }
+int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n) { return ops_take(ops, fn, us, n); }
+int kh1_recq_ops_take(u32 *fn, u32 *us, u32 *n) { return ops_take(rops, fn, us, n); }
+u32 kh1_recq_timed; /* the recording op running now is the one in 8 timed (its parts may time themselves, x8): its
+                     * number (odd), 0 when not timed */
+static u32 rq_seq;
 
 /* 2026-11-01: prof times 1 op in GSQ_SAMPLE (and counts the time GSQ_SAMPLE times): the two clock reads an op cost
  * ~0.68 us each on a Vita, ~80 ms of the worker's 2.1 s window at ~60 K ops (fps-next 9a95cf9 log).  The op is
@@ -179,10 +185,10 @@ int kh1_gsq_ops_take(u32 *fn, u32 *us, u32 *n) {
  * counts (n) stay exact; the times are estimates, good to a few percent for an op run a few hundred times a
  * window. */
 #define GSQ_SAMPLE 8
-static u32 gsq_lcg = 1;
 
-/* the consumer: runs the ops from *t up to h, moving tail after each (prof: ops sampled and timed, op_add) */
-static void q_run(KH1Q *q, u32 *t, u32 h, int prof) {
+/* the consumer: runs the ops from *t up to h, moving tail after each (prof: ops sampled and timed into that table,
+ * op_add; each consumer thread its own table and lcg) */
+static void q_run(KH1Q *q, u32 *t, u32 h, KH1QOp *prof, u32 *lcg) {
     while (*t != h) {
         const u32 *op = q->ring + (*t & q->mask);
         if (!op[0]) { /* the rest of the ring is unused: the next op is at its start */
@@ -190,11 +196,13 @@ static void q_run(KH1Q *q, u32 *t, u32 h, int prof) {
         } else {
             u32 nqw = op[1], na = op[2], pa = (na + 3) & ~3u, t0 = 0, timed = 0;
             if (prof) {
-                gsq_lcg = gsq_lcg * 1664525u + 1013904223u;
-                if ((timed = (gsq_lcg >> 29) == 0)) t0 = clock_us(); /* top 3 bits: 1 in 8 */
+                *lcg = *lcg * 1664525u + 1013904223u;
+                if ((timed = (*lcg >> 29) == 0)) t0 = clock_us(); /* top 3 bits: 1 in 8 */
             }
+            if (prof == rops) kh1_recq_timed = timed ? ++rq_seq | 1 : 0; /* a new number each timed op */
             ((KH1GsqFn)(unsigned long)op[0])(op + 4, op + 4 + pa, nqw);
-            if (prof) op_add(op[0], timed ? (clock_us() - t0) * GSQ_SAMPLE : 0);
+            if (prof == rops) kh1_recq_timed = 0;
+            if (prof) op_add(prof, op[0], timed ? (clock_us() - t0) * GSQ_SAMPLE : 0);
             *t += 4 + pa + nqw * 4;
         }
         STORE(q->tail, *t);
@@ -306,7 +314,7 @@ static int q_init(KH1Q *q, u32 bytes) {
 
 /* ---- the GS worker ---- */
 static void worker(void) {
-    u32 t = LOAD(gsq.tail);
+    u32 t = LOAD(gsq.tail), lcg = 1;
     for (;;) {
         u32 h = LOAD(gsq.head), spin, t0;
         if (t == h) {
@@ -325,7 +333,7 @@ static void worker(void) {
             }
         }
         t0 = clock_us();
-        q_run(&gsq, &t, h, kh1_vu1_clock != 0);
+        q_run(&gsq, &t, h, kh1_vu1_clock ? ops : 0, &lcg);
         kh1_gsq_us_busy += clock_us() - t0;
     }
 }
@@ -393,7 +401,7 @@ static volatile int gq_worker_sleeps, gq_waiter_sleeps, gq_waiting;
 volatile u32 kh1_recq_us_busy, kh1_recq_us_wait, kh1_recq_waits;
 
 static void gq_worker(void) {
-    u32 seen = 0, rt = 0;
+    u32 seen = 0, rt = 0, lcg = 1;
     for (;;) {
         u32 spin, t0, h;
         for (spin = 0; spin < SPINS && LOAD(gq_posted) == seen && (!LOAD(kh1_recq_on) || LOAD(recq.head) == rt); spin++) ;
@@ -411,7 +419,7 @@ static void gq_worker(void) {
         }
         if (LOAD(kh1_recq_on) && (h = LOAD(recq.head)) != rt) {
             t0 = clock_us();
-            q_run(&recq, &rt, h, 0);
+            q_run(&recq, &rt, h, kh1_vu1_clock ? rops : 0, &lcg); /* 2026-11-03: timed by op too */
             kh1_recq_us_busy += clock_us() - t0;
             continue;
         }

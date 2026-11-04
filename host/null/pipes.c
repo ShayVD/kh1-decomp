@@ -94,6 +94,7 @@ static u32 pal_buf[256];
  * the op its answer.  The recorder is the worker's again at the frame op, once the queue is done (kh1_recq_sync) */
 static s16 a_pslot = -1; /* the recorder's bound palette slot (cmdbuf.c's clut_cmd sets rec->pslot), kept here */
 static KH1DrawRegs rec_r; /* the registers of the last state op (the recorder's side) */
+static void nt_mark(int part); /* 2026-11-03: the native ops' parts (below) */
 static KH1DrawState last_d;
 static KH1RenderPass last_p;
 
@@ -295,6 +296,7 @@ static KH1CmdRec *recorder(void) {
         /* calloc: kh1_texcache_init frees what a used cache holds, so a block that is not zeroed
          * (the Vita's heap after lang.c freed the disc's ELF) had it free that memory's old words */
         rec = (KH1CmdRec *)calloc(1, sizeof *rec);
+        kh1_cmd_mark = nt_mark;
         kh1_cmd_init(rec, malloc(KH1_RING_FRAMES * KH1_RING_VERTEX_BYTES), KH1_RING_VERTEX_BYTES,
                      malloc(KH1_RING_FRAMES * KH1_RING_UNIFORM_BYTES), KH1_RING_UNIFORM_BYTES);
         pal = (KH1PalCache *)calloc(1, sizeof *pal);
@@ -536,28 +538,52 @@ static KH1GpuVert nat_v[KH1_NAT_VERTS];
 static KH1GpuVertSk nat_vs[KH1_NAT_VERTS]; /* 2026-11-01: P13's skinned draws' (natdraw.h KH1_NAT_SKIN) */
 static f32 nat_m[KH1_NAT_MATS * 16];
 
+/* 2026-11-03 (the GPU thread ~86% busy in fights, its recording ~1.95 s a 2.17 s window, gpu parts ~0.6 s of it):
+ * the native ops' time by part on kh1_vu1_clock, only in the recording ops gsqueue.c times (1 in 8, kh1_recq_timed),
+ * x8.  Each mark gives the time since the op's last mark to its part: 0 the matrices' fold, 1 the triangles' listing
+ * (kh1_nat_tris*), 2 the rest of the draw's recording (kh1_cmd_native*), 3 the records' assembly (r_nat_dir, r_nat_rec,
+ * r_nat_end), 4 .. 6 cmdbuf.c's native() (kh1_cmd_mark): the join tests and joins, the batcher and a new command (its
+ * vertices into the ring), the matrices into the ring */
+volatile u32 kh1_pipes_nat_us[7];
+static u32 nt_t, nt_op;
+static void nt_mark(int part) {
+    u32 t;
+    if (!kh1_recq_timed || !kh1_vu1_clock) return;
+    t = kh1_vu1_clock();
+    if (part >= 0 && nt_op == kh1_recq_timed) kh1_pipes_nat_us[part] += (t - nt_t) * 8;
+    nt_op = kh1_recq_timed;
+    nt_t = t;
+}
+
 /* the recorder's side: argument the GS's X shift, data one or more payloads (ops put one after another join) */
 static void r_native(const u32 *a, const u32 *d, u32 nqw) {
     while (nqw >= 2) {
         u32 nrec = d[1], nmat = d[2], rq = d[3], len = 2 + rq + nmat * 4, n, lost;
         if (len > nqw || nmat > KH1_NAT_MATS) break;
+        nt_mark(3);
         if ((d[0] & 0xFF) == 0) { /* 2026-10-31: P0 (natdraw.h): the culled triangles, then the double-sided ones */
             u32 pass;
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            nt_mark(0);
             for (pass = 0; pass < 2; pass++) {
                 n = kh1_nat_tris0(d + 8, nrec, d[4], !pass, nat_v, KH1_NAT_VERTS, &lost);
+                nt_mark(1);
                 if (!n) continue;
                 kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat,
                                (!pass ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | KH1_NAT_LIN);
+                nt_mark(2);
                 kh1_pipes_nat_draws++;
                 kh1_pipes_nat_tris += n / 3;
             }
         } else if (!d[6] && (d[0] & 0xFF) == 13 && nrec && d[8 + 3] & KH1_NAT_SKIN) {
             /* 2026-11-01: P13's skinned records (natdraw.h KH1_NAT_SKIN): the bigger vertex, its own shaders */
             n = kh1_nat_tris_skin(d + 8, nrec, nmat, d[4], d[5], KH1_NAT_LIN, nat_vs, KH1_NAT_VERTS, &lost);
+            nt_mark(1);
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            nt_mark(0);
             kh1_cmd_native_skin(rec, &last_d, &last_p, nat_vs, n, nat_m, nmat,
                                 (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | KH1_NAT_LIN);
+            nt_mark(2);
             kh1_pipes_nat_draws++;
             kh1_pipes_nat_tris += n / 3;
         } else if (!d[6] && nrec && d[8 + 3] & KH1_NAT_VB) {
@@ -570,12 +596,14 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
             u32 ni = 0, seq = 0, home = 0;
             if ((d[0] & 0xFF) == 11) cull |= KH1_NAT_LIN;
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            nt_mark(0);
             for (i = 0; i <= nrec; i++, q += 8) {
                 const KH1GpuVert *v = i < nrec ? (const KH1GpuVert *)(unsigned long)q[4] : 0;
                 const u16 *x = i < nrec ? (const u16 *)(unsigned long)q[5] : 0;
                 if (i < nrec && !(q[3] & KH1_NAT_VB)) break; /* (an op is all stubs or none) */
                 if (ni && (i == nrec || v != xv || x != xi + ni)) {
                     kh1_cmd_native_vb(rec, &last_d, &last_p, xv, xi, ni, nat_m, nmat, home, cull, seq);
+                    nt_mark(2);
                     kh1_pipes_nat_draws++;
                     kh1_pipes_nat_tris += ni / 3;
                     ni = 0;
@@ -595,8 +623,11 @@ static void r_native(const u32 *a, const u32 *d, u32 nqw) {
             /* 2026-10-31: P11 (and P13) with z not clamped, so the GPU clips where P11 dropped what crossed its near plane
              * (P13: what left its guard band) */
             if (lin) for (i = 0; i < n; i++) nat_v[i].pad[0] |= (u8)KH1_NAT_LIN;
+            nt_mark(1);
             kh1_nat_fold(&last_p, rec_r.zbuf_lo, (s32)a[0], d + (2 + rq) * 4, nmat, nat_m);
+            nt_mark(0);
             kh1_cmd_native(rec, &last_d, &last_p, nat_v, n, nat_m, nmat, (d[7] ? kh1_pipes_nat_cull : KH1_NAT_CULL_NONE) | lin);
+            nt_mark(2);
             kh1_pipes_nat_draws++;
             kh1_pipes_nat_tris += n / 3;
         }
@@ -721,11 +752,13 @@ static int dir_open, nat_copen;
 static u32 dir_prim, dir_gen;
 u32 kh1_pipes_nat_dir_ends; /* the GPU thread's ops ended by the worker (r_nat_dend), for the log */
 static void r_nat_dend(const u32 *a, const u32 *d, u32 nqw) {
+    nt_mark(-1);
     if (!nat_copen) return;
     nat_copen = 0;
     r_nat_end(a, d, nqw);
 }
 static void r_nat_dir(const u32 *a, const u32 *d, u32 nqw) {
+    nt_mark(-1);
     for (; nqw; nqw--, d += 4) {
         const u32 *h = (const u32 *)(unsigned long)d[0], *rec = h + 8, *mats;
         u32 prog = h[0] & 0xFF, nrec = h[1], nmat = h[2], r;
@@ -770,6 +803,7 @@ static void r_nat_dir(const u32 *a, const u32 *d, u32 nqw) {
             r_nat_end(a, 0, 0);
         }
         kh1_pool_free(d[2]);
+        nt_mark(3);
     }
 }
 /* the worker's side (gsregs.h kh1_gs_nat_direct, dmawalk.c w_native_dir) */
