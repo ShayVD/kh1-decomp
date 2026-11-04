@@ -135,10 +135,26 @@ void PlatDmaPutGifTadr(u32 v) { null_gif_tadr = v; }
 /* KH1_HOST_TRACE=2: host/null/dmawalk.c walks each chain a send starts.  The host owns the
  * executable's data and bss, the scratchpad and the stack. */
 extern char __executable_start[], end[];
+/* 2026-11-03: the image's segments where the loader put them, when the platform knows (the Vita,
+ * host/vita/main.c).  A Vita loads the data segment away from its link address by a distance that changes
+ * from run to run (0x81300000 or 0x81400000 for one build) and `end` keeps its link-time value, so the top
+ * of .bss by that distance was "outside": ~14,000 bad DMA sends a run from the title on (a chain in
+ * D_0061E8B0's block), none on another run of the same build */
+static unsigned long img_lo[2], img_hi[2];
+void kh1_null_image(int seg, unsigned long lo, u32 size) {
+    if (seg < 0 || seg > 1) return;
+    img_lo[seg] = lo;
+    img_hi[seg] = lo + size;
+}
 static const char *null_dma_where(u32 a, u32 n) {
     char local;
     unsigned long p = a, e = (unsigned long)a + n;
-    if (p >= (unsigned long)__executable_start && e <= (unsigned long)end) return "image";
+    int i;
+    if (img_hi[0] || img_hi[1]) {
+        for (i = 0; i < 2; i++)
+            if (p >= img_lo[i] && e <= img_hi[i]) return "image";
+    } else if (p >= (unsigned long)__executable_start && e <= (unsigned long)end)
+        return "image";
     if (p >= (unsigned long)PlatSpr && e <= (unsigned long)PlatSpr + sizeof PlatSpr) return "spr";
     if (p - (unsigned long)&local < 0x1000000) return "stack";
     /* session 147: any coroutine's stack in the Vita's pool, not only the walking one's part above its frame

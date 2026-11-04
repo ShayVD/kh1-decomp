@@ -31,6 +31,10 @@
  *                        chooses at run time (the second station's box goes to one of two sides
  *                        by the collision group Sora stands on when the crate breaks).
  *                        Session 140: a goto stands still while there is no player (a room change).
+ *                        2026-11-03: FRAME BUTTONS waitplayer holds the script's clock at that line
+ *                        while there is no player (a save loading), so the lines after it count
+ *                        from the field's arrival: the Vita's loads take 1,500-3,300 frames longer
+ *                        than the host's, and a run's timing varies.
  *                        KH1_HOST_POS=N prints the player's position every N frames (at pad reads).
  *
  * KH1_HOST_TRACE >= 1 prints "kh1-host: pad FRAME BUTTONS" when what the game reads changes.  Not
@@ -86,6 +90,7 @@ typedef struct {
     int go;           /* session 136: steer to (gx, gz) */
     float gx, gz, gr;
     int vm;           /* session 139: steer to this VM's entity instead (-1: to gx, gz) */
+    int wait;         /* 2026-11-03: hold the script's clock here while there is no player */
 } NullPadLine;
 
 static NullPadLine *null_pad_lines;
@@ -174,8 +179,18 @@ int kh1_null_pad_load(const char *path) {
         if (!buttons(w, &L.buttons, &L.out)) return fclose(f), bad(path, ln, "not a button", w) - 1;
         L.go = 0;
         L.vm = -1;
+        L.wait = 0;
         {
             int j = i;
+            if (word(s, &j, w, sizeof w) && strcmp(w, "waitplayer") == 0) {
+                if (word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "waitplayer takes nothing after it", w) - 1;
+                for (k = 0; k < 4; k++) L.stick[k] = 128;
+                L.wait = 1;
+                null_pad_lines = realloc(null_pad_lines, (n + 1) * sizeof *null_pad_lines);
+                null_pad_lines[n++] = L;
+                continue;
+            }
+            j = i;
             if (word(s, &j, w, sizeof w) && strcmp(w, "goto") == 0) {
                 char *e2;
                 L.go = 1;
@@ -229,7 +244,8 @@ int kh1_null_pad_reload(const char *path) {
 
 /* the line that holds at this frame (0: before the first, or no script: connected, nothing) */
 static const NullPadLine *now(void) {
-    static const NullPadLine idle = { 0, 0, 0, { 128, 128, 128, 128 }, 0, 0, 0, 0 };
+    static const NullPadLine idle = { 0, 0, 0, { 128, 128, 128, 128 }, 0, 0, 0, 0, 0, 0 };
+    static unsigned long held; /* the frames waitplayer lines held the script's clock */
     unsigned long fr = kh1_host_frame();
     int lo = 0, hi;
     if (null_pad_n < 0) {
@@ -249,11 +265,17 @@ static const NullPadLine *now(void) {
 #endif
     }
     hi = null_pad_n;
+    fr -= held;
     /* the last line with frame <= fr */
     while (lo < hi) {
         int mid = (lo + hi) / 2;
         if (null_pad_lines[mid].frame <= fr) lo = mid + 1;
         else hi = mid;
+    }
+    if (lo && null_pad_lines[lo - 1].wait && !D_002E26A0[0]) {
+        /* no player yet: the script's time stays at the waitplayer line's frame */
+        if (!held && kh1_host_trace) printf("kh1-host: pad waits for the player from frame %lu\n", kh1_host_frame());
+        held = kh1_host_frame() - null_pad_lines[lo - 1].frame;
     }
     return lo ? &null_pad_lines[lo - 1] : &idle;
 }

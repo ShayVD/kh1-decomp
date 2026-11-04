@@ -88,9 +88,17 @@ static void keep_raw(KH1TexSlot *s, const u32 *raw, u32 n) {
     if (s->nraw) memcpy(s->raw, raw, n * 4);
 }
 
+/* 2026-11-03: the signature the entry's bytes were seen with now (none when the caller had none) */
+static void keep_sig(KH1TexSlot *s, u32 has, const u32 *sig) {
+    s->has_sig = has;
+    if (has) {
+        s->sig[0] = sig[0];
+        s->sig[1] = sig[1];
+    }
+}
 const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 target, KH1TexRead read, void *ctx,
                             int *decoded) {
-    u32 tw = lo >> 26 & 15, th = (lo >> 30 | hi << 2) & 15, n, h, i, nraw, ver;
+    u32 tw = lo >> 26 & 15, th = (lo >> 30 | hi << 2) & 15, n, h, i, nraw, ver, sig[2], has_sig = 0;
     KH1TexSlot *s;
     *decoded = 0;
     hi &= 3; /* lo is TBP0, TBW, PSM, TW and TH's low bits; hi's low 2 are TH's high ones */
@@ -130,6 +138,24 @@ const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 targe
             return s->tex;
         }
     }
+    /* 2026-11-03: the blocks' hashes, when an entry of this layout last saw the same ones */
+    if (c->sig && (has_sig = c->sig(lo, hi, sig)) != 0)
+        for (i = 0; i < KH1_TEXCACHE_SLOTS; i++) {
+            s = &c->slot[i];
+            if (s->n && s->lo == lo && s->hi == hi && s->has_sig && s->sig[0] == sig[0] && s->sig[1] == sig[1]) {
+                if (c->ver_check && s->nraw && c->raw && (c->rawbuf || (c->rawbuf = malloc(KH1_TEXCACHE_RAW * 4)) != 0) &&
+                    (c->raw(lo, hi, c->rawbuf, KH1_TEXCACHE_RAW) != s->nraw ||
+                     !kh1_bytes_same(s->raw, c->rawbuf, s->nraw * 4)))
+                    c->ver_bad++;
+                s->stamp = stamp;
+                s->ver = ver;
+                s->frame = c->frame;
+                s->use = c->use;
+                c->hash_hits++;
+                c->sig_hits++;
+                return s->tex;
+            }
+        }
     /* session 142: the pages' raw words, when an entry of this layout last saw the same ones; 2026-11-03: compared
      * where they lie when the caller can (c->same), copied only for an entry that keeps them */
     nraw = 0;
@@ -138,6 +164,7 @@ const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 targe
         if (s->n && s->lo == lo && s->hi == hi && s->nraw && c->same(lo, hi, s->raw, s->nraw)) {
             s->stamp = stamp;
             s->ver = ver;
+            keep_sig(s, has_sig, sig);
             s->frame = c->frame;
             s->use = c->use;
             c->hash_hits++;
@@ -152,6 +179,7 @@ const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 targe
         if (s->n && s->lo == lo && s->hi == hi && s->nraw == nraw && kh1_bytes_same(s->raw, c->rawbuf, nraw * 4)) {
             s->stamp = stamp;
             s->ver = ver;
+            keep_sig(s, has_sig, sig);
             s->frame = c->frame;
             s->use = c->use;
             c->hash_hits++;
@@ -167,6 +195,7 @@ const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 targe
         if (s->n && s->lo == lo && s->hi == hi && s->hash == h && kh1_bytes_same(s->tex, c->scratch, n * 4)) {
             s->stamp = stamp; /* the bytes are back: the new stamp is this entry's */
             s->ver = ver;
+            keep_sig(s, has_sig, sig);
             s->frame = c->frame;
             s->use = c->use;
             c->hash_hits++;
@@ -183,6 +212,7 @@ const u32 *kh1_texcache_get(KH1TexCache *c, u32 lo, u32 hi, u32 stamp, u32 targe
     s->hi = hi;
     s->stamp = stamp;
     s->ver = ver;
+    keep_sig(s, has_sig, sig);
     s->hash = h;
     s->n = n;
     s->frame = c->frame;

@@ -167,12 +167,13 @@ static void host_clock_report(void) {
     }
     { /* 2026-11-03: the recorder's texture cache by how each lookup hit (texcache.c, texver) */
         extern int kh1_pipes_texver;
+        u32 kh1_gsmem_sig_lazy(void);
         const KH1TexCache *c = kh1_pipes_texcache_if();
         if (c && c->draws)
-            printf("kh1-host: texver=%d: %u cache lookups, %u stamp hits, %u version hits (%u checked wrong), %u raw "
-                   "hits, %u hashed hits, %u decodes, %u targets\n", kh1_pipes_texver, c->draws, c->stamp_hits,
-                   c->ver_hits, c->ver_bad, c->raw_hits, c->hash_hits - c->ver_hits - c->raw_hits, c->decodes,
-                   c->targets);
+            printf("kh1-host: texver=%d: %u cache lookups, %u stamp hits, %u version hits, %u signature hits (%u checked "
+                   "wrong), %u raw hits, %u hashed hits, %u decodes, %u targets; %u blocks hashed at a lookup\n",
+                   kh1_pipes_texver, c->draws, c->stamp_hits, c->ver_hits, c->sig_hits, c->ver_bad, c->raw_hits,
+                   c->hash_hits - c->ver_hits - c->sig_hits - c->raw_hits, c->decodes, c->targets, kh1_gsmem_sig_lazy());
     }
 }
 #include "gsregs.h"

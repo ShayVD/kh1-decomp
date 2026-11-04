@@ -45,7 +45,19 @@ static u32 wr_pg[512];
  * last store (a draw's mark is not one, unlike page_seq's); every kh1_gsmem_tex_ver read moves ver_now on, so a
  * store after a read always leaves a newer version than the read saw */
 static u32 page_ver[512], ver_now = 1;
-#define STORED(pg) (dirty_pg[(pg) & 511] = 1, wr_pg[(pg) & 511] = seq, page_ver[(pg) & 511] = ver_now)
+/* the same a 256-byte block (blk_ver[b], b = the byte address >> 8; page b >> 5), so a texture over part of a page
+ * keeps its version while another texture in that page changes (most of a fight's stamp misses: the cache's
+ * small textures share pages with the ones streamed in each frame) */
+static u32 blk_ver[16384];
+/* and its content hash (blk_h0 / blk_h1) while blk_hok[b]: every store that changes a byte clears it; the block
+ * uploads (band_*) set it as they store, kh1_gsmem_tex_sig when it is asked for.  A texture's blocks hold the same
+ * bytes as when an entry saw them though their versions moved (the fight streams textures through the same blocks,
+ * one and back again): the hashes say so with no word read (docs/native-plan.md "Texture stamp misses by content
+ * hashes") */
+static u32 blk_h0[16384], blk_h1[16384];
+static u8 blk_hok[16384];
+#define TOUCHED(pg) (dirty_pg[(pg) & 511] = 1, wr_pg[(pg) & 511] = seq)
+#define STORED(b) (TOUCHED((b) >> 5), page_ver[(b) >> 5 & 511] = blk_ver[(b) & 16383] = ver_now, blk_hok[(b) & 16383] = 0)
 static u16 clut[512];
 /* session 147c: the kept entries (clut_kept) the last load wrote into the CLUT buffer and how (CPSM, 8-bit, CSA): a
  * load that finds the same entries kept and loads them the same way would store what the buffer already holds */
@@ -112,6 +124,8 @@ void kh1_gsmem_reset(void) {
     memset(clut, 0, sizeof clut);
     memset(page_seq, 0, sizeof page_seq);
     for (i = 0; i < 512; i++) page_ver[i] = ver_now; /* every page's bytes are new */
+    for (i = 0; i < 16384; i++) blk_ver[i] = ver_now;
+    memset(blk_hok, 0, sizeof blk_hok);
     ver_now++;
     memset(&st, 0, sizeof st);
     memset(&trx, 0, sizeof trx);
@@ -200,8 +214,14 @@ static u32 ld32(u32 w) {
     return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24;
 #endif
 }
-static void st32(u32 w, u32 v) {
-    STORED(w >> 11);
+/* 2026-11-03 (docs/native-plan.md "Texture stamp misses by content versions"): o, the word's bits before the store;
+ * the same bits again touch the page (the snapshot's and wr_pg's store) but keep its content version, so a texture
+ * there stays a version hit (the sprites and the pixel stores put the same bits back most of the time) */
+static void st32_was(u32 w, u32 o, u32 v) {
+    TOUCHED(w >> 11);
+    if (o == v) return;
+    page_ver[w >> 11 & 511] = blk_ver[w >> 6 & 16383] = ver_now;
+    blk_hok[w >> 6 & 16383] = 0;
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     __builtin_memcpy(vm + w * 4, &v, 4);
 #else
@@ -209,6 +229,7 @@ static void st32(u32 w, u32 v) {
     p[0] = v; p[1] = v >> 8; p[2] = v >> 16; p[3] = v >> 24;
 #endif
 }
+static void st32(u32 w, u32 v) { st32_was(w, ld32(w), v); }
 static u32 rd32(u32 w) { const u8 *p = vm + w * 4; return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24; }
 /* a write into page pg: the bits no longer a draw's, and the page's stamp moved when the stored bits
  * changed.  Session 135: the same bits again keep the stamp (the title uploads every texture and CLUT
@@ -223,7 +244,7 @@ static void mark(u32 pg, int changed, u32 bits) {
 /* bits: the word bits the write stores, no longer a draw's */
 static void wr32(u32 w, u32 v, u32 bits) {
     u32 o = ld32(w);
-    st32(w, v);
+    st32_was(w, o, v);
     if (flat_raw) return; /* a flat sprite's pixels stay the draw's (kh1_gsmem_flat_sprite) */
     mark(w >> 11, o != v, bits);
 }
@@ -267,21 +288,24 @@ static void put_at(u32 psm, u32 a, u32 v) {
     case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: {
         u32 o = vm[a * 2] | vm[a * 2 + 1] << 8;
         vm[a * 2] = v; vm[a * 2 + 1] = v >> 8;
-        STORED(a >> 12);
+        if (o != (v & 0xFFFF)) STORED(a >> 7);
+        else TOUCHED(a >> 12);
         if (!flat_raw) mark(a >> 12, o != (v & 0xFFFF), ~0u);
         return;
     }
     case KH1_PSMT8: {
         u32 o = vm[a];
         vm[a] = v;
-        STORED(a >> 13);
+        if (o != (v & 0xFF)) STORED(a >> 8);
+        else TOUCHED(a >> 13);
         mark(a >> 13, o != (v & 0xFF), ~0u);
         return;
     }
     case KH1_PSMT4: {
         u32 o = vm[a >> 1];
         vm[a >> 1] = (o & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
-        STORED(a >> 14);
+        if (o != vm[a >> 1]) STORED(a >> 9);
+        else TOUCHED(a >> 14);
         mark(a >> 14, o != vm[a >> 1], ~0u);
         return;
     }
@@ -739,14 +763,52 @@ static void band_init(void) {
 #endif
 }
 
+/* a block's content hash: its 64 words in memory order, word i into lane i & 3 (h = rotl((h ^ w) * k, 15)), so the
+ * block uploads' NEON forms hash the four words of each vector they store in one step; the lanes folded to 64 bits
+ * by bh_keep */
+static const u32 bh_seed[4] = { 0x243F6A88u, 0x85A308D3u, 0x13198A2Eu, 0x03707344u };
+static const u32 bh_k[4] = { 0x9E3779B1u, 0x85EBCA77u, 0xC2B2AE3Du, 0x27D4EB2Fu };
+static u32 band_h[4]; /* the last band_* block's lanes */
+static u32 sig_lazy;  /* blocks hashed by kh1_gsmem_tex_sig (the rest by the block uploads) */
+static u32 fmix(u32 h) {
+    h ^= h >> 16;
+    h *= 0x85EBCA6Bu;
+    h ^= h >> 13;
+    h *= 0xC2B2AE35u;
+    return h ^ h >> 16;
+}
+static void bh_words(const u8 *p, u32 *h) {
+    u32 i, w, x;
+    for (i = 0; i < 4; i++) h[i] = bh_seed[i];
+    for (i = 0; i < 64; i++) {
+        __builtin_memcpy(&w, p + i * 4, 4);
+        x = (h[i & 3] ^ w) * bh_k[i & 3];
+        h[i & 3] = x << 15 | x >> 17;
+    }
+}
+static void bh_keep(u32 b, const u32 *h) {
+    u32 a = fmix(h[0] + fmix(h[2]));
+    blk_h0[b] = a;
+    blk_h1[b] = fmix(h[1] + fmix(h[3] ^ a));
+    blk_hok[b] = 1;
+}
+#if defined(__ARM_NEON)
+#define BH_NEON(hv, kv, o)                                                \
+    do {                                                                  \
+        uint32x4_t x_ = vmulq_u32(veorq_u32(hv, o), kv);                  \
+        hv = vsriq_n_u32(vshlq_n_u32(x_, 15), x_, 17);                    \
+    } while (0)
+#endif
+
 /* the block whose top left pixel is at src (row stride `stride` bytes) into the block at vm + base:
- * nonzero when any stored byte changed */
+ * nonzero when any stored byte changed; its hash's lanes into band_h */
 static u32 band_t8(u32 base, const u8 *src, u32 stride) {
     u8 *d = vm + base;
     u32 g;
 #if defined(__ARM_NEON)
     if (t8_neon) {
         uint8x16_t diff = vdupq_n_u8(0);
+        uint32x4_t hv = vld1q_u32(bh_seed), kv = vld1q_u32(bh_k);
         uint32x2_t m;
         for (g = 0; g < 4; g++, d += 64, src += 4 * stride) {
             uint8x16_t r0 = vld1q_u8(src), r1 = vld1q_u8(src + stride), r2 = vld1q_u8(src + 2 * stride),
@@ -770,7 +832,12 @@ static u32 band_t8(u32 base, const u8 *src, u32 stride) {
             vst1q_u8(d + 16, o1);
             vst1q_u8(d + 32, o2);
             vst1q_u8(d + 48, o3);
+            BH_NEON(hv, kv, vreinterpretq_u32_u8(o0));
+            BH_NEON(hv, kv, vreinterpretq_u32_u8(o1));
+            BH_NEON(hv, kv, vreinterpretq_u32_u8(o2));
+            BH_NEON(hv, kv, vreinterpretq_u32_u8(o3));
         }
+        vst1q_u32(band_h, hv);
         m = vorr_u32(vget_low_u32(vreinterpretq_u32_u8(diff)), vget_high_u32(vreinterpretq_u32_u8(diff)));
         m = vpmax_u32(m, m);
         return vget_lane_u32(m, 0);
@@ -784,6 +851,7 @@ static u32 band_t8(u32 base, const u8 *src, u32 stride) {
                 ch |= d[o] ^ v;
                 d[o] = (u8)v;
             }
+        bh_words(vm + base, band_h);
         return ch;
     }
 }
@@ -794,7 +862,7 @@ static u32 band_c32(u32 base, const u32 *src, u32 stride) {
     u8 *d = vm + base * 4;
 #if defined(__ARM_NEON)
     if (c32_neon) {
-        uint32x4_t diff = vdupq_n_u32(0);
+        uint32x4_t diff = vdupq_n_u32(0), hv = vld1q_u32(bh_seed), kv = vld1q_u32(bh_k);
         uint32x2_t m;
         for (c = 0; c < 4; c++, d += 64, src += 2 * stride) {
             uint32x4_t a0 = vld1q_u32(src), a1 = vld1q_u32(src + 4), b0 = vld1q_u32(src + stride),
@@ -812,7 +880,12 @@ static u32 band_c32(u32 base, const u32 *src, u32 stride) {
             vst1q_u32(dw + 4, o1);
             vst1q_u32(dw + 8, o2);
             vst1q_u32(dw + 12, o3);
+            BH_NEON(hv, kv, o0);
+            BH_NEON(hv, kv, o1);
+            BH_NEON(hv, kv, o2);
+            BH_NEON(hv, kv, o3);
         }
+        vst1q_u32(band_h, hv);
         m = vorr_u32(vget_low_u32(diff), vget_high_u32(diff));
         m = vpmax_u32(m, m);
         return vget_lane_u32(m, 0);
@@ -827,18 +900,21 @@ static u32 band_c32(u32 base, const u32 *src, u32 stride) {
                 ch |= w0 ^ v;
                 __builtin_memcpy(d + o * 4, &v, 4);
             }
+        bh_words(vm + base * 4, band_h);
         return ch;
     }
 }
 
-/* the page's stamp and marks after a block of stores, as the pixel loops leave them (changed: any stored bit) */
-static int band_mark(u32 pg, u32 changed) {
+/* the page's stamp and marks after a block of stores, as the pixel loops leave them (changed: any stored bit; b, the
+ * block's number, blk_ver's) */
+static int band_mark(u32 b, u32 changed) {
+    u32 pg = b >> 5 & 511;
     if (changed) {
         page_seq[pg] = seq;
-        STORED(pg);
-    } else if (!page_drawn[pg]) {
-        return 0;
+        STORED(b);
     }
+    bh_keep(b & 16383, band_h); /* the block holds what band_* stored, changed or not */
+    if (!changed && !page_drawn[pg]) return 0;
     page_drawn[pg] = 0;
     return 1;
 }
@@ -874,7 +950,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (x == 0 && band_here(trx.ai + j, k - j, 8, 8) && band_blocks(at + j, 8, 6)) {
                 u32 bx, any = 0;
                 for (bx = 0; bx < trx.w; bx += 8)
-                    if (!SKIP_PG(at[j + bx] >> 11)) any |= band_mark(at[j + bx] >> 11, band_c32(at[j + bx], w + j + bx, trx.w));
+                    if (!SKIP_PG(at[j + bx] >> 11)) any |= band_mark(at[j + bx] >> 6, band_c32(at[j + bx], w + j + bx, trx.w));
                 marks += any != 0;
                 j += 8 * trx.w;
                 continue;
@@ -919,7 +995,7 @@ static int trx_bulk(const u32 *w, u32 n) {
                 u32 bx;
                 for (bx = 0; bx < trx.w; bx += 16)
                     if (!SKIP_PG(at[j + bx] >> 13))
-                        moved |= band_mark(at[j + bx] >> 13, band_t8(at[j + bx], (const u8 *)w + j + bx, trx.w));
+                        moved |= band_mark(at[j + bx] >> 8, band_t8(at[j + bx], (const u8 *)w + j + bx, trx.w));
                 run = 16 * trx.w;
                 continue;
             }
@@ -942,7 +1018,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             }
             if (d) {
                 page_seq[pg] = seq;
-                STORED(pg);
+                STORED(at[j] >> 8); /* the run is in one block */
                 page_drawn[pg] = 0;
                 moved = 1;
             } else if (page_drawn[pg]) {
@@ -970,7 +1046,7 @@ static int trx_bulk(const u32 *w, u32 n) {
             if (o != nv) {
                 vm[a >> 1] = (u8)nv;
                 page_seq[pg] = seq;
-                STORED(pg);
+                STORED(a >> 9);
             } else if (!page_drawn[pg]) {
                 continue;
             }
@@ -1400,6 +1476,43 @@ static const u16 *tex_pages(u32 lo, u32 hi, u32 psm, u32 bwid, u32 bhgt, u32 *n)
     return m <= TP_MAX ? tp[k].pg : 0;
 }
 
+/* 2026-11-03: the 256-byte blocks (blk_ver's numbers) TEX0 (lo, hi)'s texels lie in, a list made the first time; 0
+ * for a texture over TB_MAX blocks (kh1_gsmem_tex_ver and the raw words then go by pages: such a texture fills
+ * whole pages) or a format the model does not keep */
+#define TB_KEYS 64
+#define TB_MAX 128
+static struct { u32 lo, hi, n; u16 b[TB_MAX]; } tb[TB_KEYS];
+static u32 tb_ok[TB_KEYS / 32];
+static u32 blk_of(u32 psm, u32 a) {
+    return (bits16(psm) ? a >> 7 : psm == KH1_PSMT8 ? a >> 8 : psm == KH1_PSMT4 ? a >> 9 : a >> 6) & 16383;
+}
+static const u16 *tex_blocks(u32 lo, u32 hi, u32 *n) {
+    u32 psm = lo >> 20 & 63, tw = lo >> 26 & 15, th, bwid, bhgt, k, x, y, m = 0;
+    hi &= 3;
+    th = (lo >> 30 | hi << 2) & 15;
+    *n = 0;
+    if (!known(psm) || tw > 10 || th > 10) return 0;
+    k = (lo ^ lo >> 14 ^ lo >> 20 ^ lo >> 26 ^ hi << 6) % TB_KEYS;
+    if (tb_ok[k >> 5] >> (k & 31) & 1 && tb[k].lo == lo && tb[k].hi == hi) {
+        *n = tb[k].n;
+        return tb[k].n <= TB_MAX ? tb[k].b : 0;
+    }
+    bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
+    bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
+    /* a block-aligned cell of the texture is one block (TBP0 is a block number), each a different one */
+    for (y = 0; y < 1u << th; y += bhgt)
+        for (x = 0; x < 1u << tw; x += bwid) {
+            if (m < TB_MAX) tb[k].b[m] = (u16)blk_of(psm, kh1_gsmem_addr(psm, lo & 0x3FFF, lo >> 14 & 63, x, y));
+            m++;
+        }
+    tb[k].lo = lo;
+    tb[k].hi = hi;
+    tb[k].n = m;
+    tb_ok[k >> 5] |= 1u << (k & 31);
+    *n = m;
+    return m <= TB_MAX ? tb[k].b : 0;
+}
+
 /* the pages a texture's w x h texels lie in: the newest write's sequence number, and with *t the
  * first page whose drawn bits it reads (1 + its target, 0 for none) */
 static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
@@ -1463,7 +1576,11 @@ u32 kh1_gsmem_tex_ver(u32 lo, u32 hi) {
     if (!known(psm) || tw > 10 || th > 10) return 0;
     bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
     bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
-    if ((pg = tex_pages(lo, hi, psm, bwid, bhgt, &n)) != 0)
+    if ((pg = tex_blocks(lo, hi, &n)) != 0)
+        for (i = 0; i < n; i++) {
+            if (blk_ver[pg[i]] > v) v = blk_ver[pg[i]];
+        }
+    else if ((pg = tex_pages(lo, hi, psm, bwid, bhgt, &n)) != 0)
         for (i = 0; i < n; i++) {
             if (page_ver[pg[i]] > v) v = page_ver[pg[i]];
         }
@@ -1504,7 +1621,14 @@ static u32 tex_seen(u32 lo, u32 hi, u32 *seen) {
 }
 
 u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
-    u32 seen[512 / 32], p, n = tex_seen(lo, hi, seen);
+    u32 seen[512 / 32], p, n, i;
+    const u16 *b = tex_blocks(lo, hi, &n);
+    if (b) { /* 2026-11-03: a texture over few blocks keeps those blocks' words, in its list's order */
+        if (n * 64 > max) return 0;
+        for (i = 0; i < n; i++) memcpy(out + i * 64, vm + b[i] * 256, 256);
+        return n * 64;
+    }
+    n = tex_seen(lo, hi, seen);
     if (!n || n * 2048 > max) return 0;
     n = 0;
     for (p = 0; p < 512; p++)
@@ -1518,7 +1642,15 @@ u32 kh1_gsmem_tex_raw(u32 lo, u32 hi, u32 *out, u32 max) {
 /* 2026-11-03: 1 when the pages hold the n words kh1_gsmem_tex_raw gave (texcache.h's KH1TexRawSame), compared where
  * they lie, a page at a time */
 int kh1_gsmem_tex_raw_same(u32 lo, u32 hi, const u32 *raw, u32 n) {
-    u32 seen[512 / 32], p, k = tex_seen(lo, hi, seen);
+    u32 seen[512 / 32], p, k, i;
+    const u16 *b = tex_blocks(lo, hi, &k);
+    if (b) {
+        if (k * 64 != n) return 0;
+        for (i = 0; i < k; i++)
+            if (!kh1_bytes_same(vm + b[i] * 256, raw + i * 64, 256)) return 0;
+        return 1;
+    }
+    k = tex_seen(lo, hi, seen);
     if (!k || k * 2048 != n) return 0;
     for (p = 0, k = 0; p < 512; p++)
         if (seen[p >> 5] >> (p & 31) & 1) {
@@ -1527,6 +1659,29 @@ int kh1_gsmem_tex_raw_same(u32 lo, u32 hi, const u32 *raw, u32 n) {
         }
     return 1;
 }
+
+/* 2026-11-03: TEX0 (lo, hi)'s content signature (texcache.h's KH1TexSig): 64 bits from the hashes of the blocks its
+ * texels lie in, in tex_blocks' order, each block hashed when no hash is kept for its bytes.  0 for a texture over
+ * TB_MAX blocks or a format the model does not keep */
+int kh1_gsmem_tex_sig(u32 lo, u32 hi, u32 *sig) {
+    u32 n, i, k, a = 0x6A09E667u, c = 0xBB67AE85u, h[4];
+    const u16 *b = tex_blocks(lo, hi, &n);
+    if (!b) return 0;
+    for (i = 0; i < n; i++) {
+        k = b[i];
+        if (!blk_hok[k]) {
+            bh_words(vm + k * 256, h);
+            bh_keep(k, h);
+            sig_lazy++;
+        }
+        a = fmix(a ^ blk_h0[k]);
+        c = fmix(c ^ blk_h1[k] ^ a);
+    }
+    sig[0] = fmix(a ^ n);
+    sig[1] = fmix(c ^ sig[0]);
+    return 1;
+}
+u32 kh1_gsmem_sig_lazy(void) { return sig_lazy; }
 
 /* ---- session 142: GS memory as a frame left it, for the frame's GPU work on its own thread ----
  * kh1_gsmem_snap_take copies the pages stored to since the last one (and every page's stamp); the

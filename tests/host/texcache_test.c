@@ -43,6 +43,8 @@ static const char *key_name[KEYS] = { "stamp", "bytes", "both" };
 static KH1TexCache port;
 static KH1TexCache port_raw; /* session 142: the port's cache with kh1_gsmem_tex_raw: the same answers */
 static KH1TexCache port_ver; /* 2026-11-03: with kh1_gsmem_tex_ver as well */
+static KH1TexCache port_sig; /* 2026-11-03: and kh1_gsmem_tex_sig */
+static u32 sig_stale;
 
 typedef struct {
     u32 used, lo, hi, stamp, hash, age;
@@ -133,11 +135,15 @@ static void draw(u32 lo, u32 hi) {
                          &decoded);
     for (i = 0; t && i < n; i++)
         if (t[i] != fresh[i]) { ver_stale++; break; }
+    t = kh1_texcache_get(&port_sig, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), port_read, 0,
+                         &decoded);
+    for (i = 0; t && i < n; i++)
+        if (t[i] != fresh[i]) { sig_stale++; break; }
 }
 
 static void reset(void) {
     memset(cache, 0, sizeof cache);
-    stale = port_stale = port_target = raw_stale = ver_stale = 0;
+    stale = port_stale = port_target = raw_stale = ver_stale = sig_stale = 0;
     kh1_texcache_init(&port);
     kh1_texcache_init(&port_raw);
     port_raw.raw = kh1_gsmem_tex_raw;
@@ -146,6 +152,12 @@ static void reset(void) {
     port_ver.ver = kh1_gsmem_tex_ver;
     port_ver.same = kh1_gsmem_tex_raw_same;
     port_ver.ver_check = 1;
+    kh1_texcache_init(&port_sig);
+    port_sig.raw = kh1_gsmem_tex_raw;
+    port_sig.ver = kh1_gsmem_tex_ver;
+    port_sig.same = kh1_gsmem_tex_raw_same;
+    port_sig.sig = kh1_gsmem_tex_sig;
+    port_sig.ver_check = 1;
     kh1_gsmem_reset();
 }
 
@@ -158,7 +170,10 @@ static int port_as_both(void) {
            port_raw.decodes == port.decodes && port_raw.draws == port.draws && ver_stale == 0 &&
            port_ver.ver_bad == 0 && port_ver.stamp_hits == port.stamp_hits &&
            port_ver.hash_hits == port.hash_hits && port_ver.decodes == port.decodes && port_ver.draws == port.draws &&
-           port_ver.ver_hits + port_ver.raw_hits == port_raw.raw_hits;
+           port_ver.ver_hits + port_ver.raw_hits == port_raw.raw_hits && sig_stale == 0 && port_sig.ver_bad == 0 &&
+           port_sig.hash_hits == port.hash_hits && port_sig.decodes == port.decodes &&
+           port_sig.ver_hits == port_ver.ver_hits &&
+           port_sig.ver_hits + port_sig.sig_hits + port_sig.raw_hits == port_raw.raw_hits;
 }
 
 /* an upload of w x h pixels in psm at block bp (BW bw), texel (x, y) = f(x, y, seed) */
@@ -197,6 +212,8 @@ static void report(const char *name) {
            port.targets, port.hashed, port.decoded);
     printf("texcache_test: %s, version cache: %u version hits, %u raw hits\n", name, port_ver.ver_hits,
            port_ver.raw_hits);
+    printf("texcache_test: %s, signature cache: %u version hits, %u signature hits, %u raw hits\n", name,
+           port_sig.ver_hits, port_sig.sig_hits, port_sig.raw_hits);
 }
 
 #define TEX0(bp, bw, psm, tw, th) ((u32)(bp) | (u32)(bw) << 14 | (u32)(psm) << 20 | (u32)(tw) << 26 | (u32)(th) << 30)
@@ -223,6 +240,7 @@ int main(void) {
           cache[KEY_BOTH].hashed == cache[KEY_BYTES].hashed);
     CHECK("slot: the port cache is `both`", port_as_both() && port.hash_hits == 4);
     CHECK("slot: the slot's pages' words give each hash hit", port_raw.raw_hits == 4);
+    CHECK("slot: the blocks' hashes give each of them (the picture back after the other)", port_sig.sig_hits == 4);
 
     /* (1b) the same slot drawn twice per upload (the timer's three fonts: one upload, CSA 0 / 2 / 6) */
     reset();
@@ -265,7 +283,10 @@ int main(void) {
     CHECK("scroll: both: the bytes' decodes, hashing only after a write", cache[KEY_BOTH].decodes == 8 &&
           cache[KEY_BOTH].hashed == 28 * 16 * 8);
     CHECK("scroll: the port cache is `both`", port_as_both() && port.stamp_hits == 4 && port.hash_hits == 20);
-    CHECK("scroll: the pages' words give 7 of the 20 hash hits", port_raw.raw_hits == 7);
+    /* 2026-11-03: the words kept by blocks (gsmem.c tex_blocks), so the neighbour's stay the same while the
+     * destination's blocks change: 20 (by pages, the neighbour's page moved with the destination: 7) */
+    CHECK("scroll: the blocks' words give the 20 hash hits", port_raw.raw_hits == 20);
+    CHECK("scroll: the neighbour's blocks keep their version", port_ver.ver_hits == 13);
 
     /* (3) session 118, render targets: the windows' shadow / crossfade pass at 0x3A00 (renderer-spec
      * 4.9: 256 x 256 CT32, FBP 0x1D0, FBW 4), first a picture uploaded there and drawn as a texture

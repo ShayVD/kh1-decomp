@@ -102,6 +102,7 @@ int kh1_vu1_prog_stats(int i, int *num, u32 *us, u32 *runs, u32 *pairs);
 
 /* 1 (the default): a program out/gen/vu1_tr.c has runs as its C; 0: the interpreter only; 2: both, compared */
 extern int kh1_vu1_tr;
+extern int kh1_vu1_tr_ovl; /* 1 (the default): the overlays' programs translated too (P100-P104); 0 the interpreter */
 extern int kh1_vu1_native; /* session 150: 1 (the default) the programs written as C where there is one (vu1_nat.h); 2 each one checked against the translation */
 
 /* every kh1_vu1_dump_every-th run's start state to kh1_vu1_dump_dir/vuNNNNN.bin (offline replays; scratch) */

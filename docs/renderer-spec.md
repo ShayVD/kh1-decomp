@@ -654,6 +654,10 @@ the main mesh runs C3, or C0 when clipped. **No caller passes 2 or 3, and nothin
 (gb.x `0x00F56460`, wm.x `0x00F846F0`): C2 (flat colour) and C4 are dead code on this disc, statically. A
 port needs C0, C1 and C3.
 
+*2026-11-03:* the Vita and host builds now translate C0-C4 to C like the main ELF's programs (P100-P104,
+vita-build.md "The world map's Gummi programs as C"); their routine addresses are the set-up packet's UNPACK to
+qw 1021 just before each program's upload (C0: vertex / store 0xc8 / 0x216 for m = 0, 0xdf / 0x222 for m = 1).
+
 A port can draw this engine on the CPU side (index buffers + per-vertex lighting, one draw per run as a
 triangle or quad fan) instead of translating the VU code; the files need no rewriting.
 

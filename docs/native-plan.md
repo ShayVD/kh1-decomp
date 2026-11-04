@@ -503,6 +503,64 @@ version (a store reached one of the pages), and those are cheaper by the copy. T
 Next for the lookups: find which stores move the versions of the raw-hit textures (likely same-byte stores through
 `wr32`, which calls `st32` whatever the bytes, or a neighbour texture in a shared page), or block-granular versions.
 
+### Texture stamp misses by content hashes (2026-11-03, config.txt `texver=2`, the default)
+
+The section above left ~3/4 of the stamp misses as raw hits. Measured in Vita3K (fight_en.txt, `renderer=native`,
+frames to 14,000, means over the last 40 windows), the two guesses above turned out not to be the cause:
+
+| build | version hits | raw hits | signature hits | lookups' µs each (Vita3K) |
+|---|---|---|---|---|
+| PR #225 (`texver=1`) | 45 | 969 | - | 22.4 |
+| + same bytes keep the version | 45 | 968 | - | 21.3 |
+| + 256-byte block versions | 54 | 990 | - | 15.8 |
+| + block content hashes (`texver=2`) | ~440 | ~120 | ~1,800 | 7.6 |
+
+(The last row's windows are longer, so its counts are higher; the µs column is per texskip lookup.) A raw hit with
+block versions means the texture's own blocks held other bytes between two lookups and then its bytes again: the
+fight streams textures through the same blocks, one and back again. So no version can catch it, but a content hash
+can. Three changes (host/null/gsmem.c, host/port/texcache.c):
+
+- **Stores of the same bits keep the version** (`st32_was`, `put_at`'s 16/8/4-bit forms): they still mark the
+  page for the snapshot and `wr_pg` (`TOUCHED`), but not `page_ver`.
+- **Block versions** (`blk_ver[16384]`, one per 256 bytes; `STORED(b)` takes the block number): a texture over at
+  most `TB_MAX` (128) blocks gets its version, and its raw words (`kh1_gsmem_tex_raw` / `_raw_same`) from its own
+  blocks (`tex_blocks`, a list cached per layout like `tex_pages`), so a neighbour's upload into the same page
+  neither moves it nor fails its compare, and the compare reads only its blocks. Larger textures keep the page form.
+- **Block content hashes** (`blk_h0` / `blk_h1`, valid while `blk_hok[b]`; any store that changes a byte clears
+  it): 4 lanes of `h = rotl((h ^ w) * k, 15)` over the block's 64 words in memory order, folded to 64 bits. The
+  NEON block uploads (`band_t8`, `band_c32`) hash each vector as they store it, so a streamed texture's blocks are
+  hashed for nearly nothing. Other stores leave the hash for `kh1_gsmem_tex_sig`, which hashes such a block when it
+  is next asked (`blocks hashed at a lookup`, ~3,100 a window in the fight). The texture's signature is the blocks'
+  hashes chained in list order (64 bits). The cache (`KH1TexSig`, `sig_hits`) tries it after the version and before
+  the raw compare. An entry of the layout with the same signature is a hit with no word read.
+
+`texver=1` is the previous section's path, now with block versions; `texver=0` is the old one. The Vita and the host
+lines print `signature hits` and `blocks hashed at a lookup`. `KH1_HOST_TEXVERCHECK=1` also compares every signature
+hit's words with the entry's (`checked wrong`). A hash collision would show a wrong texture, at odds of ~2^-64 a
+compare. A hash that differs between the NEON and scalar forms would only cost hits: tests/host/gsfast_test.c (the
+`up` runs under qemu-arm too) checks that a 32 x 32 texture's signature is the same with the block uploads on and off.
+tests/host/texcache_test.c runs a fourth cache with signatures, and the slot 0x3600's picture coming back after
+another is a signature hit.
+
+**Vita A/B (2026-11-03, Shay's Vita, one build, tools/vita/hw_run.sh `renderer=native frames=14000
+pad=fight_en.txt texver=1|2`, means over frames 9,000-14,000 with ~/vita-tools/kh1-winavg.py)**: both reached frame
+14,000 and stopped cleanly.
+
+| | texver=1 | texver=2 |
+|---|---|---|
+| cache stamp misses (last window): version; signature; raw hits | 72; -; 892 | 401; 1,337; 98 |
+| texture lookups a window: ms; µs each (last 40 windows) | 214; 78 | 117; 40 |
+| gs worker thread; busy; GPU thread (ms a window) | 1,483; 1,765; 1,650 | 1,446; 1,742; 1,677 |
+| pictures/s | 25.4 | 25.2 |
+
+So the lookups lose ~100 ms a window (45%), well short of the ~0.3 s hoped for. The worker's totals move by only
+25-40 ms (one run each, so that's within noise). Pictures/s don't move because the GPU thread is the limit. What's
+left in the lookups is ~2,500 blocks hashed at a lookup a window: stores outside the NEON block uploads (the T8 row
+runs, T4, the sprites). Hashing those as they're stored, as `band_*` does, is the next cut. Host check (en.iso,
+dive_en.txt to 21,000, gxmcheck, `KH1_HOST_TEXVERCHECK=1`): all 168 GPU target hashes are the same as main's.
+`0 checked wrong`. 135,523 of main's 156,527 raw hits are signature hits. Only the mock's draw counts differ
+(a texture hit on another entry with the same bytes splits or joins a batch differently).
+
 ### Stage 1: the GPU thread's per-vertex work (static vertex buffers and batching)
 
 The native renderer's stage 5 and P0's caching note, pulled ahead because the GPU thread becomes the limit.
@@ -1001,6 +1059,8 @@ and C for every function its entry and data reach.
   bigger than the three done so far put together.
 - **gb.x / wm.x's five Gummi VU1 programs** (renderer-spec 2.5) first run as translated VU1 programs, like
   P1-P8 today (vu1tr=1); moving them to the GPU follows stage 3's pattern once the Gummi ship plays.
+  *2026-11-03:* done for the translation (P100-P104, vita-build.md "The world map's Gummi programs as C"); the
+  world map screen reaches Vita3K's 30 cap, the part after Depart is still VU1-bound (C0 / C1).
 - **Tested by**: a pad script for each overlay (world map open and a world chosen, one Gummi flight, each
   summon and a limit), reaching the same frames on the host and the Vita as in PCSX2.
 

@@ -76,7 +76,8 @@ static int tex_ok, tex_look = 1; /* tex_look: a transfer since the last lookup *
 static int lt_ok, pal_look = 1;
 static u32 lt_lo, lt_hi, lt_stamp, lt_tgt;
 int kh1_pipes_texskip = 1; /* config.txt texskip=, host KH1_HOST_TEXSKIP: 0 looks every time as before */
-int kh1_pipes_texver = 1; /* 2026-11-03: config.txt texver=, host KH1_HOST_TEXVER: 0 checks a stamp miss's words as before */
+int kh1_pipes_texver = 2; /* 2026-11-03: config.txt texver=, host KH1_HOST_TEXVER: 0 checks a stamp miss's words as before,
+                           * 1 adds the content versions, 2 the blocks' content hashes */
 u32 kh1_pipes_tex_same; /* the lookups that found the last one's texture (the watchdog's) */
 static int oc_ok; /* the last clut op's TEX0, TEXA, id and slot (on_clut's oc_*) are what the recorder holds */
 /* 2026-11-02: the GS worker's CLUT loads and texture lookups on kh1_vu1_clock (the Vita's watchdog prints them): calls,
@@ -307,6 +308,7 @@ static KH1CmdRec *recorder(void) {
         tex->raw = kh1_gsmem_tex_raw; /* session 142: a stamp miss on the same pages' words reads no texel */
         tex->ver = kh1_pipes_texver ? kh1_gsmem_tex_ver : 0; /* 2026-11-03: nor one on the same pages' version */
         tex->same = kh1_pipes_texver ? kh1_gsmem_tex_raw_same : 0; /* and the words compared where they lie */
+        tex->sig = kh1_pipes_texver >= 2 ? kh1_gsmem_tex_sig : 0; /* and texver=2: the blocks' content hashes */
         tex->ver_check = getenv("KH1_HOST_TEXVERCHECK") != 0; /* the host's check of each version hit */
         kh1_gsmem_xfer_hook = on_xfer;
         kh1_gsmem_clut_hook = on_clut;

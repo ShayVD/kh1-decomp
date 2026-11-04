@@ -32,6 +32,8 @@ typedef struct {
     u32 *raw;    /* session 142: the raw words of the pages the texels lie in, when last seen (KH1TexRaw) */
     u32 nraw;
     u32 ver;     /* 2026-11-03: the pages' content version the bytes were last seen at (KH1TexVer), 0: none */
+    u32 sig[2];  /* 2026-11-03: the content signature the bytes were last seen with (KH1TexSig), when has_sig */
+    u32 has_sig;
 } KH1TexSlot;
 
 /* session 142: the raw words of every page TEX0 (lo, hi)'s texels lie in, at most max, into out: their
@@ -48,6 +50,11 @@ typedef u32 (*KH1TexVer)(u32 tex0_lo, u32 tex0_hi);
 /* 2026-11-03: 1 when the pages TEX0 (lo, hi)'s texels lie in hold the n words a KH1TexRaw gave, compared in place
  * (no copy on a raw hit) */
 typedef int (*KH1TexRawSame)(u32 tex0_lo, u32 tex0_hi, const u32 *raw, u32 n);
+/* 2026-11-03 (docs/native-plan.md "Texture stamp misses by content hashes"): a 64-bit signature of the bytes TEX0
+ * (lo, hi)'s texels lie in, into sig[0..1], from hashes the platform keeps as it stores (no word read for bytes it
+ * has hashed); 1, or 0 when not known.  On a version miss an entry of the same layout with the same signature holds
+ * the same bytes: a hit with no word compared (a texture streamed through blocks other textures took in between) */
+typedef int (*KH1TexSig)(u32 tex0_lo, u32 tex0_hi, u32 *sig);
 
 typedef struct {
     KH1TexSlot slot[KH1_TEXCACHE_SLOTS];
@@ -69,6 +76,8 @@ typedef struct {
     u32 ver_hits;   /* of hash_hits: the pages' version held, nothing read */
     int ver_check;  /* nonzero: each version hit's pages also compared with the entry's words (ver_bad) */
     u32 ver_bad;
+    KH1TexSig sig;  /* 2026-11-03: set by the caller after kh1_texcache_init, or 0 */
+    u32 sig_hits;   /* of hash_hits: the signature held, nothing compared (ver_check: compared, into ver_bad) */
 } KH1TexCache;
 
 /* reads the texture TEX0 (lo, hi) names: its 1 << TW by 1 << TH stored texels, row by row, into out */

@@ -526,3 +526,49 @@ delete the truncated object. Worse, qemu-user's ee-as / ld writes `lw` for some 
 kh1.elf functions, gb func_00f429b0 / func_00f46ee0 and wm func_00f2d308 / f39968 / f69aa8 / f6dfd8
 differ from the original only that way, all in files this session did not touch (or touched only under
 `#ifndef KH1_PS2`). Byte-identity has to be checked on real x86 Linux. gdb does not work (no ptrace).
+
+## The Vita's save-point route, and where gb.x starts (2026-11-03)
+
+wm_en.txt / gummi_en.txt / garage_en.txt never reached the world map on the Vita: in Agrabah the
+command menu's 4th slot read "?" instead of "Save", and UP + CIRCLE did nothing. **Not a port bug: the
+pad script's timing.** Found with config.txt's new `padlog=` (vita-build.md):
+
+- The Vita reaches the field from save 04 by ~2,700 (the host by ~3,300), so the script's 2800 and 3100
+  CIRCLEs, confirms on the host, are Attacks there: Sora lunges from (-419, 288) to (-431, 359).
+- The save point is a command object of kind 1, range 50, at (-456, 282). While the player is in range,
+  cmdmenu.nostrict.c func_0012d930 calls its handler (objheal.nostrict.c func_00156d88, case -1), which
+  puts Save (id 0x36) in the top list's 4th slot. Out of range the slot keeps id 0, drawn as "?" and
+  masked off, so CIRCLE on it does nothing.
+- The pad itself is fine: one read a game frame (the field runs at 30 fps, so reads alternate 1 / 0 a
+  vblank), each press seen once. The "D-pad skips slots" report was the same confusion.
+- **Fix**: the three scripts walk back onto the save point (`3400 - goto -456 282 12`, `4400 -`). On the
+  host Sora was already there and steps ~30 units in; wm.x still loads at ~6,300. In Vita3K (main
+  f8afa7e1 + this change) the Save Menu, Gummi Ship and "Board the gummi ship?" lead to **native wm.x on
+  the Vita** (`wm.x entry (2, 83) returned 1` at frame 6,327) with no crash to 9,180; gummi_en.txt goes on
+  into the flight's files (gumi/*, gumi_manual_*.ev) and was still running at 8,760 when the run's time
+  ran out (Vita3K slows to ~10 frames/s on the map).
+- **On hardware** the user's hand-played run crashed right after that same first entry call (frame 2,122,
+  log ends at `wm.x entry (2, 83) returned 1`). Vita3K does not reproduce it, so it is one of the
+  hardware-only kinds. **Found and fixed from its psp2core dump**: a data abort in hud/ui.c func_0024a490
+  (the command menu's sprite animation) reading through 0xaaeadb48. func_0024aac8 turns a sprite file's
+  key indices into pointers and skips entries already done with `(s32)ptr <= 0xfffff`; a Vita pointer
+  (0x81xxxxxx) is negative as s32, so the HUD's second set-up on the way to the world map relocated every
+  frame pointer again. The test is unsigned off the EE now (the EE's code unchanged). Vita3K did not fault
+  on the garbage read. The user's hardware run after the fix: wm.x's first entry passes, the world map's
+  files load and the map runs (~3 fps: the watchdog shows the game thread ~2 s of each 2 s, VIF1's walk
+  2,060 ms of it, so the map's 3D is on the emulated VU1 path; 7 bad DMA sends a window, 2,400 by frame
+  2,624). Its speed is a separate task.
+
+**gb.x (game mode 6) is started only by a field script**: library call 488 (vm_lib.c func_001d8b48,
+D_003D9FE0[488]) calls roomload.c func_00112e08, which asks for state 6 (func_00109558(6)); gamestate.c
+case 6 then runs gumisave.c func_001ba7e0 ("Run Gumi Edit"). The Save Menu's Gummi Ship is library call
+func_00112d80 -> state 4 (wm.x). A VM word is opcode in byte 3, argument in bytes 0-2, so the call is
+the word 0x180001E8 (little-endian e8 01 00 18). Decompressing every KINGDOM.IDX file (extract_kingdom.py's
+decoder) and searching for it: **the only room script with call 488 is tw01.ard (Traverse Town)**, at
+offset 0x28ee3d of the decompressed file (script code sits at offsets 1 mod 4 there, as in the other
+rooms). The words around it read as a choice dispatch: `push 2; jump-if 3 ...; push 3; jump-if 4 -> lib 488`,
+so it is most likely a conversation menu's third answer that opens the Gummi editor (who says it in
+tw01 is not read yet: vmdis.py on the host at that room would show the VM and its entity). The user's
+saves (Agrabah, End of the World) are not in Traverse Town: the route to gb.x is a save there, or a
+walk from a world's save point via the world map's Traverse Town. Lib 487 (func_001d8b28) is in most
+End of the World rooms, cp21, di01 / di03, dh05, pc05, tw03 and iz46 / iz48.
