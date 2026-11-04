@@ -341,8 +341,14 @@ def platform_flags(d, f):
     tool = os.path.join(ROOT, "tools", "vu", "vu1_translate.py")
     if not os.path.exists(elf):
         return []
-    if not os.path.exists(gen) or os.path.getmtime(gen) < max(os.path.getmtime(elf), os.path.getmtime(tool)):
-        p = subprocess.run([sys.executable, "-I", tool, elf, gen], cwd=ROOT, capture_output=True, text=True)
+    # 2026-11-03: the Gummi engine's programs (wm.x / gb.x, renderer-spec 2.5) too, from the user's overlays in
+    # out/overlays (or $KH1_OVERLAYS) when they are there; without them the world map's 3D runs on the interpreter
+    ovl_dir = os.environ.get("KH1_OVERLAYS", os.path.join(ROOT, "out", "overlays"))
+    ovls = [os.path.join(ovl_dir, n) for n in ("wm.x", "gb.x") if os.path.exists(os.path.join(ovl_dir, n))]
+    if not os.path.exists(gen) or os.path.getmtime(gen) < max([os.path.getmtime(elf), os.path.getmtime(tool)]
+                                                                + [os.path.getmtime(o) for o in ovls]):
+        p = subprocess.run([sys.executable, "-I", tool, elf, gen] + (["--overlay"] + ovls if ovls else []), cwd=ROOT,
+                           capture_output=True, text=True)
         if p.returncode:
             print("vu1_translate failed, the interpreter runs every program:\n" + p.stderr)
             return []

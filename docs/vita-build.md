@@ -38,6 +38,8 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
    (default /usr/local/vitasdk).
 2. The PS2 build first (`make`: the data pieces and out/gen/symbols.ld), then `make vita`.
    About a minute on 4 cores. Prints `vita: out/vita/kh1-decomp.vpk (... KiB)`.
+   For the world map's speed, put your disc's `wm.x` and `gb.x` in out/overlays/ (or `$KH1_OVERLAYS`) first:
+   without them the Gummi programs run on the interpreter ("The world map's Gummi programs as C" below).
 
 ## Run (on a Vita with HENkaku / Ensō, or Vita3K)
 
@@ -2190,3 +2192,55 @@ Lessons from the first runs (vitacompanion 1.05):
 - At `frames=` the app exits itself; on the screen that looks like a crash. The next launch can land behind
   LiveArea's "close the application?" prompt (the game then sits at frame ~540): the script sends kill first, and if it
   still happens, close the app on the Vita and run again.
+
+## The world map's Gummi programs as C (2026-11-03)
+
+The user's first hardware run of the world map (after PR #226) ran at ~3 pictures/s with the game thread busy
+all of every window, VIF1's walk ~2,060 ms of it. The reason: wm.x's (and gb.x's) five VU1 programs, renderer C's
+C0-C4 (renderer-spec 2.5), were not in out/gen/vu1_tr.c. tools/vu/vu1_translate.py only read SLPS_251.98, so the
+map's 3D ran on the VU1 **interpreter**, one instruction pair at a time.
+
+- **The build** (tools/host/census.py, so both the host and the Vita build): when out/overlays/wm.x / gb.x (or
+  `$KH1_OVERLAYS`) are there, vu1_translate.py gets `--overlay` and adds their programs at micro address 0 as
+  **P100-P104** (= C0-C4, numbered by their place in wm.x; gb.x's are the same words, taken once). The main ELF's
+  output is byte-identical to before. Without the files the build still works and the map runs as before.
+- **Their routine calls.** C0-C4 call the vertex and store routines through VIs loaded with MTIR from vf26
+  (qw 1021 + m, written by the EE). The translator only followed jumps to links (BAL / JALR) and IADDIU constants,
+  so every such call "lost its way". The set-up packet beside each upload (the UNPACK V4-32 to qw 1021 just before
+  the program's MPG) holds those addresses (C0: 0xc8 / 0x216, 0xdf / 0x222; C3: 0xa2 / 0x105, 0xb8 / 0x10d);
+  overlay_programs() reads them there and they become the cases of every JR / JALR through a loaded VI.
+- **A miss is no longer silent.** A translated run whose JR goes outside its cases now finishes on the
+  interpreter from that pair (vu1.c `run(tpc)`) and logs the target once (`lost its way (a JR to ...)`); before,
+  the run just stopped there.
+- **Switch**: config.txt `vu1trovl=0` leaves P100-P104 to the interpreter (A/B in one VPK). The `vu1 programs:`
+  watchdog line shows them as P100-P104.
+
+**Vita3K** (main 97133558 + this, wm_en.txt, the same VPK with vu1trovl=1 / 0; Vita3K caps at 30 pictures/s and is
+not a hardware proxy):
+
+| Part of the route | vu1trovl=0 (interpreter) | vu1trovl=1 |
+| --- | --- | --- |
+| Select World (frames ~6,400-7,000) | 12-15 pictures/s, VU1 ~1.9 s a 2 s window | **30** (the cap), VU1 0.2-0.3 s |
+| After Depart (~7,120-7,400) | 2-5 pictures/s, VU1 ~1.9 s | 10-18, VU1 1.0-1.4 s (C0 and C1, ~20 ns a pair) |
+
+**Host check**: `KH1_HOST_VU1=1 KH1_HOST_VU1TR=2 KH1_HOST_TRACE=5` with wm_en.txt to frame 7,600 (out/overlays as
+above): every VU1 run from Select World through Depart compared with the interpreter from the same state, ~85,000
+runs, **0 differ** (a lost JR counts as a difference there).
+
+**Hardware** (the user's hand-played run, 2026-11-04, this branch's VPK with the defaults: save point, Gummi Ship,
+Select World, a flight to Traverse Town; windows ~2.15 s):
+
+| Part | Before (2026-11-03 run, interpreter) | Now |
+| --- | --- | --- |
+| Select World | ~3 pictures/s, game thread full, VIF1's walk ~2,060 ms | **~11 pictures/s**; VU1 (P100) ~330 ms, game thread ~1.0 s |
+| The flight | not reached | 6-9 pictures/s; game thread full, VU1 1.2-1.4 s (P100 + P101, 30-45 ns a pair) |
+
+On Select World the limit is now the **GS worker** (~2.1 s busy): `gs blocks` 1.7 s for ~1.9 M qwords and ~28 MB of
+image pieces a window, nearly all in one op (the GIF block handler, 17,000 a window), and the game waits ~1.4 s
+for it. Next for the map: find which sender streams those images every frame (the `gs senders` line) and whether
+the texture cache can skip them; for the flight, C0 / C1 as native draws.
+
+After Depart the clipped programs carry several times the map screen's runs (C0 ~8,000 runs and 37 M pairs a
+window), so even translated they fill the game thread there. The next step for it is the same as renderer A / B's:
+C0 / C1 / C3 as hand-written C (vu1_nat.h) or parsed into native draws (renderer-spec 2.5 notes the batches need
+no rewriting: index buffers and per-vertex lighting, one fan per run).

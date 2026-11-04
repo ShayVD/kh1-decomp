@@ -26,6 +26,8 @@
  *                             (maps, characters) reaches the GS; 0 skips them as before (the 3D stays black)
  *       vu1tr=N               1 (the default) runs the programs out/gen/vu1_tr.c translated as their C; 0 the
  *                             interpreter only; 2 both, compared (slow; differences go to the log)
+ *       vu1trovl=N            2026-11-03: 1 (the default) runs the Gummi programs wm.x / gb.x upload (P100-P104)
+ *                             as their translation too (built from out/overlays/wm.x, gb.x); 0 the interpreter
  *       vu1nat=N              session 150: 1 (the default) runs the programs written by hand as C
  *                             (host/port/vu1_nat.h: P0, P4, P10-P13, P18) in place of their translation; 0 the
  *                             translation; 2 runs both and compares them (kh1-vu1 lines, vu1 "checked" counts)
@@ -981,6 +983,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
         else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
         else if (strcmp(line, "vu1nat") == 0) kh1_vu1_native = atoi(v);
+        else if (strcmp(line, "vu1trovl") == 0) kh1_vu1_tr_ovl = atoi(v);
         else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
         else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
         else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);

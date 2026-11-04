@@ -1031,6 +1031,8 @@ and C for every function its entry and data reach.
   bigger than the three done so far put together.
 - **gb.x / wm.x's five Gummi VU1 programs** (renderer-spec 2.5) first run as translated VU1 programs, like
   P1-P8 today (vu1tr=1); moving them to the GPU follows stage 3's pattern once the Gummi ship plays.
+  *2026-11-03:* done for the translation (P100-P104, vita-build.md "The world map's Gummi programs as C"); the
+  world map screen reaches Vita3K's 30 cap, the part after Depart is still VU1-bound (C0 / C1).
 - **Tested by**: a pad script for each overlay (world map open and a world chosen, one Gummi flight, each
   summon and a limit), reaching the same frames on the host and the Vita as in PCSX2.
 
