@@ -545,6 +545,178 @@ static int nd_0(u32 pc, int p4) {
 }
 #undef NQ
 
+/* 2026-11-04 (docs/native-renderer.md "The Gummi engine"): C0 / C1 (P100 / P101, renderer-spec 2.5; vu1_nat.h
+ * nat_gummi is the arithmetic this replaces) from 02c or their idle PC, as P0 payloads (natdraw.h): one matrix, vf01-04
+ * (the local to the VU's clip space the program divides by w), the batch's positions as they are, and per vertex what
+ * the program's routines would give it: the lit colour (the normals through vf05-08, MAX 0, the colour matrix
+ * vf09-12, done here once a normal) times the multiplier (C0: the vertex's own; C1: the material's, qw 992 + m), MINI
+ * 255, FTOI0; ST plus the group's UV scroll (C0).  Each run is a record, its fans as strips (a quad v0..v3 as v1, v2,
+ * v0, v3), their triangles flagged for the cull unless the group is double-sided, with the program's facing rule (a
+ * fan kept when its first triangle's screen cross product is negative: P0's positive flag).  A group's texture (its
+ * GIF tag and TEX0_1) goes to the GS as a kick of its own between payloads.  The program's clipping (the w plane at
+ * qw 1020, the guard box) is the GPU's here; a batch wholly outside one plane is drawn by it and clipped.  What the
+ * run leaves: the idle PC only (vi08's output buffer, the scratch at qw 1007-1014 and the batch's in-place results
+ * are not written; nothing reads them before the next run of the program writes them) */
+int kh1_vu1_draw_gum = 1;
+u32 kh1_vu1_nd_gum, kh1_vu1_nd_gum_fail; /* runs handed over, runs given back to the program */
+static u32 ndg_kq[2][4];
+static int nd_gum(u32 pc, int c1) {
+    const u32 *h;
+    u32 (*ob)[4] = nd_buf, rq = 2, nrec = 0, k, base = top & (DATA_QW - 1);
+    u32 npos, nnorm, i7, i6, nv0;
+    f32 lit[64][4], m9[4][4], m5[4][4];
+    if (pc != 0x2c && pc != (c1 ? 0xc1u : 0xc6u)) return 0;
+    h = mem[base];
+    npos = h[1] & 0xFFFF;
+    nnorm = h[2] & 0xFFFF;
+    i7 = (h[3] + base) & 0xFFFF;
+    nv0 = (base + 1 + (h[0] & 0xFFFF) + npos) & 0xFFFF; /* the normals' first qword */
+    if (!npos || !nnorm || nnorm > 64) goto fail;
+    i6 = (nv0 - 1 - (h[0] & 0xFFFF)) & 0xFFFF; /* a position index's normal: index + vi06 (the program's 089) */
+    for (k = 0; k < 4; k++) {
+        u32 r;
+        for (r = 0; r < 4; r++) {
+            m5[k][r] = fin(vf[5 + k][r]);
+            m9[k][r] = fin(vf[9 + k][r]);
+        }
+    }
+    for (k = 0; k < nnorm; k++) { /* the normals lit: vf09-12 x max(vf05-08 x (n, 1), 0) */
+        const u32 *n = mem[(nv0 + k) & (DATA_QW - 1)];
+        f32 x = fin(n[0]), y = fin(n[1]), z = fin(n[2]), a[4];
+        u32 r;
+        for (r = 0; r < 4; r++) {
+            f32 v = m5[0][r] * x + m5[1][r] * y + m5[2][r] * z + m5[3][r];
+            a[r] = v > 0 ? v : 0;
+        }
+        for (r = 0; r < 4; r++) lit[k][r] = m9[0][r] * a[0] + m9[1][r] * a[1] + m9[2][r] * a[2] + m9[3][r] * a[3];
+    }
+    { /* walked first: nothing is handed over unless the whole batch is one done here (routines, fan sizes, room) */
+        u32 p7 = i7, need = 2;
+        for (;;) {
+            const u32 *g = mem[p7 & (DATA_QW - 1)];
+            u32 nr = g[0] & 0xFFFF, mm = g[1] & 0xFFFF, vr;
+            p7++;
+            if (!nr) break;
+            vr = mem[(1021 + mm) & (DATA_QW - 1)][0] & 0xFFFF & (MICRO_N - 1);
+            if (vr != (c1 ? 0xc3u : 0xc8u) && vr != (c1 ? 0xd7u : 0xdfu)) goto fail;
+            p7 += 1 + (mm ? 2 : 0);
+            if (mm) need = 2;
+            for (; nr; nr--) {
+                const u32 *rh = mem[p7 & (DATA_QW - 1)];
+                u32 fv = rh[0] & 0xFFFF, ns = rh[1] & 0xFFFF;
+                if ((fv != 3 && fv != 4) || !ns || ns > 256) goto fail;
+                need += 1 + ns * fv * 2;
+                if (need + 4 > ND_QW) goto fail;
+                p7 += 2 + ns * fv;
+            }
+        }
+    }
+    for (;;) { /* the groups */
+        const u32 *g = mem[i7 & (DATA_QW - 1)];
+        u32 nr = g[0] & 0xFFFF, mm = g[1] & 0xFFFF, dbl = (g[2] & 0xFFFF) != 0, vr, tex;
+        f32 sx = 0, sy = 0, mc[4] = { 0, 0, 0, 0 };
+        i7++;
+        if (!nr) break;
+        vr = mem[(1021 + mm) & (DATA_QW - 1)][0] & 0xFFFF & (MICRO_N - 1);
+        tex = vr == (c1 ? 0xd7u : 0xdfu);
+        if (c1) {
+            for (k = 0; k < 4; k++) mc[k] = fin(mem[(992 + mm) & (DATA_QW - 1)][k]);
+        } else {
+            u32 slot = mem[i7 & (DATA_QW - 1)][0] & 0xFFFF;
+            if (slot) {
+                sx = fin(mem[(991 + slot) & (DATA_QW - 1)][0]);
+                sy = fin(mem[(991 + slot) & (DATA_QW - 1)][1]);
+            }
+        }
+        i7++; /* the UV slot's qword (C1 skips it too) */
+        if (mm) { /* a texture: the payload so far drawn, then the GIF tag and TEX0_1 on their own (EOP) */
+            if (nrec) {
+                ob[0][0] = KH1_NAT_MAGIC | 0;
+                ob[0][1] = nrec;
+                ob[0][2] = 1;
+                ob[0][3] = rq - 2;
+                memset(ob[1], 0, 16);
+                for (k = 0; k < 4; k++) memcpy(ob[rq + k], vf[1 + k], 16);
+                nd_hand(ob[0], rq + 4);
+                rq = 2;
+                nrec = 0;
+            }
+            memcpy(ndg_kq[0], mem[i7 & (DATA_QW - 1)], 16);
+            memcpy(ndg_kq[1], mem[(i7 + 1) & (DATA_QW - 1)], 16);
+            ndg_kq[0][0] |= 0x8000u;
+            if (kh1_vu1_kick) kh1_vu1_kick(ndg_kq[0], 2);
+            i7 += 2;
+        }
+        for (; nr; nr--) { /* the runs */
+            const u32 *rh = mem[i7 & (DATA_QW - 1)], *tag = mem[(i7 + 1) & (DATA_QW - 1)];
+            u32 fv = rh[0] & 0xFFFF, ns = rh[1] & 0xFFFF, s, j, rv = rq;
+            i7 += 2;
+            rq++;
+            for (s = 0; s < ns; s++) {
+                static const u8 ord4[4] = { 1, 2, 0, 3 }, ord3[3] = { 0, 1, 2 };
+                const u8 *ord = fv == 4 ? ord4 : ord3;
+                for (j = 0; j < fv; j++) {
+                    const u32 *ix = mem[(i7 + ord[j]) & (DATA_QW - 1)];
+                    u32 p = (ix[0] + base) & 0xFFFF, c = (ix[1] + base) & 0xFFFF, t = (ix[2] + base) & 0xFFFF;
+                    const u32 *pp = mem[p & (DATA_QW - 1)];
+                    const f32 *l;
+                    u32 ni = (c - nv0) & 0xFFFF, rgba = 0, q;
+                    f32 mul[4], col[4];
+                    l = lit[ni < nnorm ? ni : 0]; /* (the files' colour index is always a normal: renderer-spec 2.5.1) */
+                    if (!c1)
+                        for (q = 0; q < 4; q++) mul[q] = fin(mem[(ix[3] + base) & (DATA_QW - 1)][q]);
+                    else
+                        for (q = 0; q < 4; q++) mul[q] = mc[q];
+                    col[0] = l[0]; col[1] = l[1]; col[2] = l[2]; col[3] = fin(vf[12][3]);
+                    for (q = 0; q < 4; q++) {
+                        f32 v = col[q] * mul[q];
+                        s32 iv;
+                        if (v > 255.0f) v = 255.0f;
+                        iv = v <= -2147483648.0f ? (s32)0x80000000u : (s32)v;
+                        rgba |= ((u32)iv & 0xFF) << (q * 8);
+                    }
+                    ob[rq][0] = pp[0];
+                    ob[rq][1] = pp[1];
+                    ob[rq][2] = pp[2];
+                    /* the triangle ending here: the fan's first two vertices end none */
+                    ob[rq][3] = j < 2 ? 0 : (dbl ? 1u : 0x21u) | (fv == 4 && j == 3 ? 0x80000000u : 0);
+                    if (tex) {
+                        const u32 *st = mem[t & (DATA_QW - 1)];
+                        ob[rq + 1][0] = fo(fin(st[0]) + sx);
+                        ob[rq + 1][1] = fo(fin(st[1]) + sy);
+                    } else ob[rq + 1][0] = ob[rq + 1][1] = 0;
+                    ob[rq + 1][2] = 0x3F800000u;
+                    ob[rq + 1][3] = rgba;
+                    rq += 2;
+                }
+                i7 += fv;
+            }
+            ob[rv][0] = tag[0];
+            ob[rv][1] = (tag[1] & ~(7u << 15)) | 4u << 15; /* PRE PRIM as a TRISTRIP (natdraw.h's records) */
+            ob[rv][2] = ns * fv;
+            ob[rv][3] = 0;
+            nrec++;
+        }
+    }
+    (void)i6;
+    if (nrec) {
+        ob[0][0] = KH1_NAT_MAGIC | 0;
+        ob[0][1] = nrec;
+        ob[0][2] = 1;
+        ob[0][3] = rq - 2;
+        memset(ob[1], 0, 16);
+        for (k = 0; k < 4; k++) memcpy(ob[rq + k], vf[1 + k], 16);
+        nd_hand(ob[0], rq + 4);
+    }
+    kh1_vu1_drawn++;
+    kh1_vu1_nd_gum++;
+    tpc = (c1 ? 0xc1 : 0xc6) & (MICRO_N - 1);
+    return 1;
+fail:
+    kh1_vu1_nd_gum_fail++;
+    return 0;
+}
+
 /* 2026-10-31: KH1_HOST_NATCHECK=1 (host/null/main.c): P0 runs as the program, and each run's strip is compared with
  * what nd_0's payload would draw: the program's output (the kick's XYZF2, ADC and the 12.4 position) against
  * kh1_nat_tris0's rule on the same positions.  "the program only" must stay 0; "native only" are the triangles

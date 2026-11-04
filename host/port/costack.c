@@ -24,12 +24,22 @@ int kh1_costack_owns(unsigned long a, u32 n) {
     return pool_base && a >= (unsigned long)pool_base && a + n <= (unsigned long)pool_hi;
 }
 
+int printf(const char *, ...);
+
 void *kh1_costack_alloc(u32 size) {
+    static int warned;
     size = (size + 15) & ~15u;
     if (pool_lo && (u32)(pool_hi - pool_lo) >= size) {
         void *p = pool_lo;
         pool_lo += size;
         return p;
+    }
+    /* 2026-11-04: say so once: on the Vita a system call from a malloc'd stack stops the app with no log
+     * of its own (the first hardware run into gb.x) */
+    if (pool_base && !warned) {
+        warned = 1;
+        printf("kh1-port: the coroutines' stack pool is used up (%lu KiB): malloc'd stacks from here on\n",
+               (unsigned long)(pool_hi - pool_base) >> 10);
     }
     return malloc(size);
 }

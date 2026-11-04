@@ -572,3 +572,73 @@ tw01 is not read yet: vmdis.py on the host at that room would show the VM and it
 saves (Agrabah, End of the World) are not in Traverse Town: the route to gb.x is a save there, or a
 walk from a world's save point via the world map's Traverse Town. Lib 487 (func_001d8b28) is in most
 End of the World rooms, cp21, di01 / di03, dh05, pc05, tw03 and iz46 / iz48.
+
+## The route into gb.x, and gb.x running (2026-11-04)
+
+**tests/host/pads/gbx_en.txt** goes from save 04 (Agrabah) to the Gummi editor and back, on the host and in
+Vita3K, with no crash:
+
+- **Select World to Traverse Town**: the left stick up for 40 frames (destination 21), back to centre, then
+  left for 12 (destination 3); Depart (three CIRCLEs as in gummi_en.txt) lands in **tw01.ard, the First
+  District**, with no flight. The destination words seen with KH1_HOST_DUMP (Agrabah 8): up 22 / 21, down
+  24 / 23, up-right 10 / 13 (13 = Neverland, pp08.ard), and from 21: left 3, right 4, down-right 4; from 24:
+  up 5, left 11; from 13: right 26, down 9. Left / up-left / down-left from Agrabah stay on 8.
+- **Who opens the editor**: library call 488 sits in script VM 4's code (entity id 20000, at -603 -640 1400:
+  the counter up the stairs from the district's square). Its menu reads the answer from variable 2304:
+  1 runs library calls 100 / 101 (the shop), **2 is call 488** (the Gummi menu), 3 sets 126 = 7 (a chat), 4 closes
+  (Vita3K's window capture shows the four answers in that order). So it is
+  the menu's **second** answer, not the third as read above (the third push/jump pair is answer 3's).
+- **The walk** (collmap.py path on a KH1_HOST_COLL dump, below): from the arrival point (65, -3822) north to
+  (121, -119) at y -240, then east and up the ramps (960, 190) -> (1150, 515) -> (917, 832) at -480, west
+  along the upper walk to (100, 1490) at -640, then `goto vm 4 60`, which stops ~70 units off (the counter).
+  The legs' frame spacing is distance / 8 x 1.6 + 40 (Sora runs ~8 units a frame): fixed-frame legs that
+  are too short send the next leg off from the wrong place and into a wall.
+- **Talk and answer**: CIRCLE (talk), DOWN, CIRCLE: gb.x loads as native C (795 pointers fixed up) at
+  ~10,700 on the host, then gumi/gumi_tex.bin, gumi_ini.bin, gumi_bg.bin, systex.tzb, gumi.tzb, gumi.aml /
+  .amo and SASAMSG.BIN. **Vita3K** (this branch's VPK): `gb.x entry (2, 55) returned 1` at frame 10,671 and
+  the GUMMI BLOCK MENU (Garage, Gummi Ship, Inventory, Help, Tutorial, Exit; the ship's model and Chip's
+  picture) drawn by the native renderer, no crash to 16,000.
+- **In the editor** (host, KH1_HOST_FORK from 11,900): CIRCLE / CROSS / D-pad / START / TRIANGLE / SQUARE /
+  L1-R2 sequences run to 15,500 with no crash; UP (the cursor wraps to Exit) + CIRCLE x3, or DOWN x5 +
+  CIRCLE x3, or Garage then CROSS twice and Exit, return to the First District (tw00_01.img, tw01.ard and
+  the voice banks load again). gbx_en.txt ends with the Garage-and-Exit sequence and a waitplayer.
+- **Vita3K, the whole script** (14,000 frames): wm.x at 6,327, tw01 at ~8,000, gb.x at 10,671, the Garage /
+  Exit sequence back to tw01 (the counter's menu shows again), no crash. The First District's 3D is mostly
+  dark or missing in Vita3K's window there (the HUD and the menus draw); not looked into.
+- **Hardware** (2026-11-04): the first run stalled at the load screen (waitcard / waitslots below fixed it).
+  The second reached native gb.x (`gb.x entry (2, 55) returned 1` at 10,680) and stopped ~700 frames later
+  with no log line: the dump's crashed thread (stop reason 0x10006) was the game thread in gb.x's cursor task
+  func_00f4d8e0 (an sa task, waiting a frame in func_0024e468). Cause: every game thread and task slot keeps
+  a 0x40000 coroutine stack, and on this route the count reaches 17 by gb.x (2 threads at boot, wm.x's task
+  contexts 10, gb.x's 5 at its start; counted on the host), past the 4 MiB pool (16 fit). The 17th was
+  malloc'd, and the Vita's kernel stops an app making a system call from a stack outside its thread's
+  (session 137v; Vita3K does not check). Fix: the main thread's stack is 16 MiB (pool 12 MiB, 48 stacks),
+  and costack.c logs once when the pool runs out. The third run (Shay's card has save 07 now, so it used
+  one UP for save 04 instead of two DOWNs: out of the committed script) went title, Agrabah, the world map,
+  Traverse Town, the counter, **native gb.x on hardware** (10,680), Garage / Exit and back to tw01, to
+  14,000 frames with no crash.
+- Not done: reading the editor's screens past the menu (the host's shots of gb.x
+  need the chain walk, ~50x slower; Vita3K's window capture shows them).
+
+**New host switches / pad steps** (host/null/pad.c):
+
+- `FRAME - waittitle` holds the script's clock, like `waitplayer`, until the title menu takes CIRCLE:
+  dktitle.x is the current native overlay, its state D_00F2C708 (func_00f228c8) is 27 (NEW GAME / LOAD)
+  and the fade D_002BC07C is 128. State 26 (the logo) skips to 27 on any button or after 240 frames, so no
+  START is needed; on the host the menu is up at ~1,209. The save-loading scripts (load_en, wm_en,
+  gummi_en, garage_en) and fight_en now start with `1250 - waittitle` in place of `1300 START`, since the
+  Vita's title ends 1,000-3,000 frames later and presses before it were lost (fight_en still reaches the
+  floor break; gbx_en / wm_en's prefix still reaches wm.x).
+- `FRAME - waitcard` / `FRAME - waitslots` (after the first hardware run, 2026-11-04): on the Vita the title
+  wait passed but the save never loaded: the load screen's card checks run longer there, so the port's CIRCLE
+  (loadframe.c func_0022b410: before the card is seen, D_00425C28[0].x0 3, it opens the "no card" box) and the
+  slot list's DOWN / CIRCLE came too early. waitcard holds until D_00425C28[0].x0 is not 3, waitslots until
+  loadmenu.c's step D_006437DC is 19 (the list open; on the host 45 frames after the port's CIRCLE). The
+  save-loading scripts have `1810 - waitcard` and `2200 - waitslots`; the host's timing is unchanged. With
+  KH1_HOST_TRACE the runner also prints "pad wait over at frame N" when a wait ends.
+- `KH1_HOST_POS=N` now also prints the field's script VMs whenever their set changes (a room's arrival):
+  `vm FRAME K id ID code ADDR pc PC at X Y Z`. A script found at offset O of a decompressed ROOM.ard runs
+  in the VM whose code address range holds the "loaded ROOM.ard ... at" address + O. This replaces
+  vmdis.py / gdb for `goto vm K` under qemu-user.
+- `KH1_HOST_COLL=FRAME` writes the room's collision to coll/tris.bin and coll/verts.bin at that frame
+  (relative to the run's directory), the files `collmap.py at / path / map` read, without gdb.

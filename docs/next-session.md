@@ -48,7 +48,17 @@ are off while it runs). PCSX2 is driven with computer use ("PCSX2-v2.8.2", full 
 30 minutes idle). Saving to the memory card from PCSX2 was refused by the tool's safety check: skip it.
 Ask for the Mac at the start; if the user says it is away, do the static items.
 
-## Latest (2026-11-03): gb.x native, the Gummi flight and garage on the host (session 145)
+## Latest (2026-11-04): the route into gb.x, gb.x running on the host and in Vita3K
+
+native-overlays.md "The route into gb.x": tests/host/pads/gbx_en.txt goes from save 04 to Traverse Town (Select
+World: stick up 40 frames, left 12, Depart), walks up to the shop counter (script VM 4) and picks the talk menu's
+2nd answer (library call 488): native gb.x loads (host ~10,700; Vita3K 10,671), the GUMMI BLOCK MENU draws in
+Vita3K, and the Garage / Exit return to the First District with no crash. New pad step `waittitle` (the title
+menu up before LOAD / NEW GAME; the save scripts use it now), VM lines on KH1_HOST_POS, and KH1_HOST_COLL
+(collision dump without gdb). On hardware it runs to 14,000 frames after two fixes (the load screen's waitcard / waitslots, and a 16 MiB main
+thread stack: the coroutine stack pool ran out at gb.x). **Next**: the editor's own screens (Garage editing).
+
+## Earlier (2026-11-03): gb.x native, the Gummi flight and garage on the host (session 145)
 
 native-overlays.md "Session 145": gb.x links as native C; the Gummi flight (tests/host/pads/gummi_en.txt) and
 the garage (garage_en.txt) run on the host with no crash, but both are wm.x's code: gb.x (game mode 6) was

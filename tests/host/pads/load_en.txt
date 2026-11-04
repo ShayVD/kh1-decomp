@@ -5,18 +5,21 @@
 # copy since the game writes there.  en.iso: the English disc (c8ee8c77...).  Checked with the
 # user's saves 04-06: the load screen opens on the newest (06) and it loads into the field
 # (the party HUD from ~3,300; the null platform draws no 3D).
-#   1300        START at the title
+#   1250        waittitle: the title menu up (the Vita gets there 1,000-3,000 frames later)
 #   1600-1800   DOWN to LOAD, CIRCLE: the Load Menu's "Select MEMORY CARD slot."
 #   2100        CIRCLE: slot 1; the saves listed, the cursor on the newest
 #   2500-3100   CIRCLE: that save, then the confirm prompts
-1300 START
-1302 -
+# 2026-11-04: 1810 waitcard / 2200 waitslots hold the clock until the load screen sees the card / opens
+# its slot list (the Vita's card reads are slower; presses before them were lost). Host timing unchanged.
+1250 - waittitle
 1600 DOWN
 1602 -
 1800 CIRCLE
 1802 -
+1810 - waitcard
 2100 CIRCLE
 2102 -
+2200 - waitslots
 2500 CIRCLE
 2502 -
 2800 CIRCLE

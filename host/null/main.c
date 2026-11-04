@@ -641,6 +641,7 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATCULL")) kh1_pipes_nat_cull = (u32)atoi(getenv("KH1_HOST_NATCULL"));
         if (getenv("KH1_HOST_NATCHECK")) kh1_vu1_natcheck = atoi(getenv("KH1_HOST_NATCHECK")); /* vu1_draw.h */
         if (getenv("KH1_HOST_NATP0")) kh1_vu1_draw_p0 = atoi(getenv("KH1_HOST_NATP0")); /* 2026-10-31: 0 P0 / P4 on the VU */
+        if (getenv("KH1_HOST_NATGUMMI")) kh1_vu1_draw_gum = atoi(getenv("KH1_HOST_NATGUMMI")); /* 2026-11-04: 0 C0 / C1 on the VU */
         if (getenv("KH1_HOST_NATP11")) kh1_vu1_draw_p11 = atoi(getenv("KH1_HOST_NATP11")); /* 2026-10-31: 0 P11 on the VU */
         if (getenv("KH1_HOST_NATP13")) kh1_vu1_draw_p13 = atoi(getenv("KH1_HOST_NATP13")); /* 2026-10-31: 0 P13 on the VU */
         if (getenv("KH1_HOST_NATSKIN")) kh1_vu1_nat_skin = atoi(getenv("KH1_HOST_NATSKIN")); /* 2026-11-01: 0 the CPU's sums */
@@ -661,6 +662,11 @@ int main(int argc, char **argv) {
             extern int kh1_pipes_nat_span;
             kh1_pipes_nat_span = atoi(getenv("KH1_HOST_NATSPAN"));
         }
+        if (getenv("KH1_HOST_NATINPLACE")) { /* 2026-11-04: 0 r_nat_dir copies the records into nat_op (pipes.c) */
+            extern int kh1_pipes_nat_inplace;
+            kh1_pipes_nat_inplace = atoi(getenv("KH1_HOST_NATINPLACE"));
+        }
+        if (getenv("KH1_HOST_NATPF")) kh1_nat_prefetch = atoi(getenv("KH1_HOST_NATPF")); /* 2026-11-04: natdraw.c */
         if (getenv("KH1_HOST_NATJOIN")) kh1_cmd_natjoin = atoi(getenv("KH1_HOST_NATJOIN")); /* 2026-11-01: cmdbuf.c nat_join */
         if (getenv("KH1_HOST_NATVBJOIN")) kh1_cmd_natvbjoin = atoi(getenv("KH1_HOST_NATVBJOIN")); /* 2026-11-02: vb_join */
         if (getenv("KH1_HOST_NATVBBULK")) kh1_cmd_natvbbulk = atoi(getenv("KH1_HOST_NATVBBULK")); /* 2026-11-03 */

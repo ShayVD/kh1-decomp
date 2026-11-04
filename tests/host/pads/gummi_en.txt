@@ -8,14 +8,17 @@
 #   7000-8200   CIRCLE four times: Normal Drive, Depart; worldmap/ev/gumi_manual_*.ev
 #   8400-       CIRCLE every 150 frames: the flight (radar HUD ~7,400-10,100), a white flash at ~11,000,
 #               then Select World again at ~11,400. The flight is wm.x's code: gb.x does not load.
-1300 START
-1302 -
+# 2026-11-04: 1810 waitcard / 2200 waitslots hold the clock until the load screen sees the card / opens
+# its slot list (the Vita's card reads are slower; presses before them were lost). Host timing unchanged.
+1250 - waittitle
 1600 DOWN
 1602 -
 1800 CIRCLE
 1802 -
+1810 - waitcard
 2100 CIRCLE
 2102 -
+2200 - waitslots
 2340 DOWN
 2342 -
 2380 DOWN

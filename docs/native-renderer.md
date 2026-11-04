@@ -389,3 +389,41 @@ Each stage lands behind the same switch, with a host side-by-side against the GS
 - Host: `KH1_HOST_NATIVE=1` (needs `KH1_HOST_TRACE=5`, the recorder) with `KH1_HOST_CD=go KH1_HOST_VU1=1`;
   `KH1_HOST_NATCULL=` as natcull. The gxmcheck build (vita-build.md "The GPU renderer") draws it through the
   GXM stand-in and writes PPMs with `KH1_HOST_GXM_PPM=dir`.
+
+## The Gummi engine: C0 / C1 as native draws (2026-11-04)
+
+The flight was VU1-bound even with C0 / C1 as hand-written C (vita-build.md "C0 / C1 as hand-written C"). With
+`renderer=native` (and `natgummi=1`, the default; host `KH1_HOST_NATGUMMI`), vu1_draw.h `nd_gum` hands each C0 / C1
+batch run over as **P0 payloads** instead of running it, so everything after the parse (the GS worker's counts, the
+recorder, `kh1_nat_tris0`, the culled and double-sided draws, the GPU's clipping) is P0's:
+
+- one matrix, vf01-04 (local to the VU's clip space, which the program divides by w); the batch's positions as they
+  are (w 1 from the unpack's STROW);
+- per vertex the colour the program's routines would give it: the batch's normals lit once each on the CPU (vf05-08,
+  MAX 0, the colour matrix vf09-12), times the multiplier (C0 the vertex's, C1 the material's qw 992 + m), MINI 255,
+  FTOI0; ST plus the group's UV scroll (C0), 1.0 as q (the GPU's perspective-correct interpolation is the GS's S / Q);
+- each run one record, PRE PRIM from its GIF tag with the type made TRISTRIP; a fan of 3 as it is, a quad v0..v3 as
+  the strip v1, v2, v0, v3, the first two vertices of each fan flagged 0 (no triangle ends there), the others 0x21 (the
+  cull) or 1 (a double-sided group); the program keeps a fan when its first triangle's screen cross product is
+  negative, which is P0's positive flag (natdraw.c's notes), and the quad's second triangle, the strip's reversed one,
+  gets the negative flag;
+- a group with a texture: the payload so far is handed over, then its GIF tag (EOP set) and TEX0_1 go to the GS as a
+  kick of their own, in order on the same queue.
+
+Not reproduced: the program's own clipping (the w plane at qw 1020 and the guard box: the GPU clips at its frustum,
+z not clamped, P0's KH1_NAT_LIN), the cull of a batch wholly outside one plane (the GPU clips it), the facing tested
+per triangle instead of once a fan (the same for planar quads). A batch with routine addresses, fan sizes or counts the
+program was not written for is given back before anything is handed over. What the run leaves: the idle PC only.
+
+**Hardware** (the user's hand-played runs, 2026-11-04, their config with `renderer=native`; the pictures looked right
+to them on Select World and in the flight to Traverse Town; every C0 / C1 batch run native, none given back):
+
+| | C0 / C1 as hand-written C | Native draws |
+| --- | --- | --- |
+| The flight | 7-11 pictures/s, VU1 1.1-1.3 s a window | **11-15 pictures/s**, the parse ~0.8-1.0 s for ~12,000-15,000 runs |
+| Select World | ~11 pictures/s (GS worker 2.1 s) | ~11 (unchanged: the GS worker's images) |
+
+The game thread is still full in the flight: the parse costs ~65 us a run (scalar C, fin() per field, the lighting
+per run). Making it NEON and lighter is the next step; the GPU thread (~1.1 s) and the GS worker (~1 s) have room.
+**Not checked**: the host side by side (gxmcheck) against the GS path; the user's eye on the Vita is the only check of
+the pictures so far.

@@ -107,6 +107,11 @@
  *                             draw's (cmdbuf.c vb_join; 32-bit indices into natvb's memory, the same triangles)
  *       natvbbulk=0           with natvbjoin on, a join reads the cached run's indices one by one from natvb's uncached
  *                             memory (as before 2026-11-03); 1, the default: copied out in blocks first (cmdbuf.c)
+ *       natinplace=0          with natdirect on, the GPU thread copies each payload's records into its op before
+ *                             listing them (as before 2026-11-04); 1, the default: read where they are in the pool
+ *                             (pipes.c r_nat_dir, the same ops and draws)
+ *       natpf=0               the native triangles' listing without its prefetch of the records ahead (natdraw.c;
+ *                             1, the default)
  *       natvbhome=0           every natvb entry's matrices at u_m[0], so cached runs never join (1, the default: each
  *                             new entry's after the last one's, natdraw.c)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
@@ -202,9 +207,13 @@ void kh1_null_image(int seg, unsigned long lo, u32 size); /* host/null/plat_null
 __attribute__((used)) int _newlib_heap_size_user = 160 * 1024 * 1024;
 /* session 137v: 4 MiB for the main thread's own frames, the rest the coroutines' stacks (platform/costack.h:
  * the kernel refuses a system call made on a stack outside the thread's).  Dive to the Heart makes two
- * (0x40000 each); a 52 MiB stack stopped the app at its start on hardware (C1-2681-7, no log) */
+ * (0x40000 each); a 52 MiB stack stopped the app at its start on hardware (C1-2681-7, no log).
+ * 2026-11-04: 16 MiB (was 8): every thread and task slot keeps a 0x40000 stack, and by gb.x (the Gummi
+ * editor) the route from a save had taken 17 (2 threads, wm.x's 10 task contexts, gb.x's 5), past the
+ * 4 MiB pool; the next was malloc'd and the kernel stopped the app on hardware ~700 frames into gb.x
+ * (stop reason 0x10006, Vita3K ran on).  12 MiB holds 48 */
 #define MAIN_OWN (4 * 1024 * 1024)
-__attribute__((used)) unsigned int sceUserMainThreadStackSize = 8 * 1024 * 1024;
+__attribute__((used)) unsigned int sceUserMainThreadStackSize = 16 * 1024 * 1024;
 static u32 costack_bytes;
 
 const char kh1_vita_dir[] = "ux0:data/kh1";
@@ -712,6 +721,14 @@ static int watchdog(SceSize args, void *argp) {
                      (kh1_vu1_nd13_hand_us - h13) / 1000, kh1_vu1_nd13_fail - f0, (kh1_vu1_nd13_fail_us - fu0) / 1000,
                      kh1_cmd_natjoin, kh1_cmd_nat_joins - j0);
                 j0 = kh1_cmd_nat_joins;
+                { /* 2026-11-04: the Gummi engine's C0 / C1 runs as native draws (natgummi=) */
+                    static u32 gn0, gf0;
+                    if (kh1_vu1_nd_gum != gn0 || kh1_vu1_nd_gum_fail != gf0)
+                        vlog("kh1-vita: natgummi=%d: %u C0 / C1 runs drawn natively, %u given back to the program\n", kh1_vu1_draw_gum,
+                             kh1_vu1_nd_gum - gn0, kh1_vu1_nd_gum_fail - gf0);
+                    gn0 = kh1_vu1_nd_gum;
+                    gf0 = kh1_vu1_nd_gum_fail;
+                }
                 { /* 2026-11-01: natchain's reads (docs/native-plan.md "Records straight from the chain") */
                     static u32 cr0, cq0, cf0;
                     vlog("kh1-vita: natchain=%d: %u runs read from the chain (%u K qwords not unpacked into VU memory), "
@@ -1013,12 +1030,15 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
         else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
         else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
+        else if (strcmp(line, "natgummi") == 0) kh1_vu1_draw_gum = atoi(v);
         else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
         else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
         else if (strcmp(line, "natchain") == 0) kh1_vu1_natchain = atoi(v) ? 1 : 0;
         else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
         else if (strcmp(line, "natskin") == 0) kh1_vu1_nat_skin = atoi(v);
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
+        else if (strcmp(line, "natinplace") == 0) { extern int kh1_pipes_nat_inplace; kh1_pipes_nat_inplace = atoi(v); }
+        else if (strcmp(line, "natpf") == 0) kh1_nat_prefetch = atoi(v);
         else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
         else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
         else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);
