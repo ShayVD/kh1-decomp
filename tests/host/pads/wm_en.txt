@@ -8,6 +8,8 @@
 #   2340-2380   DOWN twice: save 04 (the card lists the saves in name order, host/port/mc_dir.c)
 #   2500-3100   CIRCLE: load it and confirm; the field from ~3,300 (the Vita reaches the field by ~2,700, so
 #               there the 2800 / 3100 presses are Attacks that lunge Sora ~80 units off the save point)
+#   3200        waitplayer: the rest counts from the field's arrival (the Vita's load ends anywhere from
+#               ~2,700 to ~6,600; on the host the player appears by ~3,300)
 #   3400-4400   walk back onto the save point (range 50 at -456, 282): without it the 4th slot is "?"
 #   4600-4800   UP to the command menu's 4th slot (Save), CIRCLE: the Save Menu
 #   5300-5500   DOWN twice: Gummi Ship; 5800 CIRCLE, 6300 CIRCLE: "Board the gummi ship?" yes
@@ -31,6 +33,7 @@
 2802 -
 3100 CIRCLE
 3102 -
+3200 - waitplayer
 3400 - goto -456 282 12
 4400 -
 4600 UP
