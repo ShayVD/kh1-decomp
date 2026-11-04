@@ -2285,3 +2285,17 @@ a Vita (P18 was 67% under qemu, -36% on hardware).
 
 On the map ~30-40% of C0's pairs are batches that reach the polygon clipper, so the clipping path is worth having
 native; C3 (P103) is rare on this route and stays translated.
+
+**Hardware** (the user's hand-played run, 2026-11-04, this branch's VPK, the user's config with `renderer=native`; save
+point, Gummi Ship, Select World, the flight to Traverse Town; windows ~2.15 s):
+
+| | Before (PR #228's VPK) | Now |
+| --- | --- | --- |
+| P100 / P101 time a pair | 30-45 ns | **20-26 ns** (P103, still translated, 43-48) |
+| The flight | 6-9 pictures/s, VU1 1.2-1.4 s a window | **7-11 pictures/s**; VU1 1.1-1.3 s for ~45-50 M pairs a window (was ~37 M) |
+| Select World | ~11 pictures/s | ~11 (the GS worker is its limit, unchanged) |
+
+So C0 / C1 cost ~35-40% less a pair, close to the earlier native programs' gain, but the flight is still VU1-bound
+(the game thread ~1.8 s a window, VU1 ~2/3 of it): the faster frames simply ask for more batches. The next step for
+the flight is native draws (renderer-spec 2.5: the batches as index buffers with per-vertex lighting, one fan per run,
+the clipping left to the GPU), which removes the VU1 work instead of speeding it up.
