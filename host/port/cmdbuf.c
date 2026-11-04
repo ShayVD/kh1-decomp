@@ -515,12 +515,34 @@ int kh1_cmd_natvbjoin = 1;
 u32 kh1_cmd_natvb_joins;
 u32 kh1_cmd_natvb_nojoin[4];
 #define VB_JOIN_MAX_I (1u << 20) /* indices a joined draw holds at most */
+
+/* 2026-11-03 (the Vita's fights: the joins ~0.3 s of the GPU thread's 2.2 s window, 2026-11-03 hw timing run): a cached
+ * run's 16-bit indices are in natvb's memory, uncached for the CPU on the Vita (gxm.c), and the joins read every one of
+ * them (~2 M a fight window) to write the joined draw's 32-bit ones, each a bus read of its own.  kh1_cmd_natvbbulk 1
+ * (the default; config natvbbulk=0, host KH1_HOST_NATVBBULK=0 reads them one by one as before) copies them into a
+ * cached buffer VB_BULK at a time first (memcpy's multi-word loads: a bus read per line, not per index), the same
+ * indices */
+int kh1_cmd_natvbbulk = 1;
+#define VB_BULK 512
+static void vb_index32(u32 *o, const u16 *xi, u32 n, u32 b) {
+    u16 t[VB_BULK];
+    u32 i, k, j;
+    if (!kh1_cmd_natvbbulk) {
+        for (i = 0; i < n; i++) o[i] = b + xi[i];
+        return;
+    }
+    for (i = 0; i < n; i += k) {
+        k = n - i < VB_BULK ? n - i : VB_BULK;
+        memcpy(t, xi + i, k * 2);
+        for (j = 0; j < k; j++) o[i + j] = b + t[j];
+    }
+}
 static int vb_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *xv, const u16 *xi, u32 n,
                    const f32 *mats, u32 nmat, u32 home, u32 cull) {
     KH1Cmd *c;
     KH1BatchKey k;
     const KH1GpuVert *all = (const KH1GpuVert *)(const void *)kh1_natvb_mem;
-    u32 mend, gap, i, b;
+    u32 mend, gap, b;
     u8 *u;
     u32 *o;
     if (r->cur < 0 || r->dropped || (u32)r->cur + 1 != r->ncmd || r->split || r->held >= 0) {
@@ -556,7 +578,7 @@ static int vb_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
     if (!c->xi32) { /* the draw's own indices, now 32-bit ones into natvb's memory, at a vertex boundary of the ring */
         o = (u32 *)kh1_ring_alloc(&r->vring, c->nv * 4u, (u32)sizeof(KH1GpuVert));
         b = (u32)(c->xv - all);
-        for (i = 0; i < c->nv; i++) o[i] = b + c->xi[i];
+        vb_index32(o, c->xi, c->nv, b);
         c->v0 = (u32)((u8 *)o - (r->vring.base + r->vring.cur * r->vring.slot)) / (u32)sizeof(KH1GpuVert);
         c->xv = all;
         c->xi = 0;
@@ -564,7 +586,7 @@ static int vb_join(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
     }
     o = (u32 *)kh1_ring_alloc(&r->vring, n * 4u, 1);
     b = (u32)(xv - all);
-    for (i = 0; i < n; i++) o[i] = b + xi[i];
+    vb_index32(o, xi, n, b);
     u = (u8 *)kh1_ring_alloc(&r->uring, gap + nmat * 64u, 1);
     if (gap) memset(u, 0, gap);
     memcpy(u + gap, mats, nmat * 64u);
@@ -611,6 +633,10 @@ void kh1_cmd_native_vb(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass 
     r->in_xi = 0;
     r->in_home = 0;
 }
+/* 2026-11-03: the native draw's time by part, when the caller times it (host/null/pipes.c nt_mark: 4 the join tests and
+ * joins, 5 the batcher and a new command, 6 the matrices); 0, nothing timed */
+void (*kh1_cmd_mark)(int part);
+#define CMD_MARK(part) (kh1_cmd_mark ? kh1_cmd_mark(part) : (void)0)
 static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, const KH1GpuVert *v, u32 n, const f32 *mats,
                    u32 nmat, u32 cull, u32 skin) {
     KH1Cmd *c;
@@ -628,8 +654,11 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
         d = &nd;
     }
     if (r->in_xi ? kh1_cmd_natvbjoin && vb_join(r, d, p, v, r->in_xi, n, mats, nmat, r->in_home, cull)
-                 : kh1_cmd_natjoin && nat_join(r, d, p, v, n, mats, nmat, cull, skin))
+                 : kh1_cmd_natjoin && nat_join(r, d, p, v, n, mats, nmat, cull, skin)) {
+        CMD_MARK(4);
         return;
+    }
+    CMD_MARK(4);
     kh1_batch_break(&r->b); /* nothing before joins it */
     r->in_d = d;
     r->in_p = p;
@@ -639,8 +668,10 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
     if (!kh1_batch_prim_sig(&r->b, d, p, n, 0) || r->cur < 0 || r->dropped) { /* a state that draws nothing, or no room */
         r->in_skin = 0;
         kh1_batch_break(&r->b);
+        CMD_MARK(5);
         return;
     }
+    CMD_MARK(5);
     r->in_skin = 0;
     c = &r->cmd[r->cur];
     c->mlo = (u8)r->in_home; /* (0 but for a cached run) */
@@ -655,6 +686,7 @@ static void native(KH1CmdRec *r, const KH1DrawState *d, const KH1RenderPass *p, 
         c->lost = 1;
     }
     kh1_batch_break(&r->b); /* nor anything after */
+    CMD_MARK(6);
 }
 
 void kh1_cmd_break(KH1CmdRec *r) { kh1_batch_break(&r->b); }
