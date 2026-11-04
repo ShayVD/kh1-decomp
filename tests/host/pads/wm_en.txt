@@ -4,7 +4,8 @@
 # mc0: a copy of the user's card with saves 04-06 (never commit them); save 04 is Agrabah: Storage (world
 # 8, room 7). en.iso: the English disc (c8ee8c77...). KH1_HOST_OVL=stub: func_001b9c60 calls the
 # xl_limit.x entry while the old overlay is still there on the way to the ship (answered 0).
-#   1300-2100   START, DOWN to LOAD, CIRCLE, slot 1 (the cursor on the newest save, 06)
+#   1250-2100   waittitle (the title menu up, as on the Vita, whose title ends 1,000-3,000 frames
+#               later), DOWN to LOAD, CIRCLE, slot 1 (the cursor on the newest save, 06)
 #   2340-2380   DOWN twice: save 04 (the card lists the saves in name order, host/port/mc_dir.c)
 #   2500-3100   CIRCLE: load it and confirm; the field from ~3,300 (the Vita reaches the field by ~2,700, so
 #               there the 2800 / 3100 presses are Attacks that lunge Sora ~80 units off the save point)
@@ -15,8 +16,7 @@
 #   5300-5500   DOWN twice: Gummi Ship; 5800 CIRCLE, 6300 CIRCLE: "Board the gummi ship?" yes
 #   ~6330       wm.x loads as native C; "Select World" with Agrabah, Normal Drive, Depart (~6600)
 #   7000-7800   CIRCLE three times: Depart; gumi/*.bin load, then Agrabah again (al08.ard), the HUD by ~8000
-1300 START
-1302 -
+1250 - waittitle
 1600 DOWN
 1602 -
 1800 CIRCLE

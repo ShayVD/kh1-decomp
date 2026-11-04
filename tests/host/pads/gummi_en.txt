@@ -8,8 +8,7 @@
 #   7000-8200   CIRCLE four times: Normal Drive, Depart; worldmap/ev/gumi_manual_*.ev
 #   8400-       CIRCLE every 150 frames: the flight (radar HUD ~7,400-10,100), a white flash at ~11,000,
 #               then Select World again at ~11,400. The flight is wm.x's code: gb.x does not load.
-1300 START
-1302 -
+1250 - waittitle
 1600 DOWN
 1602 -
 1800 CIRCLE

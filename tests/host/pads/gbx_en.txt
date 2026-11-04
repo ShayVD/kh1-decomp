@@ -1,0 +1,96 @@
+# From a save in Agrabah to the Gummi editor, gb.x (2026-11-04; docs/native-overlays.md "The route into gb.x"):
+#   KH1_HOST_MC=mc0 KH1_HOST_CD=go KH1_HOST_ISO=en.iso KH1_HOST_PAD=tests/host/pads/gbx_en.txt \
+#   KH1_HOST_FRAMES=14000 KH1_HOST_QUIET=1 KH1_HOST_TRACE=1 out/host/kh1-host
+# mc0 and en.iso as in wm_en.txt (the user's card with saves 04-06, the English disc; never commit them).
+# On the Vita: config.txt pad=ux0:data/kh1/gbx_en.txt (the waits make it independent of the Vita's load times).
+#   1250        waittitle: the clock holds until the title menu (NEW GAME / LOAD) takes CIRCLE
+#   1600-3100   LOAD, save 04 (Agrabah) as wm_en.txt; 3200 waitplayer
+#   3400-6310   back onto the save point, Save Menu, Gummi Ship, "Board the gummi ship?" yes: wm.x
+#   6700-6812   Select World: the left stick up for 40 frames (destination 21), then left 12 (3, Traverse Town)
+#   7000-7800   CIRCLE three times: Depart; tw01.ard (the First District) loads, no flight
+#   8000        waitplayer; 8100-10036 the walk (goto) up the stairs to the shop counter's entity
+#               (script VM 4, id 20000, at -603 -640 1400; its script holds library call 488)
+#   10500       CIRCLE: talk; 10590 DOWN, 10650 CIRCLE: the menu's 2nd answer, library call 488
+#               (roomload.c func_00112e08 -> game mode 6): gb.x loads as native C by ~10,700 and the
+#               gumi/* files after it; the GUMMI BLOCK MENU (Garage, Gummi Ship, ..., Exit)
+#   12000-12724 CIRCLE (Garage), CROSS twice (back to the menu), UP (Exit), CIRCLE three times: gb.x
+#               returns to the First District (tw01.ard again, by ~12,900)
+1250 - waittitle
+1600 DOWN
+1602 -
+1800 CIRCLE
+1802 -
+2100 CIRCLE
+2102 -
+2340 DOWN
+2342 -
+2380 DOWN
+2382 -
+2500 CIRCLE
+2502 -
+2800 CIRCLE
+2802 -
+3100 CIRCLE
+3102 -
+3200 - waitplayer
+3400 - goto -456 282 12
+4400 -
+4600 UP
+4610 -
+4800 CIRCLE
+4810 -
+5300 DOWN
+5310 -
+5500 DOWN
+5510 -
+5800 CIRCLE
+5810 -
+6300 CIRCLE
+6310 -
+6700 - 128 128 128 0
+6740 -
+6800 - 128 128 0 128
+6812 -
+7000 CIRCLE
+7010 -
+7400 CIRCLE
+7410 -
+7800 CIRCLE
+7810 -
+8000 - waitplayer
+8100 - goto 121 -119 20
+8880 - goto 432 -133 20
+8982 - goto 609 -88 20
+9058 - goto 960 190 20
+9187 - goto 1150 515 20
+9302 - goto 917 832 20
+9420 - goto 800 890 20
+9486 - goto 800 1090 20
+9566 - goto 700 1292 20
+9651 - goto 600 1292 20
+9711 - goto 462 1640 20
+9825 - goto 262 1640 20
+9905 - goto 167 1640 20
+9964 - goto 100 1490 20
+10036 - goto vm 4 60
+10500 CIRCLE
+10504 -
+10590 DOWN
+10594 -
+10650 CIRCLE
+10654 -
+12000 CIRCLE
+12004 -
+12120 CROSS
+12124 -
+12240 CROSS
+12244 -
+12360 UP
+12364 -
+12480 CIRCLE
+12484 -
+12600 CIRCLE
+12604 -
+12720 CIRCLE
+12724 -
+12800 - waitplayer

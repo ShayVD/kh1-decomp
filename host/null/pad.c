@@ -35,6 +35,8 @@
  *                        while there is no player (a save loading), so the lines after it count
  *                        from the field's arrival: the Vita's loads take 1,500-3,300 frames longer
  *                        than the host's, and a run's timing varies.
+ *                        2026-11-04: FRAME BUTTONS waittitle holds it until the title menu takes CIRCLE
+ *                        (NEW GAME / LOAD shown, its fade done), as waitplayer does for the field.
  *                        KH1_HOST_POS=N prints the player's position every N frames (at pad reads).
  *
  * KH1_HOST_TRACE >= 1 prints "kh1-host: pad FRAME BUTTONS" when what the game reads changes.  Not
@@ -42,6 +44,7 @@
 #include "common.h"
 #include "platform/pad.h"
 #include "data/types/vm_rec.h"
+#include "platform/ovl.h"
 
 #ifdef KH1_VITA
 /* session 137v: the Vita build links this file too, as config.txt's pad=FILE (host/vita/pad.c calls these
@@ -80,6 +83,8 @@ extern u8 *D_002E26A0[]; /* the player's actor (the actor table D_002C64A0's ent
 extern float D_004F77E0; /* the camera's angle round y */
 extern VmRec D_0038D170[]; /* the field's script VMs (src/vm/script_vm.c) */
 extern s32 D_0039A570;     /* how many */
+extern s32 D_002BC07C;     /* the screen fade's level: 128 when done (dktitle.x func_00f228c8 case 27) */
+extern u8 kh1_memmap[];    /* the PS2 addresses from 0x6A0000 (host/port/memmap.c): the overlays' data */
 void func_00124d58(void *, void *, float, float);
 
 typedef struct {
@@ -90,7 +95,8 @@ typedef struct {
     int go;           /* session 136: steer to (gx, gz) */
     float gx, gz, gr;
     int vm;           /* session 139: steer to this VM's entity instead (-1: to gx, gz) */
-    int wait;         /* 2026-11-03: hold the script's clock here while there is no player */
+    int wait;         /* 2026-11-03: hold the script's clock here while there is no player (1), or
+                       * 2026-11-04 until the title menu takes CIRCLE (2) */
 } NullPadLine;
 
 static NullPadLine *null_pad_lines;
@@ -182,10 +188,10 @@ int kh1_null_pad_load(const char *path) {
         L.wait = 0;
         {
             int j = i;
-            if (word(s, &j, w, sizeof w) && strcmp(w, "waitplayer") == 0) {
-                if (word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "waitplayer takes nothing after it", w) - 1;
+            if (word(s, &j, w, sizeof w) && (strcmp(w, "waitplayer") == 0 || strcmp(w, "waittitle") == 0)) {
+                L.wait = strcmp(w, "waittitle") == 0 ? 2 : 1;
+                if (word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "waitplayer / waittitle take nothing after them", w) - 1;
                 for (k = 0; k < 4; k++) L.stick[k] = 128;
-                L.wait = 1;
                 null_pad_lines = realloc(null_pad_lines, (n + 1) * sizeof *null_pad_lines);
                 null_pad_lines[n++] = L;
                 continue;
@@ -242,10 +248,22 @@ int kh1_null_pad_reload(const char *path) {
     return kh1_null_pad_load(path);
 }
 
+/* a wait line's condition: 1 the field has a player; 2 the title menu (dktitle.x func_00f228c8's state
+ * D_00F2C708 27, NEW GAME / LOAD) is up and its fade done (D_002BC07C 128), so CIRCLE is taken.
+ * Before that the title's logo (state 26) takes any button and the menu's CIRCLEs are dropped, and the
+ * Vita gets there 1,000-3,000 frames later than the host, varying run to run */
+static int waited(int kind) {
+    const char *o;
+    if (kind == 1) return D_002E26A0[0] != 0;
+    o = PlatOvlCurrent();
+    return o && strcmp(o, "dktitle.x") == 0 && *(const s32 *)(kh1_memmap + 0xF2C708 - 0x6A0000) == 27 && D_002BC07C == 128;
+}
+
 /* the line that holds at this frame (0: before the first, or no script: connected, nothing) */
 static const NullPadLine *now(void) {
     static const NullPadLine idle = { 0, 0, 0, { 128, 128, 128, 128 }, 0, 0, 0, 0, 0, 0 };
-    static unsigned long held; /* the frames waitplayer lines held the script's clock */
+    static unsigned long held; /* the frames wait lines held the script's clock */
+    static int waiting;        /* the last wait line that held it (1-based), for the trace */
     unsigned long fr = kh1_host_frame();
     int lo = 0, hi;
     if (null_pad_n < 0) {
@@ -272,9 +290,12 @@ static const NullPadLine *now(void) {
         if (null_pad_lines[mid].frame <= fr) lo = mid + 1;
         else hi = mid;
     }
-    if (lo && null_pad_lines[lo - 1].wait && !D_002E26A0[0]) {
-        /* no player yet: the script's time stays at the waitplayer line's frame */
-        if (!held && kh1_host_trace) printf("kh1-host: pad waits for the player from frame %lu\n", kh1_host_frame());
+    if (lo && null_pad_lines[lo - 1].wait && !waited(null_pad_lines[lo - 1].wait)) {
+        /* not there yet: the script's time stays at the wait line's frame */
+        if (kh1_host_trace && waiting != lo)
+            printf("kh1-host: pad waits for the %s from frame %lu\n", null_pad_lines[lo - 1].wait == 2 ? "title menu" : "player",
+                   kh1_host_frame());
+        waiting = lo;
         held = kh1_host_frame() - null_pad_lines[lo - 1].frame;
     }
     return lo ? &null_pad_lines[lo - 1] : &idle;
@@ -371,6 +392,57 @@ static void steer(const NullPadLine *L, u8 *data) {
     data[5] = (u8)(128.0f - 127.0f * cosf(bk * 0.0981747704f));
 }
 
+/* with KH1_HOST_POS (2026-11-04): when the field's script VMs change (a room's arrival), one line a VM:
+ * K, id, its script's address and pc, its entity's position: what a goto vm K line needs, and which
+ * VM runs a script found in a room file (the address less the "loaded ROOM.ard ... at" one) */
+static void vm_trace(unsigned long f) {
+    static u32 seen;
+    u32 h = (u32)D_0039A570;
+    int k;
+    for (k = 0; k < D_0039A570 && k < 32; k++) h = h * 31u + (u32)(unsigned long)D_0038D170[k].code;
+    if (h == seen) return;
+    seen = h;
+    for (k = 0; k < D_0039A570 && k < 32; k++) {
+        const VmRec *v = &D_0038D170[k];
+        const float *e = v->obj ? (const float *)((const u8 *)v->obj + 0x10) : 0;
+        printf("kh1-host: vm %lu %d id %x code %p pc %d", f, k, v->x0, (void *)v->code, v->pc);
+        if (e) printf(" at %.1f %.1f %.1f", e[0], e[1], e[2]);
+        printf("\n");
+    }
+}
+
+#ifndef KH1_VITA
+/* KH1_HOST_COLL=FRAME (2026-11-04): at that frame write the room's collision to coll/tris.bin and
+ * coll/verts.bin (what tools/host/collmap.py dump reads with gdb, which qemu-user cannot run) */
+extern u8 *D_002A6238; /* the triangles, 20 bytes each (tools/host/collmap.py) */
+extern s32 D_002A6258; /* how many */
+extern u8 *D_002A624C; /* the vertices, 12 bytes each */
+int mkdir(const char *, unsigned);
+unsigned long fwrite(const void *, unsigned long, unsigned long, FILE *);
+static void coll_dump(unsigned long f) {
+    static long at = -1;
+    FILE *o;
+    int k, nv = 0;
+    if (at == -1) {
+        const char *s = getenv("KH1_HOST_COLL");
+        at = s ? (long)strtoul(s, 0, 0) : 0;
+    }
+    if (!at || f < (unsigned long)at || !D_002A6238 || !D_002A624C) return;
+    at = 0;
+    for (k = 0; k < D_002A6258; k++) {
+        const s16 *v = (const s16 *)(D_002A6238 + 20 * k);
+        int i;
+        for (i = 0; i < 4; i++) if (v[i] >= nv) nv = v[i] + 1;
+    }
+    mkdir("coll", 0755);
+    if ((o = fopen("coll/tris.bin", "wb"))) fwrite(D_002A6238, 20, D_002A6258, o), fclose(o);
+    if ((o = fopen("coll/verts.bin", "wb"))) fwrite(D_002A624C, 12, nv, o), fclose(o);
+    printf("kh1-host: coll %lu: %d triangles, %d vertices in coll/\n", f, D_002A6258, nv);
+}
+#else
+#define coll_dump(f) ((void)0)
+#endif
+
 /* KH1_HOST_POS=N (session 140): print the player's position every N frames, to plan and check
  * goto lines without gdb */
 static void pos_trace(void) {
@@ -378,6 +450,7 @@ static void pos_trace(void) {
     static unsigned long last;
     unsigned long f = kh1_host_frame();
     const float *pos;
+    coll_dump(f);
     if (every < 0) {
         const char *s = getenv("KH1_HOST_POS");
         every = 0;
@@ -387,6 +460,7 @@ static void pos_trace(void) {
     last = f;
     pos = (const float *)(D_002E26A0[0] + 0x10);
     printf("kh1-host: pos %lu %.1f %.1f %.1f\n", f, pos[0], pos[1], pos[2]);
+    vm_trace(f);
 }
 
 int PlatPadRead(int socket, u8 *data) {

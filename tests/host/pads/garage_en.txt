@@ -5,8 +5,7 @@
 #               Tutorial, Exit) from ~6,900, then the ship editor's screen from ~7,000. Also wm.x's
 #               code: gb.x does not load (it is game mode 6, gumisave.c func_001ba7e0; the route
 #               that starts it is not found yet)
-1300 START
-1302 -
+1250 - waittitle
 1600 DOWN
 1602 -
 1800 CIRCLE

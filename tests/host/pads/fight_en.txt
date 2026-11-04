@@ -12,7 +12,7 @@
 #               beside Sora (VM 4), so a CIRCLE at 32,400 opened his talk again and the goto to the
 #               next islander could not move Sora
 # Then 70,000-77,500: Kairi's errand and the two logs; 77,600-91,000 (session 140): the cloth and the next room (comments below).
-#   1300        START at the title; CIRCLE every 200 frames to 4600: New Game, its three pages, yes
+#   1250        waittitle (the title menu up; the Vita gets there 1,000-3,000 frames later); CIRCLE every 200 frames to 4600: New Game, its three pages, yes
 #   4800-6600   stick up: Sora walks to the sword's pedestal (0, 580); 6600 CROSS jumps onto it
 #   7000-7600   CIRCLE: the sword's lines, "this power?" yes, "what will you give up?"
 #   8000-8800   off the pedestal, then goto (host/null/pad.c) round to the staff's (500, -300), CROSS
@@ -31,8 +31,7 @@
 #   32200-70000 (session 138; comments at each step below): the three islanders' questions, the
 #               menu tutorial, the Shadows, the save point, the glass stairs, Darkside, and on into the
 #               Destiny Islands opening
-1300 START
-1302 -
+1250 - waittitle
 2000 CIRCLE
 2002 -
 2200 CIRCLE
