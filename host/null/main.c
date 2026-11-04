@@ -612,6 +612,7 @@ int main(int argc, char **argv) {
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
         kh1_dma_quiet = getenv("KH1_HOST_QUIET") != 0; /* session 135: no send lines, as on the Vita */
+        if (getenv("KH1_HOST_T4BAND")) kh1_gsmem_t4band = atoi(getenv("KH1_HOST_T4BAND")); /* 2026-11-04: config t4band= */
         kh1_dma_vu1 = getenv("KH1_HOST_VU1") && atoi(getenv("KH1_HOST_VU1")); /* session 137v: the 3D */
         kh1_vu1_verbose = kh1_dma_vu1 ? atoi(getenv("KH1_HOST_VU1")) - 1 : 0;
         if (getenv("KH1_HOST_VU1TR")) kh1_vu1_tr = atoi(getenv("KH1_HOST_VU1TR")); /* 0 / 1 / 2: checked */

@@ -166,14 +166,19 @@ static u32 run_up(u32 seed, int fast, u32 *hash, KH1GsMemStats *st) {
             x = R() % 1500; y = R() % 1500; w = 1 + R() % 540; h = 1 + R() % 200; bw = 1 + R() % 32;
         }
         if (seed % 3 == 1 && R() % 4) { /* session 148: whole blocks of CT32 / Z32 / T8 (gsmem.c band_*), some not */
-            static const u32 bpsms[] = { KH1_PSMCT32, KH1_PSMZ32, KH1_PSMT8, KH1_PSMT8 };
-            psm = bpsms[R() % 4];
+            static const u32 bpsms[] = { KH1_PSMCT32, KH1_PSMZ32, KH1_PSMT8, KH1_PSMT8, KH1_PSMT4, KH1_PSMT4 };
+            psm = bpsms[R() % 6];
             x = R() % 8 * 16 + (R() % 6 == 0 ? 8 : 0);
             y = R() % 8 * 16 + (R() % 6 == 0 ? 4 : 0) + (psm != KH1_PSMT8 && R() % 3 == 0 ? 8 : 0);
             w = (1 + R() % 16) * 16 + (R() % 8 == 0 ? 8 : 0);
             h = (1 + R() % 8) * 16 + (R() % 8 == 0 ? 3 : 0);
             bw = (w + 63) / 64 + R() % 3;
             if (psm == KH1_PSMT8) bw = (bw + 1) & ~1u; /* T8's width in pairs of 64 */
+            if (psm == KH1_PSMT4) { /* 2026-11-04: T4's blocks 32 x 16, its width in pairs of 64 */
+                x = x / 32 * 32 + (R() % 6 == 0 ? 16 : 0);
+                w = (w + 31) / 32 * 32 + (R() % 8 == 0 ? 16 : 0);
+                bw = ((w + 63) / 64 + R() % 3 + 1) & ~1u;
+            }
             if (R() % 4 == 0) bp = R() % 0x4000 & ~31u; /* page aligned */
         }
         u32 lo = bp | bw << 14 | psm << 20 | 7u << 26 | 7u << 30;

@@ -127,6 +127,8 @@
  *                             of the target's next scene, with no wait (gxm.c put_fill / put_draw)
  *       pendfast=0            uploads into targets written by the CPU a word at a time (as before 2026-11-02); 1, the
  *                             default: a whole block inside the target as 8 rows of 8 pixels (gxm.c pend_write)
+ *       t4band=0              T4 uploads stored a pixel at a time (as before 2026-11-04); 1, the default: whole 32 x 16
+ *                             blocks at once (host/null/gsmem.c band_t4: the world map's streamed T4 textures)
  *       wdprio=N              the watchdog's priority against the game's threads (2026-11-01): -20, the default, above
  *                             them; 0 theirs, as before (it then waits for the GPU thread on the third core)
  *       gputime=1             log each 2 s how long the GPU spent on each kind of scene (gxm.c; a polling thread, so
@@ -1063,6 +1065,7 @@ static void config(char *iso, int n) {
             if (c && *c == ',') kh1_vita_shot_count = strtoul(c + 1, &c, 0);
         }
         else if (strcmp(line, "pendfast") == 0) kh1_vita_pendfast = atoi(v);
+        else if (strcmp(line, "t4band") == 0) kh1_gsmem_t4band = atoi(v);
         else if (strcmp(line, "wdprio") == 0) wd_prio = atoi(v);
         else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
             static char pad[160];

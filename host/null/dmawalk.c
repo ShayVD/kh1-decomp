@@ -178,6 +178,10 @@ static void gif_qword(GifStream *g, const u32 *q) {
     else { g->left = g->nloop = nloop; g->image++; }
 }
 
+static int img_log = -1; /* 2026-11-04: KH1_HOST_IMGLOG set: a line per IMAGE piece */
+void kh1_gsmem_trx_desc(u32 *o);
+char *getenv(const char *);
+unsigned long kh1_host_frame(void);
 static void gif_block(GifStream *g, const u32 *q, u32 n) {
     u32 i;
     if (!n) return;
@@ -189,11 +193,23 @@ static void gif_block(GifStream *g, const u32 *q, u32 n) {
         if (g->left && g->flg >= 2) {
             u32 k = n - i < g->left ? n - i : g->left, whole = g->left == g->nloop && k == g->left;
             u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
-            if (!whole || !kh1_gsmem_image_same(q, k * 16)) {
+            int same = 0;
+            u32 dsc[10];
+            if (img_log < 0) img_log = getenv("KH1_HOST_IMGLOG") != 0;
+            if (img_log) kh1_gsmem_trx_desc(dsc);
+            if (!whole || !(same = kh1_gsmem_image_same(q, k * 16))) {
                 kh1_gsmem_image(q, k * 4);
                 if (whole) kh1_gsmem_image_kept(q, k * 16);
             } else {
                 kh1_dma_img_same++;
+            }
+            if (img_log) {
+                u32 h = 2166136261u, j;
+                for (j = 0; j < k * 4; j++) h = (h ^ q[j]) * 16777619u;
+                printf("kh1-host: img f%lu snd %08x psm %02x bp %04x bw %u at %u,%u %ux%u key %d dlen %u act %u: "
+                       "%u qw of %u left (nloop %u) whole %d same %d hash %08x\n", kh1_host_frame(), cs->who ? cs->who : kh1_dma_sender,
+                       dsc[0], dsc[1], dsc[2], dsc[3], dsc[4], dsc[5], dsc[6], (int)dsc[7], dsc[8], dsc[9], k, g->left,
+                       g->nloop, whole, same, h);
             }
             if (kh1_vu1_clock) kh1_dma_img_us += kh1_vu1_clock() - t0;
             kh1_dma_img_n++;
