@@ -605,7 +605,19 @@ Vita3K, with no crash:
 - **Vita3K, the whole script** (14,000 frames): wm.x at 6,327, tw01 at ~8,000, gb.x at 10,671, the Garage /
   Exit sequence back to tw01 (the counter's menu shows again), no crash. The First District's 3D is mostly
   dark or missing in Vita3K's window there (the HUD and the menus draw); not looked into.
-- Not done: the hardware run, and reading the editor's screens past the menu (the host's shots of gb.x
+- **Hardware** (2026-11-04): the first run stalled at the load screen (waitcard / waitslots below fixed it).
+  The second reached native gb.x (`gb.x entry (2, 55) returned 1` at 10,680) and stopped ~700 frames later
+  with no log line: the dump's crashed thread (stop reason 0x10006) was the game thread in gb.x's cursor task
+  func_00f4d8e0 (an sa task, waiting a frame in func_0024e468). Cause: every game thread and task slot keeps
+  a 0x40000 coroutine stack, and on this route the count reaches 17 by gb.x (2 threads at boot, wm.x's task
+  contexts 10, gb.x's 5 at its start; counted on the host), past the 4 MiB pool (16 fit). The 17th was
+  malloc'd, and the Vita's kernel stops an app making a system call from a stack outside its thread's
+  (session 137v; Vita3K does not check). Fix: the main thread's stack is 16 MiB (pool 12 MiB, 48 stacks),
+  and costack.c logs once when the pool runs out. The third run (Shay's card has save 07 now, so it used
+  one UP for save 04 instead of two DOWNs: out of the committed script) went title, Agrabah, the world map,
+  Traverse Town, the counter, **native gb.x on hardware** (10,680), Garage / Exit and back to tw01, to
+  14,000 frames with no crash.
+- Not done: reading the editor's screens past the menu (the host's shots of gb.x
   need the chain walk, ~50x slower; Vita3K's window capture shows them).
 
 **New host switches / pad steps** (host/null/pad.c):

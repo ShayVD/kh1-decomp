@@ -55,7 +55,8 @@ World: stick up 40 frames, left 12, Depart), walks up to the shop counter (scrip
 2nd answer (library call 488): native gb.x loads (host ~10,700; Vita3K 10,671), the GUMMI BLOCK MENU draws in
 Vita3K, and the Garage / Exit return to the First District with no crash. New pad step `waittitle` (the title
 menu up before LOAD / NEW GAME; the save scripts use it now), VM lines on KH1_HOST_POS, and KH1_HOST_COLL
-(collision dump without gdb). **Next**: gbx_en on hardware (ask Shay), then the editor's own screens.
+(collision dump without gdb). On hardware it runs to 14,000 frames after two fixes (the load screen's waitcard / waitslots, and a 16 MiB main
+thread stack: the coroutine stack pool ran out at gb.x). **Next**: the editor's own screens (Garage editing).
 
 ## Earlier (2026-11-03): gb.x native, the Gummi flight and garage on the host (session 145)
 
