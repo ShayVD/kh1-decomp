@@ -1131,6 +1131,7 @@ static __inline__ void vu_ftoi(u32 *t, const u32 *a, int sc) {
  * committed).  A run whose micro memory holds one of them, from one of its entries, runs that C:
  * the same state and helpers as the interpreter, its timing worked out at build time */
 int kh1_vu1_tr = 1;   /* 0: always the interpreter; 2: both, every run, compared (kh1_vu1_tr_check) */
+int kh1_vu1_tr_ovl = 1; /* 2026-11-03: 0 leaves the overlays' programs (P100-P104, wm.x / gb.x's Gummi C0-C4) to the interpreter */
 static int tr_lost;   /* a JR went somewhere the translation did not expect */
 typedef struct {
     const u32 *w;
@@ -1169,7 +1170,8 @@ static int tr_find(void) {
     if (tr_gen == micro_gen) return tr_cur;
     tr_gen = micro_gen;
     for (i = 0; i < TR_PROGS; i++)
-        if ((best < 0 || tr_progs[i].n > tr_progs[best].n) && !memcmp(micro, tr_progs[i].w, tr_progs[i].n * 8)) best = i;
+        if ((best < 0 || tr_progs[i].n > tr_progs[best].n) && (kh1_vu1_tr_ovl || tr_progs[i].num < 100) &&
+            !memcmp(micro, tr_progs[i].w, tr_progs[i].n * 8)) best = i;
     return tr_cur = best;
 }
 
@@ -1395,7 +1397,10 @@ static void start_run(u32 pc) {
             st.runs++;
             st_runs_all++;
             st.tr_runs++;
-            if (tr_lost && !tr_bad++) printf("kh1-vu1: translated program P%d lost its way (a JR)\n", tr_progs[prog].num);
+            if (tr_lost && !tr_bad++) printf("kh1-vu1: translated program P%d lost its way (a JR to %03x)\n", tr_progs[prog].num, tpc);
+            /* 2026-11-03: the rest of that run on the interpreter, from where the JR went (the Gummi programs jump
+             * through addresses read from VU memory: tools/vu/vu1_translate.py guesses their routines) */
+            if (tr_lost) run(tpc);
             return;
         }
         run_t1_set = 0; /* the interpreter's time too */
