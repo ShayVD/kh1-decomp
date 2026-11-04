@@ -4,7 +4,8 @@
 # mc0 and en.iso as in wm_en.txt (the user's card with saves 04-06, the English disc; never commit them).
 # On the Vita: config.txt pad=ux0:data/kh1/gbx_en.txt (the waits make it independent of the Vita's load times).
 #   1250        waittitle: the clock holds until the title menu (NEW GAME / LOAD) takes CIRCLE
-#   1600-3100   LOAD, save 04 (Agrabah) as wm_en.txt; 3200 waitplayer
+#   1600-3100   LOAD, save 04 (Agrabah) as wm_en.txt, with waitcard (1810: the port window has seen
+#               the card) and waitslots (2200: the slot list is open), which the Vita needs; 3200 waitplayer
 #   3400-6310   back onto the save point, Save Menu, Gummi Ship, "Board the gummi ship?" yes: wm.x
 #   6700-6812   Select World: the left stick up for 40 frames (destination 21), then left 12 (3, Traverse Town)
 #   7000-7800   CIRCLE three times: Depart; tw01.ard (the First District) loads, no flight
@@ -20,8 +21,10 @@
 1602 -
 1800 CIRCLE
 1802 -
+1810 - waitcard
 2100 CIRCLE
 2102 -
+2200 - waitslots
 2340 DOWN
 2342 -
 2380 DOWN

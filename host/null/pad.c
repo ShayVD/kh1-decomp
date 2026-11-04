@@ -36,7 +36,9 @@
  *                        from the field's arrival: the Vita's loads take 1,500-3,300 frames longer
  *                        than the host's, and a run's timing varies.
  *                        2026-11-04: FRAME BUTTONS waittitle holds it until the title menu takes CIRCLE
- *                        (NEW GAME / LOAD shown, its fade done), as waitplayer does for the field.
+ *                        (NEW GAME / LOAD shown, its fade done), as waitplayer does for the field, and
+ *                        FRAME BUTTONS waitcard until the load screen sees the card in slot 1, and
+ *                        FRAME BUTTONS waitslots until its slot list is open.
  *                        KH1_HOST_POS=N prints the player's position every N frames (at pad reads).
  *
  * KH1_HOST_TRACE >= 1 prints "kh1-host: pad FRAME BUTTONS" when what the game reads changes.  Not
@@ -83,6 +85,8 @@ extern u8 *D_002E26A0[]; /* the player's actor (the actor table D_002C64A0's ent
 extern float D_004F77E0; /* the camera's angle round y */
 extern VmRec D_0038D170[]; /* the field's script VMs (src/vm/script_vm.c) */
 extern s32 D_0039A570;     /* how many */
+extern struct { s32 x0; u8 pad[12]; } D_00425C28[]; /* the card ports' state: 3 none (yet) */
+extern s32 D_006437DC;     /* the load screen's step (src/menu/loadmenu.c): 19 the slot list open */
 extern s32 D_002BC07C;     /* the screen fade's level: 128 when done (dktitle.x func_00f228c8 case 27) */
 extern u8 kh1_memmap[];    /* the PS2 addresses from 0x6A0000 (host/port/memmap.c): the overlays' data */
 void func_00124d58(void *, void *, float, float);
@@ -96,7 +100,8 @@ typedef struct {
     float gx, gz, gr;
     int vm;           /* session 139: steer to this VM's entity instead (-1: to gx, gz) */
     int wait;         /* 2026-11-03: hold the script's clock here while there is no player (1), or
-                       * 2026-11-04 until the title menu takes CIRCLE (2) */
+                       * 2026-11-04 until the title menu takes CIRCLE (2), until the load screen's
+                       * slot list is open (3), until the load screen sees the card in slot 1 (4) */
 } NullPadLine;
 
 static NullPadLine *null_pad_lines;
@@ -188,9 +193,10 @@ int kh1_null_pad_load(const char *path) {
         L.wait = 0;
         {
             int j = i;
-            if (word(s, &j, w, sizeof w) && (strcmp(w, "waitplayer") == 0 || strcmp(w, "waittitle") == 0)) {
-                L.wait = strcmp(w, "waittitle") == 0 ? 2 : 1;
-                if (word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "waitplayer / waittitle take nothing after them", w) - 1;
+            if (word(s, &j, w, sizeof w) && (strcmp(w, "waitplayer") == 0 || strcmp(w, "waittitle") == 0 ||
+                                                      strcmp(w, "waitslots") == 0 || strcmp(w, "waitcard") == 0)) {
+                L.wait = strcmp(w, "waittitle") == 0 ? 2 : strcmp(w, "waitslots") == 0 ? 3 : strcmp(w, "waitcard") == 0 ? 4 : 1;
+                if (word(s, &j, w, sizeof w)) return fclose(f), bad(path, ln, "the wait steps take nothing after them", w) - 1;
                 for (k = 0; k < 4; k++) L.stick[k] = 128;
                 null_pad_lines = realloc(null_pad_lines, (n + 1) * sizeof *null_pad_lines);
                 null_pad_lines[n++] = L;
@@ -251,10 +257,16 @@ int kh1_null_pad_reload(const char *path) {
 /* a wait line's condition: 1 the field has a player; 2 the title menu (dktitle.x func_00f228c8's state
  * D_00F2C708 27, NEW GAME / LOAD) is up and its fade done (D_002BC07C 128), so CIRCLE is taken.
  * Before that the title's logo (state 26) takes any button and the menu's CIRCLEs are dropped, and the
- * Vita gets there 1,000-3,000 frames later than the host, varying run to run */
+ * Vita gets there 1,000-3,000 frames later than the host, varying run to run; 3 the load screen's slot list
+ * is open (menu/loadmenu.c's step D_006437DC 19): the Vita's card reads before it take longer, and presses
+ * meant for the list were lost while its "checking the memory card" step still ran; 4 the load screen's port
+ * window has seen a card in slot 1 (D_00425C28[0].x0 not 3, menu/loadframe.c func_0022b410): CIRCLE on the
+ * port before that opens the "no memory card" box instead of the card */
 static int waited(int kind) {
     const char *o;
     if (kind == 1) return D_002E26A0[0] != 0;
+    if (kind == 3) return D_006437DC == 19;
+    if (kind == 4) return D_00425C28[0].x0 != 3;
     o = PlatOvlCurrent();
     return o && strcmp(o, "dktitle.x") == 0 && *(const s32 *)(kh1_memmap + 0xF2C708 - 0x6A0000) == 27 && D_002BC07C == 128;
 }
@@ -292,11 +304,14 @@ static const NullPadLine *now(void) {
     }
     if (lo && null_pad_lines[lo - 1].wait && !waited(null_pad_lines[lo - 1].wait)) {
         /* not there yet: the script's time stays at the wait line's frame */
+        static const char *const what[] = { "", "player", "title menu", "slot list", "card" };
         if (kh1_host_trace && waiting != lo)
-            printf("kh1-host: pad waits for the %s from frame %lu\n", null_pad_lines[lo - 1].wait == 2 ? "title menu" : "player",
-                   kh1_host_frame());
+            printf("kh1-host: pad waits for the %s from frame %lu\n", what[null_pad_lines[lo - 1].wait], kh1_host_frame());
         waiting = lo;
         held = kh1_host_frame() - null_pad_lines[lo - 1].frame;
+    } else if (waiting > 0) {
+        if (kh1_host_trace) printf("kh1-host: pad wait over at frame %lu\n", kh1_host_frame());
+        waiting = -waiting; /* once a line: the next wait line has another index */
     }
     return lo ? &null_pad_lines[lo - 1] : &idle;
 }
