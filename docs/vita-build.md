@@ -2203,6 +2203,19 @@ not a hardware proxy):
 above): every VU1 run from Select World through Depart compared with the interpreter from the same state, ~85,000
 runs, **0 differ** (a lost JR counts as a difference there).
 
+**Hardware** (the user's hand-played run, 2026-11-04, this branch's VPK with the defaults: save point, Gummi Ship,
+Select World, a flight to Traverse Town; windows ~2.15 s):
+
+| Part | Before (2026-11-03 run, interpreter) | Now |
+| --- | --- | --- |
+| Select World | ~3 pictures/s, game thread full, VIF1's walk ~2,060 ms | **~11 pictures/s**; VU1 (P100) ~330 ms, game thread ~1.0 s |
+| The flight | not reached | 6-9 pictures/s; game thread full, VU1 1.2-1.4 s (P100 + P101, 30-45 ns a pair) |
+
+On Select World the limit is now the **GS worker** (~2.1 s busy): `gs blocks` 1.7 s for ~1.9 M qwords and ~28 MB of
+image pieces a window, nearly all in one op (the GIF block handler, 17,000 a window), and the game waits ~1.4 s
+for it. Next for the map: find which sender streams those images every frame (the `gs senders` line) and whether
+the texture cache can skip them; for the flight, C0 / C1 as native draws.
+
 After Depart the clipped programs carry several times the map screen's runs (C0 ~8,000 runs and 37 M pairs a
 window), so even translated they fill the game thread there. The next step for it is the same as renderer A / B's:
 C0 / C1 / C3 as hand-written C (vu1_nat.h) or parsed into native draws (renderer-spec 2.5 notes the batches need
