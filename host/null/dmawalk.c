@@ -108,6 +108,9 @@ int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max) {
  * GS worker's blocks and kicks, or the walk's own without the worker), their qwords, those skipped as the same bytes
  * again, and the microseconds they took (kh1_vu1_clock: the Vita's watchdog); and the blocks and qwords w_block took */
 u32 kh1_dma_img_n, kh1_dma_img_qw, kh1_dma_img_same, kh1_dma_img_us, kh1_dma_blk_n, kh1_dma_blk_qw;
+/* 2026-11-04: of those, the pieces done from the stored-block cache (gsmem.c kb_try) and the other same-bytes skips:
+ * their qwords and microseconds (the rest stored) */
+u32 kh1_dma_img_kb_qw, kh1_dma_img_kb_us, kh1_dma_img_same_qw, kh1_dma_img_same_us;
 
 /* 2026-11-02 (the 18,000-23,000 fights: w_block ~1,000 ms a window, its IMAGE pieces ~180): w_block's work by sender,
  * the code that started the send (kh1_dma_sender: PlatDmaSend's or kh1_dma_gif_direct's return address; out/vita/kh1.elf's
@@ -192,7 +195,7 @@ static void gif_block(GifStream *g, const u32 *q, u32 n) {
          * skipped whole when it is the same rectangle's same bytes again (host/null/gsmem.c) */
         if (g->left && g->flg >= 2) {
             u32 k = n - i < g->left ? n - i : g->left, whole = g->left == g->nloop && k == g->left;
-            u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0;
+            u32 t0 = kh1_vu1_clock ? kh1_vu1_clock() : 0, kb0 = kh1_gsmem_kb_hits;
             int same = 0;
             u32 dsc[10];
             if (img_log < 0) img_log = getenv("KH1_HOST_IMGLOG") != 0;
@@ -211,7 +214,17 @@ static void gif_block(GifStream *g, const u32 *q, u32 n) {
                        dsc[0], dsc[1], dsc[2], dsc[3], dsc[4], dsc[5], dsc[6], (int)dsc[7], dsc[8], dsc[9], k, g->left,
                        g->nloop, whole, same, h);
             }
-            if (kh1_vu1_clock) kh1_dma_img_us += kh1_vu1_clock() - t0;
+            if (kh1_vu1_clock) {
+                u32 dt = kh1_vu1_clock() - t0;
+                kh1_dma_img_us += dt;
+                if (kh1_gsmem_kb_hits != kb0) {
+                    kh1_dma_img_kb_us += dt;
+                    kh1_dma_img_kb_qw += k;
+                } else if (same) {
+                    kh1_dma_img_same_us += dt;
+                    kh1_dma_img_same_qw += k;
+                }
+            }
             kh1_dma_img_n++;
             kh1_dma_img_qw += k;
             cs->img += k;

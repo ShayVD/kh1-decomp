@@ -165,6 +165,14 @@ static void host_clock_report(void) {
             printf("kh1-host: texskip=%d: %u texture lookups, %u of them the last one's texture, %u decoded\n",
                    kh1_pipes_texskip, kh1_pipes_tex_n, kh1_pipes_tex_same, kh1_pipes_tex_dec);
     }
+    { /* 2026-11-04: the stored-block cache (gsmem.c kb_*) */
+        extern int kh1_gsmem_texblk;
+        extern u32 kh1_gsmem_kb_hits, kh1_gsmem_kb_blocks, kh1_gsmem_kb_misses, kh1_gsmem_kb_keeps, kh1_gsmem_kb_resets;
+        if (kh1_gsmem_kb_hits + kh1_gsmem_kb_misses)
+            printf("kh1-host: texblk=%d: %u uploads from kept blocks (%u blocks), %u not found, %u kept, %u pool resets\n",
+                   kh1_gsmem_texblk, kh1_gsmem_kb_hits, kh1_gsmem_kb_blocks, kh1_gsmem_kb_misses, kh1_gsmem_kb_keeps,
+                   kh1_gsmem_kb_resets);
+    }
     { /* 2026-11-03: the recorder's texture cache by how each lookup hit (texcache.c, texver) */
         extern int kh1_pipes_texver;
         u32 kh1_gsmem_sig_lazy(void);
@@ -613,6 +621,7 @@ int main(int argc, char **argv) {
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
         kh1_dma_quiet = getenv("KH1_HOST_QUIET") != 0; /* session 135: no send lines, as on the Vita */
         if (getenv("KH1_HOST_T4BAND")) kh1_gsmem_t4band = atoi(getenv("KH1_HOST_T4BAND")); /* 2026-11-04: config t4band= */
+        if (getenv("KH1_HOST_TEXBLK")) kh1_gsmem_texblk = atoi(getenv("KH1_HOST_TEXBLK")); /* 2026-11-04: config texblk= */
         kh1_dma_vu1 = getenv("KH1_HOST_VU1") && atoi(getenv("KH1_HOST_VU1")); /* session 137v: the 3D */
         kh1_vu1_verbose = kh1_dma_vu1 ? atoi(getenv("KH1_HOST_VU1")) - 1 : 0;
         if (getenv("KH1_HOST_VU1TR")) kh1_vu1_tr = atoi(getenv("KH1_HOST_VU1TR")); /* 0 / 1 / 2: checked */

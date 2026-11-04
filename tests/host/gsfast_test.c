@@ -406,6 +406,67 @@ int main(int argc, char **argv) {
         printf("gsfast_test: %u pages stored by part stores, %u left\n", kh1_gsmem_part_pages - part0, kh1_gsmem_part_skipped);
         printf("gsfast_test: %u uploads skipped, %u of them over a draw's marks\n", skips, marked);
     }
+    /* 2026-11-04: the stored-block cache (gsmem.c kb_*): eight textures streamed through two slots (A, B, A as Select
+     * World's), CT32 / Z32 / T8 / T4 in whole blocks (in some runs one slot not), with draws, pixel writes and new
+     * bytes between, each upload through kh1_gsmem_image_same with the cache on and off: the same pixels, marks,
+     * stamps, targets and content signatures after every few ops, and the cache used */
+    {
+        static const u32 tps[] = { KH1_PSMCT32, KH1_PSMZ32, KH1_PSMT8, KH1_PSMT4 };
+        static u8 tbytes[8][128 * 64 * 4];
+        u32 run, op, h0v = kh1_gsmem_kb_hits;
+        for (run = 0; run < 12; run++) {
+            u32 ha[200], hb[200], k, sl[2][7];
+            for (k = 0; k < 2; k++) { /* psm, bp, bw, x, y, w, h */
+                sl[k][0] = tps[R() % 4]; sl[k][1] = (R() % 0x3000) & ~31u; sl[k][2] = 4;
+                sl[k][3] = R() % 3 * 64; sl[k][4] = R() % 2 * 32; sl[k][5] = 64 << R() % 2; sl[k][6] = 32 << R() % 2;
+                if (run % 4 == 3 && k) sl[k][3] += 8; /* not whole blocks: stored as before */
+            }
+            for (k = 0; k < 2; k++) {
+                u32 j, n;
+                rs = run * 104723u + 11;
+                kh1_gsmem_texblk = k == 0;
+                kh1_gsmem_reset();
+                kh1_gsmem_fast(1);
+                memset(stamp_was, 0, sizeof stamp_was);
+                state_hash();
+                for (j = 0; j < 8; j++)
+                    for (n = 0; n < sizeof tbytes[j]; n++) tbytes[j][n] = (u8)R();
+                for (op = 0; op < 200; op++) {
+                    u32 c = R() % 12, j = R() % 8, *q = sl[j & 1], psm = q[0];
+                    u32 nb = psm == KH1_PSMT4 ? q[5] * q[6] / 2 : psm == KH1_PSMT8 ? q[5] * q[6] : q[5] * q[6] * 4;
+                    if (c < 8) up(1, psm, q[1], q[2], q[3], q[4], q[5], q[6], tbytes[j], nb);
+                    else if (c < 9) /* a draw (and its Z) over some pages */
+                        kh1_gsmem_draw((q[1] >> 5) | q[2] << 16 | (R() % 2 ? 1u : 0) << 24, 0, (sl[R() % 2][1] >> 5) | 1u << 24,
+                                       0, (R() % 256) << 16, (R() % 128) << 16, R() % 2 ? 0x10000 : 0);
+                    else if (c < 10) kh1_gsmem_write_pixel(psm, q[1], q[2], q[3] + R() % q[5], q[4] + R() % q[6], R());
+                    else if (c < 11) tbytes[j][R() % nb] ^= 1 + R() % 255; /* new bytes for its next upload */
+                    else kh1_gsmem_write_pixel(psm, q[1], q[2], q[3] + R() % q[5], q[4] + R() % q[6],
+                                               kh1_gsmem_read_pixel(psm, q[1], q[2], q[3], q[4])); /* often the same bits */
+                    if (op % 8 == 7 || op == 199) {
+                        u32 sg[2] = { 0, 0 }, t, h = state_hash();
+                        for (t = 0; t < 2; t++) {
+                            u32 lo = sl[t][1] | sl[t][2] << 14 | sl[t][0] << 20 | 7u << 26 | 6u << 30;
+                            if (kh1_gsmem_tex_sig(lo, 1, sg)) h = (h ^ sg[0] ^ sg[1] * 3) * 16777619u;
+                            h = (h ^ (kh1_gsmem_tex_ver(lo, 1) != 0)) * 16777619u;
+                        }
+                        (k ? hb : ha)[op] = h;
+                    } else {
+                        (k ? hb : ha)[op] = 0;
+                    }
+                }
+            }
+            kh1_gsmem_texblk = 1;
+            for (op = 0; op < 200; op++)
+                if (ha[op] != hb[op]) {
+                    printf("gsfast_test: stored-block cache run %u differs after op %u\n", run, op);
+                    fails++;
+                    break;
+                }
+        }
+        CHECK("uploads came from kept blocks", kh1_gsmem_kb_hits - h0v > 300);
+        printf("gsfast_test: %u uploads from kept blocks (%u blocks), %u kept, %u not found\n", kh1_gsmem_kb_hits - h0v,
+               kh1_gsmem_kb_blocks, kh1_gsmem_kb_keeps, kh1_gsmem_kb_misses);
+    }
     /* tex_scan's memo: a write into the texture's pages, or a draw into them, is seen at once */
     kh1_gsmem_reset();
     {
