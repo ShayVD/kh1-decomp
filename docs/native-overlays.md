@@ -617,6 +617,13 @@ Vita3K, with no crash:
   gummi_en, garage_en) and fight_en now start with `1250 - waittitle` in place of `1300 START`, since the
   Vita's title ends 1,000-3,000 frames later and presses before it were lost (fight_en still reaches the
   floor break; gbx_en / wm_en's prefix still reaches wm.x).
+- `FRAME - waitcard` / `FRAME - waitslots` (after the first hardware run, 2026-11-04): on the Vita the title
+  wait passed but the save never loaded: the load screen's card checks run longer there, so the port's CIRCLE
+  (loadframe.c func_0022b410: before the card is seen, D_00425C28[0].x0 3, it opens the "no card" box) and the
+  slot list's DOWN / CIRCLE came too early. waitcard holds until D_00425C28[0].x0 is not 3, waitslots until
+  loadmenu.c's step D_006437DC is 19 (the list open; on the host 45 frames after the port's CIRCLE). The
+  save-loading scripts have `1810 - waitcard` and `2200 - waitslots`; the host's timing is unchanged. With
+  KH1_HOST_TRACE the runner also prints "pad wait over at frame N" when a wait ends.
 - `KH1_HOST_POS=N` now also prints the field's script VMs whenever their set changes (a room's arrival):
   `vm FRAME K id ID code ADDR pc PC at X Y Z`. A script found at offset O of a decompressed ROOM.ard runs
   in the VM whose code address range holds the "loaded ROOM.ard ... at" address + O. This replaces
