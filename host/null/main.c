@@ -640,6 +640,7 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATCULL")) kh1_pipes_nat_cull = (u32)atoi(getenv("KH1_HOST_NATCULL"));
         if (getenv("KH1_HOST_NATCHECK")) kh1_vu1_natcheck = atoi(getenv("KH1_HOST_NATCHECK")); /* vu1_draw.h */
         if (getenv("KH1_HOST_NATP0")) kh1_vu1_draw_p0 = atoi(getenv("KH1_HOST_NATP0")); /* 2026-10-31: 0 P0 / P4 on the VU */
+        if (getenv("KH1_HOST_NATGUMMI")) kh1_vu1_draw_gum = atoi(getenv("KH1_HOST_NATGUMMI")); /* 2026-11-04: 0 C0 / C1 on the VU */
         if (getenv("KH1_HOST_NATP11")) kh1_vu1_draw_p11 = atoi(getenv("KH1_HOST_NATP11")); /* 2026-10-31: 0 P11 on the VU */
         if (getenv("KH1_HOST_NATP13")) kh1_vu1_draw_p13 = atoi(getenv("KH1_HOST_NATP13")); /* 2026-10-31: 0 P13 on the VU */
         if (getenv("KH1_HOST_NATSKIN")) kh1_vu1_nat_skin = atoi(getenv("KH1_HOST_NATSKIN")); /* 2026-11-01: 0 the CPU's sums */

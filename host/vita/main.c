@@ -710,6 +710,14 @@ static int watchdog(SceSize args, void *argp) {
                      (kh1_vu1_nd13_hand_us - h13) / 1000, kh1_vu1_nd13_fail - f0, (kh1_vu1_nd13_fail_us - fu0) / 1000,
                      kh1_cmd_natjoin, kh1_cmd_nat_joins - j0);
                 j0 = kh1_cmd_nat_joins;
+                { /* 2026-11-04: the Gummi engine's C0 / C1 runs as native draws (natgummi=) */
+                    static u32 gn0, gf0;
+                    if (kh1_vu1_nd_gum != gn0 || kh1_vu1_nd_gum_fail != gf0)
+                        vlog("kh1-vita: natgummi=%d: %u C0 / C1 runs drawn natively, %u given back to the program\n", kh1_vu1_draw_gum,
+                             kh1_vu1_nd_gum - gn0, kh1_vu1_nd_gum_fail - gf0);
+                    gn0 = kh1_vu1_nd_gum;
+                    gf0 = kh1_vu1_nd_gum_fail;
+                }
                 { /* 2026-11-01: natchain's reads (docs/native-plan.md "Records straight from the chain") */
                     static u32 cr0, cq0, cf0;
                     vlog("kh1-vita: natchain=%d: %u runs read from the chain (%u K qwords not unpacked into VU memory), "
@@ -1011,6 +1019,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
         else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
         else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
+        else if (strcmp(line, "natgummi") == 0) kh1_vu1_draw_gum = atoi(v);
         else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
         else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
         else if (strcmp(line, "natchain") == 0) kh1_vu1_natchain = atoi(v) ? 1 : 0;

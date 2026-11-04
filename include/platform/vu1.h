@@ -52,6 +52,8 @@ extern u32 kh1_vu1_drawn;
 /* 2026-10-31: P0 and P4 (the map's strips) drawn that way too (1, the default; config.txt natp0=0 / KH1_HOST_NATP0=0 keeps
  * them on the VU1 programs with the rest native) */
 extern int kh1_vu1_draw_p0;
+extern int kh1_vu1_draw_gum; /* 2026-11-04: C0 / C1 (the Gummi engine) as native draws (config natgummi=) */
+extern u32 kh1_vu1_nd_gum, kh1_vu1_nd_gum_fail;
 /* 2026-10-31: P11 (renderer B's unlit models with the near-plane cull) too (1, the default; natp11=0 / KH1_HOST_NATP11=0) */
 extern int kh1_vu1_draw_p11;
 /* 2026-10-31: P10 (the shadow pass's untextured strips) too (1, the default; natp10=0 / KH1_HOST_NATP10=0) */
