@@ -2145,6 +2145,12 @@ Vita3K loads the data where linked, so it never showed there. Fix: host/vita/mai
 (`sceKernelGetModuleInfo`, -lSceKernelModulemgr_stub) and hands them to `kh1_null_image`; the log's `image:` line
 prints them with the linked `end`. Other platforms keep the `end` test.
 
+Checked on hardware (fight_en.txt to 14,000): `image: code 81020000+2732ec, data 81300000+4070eec (linked end
+852f0eec)`. That is the data linked at 0x81280000 but loaded 0x80000 higher, while `end` read at run time is the
+link value (`nm`: 852f0eec): the real .bss ends at 0x85370eec. 0 bad DMA sends. That run's displacement was small
+enough that the old test would also have passed `D_0061E8A0` (it fails from about 0x150000 on), so the run shows the
+new check works, not the old failure; the check now uses the loaded ranges whatever the displacement.
+
 ## What next, in order
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,
