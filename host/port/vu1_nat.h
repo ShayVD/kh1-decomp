@@ -1849,6 +1849,806 @@ static int nat_4(u32 pc) {
     return 1;
 }
 
+/* 2026-11-04: the Gummi engine's C0 and C1 (wm.x / gb.x, P100 / P101, renderer-spec 2.5), the flight's VU1 time.
+ * One batch a run (from 02c, the first after the set-up, or the program's own end + 2): the header, every position
+ * through vf01-04 and divided by w in place with its outcode against qw 1018 / 1019 in the matching normal's w, the
+ * normals through vf05-08, MAX 0, through the colour matrix and stored back; then the groups (material, UV slot in
+ * C0, the texture's two qwords), the runs and their fans, each vertex through the group's vertex routine and store
+ * routine (vf26 x / y, from qw 1021 + m), the fan's first triangle tested for its facing unless double-sided.
+ *
+ * A batch with a position outside the clip box takes the program's clipping path (11e / 111) for every fan: the
+ * fan's outcodes ANDed and ORed; a fan wholly outside one plane (and not behind the w plane) skipped, one wholly
+ * inside drawn as above (and the output buffer kicked early when the next fan might not fit, 1fe), and the rest cut
+ * into triangles (v0, vk, vk+1), each clipped against the w plane (projecting what survives), its facing tested,
+ * then against x / y min / max where the polygon's outcodes cross them (290, with the edge routines 230 / 244 /
+ * 269), and drawn as a fan of its own.  C1 is C0 with the material's colour (qw 992 + m) for the multiplier and no
+ * UV scroll; from 0fa on its code is C0's 13 pairs earlier.
+ *
+ * Routine addresses or counts the program was not written for are given up before anything is written.  The MAC
+ * flag is kept only where a FMAND reads it (the facings' OPMSUB, the outcodes' SUBs) and for the run's end; every
+ * other FMAC's flag is overwritten before anything reads it */
+typedef struct {
+    u16 e1;      /* the entry after a batch (the program's [E] + 2), and the tpc it ends on */
+    u16 fa, fc;  /* the unclipped and the clipping paths' addresses (vf29.z, and vi15 from then on) */
+    u16 v0, v1;  /* the vertex routines: untextured (WAITQ), textured */
+    u16 s0, s1;  /* the store routines: untextured, textured */
+    u16 d;       /* from 0fa on, how many pairs earlier than C0's this program's code is */
+    int c1;      /* C1: the material's colour (qw 992 + m) for the multiplier, no UV scroll */
+} NatGum;
+static const NatGum nat_gum[2] = {
+    { 0xc6, 0xfa, 0x11e, 0xc8, 0xdf, 0x216, 0x222, 0, 0 },
+    { 0xc1, 0xed, 0x111, 0xc3, 0xd7, 0x209, 0x215, 13, 1 },
+};
+
+/* a flagged FMAC: the translation's vu_ek, else its scalar form; the MAC bits of dest's fields into *m */
+static __inline__ uint32x4_t gm_fl(int k, uint32x4_t a, uint32x4_t b, uint32x4_t c, u32 dest, u32 *m) {
+    u32 u[4] = { 0, 0, 0, 0 }, cc[4], aa[4], bb[4];
+    int f;
+    *m = 0;
+    VU_ST(cc, c);
+    if (vu_ek(u, k, vfin(a), vfin(b), cc, dest, m)) return VU_LD(u);
+    VU_ST(aa, a);
+    VU_ST(bb, b);
+    for (f = 0; f < 4; f++) {
+        f32 r, x, y;
+        if (!(dest >> (3 - f) & 1)) continue;
+        x = fin(aa[f]);
+        y = fin(bb[f]);
+        switch (k) {
+        case K_ADD: r = x + y; break;
+        case K_SUB: r = x - y; break;
+        case K_MUL: r = x * y; break;
+        case K_MADD: r = fin(cc[f]) + x * y; break;
+        default: r = fin(cc[f]) - x * y; break;
+        }
+        u[f] = fout(r, f, m);
+    }
+    return VU_LD(u);
+}
+static __inline__ uint32x4_t gm_put(uint32x4_t t, uint32x4_t u, u32 dest) { return vbslq_u32(VU_LD(vu_lanes[dest & 15]), u, t); }
+static __inline__ uint32x4_t gm_mul(uint32x4_t a, uint32x4_t b) { return vfo(vmulq_f32(vfin(a), vfin(b))); }
+static __inline__ uint32x4_t gm_add(uint32x4_t a, uint32x4_t b) { return vfo(vaddq_f32(vfin(a), vfin(b))); }
+static __inline__ uint32x4_t gm_sub(uint32x4_t a, uint32x4_t b) { return vfo(vsubq_f32(vfin(a), vfin(b))); }
+static __inline__ uint32x4_t gm_mx(uint32x4_t a, uint32x4_t b, int max) { /* MAX / MINI as vu_k */
+    float32x4_t x = nat_f(a), y = nat_f(b);
+    uint32x4_t gt = max ? vcgtq_f32(x, y) : vcltq_f32(x, y);
+    return vfo(nat_f(vflush(vbslq_u32(gt, a, b))));
+}
+static __inline__ uint32x4_t gm_ftoi(uint32x4_t a, f32 sc) { return vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(vfin(a), sc))); }
+static __inline__ u32 gm_s16(u16 v) { return (u32)(s32)(s16)v; }
+static __inline__ uint32x4_t gm_x(uint32x4_t t, int l, u16 v) { /* MFIR into field l */
+    switch (l) {
+    case 0: return vsetq_lane_u32(gm_s16(v), t, 0);
+    case 1: return vsetq_lane_u32(gm_s16(v), t, 1);
+    case 2: return vsetq_lane_u32(gm_s16(v), t, 2);
+    default: return vsetq_lane_u32(gm_s16(v), t, 3);
+    }
+}
+/* an outcode's x / y S bits (MAC 0x80 / 0x40) of a - b: the result's signs, whichever form computed it */
+static __inline__ u32 gm_sxy(uint32x4_t a, uint32x4_t b) {
+    uint32x4_t s = vshrq_n_u32(gm_sub(a, b), 31);
+    return vgetq_lane_u32(s, 0) << 7 | vgetq_lane_u32(s, 1) << 6;
+}
+#define GM(a) mem[(a) & (DATA_QW - 1)]
+#define GM_POS 64
+
+static int nat_gummi(u32 pc, const NatGum *g) {
+    u32 np, cy, f0 = 0, f1 = 0, q = 0, ir = i_reg, k, d = g->d;
+    u16 i1, i2 = vi[2], i3, i4, i5, i6, i7, i8 = vi[8], i9 = vi[9], i10, i11, i12, i13, i14, i15, clip = 0, cnt;
+    u32 oc[GM_POS];
+    uint32x4_t pp[GM_POS];
+    uint32x4_t v13 = VU_LD(vf[13]), v14 = VU_LD(vf[14]), v15 = VU_LD(vf[15]), v16 = VU_LD(vf[16]);
+    uint32x4_t v17 = VU_LD(vf[17]), v18 = VU_LD(vf[18]), v19 = VU_LD(vf[19]), v20 = VU_LD(vf[20]);
+    uint32x4_t v21 = VU_LD(vf[21]), v22 = VU_LD(vf[22]), v23 = VU_LD(vf[23]), v24 = VU_LD(vf[24]), v25 = VU_LD(vf[25]);
+    uint32x4_t v26 = VU_LD(vf[26]), v27, v28, v29 = VU_LD(vf[29]), v30 = VU_LD(vf[30]), v31 = VU_LD(vf[31]), a = VU_LD(acc);
+    uint32x4_t v0 = VU_LD(vf[0]), v12 = VU_LD(vf[12]), m1, m2, m3, m4;
+    u16 vr = 0, sr = 0;
+    int wq = 0; /* the last vertex routine was the untextured one: what it moved into vf22 is a cycle late for 175 */
+    if (pc == 0x2c) {
+        np = cy = 1;
+        i8 = 0x180;
+    } else if (pc == g->e1) np = cy = 2;
+    else return 0;
+    /* 02d-03c: the header */
+    i1 = (u16)top;
+    i12 = (u16)GM(i1)[0];
+    i10 = (u16)GM(i1)[1];
+    i11 = (u16)GM(i1)[2];
+    i7 = (u16)((u16)GM(i1)[3] + i1);
+    i3 = (u16)(i1 + 1 + i12);
+    i4 = (u16)(i3 + i10);
+    i5 = (u16)(i4 + i11);
+    v27 = VU_LD(GM(1018));
+    v28 = VU_LD(GM(1019));
+    np += 16;
+    if (!i10 || i10 > GM_POS || !i11) return 0;
+    /* 03d-067, into pp[] / oc[] first: nothing is written until the batch is known to be one done here */
+    m1 = VU_LD(vf[1]); m2 = VU_LD(vf[2]); m3 = VU_LD(vf[3]); m4 = VU_LD(vf[4]);
+    {
+        float32x4_t c1 = vfin(m1), c2 = vfin(m2), c3 = vfin(m3), c4 = vfin(m4);
+        u32 and = 0xff0, or = 0, ma = 0, mb = 0;
+        for (k = 0; k < i10; k++) {
+            uint32x4_t p = VU_LD(GM(i3 + k)), w;
+            float32x4_t pf = vfin(p);
+            uint32x4_t r;
+            a = vfo(vmulq_f32(c1, vdupq_lane_f32(vget_low_f32(pf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c2, vdupq_lane_f32(vget_low_f32(pf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c3, vdupq_lane_f32(vget_high_f32(pf), 0))));
+            r = vfo(vaddq_f32(nat_f(a), vmulq_f32(c4, vdupq_lane_f32(vget_high_f32(pf), 1))));
+            q = qop(0x38, v0[3], vgetq_lane_u32(r, 3));
+            pp[k] = r;
+            w = gm_put(r, vfo(vmulq_f32(nat_f(r), vdupq_n_f32(((Fu){ .u = q }).f))), 0xe);
+            if (k + 1 < i10) { /* the S bits (x, y, w) are the results' signs, whichever form computed them */
+                static const u32 sb[4] = { 0x80, 0x40, 0, 0x10 };
+                uint32x4_t sa = vtstq_u32(gm_sub(v28, w), vdupq_n_u32(0x80000000u));
+                uint32x4_t sc = vtstq_u32(gm_sub(w, v27), vdupq_n_u32(0x80000000u));
+                uint32x4_t b = vorrq_u32(vshlq_n_u32(vandq_u32(sa, VU_LD(sb)), 4), vandq_u32(sc, VU_LD(sb)));
+                uint32x2_t h = vorr_u32(vget_low_u32(b), vget_high_u32(b));
+                oc[k] = vget_lane_u32(h, 0) | vget_lane_u32(h, 1);
+            } else { /* the last: its MAC flag in full (the culled run ends with it) */
+                gm_fl(K_SUB, v28, w, a, 0xd, &ma);
+                gm_fl(K_SUB, w, v27, a, 0xd, &mb);
+                oc[k] = (((ma & 0xf0) << 4) | (mb & 0xf0)) & 0xFFFF;
+            }
+            and &= oc[k];
+            or |= oc[k];
+            v20 = p;
+            v26 = w;
+        }
+        f0 = f1 = mb;
+        np += 43 * i10 + 2;
+        i13 = (u16)and;
+        i14 = (u16)or;
+        i1 = (u16)oc[i10 - 1];
+        i2 = (u16)(mb & 0xf0);
+        clip = !and && or;
+    }
+    /* the command list, walked before anything is written: routines the program was not written for, a count of
+     * 0 (a u16 loop round VU memory), a fan of fewer than 3 vertices on the clipping path (its triangle count wraps) */
+    if (!i13) {
+        u16 p7 = i7, nr, n;
+        u32 tot = 0;
+        for (;;) {
+            u16 cn = (u16)GM(p7)[0], mm = (u16)GM(p7)[1];
+            u32 rv = (u16)GM(1021 + mm)[0] & (MICRO_N - 1), rs = (u16)GM(1021 + mm)[1] & (MICRO_N - 1);
+            p7 = (u16)(p7 + 1);
+            if (!cn) break;
+            if ((rv != g->v0 && rv != g->v1) || (rs != g->s0 && rs != g->s1)) return 0;
+            p7 = (u16)(p7 + 1 + (mm ? 2 : 0)); /* the UV slot's qword (C1 skips it), the texture's two */
+            for (nr = cn; nr; nr--) {
+                u16 nv = (u16)GM(p7)[0], ns = (u16)GM(p7)[1];
+                if (!nv || !ns || (clip && nv < 3) || ++tot > 4096) return 0;
+                p7 = (u16)(p7 + 2);
+                for (n = ns; n; n--) p7 = (u16)(p7 + nv);
+            }
+        }
+    }
+    /* from here on the run is this one's: the positions and outcodes */
+    i6 = i4;
+    for (k = 0; k < i10; k++) {
+        VU_ST(GM(i3 + k), pp[k]);
+        GM(i6 + k)[3] = oc[k];
+    }
+    i3 = (u16)(i3 + i10);
+    i6 = (u16)(i6 + i10);
+    v25 = pp[i10 - 1];
+    i10 = 0;
+    i15 = g->fa;
+    cy = np;
+    if (i13) { /* every position outside one plane: 0c4 */
+        np += 2;
+        cy += 2;
+        goto done;
+    }
+    /* 06a-08b: the normals */
+    if (clip) i15 = g->fc;
+    np += 2 + (clip ? 1 : 0) + 4;
+    {
+        float32x4_t c5 = vfin(VU_LD(vf[5])), c6 = vfin(VU_LD(vf[6])), c7 = vfin(VU_LD(vf[7])), c8 = vfin(VU_LD(vf[8]));
+        float32x4_t c9 = vfin(VU_LD(vf[9])), c10 = vfin(VU_LD(vf[10])), c11 = vfin(VU_LD(vf[11]));
+        u16 p2 = i4, p9 = (u16)(i4 - 1);
+        v21 = VU_LD(GM(p2));
+        p2 = (u16)(p2 + 1);
+        v25 = VU_LD(GM(i4 - 1));
+        while (i11) {
+            float32x4_t nf, lf;
+            v21 = gm_put(v21, v0, 0x1);
+            nf = vfin(v21);
+            a = vfo(vmulq_f32(c5, vdupq_lane_f32(vget_low_f32(nf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c6, vdupq_lane_f32(vget_low_f32(nf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c7, vdupq_lane_f32(vget_high_f32(nf), 0))));
+            v13 = vfo(vaddq_f32(nat_f(a), vmulq_f32(c8, vdupq_lane_f32(vget_high_f32(nf), 1))));
+            v21 = VU_LD(GM(p2));
+            p2 = (u16)(p2 + 1);
+            VU_ST(GM(p9), gm_put(VU_LD(GM(p9)), v14, 0xe));
+            p9 = (u16)(p9 + 1);
+            v13 = gm_mx(v13, vdupq_n_u32(v0[0]), 1);
+            i11 = (u16)(i11 - 1);
+            lf = nat_f(v13);
+            a = vfo(vmulq_f32(c9, vdupq_lane_f32(vget_low_f32(lf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c10, vdupq_lane_f32(vget_low_f32(lf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c11, vdupq_lane_f32(vget_high_f32(lf), 0))));
+            { /* the MADDw's MAC flag is never read; its value is NEON's but where a product of two non-zero factors
+               * flushed to 0 (the translation's scalar form keeps that denormal for the add) */
+                float32x4_t x = vfin(v12), y = vdupq_lane_f32(vget_high_f32(lf), 1), pr = vmulq_f32(x, y);
+                uint32x4_t abs7 = vdupq_n_u32(0x7FFFFFFFu), z = vdupq_n_u32(0);
+                uint32x4_t bad = vandq_u32(vceqq_u32(vandq_u32(nat_u(pr), abs7), z),
+                                           vandq_u32(vtstq_u32(nat_u(x), abs7), vtstq_u32(nat_u(y), abs7)));
+                uint32x2_t h = vorr_u32(vget_low_u32(bad), vget_high_u32(bad));
+                if (vget_lane_u32(vpmax_u32(h, h), 0)) v14 = gm_fl(K_MADD, v12, vu_lane(v13, 3), a, 0xf, &f0);
+                else v14 = vfo(vaddq_f32(nat_f(a), pr));
+            }
+            np += 18;
+        }
+        VU_ST(GM(i4 - 1), v25);
+        VU_ST(GM(p9), gm_put(VU_LD(GM(p9)), v14, 0xe));
+        p9 = (u16)(p9 + 1);
+        i9 = p9;
+        i2 = p2;
+    }
+    VU_ST(GM(1011), m1); VU_ST(GM(1012), m2); VU_ST(GM(1013), m3); VU_ST(GM(1014), m4);
+    i6 = (u16)(i4 - 1 - i12);
+    v29 = gm_x(v29, 0, i8);
+    np += 9;
+    cy = np;
+
+/* the vertex routine at vr, its pairs and cycles */
+#define GM_VERT()                                                                                                     \
+    do {                                                                                                              \
+        u16 p, c, s, w;                                                                                               \
+        i3 = (u16)top;                                                                                                \
+        p = (u16)GM(i7)[0]; c = (u16)GM(i7)[1]; s = (u16)GM(i7)[2]; w = (u16)GM(i7)[3];                               \
+        if (vr == g->v1 && !g->c1) {                                                                                  \
+            v20 = VU_LD(GM(1007));                                                                                    \
+            v22 = VU_LD(GM(s + i3));                                                                                  \
+            v22 = gm_put(v22, gm_add(v22, v20), 0xc);                                                                 \
+        } else if (vr == g->v1)                                                                                       \
+            v22 = VU_LD(GM(s + i3));                                                                                  \
+        v21 = gm_put(v21, v12, 0x1);                                                                                  \
+        v20 = VU_LD(GM(p + i3));                                                                                      \
+        v21 = gm_put(v21, VU_LD(GM(c + i3)), 0xe);                                                                    \
+        i7 = (u16)(i7 + 1);                                                                                           \
+        q = qop(0x38, v0[3], v20[3]);                                                                                 \
+        i1 = (u16)GM((u16)(p + i6))[3];                                                                               \
+        if (!g->c1) {                                                                                                 \
+            i4 = (u16)(w + i3);                                                                                       \
+            v30 = VU_LD(GM(i4));                                                                                      \
+        } else                                                                                                        \
+            i4 = (u16)((vr == g->v1 ? c : p) + i3);                                                                   \
+        v21 = gm_mul(v21, v30);                                                                                       \
+        ir = 0x437f0000u;                                                                                             \
+        v21 = gm_mx(v21, vdupq_n_u32(ir), 0);                                                                         \
+        v23 = vsetq_lane_u32(q & 0x7FFFFFFF ? q : 0, v23, 2); /* ADD.z vf00 + Q: Q (fo()'s), a -0 to +0 */            \
+        v22 = gm_x(v22, 3, i1);                                                                                       \
+        i2 = sr;                                                                                                      \
+        wq = vr != g->v1;                                                                                             \
+        if (!wq) {                                                                                                    \
+            if (g->c1) { np += 22; cy += 22; }                                                                        \
+            else { np += 27; cy += 33; }                                                                              \
+        } else if (!g->c1) { np += 23; cy += 27; }                                                                    \
+        else { np += 20; cy += 22; }                                                                                  \
+    } while (0)
+/* the store routine at sr */
+#define GM_STORE()                                                                                                    \
+    do {                                                                                                              \
+        if (sr == g->s1) {                                                                                            \
+            v18 = gm_put(v18, gm_mul(v22, vu_lane(v23, 2)), 0xe);                                                     \
+            v13 = gm_put(v13, v14, 0xe);                                                                              \
+            v16 = gm_mul(v20, vu_lane(v23, 2));                                                                       \
+            v14 = gm_put(v14, v15, 0xe);                                                                              \
+            v17 = gm_ftoi(v21, 1.0f);                                                                                 \
+            VU_ST(GM(i12), v18);                                                                                      \
+            v15 = gm_put(v15, v16, 0xe);                                                                              \
+            v16 = gm_ftoi(v16, 16.0f);                                                                                \
+            np += 14; cy += 14;                                                                                       \
+        } else {                                                                                                      \
+            v16 = gm_mul(v20, vu_lane(v23, 2));                                                                       \
+            VU_ST(GM(i12), v18);                                                                                      \
+            v17 = gm_ftoi(v21, 1.0f);                                                                                 \
+            v13 = gm_put(v13, v14, 0xe);                                                                              \
+            v14 = gm_put(v14, v15, 0xe);                                                                              \
+            v15 = gm_put(v15, v16, 0xe);                                                                              \
+            v16 = gm_ftoi(v16, 16.0f);                                                                                \
+            np += 12; cy += 12;                                                                                       \
+        }                                                                                                             \
+        VU_ST(GM(i12 + 1), v17);                                                                                      \
+        VU_ST(GM(i12 + 2), v16);                                                                                      \
+        i12 = (u16)(i12 + 3);                                                                                         \
+        i14 = (u16)(i14 + 1);                                                                                         \
+        i2 = vr;                                                                                                      \
+    } while (0)
+/* a fan's vertices, each through both routines (0ff-105 / 13b-141) */
+#define GM_FAN()                                                                                                      \
+    do {                                                                                                              \
+        i13 = i10;                                                                                                    \
+        while (i13) {                                                                                                 \
+            np += 2; cy += 2;                                                                                         \
+            GM_VERT();                                                                                                \
+            i13 = (u16)(i13 - 1);                                                                                     \
+            np += 3; cy += 3;                                                                                         \
+            GM_STORE();                                                                                               \
+            np += 2; cy += 2;                                                                                         \
+        }                                                                                                             \
+    } while (0)
+/* the facing of the triangle (vf13, vf14, vf15): the z of (vf14 - vf13) x (vf15 - vf14), or reversed (1a9) */
+#define GM_FACE(rev)                                                                                                  \
+    do {                                                                                                              \
+        v13 = gm_put(v13, gm_sub(v14, v13), 0xe);                                                                     \
+        v14 = gm_put(v14, gm_sub(v15, v14), 0xe);                                                                     \
+        if (!(rev)) {                                                                                                 \
+            a = gm_put(a, gm_mul(nat_yzx(v13), nat_zxy(v14)), 0xe);                                                   \
+            v15 = gm_put(v15, gm_fl(K_MSUB, nat_yzx(v14), nat_zxy(v13), a, 0xe, &f1), 0xe);                           \
+        } else {                                                                                                      \
+            a = gm_put(a, gm_mul(nat_yzx(v14), nat_zxy(v13)), 0xe);                                                   \
+            v15 = gm_put(v15, gm_fl(K_MSUB, nat_yzx(v13), nat_zxy(v14), a, 0xe, &f1), 0xe);                           \
+        }                                                                                                             \
+        f0 = f1;                                                                                                      \
+        i1 = (u16)(0x20 & f0);                                                                                        \
+    } while (0)
+/* 1fe: the fan just written kept; when the next one might not fit, the buffer kicked and the other one taken */
+#define GM_KEEP()                                                                                                     \
+    do {                                                                                                              \
+        i1 = (u16)v29[1];                                                                                             \
+        i2 = (u16)v29[0];                                                                                             \
+        i8 = i12;                                                                                                     \
+        i1 = (u16)(i1 + i2 - i12);                                                                                    \
+        np += 8; cy += 8;                                                                                             \
+        if ((s16)i1 < 0) {                                                                                            \
+            i1 = 0x8000;                                                                                              \
+            v13 = gm_x(v13, 0, i1);                                                                                   \
+            VU_ST(GM(i8), v13);                                                                                       \
+            kick(i2);                                                                                                 \
+            i8 = 0x180;                                                                                               \
+            np += 13; cy += 14;                                                                                       \
+            if (i2 == i8) {                                                                                           \
+                i8 = (u16)(i8 + 0x130);                                                                               \
+                np += 1; cy += 1;                                                                                     \
+            }                                                                                                         \
+            v29 = gm_x(v29, 0, i8);                                                                                   \
+        }                                                                                                             \
+        np += 2; cy += 2;                                                                                             \
+    } while (0)
+
+    /* 08c-: the groups */
+    for (;;) {
+        u16 mm;
+        i9 = (u16)GM(i7)[0];
+        i1 = (u16)GM(i7)[1];
+        v26 = gm_put(v26, VU_LD(GM(i7)), 0x2);
+        i7 = (u16)(i7 + 1);
+        np += 5; cy += 5;
+        if (!i9) break;
+        mm = i1;
+        v26 = gm_put(v26, VU_LD(GM(1021 + i1)), 0xc);
+        if (g->c1) {
+            v30 = VU_LD(GM(992 + i1));
+            i7 = (u16)(i7 + 1);
+            np += 5; cy += 5;
+        } else {
+            i3 = (u16)GM(i7)[0];
+            v20 = v0;
+            np += 5; cy += 5;
+            if (i3) {
+                v20 = VU_LD(GM(991 + i3));
+                np += 2; cy += 5;
+            } else {
+                np += 1; cy += 2;
+            }
+            VU_ST(GM(1007), v20);
+            i7 = (u16)(i7 + 1);
+            np += 3; cy += 3;
+        }
+        if (mm) {
+            v13 = VU_LD(GM(i7));
+            v14 = VU_LD(GM(i7 + 1));
+            i7 = (u16)(i7 + 2);
+            VU_ST(GM(i8), v13);
+            VU_ST(GM(i8 + 1), v14);
+            i8 = (u16)(i8 + 2);
+            np += 6; cy += 6;
+        }
+        vr = (u16)v26[0] & (MICRO_N - 1);
+        sr = (u16)v26[1] & (MICRO_N - 1);
+        while (i9) { /* the runs: 0a1-0ab, and the path's first pair (0fa / 11e) */
+            i2 = (u16)GM(i7)[2];
+            i11 = (u16)GM(i7)[1];
+            i10 = (u16)GM(i7)[0];
+            i7 = (u16)(i7 + 1);
+            i1 = (u16)(0x130 - i2);
+            v29 = gm_x(v29, 1, i1);
+            v19 = VU_LD(GM(i7));
+            i7 = (u16)(i7 + 1);
+            v29 = gm_x(v29, 2, i15);
+            np += 12; cy += 12;
+            if (!clip) {
+                while (i11) { /* the fans: 0fb- */
+                    i12 = i8;
+                    VU_ST(GM(i12), v19);
+                    i12 = (u16)(i12 + 1);
+                    i2 = vr;
+                    np += 4; cy += 4;
+                    GM_FAN();
+                    /* 106-11a: the fan's facing */
+                    i11 = (u16)(i11 - 1);
+                    i1 = (u16)v26[2];
+                    np += 5; cy += 5;
+                    if (i1) {
+                        i8 = i12;
+                        np += 1; cy += 1;
+                    } else {
+                        f0 = f1;
+                        GM_FACE(0);
+                        np += 12; cy += 13;
+                        if (i1) {
+                            i8 = i12;
+                            np += 1; cy += 1;
+                        }
+                    }
+                    np += 3; cy += 3;
+                }
+                np += 3; cy += 3; /* 11b-11d */
+            } else {
+                while (i11) { /* 11f-: a fan's outcodes */
+                    u16 sa = 0xff0, so = 0;
+                    i2 = vr;
+                    i14 = 0;
+                    i13 = i10;
+                    i5 = i7;
+                    np += 6; cy += 6;
+                    while (i13) {
+                        i2 = (u16)((u16)GM(i5)[0] + i6);
+                        i5 = (u16)(i5 + 1);
+                        i13 = (u16)(i13 - 1);
+                        i1 = (u16)GM(i2)[3];
+                        sa &= i1;
+                        so |= i1;
+                        np += 13; cy += 13;
+                    }
+                    i3 = sa;
+                    i4 = so;
+                    np += 2; cy += 2;
+                    if (i3) { /* 159: every vertex outside one plane */
+                        i1 = (u16)(0x10 & i4);
+                        np += 5; cy += 5;
+                        if (!i1) { /* skipped */
+                            i7 = (u16)(i7 + i10);
+                            i11 = (u16)(i11 - 1);
+                            np += 5; cy += 5;
+                            continue;
+                        }
+                        goto cut;
+                    }
+                    np += 2; cy += 2;
+                    if (i4) goto cut;
+                    /* 136-155: wholly inside */
+                    v19 = gm_x(v19, 0, i10);
+                    i12 = i8;
+                    i2 = vr;
+                    VU_ST(GM(i12), v19);
+                    i12 = (u16)(i12 + 1);
+                    np += 5; cy += 5;
+                    GM_FAN();
+                    i1 = (u16)v26[2];
+                    np += 4; cy += 4;
+                    k = 1; /* double-sided: kept */
+                    if (!i1) {
+                        f0 = f1;
+                        GM_FACE(0);
+                        np += 10; cy += 13;
+                        k = i1 != 0;
+                    }
+                    if (k) {
+                        np += 2; cy += 2;
+                        GM_KEEP();
+                    }
+                    i11 = (u16)(i11 - 1);
+                    np += 4; cy += 4;
+                    continue;
+                cut: /* 166-197: the fan as triangles (v0, vk, vk+1), each clipped */
+                    {
+                        u16 base = i7, t, kk = 1, s6 = i6, s9 = i9, s11 = i11, s10 = i10;
+                        v25 = gm_x(gm_x(gm_x(v25, 0, i6), 1, i9), 2, i11);
+                        i10 = (u16)(i10 - 2);
+                        i13 = i7;
+                        i14 = 1;
+                        np += 7; cy += 7;
+                        for (t = i10; t; t--) {
+                            uint32x4_t t1, t2, t3;
+                            u16 b, rt, j;
+                            i12 = (u16)(i8 + 1);
+                            i5 = vr;
+                            i7 = base;
+                            np += 6 + 2; cy += 6 + 2;
+                            for (j = 0; j < 3; j++) {
+                                if (j == 1) {
+                                    i7 = (u16)(base + kk);
+                                    np += 3; cy += 3;
+                                } else if (j == 2) {
+                                    np += 2; cy += 2;
+                                }
+                                GM_VERT();
+                                VU_ST(GM(i12), v22);
+                                VU_ST(GM(i12 + 1), v21);
+                                VU_ST(GM(i12 + 2), v20);
+                                i12 = (u16)(i12 + 3);
+                                np += 3; cy += 3 + wq;
+                            }
+                            i2 = sr;
+                            kk = (u16)(kk + 1);
+                            i14 = kk;
+                            i12 = (u16)(i8 + 1);
+                            i13 = 3;
+                            np += 7; cy += 7;
+                            /* 290: the polygon at vi12 (vi13 vertices of ST, colour, position) cut by plane b (an outcode
+                             * bit; 0x10 the w plane, whose pass also projects what it keeps) with vf31, the crossings from
+                             * edge routine rt, kept in place; vi14 the count, vi5 / vi6 their outcodes ANDed / ORed */
+#define GM_EDGE(ret)                                                                                                  \
+    do {                                                                                                              \
+        u32 xa, xb;                                                                                                   \
+        np += 2; cy += 2;                                                                                             \
+        if (b == 0x10) {                                                                                              \
+            v16 = gm_put(v16, gm_sub(v13, v20), 0xd);                                                                 \
+            v17 = gm_put(v17, gm_sub(v31, v20), 0x1);                                                                 \
+            q = qop(0x38, v17[3], v16[3]);                                                                            \
+            v16 = gm_put(v16, v31, 0x3);                                                                              \
+            v18 = gm_put(v18, vfo(vaddq_f32(nat_f(v0), vfin(vu_lane(v31, 1)))), 0x2);                                 \
+            v17 = gm_sub(v14, v21);                                                                                   \
+            v18 = gm_put(v18, gm_sub(v15, v22), 0xc);                                                                 \
+            v16 = gm_put(v16, gm_mul(v16, vdupq_n_u32(q)), 0xc);                                                      \
+            v17 = gm_mul(v17, vdupq_n_u32(q));                                                                        \
+            v18 = gm_put(v18, gm_mul(v18, vdupq_n_u32(q)), 0xc);                                                      \
+            v16 = gm_put(v16, gm_add(v16, v20), 0xc);                                                                 \
+            v17 = gm_add(v17, v21);                                                                                   \
+            v18 = gm_put(v18, gm_add(v18, v22), 0xc);                                                                 \
+            v16 = gm_mul(v16, vu_lane(v31, 1));                                                                       \
+            v18 = gm_put(v18, gm_mul(v18, vu_lane(v31, 1)), 0xc);                                                     \
+            np += 20; cy += 23;                                                                                       \
+        } else {                                                                                                      \
+            int l = rt == 0x230 - d ? 0 : 1;                                                                          \
+            u32 dm = l ? 0xb : 0x7;                                                                                   \
+            v16 = gm_sub(v13, v20);                                                                                   \
+            v17 = gm_put(v17, gm_sub(v31, v20), l ? 0x4 : 0x8);                                                       \
+            q = l ? qop(0x38, v17[1], v16[1]) : qop(0x38, v17[0], v16[0]);                                            \
+            v16 = gm_put(v16, v31, l ? 0x4 : 0x8);                                                                    \
+            v17 = gm_sub(v14, v21);                                                                                   \
+            v18 = gm_put(v18, gm_sub(v15, v22), 0xe);                                                                 \
+            v16 = gm_put(v16, gm_mul(v16, vdupq_n_u32(q)), dm);                                                       \
+            v17 = gm_mul(v17, vdupq_n_u32(q));                                                                        \
+            v18 = gm_put(v18, gm_mul(v18, vdupq_n_u32(q)), 0xe);                                                      \
+            v16 = gm_put(v16, gm_add(v16, v20), dm);                                                                  \
+            v17 = gm_add(v17, v21);                                                                                   \
+            v18 = gm_put(v18, gm_add(v18, v22), 0xe);                                                                 \
+            if (l) { np += 18; cy += 19 + 2; }                                                                        \
+            else { np += 20; cy += 21; }                                                                              \
+        }                                                                                                             \
+        VU_ST(GM(i12 + 1), v17);                                                                                      \
+        i14 = (u16)(i14 + 1);                                                                                         \
+        xa = gm_sxy(v28, v16);                                                                                        \
+        VU_ST(GM(i12 + 2), v16);                                                                                      \
+        xb = gm_sxy(v16, v27);                                                                                        \
+        VU_ST(GM(i12), v18);                                                                                          \
+        i2 = (u16)xb;                                                                                                 \
+        i1 = (u16)(xa << 4 | xb);                                                                                     \
+        GM(i12)[3] = i1;                                                                                              \
+        i5 &= i1;                                                                                                     \
+        i6 |= i1;                                                                                                     \
+        i12 = (u16)(i12 + 3);                                                                                         \
+        np += 19; cy += 19;                                                                                           \
+        i15 = (u16)(ret);                                                                                             \
+    } while (0)
+#define GM_CUT(bit, edge, ret)                                                                                        \
+    do {                                                                                                              \
+        u16 n;                                                                                                        \
+        b = (bit);                                                                                                    \
+        rt = (u16)(edge);                                                                                             \
+        v25 = gm_x(v25, 3, (u16)(ret));                                                                               \
+        i5 = 0xff0;                                                                                                   \
+        i6 = 0;                                                                                                       \
+        i14 = 0;                                                                                                      \
+        i11 = i12;                                                                                                    \
+        v22 = VU_LD(GM(i11)); v21 = VU_LD(GM(i11 + 1)); v20 = VU_LD(GM(i11 + 2));                                     \
+        t3 = VU_LD(GM(i11 + 3)); t2 = VU_LD(GM(i11 + 4)); t1 = VU_LD(GM(i11 + 5));                                    \
+        i11 = (u16)(i11 + 6);                                                                                         \
+        q = qop(0x38, v0[3], v20[3]);                                                                                 \
+        i1 = (u16)v22[3];                                                                                             \
+        VU_ST(GM(1008), v20); VU_ST(GM(1009), v21); VU_ST(GM(1010), v22);                                             \
+        i9 = i1;                                                                                                      \
+        v13 = v20; v14 = v21; v15 = v22;                                                                              \
+        i1 &= b;                                                                                                      \
+        i13 = (u16)(i13 - 1);                                                                                         \
+        np += 24; cy += 24;                                                                                           \
+        if (!i1) {                                                                                                    \
+            i1 = 0x10;                                                                                                \
+            np += 4; cy += 4;                                                                                         \
+            if (b == 0x10) {                                                                                          \
+                v22 = gm_put(v22, gm_mul(v22, vdupq_n_u32(q)), 0xe);                                                  \
+                v20 = gm_mul(v20, vdupq_n_u32(q));                                                                    \
+                np += 2; cy += 2;                                                                                     \
+            }                                                                                                         \
+            i14 = (u16)(i14 + 1);                                                                                     \
+            i5 &= i9;                                                                                                 \
+            i6 |= i9;                                                                                                 \
+            VU_ST(GM(i12), v22);                                                                                      \
+            VU_ST(GM(i12 + 2), v20);                                                                                  \
+            i12 = (u16)(i12 + 3);                                                                                     \
+            np += 6; cy += 6;                                                                                         \
+        }                                                                                                             \
+        do {                                                                                                          \
+            v22 = t3; v21 = t2; v20 = t1;                                                                             \
+            i1 = (u16)t3[3];                                                                                          \
+            t3 = VU_LD(GM(i11)); t2 = VU_LD(GM(i11 + 1)); t1 = VU_LD(GM(i11 + 2));                                    \
+            i11 = (u16)(i11 + 3);                                                                                     \
+            q = qop(0x38, v0[3], v20[3]);                                                                             \
+            i2 = (u16)(i9 & b);                                                                                       \
+            i9 = i1;                                                                                                  \
+            i1 &= b;                                                                                                  \
+            np += 14; cy += 14;                                                                                       \
+            if (!i1) {                                                                                                \
+                i5 &= i9;                                                                                             \
+                i6 |= i9;                                                                                             \
+                v24 = vsetq_lane_u32(q & 0x7FFFFFFF ? q : 0, v24, 0);                                                 \
+                np += 4; cy += 4;                                                                                     \
+                if (i2) GM_EDGE(0x2c8 - d);                                                                           \
+                i1 = 0x10;                                                                                            \
+                v16 = v20;                                                                                            \
+                v18 = v22;                                                                                            \
+                np += 5; cy += 5;                                                                                     \
+                if (b == 0x10) {                                                                                      \
+                    v18 = gm_put(v18, gm_mul(v18, vu_lane(v24, 0)), 0xe);                                             \
+                    v16 = gm_mul(v16, vu_lane(v24, 0));                                                               \
+                    np += 2; cy += 3 + 1;                                                                             \
+                }                                                                                                     \
+                i14 = (u16)(i14 + 1);                                                                                 \
+                VU_ST(GM(i12), v18);                                                                                  \
+                VU_ST(GM(i12 + 1), v21);                                                                              \
+                VU_ST(GM(i12 + 2), v16);                                                                              \
+                i12 = (u16)(i12 + 3);                                                                                 \
+                np += 6; cy += 6;                                                                                     \
+            } else {                                                                                                  \
+                np += 2; cy += 2;                                                                                     \
+                if (!i2) GM_EDGE(0x2d9 - d);                                                                          \
+            }                                                                                                         \
+            i13 = (u16)(i13 - 1);                                                                                     \
+            v13 = v20; v14 = v21; v15 = v22;                                                                          \
+            np += 6; cy += 6;                                                                                         \
+        } while (i13);                                                                                                \
+        v22 = VU_LD(GM(1010)); v20 = VU_LD(GM(1008)); v21 = VU_LD(GM(1009));                                          \
+        i1 = (u16)(i9 & b);                                                                                           \
+        i2 = (u16)((u16)v22[3] & b);                                                                                  \
+        np += 9; cy += 9;                                                                                             \
+        if (i1 != i2) GM_EDGE(0x2ea - d);                                                                             \
+        n = 0;                                                                                                        \
+        (void)n;                                                                                                      \
+        i15 = (u16)v25[3];                                                                                            \
+        np += 6; cy += 6;                                                                                             \
+    } while (0)
+                            i3 = 0x10;
+                            v31 = VU_LD(GM(1020));
+                            i4 = (u16)(0x269 - d);
+                            np += 5; cy += 5;
+                            GM_CUT(0x10, i4, 0x1a0 - d);
+                            np += 2; cy += 2;
+                            if (!i14) goto drawn;
+                            i1 = (u16)v26[2];
+                            np += 4; cy += 4;
+                            if (!i1) {
+                                v13 = VU_LD(GM(i8 + 3));
+                                v14 = VU_LD(GM(i8 + 6));
+                                v15 = VU_LD(GM(i8 + 9));
+                                f0 = f1;
+                                GM_FACE(1);
+                                np += 13; cy += 18;
+                                if (i1) {
+                                    i14 = 0;
+                                    np += 3; cy += 3;
+                                    goto drawn;
+                                }
+                            }
+                            {
+                                static const u16 bit[4] = { 0x80, 0x800, 0x40, 0x400 }, qw[4] = { 1018, 1019, 1018, 1019 };
+                                static const u16 ed[4] = { 0x230, 0x230, 0x244, 0x244 }, rr[4] = { 0x1c1, 0x1ce, 0x1db, 0x1e8 };
+                                int pl;
+                                for (pl = 0; pl < 4; pl++) {
+                                    i3 = (u16)(bit[pl] & i6);
+                                    np += 5; cy += 5;
+                                    if (i3) {
+                                        v31 = VU_LD(GM(qw[pl]));
+                                        i4 = (u16)(ed[pl] - d);
+                                        i13 = i14;
+                                        i12 = (u16)(i8 + 1);
+                                        np += 6; cy += 6;
+                                        GM_CUT(bit[pl], i4, rr[pl] - d);
+                                    }
+                                    np += 2; cy += 2;
+                                    if (!i14) goto drawn;
+                                }
+                            }
+                            /* 1ea-1f5: colours and positions to integers */
+                            i13 = i14;
+                            i12 = (u16)(i8 + 1);
+                            np += 2; cy += 2;
+                            while (i13) {
+                                v21 = gm_ftoi(VU_LD(GM(i12 + 1)), 1.0f);
+                                v20 = gm_ftoi(VU_LD(GM(i12 + 2)), 16.0f);
+                                i13 = (u16)(i13 - 1);
+                                VU_ST(GM(i12 + 1), v21);
+                                VU_ST(GM(i12 + 2), v20);
+                                i12 = (u16)(i12 + 3);
+                                np += 10; cy += 13;
+                            }
+                        drawn: /* 1f6-190 */
+                            np += 2; cy += 2;
+                            if (i14) {
+                                v19 = gm_x(v19, 0, i14);
+                                VU_ST(GM(i8), v19);
+                                np += 4; cy += 7;
+                                GM_KEEP();
+                            }
+                            i6 = (u16)v25[0];
+                            i13 = base;
+                            i14 = kk;
+                            np += 2 + 7; cy += 2 + 7;
+                        }
+                        i7 = (u16)(base + kk + 1);
+                        i9 = s9;
+                        i11 = s11;
+                        i10 = s10;
+                        i11 = (u16)(i11 - 1);
+                        (void)s6;
+                        np += 7; cy += 7;
+                    }
+                }
+                np += 3; cy += 3; /* 156 / 163 / 198 */
+            }
+            i15 = clip ? g->fc : g->fa;
+            np += 4; cy += 4; /* 0ac-0af */
+            i9 = (u16)(i9 - 1);
+        }
+        np += 2; cy += 2;
+    }
+#undef GM_VERT
+#undef GM_STORE
+#undef GM_FAN
+#undef GM_FACE
+#undef GM_KEEP
+#undef GM_EDGE
+#undef GM_CUT
+    /* 0b2-0c5: the end */
+    v19 = gm_fl(K_SUB, v19, v19, a, 0xf, &f1);
+    f0 = f1;
+    i1 = (u16)v29[0];
+    i2 = 0x8000;
+    v19 = gm_x(v19, 0, i2);
+    np += 10; cy += 10;
+    if (i1 != i8) {
+        VU_ST(GM(i8), v19);
+        np += 7; cy += 8;
+        kick(i1);
+        i8 = 0x180;
+        if (i1 == i8) {
+            i8 = (u16)(i8 + 0x130);
+            np += 1; cy += 1;
+        }
+    }
+    np += 2; cy += 2;
+done:
+    vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[5] = i5; vi[6] = i6; vi[7] = i7; vi[8] = i8;
+    vi[9] = i9; vi[10] = i10; vi[11] = i11; vi[12] = i12; vi[13] = i13; vi[14] = i14; vi[15] = i15;
+    VU_ST(vf[13], v13); VU_ST(vf[14], v14); VU_ST(vf[15], v15); VU_ST(vf[16], v16); VU_ST(vf[17], v17);
+    VU_ST(vf[18], v18); VU_ST(vf[19], v19); VU_ST(vf[20], v20); VU_ST(vf[21], v21); VU_ST(vf[22], v22);
+    VU_ST(vf[23], v23); VU_ST(vf[24], v24); VU_ST(vf[25], v25); VU_ST(vf[26], v26); VU_ST(vf[27], v27);
+    VU_ST(vf[28], v28); VU_ST(vf[29], v29); VU_ST(vf[30], v30); VU_ST(vf[31], v31); VU_ST(acc, a);
+    mac_now = f0;
+    q_reg = q;
+    i_reg = ir;
+    st.insns += np;
+    st.cycles += cy;
+    tpc = g->e1 & (MICRO_N - 1);
+    return 1;
+}
+static int nat_100(u32 pc) { return nat_gummi(pc, &nat_gum[0]); }
+static int nat_101(u32 pc) { return nat_gummi(pc, &nat_gum[1]); }
+
 #endif
 
 /* the program numbers (tools/vu/find_vu1.py's) that have one.  A native run answers 0, before it changes
@@ -1863,6 +2663,8 @@ static int (*nat_run(int num))(u32) {
     if (num == 12) return nat_12;
     if (num == 13) return nat_13;
     if (num == 18) return nat_18;
+    if (num == 100) return nat_100;
+    if (num == 101) return nat_101;
 #endif
     return 0;
 }

@@ -1078,6 +1078,7 @@ static void pend_write(Target *t, u32 b, u64 m, int ct24) {
 static void pend_flush_sel(u32 sel, int at) {
     u32 i, k = 0, wait = 0, why = 0;
     int any = 0;
+    SceUInt64 t1 = 0;
     for (i = 0; i < KH1_CMD_TARGETS; i++)
         if (sel >> i & 1 && tgt[i].pend && tgt[i].used > wait) {
             wait = tgt[i].used;
@@ -1094,22 +1095,20 @@ static void pend_flush_sel(u32 sel, int at) {
                     kh1_vita_pend_wait_us[tgt[why].rt < KH1_RT_COUNT ? tgt[why].rt : KH1_RT_OTHER] +=
                         (u32)(sceKernelGetProcessTimeWide() - t0);
                 } else kh1_vita_pend_nowait++;
+                t1 = sceKernelGetProcessTimeWide(); /* 2026-11-04: the writes timed once a flush, not each block's */
             }
             any = 1;
-            {
-                SceUInt64 t1 = sceKernelGetProcessTimeWide();
-                for (j = 0; j < KH1_CMD_TARGETS; j++)
-                    if (own >> j & 1) {
-                        pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
-                        kh1_vita_pend_rt[tgt[j].rt < 8 ? tgt[j].rt : 7]++;
-                        if (pend_mask[b] == ~0ull) kh1_vita_pend_full++;
-                    }
-                kh1_vita_pend_us += (u32)(sceKernelGetProcessTimeWide() - t1);
-            }
+            for (j = 0; j < KH1_CMD_TARGETS; j++)
+                if (own >> j & 1) {
+                    pend_write(&tgt[j], b, pend_mask[b], pend_24[b]);
+                    kh1_vita_pend_rt[tgt[j].rt < 8 ? tgt[j].rt : 7]++;
+                    if (pend_mask[b] == ~0ull) kh1_vita_pend_full++;
+                }
             pend_own[b] &= ~own;
         }
         if (pend_own[b]) pend_list[k++] = (u16)b;
     }
+    if (any) kh1_vita_pend_us += (u32)(sceKernelGetProcessTimeWide() - t1);
     pend_n = k;
     for (i = 0; i < KH1_CMD_TARGETS; i++)
         if (sel >> i & 1) tgt[i].pend = 0;
@@ -1998,6 +1997,30 @@ int kh1_vita_gxm_init(void) {
             kh1_vita_log("kh1-gxm: no GPU memory for natvb's %u MiB: natvb is off\n", kh1_vita_natvb_mb);
             kh1_natvb = 0;
         }
+    }
+    { /* 2026-11-04: the CPU's stores into each kind of memory, 32-byte runs as pend_write's, in MB/s (the Vita: CDRAM
+       * ~640, LPDDR uncached ~860, cached ~890; a whole block's 256 bytes ~0.4 us of pend_write's ~4.5) */
+        static const char *const nm[3] = { "CDRAM", "LPDDR uncached", "cached" };
+        u32 rate[3], k, n, row[8] = { 0 };
+        for (k = 0; k < 3; k++) {
+            Heap *h = k == 0 ? &vram : &tram;
+            u8 *m = k == 2 ? (u8 *)malloc(64 << 10) : (u8 *)heap_alloc(h, 64 << 10);
+            SceUInt64 t0;
+            u32 us;
+            rate[k] = 0;
+            if (!m) continue;
+            t0 = sceKernelGetProcessTimeWide();
+            for (n = 0; n < 16 * (64 << 10) / 32; n++) {
+                row[n & 7] = n;
+                memcpy(m + (n * 32 & ((64 << 10) - 1)), row, sizeof row);
+            }
+            us = (u32)(sceKernelGetProcessTimeWide() - t0);
+            rate[k] = us ? (1u << 20) / us : 0; /* 1 MiB in us microseconds: bytes / us = MB/s */
+            if (k == 2) free(m);
+            else heap_free(h, m, 64 << 10);
+        }
+        kh1_vita_log("kh1-gxm: CPU stores in 32-byte runs: %s %u MB/s, %s %u, %s %u\n", nm[0], rate[0], nm[1], rate[1],
+                     nm[2], rate[2]);
     }
     kh1_natvb_fenced = 1; /* kh1_vita_gxm_frame publishes what the GPU has read */
     vbuf_bytes = KH1_RING_VERTEX_BYTES;
