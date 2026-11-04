@@ -2244,3 +2244,44 @@ After Depart the clipped programs carry several times the map screen's runs (C0 
 window), so even translated they fill the game thread there. The next step for it is the same as renderer A / B's:
 C0 / C1 / C3 as hand-written C (vu1_nat.h) or parsed into native draws (renderer-spec 2.5 notes the batches need
 no rewriting: index buffers and per-vertex lighting, one fan per run).
+
+## C0 / C1 as hand-written C (2026-11-04)
+
+`nat_100` / `nat_101` in host/port/vu1_nat.h (one function, `nat_gummi`, with a table of what differs) run the Gummi
+engine's C0 and C1 in place of their translation for every batch run (from 02c and from the program's own end + 2;
+the set-up run from 000 stays translated). What they do is renderer-spec 2.5's description, in the translation's
+arithmetic (the same fin() / fout() clamps, Q through qop(), vu_ek() where a flag is read):
+
+- **The batch.** Every position through vf01-04 and 1 / w, its outcode (S bits of x, y, w against qw 1018 / 1019) in
+  the w of its normal; the normals through vf05-08, MAX 0, the colour matrix. The positions are first worked out
+  into a local array: a run whose routine addresses (qw 1021 + m) or counts the program was not written for (a 0 count
+  is a u16 loop round VU memory; more than 64 positions; a fan under 3 vertices on the clipping path) answers 0 before
+  anything is written, and the translation runs it.
+- **Unclipped (0fa / 0ed).** Per group the UV slot (C0) or the material's colour (C1, qw 992 + m), the texture's two
+  qwords; per run its GIF tag and fans; per vertex the vertex routine (untextured c8 / c3 with its WAITQ, textured df /
+  d7, C0 adding the UV scroll) and the store routine (216 / 222, C1 209 / 215); the fan's first triangle's facing
+  (OPMULA / OPMSUB, FMAND 0x20) unless double-sided.
+- **Clipping (11e / 111: some position outside the box).** Per fan the outcodes ANDed / ORed: skipped when wholly
+  outside one plane (unless behind the w plane), drawn as above when wholly inside (with 1fe's early kick when the
+  buffer might not hold the next fan), else cut into triangles (v0, vk, vk+1), each through 290 against the w plane
+  (which projects what it keeps), its facing, then x / y min / max where the polygon's outcodes cross them (edge
+  routines 230 / 244 / 269), to integers and kept as a fan of its own. From 0fa on C1's code is C0's 13 pairs earlier.
+- **Flags.** Only the FMACs whose MAC flag a FMAND reads (the facings' OPMSUB, the outcodes' SUBs) and the run's last
+  (0b2's SUB, or the culled batch's last outcode SUB) keep theirs; every other flag is overwritten before anything
+  reads it, so its value is computed the plain NEON way (the normals' MADDw falls back to vu_ek's scalar form where a
+  product of non-zero factors flushed to 0, which the translation keeps as a denormal).
+- **Pairs and cycles** are the translation's, per block. One correction found by the replay: the store routines do
+  not stall after the untextured vertex routine on the unclipped path (the translation's 216 / 222 with 2 cycles are
+  reached only elsewhere); the clipped triangle's stores of vf22 right after it (175 / 17b / 180) do.
+
+**Checked** with `tests/host/vu1nat_replay.c` (new): runs dumped from a host run of wm_en.txt
+(`KH1_HOST_VU1DUMP=dir:N`), each replayed under qemu-arm, native then translated from the same state through
+vu1.c's nat_check (every VF / VI, ACC, Q / I / MAC / clip, VU memory, pairs, cycles, the kicks' hash). `-v` prints
+the first fields that differ, `-s` the batches' paths (translation only), `-t` both forms' qemu time. It needs
+out/gen's vu1_tr.c (a copy with only P100-P104 builds in ~80 s instead of ~10 min) and the dumps: neither is
+committed. Every 97th run to frame 7,450: P100 461 / 461 and P101 197 / 197 batch runs identical (the other 164 are
+the set-up runs from 000); qemu time native / translated ~62-71% (P100) and ~46-74% (P101), noisy, and qemu is not
+a Vita (P18 was 67% under qemu, -36% on hardware).
+
+On the map ~30-40% of C0's pairs are batches that reach the polygon clipper, so the clipping path is worth having
+native; C3 (P103) is rare on this route and stays translated.
