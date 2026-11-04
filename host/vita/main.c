@@ -200,9 +200,13 @@ void kh1_null_image(int seg, unsigned long lo, u32 size); /* host/null/plat_null
 __attribute__((used)) int _newlib_heap_size_user = 160 * 1024 * 1024;
 /* session 137v: 4 MiB for the main thread's own frames, the rest the coroutines' stacks (platform/costack.h:
  * the kernel refuses a system call made on a stack outside the thread's).  Dive to the Heart makes two
- * (0x40000 each); a 52 MiB stack stopped the app at its start on hardware (C1-2681-7, no log) */
+ * (0x40000 each); a 52 MiB stack stopped the app at its start on hardware (C1-2681-7, no log).
+ * 2026-11-04: 16 MiB (was 8): every thread and task slot keeps a 0x40000 stack, and by gb.x (the Gummi
+ * editor) the route from a save had taken 17 (2 threads, wm.x's 10 task contexts, gb.x's 5), past the
+ * 4 MiB pool; the next was malloc'd and the kernel stopped the app on hardware ~700 frames into gb.x
+ * (stop reason 0x10006, Vita3K ran on).  12 MiB holds 48 */
 #define MAIN_OWN (4 * 1024 * 1024)
-__attribute__((used)) unsigned int sceUserMainThreadStackSize = 8 * 1024 * 1024;
+__attribute__((used)) unsigned int sceUserMainThreadStackSize = 16 * 1024 * 1024;
 static u32 costack_bytes;
 
 const char kh1_vita_dir[] = "ux0:data/kh1";
