@@ -1849,6 +1849,416 @@ static int nat_4(u32 pc) {
     return 1;
 }
 
+/* 2026-11-04: the Gummi engine's C0 and C1 (wm.x / gb.x, P100 / P101, renderer-spec 2.5), the flight's VU1 time.
+ * One batch a run (from 02c, the first after the set-up, or the program's own end + 2): the header, every position
+ * through vf01-04 and divided by w in place with its outcode against qw 1018 / 1019 in the matching normal's w, the
+ * normals through vf05-08, MAX 0, through the colour matrix and stored back; then the groups (material, UV slot in
+ * C0, the texture's two qwords), the runs and their fans, each vertex through the group's vertex routine and store
+ * routine (vf26 x / y, from qw 1021 + m), the fan's first triangle tested for its facing unless double-sided.  The
+ * batches with a position outside the clip box (vi14 != 0: the program's 11e / 111 entry and its polygon clipper)
+ * are given up whole before anything is written, as are routine addresses or counts the program was not written
+ * for.  The flags as the translation keeps them: f0 the MAC flag a FMAND reads, f1 the one behind it */
+typedef struct {
+    u16 e1;      /* the entry after a batch (the program's [E] + 2), and the tpc it ends on */
+    u16 fa;      /* the unclipped path's address (stored in vf29.z, and vi15 from then on) */
+    u16 v0, v1;  /* the vertex routines: untextured (WAITQ), textured */
+    u16 s0, s1;  /* the store routines: untextured, textured */
+    u16 r1, r2;  /* the JALRs' return addresses (vi15) */
+    int c1;      /* C1: the material's colour (qw 992 + m) for the multiplier, no UV scroll */
+} NatGum;
+static const NatGum nat_gum[2] = {
+    { 0xc6, 0xfa, 0xc8, 0xdf, 0x216, 0x222, 0x101, 0x104, 0 },
+    { 0xc1, 0xed, 0xc3, 0xd7, 0x209, 0x215, 0xf4, 0xf7, 1 },
+};
+
+/* a flagged FMAC: the translation's vu_ek, else its scalar form; the MAC bits of dest's fields into *m */
+static __inline__ uint32x4_t gm_fl(int k, uint32x4_t a, uint32x4_t b, uint32x4_t c, u32 dest, u32 *m) {
+    u32 u[4] = { 0, 0, 0, 0 }, cc[4], aa[4], bb[4];
+    int f;
+    *m = 0;
+    VU_ST(cc, c);
+    if (vu_ek(u, k, vfin(a), vfin(b), cc, dest, m)) return VU_LD(u);
+    VU_ST(aa, a);
+    VU_ST(bb, b);
+    for (f = 0; f < 4; f++) {
+        f32 r, x, y;
+        if (!(dest >> (3 - f) & 1)) continue;
+        x = fin(aa[f]);
+        y = fin(bb[f]);
+        switch (k) {
+        case K_ADD: r = x + y; break;
+        case K_SUB: r = x - y; break;
+        case K_MUL: r = x * y; break;
+        case K_MADD: r = fin(cc[f]) + x * y; break;
+        default: r = fin(cc[f]) - x * y; break;
+        }
+        u[f] = fout(r, f, m);
+    }
+    return VU_LD(u);
+}
+static __inline__ uint32x4_t gm_put(uint32x4_t t, uint32x4_t u, u32 dest) { return vbslq_u32(VU_LD(vu_lanes[dest & 15]), u, t); }
+static __inline__ uint32x4_t gm_mul(uint32x4_t a, uint32x4_t b) { return vfo(vmulq_f32(vfin(a), vfin(b))); }
+static __inline__ uint32x4_t gm_madd(uint32x4_t c, uint32x4_t a, uint32x4_t b) { return vfo(vaddq_f32(nat_f(c), vmulq_f32(vfin(a), vfin(b)))); }
+static __inline__ uint32x4_t gm_mx(uint32x4_t a, uint32x4_t b, int max) { /* MAX / MINI as vu_k */
+    float32x4_t x = nat_f(a), y = nat_f(b);
+    uint32x4_t gt = max ? vcgtq_f32(x, y) : vcltq_f32(x, y);
+    return vfo(nat_f(vflush(vbslq_u32(gt, a, b))));
+}
+static __inline__ uint32x4_t gm_ftoi(uint32x4_t a, f32 sc) { return vreinterpretq_u32_s32(vcvtq_s32_f32(vmulq_n_f32(vfin(a), sc))); }
+static __inline__ u32 gm_s16(u16 v) { return (u32)(s32)(s16)v; }
+#define GM(a) mem[(a) & (DATA_QW - 1)]
+#define GM_POS 64
+
+static int nat_gummi(u32 pc, const NatGum *g) {
+    u32 np, cy, f0 = 0, f1 = 0, m, q = 0, ir = i_reg, k;
+    u16 i1, i2 = vi[2], i3, i4, i5, i6, i7, i8 = vi[8], i9 = vi[9], i10, i11, i12, i13, i14, i15;
+    u32 oc[GM_POS];
+    uint32x4_t pp[GM_POS];
+    uint32x4_t v13 = VU_LD(vf[13]), v14 = VU_LD(vf[14]), v15 = VU_LD(vf[15]), v16 = VU_LD(vf[16]);
+    uint32x4_t v17 = VU_LD(vf[17]), v18 = VU_LD(vf[18]), v19 = VU_LD(vf[19]), v20 = VU_LD(vf[20]);
+    uint32x4_t v21 = VU_LD(vf[21]), v22 = VU_LD(vf[22]), v23 = VU_LD(vf[23]), v25 = VU_LD(vf[25]);
+    uint32x4_t v26 = VU_LD(vf[26]), v27, v28, v29 = VU_LD(vf[29]), v30 = VU_LD(vf[30]), a = VU_LD(acc);
+    uint32x4_t v0 = VU_LD(vf[0]), v12 = VU_LD(vf[12]), m1, m2, m3, m4;
+    if (pc == 0x2c) {
+        np = cy = 1;
+        i8 = 0x180;
+    } else if (pc == g->e1) np = cy = 2;
+    else return 0;
+    /* 02d-03c: the header */
+    i1 = (u16)top;
+    i12 = (u16)GM(i1)[0];
+    i10 = (u16)GM(i1)[1];
+    i11 = (u16)GM(i1)[2];
+    i7 = (u16)((u16)GM(i1)[3] + i1);
+    i3 = (u16)(i1 + 1 + i12);
+    i4 = (u16)(i3 + i10);
+    i5 = (u16)(i4 + i11);
+    v27 = VU_LD(GM(1018));
+    v28 = VU_LD(GM(1019));
+    np += 16;
+    cy = np;
+    if (!i10 || i10 > GM_POS || !i11) return 0;
+    /* 03d-067, into pp[] / oc[] first: nothing is written until the batch is known to be one done here */
+    m1 = VU_LD(vf[1]); m2 = VU_LD(vf[2]); m3 = VU_LD(vf[3]); m4 = VU_LD(vf[4]);
+    {
+        float32x4_t c1 = vfin(m1), c2 = vfin(m2), c3 = vfin(m3), c4 = vfin(m4);
+        u32 and = 0xff0, or = 0, ma = 0, mb = 0;
+        for (k = 0; k < i10; k++) {
+            uint32x4_t p = VU_LD(GM(i3 + k)), w;
+            float32x4_t pf = vfin(p);
+            uint32x4_t r;
+            a = vfo(vmulq_f32(c1, vdupq_lane_f32(vget_low_f32(pf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c2, vdupq_lane_f32(vget_low_f32(pf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c3, vdupq_lane_f32(vget_high_f32(pf), 0))));
+            r = vfo(vaddq_f32(nat_f(a), vmulq_f32(c4, vdupq_lane_f32(vget_high_f32(pf), 1))));
+            q = qop(0x38, v0[3], vgetq_lane_u32(r, 3));
+            pp[k] = r;
+            w = gm_put(r, vfo(vmulq_f32(nat_f(r), vdupq_n_f32(((Fu){ .u = q }).f))), 0xe);
+            if (k + 1 < i10) { /* the S bits (x, y, w) are the results' signs, whichever form computed them */
+                static const u32 sb[4] = { 0x80, 0x40, 0, 0x10 };
+                uint32x4_t sa = vtstq_u32(vfo(vsubq_f32(vfin(v28), vfin(w))), vdupq_n_u32(0x80000000u));
+                uint32x4_t sc = vtstq_u32(vfo(vsubq_f32(vfin(w), vfin(v27))), vdupq_n_u32(0x80000000u));
+                uint32x4_t b = vorrq_u32(vshlq_n_u32(vandq_u32(sa, VU_LD(sb)), 4), vandq_u32(sc, VU_LD(sb)));
+                uint32x2_t h = vorr_u32(vget_low_u32(b), vget_high_u32(b));
+                oc[k] = vget_lane_u32(h, 0) | vget_lane_u32(h, 1);
+            } else { /* the last: its MAC flag in full (the culled run ends with it) */
+                gm_fl(K_SUB, v28, w, a, 0xd, &ma);
+                gm_fl(K_SUB, w, v27, a, 0xd, &mb);
+                oc[k] = (((ma & 0xf0) << 4) | (mb & 0xf0)) & 0xFFFF;
+            }
+            and &= oc[k];
+            or |= oc[k];
+            v20 = p;
+            v26 = w;
+        }
+        f0 = f1 = mb;
+        np += 43 * i10 + 2;
+        if (!and && or) return 0; /* 06c: the clipping path */
+        i13 = (u16)and;
+        i14 = (u16)or;
+        i1 = (u16)oc[i10 - 1];
+        i2 = (u16)(mb & 0xf0);
+    }
+    /* the command list, walked before anything is written: routines the program was not written for, a count of
+     * 0 (a u16 loop round VU memory) */
+    if (!i13) {
+        u16 p7 = i7, nr, n;
+        u32 tot = 0;
+        for (;;) {
+            u16 cnt = (u16)GM(p7)[0], mm = (u16)GM(p7)[1];
+            u32 vr = (u16)GM(1021 + mm)[0] & (MICRO_N - 1), sr = (u16)GM(1021 + mm)[1] & (MICRO_N - 1);
+            p7 = (u16)(p7 + 1);
+            if (!cnt) break;
+            if ((vr != g->v0 && vr != g->v1) || (sr != g->s0 && sr != g->s1)) return 0;
+            p7 = (u16)(p7 + 1 + (mm ? 2 : 0)); /* the UV slot's qword (C1 skips it), the texture's two */
+            for (nr = cnt; nr; nr--) {
+                u16 nv = (u16)GM(p7)[0], ns = (u16)GM(p7)[1];
+                if (!nv || !ns || ++tot > 4096) return 0;
+                p7 = (u16)(p7 + 2);
+                for (n = ns; n; n--) p7 = (u16)(p7 + nv);
+            }
+        }
+    }
+    /* from here on the run is this one's: the positions and outcodes */
+    i6 = i4;
+    for (k = 0; k < i10; k++) {
+        VU_ST(GM(i3 + k), pp[k]);
+        GM(i6 + k)[3] = oc[k];
+    }
+    i3 = (u16)(i3 + i10);
+    i6 = (u16)(i6 + i10);
+    v25 = pp[i10 - 1];
+    i10 = 0;
+    i15 = g->fa;
+    cy = np;
+    if (i13) { /* every position outside one plane: 0c4 */
+        np += 2;
+        cy += 2;
+        goto done;
+    }
+    /* 06a-08b: the normals */
+    np += 2 + 4;
+    {
+        float32x4_t c5 = vfin(VU_LD(vf[5])), c6 = vfin(VU_LD(vf[6])), c7 = vfin(VU_LD(vf[7])), c8 = vfin(VU_LD(vf[8]));
+        float32x4_t c9 = vfin(VU_LD(vf[9])), c10 = vfin(VU_LD(vf[10])), c11 = vfin(VU_LD(vf[11]));
+        u16 p2 = i4, p9 = (u16)(i4 - 1);
+        v21 = VU_LD(GM(p2));
+        p2 = (u16)(p2 + 1);
+        v25 = VU_LD(GM(i4 - 1));
+        while (i11) {
+            float32x4_t nf, lf;
+            v21 = gm_put(v21, v0, 0x1);
+            nf = vfin(v21);
+            a = vfo(vmulq_f32(c5, vdupq_lane_f32(vget_low_f32(nf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c6, vdupq_lane_f32(vget_low_f32(nf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c7, vdupq_lane_f32(vget_high_f32(nf), 0))));
+            v13 = vfo(vaddq_f32(nat_f(a), vmulq_f32(c8, vdupq_lane_f32(vget_high_f32(nf), 1))));
+            v21 = VU_LD(GM(p2));
+            p2 = (u16)(p2 + 1);
+            VU_ST(GM(p9), gm_put(VU_LD(GM(p9)), v14, 0xe));
+            p9 = (u16)(p9 + 1);
+            v13 = gm_mx(v13, vdupq_n_u32(v0[0]), 1);
+            i11 = (u16)(i11 - 1);
+            lf = nat_f(v13);
+            a = vfo(vmulq_f32(c9, vdupq_lane_f32(vget_low_f32(lf), 0)));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c10, vdupq_lane_f32(vget_low_f32(lf), 1))));
+            a = vfo(vaddq_f32(nat_f(a), vmulq_f32(c11, vdupq_lane_f32(vget_high_f32(lf), 0))));
+            v14 = gm_fl(K_MADD, v12, vu_lane(v13, 3), a, 0xf, &f0);
+            np += 18;
+        }
+        VU_ST(GM(i4 - 1), v25);
+        VU_ST(GM(p9), gm_put(VU_LD(GM(p9)), v14, 0xe));
+        p9 = (u16)(p9 + 1);
+        i9 = p9;
+        i2 = p2;
+    }
+    VU_ST(GM(1011), m1); VU_ST(GM(1012), m2); VU_ST(GM(1013), m3); VU_ST(GM(1014), m4);
+    i6 = (u16)(i4 - 1 - i12);
+    v29 = gm_put(v29, vdupq_n_u32(gm_s16(i8)), 0x8);
+    np += 9;
+    cy = np;
+    /* 08c-: the groups */
+    for (;;) {
+        u16 mm;
+        i9 = (u16)GM(i7)[0];
+        i1 = (u16)GM(i7)[1];
+        v26 = gm_put(v26, VU_LD(GM(i7)), 0x2);
+        i7 = (u16)(i7 + 1);
+        np += 5; cy += 5;
+        if (!i9) break;
+        mm = i1;
+        v26 = gm_put(v26, VU_LD(GM(1021 + i1)), 0xc);
+        if (g->c1) {
+            v30 = VU_LD(GM(992 + i1));
+            i7 = (u16)(i7 + 1);
+            np += 5; cy += 5;
+        } else {
+            i3 = (u16)GM(i7)[0];
+            v20 = v0;
+            np += 5; cy += 5;
+            if (i3) {
+                v20 = VU_LD(GM(991 + i3));
+                np += 2; cy += 5;
+            } else {
+                np += 1; cy += 2;
+            }
+            VU_ST(GM(1007), v20);
+            i7 = (u16)(i7 + 1);
+            np += 3; cy += 3;
+        }
+        if (mm) {
+            v13 = VU_LD(GM(i7));
+            v14 = VU_LD(GM(i7 + 1));
+            i7 = (u16)(i7 + 2);
+            VU_ST(GM(i8), v13);
+            VU_ST(GM(i8 + 1), v14);
+            i8 = (u16)(i8 + 2);
+            np += 6; cy += 6;
+        }
+        while (i9) { /* the runs: 0a1-0ab, 0fa */
+            u16 vr, sr;
+            i2 = (u16)GM(i7)[2];
+            i11 = (u16)GM(i7)[1];
+            i10 = (u16)GM(i7)[0];
+            i7 = (u16)(i7 + 1);
+            i1 = (u16)(0x130 - i2);
+            v29 = gm_put(v29, vdupq_n_u32(gm_s16(i1)), 0x4);
+            v19 = VU_LD(GM(i7));
+            i7 = (u16)(i7 + 1);
+            v29 = gm_put(v29, vdupq_n_u32(gm_s16(i15)), 0x2);
+            np += 12; cy += 12;
+            vr = (u16)v26[0] & (MICRO_N - 1);
+            sr = (u16)v26[1] & (MICRO_N - 1);
+            while (i11) { /* the fans: 0fb- */
+                i13 = i10;
+                i12 = i8;
+                VU_ST(GM(i12), v19);
+                i12 = (u16)(i12 + 1);
+                np += 4; cy += 4;
+                while (i13) {
+                    u16 p, c, s, w;
+                    /* the vertex routine */
+                    i3 = (u16)top;
+                    p = (u16)GM(i7)[0]; c = (u16)GM(i7)[1]; s = (u16)GM(i7)[2]; w = (u16)GM(i7)[3];
+                    if (vr == g->v1 && !g->c1) {
+                        v20 = VU_LD(GM(1007));
+                        v22 = VU_LD(GM(s + i3));
+                        v22 = gm_put(v22, vfo(vaddq_f32(vfin(v22), vfin(v20))), 0xc);
+                    } else if (vr == g->v1)
+                        v22 = VU_LD(GM(s + i3));
+                    v21 = gm_put(v21, v12, 0x1);
+                    v20 = VU_LD(GM(p + i3));
+                    v21 = gm_put(v21, VU_LD(GM(c + i3)), 0xe);
+                    i7 = (u16)(i7 + 1);
+                    q = qop(0x38, v0[3], v20[3]);
+                    i1 = (u16)GM((u16)(p + i6))[3];
+                    if (!g->c1) {
+                        i4 = (u16)(w + i3);
+                        v30 = VU_LD(GM(i4));
+                    } else
+                        i4 = (u16)((vr == g->v1 ? c : p) + i3);
+                    v21 = gm_mul(v21, v30);
+                    ir = 0x437f0000u;
+                    v21 = gm_mx(v21, vdupq_n_u32(ir), 0);
+                    /* ADD.z vf00 + Q: Q itself (fo()'s: finite, no denormal), a -0 to +0; its MAC flag is never read
+                     * (the fan's OPMSUB or the end's SUB comes before any FMAND or the run's end) */
+                    v23 = vsetq_lane_u32(q & 0x7FFFFFFF ? q : 0, v23, 2);
+                    f0 = f1 = q & 0x7FFFFFFF ? (q >> 31 ? 0x20 : 0) : 0x2;
+                    v22 = gm_put(v22, vdupq_n_u32(gm_s16(i1)), 0x1);
+                    if (vr == g->v1) {
+                        if (g->c1) {
+                            np += 22; cy += 22;
+                        } else {
+                            np += 27; cy += 33;
+                        }
+                    } else {
+                        if (!g->c1) {
+                            np += 23; cy += 27;
+                        } else {
+                            np += 20; cy += 22;
+                        }
+                    }
+                    np += 2 + 3; cy += 2 + 3;
+                    i13 = (u16)(i13 - 1);
+                    /* the store routine */
+                    if (sr == g->s1) {
+                        v18 = gm_put(v18, gm_mul(v22, vu_lane(v23, 2)), 0xe);
+                        v13 = gm_put(v13, v14, 0xe);
+                        v16 = gm_mul(v20, vu_lane(v23, 2));
+                        v14 = gm_put(v14, v15, 0xe);
+                        v17 = gm_ftoi(v21, 1.0f);
+                        VU_ST(GM(i12), v18);
+                        v15 = gm_put(v15, v16, 0xe);
+                        v16 = gm_ftoi(v16, 16.0f);
+                        np += 14; cy += 14;
+                    } else {
+                        v16 = gm_mul(v20, vu_lane(v23, 2));
+                        VU_ST(GM(i12), v18);
+                        v17 = gm_ftoi(v21, 1.0f);
+                        v13 = gm_put(v13, v14, 0xe);
+                        v14 = gm_put(v14, v15, 0xe);
+                        v15 = gm_put(v15, v16, 0xe);
+                        v16 = gm_ftoi(v16, 16.0f);
+                        np += 12; cy += 12;
+                    }
+                    VU_ST(GM(i12 + 1), v17);
+                    VU_ST(GM(i12 + 2), v16);
+                    i12 = (u16)(i12 + 3);
+                    i14 = (u16)(i14 + 1);
+                    i2 = vr;
+                    np += 2; cy += 2;
+                }
+                /* 106-11a: the fan's facing */
+                i11 = (u16)(i11 - 1);
+                i1 = (u16)v26[2];
+                np += 5; cy += 5;
+                if (i1) {
+                    i8 = i12;
+                    np += 1; cy += 1;
+                } else {
+                    uint32x4_t s13, s14;
+                    float32x4_t x, y;
+                    f0 = f1;
+                    v13 = gm_put(v13, vfo(vsubq_f32(vfin(v14), vfin(v13))), 0xe);
+                    v14 = gm_put(v14, vfo(vsubq_f32(vfin(v15), vfin(v14))), 0xe);
+                    x = vfin(nat_yzx(v13));
+                    y = vfin(nat_zxy(v14));
+                    a = gm_put(a, vfo(vmulq_f32(x, y)), 0xe);
+                    s13 = nat_zxy(v13);
+                    s14 = nat_yzx(v14);
+                    v15 = gm_put(v15, gm_fl(K_MSUB, s14, s13, a, 0xe, &f1), 0xe);
+                    f0 = f1;
+                    i1 = (u16)(0x20 & f0);
+                    np += 12; cy += 13;
+                    if (i1) {
+                        i8 = i12;
+                        np += 1; cy += 1;
+                    }
+                }
+                np += 3; cy += 3;
+            }
+            i15 = g->fa;
+            np += 3 + 4; cy += 3 + 4;
+            i9 = (u16)(i9 - 1);
+        }
+        np += 2; cy += 2;
+    }
+    /* 0b2-0c5: the end */
+    v19 = gm_fl(K_SUB, v19, v19, a, 0xf, &f1);
+    f0 = f1;
+    i1 = (u16)v29[0];
+    i2 = 0x8000;
+    v19 = gm_put(v19, vdupq_n_u32(gm_s16(i2)), 0x8);
+    np += 10; cy += 10;
+    if (i1 != i8) {
+        VU_ST(GM(i8), v19);
+        np += 7; cy += 8;
+        kick(i1);
+        i8 = 0x180;
+        if (i1 == i8) {
+            i8 = (u16)(i8 + 0x130);
+            np += 1; cy += 1;
+        }
+    }
+    np += 2; cy += 2;
+done:
+    vi[1] = i1; vi[2] = i2; vi[3] = i3; vi[4] = i4; vi[5] = i5; vi[6] = i6; vi[7] = i7; vi[8] = i8;
+    vi[9] = i9; vi[10] = i10; vi[11] = i11; vi[12] = i12; vi[13] = i13; vi[14] = i14; vi[15] = i15;
+    VU_ST(vf[13], v13); VU_ST(vf[14], v14); VU_ST(vf[15], v15); VU_ST(vf[16], v16); VU_ST(vf[17], v17);
+    VU_ST(vf[18], v18); VU_ST(vf[19], v19); VU_ST(vf[20], v20); VU_ST(vf[21], v21); VU_ST(vf[22], v22);
+    VU_ST(vf[23], v23); VU_ST(vf[25], v25); VU_ST(vf[26], v26); VU_ST(vf[27], v27); VU_ST(vf[28], v28);
+    VU_ST(vf[29], v29); VU_ST(vf[30], v30); VU_ST(acc, a);
+    mac_now = f0;
+    q_reg = q;
+    i_reg = ir;
+    st.insns += np;
+    st.cycles += cy;
+    tpc = g->e1 & (MICRO_N - 1);
+    return 1;
+}
+static int nat_100(u32 pc) { return nat_gummi(pc, &nat_gum[0]); }
+static int nat_101(u32 pc) { return nat_gummi(pc, &nat_gum[1]); }
+
 #endif
 
 /* the program numbers (tools/vu/find_vu1.py's) that have one.  A native run answers 0, before it changes
@@ -1863,6 +2273,8 @@ static int (*nat_run(int num))(u32) {
     if (num == 12) return nat_12;
     if (num == 13) return nat_13;
     if (num == 18) return nat_18;
+    if (num == 100) return nat_100;
+    if (num == 101) return nat_101;
 #endif
     return 0;
 }
