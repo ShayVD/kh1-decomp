@@ -14,7 +14,7 @@ static f32 nf(u32 v) {
     return x.f;
 }
 
-static void put(KH1GpuVert *o, const u32 *v, u32 rgba, u32 f) {
+static void put(KH1GpuVert *o, const u32 *v, u32 add, u32 rgba, u32 f) {
     o->x = nf(v[0]);
     o->y = nf(v[1]);
     o->z = nf(v[2]);
@@ -26,7 +26,7 @@ static void put(KH1GpuVert *o, const u32 *v, u32 rgba, u32 f) {
     o->rgba[2] = (u8)(rgba >> 16);
     o->rgba[3] = (u8)(rgba >> 24);
     o->f = (u8)f;
-    o->pad[0] = (u8)v[3];
+    o->pad[0] = (u8)(v[3] + add);
     o->pad[1] = o->pad[2] = 0;
 }
 
@@ -36,9 +36,21 @@ static void put(KH1GpuVert *o, const u32 *v, u32 rgba, u32 f) {
  * host KH1_HOST_RECFAST=0) converts per triangle as before */
 int kh1_nat_once = 1;
 #define SV_MAX 512
+/* 2026-11-04 (pipes.c natinplace): the records are read where the game thread wrote them, from another core, so each
+ * new cache line of them misses (the triangles' listing 109 -> 201 ms a fight window on the Vita once nothing copied
+ * them first).  kh1_nat_prefetch 1 (the default; config natpf=0, host KH1_HOST_NATPF=0 to leave it out) asks for the
+ * line PF_AHEAD bytes on as each vertex is converted, so it is there by the time the listing reaches it.  A hint only:
+ * nothing read changes */
+int kh1_nat_prefetch = 1;
+#define PF_AHEAD 512
+#define PF(p) do { if (kh1_nat_prefetch) __builtin_prefetch((const char *)(p) + PF_AHEAD); } while (0)
 static KH1GpuVert sv[SV_MAX];
 
 u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVert *out, u32 max, u32 *lost) {
+    return kh1_nat_tris_at(data, nrec, nmat, 0, rgba, f, out, max, lost);
+}
+u32 kh1_nat_tris_at(const u32 *data, u32 nrec, u32 nmat, u32 add, u32 rgba, u32 f, KH1GpuVert *out, u32 max,
+                    u32 *lost) {
     u32 r, j, n = 0;
     *lost = 0;
     for (r = 0; r < nrec; r++) {
@@ -50,9 +62,12 @@ u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVer
         }
         if (kh1_nat_once && nv <= SV_MAX) {
             u32 bad = 0; /* bit k of the last 3: vertex j - 2 + k's matrix index past the run's */
-            for (j = 0; j < nv; j++) put(&sv[j], v + j * 8, rgba, f);
             for (j = 0; j < nv; j++) {
-                bad = (bad >> 1) | (v[j * 8 + 3] >= nmat) << 2;
+                PF(v + j * 8);
+                put(&sv[j], v + j * 8, add, rgba, f);
+            }
+            for (j = 0; j < nv; j++) {
+                bad = (bad >> 1) | (v[j * 8 + 3] + add >= nmat) << 2;
                 if (j < 2 || bad) continue;
                 if (n + 3 > max) { (*lost)++; continue; }
                 if ((par + j) & 1) {
@@ -70,16 +85,16 @@ u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVer
         }
         for (j = 2; j < nv; j++) {
             const u32 *a = v + (j - 2) * 8, *b = v + (j - 1) * 8, *c = v + j * 8;
-            if (a[3] >= nmat || b[3] >= nmat || c[3] >= nmat) continue;
+            if (a[3] + add >= nmat || b[3] + add >= nmat || c[3] + add >= nmat) continue;
             if (n + 3 > max) { (*lost)++; continue; }
             if ((par + j) & 1) { /* odd: kept as it is when its area >= 0 */
-                put(&out[n], a, rgba, f);
-                put(&out[n + 1], b, rgba, f);
+                put(&out[n], a, add, rgba, f);
+                put(&out[n + 1], b, add, rgba, f);
             } else { /* even: P18's operands swapped, so its mirror */
-                put(&out[n], b, rgba, f);
-                put(&out[n + 1], a, rgba, f);
+                put(&out[n], b, add, rgba, f);
+                put(&out[n + 1], a, add, rgba, f);
             }
-            put(&out[n + 2], c, rgba, f);
+            put(&out[n + 2], c, add, rgba, f);
             n += 3;
         }
         data += 4 + nv * 8;
@@ -88,7 +103,7 @@ u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVer
 }
 
 /* 2026-11-01: a KH1_NAT_SKIN record's vertex (natdraw.h) */
-static void put_sk(KH1GpuVertSk *o, const u32 *v, u32 rgba, u32 f, u32 lin) {
+static void put_sk(KH1GpuVertSk *o, const u32 *v, u32 add, u32 rgba, u32 f, u32 lin) {
     o->x = nf(v[0]);
     o->y = nf(v[1]);
     o->z = nf(v[2]);
@@ -101,8 +116,8 @@ static void put_sk(KH1GpuVertSk *o, const u32 *v, u32 rgba, u32 f, u32 lin) {
     o->rgba[2] = (u8)(rgba >> 16);
     o->rgba[3] = (u8)(rgba >> 24);
     o->f = (u8)f;
-    o->mi = (u8)(v[3] | lin);
-    o->mi2 = (u8)(v[3] >> 16);
+    o->mi = (u8)((v[3] + add) | lin);
+    o->mi2 = (u8)((v[3] + add) >> 16);
     o->pad = 0;
     o->x2 = nf(v[8]);
     o->y2 = nf(v[9]);
@@ -111,6 +126,10 @@ static void put_sk(KH1GpuVertSk *o, const u32 *v, u32 rgba, u32 f, u32 lin) {
 }
 
 u32 kh1_nat_tris_skin(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, u32 lin, KH1GpuVertSk *out, u32 max, u32 *lost) {
+    return kh1_nat_tris_skin_at(data, nrec, nmat, 0, rgba, f, lin, out, max, lost);
+}
+u32 kh1_nat_tris_skin_at(const u32 *data, u32 nrec, u32 nmat, u32 add, u32 rgba, u32 f, u32 lin, KH1GpuVertSk *out,
+                         u32 max, u32 *lost) {
     u32 r, j, n = 0;
     *lost = 0;
     for (r = 0; r < nrec; r++) {
@@ -122,18 +141,20 @@ u32 kh1_nat_tris_skin(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, u32 
         }
         for (j = 2; j < nv; j++) {
             const u32 *a = v + (j - 2) * vq, *b = v + (j - 1) * vq, *c = v + j * vq;
-            if (vq != 12 || (a[3] & 0xFFFF) >= nmat || (b[3] & 0xFFFF) >= nmat || (c[3] & 0xFFFF) >= nmat ||
-                a[3] >> 16 >= nmat || b[3] >> 16 >= nmat || c[3] >> 16 >= nmat)
+            u32 wa = a[3] + add, wb = b[3] + add, wc = c[3] + add;
+            PF(c);
+            if (vq != 12 || (wa & 0xFFFF) >= nmat || (wb & 0xFFFF) >= nmat || (wc & 0xFFFF) >= nmat || wa >> 16 >= nmat ||
+                wb >> 16 >= nmat || wc >> 16 >= nmat)
                 continue;
             if (n + 3 > max) { (*lost)++; continue; }
             if ((par + j) & 1) {
-                put_sk(&out[n], a, rgba, f, lin);
-                put_sk(&out[n + 1], b, rgba, f, lin);
+                put_sk(&out[n], a, add, rgba, f, lin);
+                put_sk(&out[n + 1], b, add, rgba, f, lin);
             } else {
-                put_sk(&out[n], b, rgba, f, lin);
-                put_sk(&out[n + 1], a, rgba, f, lin);
+                put_sk(&out[n], b, add, rgba, f, lin);
+                put_sk(&out[n + 1], a, add, rgba, f, lin);
             }
-            put_sk(&out[n + 2], c, rgba, f, lin);
+            put_sk(&out[n + 2], c, add, rgba, f, lin);
             n += 3;
         }
         data += 4 + nv * vq;
@@ -172,8 +193,12 @@ u32 kh1_nat_tris0(const u32 *data, u32 nrec, u32 f, int culled, KH1GpuVert *out,
         const u32 *v = data + 4;
         if (kh1_nat_once && nv <= SV_MAX) { /* each vertex converted once (kh1_nat_tris), only those a triangle uses */
             u32 done = 0; /* sv holds vertices 0 .. done - 1 */
+            PF(v);
+            PF(v + 8);
             for (j = 2; j < nv; j++) {
-                u32 fl = v[j * 8 + 3] & 0xFFFF;
+                u32 fl;
+                PF(v + j * 8);
+                fl = v[j * 8 + 3] & 0xFFFF;
                 if (!fl || ((fl & 0x20) != 0) != (culled != 0)) continue;
                 if (n + 3 > max) { (*lost)++; continue; }
                 if (done < j - 2) done = j - 2;
@@ -553,7 +578,7 @@ void kh1_natvb_learn(const u32 *src, u32 lim, u32 prog, u32 flags, const u32 *pa
         const u32 *w = d + 4;
         KH1GpuVert t;
         for (j = 0; j < n; j++) {
-            put(&t, w + j * 8, rgba, f);
+            put(&t, w + j * 8, 0, rgba, f);
             t.pad[0] = (u8)((w[j * 8 + 3] < nmat ? t.pad[0] + e->home : t.pad[0]) | lin); /* (an ADC index is never drawn) */
             memcpy(&v[nv + j], &t, sizeof t); /* one store pass into GPU memory */
         }
@@ -610,7 +635,7 @@ int kh1_natvb_check(const KH1NatVb *e, const u32 *pay, u32 lin) {
             o[2] = c;
             for (k = 0; k < 3; k++) {
                 KH1GpuVert t;
-                put(&t, o[k], rgba, f);
+                put(&t, o[k], 0, rgba, f);
                 t.pad[0] = (u8)((t.pad[0] + e->home) | lin);
                 if (memcmp(&t, &e->v[e->ix[n + k]], sizeof t)) return 0;
             }

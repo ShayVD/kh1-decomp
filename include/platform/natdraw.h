@@ -70,6 +70,14 @@ u32 kh1_nat_tris(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, KH1GpuVer
 /* 2026-11-01: kh1_nat_tris for KH1_NAT_SKIN records, into the skinned vertex (vertex.h KH1GpuVertSk); lin or'd into
  * every vertex's mi (KH1_NAT_LIN) */
 u32 kh1_nat_tris_skin(const u32 *data, u32 nrec, u32 nmat, u32 rgba, u32 f, u32 lin, KH1GpuVertSk *out, u32 max, u32 *lost);
+/* 2026-11-04 (pipes.c natinplace): the two above with add put on every vertex's word 3 (its matrix indices) first, as
+ * a joined P13 run's records get it when they are copied into the op (pipes.c r_nat_rec), so they can be read where
+ * the game thread wrote them */
+u32 kh1_nat_tris_at(const u32 *data, u32 nrec, u32 nmat, u32 add, u32 rgba, u32 f, KH1GpuVert *out, u32 max,
+                    u32 *lost);
+extern int kh1_nat_prefetch; /* 1 (the default): natdraw.c's listing prefetches the records ahead of it */
+u32 kh1_nat_tris_skin_at(const u32 *data, u32 nrec, u32 nmat, u32 add, u32 rgba, u32 f, u32 lin, KH1GpuVertSk *out,
+                         u32 max, u32 *lost);
 
 /* 2026-10-31: P0's payload (program 0, docs/native-renderer.md stage 3): one record a run (its batch), one matrix (the
  * screen matrix times the clip one, the VU's columns), qword 1's word 0 the F all vertices get (P0's I register);
