@@ -2127,6 +2127,24 @@ done with them; fetch them with tools/vita/hw_ftp.py. In the Dive every other pi
 first picture at or after the one due. Vita3K does not write GPU pixels back where the CPU reads them (all black
 there): capture its window instead.
 
+## Bad DMA sends on some runs only: `end` is not moved with the data segment (2026-11-03)
+
+A hardware run of main f8afa7e1 logged ~14,650 bad DMA sends by frame 23,000, every one `tag at 852e9ff0 outside`
+from frame 8 (the title's loads) on; the texver build's run before it had none. Not a regression: the same build
+gives thousands on one run and none on the next (texsame tv1 9,996 / tv2 0, gspkt c1 12,965 / c0 0, gs2d f-nat 9,954
+/ f-gs 0). Between such a pair every buffer in .bss sits 0x100000 apart in the log (`loaded btltbl.bin ... at
+0x81670a40` / `0x81570a40`): the Vita puts the data segment at a different address on different runs. The crash
+dump of gspkt c1 has kh1.elf's seg2 at 0x81400000 (linked at 0x81250000), and that run's bad tag, 0x852e6e90, is
+`D_0061E8B0`'s first byte (0x85136e90 linked) moved by the same 0x1b0000.
+
+plat_null.c's `null_dma_where` owned `__executable_start` to `end`, and on hardware `end` does not move with the data segment
+(gspkt c1's bad tag was past the linked `end` but inside the loaded seg2; why the relocation misses it is not known), so the top of .bss by the data
+segment's displacement was "outside" and a chain built there (the game's `D_0061E8A0`-`D_0061E8B0` block, a
+`kh1_hostblk_00595e40` buffer in another build) was dropped, about two sends a frame. Nothing visibly wrong on screen;
+Vita3K loads the data where linked, so it never showed there. Fix: host/vita/main.c reads the module's two segments
+(`sceKernelGetModuleInfo`, -lSceKernelModulemgr_stub) and hands them to `kh1_null_image`; the log's `image:` line
+prints them with the linked `end`. Other platforms keep the `end` test.
+
 ## What next, in order
 
 0. **The Dive's frame rate after the GPU cuts (2026-10-31, above)**: a Vita run with `gputime=1` and one without,

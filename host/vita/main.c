@@ -150,6 +150,7 @@
  * Not part of the PS2 build. */
 #include <psp2/ctrl.h>
 #include <psp2/kernel/cpu.h>
+#include <psp2/kernel/modulemgr.h>
 #include <psp2/display.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
@@ -184,6 +185,7 @@ extern int kh1_nat_once; /* natdraw.c: config.txt recfast= (2026-11-01) */
 #include "platform/costack.h"
 #include "platform/view.h"
 void kh1_null_hud_wide(s32 margin16); /* host/null/plat_null.c: the HUD anchors, full-screen stretch, scissor rule */
+void kh1_null_image(int seg, unsigned long lo, u32 size); /* host/null/plat_null.c: the DMA walk's memory check */
 
 /* newlib's heap and the main thread's stack: the game's coroutine stacks (0x40000 each, host/null
  * threads.c, host/port/tasks.c) and the model's buffers come from the heap; the 25 MiB memory map
@@ -1094,6 +1096,20 @@ int main(int argc, char **argv) {
     }
     vlog("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
     vlog("kh1-vita: %u KiB of the main thread's stack for the game's threads and tasks\n", costack_bytes >> 10);
+    { /* 2026-11-03: the image's segments where the loader put them (plat_null.c's kh1_null_image: `end` is not
+       * moved with the data segment) */
+        static SceKernelModuleInfo mi;
+        extern char end[];
+        SceUID id = sceKernelGetModuleIdByAddr(&costack_bytes);
+        int i;
+        mi.size = sizeof mi;
+        if (id >= 0 && sceKernelGetModuleInfo(id, &mi) >= 0) {
+            for (i = 0; i < 2; i++) kh1_null_image(i, (unsigned long)mi.segments[i].vaddr, mi.segments[i].memsz);
+            vlog("kh1-vita: image: code %08x+%x, data %08x+%x (linked end %08x)\n", (u32)mi.segments[0].vaddr,
+                 mi.segments[0].memsz, (u32)mi.segments[1].vaddr, mi.segments[1].memsz, (u32)end);
+        } else
+            vlog("kh1-vita: image: no module info (%08x)\n", (u32)id);
+    }
     /* session 137v (the real Vita's speed): an application starts at 333 MHz; the A9s at 444, the bus and
      * the GPU at 222 as other ports set them (Vita3K takes the calls and runs as fast either way) */
     {
