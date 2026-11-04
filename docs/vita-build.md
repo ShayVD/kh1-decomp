@@ -2244,3 +2244,48 @@ After Depart the clipped programs carry several times the map screen's runs (C0 
 window), so even translated they fill the game thread there. The next step for it is the same as renderer A / B's:
 C0 / C1 / C3 as hand-written C (vu1_nat.h) or parsed into native draws (renderer-spec 2.5 notes the batches need
 no rewriting: index buffers and per-vertex lighting, one fan per run).
+
+## The world map's streamed T4 textures a block at a time (2026-11-04)
+
+The map's Select World after PR #228 ran at ~11 pictures/s on hardware, with the GS worker the limit: ~28 MB of
+IMAGE pieces a 2 s window took ~1.75 s of its time (`gs blocks`). The `gs senders` address is **func_00106b98**
+(src/gfx/dmapool.c: the chain send queued by func_00106bd8, field.c's frame chains), not mdldraw's func_001606d0:
+that build's code sat 0x3a000 above its link address on the device (w_block's op address in `gs worker ops` minus
+the ELF's w_block gives the shift), which the first mapping missed.
+
+**Why they come every frame.** The host with `KH1_HOST_IMGLOG=1` (a line per IMAGE piece: PSM, BITBLTBUF,
+rectangle, its at_key entry, whether whole and skipped, a hash of the bytes; needs `KH1_HOST_TRACE=2`, the level
+from which the host feeds its GS model at all) on wm_en.txt at frame ~6,600: 164 pieces, ~1.2 MB a picture, nearly
+all from that one sender into one 128 x 128 slot at **DBP 0x3600** (T8 and T4 textures, their CLUTs at 0x3700 / 0x3680).
+22 different textures go through it, each 2 to 4 times a picture, the same set every picture: the PS2's way of
+drawing many textures through a small VRAM area (upload, draw, next). The "same bytes again" skip
+(kh1_gsmem_image_same) only applies when the slot still holds those bytes, which it never does here (A, B, A).
+
+**Where the time went.** T8 (~840 KiB a picture) and the CT32 CLUTs already store whole blocks at once (session
+148's band_t8 / band_c32, NEON on the Vita). The T4 uploads (~315 KiB a picture, ~650,000 pixels) still went
+through trx_bulk's loop a pixel at a time.
+
+**The change** (host/null/gsmem.c): **band_t4**, a T4 block (32 x 16 pixels, 256 bytes) stored at once from a
+table of each nibble's source pixel made from kh1_gsmem_addr in band_init (t4_src; refused, as the others are, if
+the layout is not one block's own), for whole blocks of a band of 16 rows from a row start (band_blocks now takes
+the block's height). The page stamp, drawn bits, stored block and block hash (bh_keep) end as the pixel loop
+leaves them. Plain C, no NEON (a nibble permutation does not fit vtbl as T8's does). config.txt `t4band=0`
+(host `KH1_HOST_T4BAND=0`) stores them a pixel at a time as before.
+
+- tests/host/gsfast_test.c's block uploads now include T4 (x and width in 32s, sometimes not); it passes, and fails
+  with a byte of band_t4's output flipped.
+- Host A/B (wm_en.txt to frame 6,700 with KH1_HOST_TEXDUMP): the 1,012 textures drawn are byte-identical both ways.
+
+**Hardware** (the user's hand-played run, same route as the PR #228 one: save, Gummi Ship, Select World):
+
+| Select World | PR #228 (2026-11-04 morning) | band_t4 |
+| --- | --- | --- |
+| Pictures/s | ~11 | **~19.8** |
+| Image pieces a window | 28.5 MB in 1,750 ms | 52 MB in 1,485 ms (2.1x the bytes a ms) |
+| The game's wait for the GS worker | ~1,380 ms | ~810 ms |
+
+The GS worker is still the limit there (~2.0 s busy, the block handler ~1.99 s of it). Left in the image pieces:
+the T8 stores, the same-bytes compare and kh1_gsmem_image_kept's copy of every piece (each a miss here, as above),
+the CLUT loads (~90 ms). A next step would be to remember each streamed texture's stored blocks by its bytes, so an
+upload of a texture seen before copies those blocks instead of storing it again, or to let the texture cache take
+the source bytes' hash as the key and leave GS memory to be written only when something reads it as memory.

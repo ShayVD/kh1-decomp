@@ -667,6 +667,12 @@ int kh1_gsmem_image_same(const void *src, u32 bytes) {
     return 1;
 }
 
+/* 2026-11-04 (KH1_HOST_IMGLOG, dmawalk.c): the upload in progress (PSM, DBP, DBW, rectangle, its at_key entry) */
+void kh1_gsmem_trx_desc(u32 *o) {
+    o[0] = trx.psm; o[1] = trx.bp; o[2] = trx.bw; o[3] = trx.x0; o[4] = trx.y0; o[5] = trx.w; o[6] = trx.h;
+    o[7] = (u32)trx.key; o[8] = trx.key >= 0 ? at_key[trx.key].dlen : 0; o[9] = trx.active;
+}
+
 /* the upload's bytes kept for the next kh1_gsmem_image_same, once all its pixels came */
 void kh1_gsmem_image_kept(const void *src, u32 bytes) {
     if (trx.active || trx.key < 0 || !trx.at || trx.ai != trx.w * trx.h || bytes > SAME_POOL) return;
@@ -719,6 +725,14 @@ static void trx_pixel(u32 v) {
 static u8 t8_src[2][64];            /* T8: a column's byte o from row t8_src >> 4, x t8_src & 15 of its 4 x 16 */
 static u8 c32_src[16];              /* CT32: a column's word o from row c32_src >> 3, x c32_src & 7 of its 2 x 8 */
 static int band_ok = -1;            /* the layouts as above (0: the pixel loops only) */
+/* 2026-11-04 (the world map's T4 textures, ~650,000 pixels a frame through the slot at 0x3600): T4's block (32 x 16
+ * pixels, 512 nibbles in 256 bytes): nibble o from row t4_src >> 5, x t4_src & 31; t4_off / t4_sh, its source byte
+ * and shift for the row stride t4_stride (in bytes); t4_ok 0 when the layout is not one block's own */
+static u16 t4_src[512], t4_off[512];
+static u8 t4_sh[512];
+static u32 t4_stride;
+static int t4_ok;
+int kh1_gsmem_t4band = 1; /* 0: T4 a pixel at a time (the Vita's config.txt t4band=) */
 #if defined(__ARM_NEON)
 static u8 t8_idx[2][8][8];          /* T8 on NEON: column D d of parity p from rows d & 1 and (d & 1) + 2 */
 static int t8_neon, c32_neon;
@@ -736,6 +750,17 @@ static void band_init(void) {
             if (g < 2) t8_src[g][o] = (u8)((y & 3) << 4 | x);
             else if (t8_src[g & 1][o] != ((y & 3) << 4 | x)) ok = 0;
         }
+    {
+        static u8 seen[512];
+        t4_ok = 1;
+        for (y = 0; y < 16; y++)
+            for (x = 0; x < 32; x++) {
+                a = kh1_gsmem_addr(KH1_PSMT4, 0, 2, x, y); /* block 0, in nibbles */
+                if (a >= 512 || seen[a]) { t4_ok = 0; continue; }
+                seen[a] = 1;
+                t4_src[a] = (u16)(y << 5 | x);
+            }
+    }
     for (y = 0; y < 8; y++)
         for (x = 0; x < 8; x++) {
             u32 z = kh1_gsmem_addr(KH1_PSMZ32, 0, 1, x, y) - kh1_gsmem_addr(KH1_PSMZ32, 0, 1, 0, 0);
@@ -747,6 +772,7 @@ static void band_init(void) {
     ok = 0; /* T8's source bytes read in memory order */
 #endif
     band_ok = ok;
+    t4_ok &= ok;
 #if defined(__ARM_NEON)
     t8_neon = ok;
     for (p = 0; p < 2; p++)
@@ -905,6 +931,26 @@ static u32 band_c32(u32 base, const u32 *src, u32 stride) {
     }
 }
 
+/* the same for T4 (base in bytes, src the block's top left pixel's byte, its pixel even, stride in bytes) */
+static u32 band_t4(u32 base, const u8 *src, u32 stride) {
+    u8 *d = vm + base;
+    u32 o, v, ch = 0;
+    if (stride != t4_stride) {
+        for (o = 0; o < 512; o++) {
+            t4_off[o] = (u16)((t4_src[o] >> 5) * stride + (t4_src[o] & 31) / 2);
+            t4_sh[o] = (u8)((t4_src[o] & 1) * 4);
+        }
+        t4_stride = stride;
+    }
+    for (o = 0; o < 256; o++) {
+        v = (src[t4_off[2 * o]] >> t4_sh[2 * o] & 15) | (src[t4_off[2 * o + 1]] >> t4_sh[2 * o + 1] & 15) << 4;
+        ch |= d[o] ^ v;
+        d[o] = (u8)v;
+    }
+    bh_words(d, band_h);
+    return ch;
+}
+
 /* the page's stamp and marks after a block of stores, as the pixel loops leave them (changed: any stored bit; b, the
  * block's number, blk_ver's) */
 static int band_mark(u32 b, u32 changed) {
@@ -919,11 +965,11 @@ static int band_mark(u32 b, u32 changed) {
     return 1;
 }
 
-/* each block of the band from at on starts a block (2^lg units) and ends in it (b x b pixels a block) */
-static int band_blocks(const u32 *at, u32 b, u32 lg) {
+/* each block of the band from at on starts a block (2^lg units) and ends in it (b x bh pixels a block) */
+static int band_blocks(const u32 *at, u32 b, u32 bh, u32 lg) {
     u32 bx;
     for (bx = 0; bx < trx.w; bx += b)
-        if (at[bx] & ((1u << lg) - 1) || at[bx + (b - 1) * trx.w + b - 1] >> lg != at[bx] >> lg) return 0;
+        if (at[bx] & ((1u << lg) - 1) || at[bx + (bh - 1) * trx.w + b - 1] >> lg != at[bx] >> lg) return 0;
     return 1;
 }
 
@@ -947,7 +993,7 @@ static int trx_bulk(const u32 *w, u32 n) {
         k = n < left ? n : left;
         for (j = 0; j < k;) {
             /* session 148: whole blocks, 8 rows at a time, from a row start */
-            if (x == 0 && band_here(trx.ai + j, k - j, 8, 8) && band_blocks(at + j, 8, 6)) {
+            if (x == 0 && band_here(trx.ai + j, k - j, 8, 8) && band_blocks(at + j, 8, 8, 6)) {
                 u32 bx, any = 0;
                 for (bx = 0; bx < trx.w; bx += 8)
                     if (!SKIP_PG(at[j + bx] >> 11)) any |= band_mark(at[j + bx] >> 6, band_c32(at[j + bx], w + j + bx, trx.w));
@@ -991,7 +1037,7 @@ static int trx_bulk(const u32 *w, u32 n) {
         k = n * 4 < left ? n * 4 : left;
         for (j = 0; j < k; j += run) {
             /* session 148: whole blocks, 16 rows at a time, from a row start */
-            if (x == 0 && band_here(trx.ai + j, k - j, 16, 16) && band_blocks(at + j, 16, 8)) {
+            if (x == 0 && band_here(trx.ai + j, k - j, 16, 16) && band_blocks(at + j, 16, 16, 8)) {
                 u32 bx;
                 for (bx = 0; bx < trx.w; bx += 16)
                     if (!SKIP_PG(at[j + bx] >> 13))
@@ -1034,9 +1080,19 @@ static int trx_bulk(const u32 *w, u32 n) {
     }
     case KH1_PSMT4: {
         int moved = 0;
+        u32 x = trx.ai % trx.w;
         k = n * 8 < left ? n * 8 : left;
-        for (j = 0; j < k; j++) {
+        for (j = 0; j < k; j++, x = x + 1 == trx.w ? 0 : x + 1) {
             u32 pg, nv;
+            /* 2026-11-04: whole blocks, 16 rows at a time, from a row start (band_t4) */
+            while (x == 0 && band_here(trx.ai + j, k - j, 32, 16) && t4_ok && kh1_gsmem_t4band && band_blocks(at + j, 32, 16, 9)) {
+                u32 bx;
+                for (bx = 0; bx < trx.w; bx += 32)
+                    if (!SKIP_PG(at[j + bx] >> 14))
+                        moved |= band_mark(at[j + bx] >> 9, band_t4(at[j + bx] >> 1, (const u8 *)w + (j + bx) / 2, trx.w / 2));
+                j += 16 * trx.w;
+            }
+            if (j >= k) break;
             a = at[j];
             if (SKIP_PG(a >> 14)) continue;
             v = w[j >> 3] >> (j & 7) * 4 & 15;
