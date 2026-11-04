@@ -931,6 +931,34 @@ Last, because it only matters once the game thread's own code (~0.66 s per 2.4 s
 - **Tested by**: per-function differential tests on inputs captured from a Dive run; the census and pad
   scripts reaching the same frames with the same positions (dive_en.txt to 91,000).
 
+### The GPU thread's recording, split (2026-11-03)
+
+Fights in the Dive (dive_en.txt, frames 18k-23k) run ~22-23 pictures/s on the Vita with the GPU frame's thread the
+limit (~1.9-2.0 s busy of a 2.17 s window). Two watchdog lines now split its recording (host/vita/main.c):
+`recording ops:` (gsqueue.c, the recording queue's ops by function, 1 op in 8 timed; map the addresses with
+arm-vita-eabi-nm on that build's out/vita/kh1.elf) and `recording's native draws:` (pipes.c nt_mark and cmdbuf.c
+kh1_cmd_mark, the native ops by part, in the same sampled ops). The 3 Nov hardware split, ms a window:
+
+| part | ms |
+| --- | --- |
+| r_frame (the frame op): the submit 900 (CPU uploads into targets 311, 287 of it the frame-start flush; transfers 195; scenes 161; draws 114; vertex copy 101; calls 36), the passes ~90 | 1036 |
+| r_nat_dir + r_nat_dend (native): records' assembly 270-450, joins 300, triangles 115, batcher and new commands 91, fold 36, matrices 11 | 790 |
+| GS path: r_prim 89, r_strip 61, r_state 16, the rest ~30 | ~200 |
+
+Vita3K's split is not the hardware's (there the record ops are under half of the recording and the Dive caps at 30
+pictures/s), so these need a hw_run.sh log.
+
+**natvbbulk** (cmdbuf.c vb_index32, config natvbbulk=0 / host KH1_HOST_NATVBBULK=0 for the old path): the joins
+read each cached run's 16-bit indices from natvb's memory, which is uncached for the CPU on the Vita
+(USER_RW_UNCACHE), one bus read each (~2 M a fight window). Copying them into a cached buffer 512 at a time first
+(memcpy's multi-word loads) cut the joins 309 -> 157 ms a window (Vita A/B, 4 Nov); the host's GXM hashes are the
+same either way. Pictures/s moved within the run-to-run noise (records' assembly alone varied 271-454 ms between
+runs), so more of the thread must go before fights reach 26-28. Candidates, largest first: the records' assembly
+(r_nat_dir copies every record into nat_op before r_native reads it: reading the payload in place would skip the
+copy) and the frame-start flush of CPU uploads into the slot capture and off-screen targets (~620 whole blocks a frame).
+Making natvb's memory cached instead was rejected: the GPU then needs a cache clean after each entry, and the
+user-mode calls for that (sceKernelSyncVMDomain) are for VM blocks, with nothing in Vita3K to show a missed clean.
+
 ## Beyond speed: the rest of the game native (added 2026-11-02)
 
 Stages 0-9 make the Dive fast. They do not make the whole game run: some of it still has no native code, and
