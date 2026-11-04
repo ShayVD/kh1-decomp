@@ -1357,7 +1357,9 @@ static void start_run(u32 pc) {
                                 (tr_progs[prog].num == 10 && kh1_vu1_draw_p10 && nd_10(pc)) ||
                                 (tr_progs[prog].num == 13 && kh1_vu1_draw_p13 && nd_13(pc)) ||
                                 (tr_progs[prog].num == 0 && kh1_vu1_draw_p0 && nd_0(pc, 0)) ||
-                                (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)));
+                                (tr_progs[prog].num == 4 && kh1_vu1_draw_p0 && nd_0(pc, 1)) ||
+                                (tr_progs[prog].num == 100 && kh1_vu1_draw_gum && nd_gum(pc, 0)) ||
+                                (tr_progs[prog].num == 101 && kh1_vu1_draw_gum && nd_gum(pc, 1)));
         if (nc_n) nc_flush(); /* natchain: a parse that did not take them (or did not look): written before the run */
         if (tr_progs[prog].num == 10 && pc == 0) nd_10_setup(); /* the RGBAQ its kick sets, for nd_10's payload */
         if (!ran && kh1_vu1_natcheck && (tr_progs[prog].num == 0 || tr_progs[prog].num == 4)) { /* KH1_HOST_NATCHECK */
