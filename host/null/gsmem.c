@@ -108,7 +108,9 @@ static u32 only_pg[16];
 static u32 at_pool[AT_POOL], at_used, at_n;
 /* session 137: with each, the bytes the last whole upload there brought (dlen 0: none) at doff in
  * same_pool, seq when it ended and the pages the rectangle spans (kh1_gsmem_image_same) */
-static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16], gen, nob; } at_key[AT_KEYS];
+static struct { u32 psm, bp, bw, x, y, w, h, off, doff, dlen, stamp, plo, phi, pg[16], gen, nob, hk, hs[2], kb; } at_key[AT_KEYS];
+/* 2026-11-04: hk 1 when the entry's bytes are known by their hash hs (src_hash) instead of a copy in same_pool; kb,
+ * whether the rectangle's pixels fill whole blocks (0 not known yet, 1 yes, 2 no: the stored-block cache, kb_*) */
 /* 2026-10-31: nob 1 when the entry's bytes are not in same_pool (a large upload's, matched by gen alone) */
 /* session 146: pg, the pages the rectangle's pixels lie in (bit p of pg[p >> 5]) */
 #define SAME_POOL (4u << 20)
@@ -591,6 +593,7 @@ static const u32 *trx_addrs(u32 psm, u32 bp, u32 bw, u32 x0, u32 y0, u32 w, u32 
     at_key[at_n].psm = psm; at_key[at_n].bp = bp; at_key[at_n].bw = bw; at_key[at_n].x = x0; at_key[at_n].y = y0;
     at_key[at_n].w = w; at_key[at_n].h = h; at_key[at_n].off = at_used;
     at_key[at_n].dlen = 0;
+    at_key[at_n].kb = at_key[at_n].hk = 0;
     at_key[at_n].plo = page_of(psm, lo);
     at_key[at_n].phi = page_of(psm, hi);
     at_used += w * h;
@@ -617,21 +620,31 @@ u32 kh1_gsmem_image_gen;
  * store only those pages; the others still hold the bytes.  A word-aligned source only (the callers' are) */
 u32 kh1_gsmem_part_pages, kh1_gsmem_part_skipped; /* the pages a part store stored and left */
 
+/* 2026-11-04 (the world map's Select World: 22 textures streamed through one slot, A, B, A, so the same-bytes skip
+ * above never applies): an upload whose pixels fill whole blocks is known by a hash of its bytes (src_hash), and the
+ * blocks it stored are kept by that hash (kb_keep); the same bytes into the same rectangle again copy those blocks
+ * (kb_try) instead of storing every pixel.  Below the block uploads (band_*) */
+static const u32 *src_hash(const void *src, u32 bytes);
+static int kb_ok(u32 bytes);
+static int kb_try(const void *src, u32 bytes);
+static void kb_keep(const u32 *hs);
+
 int kh1_gsmem_image_same(const void *src, u32 bytes) {
     u32 p, bits, k, newer = 0, kept;
     if (!trx.active || trx.key < 0 || trx.ai || trx.nacc || flat_raw) return 0;
     k = (u32)trx.key;
-    if (at_key[k].dlen != bytes || at_key[k].plo > at_key[k].phi) return 0;
+    if (at_key[k].dlen != bytes || at_key[k].plo > at_key[k].phi) return kb_try(src, bytes);
     memset(only_pg, 0, sizeof only_pg);
     for (p = at_key[k].plo; p <= at_key[k].phi; p++)
         if (wr_pg[p] > at_key[k].stamp && at_key[k].pg[p >> 5] >> (p & 31) & 1) {
             only_pg[p >> 5] |= 1u << (p & 31);
             newer++;
         }
-    if (newer && (((unsigned long)src & 3) || !trx.at)) return 0;
+    if (newer && (((unsigned long)src & 3) || !trx.at)) return kb_try(src, bytes);
     if (kh1_gsmem_image_gen ? at_key[k].gen != kh1_gsmem_image_gen
+        : at_key[k].hk      ? src_hash(src, bytes)[0] != at_key[k].hs[0] || src_hash(src, bytes)[1] != at_key[k].hs[1]
                             : at_key[k].nob || !kh1_bytes_same(same_pool + at_key[k].doff, src, bytes))
-        return 0;
+        return kb_try(src, bytes);
     bits = psm_bits(trx.psm);
     for (p = at_key[k].plo; p <= at_key[k].phi; p++)
         if (at_key[k].pg[p >> 5] >> (p & 31) & 1 && !(only_pg[p >> 5] >> (p & 31) & 1) && page_drawn[p] & bits) {
@@ -675,14 +688,25 @@ void kh1_gsmem_trx_desc(u32 *o) {
 
 /* the upload's bytes kept for the next kh1_gsmem_image_same, once all its pixels came */
 void kh1_gsmem_image_kept(const void *src, u32 bytes) {
+    u32 was;
     if (trx.active || trx.key < 0 || !trx.at || trx.ai != trx.w * trx.h || bytes > SAME_POOL) return;
+    was = at_key[trx.key].hk;
+    at_key[trx.key].hk = 0;
     if (kh1_gsmem_image_gen) {
         /* 2026-10-31: a large upload is matched by its generation alone (gsimage.c load_big), so its bytes are
          * not copied (on a Vita, 256 KiB a drawn frame through the worker's caches) */
         at_key[trx.key].dlen = bytes;
         at_key[trx.key].nob = 1;
+    } else if (kb_ok(bytes)) {
+        /* 2026-11-04: whole blocks: the bytes known by their hash, not copied */
+        const u32 *hs = src_hash(src, bytes);
+        at_key[trx.key].dlen = bytes;
+        at_key[trx.key].nob = 0;
+        at_key[trx.key].hk = 1;
+        at_key[trx.key].hs[0] = hs[0];
+        at_key[trx.key].hs[1] = hs[1];
     } else {
-        if (at_key[trx.key].dlen != bytes || at_key[trx.key].nob) {
+        if (at_key[trx.key].dlen != bytes || at_key[trx.key].nob || was) {
             u32 i;
             if (same_used + bytes > SAME_POOL) {
                 for (i = 0; i < at_n; i++) at_key[i].dlen = 0;
@@ -695,6 +719,7 @@ void kh1_gsmem_image_kept(const void *src, u32 bytes) {
         }
         memcpy(same_pool + at_key[trx.key].doff, src, bytes);
     }
+    if (kb_ok(bytes)) kb_keep(src_hash(src, bytes)); /* 2026-11-04: the blocks it stored, kept by its hash */
     at_key[trx.key].gen = kh1_gsmem_image_gen;
     at_key[trx.key].stamp = seq;
     seq++; /* session 146: a later store's wr_pg is newer than the stamp, whatever op makes it */
@@ -962,6 +987,236 @@ static int band_mark(u32 b, u32 changed) {
     bh_keep(b & 16383, band_h); /* the block holds what band_* stored, changed or not */
     if (!changed && !page_drawn[pg]) return 0;
     page_drawn[pg] = 0;
+    return 1;
+}
+
+/* 2026-11-04 (the world map's Select World, docs/vita-build.md "Streamed textures' blocks kept by their bytes"): the
+ * stored-block cache.  An upload whose rectangle is whole blocks (CT32 / Z32 8 x 8, T8 16 x 16, T4 32 x 16, each
+ * block's pixels all its own) leaves those blocks holding bytes that depend on its source bytes alone.  So the blocks
+ * an upload stored are kept (kb_pool) under the rectangle and a hash of its bytes, from the second upload of those
+ * bytes on (kb_seen: one seen once is not kept, as most never come again); the same bytes into the same rectangle
+ * again copy the kept blocks in (kb_try), each block's stamp, version, drawn bits and content hash ending as the
+ * block uploads leave them (band_mark).  The pool starts again when full.  kh1_gsmem_texblk 0 (config texblk=0, host
+ * KH1_HOST_TEXBLK=0) turns it off, the bytes then kept and compared as before */
+int kh1_gsmem_texblk = 1;
+u32 kh1_gsmem_kb_hits, kh1_gsmem_kb_same, kh1_gsmem_kb_blocks, kh1_gsmem_kb_misses, kh1_gsmem_kb_keeps, kh1_gsmem_kb_resets;
+#define KB_BLKS 8192 /* 2 MiB of blocks */
+#define KB_ENTS 1024
+#define KB_SEEN 4096
+static u8 kb_pool[KB_BLKS][256] __attribute__((aligned(16)));
+static u16 kb_b[KB_BLKS];     /* each kept block's number */
+static u32 kb_bh[KB_BLKS][2]; /* and its content hash (blk_h0 / blk_h1's) */
+static struct { u32 psm, bp, bw, x, y, w, h, hs[2], first, n, next; } kb_e[KB_ENTS];
+static u32 kb_head[KB_ENTS], kb_n, kb_used; /* kb_head: 1 + the first entry of hs[0]'s chain */
+static u32 kb_seen[KB_SEEN];
+
+/* the source's hash: its words in eight lanes (word i into lane i & 7, as bh_words' four), so NEON takes 32 bytes a
+ * step; the tail's last word padded with zeros, the byte count folded in */
+static const u32 th_seed[8] = { 0x243F6A88u, 0x85A308D3u, 0x13198A2Eu, 0x03707344u,
+                                0xA4093822u, 0x299F31D0u, 0x082EFA98u, 0xEC4E6C89u };
+static const u32 th_k[8] = { 0x9E3779B1u, 0x85EBCA77u, 0xC2B2AE3Du, 0x27D4EB2Fu,
+                             0x165667B1u, 0xCC9E2D51u, 0x1B873593u, 0xE6546B65u };
+static void kb_hash(const void *src, u32 bytes, u32 *o) {
+    const u8 *p = (const u8 *)src;
+    u32 l[8], i, n32 = bytes / 32, w, x, r;
+#if defined(__ARM_NEON)
+    {
+        uint32x4_t a = vld1q_u32(th_seed), b = vld1q_u32(th_seed + 4), ka = vld1q_u32(th_k), kb = vld1q_u32(th_k + 4);
+        for (i = 0; i < n32; i++, p += 32) {
+            __builtin_prefetch(p + 512); /* the game thread wrote the source on another core */
+            BH_NEON(a, ka, vreinterpretq_u32_u8(vld1q_u8(p)));
+            BH_NEON(b, kb, vreinterpretq_u32_u8(vld1q_u8(p + 16)));
+        }
+        vst1q_u32(l, a);
+        vst1q_u32(l + 4, b);
+    }
+#else
+    for (i = 0; i < 8; i++) l[i] = th_seed[i];
+    for (i = 0; i < n32 * 8; i++) {
+        __builtin_memcpy(&w, p + i * 4, 4);
+        x = (l[i & 7] ^ w) * th_k[i & 7];
+        l[i & 7] = x << 15 | x >> 17;
+    }
+    p += n32 * 32;
+#endif
+    for (i = 0, r = bytes - n32 * 32; r; i++, p += 4, r -= r < 4 ? r : 4) {
+        w = 0;
+        __builtin_memcpy(&w, p, r < 4 ? r : 4);
+        x = (l[i & 7] ^ w) * th_k[i & 7];
+        l[i & 7] = x << 15 | x >> 17;
+    }
+    o[0] = fmix(l[0] + fmix(l[2] ^ fmix(l[4] + fmix(l[6] ^ bytes))));
+    o[1] = fmix(l[1] + fmix(l[3] ^ fmix(l[5] + fmix(l[7] ^ o[0]))));
+}
+
+/* the upload in progress's source hash, computed once however many times it is asked (useq moves at each TRXDIR) */
+static u32 hs_now[2], hs_useq = ~0u, hs_bytes;
+static const void *hs_src;
+static const u32 *src_hash(const void *src, u32 bytes) {
+    if (hs_useq != useq || hs_src != src || hs_bytes != bytes) {
+        kb_hash(src, bytes, hs_now);
+        hs_useq = useq;
+        hs_src = src;
+        hs_bytes = bytes;
+    }
+    return hs_now;
+}
+
+/* an address's block in kh1_gsmem_addr's units: 2^kb_lg units a block (0: a PSM the cache does not take) */
+static u32 kb_lg(u32 psm) {
+    return psm == KH1_PSMCT32 || psm == KH1_PSMZ32 ? 6 : psm == KH1_PSMT8 ? 8 : psm == KH1_PSMT4 ? 9 : 0;
+}
+
+/* whether the upload in progress (bytes of source, its addresses kept) is whole blocks, each block's pixels all in
+ * it: checked a pixel at a time once for its at_key entry */
+static int kb_ok(u32 bytes) {
+    u32 lg = kb_lg(trx.psm), n = trx.w * trx.h, bw, bh, j, x, y;
+    const u32 *at = trx.at;
+    if (!kh1_gsmem_texblk || trx.key < 0 || !at || !lg || bytes != (lg == 6 ? n * 4 : lg == 8 ? n : n / 2)) return 0;
+    if (at_key[trx.key].kb) return at_key[trx.key].kb == 1;
+    at_key[trx.key].kb = 2;
+    bw = blk_w(trx.psm);
+    bh = blk_h(trx.psm);
+    if (trx.x0 % bw || trx.y0 % bh || trx.w % bw || trx.h % bh) return 0;
+    for (j = y = 0; y < trx.h; y++)
+        for (x = 0; x < trx.w; x++, j++) {
+            u32 t = at[(y - y % bh) * trx.w + x - x % bw]; /* the block's top left pixel */
+            if (at[j] >> lg != t >> lg || t & ((1u << lg) - 1)) return 0;
+        }
+    at_key[trx.key].kb = 1;
+    return 1;
+}
+
+static int kb_find(const u32 *hs) {
+    u32 i;
+    for (i = kb_head[hs[0] & (KB_ENTS - 1)]; i; i = kb_e[i - 1].next) {
+        const u32 e = i - 1;
+        if (kb_e[e].hs[0] == hs[0] && kb_e[e].hs[1] == hs[1] && kb_e[e].psm == trx.psm && kb_e[e].bp == trx.bp &&
+            kb_e[e].bw == trx.bw && kb_e[e].x == trx.x0 && kb_e[e].y == trx.y0 && kb_e[e].w == trx.w && kb_e[e].h == trx.h)
+            return (int)e;
+    }
+    return -1;
+}
+
+/* the finished upload's blocks (all its pixels stored) kept by its source hash hs */
+static void kb_keep(const u32 *hs) {
+    u32 lg = kb_lg(trx.psm), bw = blk_w(trx.psm), bh = blk_h(trx.psm), n = trx.w / bw * (trx.h / bh), bx, by, s, h[4];
+    u32 *seen = &kb_seen[hs[0] & (KB_SEEN - 1)];
+    if (*seen != hs[1]) { /* the first time these bytes came */
+        *seen = hs[1];
+        return;
+    }
+    if (n > KB_BLKS || kb_find(hs) >= 0) return;
+    if (kb_n == KB_ENTS || kb_used + n > KB_BLKS) {
+        kb_n = kb_used = 0;
+        memset(kb_head, 0, sizeof kb_head);
+        kh1_gsmem_kb_resets++;
+    }
+    s = kb_used;
+    for (by = 0; by < trx.h; by += bh)
+        for (bx = 0; bx < trx.w; bx += bw, s++) {
+            u32 b = trx.at[by * trx.w + bx] >> lg & 16383;
+            kb_b[s] = (u16)b;
+            memcpy(kb_pool[s], vm + b * 256, 256);
+            if (!blk_hok[b]) {
+                bh_words(vm + b * 256, h);
+                bh_keep(b, h);
+            }
+            kb_bh[s][0] = blk_h0[b];
+            kb_bh[s][1] = blk_h1[b];
+        }
+    kb_e[kb_n].psm = trx.psm; kb_e[kb_n].bp = trx.bp; kb_e[kb_n].bw = trx.bw;
+    kb_e[kb_n].x = trx.x0; kb_e[kb_n].y = trx.y0; kb_e[kb_n].w = trx.w; kb_e[kb_n].h = trx.h;
+    kb_e[kb_n].hs[0] = hs[0]; kb_e[kb_n].hs[1] = hs[1];
+    kb_e[kb_n].first = kb_used;
+    kb_e[kb_n].n = n;
+    kb_e[kb_n].next = kb_head[hs[0] & (KB_ENTS - 1)];
+    kb_head[hs[0] & (KB_ENTS - 1)] = ++kb_n;
+    kb_used = s;
+    kh1_gsmem_kb_keeps++;
+}
+
+/* a kept block's 256 bytes into d: nonzero when any stored byte changed */
+static u32 kb_put(u8 *d, const u8 *s) {
+#if defined(__ARM_NEON)
+    uint8x16_t diff = vdupq_n_u8(0), v;
+    uint32x2_t m;
+    u32 i;
+    for (i = 0; i < 256; i += 16) {
+        v = vld1q_u8(s + i);
+        diff = vorrq_u8(diff, veorq_u8(vld1q_u8(d + i), v));
+        vst1q_u8(d + i, v);
+    }
+    m = vorr_u32(vget_low_u32(vreinterpretq_u32_u8(diff)), vget_high_u32(vreinterpretq_u32_u8(diff)));
+    m = vpmax_u32(m, m);
+    return vget_lane_u32(m, 0);
+#else
+    u32 i, a, b, ch = 0;
+    for (i = 0; i < 256; i += 4) {
+        __builtin_memcpy(&a, d + i, 4);
+        __builtin_memcpy(&b, s + i, 4);
+        ch |= a ^ b;
+        __builtin_memcpy(d + i, &b, 4);
+    }
+    return ch;
+#endif
+}
+
+/* the whole upload in progress (src, bytes) from the kept blocks when they are its bytes': 1 when done, its counts,
+ * position and at_key entry as kh1_gsmem_image then kh1_gsmem_image_kept leave them; 0 to store it */
+static int kb_try(const void *src, u32 bytes) {
+    const u32 *hs;
+    u32 i, k = (u32)trx.key, moved = 0;
+    int e;
+    if (only_on || !kb_ok(bytes)) return 0;
+    hs = src_hash(src, bytes);
+    if ((e = kb_find(hs)) < 0) {
+        kh1_gsmem_kb_misses++;
+        return 0;
+    }
+    seq++; /* the upload's one piece (kh1_gsmem_image's) */
+    for (i = 0; i < kb_e[e].n; i++) {
+        u32 s = kb_e[e].first + i, b = kb_b[s], pg = b >> 5 & 511, ch;
+        if (i + 2 < kb_e[e].n) { /* two blocks ahead: the kept bytes and where they go */
+            __builtin_prefetch(kb_pool[s + 2]);
+            __builtin_prefetch(kb_pool[s + 2] + 128);
+            __builtin_prefetch(vm + kb_b[s + 2] * 256, 1);
+            __builtin_prefetch(vm + kb_b[s + 2] * 256 + 128, 1);
+        }
+        /* a block already holding the bytes (its hash known and the same) is left alone */
+        ch = !(blk_hok[b] && blk_h0[b] == kb_bh[s][0] && blk_h1[b] == kb_bh[s][1]) && kb_put(vm + b * 256, kb_pool[s]);
+        if (ch) {
+            page_seq[pg] = seq;
+            STORED(b);
+        } else {
+            kh1_gsmem_kb_same++;
+        }
+        blk_h0[b] = kb_bh[s][0];
+        blk_h1[b] = kb_bh[s][1];
+        blk_hok[b] = 1;
+        if (ch || page_drawn[pg]) {
+            page_drawn[pg] = 0;
+            moved = 1;
+        }
+    }
+    marks += moved;
+    st.pixels += trx.w * trx.h;
+    if (trx.log) trx.log->pixels += trx.w * trx.h;
+    trx.ai = trx.w * trx.h;
+    trx.active = 0;
+    trx.x = trx.x0;
+    trx.y = trx.y0 + trx.h;
+    at_key[k].dlen = bytes;
+    at_key[k].nob = 0;
+    at_key[k].hk = 1;
+    at_key[k].hs[0] = hs[0];
+    at_key[k].hs[1] = hs[1];
+    at_key[k].gen = kh1_gsmem_image_gen;
+    at_key[k].stamp = seq;
+    seq++;
+    trx.key = -1;
+    kh1_gsmem_kb_hits++;
+    kh1_gsmem_kb_blocks += kb_e[e].n;
     return 1;
 }
 

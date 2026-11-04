@@ -2344,3 +2344,49 @@ the T8 stores, the same-bytes compare and kh1_gsmem_image_kept's copy of every p
 the CLUT loads (~90 ms). A next step would be to remember each streamed texture's stored blocks by its bytes, so an
 upload of a texture seen before copies those blocks instead of storing it again, or to let the texture cache take
 the source bytes' hash as the key and leave GS memory to be written only when something reads it as memory.
+
+## Streamed textures' blocks kept by their bytes (2026-11-04)
+
+After band_t4 (PR #235) Select World ran at ~19.8 pictures/s on hardware, still GS-worker bound: the same 22 textures
+go through the slot at DBP 0x3600 two to four times a picture (A, B, A), so the same-bytes skip never applies and
+every upload stored every pixel again.
+
+**The change** (host/null/gsmem.c `kb_*`, the stored-block cache). An upload whose rectangle is whole blocks (CT32 /
+Z32 8 x 8, T8 16 x 16, T4 32 x 16, every block's pixels all inside it: checked a pixel at a time once per at_key
+entry, `kb_ok`) leaves those blocks holding bytes that depend on its source bytes alone. So:
+
+- Its source bytes are known by a 64-bit hash (`kb_hash`: eight lanes of `rotl((h ^ w) * k, 15)`, NEON 32 bytes a
+  step, the byte count folded in). For such rectangles at_key keeps the hash (`hk`, `hs`) instead of copying the
+  bytes into same_pool, and kh1_gsmem_image_same compares hashes.
+- After a store, the blocks it left are copied into a 2 MiB pool (`kb_pool`, 8,192 blocks, 1,024 entries) under
+  the rectangle and the hash, from the **second** upload of those bytes on (`kb_seen`), since most one-off uploads
+  never come back. The pool starts again when full.
+- The same bytes into the same rectangle again (`kb_try`, from kh1_gsmem_image_same when the plain same-bytes skip
+  fails) copy the kept blocks in. Each block's stamp, version, drawn bits and content hash (blk_h0 / blk_h1, so the
+  texture cache's signature hits need no lazy hashing) end as band_mark leaves them; a block whose known hash already
+  matches is left alone. The at_key entry then holds that hash, as kh1_gsmem_image_kept would leave it.
+
+config.txt `texblk=0` (host `KH1_HOST_TEXBLK=0`) turns it all off. The Vita watchdog logs a `texblk=` line a window:
+uploads from kept blocks, blocks copied, misses, entries kept, pool resets, and (second build) the image pieces' time
+split into from-cache, other same-bytes skips and real stores (dmawalk.c `kh1_dma_img_kb_*`, `kh1_dma_img_same_*`).
+
+**Checks.** tests/host/gsfast_test.c streams eight textures through two slots (CT32 / Z32 / T8 / T4, one slot
+misaligned in some runs) with draws, pixel writes and new bytes in between, cache on vs off: pixels, drawn bits,
+stamps, targets, content signatures and versions agree after every few ops (both the NEON and the plain C forms, run
+natively on an arm64 Mac with clang). It fails with a byte of a copied block flipped, or with the drawn bits left set.
+Host A/B (wm_en.txt to frame 6,700, KH1_HOST_TEXDUMP): the 1,012 textures drawn are byte-identical both ways; 111,913
+uploads came from kept blocks, 168 entries kept, one pool reset.
+
+**Hardware** (hand-played, save -> Gummi Ship -> Select World):
+
+| Select World | band_t4 (PR #235) | texblk=1 |
+| --- | --- | --- |
+| Pictures/s | ~19.8 | **~24.5** (23.7-25.5 over 30 windows) |
+| Image pieces a window | 52 MB in 1,485 ms | 67.6 MB in ~1,415 ms |
+| Uploads from kept blocks a window | - | ~6,000 (~207,000 blocks), ~210 misses, no pool resets |
+| The game's wait for the GS worker | ~810 ms | ~880 ms (the game makes more pictures) |
+
+The GS worker is still the limit (~2.07 s busy, w_block ~1.95 s): the image pieces cost about as much per window as
+before though most are now 256-byte block copies, about 220 us an upload of ~9 KB. The second build's time split and
+prefetching (the source is written by the game thread on another core) are there to say whether that is the hash
+reading the ring, the copies, or the ~1,100 pieces still stored.
