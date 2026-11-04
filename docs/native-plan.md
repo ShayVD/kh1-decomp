@@ -1017,6 +1017,22 @@ copy) and the frame-start flush of CPU uploads into the slot capture and off-scr
 Making natvb's memory cached instead was rejected: the GPU then needs a cache clean after each entry, and the
 user-mode calls for that (sceKernelSyncVMDomain) are for VM blocks, with nothing in Vita3K to show a missed clean.
 
+**The frame-start flush, one clock read a flush** (gxm.c pend_flush_sel, 2026-11-04): the flush read
+sceKernelGetProcessTimeWide twice for every block it wrote (for the `uploads into targets written by the CPU` line), and
+a read costs ~0.68 us on the Vita (`kh1-vita: clock:`), so ~1.4 us of each block's ~6 us was the timer. It now reads the
+clock once after the flush's wait and once at its end. Vita, dive_en.txt to 23,000, the last 24 windows: 6.09 and 5.58 us
+a block before (PR 230's two runs) -> 4.48 and 4.49 us (two runs), so the frame-start flush ~346 -> ~240 ms a window at
+the fights' ~60-70 K blocks (their count varies 49-69 K between runs). GPU thread 1,957 -> 1,758 ms and 22.2 -> 23.5
+pictures/s, but both are inside the run-to-run noise. Host GXM hashes identical (dive_en.txt to 6,000).
+
+**The stores are not the price**: gxm_init now logs the CPU's store rate in 32-byte runs (`kh1-gxm: CPU stores in 32-byte
+runs:`): CDRAM ~640 MB/s, LPDDR uncached ~860, cached ~890. A block's 256 bytes into CDRAM is ~0.4 us of pend_write's
+~4.5. Putting the slot capture and the off-screen buffer in LPDDR (tried as `pendlp=1`) changed nothing measurable (4.48
+against 4.49 us a block) and was dropped. The rest (~4 us a block: the snapshot's 256-byte read, 64 conversions, the
+pend_list walk over pend_own / pend_mask / pend_24) needs a sampled split on the Vita before the next change; skipping
+blocks whose words and pixels are unchanged needs to know which pixels the target's scenes drew (the slot capture is
+drawn twice every fight frame).
+
 ## Beyond speed: the rest of the game native (added 2026-11-02)
 
 Stages 0-9 make the Dive fast. They do not make the whole game run: some of it still has no native code, and
