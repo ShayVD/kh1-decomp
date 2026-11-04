@@ -2280,7 +2280,7 @@ vu1.c's nat_check (every VF / VI, ACC, Q / I / MAC / clip, VU memory, pairs, cyc
 the first fields that differ, `-s` the batches' paths (translation only), `-t` both forms' qemu time. It needs
 out/gen's vu1_tr.c (a copy with only P100-P104 builds in ~80 s instead of ~10 min) and the dumps: neither is
 committed. Every 97th run to frame 7,450: P100 461 / 461 and P101 197 / 197 batch runs identical (the other 164 are
-the set-up runs from 000); qemu time native / translated ~62-71% (P100) and ~46-74% (P101), noisy, and qemu is not
+the set-up runs from 000); every 31st run from Select World to frame 7,450: P100 1,465 and P101 632 batch runs identical; qemu time native / translated ~62-71% (P100) and ~46-74% (P101), noisy, and qemu is not
 a Vita (P18 was 67% under qemu, -36% on hardware).
 
 On the map ~30-40% of C0's pairs are batches that reach the polygon clipper, so the clipping path is worth having
