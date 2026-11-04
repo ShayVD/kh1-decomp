@@ -660,6 +660,11 @@ int main(int argc, char **argv) {
             extern int kh1_pipes_nat_span;
             kh1_pipes_nat_span = atoi(getenv("KH1_HOST_NATSPAN"));
         }
+        if (getenv("KH1_HOST_NATINPLACE")) { /* 2026-11-04: 0 r_nat_dir copies the records into nat_op (pipes.c) */
+            extern int kh1_pipes_nat_inplace;
+            kh1_pipes_nat_inplace = atoi(getenv("KH1_HOST_NATINPLACE"));
+        }
+        if (getenv("KH1_HOST_NATPF")) kh1_nat_prefetch = atoi(getenv("KH1_HOST_NATPF")); /* 2026-11-04: natdraw.c */
         if (getenv("KH1_HOST_NATJOIN")) kh1_cmd_natjoin = atoi(getenv("KH1_HOST_NATJOIN")); /* 2026-11-01: cmdbuf.c nat_join */
         if (getenv("KH1_HOST_NATVBJOIN")) kh1_cmd_natvbjoin = atoi(getenv("KH1_HOST_NATVBJOIN")); /* 2026-11-02: vb_join */
         if (getenv("KH1_HOST_NATVBBULK")) kh1_cmd_natvbbulk = atoi(getenv("KH1_HOST_NATVBBULK")); /* 2026-11-03 */

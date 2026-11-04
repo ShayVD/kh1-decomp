@@ -107,6 +107,11 @@
  *                             draw's (cmdbuf.c vb_join; 32-bit indices into natvb's memory, the same triangles)
  *       natvbbulk=0           with natvbjoin on, a join reads the cached run's indices one by one from natvb's uncached
  *                             memory (as before 2026-11-03); 1, the default: copied out in blocks first (cmdbuf.c)
+ *       natinplace=0          with natdirect on, the GPU thread copies each payload's records into its op before
+ *                             listing them (as before 2026-11-04); 1, the default: read where they are in the pool
+ *                             (pipes.c r_nat_dir, the same ops and draws)
+ *       natpf=0               the native triangles' listing without its prefetch of the records ahead (natdraw.c;
+ *                             1, the default)
  *       natvbhome=0           every natvb entry's matrices at u_m[0], so cached runs never join (1, the default: each
  *                             new entry's after the last one's, natdraw.c)
  *       hoist=0               keep the game's pass order (2026-10-31; 1, the default: passes that split a scene and
@@ -1017,6 +1022,8 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
         else if (strcmp(line, "natskin") == 0) kh1_vu1_nat_skin = atoi(v);
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
+        else if (strcmp(line, "natinplace") == 0) { extern int kh1_pipes_nat_inplace; kh1_pipes_nat_inplace = atoi(v); }
+        else if (strcmp(line, "natpf") == 0) kh1_nat_prefetch = atoi(v);
         else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
         else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
         else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);

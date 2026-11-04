@@ -1017,6 +1017,30 @@ copy) and the frame-start flush of CPU uploads into the slot capture and off-scr
 Making natvb's memory cached instead was rejected: the GPU then needs a cache clean after each entry, and the
 user-mode calls for that (sceKernelSyncVMDomain) are for VM blocks, with nothing in Vita3K to show a missed clean.
 
+**Records read in place** (pipes.c r_nat_dir / r_native_op, config natinplace=0 / host KH1_HOST_NATINPLACE=0 for the
+old path, 4 Nov): with natdirect the GPU thread used to copy every record of a payload into nat_op (r_nat_rec) and
+then list its triangles from there. Now an op keeps its records as runs (NatSeg: where they are in the pool, how
+many, and a joined P13 run's matrix offset, which r_nat_rec used to add into the copy and kh1_nat_tris_at /
+kh1_nat_tris_skin_at now add as they list). Only the op's 2-qword header and its matrices are still copied (the joins
+compare and append to them). nat_crq still counts the qwords a copy would have taken, so every op ends exactly where
+it did and the draws are the same. The pool is freed up to a payload only after the op that reads it is drawn: an
+open op holds at most NAT_QW (4096) qwords of records out of the 4 MB pool, and the worker always ends it
+(r_nat_dend) before any other recording op, so the game thread can't end up waiting on it.
+
+Vita A/B (fight_en.txt, frames 18k-23k, two runs each, `recording's native draws:` ms a window):
+
+| | assembly | triangles' listing | GPU thread busy | pictures/s |
+| --- | --- | --- | --- | --- |
+| natinplace=0 (the copy) | 307 | 109 | 1827 | 23.1-23.2 |
+| natinplace=1, natpf=0 | 182-189 | 182-205 | 1784-1820 | 23.4-23.5 |
+| natinplace=1, natpf=1 (the default) | 187-189 | 106-115 | 1735-1766 | 23.8-23.9 |
+
+The copy was not the cost: reading what the game thread just wrote on another core is (each new cache line a miss).
+Without the copy those misses moved into the triangles' listing; natdraw.c's prefetch (natpf, 512 bytes ahead of
+the vertex being converted) hides them there. What is left of "assembly" (~185 ms) is mostly r_nat_dir's own walk
+over the records' first qwords (a miss each) to count their qwords for the op's ends. Next: skip that walk for a
+payload whose records all fit in the open op (its records' length is in its header), or prefetch it.
+
 ## Beyond speed: the rest of the game native (added 2026-11-02)
 
 Stages 0-9 make the Dive fast. They do not make the whole game run: some of it still has no native code, and
