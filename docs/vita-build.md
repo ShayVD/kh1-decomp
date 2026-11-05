@@ -33,7 +33,7 @@ out/host/kh1-host does. It is build output for your own Vita: never share it, ne
 ## Build
 
 1. vitasdk: on a Mac / Linux desktop the usual install (https://vitasdk.org, vdpm), or in a container
-   `tools/vita/get_vitasdk.sh` (the vitasdk/vitasdk image's two toolchain layers from mirror.gcr.io,
+   `third_party/vita-port-kit/vita/tools/get_vitasdk.sh` (the vitasdk/vitasdk image's two toolchain layers from mirror.gcr.io,
    sha256-checked, channel 2026.08, gcc 15.2; no docker daemon needed). `export VITASDK=...`
    (default /usr/local/vitasdk).
 2. The PS2 build first (`make`: the data pieces and out/gen/symbols.ld), then `make vita`.

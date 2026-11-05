@@ -76,7 +76,9 @@ NO_LTO = {("port", "memmap.c")}
 def platform_opt(d, f):
     return [x for x in PLATFORM_OPT if x not in LTO] if (d, f) in NO_LTO else PLATFORM_OPT
 def vita_platform_flags(d, f):
-    return census_platform_flags(d, f) + platform_opt(d, f) + (["-fshort-enums"] if d == "vita" else [])
+    # the kit's modules (third_party/vita-port-kit) are vitasdk code like host/vita's: the SDK's enums
+    sdk = d == "vita" or d.startswith("third_party/")
+    return census_platform_flags(d, f) + platform_opt(d, f) + (["-fshort-enums"] if sdk else [])
 def armlinux_platform_flags(d, f):
     return census_platform_flags(d, f) + platform_opt(d, f)
 
@@ -89,7 +91,8 @@ CFLAGS_GXM = ["-std=gnu99", "-w", "-DKH1_HOST", "-fno-pic", "-fno-stack-protecto
 TARGETS = {
     "vita": dict(
         out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA", "-fno-short-enums"],
-        dirs=[("null", ("main.c",)), ("port", ()), ("vita", ()), (census.KIT_COSTACK, ()), (census.KIT + "ucontext", ())],
+        dirs=[("null", ("main.c",)), ("port", ()), ("vita", ()), (census.KIT_COSTACK, ()), (census.KIT + "ucontext", ())]
+        + [(census.KIT + m, ()) for m in ("config", "log", "clocks", "watchdog", "procparam")],
         link=["-Wl,-q", "-Wl,--no-warn-rwx-segments", "-Wl,--no-enum-size-warning"],
         libs=["-lvita2d", "-lvitashark", "-lSceShaccCgExt", "-lSceShaccCg_stub", "-ltaihen_stub", "-lSceKernelDmacMgr_stub", "-lSceDisplay_stub", "-lSceGxm_stub", "-lSceSysmodule_stub", "-lSceCommonDialog_stub",
               "-lSceAppMgr_stub", "-lScePgf_stub", "-lSceAudio_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lSceKernelModulemgr_stub", "-lScePower_stub", "-lm"]),

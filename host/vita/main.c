@@ -180,6 +180,12 @@
 #include <string.h>
 #include "common.h"
 #include "platform/target.h"
+/* vita-port-kit (docs/vita-port-kit.md) */
+#include "../../third_party/vita-port-kit/vita/runtime/config/vpk_config.h"
+#include "../../third_party/vita-port-kit/vita/runtime/log/vpk_log.h"
+#include "../../third_party/vita-port-kit/vita/runtime/clocks/vpk_clocks.h"
+#include "../../third_party/vita-port-kit/vita/runtime/watchdog/vpk_watchdog.h"
+#include "../../third_party/vita-port-kit/vita/runtime/procparam/vpk_procparam.h"
 /* host/vita/audio.c: the sound */
 extern int kh1_vita_snd, kh1_vita_snd_core, kh1_vita_snd_prio;
 extern u32 kh1_vita_snd_us, kh1_vita_snd_tick_us, kh1_vita_snd_bufs, kh1_vita_snd_under, kh1_vita_snd_queued;
@@ -210,7 +216,6 @@ void kh1_null_image(int seg, unsigned long lo, u32 size); /* host/null/plat_null
 /* both are read by the SDK by name (vita-elf-create's process parameters, newlib's sbrk), never by our
  * code: `used` keeps LTO from dropping them (without it the main thread got the default 256 KiB stack
  * and the app stopped at launch, 2026-10-30) */
-__attribute__((used)) int _newlib_heap_size_user = 160 * 1024 * 1024;
 /* session 137v: 4 MiB for the main thread's own frames, the rest the coroutines' stacks (platform/costack.h:
  * the kernel refuses a system call made on a stack outside the thread's).  Dive to the Heart makes two
  * (0x40000 each); a 52 MiB stack stopped the app at its start on hardware (C1-2681-7, no log).
@@ -219,7 +224,7 @@ __attribute__((used)) int _newlib_heap_size_user = 160 * 1024 * 1024;
  * 4 MiB pool; the next was malloc'd and the kernel stopped the app on hardware ~700 frames into gb.x
  * (stop reason 0x10006, Vita3K ran on).  12 MiB holds 48 */
 #define MAIN_OWN (4 * 1024 * 1024)
-__attribute__((used)) unsigned int sceUserMainThreadStackSize = 16 * 1024 * 1024;
+VPK_PROCESS_PARAMS(160 * 1024 * 1024, 16 * 1024 * 1024); /* newlib's heap, the main thread's stack */
 static u32 costack_bytes;
 
 const char kh1_vita_dir[] = "ux0:data/kh1";
@@ -262,65 +267,14 @@ static int strip_always;  /* config.txt's strip= */
  * commands (gxm.c's submit included), the present, and the slowest frame (vblank to vblank, its wait left
  * out) of each 2 s */
 static volatile u32 us_record, us_frame, us_draw, us_worst;
-static SceUID log_fd = -1;
-
-/* the log goes straight to sceIoWrite (a FILE from funopen, unbuffered): newlib's own fopen'd log
- * stayed empty in Vita3K through two runs */
-/* session 143: every write to the log is one sceIoWrite, timed (the watchdog's "log:" line) */
-static volatile u32 us_log, log_writes;
-static void log_out(const void *buf, int n) {
-    u32 t0;
-    if (log_fd < 0 || n <= 0) return;
-    t0 = (u32)sceKernelGetProcessTimeWide();
-    sceIoWrite(log_fd, buf, n);
-    us_log += (u32)sceKernelGetProcessTimeWide() - t0;
-    log_writes++;
-}
-
-static int log_write(void *cookie, const char *buf, int n) {
-    (void)cookie;
-    log_out(buf, n);
-    return n;
-}
-
-/* this file's own lines go straight to the log too, whatever stdio does */
+/* the log (the kit's vpk_log: one sceIoWrite a line, stdout / stderr pointed at it; its vpk_log_stdio.c is linked,
+ * so the game's and host/null's printf / puts land there too) */
 #define vlog kh1_vita_log
 void kh1_vita_log(const char *fmt, ...) {
-    char buf[4608]; /* session 136: room for a shader's text (gxm.c) */
     va_list ap;
-    int n;
     va_start(ap, fmt);
-    n = vsnprintf(buf, sizeof buf, fmt, ap);
+    vpk_logv(fmt, ap);
     va_end(ap);
-    if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
-    log_out(buf, n);
-}
-
-/* session 137v: the game's and host/null's printf straight into the log. Pointing newlib's stdout at the
- * log reached neither its global nor its per-thread stream on the Vita (no "kh1-host:" line ever
- * showed), so these take the place of libc's own (gcc turns a bare printf("...\n") into puts) */
-int vprintf(const char *fmt, va_list ap) {
-    char buf[1024];
-    int n = vsnprintf(buf, sizeof buf, fmt, ap);
-    if (n > (int)sizeof buf - 1) n = sizeof buf - 1;
-    log_out(buf, n);
-    return n;
-}
-
-int printf(const char *fmt, ...) {
-    va_list ap;
-    int n;
-    va_start(ap, fmt);
-    n = vprintf(fmt, ap);
-    va_end(ap);
-    return n;
-}
-
-int puts(const char *s) {
-    int n = (int)strlen(s);
-    log_out(s, n);
-    log_out("\n", 1);
-    return n + 1;
 }
 
 unsigned long kh1_host_frame(void) { return frames; }
@@ -512,33 +466,10 @@ extern volatile u32 kh1_vita_pend_us, kh1_vita_pend_us_start, kh1_vita_pend_rt[8
 extern volatile u32 kh1_vita_scene_waits; /* host/vita/gxm.c, session 151 */
 /* native-plan.md stage 0: the port's threads, each one's CPU time per window (the kernel's run clock, so time
  * another thread took from it is not counted), the core it last ran on, and how often it was preempted */
-#define KH1_THREADS_MAX 12
-static struct { SceUID uid; const char *name; SceUInt64 run; u32 pre; } kh1_threads[KH1_THREADS_MAX];
-static int kh1_nthreads;
-void kh1_vita_thread_note(int uid, const char *name) {
-    if (uid < 0 || kh1_nthreads >= KH1_THREADS_MAX) return;
-    kh1_threads[kh1_nthreads].uid = uid;
-    kh1_threads[kh1_nthreads++].name = name;
-}
+void kh1_vita_thread_note(int uid, const char *name) { vpk_thread_note(uid, name); } /* the kit's watchdog module */
 static void threads_line(void) {
     char line[640];
-    int i, len = snprintf(line, sizeof line, "kh1-vita: threads:");
-    for (i = 0; i < kh1_nthreads && len < (int)sizeof line - 80; i++) {
-        SceKernelThreadInfo ti;
-        SceUInt64 run;
-        u32 pre;
-        memset(&ti, 0, sizeof ti);
-        ti.size = sizeof ti;
-        if (sceKernelGetThreadInfo(kh1_threads[i].uid, &ti) < 0) continue;
-        run = (SceUInt64)ti.runClocks;
-        pre = ti.threadPreemptCount + ti.intrPreemptCount;
-        len += snprintf(line + len, sizeof line - len, "%s %s %u ms (core %d, mask %x, prio %x, %u preempted)",
-                        i ? "," : "", kh1_threads[i].name, (u32)((run - kh1_threads[i].run) / 1000),
-                        (int)ti.lastExecutedCpuId, (u32)ti.currentCpuAffinityMask, (u32)ti.currentPriority,
-                        pre - kh1_threads[i].pre);
-        kh1_threads[i].run = run;
-        kh1_threads[i].pre = pre;
-    }
+    vpk_threads_line(line, sizeof line, "kh1-vita: threads:");
     vlog("%s\n", line);
 }
 
@@ -994,9 +925,9 @@ static int watchdog(SceSize args, void *argp) {
          * with a problem, whose tag lists only the first few print (dmawalk.h) */
         threads_line();
         vlog("kh1-vita: log: %u writes, %u ms in them; %u bad DMA sends (%u so far, the first %d printed)\n",
-             log_writes - logn0, (us_log - log0) / 1000, kh1_dma_bad_sends - bad0, kh1_dma_bad_sends, KH1_DMA_BAD_SHOWN);
-        log0 = us_log;
-        logn0 = log_writes;
+             vpk_log_writes - logn0, (vpk_log_us - log0) / 1000, kh1_dma_bad_sends - bad0, kh1_dma_bad_sends, KH1_DMA_BAD_SHOWN);
+        log0 = vpk_log_us;
+        logn0 = vpk_log_writes;
         bad0 = kh1_dma_bad_sends;
         at0 = (u32)sceKernelGetProcessTimeWide();
         gbusy0 = kh1_gsq_us_busy;
@@ -1033,96 +964,97 @@ static int watchdog(SceSize args, void *argp) {
 static char mc_dir[128];
 extern const char *kh1_mc_root[2];
 
-static void config(char *iso, int n) {
-    char path[128], line[256];
-    FILE *f;
-    snprintf(path, sizeof path, "%s/config.txt", kh1_vita_dir);
-    f = fopen(path, "r");
-    if (!f) return;
-    while (fgets(line, sizeof line, f)) {
-        char *v = strchr(line, '='), *e;
-        if (line[0] == '#' || !v) continue;
-        *v++ = 0;
-        for (e = v + strlen(v); e > v && (e[-1] == '\n' || e[-1] == '\r' || e[-1] == ' '); e--) e[-1] = 0;
-        if (strcmp(line, "iso") == 0) snprintf(iso, n, "%s", v);
-        else if (strcmp(line, "title") == 0) title_state = atoi(v);
-        else if (strcmp(line, "trace") == 0) kh1_host_trace = atoi(v);
-        else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
-        else if (strcmp(line, "padlog") == 0) {
-            padlog_lo = strtoul(v, &e, 0);
-            padlog_hi = *e == '-' ? strtoul(e + 1, 0, 0) : padlog_lo;
-        }
-        else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
-        else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
-        else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
-        else if (strcmp(line, "vu1nat") == 0) kh1_vu1_native = atoi(v);
-        else if (strcmp(line, "vu1trovl") == 0) kh1_vu1_tr_ovl = atoi(v);
-        else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
-        else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
-        else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
-        else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
-        else if (strcmp(line, "natgummi") == 0) kh1_vu1_draw_gum = atoi(v);
-        else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
-        else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
-        else if (strcmp(line, "natchain") == 0) kh1_vu1_natchain = atoi(v) ? 1 : 0;
-        else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
-        else if (strcmp(line, "natskin") == 0) kh1_vu1_nat_skin = atoi(v);
-        else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
-        else if (strcmp(line, "natinplace") == 0) { extern int kh1_pipes_nat_inplace; kh1_pipes_nat_inplace = atoi(v); }
-        else if (strcmp(line, "natwhole") == 0) { extern int kh1_pipes_nat_whole; kh1_pipes_nat_whole = atoi(v); }
-        else if (strcmp(line, "natpf") == 0) kh1_nat_prefetch = atoi(v);
-        else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
-        else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
-        else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);
-        else if (strcmp(line, "clutskip") == 0) { extern int kh1_pipes_clutskip; kh1_pipes_clutskip = atoi(v); }
-        else if (strcmp(line, "texskip") == 0) { extern int kh1_pipes_texskip; kh1_pipes_texskip = atoi(v); }
-        else if (strcmp(line, "texver") == 0) { extern int kh1_pipes_texver; kh1_pipes_texver = atoi(v); }
-        else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
-        else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
-        else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);
-        else if (strcmp(line, "natvbmb") == 0) kh1_vita_natvb_mb = (u32)atoi(v);
-        else if (strcmp(line, "natvbjoin") == 0) kh1_cmd_natvbjoin = atoi(v);
-        else if (strcmp(line, "natvbbulk") == 0) kh1_cmd_natvbbulk = atoi(v);
-        else if (strcmp(line, "natvbcheck") == 0) { extern int kh1_cmd_natvbcheck; kh1_cmd_natvbcheck = atoi(v); }
-        else if (strcmp(line, "natvbhome") == 0) kh1_natvb_home = atoi(v);
-        else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
-        else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
-        else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
-        else if (strcmp(line, "pendgpu") == 0) kh1_vita_pendgpu = atoi(v);
-        else if (strcmp(line, "shot") == 0) { /* 2026-11-02: FIRST[,STEP[,COUNT]] pictures to PPMs (gxm.c shot) */
-            extern u32 kh1_vita_shot_first, kh1_vita_shot_step, kh1_vita_shot_count;
-            char *c = 0;
-            kh1_vita_shot_first = strtoul(v, &c, 0);
-            if (c && *c == ',') kh1_vita_shot_step = strtoul(c + 1, &c, 0);
-            if (c && *c == ',') kh1_vita_shot_count = strtoul(c + 1, &c, 0);
-        }
-        else if (strcmp(line, "pendfast") == 0) kh1_vita_pendfast = atoi(v);
-        else if (strcmp(line, "t4band") == 0) kh1_gsmem_t4band = atoi(v);
-        else if (strcmp(line, "texblk") == 0) kh1_gsmem_texblk = atoi(v);
-        else if (strcmp(line, "wdprio") == 0) wd_prio = atoi(v);
-        else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
-            static char pad[160];
-            snprintf(pad, sizeof pad, "%s", v);
-            kh1_vita_pad_script = pad;
-        }
-        else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
-        else if (strcmp(line, "mc") == 0) snprintf(mc_dir, sizeof mc_dir, "%s", v);
-        else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
-        else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
-        else if (strcmp(line, "gsq") == 0) use_gsq = atoi(v);
-        else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
-        else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
-        else if (strcmp(line, "recq") == 0) use_recq = atoi(v);
-        else if (strcmp(line, "recframe") == 0) kh1_pipes_rq_frame = atoi(v);
-        else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
-        else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
-        else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
-        else if (strcmp(line, "sndprio") == 0) kh1_vita_snd_prio = atoi(v);
-        else if (strcmp(line, "wide") == 0 || strcmp(line, "widescreen") == 0) wide = atoi(v);
-        else if (strcmp(line, "strip") == 0) strip_always = atoi(v);
-        else kh1_vita_menu_config(line, v); /* the mod menu's own keys (menu.c) */
+/* one key=value line of config.txt (the kit's vpk_config reads the file) */
+struct config_out { char *iso; int n; };
+static void config_key(char *line, char *v, void *user) {
+    struct config_out *o = user;
+    char *e;
+    if (strcmp(line, "iso") == 0) snprintf(o->iso, o->n, "%s", v);
+    else if (strcmp(line, "title") == 0) title_state = atoi(v);
+    else if (strcmp(line, "trace") == 0) kh1_host_trace = atoi(v);
+    else if (strcmp(line, "frames") == 0) max_frames = strtoul(v, 0, 0);
+    else if (strcmp(line, "padlog") == 0) {
+        padlog_lo = strtoul(v, &e, 0);
+        padlog_hi = *e == '-' ? strtoul(e + 1, 0, 0) : padlog_lo;
     }
-    fclose(f);
+    else if (strcmp(line, "gpu") == 0) use_gpu = atoi(v);
+    else if (strcmp(line, "vu1") == 0) kh1_dma_vu1 = atoi(v);
+    else if (strcmp(line, "vu1tr") == 0) kh1_vu1_tr = atoi(v);
+    else if (strcmp(line, "vu1nat") == 0) kh1_vu1_native = atoi(v);
+    else if (strcmp(line, "vu1trovl") == 0) kh1_vu1_tr_ovl = atoi(v);
+    else if (strcmp(line, "gsstrip") == 0) use_gsstrip = atoi(v);
+    else if (strcmp(line, "renderer") == 0) use_native = strcmp(v, "native") == 0;
+    else if (strcmp(line, "natcull") == 0) kh1_pipes_nat_cull = (u32)atoi(v);
+    else if (strcmp(line, "natp0") == 0) kh1_vu1_draw_p0 = atoi(v);
+    else if (strcmp(line, "natgummi") == 0) kh1_vu1_draw_gum = atoi(v);
+    else if (strcmp(line, "natp11") == 0) kh1_vu1_draw_p11 = atoi(v);
+    else if (strcmp(line, "natp10") == 0) kh1_vu1_draw_p10 = atoi(v);
+    else if (strcmp(line, "natchain") == 0) kh1_vu1_natchain = atoi(v) ? 1 : 0;
+    else if (strcmp(line, "natp13") == 0) kh1_vu1_draw_p13 = atoi(v);
+    else if (strcmp(line, "natskin") == 0) kh1_vu1_nat_skin = atoi(v);
+    else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
+    else if (strcmp(line, "natinplace") == 0) { extern int kh1_pipes_nat_inplace; kh1_pipes_nat_inplace = atoi(v); }
+    else if (strcmp(line, "natwhole") == 0) { extern int kh1_pipes_nat_whole; kh1_pipes_nat_whole = atoi(v); }
+    else if (strcmp(line, "natpf") == 0) kh1_nat_prefetch = atoi(v);
+    else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
+    else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);
+    else if (strcmp(line, "natdirect") == 0) kh1_dma_natdirect = atoi(v);
+    else if (strcmp(line, "clutskip") == 0) { extern int kh1_pipes_clutskip; kh1_pipes_clutskip = atoi(v); }
+    else if (strcmp(line, "texskip") == 0) { extern int kh1_pipes_texskip; kh1_pipes_texskip = atoi(v); }
+    else if (strcmp(line, "texver") == 0) { extern int kh1_pipes_texver; kh1_pipes_texver = atoi(v); }
+    else if (strcmp(line, "hoist") == 0) kh1_cmd_hoist = atoi(v);
+    else if (strcmp(line, "natjoin") == 0) kh1_cmd_natjoin = atoi(v);
+    else if (strcmp(line, "natvb") == 0) kh1_natvb = atoi(v);
+    else if (strcmp(line, "natvbmb") == 0) kh1_vita_natvb_mb = (u32)atoi(v);
+    else if (strcmp(line, "natvbjoin") == 0) kh1_cmd_natvbjoin = atoi(v);
+    else if (strcmp(line, "natvbbulk") == 0) kh1_cmd_natvbbulk = atoi(v);
+    else if (strcmp(line, "natvbcheck") == 0) { extern int kh1_cmd_natvbcheck; kh1_cmd_natvbcheck = atoi(v); }
+    else if (strcmp(line, "natvbhome") == 0) kh1_natvb_home = atoi(v);
+    else if (strcmp(line, "recfast") == 0) kh1_cmd_fastrot = kh1_nat_once = atoi(v);
+    else if (strcmp(line, "gputime") == 0) kh1_vita_gputime = atoi(v);
+    else if (strcmp(line, "present") == 0) kh1_vita_present_direct = atoi(v);
+    else if (strcmp(line, "pendgpu") == 0) kh1_vita_pendgpu = atoi(v);
+    else if (strcmp(line, "shot") == 0) { /* 2026-11-02: FIRST[,STEP[,COUNT]] pictures to PPMs (gxm.c shot) */
+        extern u32 kh1_vita_shot_first, kh1_vita_shot_step, kh1_vita_shot_count;
+        char *c = 0;
+        kh1_vita_shot_first = strtoul(v, &c, 0);
+        if (c && *c == ',') kh1_vita_shot_step = strtoul(c + 1, &c, 0);
+        if (c && *c == ',') kh1_vita_shot_count = strtoul(c + 1, &c, 0);
+    }
+    else if (strcmp(line, "pendfast") == 0) kh1_vita_pendfast = atoi(v);
+    else if (strcmp(line, "t4band") == 0) kh1_gsmem_t4band = atoi(v);
+    else if (strcmp(line, "texblk") == 0) kh1_gsmem_texblk = atoi(v);
+    else if (strcmp(line, "wdprio") == 0) wd_prio = atoi(v);
+    else if (strcmp(line, "pad") == 0) { /* session 137v: a host pad script (host/null/pad.c) */
+        static char pad[160];
+        snprintf(pad, sizeof pad, "%s", v);
+        kh1_vita_pad_script = pad;
+    }
+    else if (strcmp(line, "shacc_ext") == 0) kh1_vita_shacc_ext = atoi(v);
+    else if (strcmp(line, "mc") == 0) snprintf(mc_dir, sizeof mc_dir, "%s", v);
+    else if (strcmp(line, "shadertest") == 0) kh1_vita_shadertest = atoi(v);
+    else if (strcmp(line, "shacc_restart") == 0) kh1_vita_shacc_restart = atoi(v);
+    else if (strcmp(line, "gsq") == 0) use_gsq = atoi(v);
+    else if (strcmp(line, "gpuq") == 0) use_gpuq = atoi(v);
+    else if (strcmp(line, "latewait") == 0) late_wait = atoi(v);
+    else if (strcmp(line, "recq") == 0) use_recq = atoi(v);
+    else if (strcmp(line, "recframe") == 0) kh1_pipes_rq_frame = atoi(v);
+    else if (strcmp(line, "rcam") == 0) kh1_vita_rcam = atoi(v);
+    else if (strcmp(line, "snd") == 0) kh1_vita_snd = atoi(v);
+    else if (strcmp(line, "sndcore") == 0) kh1_vita_snd_core = atoi(v);
+    else if (strcmp(line, "sndprio") == 0) kh1_vita_snd_prio = atoi(v);
+    else if (strcmp(line, "wide") == 0 || strcmp(line, "widescreen") == 0) wide = atoi(v);
+    else if (strcmp(line, "strip") == 0) strip_always = atoi(v);
+    else kh1_vita_menu_config(line, v); /* the mod menu's own keys (menu.c) */
+}
+
+static void config(char *iso, int n) {
+    char path[128];
+    struct config_out o;
+    o.iso = iso;
+    o.n = n;
+    snprintf(path, sizeof path, "%s/config.txt", kh1_vita_dir);
+    vpk_config_read(path, config_key, &o);
 }
 
 /* no disc image: a red screen until START, then exit */
@@ -1145,38 +1077,12 @@ int main(int argc, char **argv) {
         __asm__ volatile("vmsr fpscr, %0" : : "r"(fpscr | (1u << 24)));
     }
     kh1_vita_thread_note(sceKernelGetThreadId(), "game"); /* native-plan.md stage 0: the `threads:` line */
-    { /* the main thread's stack below its own MAIN_OWN: the coroutines' stacks */
-        SceKernelThreadInfo ti;
-        volatile u8 here;
-        memset(&ti, 0, sizeof ti);
-        ti.size = sizeof ti;
-        if (sceKernelGetThreadInfo(sceKernelGetThreadId(), &ti) >= 0 && ti.stack &&
-            (u8 *)&here - (u8 *)ti.stack > MAIN_OWN)
-            kh1_costack_pool(ti.stack, costack_bytes = (u32)((u8 *)&here - (u8 *)ti.stack) - MAIN_OWN);
-        /* session 147: the DMA walk owns all of it (3d-zk: a chain's data at 0x846a3c30, the main thread's own
-         * part, refused) */
-        if (ti.stack && ti.stackSize > 0) kh1_costack_stack(ti.stack, (u32)ti.stackSize);
-    }
+    /* the main thread's stack below its own MAIN_OWN: the coroutines' stacks; session 147: the DMA walk owns all of
+     * it (3d-zk: a chain's data at 0x846a3c30, the main thread's own part, refused): the kit's procparam module */
+    costack_bytes = vpk_main_stack_to_costack(MAIN_OWN);
     sceIoMkdir(kh1_vita_dir, 0777);
     snprintf(log, sizeof log, "%s/kh1.log", kh1_vita_dir);
-    sceIoRemove(log); /* session 136: Vita3K's open kept the last run's tail past this run's lines (no truncate) */
-    log_fd = sceIoOpen(log, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_TRUNC, 0777);
-    if (log_fd >= 0) {
-        FILE *f;
-        /* newlib sets the standard streams up at its first stdio call on them (__sinit), which
-         * would put the console's back over ours: make that happen first */
-        fflush(stdout);
-        fflush(stderr);
-        f = funopen(0, 0, log_write, 0, 0);
-        if (f) {
-            setvbuf(f, 0, _IONBF, 0);
-            stdout = f;
-            stderr = f;
-            _GLOBAL_REENT->_stdout = f;
-            _GLOBAL_REENT->_stderr = f;
-        }
-        sceIoWrite(log_fd, "kh1-vita: log open\n", 19);
-    }
+    vpk_log_open(log, "kh1-vita: log open\n");
     vlog("kh1-vita: kh1-decomp's first Vita build (docs/vita-build.md)\n");
     vlog("kh1-vita: %u KiB of the main thread's stack for the game's threads and tasks\n", costack_bytes >> 10);
     { /* 2026-11-03: the image's segments where the loader put them (plat_null.c's kh1_null_image: `end` is not
@@ -1196,13 +1102,10 @@ int main(int argc, char **argv) {
     /* session 137v (the real Vita's speed): an application starts at 333 MHz; the A9s at 444, the bus and
      * the GPU at 222 as other ports set them (Vita3K takes the calls and runs as fast either way) */
     {
-        int arm0 = scePowerGetArmClockFrequency();
-        scePowerSetArmClockFrequency(444);
-        scePowerSetBusClockFrequency(222);
-        scePowerSetGpuClockFrequency(222);
-        scePowerSetGpuXbarClockFrequency(166);
-        vlog("kh1-vita: clocks: ARM %d MHz (was %d), bus %d, GPU %d, GPU crossbar %d\n", scePowerGetArmClockFrequency(), arm0,
-             scePowerGetBusClockFrequency(), scePowerGetGpuClockFrequency(), scePowerGetGpuXbarClockFrequency());
+        VpkClocks c;
+        vpk_clocks_set(VPK_CLOCKS_MAX, &c);
+        vlog("kh1-vita: clocks: ARM %d MHz (was %d), bus %d, GPU %d, GPU crossbar %d\n", c.arm, c.arm_was, c.bus, c.gpu,
+             c.gpu_xbar);
     }
     if (kh1_vita_display_init(D_002A6890)) {
         vlog("kh1-vita: no framebuffer\n");
