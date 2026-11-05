@@ -3,7 +3,7 @@
 # vitasdk/vitasdk image's toolchain and package layers (linux/amd64, channel 2026.08, pinned by
 # digest), read from Docker Hub's Google mirror (mirror.gcr.io; Docker Hub itself rate-limits
 # shared addresses) and unpacked.  Each layer's sha256 is checked.  On a Mac or a desktop, the
-# usual vdpm install (https://vitasdk.org) is simpler; docs/vita-build.md.
+# usual vdpm install (https://vitasdk.org) is simpler. From kh1-decomp tools/vita/get_vitasdk.sh @ e1575e1a.
 #   tools/vita/get_vitasdk.sh            # then: export VITASDK=/usr/local/vitasdk
 set -euo pipefail
 
@@ -26,7 +26,8 @@ mkdir -p "$VITASDK"
 for d in "${LAYERS[@]}"; do
   echo "fetching layer ${d:0:12}"
   curl -fsSL -o "$tmp/$d.tgz" "$REG/v2/$IMAGE/blobs/sha256:$d"
-  echo "$d  $tmp/$d.tgz" | sha256sum -c --quiet
+  if command -v sha256sum > /dev/null; then echo "$d  $tmp/$d.tgz" | sha256sum -c --quiet
+  else echo "$d  $tmp/$d.tgz" | shasum -a 256 -c --quiet; fi
   # the layers hold usr/local/vitasdk/...: strip it to land in $VITASDK
   tar xzf "$tmp/$d.tgz" -C "$VITASDK" --strip-components=3 usr/local/vitasdk
   rm -f "$tmp/$d.tgz"

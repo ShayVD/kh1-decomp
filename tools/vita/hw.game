@@ -1,0 +1,27 @@
+# kh1-decomp's settings for vita-port-kit's hardware-run tools (third_party/vita-port-kit/vita/tools; the wrappers
+# tools/vita/hw_run.sh, hw_check.sh and hw_ftp.py set HW_GAME to this file). Sourced by bash; the plain KEY=VALUE
+# lines are also read by hw_ftp.py. Settings and hooks: third_party/vita-port-kit/vita/tools/hw.game.example.
+HW_TITLE_ID=KHDC00001
+HW_NAME="kh1-decomp"
+HW_DATA=ux0:data/kh1
+HW_LOG=kh1.log
+HW_STOP_RE='frames: stop'
+HW_VPK=out/vita/kh1-decomp.vpk
+HW_TIMEOUT=1800
+# No FTP while the game runs: polling vitacompanion 1.05's FTP every 10 s wedged it at frame ~900 (2026-11-02);
+# only a Vita restart brought it back. The Dive's 11,600 frames take ~5 min.
+HW_QUIET_S=360
+HW_POLL_S=30
+HW_PAD_NAME=hw-pad.txt
+
+hw_check_game() {
+  local d
+  d=$(v ls "$HW_DATA" 2>/dev/null)
+  if grep -qE ' kh1\.(iso|bin)$' <<< "$d"; then ok "disc: $(grep -oE 'kh1\.(iso|bin)$' <<< "$d" | head -1) in $HW_DATA"
+  else note "disc: no kh1.iso / kh1.bin in $HW_DATA (config.txt's iso= may point elsewhere)"; fi
+  if v size ur0:data/libshacccg.suprx > /dev/null 2>&1 || v size ur0:data/external/libshacccg.suprx > /dev/null 2>&1; then
+    ok "ur0:data/libshacccg.suprx (the GPU renderer's shader compiler)"
+  else
+    note "no ur0:data/libshacccg.suprx: shaders only from the cache in $HW_DATA/shaders, else the software picture"
+  fi
+}
