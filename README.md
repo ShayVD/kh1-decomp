@@ -13,7 +13,7 @@ Target: **Kingdom Hearts Final Mix**, main executable `SLPS_251.98`
 (main ELF plus the 12 EE overlays), not how playable anything is; the native Vita port
 is further behind. Details by phase: [docs/progress.md](docs/progress.md).
 `docs/progress.svg` is generated from committed files by `make progress-badge`, and the
-`progress` workflow commits it on every push to `main`, with no game data or secrets.
+`progress` workflow commits it when a push to `main` changes the numbers, with no game data or secrets.
 
 ## No game data in this repository
 

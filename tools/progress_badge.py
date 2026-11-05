@@ -4,7 +4,7 @@
   python3 tools/progress_badge.py           # or `make progress-badge`
 
 No game data and no compiler, so it runs in CI without KH1_ELF_URL (.github/workflows/
-progress.yml, every push to main). It reads the same facts `make progress` and
+progress.yml, on pushes to main). It reads the same facts `make progress` and
 `make ovl-progress` measure against the ELF, under the rule that nothing non-matching is
 ever built (a non-matching function fails `make verify` and lives in nonmatchings/):
 
