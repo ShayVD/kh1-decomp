@@ -14,6 +14,7 @@ commit. Do not edit those files here: change the kit, then re-vendor from a kit 
 | `vita/runtime/config` | main.c config()'s line reader | main.c (`config_key` keeps every key) | as above |
 | `vita/runtime/clocks` | main.c's clock block | main.c | as above |
 | `vita/runtime/watchdog` | main.c threads_line, kh1_vita_thread_note's table | main.c (the watchdog loop itself stays: its window is all game counters) | as above |
+| `vita/runtime/audioout` | host/vita/audio.c's ring (ring / ring_head / ring_tail) and output thread (out_thread, the port and its volume) | audio.c: the mixer pushes into the plain ring (`rate_control 0`) while its level is under the lead; `vpk_audio_out` runs the output thread with `out_pulled` counting short buffers and waking the mixer | tools/vita/build.py: the kit's runtime dirs in the Vita target (the ARM Linux check has no sceAudio, as before) |
 | `vita/tools` | tools/vita/hw_run.sh, hw_ftp.py (and adds hw_check.sh, hw_mock.py), get_vitasdk.sh | tools/vita/hw_run.sh, hw_check.sh, hw_ftp.py are wrappers with this game's settings in tools/vita/hw.game | the wrappers set HW_GAME |
 
 Visible differences: the line when the stack pool runs out starts `vpk-costack:` (was `kh1-port:`); hardware runs

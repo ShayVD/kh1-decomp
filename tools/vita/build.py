@@ -92,7 +92,7 @@ TARGETS = {
     "vita": dict(
         out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA", "-fno-short-enums"],
         dirs=[("null", ("main.c",)), ("port", ()), ("vita", ()), (census.KIT_COSTACK, ()), (census.KIT + "ucontext", ())]
-        + [(census.KIT + m, ()) for m in ("config", "log", "clocks", "watchdog", "procparam")],
+        + [(census.KIT + m, ()) for m in ("config", "log", "clocks", "watchdog", "procparam", "audioout")],
         link=["-Wl,-q", "-Wl,--no-warn-rwx-segments", "-Wl,--no-enum-size-warning"],
         libs=["-lvita2d", "-lvitashark", "-lSceShaccCgExt", "-lSceShaccCg_stub", "-ltaihen_stub", "-lSceKernelDmacMgr_stub", "-lSceDisplay_stub", "-lSceGxm_stub", "-lSceSysmodule_stub", "-lSceCommonDialog_stub",
               "-lSceAppMgr_stub", "-lScePgf_stub", "-lSceAudio_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lSceKernelModulemgr_stub", "-lScePower_stub", "-lm"]),

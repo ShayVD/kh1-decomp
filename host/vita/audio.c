@@ -12,7 +12,8 @@
  *     almost no work, so it runs at a high priority.  When the ring runs dry it plays silence for
  *     the gap (counted as short on the watchdog's sound line) rather than wait.
  * The game thread only copies its per-frame command queue into snd.c's FIFO; the sounds it starts
- * play about 100 ms later.
+ * play about 100 ms later.  The ring and the output thread are vita-port-kit's (vita/runtime/audioout, vendored:
+ * docs/vita-port-kit.md): the plain ring, the mixer paced by its level.
  * Not part of the PS2 build. */
 #include <psp2/audioout.h>
 #include <psp2/kernel/threadmgr.h>
@@ -20,6 +21,7 @@
 #include <psp2/kernel/cpu.h>
 #include <string.h>
 #include "common.h"
+#include "../../third_party/vita-port-kit/vita/runtime/audioout/vpk_audio_out.h"
 void kh1_vita_thread_note(int uid, const char *name); /* main.c: the watchdog's `threads:` line */
 
 void kh1_vita_log(const char *fmt, ...);
@@ -53,8 +55,8 @@ static SceKernelLwMutexWork snd_mutex;
 static SceUID room;         /* signalled by the output when it has taken a buffer */
 static SceUID ticked, mixed; /* a tick done (for the mixer), a tick mixed (for the tick thread) */
 static int port = -1;
-static s16 ring[RING * 2] __attribute__((aligned(64)));
-static volatile u32 ring_head, ring_tail; /* frames written / read, ever (mod 2^32) */
+static VpkAudioRing ring;   /* the plain ring (no rate control): RING frames */
+static VpkAudioOut out;     /* the port and the output thread */
 
 static void snd_lock(void) { sceKernelLockLwMutex(&snd_mutex, 1, 0); }
 static void snd_unlock(void) { sceKernelUnlockLwMutex(&snd_mutex, 1); }
@@ -80,8 +82,8 @@ static int mix_thread(SceSize args, void *argp) {
     (void)args;
     (void)argp;
     for (;;) {
-        u32 head = ring_head, t0, at, n, n1;
-        if (head - ring_tail > RING - 200 || head - ring_tail >= LEAD) {
+        u32 level = vpk_audio_ring_level(&ring), t0, n;
+        if (level > RING - 200 || level >= LEAD) {
             SceUInt timeout = 20000;
             sceKernelWaitSema(room, 1, &timeout);
             continue;
@@ -95,66 +97,45 @@ static int mix_thread(SceSize args, void *argp) {
         }
         kh1_vita_snd_us += (u32)sceKernelGetProcessTimeWide() - t0;
         sceKernelSignalSema(mixed, 1);
-        at = head & (RING - 1);
-        n1 = RING - at < n ? RING - at : n;
-        memcpy(ring + at * 2, buf, n1 * 4);
-        if (n1 < n) memcpy(ring, buf + n1 * 2, (n - n1) * 4);
-        __sync_synchronize(); /* the samples before the index (the output may be on another core) */
-        ring_head = head + n;
+        vpk_audio_ring_push(&ring, buf, (int)n); /* fits: the level was checked above */
     }
     return 0;
 }
 
-static int out_thread(SceSize args, void *argp) {
-    static s16 buf[2][AUDIO_GRAIN * 2] __attribute__((aligned(64)));
-    int k = 0;
-    (void)args;
-    (void)argp;
-    for (;;) {
-        u32 tail = ring_tail, have = ring_head - tail, n = have < AUDIO_GRAIN ? have : AUDIO_GRAIN, i;
-        __sync_synchronize();
-        for (i = 0; i < n; i++) {
-            u32 at = (tail + i) & (RING - 1);
-            buf[k][2 * i] = ring[2 * at];
-            buf[k][2 * i + 1] = ring[2 * at + 1];
-        }
-        if (n < AUDIO_GRAIN) {
-            memset(buf[k] + 2 * n, 0, (AUDIO_GRAIN - n) * 4);
-            kh1_vita_snd_under++;
-        }
-        __sync_synchronize();
-        ring_tail = tail + n;
-        kh1_vita_snd_queued = have;
-        sceKernelSignalSema(room, 1);
-        kh1_vita_snd_bufs++;
-        sceAudioOutOutput(port, buf[k]);
-        k ^= 1;
-    }
-    return 0;
+/* the output thread (the kit's vpk_audio_out) after each grain's pull, before the grain plays: when the ring could
+ * not fill it, silence played in the gap */
+static void out_pulled(void *user, int got, const VpkAudioRing *r) {
+    (void)user;
+    if (got < AUDIO_GRAIN) kh1_vita_snd_under++;
+    kh1_vita_snd_queued = r->last_level;
+    sceKernelSignalSema(room, 1);
+    kh1_vita_snd_bufs++;
 }
 
 /* the mod menu's volume (menu.c, config.txt's volume=): 0-100, of the output's 0 dB */
 int kh1_vita_volume = 100;
 void kh1_vita_audio_volume(int percent) {
-    int vol[2];
     if (percent < 0) percent = 0;
     if (percent > 100) percent = 100;
     kh1_vita_volume = percent;
-    vol[0] = vol[1] = SCE_AUDIO_VOLUME_0DB * percent / 100;
-    if (port >= 0) sceAudioOutSetVolume(port, SCE_AUDIO_VOLUME_FLAG_L_CH | SCE_AUDIO_VOLUME_FLAG_R_CH, vol);
+    if (port >= 0) vpk_audio_out_volume(&out, percent);
 }
 
 static void start_output(void) {
     static const SceUInt masks[3] = { SCE_KERNEL_CPU_MASK_USER_0, SCE_KERNEL_CPU_MASK_USER_1, SCE_KERNEL_CPU_MASK_USER_2 };
     SceUID t;
     SceUInt mix_mask = kh1_vita_snd_core >= 0 && kh1_vita_snd_core <= 2 ? masks[kh1_vita_snd_core] : SCE_KERNEL_CPU_MASK_USER_ALL;
-    int vol[2] = { SCE_AUDIO_VOLUME_0DB * kh1_vita_volume / 100, SCE_AUDIO_VOLUME_0DB * kh1_vita_volume / 100 };
-    port = sceAudioOutOpenPort(SCE_AUDIO_OUT_PORT_TYPE_MAIN, AUDIO_GRAIN, 48000, SCE_AUDIO_OUT_MODE_STEREO);
+    static const VpkAudioRingConfig rc = { RING, 0, 0, 0, 0, 0, 0 };
+    /* the output above the game's threads (0x10000100): it only copies and waits */
+    VpkAudioOutConfig oc = { SCE_AUDIO_OUT_PORT_TYPE_MAIN, AUDIO_GRAIN, 48000, 0, "kh1_snd_out", 0x10000100 - 16,
+                             SCE_KERNEL_CPU_MASK_USER_ALL, 0x4000, out_pulled, 0 };
+    oc.volume = kh1_vita_volume;
+    vpk_audio_ring_init(&ring, &rc);
+    port = vpk_audio_out_open(&out, &ring, &oc);
     if (port < 0) {
         vlog("kh1-vita: sound: no audio port (0x%08x)\n", port);
         return;
     }
-    sceAudioOutSetVolume(port, SCE_AUDIO_VOLUME_FLAG_L_CH | SCE_AUDIO_VOLUME_FLAG_R_CH, vol);
     room = sceKernelCreateSema("kh1_snd_room", 0, 0, 64, 0);
     ticked = sceKernelCreateSema("kh1_snd_ticked", 0, 0, 64, 0);
     mixed = sceKernelCreateSema("kh1_snd_mixed", 0, 0, 64, 0);
@@ -172,8 +153,8 @@ static void start_output(void) {
         return;
     }
     kh1_vita_thread_note(t, "sound mix");
-    t = sceKernelCreateThread("kh1_snd_out", out_thread, 0x10000100 - 16, 0x4000, 0, SCE_KERNEL_CPU_MASK_USER_ALL, 0);
-    if (t < 0 || sceKernelStartThread(t, 0, 0) < 0) {
+    t = vpk_audio_out_start(&out);
+    if (t < 0) {
         vlog("kh1-vita: sound: no output thread (0x%08x)\n", t);
         return;
     }
