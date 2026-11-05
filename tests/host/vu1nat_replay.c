@@ -5,7 +5,7 @@
  * native runs (the rest given up to the translation), differences.
  *
  *   arm-linux-gnueabihf-gcc ... -DKH1_HOST -DKH1_VU1_TR -Iout/gen -Iinclude tests/host/vu1nat_replay.c -lm
- *   qemu-arm ./vu1nat_replay [-p NUM] dump/vu*.bin
+ *   qemu-arm ./vu1nat_replay [-p NUM] [-v | -t | -s | -g] dump/vu*.bin
  *
  * Needs out/gen/vu1_tr.c (the user's own programs as C) and the dumps (their data): both stay out of the
  * repository.  Meaningful on ARM with NEON; elsewhere vu1_nat.h has no programs and every run is given up. */
@@ -116,6 +116,43 @@ static void timed(int prog, int num, u32 pc) {
     kh1_vu1_kick = out;
 }
 
+/* -g (2026-11-04): vu1_draw.h's nd_gum, the Gummi engine's C0 / C1 as native draws, on each P100 / P101 run: a line
+ * per run with a hash of every payload and kick it hands over (diff two builds' lines to check a change to the parse
+ * is bit-exact), and the parse's time over 20 repeats */
+static int gum;
+static u32 g_hash, g_runs, g_given, g_words;
+static double t_gum;
+static void g_sink(const u32 *q, u32 nqw) {
+    u32 i;
+    g_hash = (g_hash ^ nqw) * 16777619u;
+    for (i = 0; i < nqw * 4; i++) g_hash = (g_hash ^ q[i]) * 16777619u;
+    g_words += nqw * 4;
+}
+static void g_kick(const u32 *q, u32 nqw) {
+    g_hash = (g_hash ^ 0x4B1C4B1Cu) * 16777619u;
+    g_sink(q, nqw);
+}
+static void g_run(const char *name, int num, u32 pc) {
+    int ok, r;
+    u32 w0 = g_words;
+    double t0;
+    kh1_vu1_draw = g_sink;
+    kh1_vu1_kick = g_kick;
+    kh1_vu1_draw_gum = 1;
+    g_hash = 2166136261u;
+    ok = nd_gum(pc, num == 101);
+    printf("g %s P%d %08x %d %u %u\n", name, num, g_hash, ok, mem[top & (DATA_QW - 1)][2] & 0xFFFF, g_words - w0);
+    g_runs++;
+    if (!ok) return;
+    g_given++;
+    t0 = now();
+    for (r = 0; r < 20; r++) {
+        tr_load(&snap); top = snap.r[8]; itop = snap.r[9];
+        nd_gum(pc, num == 101);
+    }
+    t_gum += now() - t0;
+}
+
 int main(int argc, char **argv) {
     int i, only = -1, sonly = 0;
     u32 total = 0;
@@ -134,6 +171,10 @@ int main(int argc, char **argv) {
         }
         if (!strcmp(argv[i], "-t")) {
             timing = 1;
+            continue;
+        }
+        if (!strcmp(argv[i], "-g")) {
+            gum = 1;
             continue;
         }
         if (!strcmp(argv[i], "-s")) {
@@ -159,6 +200,10 @@ int main(int argc, char **argv) {
         b0 = st.tr_differ;
         total++;
         if (num < 200) runs[num]++;
+        if (gum) {
+            if (num == 100 || num == 101) g_run(argv[i], num, pc);
+            continue;
+        }
         if (timing) {
             if (num < 200) timed(prog, num, pc);
             continue;
@@ -183,6 +228,7 @@ int main(int argc, char **argv) {
                    path[i][0], pairs[i][0], path[i][1], pairs[i][1], path[i][2], pairs[i][2], path[i][3], pairs[i][3]);
     for (i = 0; i < 200; i++)
         if (timing && t_tr[i] > 0) printf("P%d: %u native runs, native %.3f s, translation %.3f s (%.0f%%)\n", i, nat[i], t_nat[i], t_tr[i], 100 * t_nat[i] / t_tr[i]);
+    if (gum) printf("nd_gum: %u runs, %u drawn, %u words handed over, %.3f s for 20 repeats\n", g_runs, g_given, g_words, t_gum);
     printf("%u runs replayed\n", total);
     return 0;
 }
