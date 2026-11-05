@@ -14,7 +14,12 @@ commit. Do not edit those files here: change the kit, then re-vendor from a kit 
 | `vita/runtime/config` | main.c config()'s line reader | main.c (`config_key` keeps every key) | as above |
 | `vita/runtime/clocks` | main.c's clock block | main.c | as above |
 | `vita/runtime/watchdog` | main.c threads_line, kh1_vita_thread_note's table | main.c (the watchdog loop itself stays: its window is all game counters) | as above |
+| `vita/tools/vpk_pack.py` | tools/vita/build.py's package() (vita-elf-create, make-fself, mksfoex with ATTRIBUTE2=12, pack-vpk, the plain LiveArea art) and its process-parameter check | tools/vita/build.py (`vpk_pack.check_procparams`, `vpk_pack.placeholder_livearea`, `vpk_pack.pack`) | imported from third_party/vita-port-kit/vita/tools; the work files (kh1.velf, eboot.bin, param.sfo, sce_sys/) stay in out/vita/ |
 | `vita/tools` | tools/vita/hw_run.sh, hw_ftp.py (and adds hw_check.sh, hw_mock.py), get_vitasdk.sh | tools/vita/hw_run.sh, hw_check.sh, hw_ftp.py are wrappers with this game's settings in tools/vita/hw.game | the wrappers set HW_GAME |
+
+The VPK's param.sfo values and file contents are the same as before the swap (vpk_pack.py `show` on both, same
+ELF; only the zip's timestamps differ). The check now wants the two process parameters defined: a check of the names
+alone took newlib's undefined weak `_newlib_heap_size_user` for the symbol.
 
 Visible differences: the line when the stack pool runs out starts `vpk-costack:` (was `kh1-port:`); hardware runs
 now take a lock in ~/.cache/vita-port-kit (one run at a time across games and clones), fetch any new crash dump into

@@ -23,15 +23,15 @@ What runs and what does not: docs/vita-build.md.
 import argparse
 import os
 import re
-import struct
 import subprocess
 import sys
-import zlib
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "tools", "host"))
 import census  # noqa: E402
+sys.path.insert(0, os.path.join(ROOT, "third_party", "vita-port-kit", "vita", "tools"))
+import vpk_pack  # noqa: E402
 
 TITLE = "Kingdom Hearts (kh1-decomp)"
 TITLE_ID = "KHDC00001"
@@ -181,17 +181,6 @@ def compile_game(cc, files, ovl, out):
     return res
 
 
-def png_icon(path, w, h, rgb):
-    """A plain one-colour 8-bit paletted PNG (the LiveArea wants indexed colour), made here: no
-    image is committed."""
-    def chunk(t, d):
-        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
-    raw = b"".join(b"\0" + bytes(w) for _ in range(h))
-    data = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 3, 0, 0, 0)) \
-        + chunk(b"PLTE", bytes(rgb)) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
-    open(path, "wb").write(data)
-
-
 def run(args, what):
     p = subprocess.run(args, cwd=ROOT, capture_output=True, text=True)
     if p.returncode:
@@ -231,31 +220,15 @@ def code_gap(b, elf):
 
 
 def package(b, out, elf):
-    velf = os.path.join(out, "kh1.velf")
-    run([b + "vita-elf-create", elf, velf], "vita-elf-create")
-    eboot = os.path.join(out, "eboot.bin")
-    run([b + "vita-make-fself", "-s", "-c", velf, eboot], "vita-make-fself")
-    sfo = os.path.join(out, "param.sfo")
-    run([b + "vita-mksfoex", "-s", "APP_VER=" + VERSION, "-s", "TITLE_ID=" + TITLE_ID,
-         "-d", "ATTRIBUTE2=12", TITLE, sfo], "vita-mksfoex")
-    sysdir = os.path.join(out, "sce_sys")
-    os.makedirs(os.path.join(sysdir, "livearea", "contents"), exist_ok=True)
-    png_icon(os.path.join(sysdir, "icon0.png"), 128, 128, (0x20, 0x30, 0x80))
-    png_icon(os.path.join(sysdir, "livearea", "contents", "bg.png"), 840, 500, (0x10, 0x18, 0x40))
-    png_icon(os.path.join(sysdir, "livearea", "contents", "startup.png"), 280, 158, (0x20, 0x30, 0x80))
-    open(os.path.join(sysdir, "livearea", "contents", "template.xml"), "w").write(
-        '<?xml version="1.0" encoding="utf-8"?>\n<livearea style="a1" format-ver="01.00" content-rev="1">\n'
-        '  <livearea-background><image>bg.png</image></livearea-background>\n'
-        '  <gate><startup-image>startup.png</startup-image></gate>\n</livearea>\n')
+    """The VPK: vita-port-kit's vita/tools/vpk_pack.py (the process-parameter check, vita-elf-create, make-fself,
+    mksfoex with ATTRIBUTE2=12, pack-vpk) with its plain placeholder art; the work files stay in out/."""
     vpk = os.path.join(out, "kh1-decomp.vpk")
-    if os.path.exists(vpk):
-        os.remove(vpk)
-    pack = [b + "vita-pack-vpk", "-s", sfo, "-b", eboot]
-    for f in ("icon0.png", "livearea/contents/bg.png", "livearea/contents/startup.png",
-              "livearea/contents/template.xml"):
-        pack += ["-a", "%s=sce_sys/%s" % (os.path.join(sysdir, f), f)]
-    run(pack + [vpk], "vita-pack-vpk")
-    return vpk
+    try:
+        art = vpk_pack.placeholder_livearea(os.path.join(out, "sce_sys"))
+        return vpk_pack.pack(elf, vpk, TITLE_ID, VERSION, TITLE, art, work=out, b=b)
+    except vpk_pack.PackError as e:
+        print("vita: %s" % e)
+        sys.exit(1)
 
 
 def translations_missing():
@@ -354,9 +327,9 @@ def main():
             print("vita: the code segment padded by %d bytes (%d were left before the data's page)" % (gap + 512, gap))
     if name == "vita":
         # the SDK reads these by name (the process parameters, newlib's heap); LTO drops a variable
-        # nothing references, and the app then starts with the default 256 KiB stack and stops at once
-        syms = subprocess.run([census.NM, elf], capture_output=True, text=True).stdout.split()
-        lost = [s for s in ("sceUserMainThreadStackSize", "_newlib_heap_size_user") if s not in syms]
+        # nothing references, and the app then starts with the default 256 KiB stack and stops at once.
+        # The kit's check wants them defined: newlib leaves an undefined weak _newlib_heap_size_user behind
+        lost = vpk_pack.check_procparams(elf, b)
         if lost:
             print("vita: %s missing from the link (dropped by LTO?)" % " ".join(lost))
             return 1
