@@ -1,20 +1,17 @@
 #ifndef PLATFORM_COSTACK_H
 #define PLATFORM_COSTACK_H
 
-#include "common.h"
-
 /* The stacks of the game's threads and tasks, which the port runs as coroutines (host/null/threads.c,
- * host/port/tasks.c).  Session 137v: the Vita's kernel refuses a system call made with SP outside the calling
- * thread's own stack (the first disc read, from a coroutine on a malloc'd stack, stopped the app with
- * C2-12828-1 on hardware; Vita3K does not check), so the Vita hands the main thread's unused stack to
- * kh1_costack_pool and the coroutines take their stacks from it.  Elsewhere (and when the pool is used up)
- * a stack is malloc'd.  Never freed: each thread / task slot keeps its stack.  Not part of the PS2 build. */
-void kh1_costack_pool(void *base, u32 size);
-void *kh1_costack_alloc(u32 size);
-/* the whole stack the pool is part of (the Vita's main thread's, its own part above the pool included) */
-void kh1_costack_stack(void *base, u32 size);
-/* nonzero when a..a+n lies in the pool or that stack (session 147: the DMA walk's memory check,
- * host/null/plat_null.c) */
-int kh1_costack_owns(unsigned long a, u32 n);
+ * host/port/tasks.c): vita-port-kit's costack (third_party/vita-port-kit/vita/runtime/costack, vendored:
+ * docs/vita-port-kit.md), under the kh1_ names the port code calls.  Session 137v: the Vita's kernel refuses a
+ * system call made with SP outside the calling thread's own stack (C2-12828-1 on hardware; Vita3K does not
+ * check), so host/vita/main.c hands the main thread's unused stack to kh1_costack_pool.  Not part of the PS2
+ * build. */
+#include "../../third_party/vita-port-kit/vita/runtime/costack/vpk_costack.h"
+
+#define kh1_costack_pool vpk_costack_pool
+#define kh1_costack_alloc vpk_costack_alloc
+#define kh1_costack_stack vpk_costack_stack
+#define kh1_costack_owns vpk_costack_owns
 
 #endif

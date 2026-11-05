@@ -41,7 +41,7 @@ VERSION = "00.01"
 # (ARM's is unsigned), no fused multiply-add (portability rule 7)
 CFLAGS = [
     "-std=gnu89", "-g", "-w", "-fsigned-char", "-fno-strict-aliasing", "-ffp-contract=off",
-    "-Iinclude", "-Isrc", "-Ihost/vita/include", "-Ihost/null", "-Ihost/vita",
+    "-Iinclude", "-Isrc", "-I" + census.KIT + "ucontext/std", "-Ihost/null", "-Ihost/vita",
     "-Wno-error=implicit-function-declaration", "-Wno-error=int-conversion",
     "-Wno-error=incompatible-pointer-types", "-Wno-error=implicit-int",
 ]
@@ -85,17 +85,18 @@ CFLAGS_GXM = ["-std=gnu99", "-w", "-DKH1_HOST", "-fno-pic", "-fno-stack-protecto
               "-Ihost/null", "-Ihost/vita"]
 
 # the two targets: the Vita, and 32-bit ARM Linux for qemu-arm (the host's null runner as it is,
-# with host/vita's context switch and host/armlinux's overlay answer)
+# with the kit's context switch and host/armlinux's overlay answer)
 TARGETS = {
     "vita": dict(
         out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA", "-fno-short-enums"],
-        dirs=[("null", ("main.c",)), ("port", ()), ("vita", ())],
+        dirs=[("null", ("main.c",)), ("port", ()), ("vita", ()), (census.KIT_COSTACK, ()), (census.KIT + "ucontext", ())],
         link=["-Wl,-q", "-Wl,--no-warn-rwx-segments", "-Wl,--no-enum-size-warning"],
         libs=["-lvita2d", "-lvitashark", "-lSceShaccCgExt", "-lSceShaccCg_stub", "-ltaihen_stub", "-lSceKernelDmacMgr_stub", "-lSceDisplay_stub", "-lSceGxm_stub", "-lSceSysmodule_stub", "-lSceCommonDialog_stub",
               "-lSceAppMgr_stub", "-lScePgf_stub", "-lSceAudio_stub", "-lSceCtrl_stub", "-lSceTouch_stub", "-lSceSysmem_stub", "-lSceKernelModulemgr_stub", "-lScePower_stub", "-lm"]),
     "linux-arm": dict(
         out="out/armlinux", prefix="arm-linux-gnueabihf-", defines=["-DKH1_HOST", "-fno-pic", "-fno-stack-protector", "-mfpu=neon"],
-        dirs=[("null", ()), ("port", ()), ("vita", ("main.c", "pad.c", "display.c", "menu.c")), ("armlinux", ())],
+        dirs=[("null", ()), ("port", ()), ("vita", ("main.c", "pad.c", "display.c", "menu.c")), ("armlinux", ()),
+              (census.KIT_COSTACK, ()), (census.KIT + "ucontext", ())],
         link=["-no-pie", "-Wl,--no-warn-execstack"], libs=["-lm"]),
 }
 

@@ -1,0 +1,4 @@
+# vita-port-kit, vendored by tools/vendor.sh: do not edit these files here; change the kit and re-vendor.
+commit b18e903ee5effbcbf0b410d2c0231560d9e9d909
+path vita/runtime/ucontext
+path vita/runtime/costack
