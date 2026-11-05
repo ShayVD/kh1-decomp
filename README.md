@@ -1,7 +1,10 @@
 # kh1-decomp
 
-A matching decompilation of **Kingdom Hearts** (PS2, 2002), with the long-term
-goal of a native PS Vita port.
+A matching decompilation of **Kingdom Hearts** (PS2, 2002). The native PS Vita
+port built from this code lives in its own repository,
+[kh1-vita](https://github.com/ShayVD/kh1-vita), which uses this one as a submodule.
+Docs here that name `host/`, `tools/host/`, `tools/vu/`, `tools/vita/`, `tests/host/` or
+the `vita-*` and `native-*` docs mean paths in kh1-vita, where those files moved.
 
 Target: **Kingdom Hearts Final Mix**, main executable `SLPS_251.98`
 (SHA-256 `1993a4da…`, pinned in `kh1.toml`). See
@@ -95,8 +98,7 @@ nonmatchings/     work in progress (not built)
 include/          headers; platform/ wrappers, sce/ hand-written SDK declarations
 tools/            kh1tool.py (build helper), setup_toolchain.sh, self-tests
 docs/             findings: toolchain, versions, ELF, SDK, structs, workflow, portability, progress,
-                  vita-port-plan (phase 5), renderer-spec (phase 3), sound-spec (the sound driver's
-                  commands)
+                  renderer-spec (phase 3), sound-spec (the sound driver's commands)
 tests/selftest/   synthetic ELF used by `make test`
 ```
 

@@ -11,11 +11,11 @@
 /SCPS_*
 *.elf
 *.ELF
-# Vita builds hold bytes of the user's ELF (tools/vita/build.py).
+# Vita builds hold bytes of the user's ELF (kh1-vita).
 *.vpk
 *.velf
 eboot.bin
-# IOP modules from the disc (LIBSSL.IRX: the sound driver tools/host/iop_translate.py reads at build time).
+# IOP modules from the disc (LIBSSL.IRX: the sound driver kh1-vita reads at build time).
 *.IRX
 *.irx
 # Disc images and dumped archives / extracted assets.
@@ -61,5 +61,3 @@ src/**/.*
 # EE overlays from KINGDOM.IMG (tools/ovl/build.py; never commit them)
 *.x
 
-# tools/vita/hw_run.sh: the Vita's address
-tools/vita/hw.env
