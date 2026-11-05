@@ -32,7 +32,7 @@ ifeq ($(filter clean distclean help toolchain check layout rank,$(MAKECMDGOALS))
 -include $(GEN)/objects.mk
 endif
 
-.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help shift data-relocs host-census vita vita-armcheck ovl ovl-report ovl-progress
+.PHONY: all build verify check layout rank objdiff report progress progress-update progress-badge toolchain test clean distclean help shift data-relocs host-census vita vita-armcheck ovl ovl-report ovl-progress
 
 all: verify
 
@@ -47,6 +47,7 @@ help:
 	@echo "make report           objdiff-cli per-function match report"
 	@echo "make progress         print the progress tracker"
 	@echo "make progress-update  rewrite docs/progress.md + history (end of session)"
+	@echo "make progress-badge   rewrite docs/progress.svg (CI does this on main, no ELF needed)"
 	@echo "make test             tool self-tests (no game ELF needed)"
 	@echo "make ovl              build + verify the overlays in ovl/ against out/overlays/*.x (docs/overlays.md)"
 	@echo "make ovl-report       objdiff-cli report for each overlay; make ovl-progress: matched per overlay"
@@ -128,6 +129,9 @@ progress: $(PATCHED)
 progress-update: report
 	@$(KH1) progress --write
 
+progress-badge:
+	@$(PY) tools/progress_badge.py
+
 # The 12 EE overlays (docs/overlays.md): each built and verified on its own, out/ovl/ only.
 ovl:
 	@$(PY) tools/ovl/build.py verify $(OVL)
@@ -145,6 +149,7 @@ test:
 	@$(PY) tools/test_mangle_gcc2.py
 	@tests/selftest.sh
 	@$(PY) -I tests/reach_check_test.py
+	@$(PY) -I tests/progress_badge_test.py
 	@tools/check_no_assets.sh && echo "no-assets check: PASS"
 
 # ---- Shiftable build (docs/shiftable-plan.md). Separate from `make`, which it

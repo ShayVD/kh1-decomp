@@ -7,7 +7,13 @@ Target: **Kingdom Hearts Final Mix**, main executable `SLPS_251.98`
 (SHA-256 `1993a4da…`, pinned in `kh1.toml`). See
 [docs/target-versions.md](docs/target-versions.md) for why.
 
-Progress: see [docs/progress.md](docs/progress.md).
+[![Decompilation progress](docs/progress.svg)](docs/progress.md)
+
+**Work in progress.** The bars count code that matches the original byte for byte
+(main ELF plus the 12 EE overlays), not how playable anything is; the native Vita port
+is further behind. Details by phase: [docs/progress.md](docs/progress.md).
+`docs/progress.svg` is generated from committed files by `make progress-badge`, and the
+`progress` workflow commits it on every push to `main`, with no game data or secrets.
 
 ## No game data in this repository
 
