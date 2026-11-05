@@ -110,6 +110,9 @@
  *       natinplace=0          with natdirect on, the GPU thread copies each payload's records into its op before
  *                             listing them (as before 2026-11-04); 1, the default: read where they are in the pool
  *                             (pipes.c r_nat_dir, the same ops and draws)
+ *       natwhole=0            with natinplace on, the GPU thread walks every payload's records for their length (as
+ *                             before 2026-11-04); 1, the default: one that fits in the op whole, its length from its
+ *                             header (pipes.c r_nat_dir, the same ops and draws)
  *       natpf=0               the native triangles' listing without its prefetch of the records ahead (natdraw.c;
  *                             1, the default)
  *       natvbhome=0           every natvb entry's matrices at u_m[0], so cached runs never join (1, the default: each
@@ -248,7 +251,7 @@ extern u32 kh1_pipes_nat_cull, kh1_pipes_nat_draws, kh1_pipes_nat_tris;
 extern int kh1_pipes_nat_span; /* pipes.c: config.txt natspan= (2026-11-01) */
 extern int kh1_dma_natref, kh1_dma_natbulk; /* dmawalk.c: config.txt natref=, natbulk= (2026-11-01) */
 extern int kh1_dma_natdirect;               /* dmawalk.c: config.txt natdirect= (2026-11-02) */
-extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends;
+extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends, kh1_pipes_nat_wholes;
 extern u32 kh1_dma_img_n, kh1_dma_img_qw, kh1_dma_img_same, kh1_dma_img_us, kh1_dma_blk_n, kh1_dma_blk_qw; /* dmawalk.c */
 static int wide = 1;      /* config.txt's wide= (0 4:3 pillarboxed, 1 the 16:9 hor+ view, 2 4:3 stretched) */
 static int strip_always;  /* config.txt's strip= */
@@ -792,10 +795,12 @@ static int watchdog(SceSize args, void *argp) {
                 pw0 = kh1_pool_us_wait;
                 pn0 = kh1_pool_waits;
                 if (kh1_pool_on && kh1_dma_natref && kh1_dma_natdirect) { /* 2026-11-02 */
-                    static u32 dn0, mn0, de0;
+                    static u32 dn0, mn0, de0, wh0;
                     vlog("kh1-vita: natdirect=1: %u payloads straight to the GPU thread, %u read by the GS worker (a PRIM "
-                         "change among their records); %u native ops ended by the worker\n",
-                         kh1_dma_nat_direct_n - dn0, kh1_dma_nat_mixed_n - mn0, kh1_pipes_nat_dir_ends - de0);
+                         "change among their records); %u native ops ended by the worker; %u taken whole (natwhole)\n",
+                         kh1_dma_nat_direct_n - dn0, kh1_dma_nat_mixed_n - mn0, kh1_pipes_nat_dir_ends - de0,
+                         kh1_pipes_nat_wholes - wh0);
+                    wh0 = kh1_pipes_nat_wholes;
                     dn0 = kh1_dma_nat_direct_n;
                     mn0 = kh1_dma_nat_mixed_n;
                     de0 = kh1_pipes_nat_dir_ends;
@@ -1038,6 +1043,7 @@ static void config(char *iso, int n) {
         else if (strcmp(line, "natskin") == 0) kh1_vu1_nat_skin = atoi(v);
         else if (strcmp(line, "natspan") == 0) kh1_pipes_nat_span = atoi(v);
         else if (strcmp(line, "natinplace") == 0) { extern int kh1_pipes_nat_inplace; kh1_pipes_nat_inplace = atoi(v); }
+        else if (strcmp(line, "natwhole") == 0) { extern int kh1_pipes_nat_whole; kh1_pipes_nat_whole = atoi(v); }
         else if (strcmp(line, "natpf") == 0) kh1_nat_prefetch = atoi(v);
         else if (strcmp(line, "natref") == 0) kh1_dma_natref = atoi(v);
         else if (strcmp(line, "natbulk") == 0) kh1_dma_natbulk = atoi(v);

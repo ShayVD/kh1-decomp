@@ -1041,6 +1041,31 @@ the vertex being converted) hides them there. What is left of "assembly" (~185 m
 over the records' first qwords (a miss each) to count their qwords for the op's ends. Next: skip that walk for a
 payload whose records all fit in the open op (its records' length is in its header), or prefetch it.
 
+**Payloads taken whole** (pipes.c r_nat_dir, config natwhole=0 / host KH1_HOST_NATWHOLE=0 for the walk, 5 Nov): a
+payload whose records all fit in the open op (or in a new one) now goes into it as one run, its length from its header
+(h[3], the records' qwords), without reading each record. No record could have ended or opened the op, so the ops and
+draws are the same; the only per-record value the walk set, a cached stub's add of 0, is never read (kh1_nat_tris_at
+and _skin_at skip stubs). Nearly every fight payload qualifies (host dive_en.txt to 6,000: 465,804 of 468,318 taken
+whole). Host GXM hashes identical with natwhole 0, 1 and 2 at all 48 checkpoints; natwhole=2 also walks and found 0
+payloads whose header length differed from their records'.
+
+Vita, dive_en.txt frames 18k-23k, `recording's native draws:` ms a window and the GPU thread:
+
+| | assembly | listing | joins | native parts | GPU thread | pictures/s |
+| --- | --- | --- | --- | --- | --- | --- |
+| natwhole=0 (two "fast" runs) | 275-279 | 159-179 | 151 | 792-819 | 1807 | 24.8 |
+| natwhole=1 (three "fast" runs) | 124-130 | 164-178 | 236-249 | 735-772 | 1769-1780 | 25.0-25.2 |
+
+A small win (~30 ms of the GPU thread), not the +1-2 fps hoped for: about 80 of the ~145 ms saved in assembly
+reappears in the "joins" part, so the walk's misses were partly the first touch of lines the next reader needs anyway.
+Two prefetches were tried and dropped: prefetching each payload taken whole up front (natwpf, 4 or 16 KiB: assembly
+back up to 227-273) and prefetching the cached run's stubs 16 ahead in r_native_op (no change in "joins").
+
+**Hardware runs are not one population**: identical settings give "slow" runs (54 windows over 18k-23k, ~21 pictures/s,
+stop after 480 s) and "fast" ones (46-47 windows, ~25 pictures/s, 450 s), whichever way the data segment loaded
+(0x81300000 or 0x81400000). Two natwhole=1 runs out of six were faster still (native parts ~550 ms, GPU thread
+1575-1643 ms). Compare like with like, and run settings alternately (0, 1, 0, 1).
+
 **The frame-start flush, one clock read a flush** (gxm.c pend_flush_sel, 2026-11-04): the flush read
 sceKernelGetProcessTimeWide twice for every block it wrote (for the `uploads into targets written by the CPU` line), and
 a read costs ~0.68 us on the Vita (`kh1-vita: clock:`), so ~1.4 us of each block's ~6 us was the timer. It now reads the
