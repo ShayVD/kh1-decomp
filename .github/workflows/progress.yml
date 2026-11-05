@@ -1,0 +1,40 @@
+name: progress
+
+# Keeps docs/progress.svg (the README's bars) current. Needs no game data and no
+# secret: tools/progress_badge.py reads committed files, and the commit below uses
+# the job's own GITHUB_TOKEN.
+on:
+  push:
+    branches: [main]
+    paths:
+      - layout.tsv
+      - shift/unmatched/**
+      - src/**
+      - ovl/**
+      - tools/progress_badge.py
+      - .github/workflows/progress.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: progress-badge
+
+jobs:
+  badge:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Regenerate
+        run: python3 tools/progress_badge.py
+      - name: Commit if changed
+        run: |
+          git diff --quiet docs/progress.svg && exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'docs/progress.svg: update from the tree' docs/progress.svg
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
