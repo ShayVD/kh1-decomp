@@ -818,6 +818,33 @@ static void r_nat_dend(const u32 *a, const u32 *d, u32 nqw) {
     nat_copen = 0;
     r_nat_dir_end(a);
 }
+static void dir_op_open(const u32 *h, const u32 *mats, u32 nmat) {
+    memcpy(nat_op[0], h, 32);
+    memcpy(nat_cms, mats, nmat * 64);
+    nat_crq = 2;
+    nat_cnrec = 0;
+    nat_cmoff = 0;
+    nat_nseg = 0;
+    nat_copen = 1;
+}
+/* r_nat_rec's count, the records (nq qwords) left where they are (joined to the run before when they follow it) */
+static void dir_seg(const u32 *rec, u32 nrec, u32 nq, u32 add) {
+    NatSeg *g = nat_nseg ? &nat_seg[nat_nseg - 1] : 0;
+    if (!g || g->add != add || g->p + g->nq * 4 != rec) {
+        g = &nat_seg[nat_nseg++];
+        g->p = rec;
+        g->nrec = g->nq = 0;
+        g->add = add;
+    }
+    g->nrec += nrec;
+    g->nq += nq;
+    nat_crq += nq;
+    nat_cnrec += nrec;
+}
+/* 2026-11-04 (docs/native-plan.md "Payloads taken whole"; config natwhole=0, host KH1_HOST_NATWHOLE=0 for the walk;
+ * 2 on the host also walks and counts payloads whose header length differs from their records') */
+int kh1_pipes_nat_whole = 1;
+u32 kh1_pipes_nat_wholes, kh1_pipes_nat_wholebad; /* payloads taken whole, for the log; whole=2's misfits */
 static void r_nat_dir(const u32 *a, const u32 *d, u32 nqw) {
     nt_mark(-1);
     for (; nqw; nqw--, d += 4) {
@@ -836,8 +863,26 @@ static void r_nat_dir(const u32 *a, const u32 *d, u32 nqw) {
             nat_copen = 0;
             r_nat_dir_end(a);
         }
+        /* 2026-11-04 (natwhole): a payload whose records all fit in the op is one run, its length (h[3], the
+         * records' qwords) from its header: the loop below reads each record's first qword for its length, a cache
+         * miss each on the GPU thread (~185 ms a fight window; the Vita's assembly 275 -> ~130 ms, though ~80 of it
+         * reappears in the next reader).  Its ends are the loop's (no record would end or open the op), and a cached
+         * record's add is never read (kh1_nat_tris_at and _skin_at skip those) */
+        r = 0;
+        if (kh1_pipes_nat_whole && kh1_pipes_nat_inplace && nrec && nmat <= KH1_NAT_MATS &&
+            (nat_copen ? nat_crq + h[3] + nat_op[0][2] * 4 : 2 + h[3] + nmat * 4) <= NAT_QW) {
+            if (!nat_copen) dir_op_open(h, mats, nmat);
+            dir_seg(rec, nrec, h[3], nat_cmoff);
+            if (kh1_pipes_nat_whole == 2) { /* (host check: the walk's length against the header's) */
+                u32 q = 0;
+                for (r = 0; r < nrec; r++) q += KH1_NAT_REC_QW(rec + q * 4);
+                if (q != h[3]) kh1_pipes_nat_wholebad++;
+            }
+            r = nrec;
+            kh1_pipes_nat_wholes++;
+        }
         /* nat_rec, a record at a time */
-        for (r = 0; r < nrec; r++) {
+        for (; r < nrec; r++) {
             u32 nq = KH1_NAT_REC_QW(rec);
             if (nat_copen && nat_crq + nq + nat_op[0][2] * 4 > NAT_QW) {
                 nat_copen = 0;
@@ -848,30 +893,10 @@ static void r_nat_dir(const u32 *a, const u32 *d, u32 nqw) {
                     rec += nq * 4;
                     continue;
                 }
-                memcpy(nat_op[0], h, 32);
-                memcpy(nat_cms, mats, nmat * 64);
-                nat_crq = 2;
-                nat_cnrec = 0;
-                nat_cmoff = 0;
-                nat_nseg = 0;
-                nat_copen = 1;
+                dir_op_open(h, mats, nmat);
             }
-            if (!kh1_pipes_nat_inplace) {
-                r_nat_rec(a, rec, nq);
-            } else { /* r_nat_rec's count, the record left where it is (joined to the run before it when it follows it) */
-                NatSeg *g = nat_nseg ? &nat_seg[nat_nseg - 1] : 0;
-                u32 add = rec[3] & KH1_NAT_VB ? 0 : nat_cmoff;
-                if (!g || g->add != add || g->p + g->nq * 4 != rec) {
-                    g = &nat_seg[nat_nseg++];
-                    g->p = rec;
-                    g->nrec = g->nq = 0;
-                    g->add = add;
-                }
-                g->nrec++;
-                g->nq += nq;
-                nat_crq += nq;
-                nat_cnrec++;
-            }
+            if (!kh1_pipes_nat_inplace) r_nat_rec(a, rec, nq);
+            else dir_seg(rec, 1, nq, rec[3] & KH1_NAT_VB ? 0 : nat_cmoff);
             rec += nq * 4;
         }
         /* nat_hook's what 2: only P0's and P13's ops stay open */

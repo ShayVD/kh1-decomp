@@ -148,10 +148,13 @@ static void host_clock_report(void) {
                kh1_cmd_natvb_nojoin[2], kh1_cmd_natvb_nojoin[3]);
     }
     { /* 2026-11-02: natdirect's payloads (dmawalk.c) */
-        extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends;
+        extern u32 kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends, kh1_pipes_nat_wholes,
+            kh1_pipes_nat_wholebad;
         if (kh1_dma_nat_direct_n || kh1_dma_nat_mixed_n)
             printf("kh1-host: natdirect: %u payloads straight to the GPU thread, %u read by the GS worker; %u ops ended by "
-                   "the worker\n", kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends);
+                   "the worker; %u taken whole (%u with a header length unlike their records', natwhole=2)\n",
+                   kh1_dma_nat_direct_n, kh1_dma_nat_mixed_n, kh1_pipes_nat_dir_ends, kh1_pipes_nat_wholes,
+                   kh1_pipes_nat_wholebad);
     }
     { /* 2026-11-02: repeated CLUT loads left out (pipes.c on_clut) */
         extern u32 kh1_pipes_clut_n, kh1_pipes_clut_skipped;
@@ -684,6 +687,10 @@ int main(int argc, char **argv) {
         if (getenv("KH1_HOST_NATINPLACE")) { /* 2026-11-04: 0 r_nat_dir copies the records into nat_op (pipes.c) */
             extern int kh1_pipes_nat_inplace;
             kh1_pipes_nat_inplace = atoi(getenv("KH1_HOST_NATINPLACE"));
+        }
+        if (getenv("KH1_HOST_NATWHOLE")) { /* 2026-11-04: 0 r_nat_dir walks every payload's records (pipes.c) */
+            extern int kh1_pipes_nat_whole;
+            kh1_pipes_nat_whole = atoi(getenv("KH1_HOST_NATWHOLE"));
         }
         if (getenv("KH1_HOST_NATPF")) kh1_nat_prefetch = atoi(getenv("KH1_HOST_NATPF")); /* 2026-11-04: natdraw.c */
         if (getenv("KH1_HOST_NATJOIN")) kh1_cmd_natjoin = atoi(getenv("KH1_HOST_NATJOIN")); /* 2026-11-01: cmdbuf.c nat_join */
