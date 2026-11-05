@@ -427,3 +427,38 @@ The game thread is still full in the flight: the parse costs ~65 us a run (scala
 per run). Making it NEON and lighter is the next step; the GPU thread (~1.1 s) and the GS worker (~1 s) have room.
 **Not checked**: the host side by side (gxmcheck) against the GS path; the user's eye on the Vita is the only check of
 the pictures so far.
+
+## The Gummi parse, lighter (2026-11-04)
+
+vu1_draw.h `nd_gum` hands over the same bytes as before, with less work a batch:
+
+- C1's colours are one table a group (the multiplier is the material's, so a normal gives one colour); C0's still a
+  vertex's (its own multiplier);
+- on NEON (`KH1_VU1_SCALAR` unset) the normals are lit four lanes at once, in the scalar form's order of sums, and a
+  vertex's colour (VMUL, VMIN 255, VCVT, two narrowings), ST plus the UV scroll and both of its qwords are vector
+  operations. VMIN keeps a NaN and VCVT takes it to 0 as VFP's conversion does; VCVT saturates at -2^31 as the
+  scalar test.
+
+**Checked**: tests/host/vu1nat_replay.c `-g` (a line per P100 / P101 run with a hash of every payload and kick
+nd_gum hands over) on 822 runs dumped from a host run of wm_en.txt (642 drawn natively): the NEON build and the
+`-DKH1_VU1_SCALAR` build give the old code's 822 hashes. Dumped batches average ~55 vertices and 32 normals.
+
+**Hardware** (the user's hand-played flight to Traverse Town, renderer=native, 8 windows against the earlier run's 10):
+
+| | Native draws (PR #236) | Lighter parse |
+| --- | --- | --- |
+| C0 a run | ~56 us | ~31 us |
+| C1 a run | ~34 us | ~19 us |
+| VU1 programs a window | 890 ms | 617 ms |
+| The flight | 13.1 pictures/s | **16.6 pictures/s** |
+
+The game thread is still full in the flight (~1.9 s of 2). The largest part left is the walk writing the batches'
+unpacks into VU memory (`walk split`: ~1,000 ms feeding ~14 M words a window); nd_gum reads VU memory at random
+(indices into positions, normals, ST, colours), so reading the held unpacks in place (natchain, as P0 does) needs a
+map from a VU address to its unpack. That is the next step for the flight.
+
+**Host A/B** (KH1_HOST_FORK_NATGUMMI, KH1_HOST_GXM_START): one gxmcheck run to frame 6,300 of wm_en.txt, forked into
+a natgummi=1 and a natgummi=0 child, the GPU's pictures every 25 frames from 6,400 (Select World, the flight). 61 of
+the 84 pictures are identical (Select World and the take-off); the 23 in the flight (7,124-7,399) differ in 10-25% of
+their pixels, ~98% of those by 1-3 levels (the GPU's interpolation and clipping against the GS's), ~1% by more than 32
+(edges); side by side the pictures look the same.

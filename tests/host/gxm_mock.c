@@ -16,7 +16,8 @@
  * KH1_HOST_GXM=N turns it on: gxm.c takes every frame's commands (uploads always), the rasteriser draws the two
  * frames before each Nth and the display target is compared with the GS model's display buffer (RGB) at each
  * Nth; KH1_HOST_GXM_POINT=1 samples point (the model's sprites are point-sampled), KH1_HOST_GXM_PPM=DIR writes
- * both pictures, KH1_HOST_GXM_FROM=F checks every frame from F.  Run with KH1_HOST_SHOT so the model draws its pixels.  Not part of the PS2 build. */
+ * both pictures, KH1_HOST_GXM_FROM=F checks every frame from F,
+ * KH1_HOST_GXM_START=F draws no picture before F.  Run with KH1_HOST_SHOT so the model draws its pixels.  Not part of the PS2 build. */
 #include <psp2/gxm.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
@@ -817,7 +818,7 @@ static void write_ppm(const char *name, const u32 *pix, u32 w, u32 h, u32 stride
     char path[512];
     FILE *f;
     u32 x, y;
-    snprintf(path, sizeof path, "%s/%s_%05u.ppm", ppm, name, frame);
+    snprintf(path, sizeof path, "%s/%s_%05u.ppm", getenv("KH1_HOST_GXM_PPM"), name, frame); /* (a fork child's own) */
     f = fopen(path, "wb");
     if (!f) return;
     fprintf(f, "P6\n%u %u\n255\n", w, h);
@@ -878,12 +879,14 @@ static int compare(const char *what, u32 rt, u32 bp, u32 rows) {
 }
 
 static u32 from; /* KH1_HOST_GXM_FROM=F: rasterise and compare every frame from F */
+static u32 gxm_start; /* 2026-11-04: KH1_HOST_GXM_START=F: no picture before F (the GPU's commands still run) */
 /* session 142: KH1_HOST_GXM_HASH=1, a hash of the GPU's display and 3D targets at each Nth frame in place of the
  * comparison (which reads the GS model: with the frame on its own thread the model is a frame ahead) */
 static int hash_only;
 static void hook(const KH1CmdRec *r) {
     u32 n = frame % (u32)every;
     if (from && frame >= from) n = (u32)every - 1; /* KH1_HOST_GXM_FROM: every frame from there */
+    if (frame < gxm_start) n = 0;
     g.raster = n >= (u32)every - 2;
     g.draws = g.tris = g.pixels = 0;
     memset(&cf, 0, sizeof cf);
@@ -929,6 +932,7 @@ __attribute__((constructor)) static void start(void) {
     g.point = getenv("KH1_HOST_GXM_POINT") != 0;
     hash_only = getenv("KH1_HOST_GXM_HASH") != 0;
     from = getenv("KH1_HOST_GXM_FROM") ? (u32)atoi(getenv("KH1_HOST_GXM_FROM")) : 0;
+    gxm_start = getenv("KH1_HOST_GXM_START") ? (u32)atoi(getenv("KH1_HOST_GXM_START")) : 0;
     ppm = getenv("KH1_HOST_GXM_PPM");
     cost = getenv("KH1_HOST_GXM_COST") != 0;
     if (kh1_vita_gxm_init()) {

@@ -560,11 +560,63 @@ static int nd_0(u32 pc, int p4) {
 int kh1_vu1_draw_gum = 1;
 u32 kh1_vu1_nd_gum, kh1_vu1_nd_gum_fail; /* runs handed over, runs given back to the program */
 static u32 ndg_kq[2][4];
+/* 2026-11-04 (docs/native-renderer.md "The Gummi parse, lighter"): a vertex's colour, the lit normal (w the colour
+ * matrix's vf12.w) times the multiplier, MINI 255, FTOI0, the low bytes; C1's multiplier is the group's, so its
+ * colours are one table a group (a normal each), C0's a vertex's.  The NEON form gives the same bits: VMIN keeps a
+ * NaN as the scalar test does and VCVT takes it to 0 as VFP's does, saturating at -2^31 as the scalar form's test */
+#if defined(__ARM_NEON) && !defined(KH1_VU1_SCALAR)
+#define NDG_NEON 1
+typedef float32x4_t NdgV;
+static __inline__ __attribute__((always_inline)) u32 ndg_rgba(float32x4_t col, float32x4_t mul) {
+    int32x4_t iv = vcvtq_s32_f32(vminq_f32(vmulq_f32(col, mul), vdupq_n_f32(255.0f)));
+    int16x4_t h = vmovn_s32(iv);
+    return vget_lane_u32(vreinterpret_u32_s8(vmovn_s16(vcombine_s16(h, h))), 0);
+}
+static __inline__ __attribute__((always_inline)) uint32x2_t vfin2(uint32x2_t u) { /* vu1.c vfin, two lanes */
+    int32x2_t p = vmin_s32(vreinterpret_s32_u32(u), vdup_n_s32(0x7F7FFFFF));
+    return vmin_u32(vreinterpret_u32_s32(p), vdup_n_u32(0xFF7FFFFFu));
+}
+#else
+typedef struct { f32 v[4]; } NdgV;
+static __inline__ u32 ndg_rgba(NdgV col, NdgV mul) {
+    u32 q, rgba = 0;
+    for (q = 0; q < 4; q++) {
+        f32 v = col.v[q] * mul.v[q];
+        s32 iv;
+        if (v > 255.0f) v = 255.0f;
+        iv = v <= -2147483648.0f ? (s32)0x80000000u : (s32)v;
+        rgba |= ((u32)iv & 0xFF) << (q * 8);
+    }
+    return rgba;
+}
+#endif
+static __inline__ __attribute__((always_inline)) NdgV ndg_fin(const u32 *w) { /* fin() of a qword */
+#ifdef NDG_NEON
+    return vfin(vld1q_u32(w));
+#else
+    NdgV r;
+    u32 q;
+    for (q = 0; q < 4; q++) r.v[q] = fin(w[q]);
+    return r;
+#endif
+}
+/* the payload so far (nrec records, rq qwords with the header's two) drawn, with vf01-04 as its matrix */
+static void ndg_flush(u32 (*ob)[4], u32 nrec, u32 rq) {
+    u32 k;
+    ob[0][0] = KH1_NAT_MAGIC | 0;
+    ob[0][1] = nrec;
+    ob[0][2] = 1;
+    ob[0][3] = rq - 2;
+    memset(ob[1], 0, 16);
+    for (k = 0; k < 4; k++) memcpy(ob[rq + k], vf[1 + k], 16);
+    nd_hand(ob[0], rq + 4);
+}
 static int nd_gum(u32 pc, int c1) {
     const u32 *h;
     u32 (*ob)[4] = nd_buf, rq = 2, nrec = 0, k, base = top & (DATA_QW - 1);
-    u32 npos, nnorm, i7, i6, nv0;
-    f32 lit[64][4], m9[4][4], m5[4][4];
+    u32 npos, nnorm, i7, nv0;
+    NdgV lit[64]; /* the normals lit, w the colour's (vf12.w) */
+    u32 tab[64];  /* C1: a group's colours, a normal each */
     if (pc != 0x2c && pc != (c1 ? 0xc1u : 0xc6u)) return 0;
     h = mem[base];
     npos = h[1] & 0xFFFF;
@@ -572,24 +624,6 @@ static int nd_gum(u32 pc, int c1) {
     i7 = (h[3] + base) & 0xFFFF;
     nv0 = (base + 1 + (h[0] & 0xFFFF) + npos) & 0xFFFF; /* the normals' first qword */
     if (!npos || !nnorm || nnorm > 64) goto fail;
-    i6 = (nv0 - 1 - (h[0] & 0xFFFF)) & 0xFFFF; /* a position index's normal: index + vi06 (the program's 089) */
-    for (k = 0; k < 4; k++) {
-        u32 r;
-        for (r = 0; r < 4; r++) {
-            m5[k][r] = fin(vf[5 + k][r]);
-            m9[k][r] = fin(vf[9 + k][r]);
-        }
-    }
-    for (k = 0; k < nnorm; k++) { /* the normals lit: vf09-12 x max(vf05-08 x (n, 1), 0) */
-        const u32 *n = mem[(nv0 + k) & (DATA_QW - 1)];
-        f32 x = fin(n[0]), y = fin(n[1]), z = fin(n[2]), a[4];
-        u32 r;
-        for (r = 0; r < 4; r++) {
-            f32 v = m5[0][r] * x + m5[1][r] * y + m5[2][r] * z + m5[3][r];
-            a[r] = v > 0 ? v : 0;
-        }
-        for (r = 0; r < 4; r++) lit[k][r] = m9[0][r] * a[0] + m9[1][r] * a[1] + m9[2][r] * a[2] + m9[3][r] * a[3];
-    }
     { /* walked first: nothing is handed over unless the whole batch is one done here (routines, fan sizes, room) */
         u32 p7 = i7, need = 2;
         for (;;) {
@@ -611,33 +645,72 @@ static int nd_gum(u32 pc, int c1) {
             }
         }
     }
+    { /* the normals lit: vf09-12 x max(vf05-08 x (n, 1), 0), in the scalar form's order of sums */
+#ifdef NDG_NEON
+        float32x4_t m5[4], m9[4], z = vdupq_n_f32(0);
+        f32 w12 = fin(vf[12][3]);
+        for (k = 0; k < 4; k++) {
+            m5[k] = vfin(vld1q_u32(vf[5 + k]));
+            m9[k] = vfin(vld1q_u32(vf[9 + k]));
+        }
+        for (k = 0; k < nnorm; k++) {
+            float32x4_t n = vfin(vld1q_u32(mem[(nv0 + k) & (DATA_QW - 1)])), a, l;
+            a = vmulq_lane_f32(m5[0], vget_low_f32(n), 0);
+            a = vmlaq_lane_f32(a, m5[1], vget_low_f32(n), 1);
+            a = vmlaq_lane_f32(a, m5[2], vget_high_f32(n), 0);
+            a = vmaxq_f32(vaddq_f32(a, m5[3]), z);
+            l = vmulq_lane_f32(m9[0], vget_low_f32(a), 0);
+            l = vmlaq_lane_f32(l, m9[1], vget_low_f32(a), 1);
+            l = vmlaq_lane_f32(l, m9[2], vget_high_f32(a), 0);
+            l = vmlaq_lane_f32(l, m9[3], vget_high_f32(a), 1);
+            lit[k] = vsetq_lane_f32(w12, l, 3);
+        }
+#else
+        f32 m9[4][4], m5[4][4];
+        for (k = 0; k < 4; k++) {
+            u32 r;
+            for (r = 0; r < 4; r++) {
+                m5[k][r] = fin(vf[5 + k][r]);
+                m9[k][r] = fin(vf[9 + k][r]);
+            }
+        }
+        for (k = 0; k < nnorm; k++) {
+            const u32 *n = mem[(nv0 + k) & (DATA_QW - 1)];
+            f32 x = fin(n[0]), y = fin(n[1]), z = fin(n[2]), a[4];
+            u32 r;
+            for (r = 0; r < 4; r++) {
+                f32 v = m5[0][r] * x + m5[1][r] * y + m5[2][r] * z + m5[3][r];
+                a[r] = v > 0 ? v : 0;
+            }
+            for (r = 0; r < 3; r++) lit[k].v[r] = m9[0][r] * a[0] + m9[1][r] * a[1] + m9[2][r] * a[2] + m9[3][r] * a[3];
+            lit[k].v[3] = fin(vf[12][3]);
+        }
+#endif
+    }
     for (;;) { /* the groups */
         const u32 *g = mem[i7 & (DATA_QW - 1)];
-        u32 nr = g[0] & 0xFFFF, mm = g[1] & 0xFFFF, dbl = (g[2] & 0xFFFF) != 0, vr, tex;
-        f32 sx = 0, sy = 0, mc[4] = { 0, 0, 0, 0 };
+        u32 nr = g[0] & 0xFFFF, mm = g[1] & 0xFFFF, dbl = (g[2] & 0xFFFF) != 0, vr, tex, fl;
+        u32 sxy[2] = { 0, 0 };
         i7++;
         if (!nr) break;
         vr = mem[(1021 + mm) & (DATA_QW - 1)][0] & 0xFFFF & (MICRO_N - 1);
         tex = vr == (c1 ? 0xd7u : 0xdfu);
+        fl = dbl ? 1u : 0x21u; /* a triangle's flag (natdraw.h): the cull unless the group is double-sided */
         if (c1) {
-            for (k = 0; k < 4; k++) mc[k] = fin(mem[(992 + mm) & (DATA_QW - 1)][k]);
+            NdgV mc = ndg_fin(mem[(992 + mm) & (DATA_QW - 1)]);
+            for (k = 0; k < nnorm; k++) tab[k] = ndg_rgba(lit[k], mc);
         } else {
             u32 slot = mem[i7 & (DATA_QW - 1)][0] & 0xFFFF;
             if (slot) {
-                sx = fin(mem[(991 + slot) & (DATA_QW - 1)][0]);
-                sy = fin(mem[(991 + slot) & (DATA_QW - 1)][1]);
+                f32 sx = fin(mem[(991 + slot) & (DATA_QW - 1)][0]), sy = fin(mem[(991 + slot) & (DATA_QW - 1)][1]);
+                memcpy(&sxy[0], &sx, 4);
+                memcpy(&sxy[1], &sy, 4);
             }
         }
         i7++; /* the UV slot's qword (C1 skips it too) */
         if (mm) { /* a texture: the payload so far drawn, then the GIF tag and TEX0_1 on their own (EOP) */
             if (nrec) {
-                ob[0][0] = KH1_NAT_MAGIC | 0;
-                ob[0][1] = nrec;
-                ob[0][2] = 1;
-                ob[0][3] = rq - 2;
-                memset(ob[1], 0, 16);
-                for (k = 0; k < 4; k++) memcpy(ob[rq + k], vf[1 + k], 16);
-                nd_hand(ob[0], rq + 4);
+                ndg_flush(ob, nrec, rq);
                 rq = 2;
                 nrec = 0;
             }
@@ -650,46 +723,47 @@ static int nd_gum(u32 pc, int c1) {
         for (; nr; nr--) { /* the runs */
             const u32 *rh = mem[i7 & (DATA_QW - 1)], *tag = mem[(i7 + 1) & (DATA_QW - 1)];
             u32 fv = rh[0] & 0xFFFF, ns = rh[1] & 0xFFFF, s, j, rv = rq;
+            /* a fan's flag words: its first two vertices end no triangle; a quad v0..v3 is the strip v1, v2, v0,
+             * v3, whose second triangle is the reversed one */
+            u32 fw[4] = { 0, 0, fl, fv == 4 ? fl | 0x80000000u : fl };
+            static const u8 ord4[4] = { 1, 2, 0, 3 }, ord3[3] = { 0, 1, 2 };
+            const u8 *ord = fv == 4 ? ord4 : ord3;
             i7 += 2;
             rq++;
-            for (s = 0; s < ns; s++) {
-                static const u8 ord4[4] = { 1, 2, 0, 3 }, ord3[3] = { 0, 1, 2 };
-                const u8 *ord = fv == 4 ? ord4 : ord3;
-                for (j = 0; j < fv; j++) {
+            for (s = 0; s < ns; s++, i7 += fv) {
+                for (j = 0; j < fv; j++, rq += 2) {
                     const u32 *ix = mem[(i7 + ord[j]) & (DATA_QW - 1)];
-                    u32 p = (ix[0] + base) & 0xFFFF, c = (ix[1] + base) & 0xFFFF, t = (ix[2] + base) & 0xFFFF;
-                    const u32 *pp = mem[p & (DATA_QW - 1)];
-                    const f32 *l;
-                    u32 ni = (c - nv0) & 0xFFFF, rgba = 0, q;
-                    f32 mul[4], col[4];
-                    l = lit[ni < nnorm ? ni : 0]; /* (the files' colour index is always a normal: renderer-spec 2.5.1) */
-                    if (!c1)
-                        for (q = 0; q < 4; q++) mul[q] = fin(mem[(ix[3] + base) & (DATA_QW - 1)][q]);
-                    else
-                        for (q = 0; q < 4; q++) mul[q] = mc[q];
-                    col[0] = l[0]; col[1] = l[1]; col[2] = l[2]; col[3] = fin(vf[12][3]);
-                    for (q = 0; q < 4; q++) {
-                        f32 v = col[q] * mul[q];
-                        s32 iv;
-                        if (v > 255.0f) v = 255.0f;
-                        iv = v <= -2147483648.0f ? (s32)0x80000000u : (s32)v;
-                        rgba |= ((u32)iv & 0xFF) << (q * 8);
+                    const u32 *pp = mem[(ix[0] + base) & (DATA_QW - 1)];
+                    u32 ni = (ix[1] + base - nv0) & 0xFFFF, rgba;
+                    if (ni >= nnorm) ni = 0; /* (the files' colour index is always a normal: renderer-spec 2.5.1) */
+                    rgba = c1 ? tab[ni] : ndg_rgba(lit[ni], ndg_fin(mem[(ix[3] + base) & (DATA_QW - 1)]));
+#ifdef NDG_NEON
+                    {
+                        uint32x2_t st = vdup_n_u32(0);
+                        if (tex) {
+                            float32x2_t f = vreinterpret_f32_u32(vfin2(vld1_u32(mem[(ix[2] + base) & (DATA_QW - 1)])));
+                            st = vfin2(vreinterpret_u32_f32(vadd_f32(f, vreinterpret_f32_u32(vld1_u32(sxy)))));
+                        }
+                        vst1q_u32(ob[rq], vsetq_lane_u32(fw[j], vld1q_u32(pp), 3));
+                        vst1q_u32(ob[rq + 1], vcombine_u32(st, vcreate_u32(0x3F800000u | (unsigned long long)rgba << 32)));
                     }
+#else
                     ob[rq][0] = pp[0];
                     ob[rq][1] = pp[1];
                     ob[rq][2] = pp[2];
-                    /* the triangle ending here: the fan's first two vertices end none */
-                    ob[rq][3] = j < 2 ? 0 : (dbl ? 1u : 0x21u) | (fv == 4 && j == 3 ? 0x80000000u : 0);
+                    ob[rq][3] = fw[j];
                     if (tex) {
-                        const u32 *st = mem[t & (DATA_QW - 1)];
+                        const u32 *st = mem[(ix[2] + base) & (DATA_QW - 1)];
+                        f32 sx, sy;
+                        memcpy(&sx, &sxy[0], 4);
+                        memcpy(&sy, &sxy[1], 4);
                         ob[rq + 1][0] = fo(fin(st[0]) + sx);
                         ob[rq + 1][1] = fo(fin(st[1]) + sy);
                     } else ob[rq + 1][0] = ob[rq + 1][1] = 0;
                     ob[rq + 1][2] = 0x3F800000u;
                     ob[rq + 1][3] = rgba;
-                    rq += 2;
+#endif
                 }
-                i7 += fv;
             }
             ob[rv][0] = tag[0];
             ob[rv][1] = (tag[1] & ~(7u << 15)) | 4u << 15; /* PRE PRIM as a TRISTRIP (natdraw.h's records) */
@@ -698,16 +772,7 @@ static int nd_gum(u32 pc, int c1) {
             nrec++;
         }
     }
-    (void)i6;
-    if (nrec) {
-        ob[0][0] = KH1_NAT_MAGIC | 0;
-        ob[0][1] = nrec;
-        ob[0][2] = 1;
-        ob[0][3] = rq - 2;
-        memset(ob[1], 0, 16);
-        for (k = 0; k < 4; k++) memcpy(ob[rq + k], vf[1 + k], 16);
-        nd_hand(ob[0], rq + 4);
-    }
+    if (nrec) ndg_flush(ob, nrec, rq);
     kh1_vu1_drawn++;
     kh1_vu1_nd_gum++;
     tpc = (c1 ? 0xc1 : 0xc6) & (MICRO_N - 1);

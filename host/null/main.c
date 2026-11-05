@@ -67,7 +67,9 @@
  *                       PAD.log and its shots (KH1_HOST_SHOT, if set) to PAD.d/; the children run one after
  *                       another (they share the disc image's file offset) and the parent ends when they have.  Tries inputs from a far frame (a menu after a save
  *                       load) without replaying the way there.  The null platform's state only: no threads
- *                       (KH1_HOST_GSQ, KH1_HOST_GPUQ, KH1_HOST_SND=iop are not forked)
+ *                       (KH1_HOST_GSQ, KH1_HOST_GPUQ, KH1_HOST_SND=iop are not forked).  2026-11-04:
+ *                       KH1_HOST_FORK_NATGUMMI=A,B,... gives each child its natgummi (KH1_HOST_NATGUMMI), so
+ *                       one run to the map serves both sides of a C0 / C1 A / B
  *   KH1_HOST_SHOT_FROM=N  (session 145) KH1_HOST_SHOT set up at frame N instead of the start: the chain walk
  *                       and the GS memory model (most of a shot run's time) stay off until then, so what
  *                       was uploaded before N (fonts, textures) is missing from the shots
@@ -416,10 +418,11 @@ static void dump_frame(void) {
 static void fork_runs(void) {
     static char dir[512], log[512];
     char *p = fork_pads, *e;
-    int running = 0, st;
+    const char *ng = getenv("KH1_HOST_FORK_NATGUMMI");
+    int running = 0, st, idx = 0;
     fflush(stdout);
     fflush(stderr);
-    for (; p && *p; p = e ? e + 1 : 0) {
+    for (; p && *p; p = e ? e + 1 : 0, idx++) {
         pid_t pid;
         e = strchr(p, ',');
         if (e) *e = 0;
@@ -434,9 +437,16 @@ static void fork_runs(void) {
             setvbuf(stdout, 0, _IOLBF, 0);
             setvbuf(stderr, 0, _IONBF, 0);
             kh1_present_dir(dir);
+            if (getenv("KH1_HOST_GXM_PPM")) setenv("KH1_HOST_GXM_PPM", dir, 1); /* gxmcheck's pictures there too */
             dump_prefix = p;
+            if (ng) { /* 2026-11-04: KH1_HOST_FORK_NATGUMMI=A,B,...: child i's natgummi (an A / B from one shared run) */
+                const char *v = ng;
+                int k;
+                for (k = 0; k < idx && v; k++) v = strchr(v, ',') ? strchr(v, ',') + 1 : 0;
+                if (v) kh1_vu1_draw_gum = atoi(v);
+            }
             if (kh1_null_pad_reload(p) < 0) _exit(2);
-            printf("kh1-host: KH1_HOST_FORK: frame %lu, pad %s\n", frames, p);
+            printf("kh1-host: KH1_HOST_FORK: frame %lu, pad %s, natgummi %d\n", frames, p, kh1_vu1_draw_gum);
             return;
         }
         if (pid > 0) running++;
