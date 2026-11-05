@@ -1138,7 +1138,7 @@ static void no_disc(const char *iso) {
 int main(int argc, char **argv) {
     char iso[256], log[128];
     /* the EE's FPU flushes denormals to zero (portability rule 7): the VFP's FZ bit (FPSCR bit 24);
-     * the game's coroutines take it with the rest of FPSCR (host/vita/context.S) */
+     * the game's coroutines take it with the rest of FPSCR (the kit's vpk_ucontext.S, docs/vita-port-kit.md) */
     {
         unsigned int fpscr;
         __asm__ volatile("vmrs %0, fpscr" : "=r"(fpscr));

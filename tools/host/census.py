@@ -179,7 +179,11 @@ def assemble_data():
 # with the files it leaves out (host/null's main.c and pad.c are the host runner's own).
 NM = "nm"
 TYPE_PREFIX = "@"
-PLATFORM_DIRS = [("null", ()), ("port", ())]
+# vita-port-kit's modules every platform shares (third_party/vita-port-kit, vendored: docs/vita-port-kit.md);
+# a PLATFORM_DIRS entry that names a path under third_party/ is that directory, not one under host/
+KIT = "third_party/vita-port-kit/vita/runtime/"
+KIT_COSTACK = KIT + "costack"
+PLATFORM_DIRS = [("null", ()), ("port", ()), (KIT_COSTACK, ())]
 
 
 def nm(objs, defined):
@@ -361,15 +365,15 @@ def link_census(results, cc):
     null_objs = []
     # host/null: the null platform; host/port: what every port platform shares
     for d, skip in PLATFORM_DIRS:
-        nd = os.path.join(ROOT, "host", d)
-        for f in sorted(os.listdir(nd)):
+        src = d if d.startswith("third_party/") else os.path.join("host", d)
+        for f in sorted(os.listdir(os.path.join(ROOT, src))):
             if (f.endswith(".c") or f.endswith(".S")) and f not in skip:
-                obj = os.path.join(OUT, d, f + ".o")
+                obj = os.path.join(OUT, "kit" if src != os.path.join("host", d) else d, f + ".o")
                 os.makedirs(os.path.dirname(obj), exist_ok=True)
-                p = subprocess.run([cc] + CFLAGS + platform_flags(d, f) + ["-c", "-o", obj, os.path.join("host", d, f)], cwd=ROOT,
+                p = subprocess.run([cc] + CFLAGS + platform_flags(d, f) + ["-c", "-o", obj, os.path.join(src, f)], cwd=ROOT,
                                    capture_output=True, text=True)
                 if p.returncode:
-                    print("null platform: host/%s/%s does not compile:\n%s" % (d, f, p.stderr))
+                    print("null platform: %s/%s does not compile:\n%s" % (src, f, p.stderr))
                 else:
                     null_objs.append(obj)
     # the overlays whose every function has C (tools/host/ovlnative.py, include/platform/ovl.h)
