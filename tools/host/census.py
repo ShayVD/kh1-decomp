@@ -183,7 +183,8 @@ TYPE_PREFIX = "@"
 # a PLATFORM_DIRS entry that names a path under third_party/ is that directory, not one under host/
 KIT = "third_party/vita-port-kit/vita/runtime/"
 KIT_COSTACK = KIT + "costack"
-PLATFORM_DIRS = [("null", ()), ("port", ()), (KIT_COSTACK, ())]
+KIT_RING = KIT + "ring"
+PLATFORM_DIRS = [("null", ()), ("port", ()), (KIT_COSTACK, ()), (KIT_RING, ())]
 
 
 def nm(objs, defined):

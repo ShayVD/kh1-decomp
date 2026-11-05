@@ -313,13 +313,13 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/port/canvas.c" "$ROOT/host/port/batch.c" "$ROOT/host/port/vertex.c" "$ROOT/host/port/target.c" \
       "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" \
       "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c" \
-      "$ROOT/host/port/ring.c" "$ROOT/host/port/cmdbuf.c" "$ROOT/host/port/palcache.c" "$ROOT/host/port/texcache.c" \
+      "$ROOT/host/port/ring.c" "$ROOT/third_party/vita-port-kit/vita/runtime/ring/vpk_ring.c" "$ROOT/host/port/cmdbuf.c" "$ROOT/host/port/palcache.c" "$ROOT/host/port/texcache.c" \
       "$ROOT/host/port/shadergen.c" "$ROOT/host/port/gxmrec.c" "$ROOT/host/port/natdraw.c"
   "$W/batch_test" > "$W/batch.log" || { cat "$W/batch.log"; exit 1; }
   tail -n 1 "$W/batch.log"
   # the per-frame vertex and uniform rings (renderer-spec 4.13 "Session 125")
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/ring_test" \
-      "$ROOT/tests/host/ring_test.c" "$ROOT/host/port/ring.c"
+      "$ROOT/tests/host/ring_test.c" "$ROOT/host/port/ring.c" "$ROOT/third_party/vita-port-kit/vita/runtime/ring/vpk_ring.c"
   "$W/ring_test" > "$W/ring.log" || { cat "$W/ring.log"; exit 1; }
   tail -n 1 "$W/ring.log"
   # the draw list as GPU commands, the passes' load / store needs (renderer-spec 4.13 "Session 126")
@@ -329,7 +329,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/port/canvas.c" "$ROOT/host/port/batch.c" "$ROOT/host/port/vertex.c" "$ROOT/host/port/target.c" \
       "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" \
       "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c" \
-      "$ROOT/host/port/ring.c" "$ROOT/host/port/cmdbuf.c" "$ROOT/host/port/palcache.c" "$ROOT/host/port/texcache.c" \
+      "$ROOT/host/port/ring.c" "$ROOT/third_party/vita-port-kit/vita/runtime/ring/vpk_ring.c" "$ROOT/host/port/cmdbuf.c" "$ROOT/host/port/palcache.c" "$ROOT/host/port/texcache.c" \
       "$ROOT/host/port/shadergen.c" "$ROOT/host/port/gxmrec.c" "$ROOT/host/port/natdraw.c"
   "$W/cmdbuf_test" > "$W/cmdbuf.log" || { grep -v '^kh1-host:' "$W/cmdbuf.log"; exit 1; }
   tail -n 1 "$W/cmdbuf.log"

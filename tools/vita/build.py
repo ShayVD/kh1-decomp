@@ -91,7 +91,7 @@ CFLAGS_GXM = ["-std=gnu99", "-w", "-DKH1_HOST", "-fno-pic", "-fno-stack-protecto
 TARGETS = {
     "vita": dict(
         out="out/vita", prefix="arm-vita-eabi-", defines=["-DKH1_VITA", "-fno-short-enums"],
-        dirs=[("null", ("main.c",)), ("port", ()), ("vita", ()), (census.KIT_COSTACK, ()), (census.KIT + "ucontext", ())]
+        dirs=[("null", ("main.c",)), ("port", ()), ("vita", ()), (census.KIT_COSTACK, ()), (census.KIT_RING, ()), (census.KIT + "ucontext", ())]
         + [(census.KIT + m, ()) for m in ("config", "log", "clocks", "watchdog", "procparam")],
         link=["-Wl,-q", "-Wl,--no-warn-rwx-segments", "-Wl,--no-enum-size-warning"],
         libs=["-lvita2d", "-lvitashark", "-lSceShaccCgExt", "-lSceShaccCg_stub", "-ltaihen_stub", "-lSceKernelDmacMgr_stub", "-lSceDisplay_stub", "-lSceGxm_stub", "-lSceSysmodule_stub", "-lSceCommonDialog_stub",
@@ -99,7 +99,7 @@ TARGETS = {
     "linux-arm": dict(
         out="out/armlinux", prefix="arm-linux-gnueabihf-", defines=["-DKH1_HOST", "-fno-pic", "-fno-stack-protector", "-mfpu=neon"],
         dirs=[("null", ()), ("port", ()), ("vita", ("main.c", "pad.c", "display.c", "menu.c")), ("armlinux", ()),
-              (census.KIT_COSTACK, ()), (census.KIT + "ucontext", ())],
+              (census.KIT_COSTACK, ()), (census.KIT_RING, ()), (census.KIT + "ucontext", ())],
         link=["-no-pie", "-Wl,--no-warn-execstack"], libs=["-lm"]),
 }
 

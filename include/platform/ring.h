@@ -29,22 +29,18 @@
 #define KH1_RING_UNIFORM_BYTES (512u << 10) /* a frame's uniforms (session 141: a slot for each of 4,096 commands and 256 passes) */
 #define KH1_RING_UNIFORM_SLOT 64u           /* a batch's or a pass's uniform block */
 
-typedef struct {
-    u8 *base;           /* KH1_RING_FRAMES x slot bytes */
-    u32 slot;           /* bytes a frame */
-    u32 cur;            /* the frame slot being written */
-    u32 head;           /* bytes used in it */
-    u32 frames;         /* frames ended */
-    u32 high;           /* the most bytes a frame used */
-    u32 overflows;      /* allocations that did not fit */
-} KH1Ring;
+/* the ring itself is vita-port-kit's (third_party/vita-port-kit/vita/runtime/ring, vendored: docs/vita-port-kit.md),
+ * under the kh1_ names the port code calls, with KH1_RING_FRAMES slots */
+#include "../../third_party/vita-port-kit/vita/runtime/ring/vpk_ring.h"
+
+typedef VpkRing KH1Ring;
 
 /* a ring over mem (KH1_RING_FRAMES x slot bytes, slot a multiple of 16) */
-void kh1_ring_init(KH1Ring *r, void *mem, u32 slot);
+#define kh1_ring_init(r, mem, slot) vpk_ring_init((r), (mem), (slot), KH1_RING_FRAMES)
 /* bytes from the current frame's slot, aligned to align (a power of two up to 256); 0 when it does not fit */
-void *kh1_ring_alloc(KH1Ring *r, u32 bytes, u32 align);
+#define kh1_ring_alloc vpk_ring_alloc
 /* the frame ends: its use into the high-water mark, the next slot starts empty */
-void kh1_ring_frame(KH1Ring *r);
+#define kh1_ring_frame vpk_ring_frame
 /* a frame's bytes for v vertices / b batches and p passes (what the rings above must hold) */
 u32 kh1_ring_vertex_bytes(u32 v);
 u32 kh1_ring_uniform_bytes(u32 b, u32 p);
