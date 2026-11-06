@@ -62,6 +62,16 @@ Rules: a function counts only when `make ovl` is byte-identical and `make ovl-re
 | batch 8 | 2026-10-30 | 1893 / 2114 | gb +7, wm +11, dkmovie +1, xs_dumbo +1 (func_00f20570). New levers: a field's declared type as a store-order lever (wm f3ac48), `(x + c) << 4` where gcc would fold `(x + c) * 16`, end-coordinate locals computed before the packet calls (gb f3c1f0), mixed `(u8)` / `& 0xFF` reads of one s8 field (gb f4d930), gcse hash-bucket order (the insn count at gcse time decides which %hi pseudo is numbered first, xs_dumbo f20570), and auditing values before registers: tools/ovl/valaudit.py found two drafts passing the wrong argument (gb f422e8, wm f62440) and tools/ovl/xsym.py lists cross-overlay symbols. Fixed-address stand-ins were replaced by asm-label second names, which still do not count as matches. Details are in docs/overlays.md and NOTES-wwm2.md. |
 | batch 9 | 2026-10-30 | 1907 / 2114 | gb +3, wm +7, dkmovie +2, dktitle +2 (func_00f24330, func_00f228c8). Final batch of session 141. New tools: tools/ovl/rettype.py (callee return types tried against matched code and as s32/void), tools/ovl/nothrow.py (CONTEXT_ONLY callee definitions where a plain branch came out branch-likely, with a `kept` check for score-only gains), tools/ovl/cfdiff.py (branch/call skeleton distance), tools/ovl/gcsebucket.py; hill3 now keeps volatile accesses in order. Findings: in C only an earlier definition in the same file makes a call nothrow, so CONTEXT_ONLY gains on main-ELF callees are stand-ins; -fno-optimize-sibling-calls (nosib) merges two per-arm calls into one jal; break vs goto decides loop rotation; a `case 0: default:` balances the case tree. A permuter batch (35 min per draft, outputs rescored with hand.py and reviewed for natural code) matched three gb/wm pairs. wm func_00f3bc48 matches with an asm-label second name for D_01067FE0 whose natural source form is unknown. |
 
+## 2026-11-06: rescore and permuter pass (stopped)
+
+All 196 overlay drafts rescored with `hand.py try` (after kh1-decomp#248): 21 are within 2-6 words, every one a
+two-instruction scheduling or register tie (wm f23550 / f32770 / f43430 at 2; dktitle f241c8, gb f425a8, wm
+f696a0, xs_genie f218f8 at 3). decomp-permuter (tools/permuter.py, 30-45 min each, -j1) on 14 of them found
+nothing usable: 12 never moved from their base score, xs_genie f218f8 went 210 -> 115 without matching, and wm
+f23550's score-0 output passes the draft's pinned `ten` register variable uninitialised, which is not real C.
+So the "longer permuter run" idea above does not pay at this length either. The overlays all run as native C
+(drafts where unmatched), so the matching push stops here; the remaining 207 functions are the bar's gap.
+
 ## Stopping point (session 141)
 
 Session 141 stopped at 1,907 / 2,114 by choice: the last rounds averaged about 4 matches an hour, so further matching cost too much per function. What is left, by kind:
