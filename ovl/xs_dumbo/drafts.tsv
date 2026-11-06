@@ -1,0 +1,4 @@
+# xs_dumbo.x functions not matched yet: the draft a port compiles in their place (tools/host/ovlnative.py).
+# None is a match: words = the score tools/ovl/hand.py try gives (the words that differ from the original).
+func	path	words
+func_00f222f8	nonmatchings/session141/xs_dumbo/func_00f222f8.c	47

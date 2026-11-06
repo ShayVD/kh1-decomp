@@ -1,0 +1,2 @@
+# xs_bambi.x data words that point into the overlay (tools/ovl/relocs.py): a port rewrites them after each load. 7 words pointing inside functions (jump tables) left out.
+addr	target	kind

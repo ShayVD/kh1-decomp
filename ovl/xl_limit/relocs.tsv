@@ -1,0 +1,8 @@
+# xl_limit.x data words that point into the overlay (tools/ovl/relocs.py): a port rewrites them after each load. 12 words pointing inside functions (jump tables) left out.
+addr	target	kind
+00f233c4	00f22760	func
+00f233cc	00f229c0	func
+00f233d4	00f229e8	func
+00f233dc	00f22a10	func
+00f233e4	00f22a38	func
+00f233ec	00f22a70	func

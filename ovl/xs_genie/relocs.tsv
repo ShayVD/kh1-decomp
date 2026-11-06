@@ -1,0 +1,13 @@
+# xs_genie.x data words that point into the overlay (tools/ovl/relocs.py): a port rewrites them after each load. 13 words pointing inside functions (jump tables) left out. 26 words in data the C does not name (assets) left out.
+addr	target	kind
+00fc0d64	00fc0d00	data
+00fc0d6c	00fc0d08	data
+00fc0d74	00fc0d30	data
+00fc0d7c	00fc0d58	data
+00fc0db0	00f21b50	func
+00fc0dcc	00f21b98	func
+00fc0dd0	00f21c08	func
+00fc0de8	00f21ec0	func
+00fc0dec	00f21f68	func
+00fc0e08	00f21d58	func
+00fc0e20	00f21de8	func
