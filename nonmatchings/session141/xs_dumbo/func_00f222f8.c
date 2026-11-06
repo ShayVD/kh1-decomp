@@ -2,7 +2,11 @@
 #include "ovl.h"
 typedef struct { u8 h[0x10]; OvlVec pos[3]; OvlVec col[3]; OvlVec pad70; OvlVec uv[3]; } Tri;
 extern OvlVec D_00F2C410[10][10];
+#ifdef KH1_PS2
 void func_00249950(f32 *, f32, f32);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_00249950(f32 *, f32, f32);
+#endif
 void func_00249988(f32 *, f32 *, f32 *, f32);
 void func_00f21ca8(OvlVec *, s32);
 

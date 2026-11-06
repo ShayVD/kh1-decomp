@@ -6,7 +6,11 @@ typedef struct { f32 *pos; } Tgt;
 typedef struct { s32 f0; s32 type; f32 f8; u8 padc[4]; OvlVec v10; OvlVec v20; Tgt *tgt; void *act; s32 id; Eff *eff; } Gs;
 void func_00f20fc0(Gs *);
 s32 func_00122ff8(void *);
+#ifdef KH1_PS2
 void func_0012ec60(void *, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(void *, s32, f32 *);
+#endif
 void func_00121860(f32 *, f32 *, f32 *, f32);
 extern f32 D_002BBDFC;
 void func_00f20fe8(Gs *o) {

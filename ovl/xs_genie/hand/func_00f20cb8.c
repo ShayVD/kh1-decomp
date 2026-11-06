@@ -3,7 +3,11 @@
 
 typedef struct { u8 pad[0x370]; u64 f370; } Act;
 typedef struct { Act *act; s32 id; } Cur;
+#ifdef KH1_PS2
 void func_0012ec60(Act *, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(Act *, s32, f32 *);
+#endif
 Act *func_001230a0(Act *);
 s32 func_0012ee70(Act *, s32);
 s32 func_0012f040(Act *, s32);

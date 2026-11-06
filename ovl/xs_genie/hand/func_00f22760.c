@@ -5,8 +5,19 @@ typedef struct { u8 pad0[0x10]; OvlVec pos; u8 pad20[0x10]; OvlVec v30; u8 pad40
 typedef struct { Act *act; s32 id; } Cur;
 typedef struct { s32 f0; s32 kind; Act *act; Cur cur; } Cmd;
 s32 func_00122ff8(Act *);
+#ifdef KH1_PS2
 void func_0012ec60(Act *, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(Act *, s32, f32 *);
+#endif
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f22530(f32 *, f32 *, f32);
+#else
+void func_00f22530(f32 *, f32); /* the definition never reads the second pointer (a1) */
+static __inline__ void ee_00f22530(f32 *x0, f32 *x1, f32 x2) { (void)x1; func_00f22530(x0, x2); }
+#undef func_00f22530
+#define func_00f22530 ee_00f22530
+#endif
 void func_001315c0(Act *, s32, f32 *, f32);
 void func_00f221e0(f32 *, Cur *);
 void func_00f221a0(f32 *, Cur *);

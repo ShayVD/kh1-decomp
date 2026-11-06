@@ -2,7 +2,11 @@
 #include "ovl.h"
 
 typedef struct { u8 pad[0xC]; f32 *fC; s8 *f10; } Obj;
+#ifdef KH1_PS2
 void func_00249950(f32 *, f32, f32);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_00249950(f32 *, f32, f32);
+#endif
 extern s32 D_00F3C9D8;
 extern Obj *D_00F44AA0;
 extern f32 D_00F44AA4;

@@ -2,7 +2,11 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
+#ifdef KH1_PS2
 M2C_UNK func_0012ec60(s32, s32, void *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(s32, s32, void *);
+#endif
 M2C_UNK sceVu0SubVector(void *, void *, s32);
 extern M2C_UNK D_002E31B0;
 f32 atan2f(f32, f32);

@@ -41,8 +41,16 @@ void func_00130340(void *, s32, f32);
 void func_00130578(void *, s32, f32);
 void func_00f207a0(void);
 s32 func_00122ff8(s32);
+#ifdef KH1_PS2
 void func_0012ec60(s32, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(s32, s32, f32 *);
+#endif
+#ifdef KH1_PS2
 void func_001376e8(Act *, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_001376e8(Act *, f32 *);
+#endif
 void func_00f20b68(void);
 void func_00147ed8(void *, s32, s32, f32 *);
 void func_00135800(Act *, f32, f32);

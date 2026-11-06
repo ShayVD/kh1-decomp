@@ -7,7 +7,11 @@ typedef struct { u8 pad[0x2C]; Gs *f2c; } Mdl;
 typedef struct { u8 pad[0x14C]; Mdl *f14c; } Obj;
 typedef struct { s32 f0; s32 f4; } Tgt;
 s32 func_00122ff8(s32);
+#ifdef KH1_PS2
 void func_0012ec60(s32, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(s32, s32, f32 *);
+#endif
 void func_00130340(Obj *, s32, f32);
 Res *func_00130578(Obj *, s32, f32);
 void func_0013dc10(Obj *, s32);

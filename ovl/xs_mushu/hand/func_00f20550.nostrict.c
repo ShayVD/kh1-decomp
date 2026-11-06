@@ -33,7 +33,14 @@ extern s32 D_002E31B8;
 extern MuPair D_002E31B0;
 extern f32 D_00304B7C;
 extern MuB *D_00304B70;
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f204e8(f32 *, f32 *, f32);
+#else
+void func_00f204e8(f32 *, f32); /* the definition never reads the second pointer (a1) */
+static __inline__ void ee_00f204e8(f32 *x0, f32 *x1, f32 x2) { (void)x1; func_00f204e8(x0, x2); }
+#undef func_00f204e8
+#define func_00f204e8 ee_00f204e8
+#endif
 f32 **func_00147c98(void *, s32, s32);
 s32 func_00122ff8(s32);
 s32 func_001477e0(s32);

@@ -13,7 +13,11 @@ f32 func_00120bf8(f32 *);
 s32 func_00122ff8(Act *);
 Act *func_001230a0(Act *);
 void func_0012c880(Act *, s32);
+#ifdef KH1_PS2
 void func_0012ec60(Act *, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(Act *, s32, f32 *);
+#endif
 s32 func_00130340(Act *, s32, f32);
 void *func_00130578(Act *, s32, f32);
 void func_001373f8(Act *, f32);

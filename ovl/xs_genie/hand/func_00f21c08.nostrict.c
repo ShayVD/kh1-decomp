@@ -4,7 +4,11 @@
 typedef struct { s32 f0; f32 f4; } A;
 typedef struct { A *f0; s32 f4; f32 *f8; } Eff;
 typedef struct { u8 pad[0x10]; OvlVec pos; Eff *f20; } Obj;
+#ifdef KH1_PS2
 void func_00249950(f32 *, f32, f32);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_00249950(f32 *, f32, f32);
+#endif
 extern f32 D_002BBDFC;
 extern f32 D_00FC0D98;
 s32 func_00f21c08(Obj *o) {

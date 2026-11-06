@@ -6,7 +6,11 @@ s32 func_00f22cb0(void *, f32 *, s32, f32 *, f32);
 void func_00f22db8(void *, s32, f32 *);
 void func_00147ed8(s32, s32, s32, f32 *);
 void func_00121fc4(f32 *, f32 *);
+#ifdef KH1_PS2
 void func_001376e8(Obj *, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_001376e8(Obj *, f32 *);
+#endif
 extern Obj *D_00F22E90;
 extern s32 D_00F22E98;
 extern s32 D_00FC1710;
