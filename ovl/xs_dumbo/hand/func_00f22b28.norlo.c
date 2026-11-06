@@ -10,14 +10,15 @@ extern f32 D_00F2BAE0;
 extern s32 D_00F2BB10[];
 extern E D_00F2BB20[];
 
-void func_00f22b28(s32 arg0) {
+/* dir: the second argument func_00f21860 passes on, func_00249420's look-at direction */
+void func_00f22b28(s32 arg0, s32 dir) {
     f32 a[4];
     f32 b[4];
     f32 n[4];
     s32 i;
     E *p;
 
-    func_00249420(D_00F2BB20);
+    func_00249420(D_00F2BB20, dir);
     for (i = 1; i < 10; i++) {
         p = &D_00F2BB20[i];
         PlatVu0ScaleVectorXYZ(a, (p - 1)->v2, D_00F2BAE0);

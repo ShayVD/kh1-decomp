@@ -25,7 +25,7 @@ void func_0013ecf8(s32, s32, s32);
 void func_00f21710(s32, f32);
 
 void func_00f20a78(s32 *arg0) {
-    func_00131500();
+    func_00131500(arg0);
     *arg0 &= 0xFEDFFFFF;
     func_00f20940((s64) 0x807C << 0x2F);
     func_0012cab8(0);
@@ -64,7 +64,7 @@ void func_00f21d70(void) {
 }
 
 void func_00f22540(s32 *arg0) {
-    func_00131500();
+    func_00131500(arg0);
     *arg0 &= 0xFEDFFF7F;
     func_00f20208();
 }
