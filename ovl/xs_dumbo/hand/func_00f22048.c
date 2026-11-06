@@ -8,7 +8,14 @@ extern Q D_00F3CA20;
 extern f32 D_00F2BADC;
 extern f32 D_00F2BAE4;
 void *memset(void *, s32, s32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f21ef0(OvlVec *, f32, f32, s32, s32, f32);
+#else
+void func_00f21ef0(OvlVec *, s32, s32, f32, f32, f32);
+static __inline__ void ee_00f21ef0(OvlVec *x0, f32 x1, f32 x2, s32 x3, s32 x4, f32 x5) { func_00f21ef0(x0, x3, x4, x1, x2, x5); }
+#undef func_00f21ef0
+#define func_00f21ef0 ee_00f21ef0
+#endif
 void func_00249420(OvlMtx, Q *);
 void func_00f21a48(f32 *);
 void func_00f21c60(f32 *, OvlMtx, f32 *);

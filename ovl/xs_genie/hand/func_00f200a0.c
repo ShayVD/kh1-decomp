@@ -10,7 +10,11 @@ void func_0012cab8(s32);
 s32 func_00130340(Pl *, s32, f32);
 s32 func_00130578(Pl *, s32, f32);
 void func_0013aac0(Pl *);
+#ifdef KH1_PS2
 void func_0014cce0(Pl *, f32);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0014cce0(Pl *, f32);
+#endif
 void func_00f20c68(void *);
 void func_00f20f58(void);
 void func_00f21878(void);

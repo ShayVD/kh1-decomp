@@ -7,7 +7,11 @@ typedef struct { s32 f0; f32 f4; s32 f8; f32 fc; } Ctl;
 typedef struct { Act *act; s32 id; } Cur;
 Gnd *func_0014dab8(Act *);
 s32 func_00122ff8(Act *);
+#ifdef KH1_PS2
 void func_0012ec60(Act *, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(Act *, s32, f32 *);
+#endif
 void func_001315c0(Act *, s32, f32 *, f32);
 void func_0014d988(Act *, Cur *, Ctl *, f32, f32, f32, f32);
 typedef struct { u32 b0 : 5; u32 b5 : 1; u32 rest : 26; } F58;

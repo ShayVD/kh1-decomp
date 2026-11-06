@@ -1,0 +1,5 @@
+# xs_genie.x functions not matched yet: the draft a port compiles in their place (tools/host/ovlnative.py).
+# None is a match: words = the score tools/ovl/hand.py try gives (the words that differ from the original).
+func	path	words
+func_00f218f8	nonmatchings/session141/xs_genie/func_00f218f8.c	3
+func_00f22078	nonmatchings/session141/xs_genie/func_00f22078.c	37

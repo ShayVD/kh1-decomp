@@ -1,0 +1,4 @@
+# xl_limit.x functions not matched yet: the draft a port compiles in their place (tools/host/ovlnative.py).
+# None is a match: words = the score tools/ovl/hand.py try gives (the words that differ from the original).
+func	path	words
+func_00f225b0	nonmatchings/session140/xl_limit/func_00f225b0.norlo.c	41

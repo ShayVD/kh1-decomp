@@ -5,8 +5,8 @@
 M2C_UNK func_00f20a40();
 M2C_UNK sceVu0CopyVector(s32, s32);
 
-void func_00f200b0(void) {
-    func_00f20a40();
+void func_00f200b0(s32 arg0) {
+    func_00f20a40(arg0);
 }
 
 void func_00f20ac0(void *arg0, s32 arg1, s32 arg2, s32 arg3) {

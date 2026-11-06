@@ -55,7 +55,7 @@ def named(name: str) -> list[int]:
     for f in files:
         if f.exists():
             out |= {int(m, 16) for m in re.findall(r"\bD_(0[01][0-9A-F]{6})\b", f.read_text(errors="replace"))}
-    return sorted(a for a in out if AREA_END <= a < FAR_END)
+    return sorted(a for a in out if BASE <= a < FAR_END)
 
 
 def main() -> int:
@@ -65,8 +65,9 @@ def main() -> int:
     blob = (SRC_DIR / f"{name}.x").read_bytes()
     starts, code_end = layout(name)
     funcs = set(starts)
-    far = named(name)
-    rows, labels = [], 0
+    near = named(name)
+    far = [a for a in near if a >= AREA_END]
+    rows, labels, skipped = [], 0, 0
     for off in range((code_end - BASE + 3) & ~3, len(blob) - 3, 4):
         v = struct.unpack_from("<I", blob, off)[0]
         if AREA_END <= v < FAR_END:
@@ -79,19 +80,28 @@ def main() -> int:
         if v in funcs:
             rows.append((BASE + off, v, "func"))
         elif v >= code_end:
-            rows.append((BASE + off, v, "data"))
+            # a data pointer is kept only where its word lies in (or within 4 KiB above) data the
+            # overlay's C names: the summons' models, textures and GS packets hold many words in
+            # this range that are not pointers (xs_simba.x 79, xs_genie.x 30), and rewriting
+            # them would corrupt the file's assets
+            i = bisect.bisect_right(near, BASE + off) - 1
+            if i >= 0 and BASE + off - near[i] < FAR_NEAR:
+                rows.append((BASE + off, v, "data"))
+            else:
+                skipped += 1
         else:
             labels += 1
     path = ROOT / "ovl" / name / "relocs.tsv"
     with path.open("w") as f:
         f.write(f"# {name}.x data words that point into the overlay (tools/ovl/relocs.py): a port "
                 f"rewrites them after each load. {labels} words pointing inside functions (jump "
-                "tables) left out.\n")
+                "tables) left out." + (f" {skipped} words in data the C does not name (assets) left "
+                                       "out." if skipped else "") + "\n")
         f.write("addr\ttarget\tkind\n")
         for a, v, k in rows:
             f.write(f"{a:08x}\t{v:08x}\t{k}\n")
     print(f"wrote {path.relative_to(ROOT)}: {len(rows)} pointers "
-          f"({sum(1 for r in rows if r[2] == 'func')} functions), {labels} jump-table words left out")
+          f"({sum(1 for r in rows if r[2] == 'func')} functions), {labels} jump-table words, {skipped} asset words left out")
     return 0
 
 

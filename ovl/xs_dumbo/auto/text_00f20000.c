@@ -23,7 +23,11 @@ extern s32 D_00F23208;
 extern s32 D_00F23214;
 extern s32 D_00F44AA0;
 extern void *D_00F3CA88;
+#ifdef KH1_PS2
 f32 func_00135800(s32, f32, f32);
+#else /* the definition is void: an x86 caller of an f32 one pops an empty x87 stack */
+void func_00135800(s32, f32, f32);
+#endif
 f32 func_0014cc88(s32, f32);
 s32 func_0011ef38(M2C_UNK *);
 s32 func_0012cab8(s32);

@@ -33,7 +33,11 @@ extern s32 D_00F23E0C;
 extern s32 D_00F23F90;
 extern void *D_002E26A0;
 f32 PlatSqrtf(f32);
+#ifdef KH1_PS2
 f32 func_001224c8(s32, s32, s32, f32);
+#else /* the definition is void: an x86 caller of an f32 one pops an empty x87 stack */
+void func_001224c8(s32, s32, s32, f32);
+#endif
 f32 func_001376e8();
 s32 func_001226f0(s32, s32, s32);
 s32 func_00130030(void *);
@@ -246,8 +250,9 @@ s32 func_00f22a38(void) {
     return 1;
 }
 
-void func_00f22d10(s32 arg0) {
-    func_00137688(arg0, func_001376e8());
+/* a class's 3rd callback (func_0014f830): (object, the vector it is given), as class15.c func_0014c6c0 */
+void func_00f22d10(s32 arg0, f32 *arg1) {
+    func_00137688(arg0, func_001376e8(arg0, arg1));
 }
 
 void func_00f22ee8(void *arg0, s32 arg1, s32 arg2, s32 arg3) {

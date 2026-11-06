@@ -4,7 +4,11 @@
 typedef struct { s32 act; s32 id; s32 pad; } Ent;
 typedef struct { u8 pad[0x20]; s32 f20; } Obj;
 s32 func_00122ff8(s32);
+#ifdef KH1_PS2
 void func_0012ec60(s32, s32, OvlVec);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(s32, s32, OvlVec);
+#endif
 s32 func_00147ed8(void *, s32, s32, OvlVec);
 Obj *func_001354b8(s32, s32);
 void func_00f20188(void);

@@ -8,7 +8,14 @@ void func_00249a48(s32, s32);
 void func_002370c8(Pkt *);
 void func_00237018(Pkt *, s32, s32);
 f32 fmodf(f32, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00f222f8(Tri *, f32, f32, f32, s32, f32);
+#else
+void func_00f222f8(Tri *, s32, f32, f32, f32, f32);
+static __inline__ void ee_00f222f8(Tri *x0, f32 x1, f32 x2, f32 x3, s32 x4, f32 x5) { func_00f222f8(x0, x4, x1, x2, x3, x5); }
+#undef func_00f222f8
+#define func_00f222f8 ee_00f222f8
+#endif
 void func_00237600(void *);
 void func_002376c8(void *, Tri *, void *);
 void func_00238258(void *, s32, s32, s32, void *);

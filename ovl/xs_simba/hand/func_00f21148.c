@@ -14,7 +14,11 @@ s32 func_00142b30(Act *, f32 *);
 s32 func_00130340(Act *, s32, f32);
 void func_00130398(Act *, s32, f32);
 Mot *func_00130578(Act *, s32, f32);
+#ifdef KH1_PS2
 void func_001376e8(Act *, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_001376e8(Act *, f32 *);
+#endif
 void func_00f21080(void);
 extern f32 D_002BBDFC;
 extern f32 D_002C58B0[];

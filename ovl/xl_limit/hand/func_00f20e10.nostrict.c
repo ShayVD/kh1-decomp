@@ -10,7 +10,11 @@ typedef struct {
     u8 pad40[0x380];
     OvlVec v3c0;
 } LimObj;
+#ifdef KH1_PS2
 f32 func_00f209e0(LimObj *, f32);
+#else /* the definition is void: an x86 caller of an f32 one pops an empty x87 stack */
+void func_00f209e0(LimObj *, f32);
+#endif
 void func_00130340(LimObj *, s32, f32);
 Res *func_00130578(LimObj *, s32, f32);
 void func_001315c0(LimObj *, s32, f32 *, f32);

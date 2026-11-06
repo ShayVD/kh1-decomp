@@ -7,11 +7,19 @@ typedef struct { s32 cnt; Ent *list; } Tbl;
 typedef struct { s32 a; s32 b; s32 pad[2]; } R;
 s32 func_00122ff8(s32);
 void func_00123030(Obj *, s32, s32);
+#ifdef KH1_PS2
 void func_0012ec60(s32, s32, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_0012ec60(s32, s32, f32 *);
+#endif
 void func_00130340(Obj *, s32, f32);
 void func_00130578(Obj *, s32, f32);
 s32 func_00137618(Obj *);
+#ifdef KH1_PS2
 void func_001376e8(Obj *, f32 *);
+#else /* the definition returns f32: an x86 caller that drops it unbalances the x87 stack */
+f32 func_001376e8(Obj *, f32 *);
+#endif
 void func_00157910(Obj *, s32, s32);
 f32 func_00176850(void);
 CONTEXT_ONLY void func_00f200a0(s32 a) {}

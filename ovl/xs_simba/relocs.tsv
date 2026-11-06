@@ -1,0 +1,2 @@
+# xs_simba.x data words that point into the overlay (tools/ovl/relocs.py): a port rewrites them after each load. 4 words pointing inside functions (jump tables) left out. 79 words in data the C does not name (assets) left out.
+addr	target	kind

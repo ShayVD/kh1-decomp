@@ -15,9 +15,13 @@ typedef struct {
     OvlVec v3c0;
 } LimObj;
 typedef struct { f32 *pos; s32 w4; f32 *scale; } Fx;
-void func_0013ecf8(LimObj *, void *);
+void func_0013ecf8(LimObj *, void *, f32 *);
 Mot *func_0013dc10(LimObj *, s32);
+#ifdef KH1_PS2
 f32 func_00f209e0(LimObj *, f32);
+#else /* the definition is void: an x86 caller of an f32 one pops an empty x87 stack */
+void func_00f209e0(LimObj *, f32);
+#endif
 void func_00130340(LimObj *, s32, f32);
 Res *func_00130578(LimObj *, s32, f32);
 void func_001315c0(LimObj *, s32, f32 *, f32);
@@ -38,14 +42,15 @@ extern s32 D_00F2348C;
 /* func_00f208f8 defined above (as in the original file): bc1f, not bc1fl, before its call */
 CONTEXT_ONLY void func_00f208f8(LimObj *o) {}
 
-void func_00f20ae0(LimObj *o) {
+/* a class's 7th callback (func_0014f830): (object, pad, the facing vector out), as class15.c func_0014c5c8 */
+void func_00f20ae0(LimObj *o, void *pad, f32 *dir) {
     OvlVec v;
     f32 s;
     Mot *m;
     f32 *sc;
 
     if (D_00F23480 < 5) {
-        func_0013ecf8(o, D_002E31B0);
+        func_0013ecf8(o, D_002E31B0, dir);
         m = func_0013dc10(o, D_00F23480 + 54);
         o->mdl->eff->flags |= 0x800000;
         func_00f209e0(o, m->f8);
@@ -55,7 +60,7 @@ void func_00f20ae0(LimObj *o) {
             o->mdl->eff->w8 = D_00F23208;
         }
     } else if (D_00F23480 == 5) {
-        func_0013ecf8(o, D_002E31B0);
+        func_0013ecf8(o, D_002E31B0, dir);
         func_00f209e0(o, 0.0f);
         sceVu0CopyVector(o->v3c0, D_002C58B0);
         func_00130340(o, 0x008000F6, 0.0f);

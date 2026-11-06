@@ -16,8 +16,16 @@ extern s32 D_00FA6A10;
 extern s32 D_00FA6A90;
 extern s32 D_00FA6A94;
 extern u8 D_002E3190;
+#ifdef KH1_PS2
 f32 func_001224c8(s32, s32, s32, f32);
+#else /* the definition is void: an x86 caller of an f32 one pops an empty x87 stack */
+void func_001224c8(s32, s32, s32, f32);
+#endif
+#ifdef KH1_PS2
 f32 func_00135800(s32, f32, f32);
+#else /* the definition is void: an x86 caller of an f32 one pops an empty x87 stack */
+void func_00135800(s32, f32, f32);
+#endif
 f32 func_0014cce0(s32, f32);
 s32 func_001226f0(s32, s32, s32);
 s32 func_00130340(s32, s32, f32);
