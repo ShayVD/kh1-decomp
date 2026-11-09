@@ -49,6 +49,17 @@ extern s32 func_00130190(Ob *, s32);
 extern s32 func_00167698(s32);
 extern s32 func_00130270(Ob *, s32);
 extern s32 func_001302d0(Ob *, s32, f32, f32);
+/* r below is func_00130190's answer with its tags (func_00130070: 0x08000000 for a type-0 table entry, 0x20000000
+ * for a raw motion, ...), and the walk / run blend indexes the motion table with it as it is. On the EE that
+ * works: r * 4 turns bit 27 into +0x20000000 and bit 29 into +0x80000000, the uncached and kseg0 mirrors of the
+ * same RAM, so f1d4[0x08000002] reads f1d4[2]. Off the EE there is no mirror: on the Vita that read went 512 MiB
+ * past the table: a data abort in Agrabah's Main Street, attacking pots with Donald and Goofy following (kh1-vita's
+ * al_vita pad route, 2026-11-09; r was 0x08000002). Off the EE the two mirror bits are dropped, which reads what the EE reads. */
+#ifdef KH1_PS2
+#define MOTION_ENTRY(r) (r)
+#else
+#define MOTION_ENTRY(r) ((r) & ~0x28000000)
+#endif
 void func_00130398(Ob *o, s32 a1, f32 t) {
     s32 r, k, v;
     f32 f, a, b;
@@ -62,7 +73,7 @@ void func_00130398(Ob *o, s32 a1, f32 t) {
             if ((u32)(v - 1) < 2 || v == 172 || v == 173) {
                 if ((u32)(k - 1) < 2 || k == 172 || k == 173) {
                     a = func_00167698(o->f1d4[o->f168]);
-                    b = func_00167698(o->f1d4[r]);
+                    b = func_00167698(o->f1d4[MOTION_ENTRY(r)]);
                     f = b * ((o->f16c + D_002BBDFC + t) / a);
                     while (b <= f) f -= b;
                     goto call;
@@ -78,6 +89,7 @@ call:
     func_001302d0(o, func_00130270(o, a1), f, t);
     o->b0 = 1;
 }
+#undef MOTION_ENTRY
 
 /* func_00130598 (from hand/nostrict/text_00120000_h31.c). */
 typedef struct { u8 pad0[0x40]; f32 f40[4]; u8 pad50[0x15c - 0x50]; s32 f15c; u8 pad160[0x220 - 0x160]; f32 f220[4]; u8 pad230[0x370 - 0x230]; u64 f370; } E598;
