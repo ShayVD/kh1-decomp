@@ -18,7 +18,7 @@ extern Blk48 D_00F719B0;
 extern double D_00F719E0;
 extern D61880 D_00F61880;
 extern Col D_00F82640[];
-extern Col D_0108EE80[];
+extern Col D_00F826C0[]; /* the tabs' colours: gb.x's own (lui 0xf8 / addiu 9920); D_0108EE80 was the wm twin's address (overlay-verify) */
 extern s32 D_00F826F0;
 extern s32 D_00F826F4;
 void sceVu0UnitMatrix(OvlMtx);
@@ -321,7 +321,7 @@ void func_00f39eb0(s32 id, u64 **pp, u8 *colors) {
         s32 u = D_00F61880.x7C + i * 80;
         p = func_00f3fa80(p);
         p[0] = 342;
-        e = &D_0108EE80[i];
+        e = &D_00F826C0[i];
         p[1] = 0;
         p += 2;
         p[0] = *(u64 *)(D_00F56DC0 + 8752);

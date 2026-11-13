@@ -9,7 +9,8 @@ extern s32 D_002E27A4;
 extern WmFlags D_0037A378;
 extern s32 D_00F85088;
 extern s32 D_00F85094;
-extern void *D_00F864C0;
+typedef struct { u8 pad[0x558]; s8 x558; } Wm864c0;
+extern Wm864c0 *D_00F864C0;
 extern s32 D_00F87308;
 extern s32 D_00F9B2EC;
 extern s32 D_00F9B2F0;
@@ -22,7 +23,6 @@ extern s32 D_00F9B320;
 extern s32 D_00F9B324;
 extern s32 D_00F9B328;
 extern Gfx D_00FB6408;
-extern s8 D_01080558;
 extern s32 D_010807F8;
 extern s32 D_01080828[2];
 extern s32 D_01080830[2];
@@ -86,7 +86,10 @@ void func_00f46cb8(s32 id, s32 how)
     D_00FB6408.x8 = D_01080904;
     D_00FB6408.fn(0x2F00, 0x3600, D_01080904, D_00F9B320, D_00F9B324);
     if (D_00F864C0 != NULL) {
-        func_00f2abe8(26, D_01080558);
+        /* the object's byte at +0x558: the original's beqzl annuls its delay-slot lui, so the lb's base is
+           D_00F864C0 itself (an absolute D_01080558 here wrote 5 for 7 into the save image's block 2 at
+           +0x308 on the Agrabah -> Select World route; overlay-verify, 2026-11-13) */
+        func_00f2abe8(26, D_00F864C0->x558);
     }
     for (i = 0; i < 2; i++) {
         D_01080840[i] = 0;
