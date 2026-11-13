@@ -37,7 +37,7 @@ extern s32 D_00F82A04;
 extern s32 D_00F82A08;
 extern f32 D_00F82A24;
 extern s32 D_00F82A44;
-extern Fx D_0108F208;
+extern Fx D_00F82A48; /* gb.x's own block (lui 0xf8 / addiu 10824); D_0108F208 was the wm twin's address: the GUMMI BLOCK MENU's darkening panel came out black and clear (overlay-verify) */
 extern s32 D_00F82A94;
 void func_0024e468(s32);
 void func_00f422e8(void *, void *, s32, s32, s32, s32, s32, Rgba *, s32, u64, s32, u64);
@@ -76,7 +76,7 @@ loop:
             h = (s32)(D_00F702E0 * 128.0f) / 2;
             func_00f425a8(D_00F707D0.base + 0x14800, D_00F707D0.base + 0x1BC00, D_00F82A04 - h, D_00F82A08 - h, 128, 128, 8, c, D_00F702E0, 0, D_00F70318 ? 72 : 68, 0, 0x5001D);
         }
-        f = &D_0108F208;
+        f = &D_00F82A48;
         c[0].r = c[1].r = f->c2[0];
         c[0].g = c[1].g = f->c2[1];
         c[0].b = c[1].b = f->c2[2];

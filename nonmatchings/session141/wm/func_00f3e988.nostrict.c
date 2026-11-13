@@ -78,7 +78,7 @@ void func_00f3e988(void)
     p[0] = 0x156;
     p[1] = 0;
     p += 2;
-    p[0] = 0x3F8080808080LL;
+    p[0] = 0x3F80000080808080LL; /* RGBAQ, Q = 1.0f (lui 0x3f80 in the original; this read 0x3F8080808080, Q 0x3F80: overlay-verify) */
     p[1] = 1;
     p += 2;
     p[0] = D_00F87070[n];
@@ -106,7 +106,7 @@ void func_00f3e988(void)
     p[0] = 0x156;
     p[1] = 0;
     p += 2;
-    p[0] = 0x3F8080B3B300LL;
+    p[0] = 0x3F80000080B3B300LL; /* Q = 1.0f, as above */
     p[1] = 1;
     p += 2;
     p[0] = D_00F87070[11];
@@ -233,7 +233,7 @@ void func_00f3e988(void)
     p[0] = 0x5000D;
     p[1] = 71;
     p += 2;
-    p[0] = 0x17F01FF0000LL;
+    p[0] = 0x017F000001FF0000LL; /* SCISSOR_1 0-511 x 0-383 (lui 0x17f; this put 383 in SCAY0 and 0 in SCAY1) */
     p[1] = 64;
     p += 2;
     func_00f66b90(p);

@@ -1,5 +1,5 @@
 # gb.x functions not matched yet: the draft a port compiles in their place (tools/host/ovlnative.py).
-# None is a match: words = the words that differ from the original (tools/ovl/hand.py try). Their behaviour check: docs/native-overlays.md "Session 145".
+# None is a match: words = the words that differ from the original (tools/ovl/hand.py try). Their behaviour check: docs/native-overlays.md "Session 145" and (2026-11-13) kh1-vita's docs/native-overlays.md "The drafts against the originals, both in PCSX2".
 func	path	words
 func_00f20a68	nonmatchings/session141/gb/func_00f20a68.c	?
 func_00f20e48	nonmatchings/session141/gb/func_00f20e48.c	?
@@ -30,7 +30,7 @@ func_00f37618	nonmatchings/session141/gb/func_00f37618.c	?
 func_00f377b0	nonmatchings/session141/gb/func_00f377b0.norlo.c	?
 func_00f38848	nonmatchings/session141/gb/func_00f38848.c	?
 func_00f399f8	nonmatchings/session141/gb/func_00f399f8.c	?
-func_00f39eb0	nonmatchings/session141/gb/func_00f39eb0.c	?
+func_00f39eb0	nonmatchings/session141/gb/func_00f39eb0.c	1039
 func_00f3b348	nonmatchings/session141/gb/func_00f3b348.c	?
 func_00f3b4f8	nonmatchings/session141/gb/func_00f3b4f8.nostrict.c	?
 func_00f3c8c8	nonmatchings/session141/gb/func_00f3c8c8.c	?
@@ -43,7 +43,7 @@ func_00f40b68	nonmatchings/session141/gb/func_00f40b68.c	?
 func_00f42180	nonmatchings/session141/gb/func_00f42180.c	?
 func_00f425a8	nonmatchings/session141/gb/func_00f425a8.c	?
 func_00f42ed8	nonmatchings/session141/gb/func_00f42ed8.c	?
-func_00f43d70	nonmatchings/session141/gb/func_00f43d70.c	?
+func_00f43d70	nonmatchings/session141/gb/func_00f43d70.c	421
 func_00f446d0	nonmatchings/session141/gb/func_00f446d0.c	?
 func_00f45ea8	nonmatchings/session141/gb/func_00f45ea8.c	?
 func_00f46718	nonmatchings/session141/gb/func_00f46718.c	?
