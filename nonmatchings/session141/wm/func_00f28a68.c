@@ -49,7 +49,7 @@ void func_00f28a68(s32 x, s32 y, s32 al) {
     p[1] = 0;
     p[0] = 342;
     p += 2;
-    p[0] = ((u64)al << 24) | 0x00003F8000808080;
+    p[0] = ((u64)al << 24) | 0x3F80000000808080; /* RGBAQ, Q = 1.0f (the original builds 0x3f80000000808080; this read 0x00003F8000808080: overlay-verify) */
     p[1] = 1;
     p += 2;
     p[1] = 3;

@@ -31,7 +31,7 @@ Qw *func_00f5d8e0(V4 *lo, V4 *hi, u64 rgbaq, f32 (*m)[4], Qw *p) {
     for (i = 0; i < 3; i++) {
         for (side = 0; side < 2; side++) {
             p[0].lo = 0xB062400000000001ULL;
-            p[0].hi = 0x044444444444444EULL;
+            p[0].hi = 0x4444444444EULL; /* the original's 11 register nibbles (NREG 11; this had 15: overlay-verify) */
             p[1].lo = rgbaq;
             p[1].hi = 1;
             p += 2;
