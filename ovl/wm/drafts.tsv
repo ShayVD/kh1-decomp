@@ -1,9 +1,9 @@
 # wm.x functions not matched yet: the draft a port compiles in their place (tools/host/ovlnative.py).
-# None is a match: words = the words that differ from the original (tools/ovl/hand.py try). Their behaviour check: docs/native-overlays.md "Session 142".
+# None is a match: words = the words that differ from the original (tools/ovl/hand.py try). Their behaviour check: docs/native-overlays.md "Session 142" and (2026-11-13) kh1-vita's docs/native-overlays.md "The drafts against the originals, both in PCSX2".
 func	path	words
 func_00f20d08	nonmatchings/session141/wm/func_00f20d08.c	10
 func_00f21260	nonmatchings/session141/wm/func_00f21260.c	2
-func_00f22358	nonmatchings/session141/wm/func_00f22358.c	209
+func_00f22358	nonmatchings/session141/wm/func_00f22358.c	226
 func_00f23550	nonmatchings/session141/wm/func_00f23550.c	2
 func_00f23628	nonmatchings/session141/wm/func_00f23628.nosib.c	130
 func_00f24380	nonmatchings/session141/wm/func_00f24380.c	24
@@ -49,7 +49,7 @@ func_00f44158	nonmatchings/session141/wm/func_00f44158.c	9
 func_00f45e68	nonmatchings/session141/wm/func_00f45e68.c	28
 func_00f46070	nonmatchings/session141/wm/func_00f46070.c	7
 func_00f465a8	nonmatchings/session141/wm/func_00f465a8.c	12
-func_00f46cb8	nonmatchings/session141/wm/func_00f46cb8.c	210
+func_00f46cb8	nonmatchings/session141/wm/func_00f46cb8.c	207
 func_00f47b60	nonmatchings/session141/wm/func_00f47b60.c	136
 func_00f47f40	nonmatchings/session141/wm/func_00f47f40.c	275
 func_00f49718	nonmatchings/session141/wm/func_00f49718.c	203
@@ -71,7 +71,7 @@ func_00f58748	nonmatchings/session141/wm/func_00f58748.c	199
 func_00f58bd0	nonmatchings/session141/wm/func_00f58bd0.c	190
 func_00f58f98	nonmatchings/session141/wm/func_00f58f98.c	49
 func_00f59b30	nonmatchings/session141/wm/func_00f59b30.c	456
-func_00f5d8e0	nonmatchings/wm-native/func_00f5d8e0.c	231
+func_00f5d8e0	nonmatchings/wm-native/func_00f5d8e0.c	227
 func_00f5dfd8	nonmatchings/session141/wm/func_00f5dfd8.c	34
 func_00f5e368	nonmatchings/session141/wm/func_00f5e368.c	14
 func_00f5e540	nonmatchings/session141/wm/func_00f5e540.c	48
@@ -93,7 +93,7 @@ func_00f69278	nonmatchings/session141/wm/func_00f69278.c	24
 func_00f696a0	nonmatchings/session141/wm/func_00f696a0.c	2
 func_00f69fd0	nonmatchings/session141/wm/func_00f69fd0.c	145
 func_00f6ae68	nonmatchings/session141/wm/func_00f6ae68.c	421
-func_00f6b7c8	nonmatchings/session141/wm/func_00f6b7c8.c	1360
+func_00f6b7c8	nonmatchings/session141/wm/func_00f6b7c8.c	1420
 func_00f6cfa0	nonmatchings/session141/wm/func_00f6cfa0.c	322
 func_00f6d810	nonmatchings/session141/wm/func_00f6d810.c	420
 func_00f6e278	nonmatchings/session141/wm/func_00f6e278.c	327
