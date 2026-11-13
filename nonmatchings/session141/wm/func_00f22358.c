@@ -2,7 +2,7 @@
 /* Round 48 wwm2: the hill3o order from 4826d095 (wm func_00f22358 near miss, score 188 -> 123, hill3o statement order (wwm2 round) moved a control line (break/case/label/return/goto) or broke a dependency, so its score 123 was not valid. Restored the last valid statement order: score 188. Earlier header below. */
 /* score 188 (1064 vs 1056 bytes); structure right, register allocation off: original hoists 71 into s8 alongside 68/66 (ours runs out of s-regs, so 71 is rematerialized), p shares s3 with &c->x8 and col shares s5 with &D_00F878F0, x/y negu regs swapped; tried statement orders, local pointer for D_00F878F0, s32 col, x/y order, c->x0 placement */
 typedef struct { s32 x0; u8 *x4; s32 x8, xC, x10; } Ctx22;
-extern Ctx22 **D_00F85160;
+extern Ctx22 *D_00F85160; /* one load in the original (lw s0, 0(&D_00F85160)), as func_00f2f3b8 declares it */
 extern s32 D_00FBAA70;
 extern s32 D_00FBAA74;
 extern s32 D_00FBB330;
@@ -43,11 +43,11 @@ void func_00f22358(s32 a0, s32 a1, s32 a2, u32 col, OvlMtx m, s32 tex) {
     }
     func_00f651c0(k);
     sceVu0UnitMatrix(r);
-    sceVu0RotMatrixX(r, r, 3.1415927f);
+    sceVu0RotMatrixX(r, r, 3.1415926f); /* 0x40490FDA, the original's, from ee-gcc (it truncates) and from a port's compiler (it rounds): 3.1415927f gave the port 0x40490FDB (overlay-verify) */
     sceVu0MulMatrix(r, m, r);
     y = (y + 0x740) << 4;
     x = (x + 0x700) << 4;
-    p = func_00f66b78(func_00f66ac8(*D_00F85160));
+    p = func_00f66b78(func_00f66ac8((Ctx22 *)D_00F85160->x0));
     p[0] = 68;
     p[1] = 66;
     p += 2;
@@ -97,7 +97,8 @@ void func_00f22358(s32 a0, s32 a1, s32 a2, u32 col, OvlMtx m, s32 tex) {
     p += 2;
     func_00f66b90(p);
     s = func_00f66b38(p);
-    c = *D_00F85160;
+    c = D_00F85160; /* overlay-verify: this was *D_00F85160, the struct's first word (a packet pointer), so c->x0 = p and the three
+                       chains wrote into the packet and the DMA chain lost its ref tags (and the host faulted here once) */
     sv[2] = c->x10;
     sv[1] = c->xC;
     sv[0] = c->x8;
