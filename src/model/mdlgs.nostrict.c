@@ -736,6 +736,16 @@ s32 func_0015ff78(B4Dm *d) {
         break;
     case 4:
         tb = s->x0->x14;
+#ifndef KH1_PS2
+        { /* port (docs/native-objects-renderer.md O4, natobj=2): a P18 part drawn from its native mesh, its chain not sent */
+            extern int kh1_natobj_draw(u32, u32, s32, s32, s32) __attribute__((weak));
+            if (kh1_natobj_draw && kh1_natobj_draw((u32)((B4Rec2 *)(((u8 *)s)[7] * 4 + tb))->x18, s->x0->x10->x0,
+                                                   s->x0->x48, (s32)((u64)s->x4 >> 4), s->x0->x18)) {
+                d->x14 = 5; st = 5;
+                break;
+            }
+        }
+#endif
         D_0055C640->dir = 1;
         D_0055C640->mod = 1;
         D_0055C640->asp = 0;
