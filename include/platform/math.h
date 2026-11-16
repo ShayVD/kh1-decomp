@@ -15,7 +15,13 @@ static inline f32 PlatSqrtf(f32 x) {
     return r;
 }
 #else
-#define PlatSqrtf(x) __builtin_sqrtf(x)
+/* The EE's `sqrt.s` of a negative number is the root of its magnitude (the FPU has no NaN; it only raises the
+ * invalid flag), and the game leans on it: the script library's jump (vm_lib.c func_001d2c68) takes
+ * sqrt(height + drop), negative when the landing point lies further below than the jump is high, and the IEEE
+ * root's NaN went into the jump's speed and from there into the entity's position (the port's Destiny Islands:
+ * the second morning's first event, the player's position a NaN from then on and the picture black).
+ * platform/vu.h's PlatVu0Sqrt does the same for the VU's root. */
+static __inline__ f32 PlatSqrtf(f32 x) { return __builtin_sqrtf(__builtin_fabsf(x)); }
 #endif
 
 #endif /* KH1_PLATFORM_MATH_H */
