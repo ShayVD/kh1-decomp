@@ -39,7 +39,7 @@ u32 func_00111be8();
 s32 func_00122ff8(void *);
 void *func_0013daf8(s32);
 void func_00141b10(s32, void *);
-void func_00147808(u16);
+u8 *func_00147808(u16);
 ItemRec *func_00147840(s32);
 AbilRec *func_001478a0(s32);
 s32 func_00149440(s32, s32);
@@ -173,8 +173,7 @@ void func_001ee680(s32 id) {
 
 u8 *func_001ee698(s32 arg0) {
     if (arg0 != 0) {
-        func_00147808(func_00147840(arg0)->x0);
-        return;
+        return func_00147808(func_00147840(arg0)->x0);
     }
     return func_001efc10(0x97);
 }
@@ -331,32 +330,28 @@ s32 func_001eeb20(void) {
 
 u8 *func_001eeb88(s32 arg0) {
     if (arg0 != 0) {
-        func_001ee698(arg0);
-        return;
+        return func_001ee698(arg0);
     }
     return func_001efc10(0xA7);
 }
 
 u8 *func_001eebb0(s32 arg0) {
     if (arg0 != 0) {
-        func_001ee698(arg0);
-        return;
+        return func_001ee698(arg0);
     }
     return func_001efc10(0xA7);
 }
 
 u8 *func_001eebd8(s32 arg0) {
     if (arg0 != 0) {
-        func_001ee6d0(arg0);
-        return;
+        return (u8 *)func_001ee6d0(arg0);
     }
     return func_001efc10(0xA8);
 }
 
 u8 *func_001eec00(s32 arg0) {
     if (arg0 != 0) {
-        func_001ee6d0(arg0);
-        return;
+        return (u8 *)func_001ee6d0(arg0);
     }
     return func_001efc10(0xA8);
 }
