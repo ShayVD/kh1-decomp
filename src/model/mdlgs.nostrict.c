@@ -379,6 +379,14 @@ void func_0015f488(B4Drw *a) {
 }
 #undef D_00573E40
 
+#ifndef KH1_PS2
+/* port (docs/dma-vif-native.md step 3, "at the call"): renderer B's header / program send taken here, the walk left
+ * out (host/null/plat_null.c kh1_dma_b_call; 0: sent as before) */
+extern int kh1_dma_b_call(void *, void *) __attribute__((weak));
+#define B_SEND(c, t) do { if (!kh1_dma_b_call || !kh1_dma_b_call((void *)(c), (void *)(t))) PlatDmaSend((void *)(c), (void *)(t)); } while (0)
+#else
+#define B_SEND(c, t) PlatDmaSend(c, t)
+#endif
 /* func_0015f798 (from hand/nostrict/text_00150000_h36.c). */
 extern DmaChcr *D_0055C640;
 extern u32 D_00272CF0[];
@@ -413,7 +421,7 @@ void func_0015f798(S798 *o) {
     D_0055C640->tte = 1;
     D_0055C640->tie = 0;
     PlatSync();
-    PlatDmaSend((void *)D_0055C640, D_00272CF0);
+    B_SEND(D_0055C640, D_00272CF0);
 }
 
 /* func_0015f8c8 (from hand/nostrict/text_00150000_h59.c). */
@@ -540,15 +548,15 @@ void func_0015fc00(A0 *a) {
     v = e->o->x48;
     if (fl & 8) {
         if (v & 0x10) {
-            PlatDmaSend(D_0055C640, D_00277E40);
+            B_SEND(D_0055C640, D_00277E40);
             return;
         }
-        PlatDmaSend(D_0055C640, D_00278210);
+        B_SEND(D_0055C640, D_00278210);
         return;
     }
     if (!((fl >> 4) & 2)) v &= ~4;
     if ((u8)((fl >> 4) & 1)) v |= 2; else v &= ~2;
-    PlatDmaSend(D_0055C640, D_00351BE0[v]);
+    B_SEND(D_0055C640, D_00351BE0[v]);
 }
 
 /* func_0015fd20 (from hand/nostrict/text_00150000_h59.c). */
