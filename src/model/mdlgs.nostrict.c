@@ -674,6 +674,18 @@ extern u8 D_00573E40_0015ff78[] __asm__("D_00573E40");
 #define func_0015fd20 ((s32 (*)(s32, u32, s32, s32, s32)) func_0015fd20)
 #endif
 #define func_0015f8c8 ((void (*)(B4Drw2 *, s32)) func_0015f8c8)
+#ifndef KH1_PS2
+/* port (2026-11-22, docs/dma-vif-native.md step 4, eighth; config natobjfd=, host KH1_HOST_NATOBJFD; 1 the default): the
+ * bone matrices' copy into the part's packets (func_0015fd20) put off to state 4 and made only for a part that goes
+ * on its chain.  natobj=2 draws a native part with the matrices from the bone buffer itself, so the copy was never read
+ * for it.  Only when nothing runs between: case 1 (no callback), or case 2 with no x40 callback (state 3) */
+extern int kh1_natobj_fdlate __attribute__((weak)), kh1_natobj __attribute__((weak));
+extern u32 kh1_natobj_fdn[2] __attribute__((weak)); /* (natobj.c: copies left out, copies made late) */
+#define FD_LATE(s_) (&kh1_natobj_fdlate && kh1_natobj_fdlate && &kh1_natobj && kh1_natobj >= 2 && \
+                     ((s_)->x0->x48 & 4 || !(s_)->x0->x40))
+#else
+#define FD_LATE(s_) 0
+#endif
 s32 func_0015ff78(B4Dm *d) {
     B4Drw2 *s;
     B4Drw2 *t;
@@ -698,7 +710,7 @@ s32 func_0015ff78(B4Dm *d) {
             d->x14 = 2; st = 2;
             break;
         }
-        CALLFD();
+        if (!FD_LATE(s)) CALLFD();
         d->x14 = st = 4;
         break;
     case 2:
@@ -734,7 +746,7 @@ s32 func_0015ff78(B4Dm *d) {
             PlatSync();
             PlatDmaSend(D_0055C644, D_00573E40);
         }
-        CALLFD();
+        if (!FD_LATE(s)) CALLFD();
         if (s->x0->x40) { d->x14 = 3; st = 3; }
         else { d->x14 = 4; st = 4; }
         break;
@@ -749,8 +761,13 @@ s32 func_0015ff78(B4Dm *d) {
             extern int kh1_natobj_draw(u32, u32, s32, s32, s32) __attribute__((weak));
             if (kh1_natobj_draw && kh1_natobj_draw((u32)((B4Rec2 *)(((u8 *)s)[7] * 4 + tb))->x18, s->x0->x10->x0,
                                                    s->x0->x48, (s32)((u64)s->x4 >> 4), s->x0->x18)) {
+                if (FD_LATE(s) && &kh1_natobj_fdn) kh1_natobj_fdn[0]++;
                 d->x14 = 5; st = 5;
                 break;
+            }
+            if (FD_LATE(s)) { /* (the part goes on its chain: its packets get their matrices now) */
+                CALLFD();
+                if (&kh1_natobj_fdn) kh1_natobj_fdn[1]++;
             }
         }
 #endif
@@ -788,4 +805,5 @@ s32 func_0015ff78(B4Dm *d) {
 #undef func_0015fd20
 #undef func_0015f8c8
 #undef CALLFD
+#undef FD_LATE
 
