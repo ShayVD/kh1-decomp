@@ -382,13 +382,32 @@ void func_0017f9a8(void) __asm__("func_0017f9a8");
 void func_00183a00(void *, void *, s32) __asm__("func_00183a00");
 void *memset(void *, s32, u32);
 void func_0017f910(s32, s32) __asm__("func_0017f910");
+#ifndef KH1_PS2
+/* port (2026-11-23, docs/ppp-heap.md; config pppheap=, host KH1_HOST_PPPHEAP; KiB, 1024 the default, 512 the game's
+ * own buffer): the effects' heap in a larger buffer of the image (DMA chains may point into it, and the walk takes
+ * only the image's addresses).  0.0.212 crashed when func_00183a48 found no block large enough in the Second
+ * District (func_00182588 writes through its 0): 80-150 KiB in use of 512, the largest free block down to 30 KiB */
+extern u32 kh1_ppp_heap_kib __attribute__((weak));
+static u8 kh1_ppp_heap_big[1u << 20] __attribute__((aligned(64)));
+#endif
 void func_00182058(void) {
     Pmgr *m;
     s32 i;
     func_0017f9a8();
     m = &D_00615E40;
     D_0061621C = 0;
+#ifndef KH1_PS2
+    {
+        u32 kib = &kh1_ppp_heap_kib ? kh1_ppp_heap_kib : 512;
+        if (kib > 512) {
+            if (kib > sizeof kh1_ppp_heap_big >> 10) kib = sizeof kh1_ppp_heap_big >> 10;
+            func_00183a00(m, kh1_ppp_heap_big, (s32)(kib << 10));
+        } else
+            func_00183a00(m, D_00595E40, 0x80000);
+    }
+#else
     func_00183a00(m, D_00595E40, 0x80000);
+#endif
     m->x10 = D_00362730;
     m->x14 = D_00363930;
     m->x18 = D_00363D30;
